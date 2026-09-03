@@ -18,7 +18,7 @@
 
 body {
   margin: 0;
-  font-family: "Rockwell", "Rockwell Nova", "Roboto Slab", Georgia, serif;
+  font-family: "DM Sans", system-ui, sans-serif;
   background: var(--bg);
   color: var(--ink);
   line-height: 1.5;
@@ -26,7 +26,21 @@ body {
 
 a { color: inherit; }
 
-h1, h2, h3 { font-family: "Rockwell", "Rockwell Nova", "Roboto Slab", Georgia, serif; font-weight: 700; letter-spacing: -0.01em; }
+/* ---------- Icons (shared) ---------- */
+[data-icon] svg { display: block; width: 100%; height: 100%; }
+.nav-icon {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  vertical-align: -4px;
+  margin-right: 0.45rem;
+  color: var(--muted);
+  transition: color 0.15s ease;
+}
+a:hover .nav-icon, a.active .nav-icon { color: var(--accent-2); }
+a.nav-cta .nav-icon { color: inherit; }
+
+h1, h2, h3 { font-family: "DM Sans", system-ui, sans-serif; font-weight: 700; letter-spacing: -0.01em; }
 
 /* ---------- Verse banner (hero) ---------- */
 .verse-banner {
@@ -53,7 +67,7 @@ h1, h2, h3 { font-family: "Rockwell", "Rockwell Nova", "Roboto Slab", Georgia, s
 }
 .verse-banner .verse-text {
   display: block;
-  font-family: "Rockwell", "Rockwell Nova", "Roboto Slab", Georgia, serif;
+  font-family: "DM Sans", system-ui, sans-serif;
   font-weight: 700;
   font-size: 2rem;
   line-height: 1.25;
@@ -84,15 +98,18 @@ h1, h2, h3 { font-family: "Rockwell", "Rockwell Nova", "Roboto Slab", Georgia, s
   top: 0;
   z-index: 20;
 }
-.topbar .brand { font-family: "Rockwell", "Rockwell Nova", "Roboto Slab", Georgia, serif; font-weight: 700; font-size: 1.15rem; color: var(--ink); }
+.topbar .brand { font-family: "DM Sans", system-ui, sans-serif; font-weight: 700; font-size: 1.15rem; color: var(--ink); }
 .menu-toggle {
   background: none;
   border: none;
-  font-size: 1.6rem;
-  line-height: 1;
   color: var(--ink);
   cursor: pointer;
-  padding: 0.25rem 0.5rem;
+  padding: 0.35rem;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ---------- Nav / sidebar ---------- */
@@ -105,7 +122,7 @@ h1, h2, h3 { font-family: "Rockwell", "Rockwell Nova", "Roboto Slab", Georgia, s
   padding: 1.5rem 1rem;
 }
 .sidebar .brand {
-  font-family: "Rockwell", "Rockwell Nova", "Roboto Slab", Georgia, serif;
+  font-family: "DM Sans", system-ui, sans-serif;
   font-size: 1.3rem;
   font-weight: 700;
   color: var(--ink);
@@ -162,14 +179,15 @@ h1, h2, h3 { font-family: "Rockwell", "Rockwell Nova", "Roboto Slab", Georgia, s
   box-shadow: 0 12px 32px rgba(255, 122, 48, 0.18);
 }
 .card .icon {
-  font-size: 1.5rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 44px;
   height: 44px;
+  padding: 11px;
   border-radius: 12px;
   background: var(--surface-raised);
+  color: var(--accent-2);
 }
 .card h3 { margin: 0.9rem 0 0.3rem; }
 .card p { margin: 0; color: var(--muted); font-size: 0.92rem; }
@@ -237,8 +255,14 @@ h1.page-title { margin-top: 0; font-size: 1.9rem; }
   border: none;
   color: var(--danger);
   cursor: pointer;
-  font-size: 1.1rem;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  flex-shrink: 0;
+  opacity: 0.75;
+  transition: opacity 0.15s ease;
 }
+.list-item button.delete:hover { opacity: 1; }
 .empty-state { color: var(--muted); font-style: italic; }
 
 .stat-row {
@@ -255,7 +279,7 @@ h1.page-title { margin-top: 0; font-size: 1.9rem; }
   flex: 1 1 160px;
 }
 .stat-box .value {
-  font-family: "Rockwell", "Rockwell Nova", "Roboto Slab", Georgia, serif;
+  font-family: "DM Sans", system-ui, sans-serif;
   font-size: 1.7rem;
   font-weight: 700;
   background: var(--accent-grad);
@@ -279,12 +303,15 @@ h1.page-title { margin-top: 0; font-size: 1.9rem; }
 .habit-row .day-toggle {
   width: 32px;
   height: 32px;
+  padding: 8px;
   border-radius: 50%;
   border: 1px solid var(--border);
   background: var(--bg-soft);
   color: var(--ink);
   cursor: pointer;
-  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 .habit-row .day-toggle.done { background: var(--accent-grad); border-color: transparent; color: #0a0a0a; font-weight: 700; }
@@ -392,7 +419,7 @@ h1.page-title { margin-top: 0; font-size: 1.9rem; }
     font-size: 0.7rem;
     position: relative;
   }
-  .bottom-nav a .icon { display: block; font-size: 1.25rem; margin-bottom: 0.15rem; }
+  .bottom-nav a .icon { display: block; width: 22px; height: 22px; margin: 0 auto 0.25rem; }
   .bottom-nav a.active { color: var(--ink); }
   .bottom-nav a.active::before {
     content: "";
@@ -410,5 +437,5 @@ h1.page-title { margin-top: 0; font-size: 1.9rem; }
     grid-template-columns: 1fr repeat(7, 28px) 28px;
     font-size: 0.7rem;
   }
-  .habit-row .day-toggle { width: 28px; height: 28px; }
+  .habit-row .day-toggle { width: 28px; height: 28px; padding: 6px; }
 }

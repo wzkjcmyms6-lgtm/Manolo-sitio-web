@@ -50,7 +50,7 @@ function renderHabits() {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "day-toggle" + (habit.done.includes(date) ? " done" : "");
-      btn.textContent = habit.done.includes(date) ? "✓" : "";
+      btn.innerHTML = habit.done.includes(date) ? ICONS.check : "";
       btn.addEventListener("click", () => toggleDay(idx, date));
       row.appendChild(btn);
     });
@@ -58,7 +58,8 @@ function renderHabits() {
     const del = document.createElement("button");
     del.type = "button";
     del.className = "delete";
-    del.textContent = "✕";
+    del.setAttribute("aria-label", "Eliminar hábito");
+    del.innerHTML = ICONS.trash;
     del.addEventListener("click", () => deleteHabit(idx));
     row.appendChild(del);
 

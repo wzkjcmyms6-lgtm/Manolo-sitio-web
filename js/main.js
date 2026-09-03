@@ -9,11 +9,13 @@ document.addEventListener("DOMContentLoaded", () => {
       sidebar.classList.remove("open");
       overlay.classList.remove("visible");
       toggle.setAttribute("aria-expanded", "false");
+      toggle.innerHTML = ICONS.menu;
     };
     const openMenu = () => {
       sidebar.classList.add("open");
       overlay.classList.add("visible");
       toggle.setAttribute("aria-expanded", "true");
+      toggle.innerHTML = ICONS.close;
     };
     toggle.addEventListener("click", () => {
       sidebar.classList.contains("open") ? closeMenu() : openMenu();

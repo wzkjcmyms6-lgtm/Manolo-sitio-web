@@ -49,7 +49,8 @@ function renderExercises() {
     `;
     const del = document.createElement("button");
     del.className = "delete";
-    del.textContent = "✕";
+    del.setAttribute("aria-label", "Eliminar entrenamiento");
+    del.innerHTML = ICONS.trash;
     del.addEventListener("click", () => deleteExercise(entry.id));
     item.appendChild(del);
     container.appendChild(item);

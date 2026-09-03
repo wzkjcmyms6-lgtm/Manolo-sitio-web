@@ -45,7 +45,8 @@ function renderMovements() {
     `;
     const del = document.createElement("button");
     del.className = "delete";
-    del.textContent = "✕";
+    del.setAttribute("aria-label", "Eliminar movimiento");
+    del.innerHTML = ICONS.trash;
     del.addEventListener("click", () => deleteMovement(m.id));
     item.appendChild(del);
     container.appendChild(item);
