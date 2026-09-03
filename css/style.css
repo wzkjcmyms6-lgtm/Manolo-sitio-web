@@ -18,7 +18,7 @@
 
 body {
   margin: 0;
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Rockwell", "Rockwell Nova", "Roboto Slab", Georgia, serif;
   background: var(--bg);
   color: var(--ink);
   line-height: 1.5;
@@ -26,7 +26,7 @@ body {
 
 a { color: inherit; }
 
-h1, h2, h3 { font-family: "Space Grotesk", "Inter", system-ui, sans-serif; font-weight: 700; letter-spacing: -0.01em; }
+h1, h2, h3 { font-family: "Rockwell", "Rockwell Nova", "Roboto Slab", Georgia, serif; font-weight: 700; letter-spacing: -0.01em; }
 
 /* ---------- Verse banner (hero) ---------- */
 .verse-banner {
@@ -53,7 +53,7 @@ h1, h2, h3 { font-family: "Space Grotesk", "Inter", system-ui, sans-serif; font-
 }
 .verse-banner .verse-text {
   display: block;
-  font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
+  font-family: "Rockwell", "Rockwell Nova", "Roboto Slab", Georgia, serif;
   font-weight: 700;
   font-size: 2rem;
   line-height: 1.25;
@@ -84,7 +84,7 @@ h1, h2, h3 { font-family: "Space Grotesk", "Inter", system-ui, sans-serif; font-
   top: 0;
   z-index: 20;
 }
-.topbar .brand { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 1.15rem; color: var(--ink); }
+.topbar .brand { font-family: "Rockwell", "Rockwell Nova", "Roboto Slab", Georgia, serif; font-weight: 700; font-size: 1.15rem; color: var(--ink); }
 .menu-toggle {
   background: none;
   border: none;
@@ -105,7 +105,7 @@ h1, h2, h3 { font-family: "Space Grotesk", "Inter", system-ui, sans-serif; font-
   padding: 1.5rem 1rem;
 }
 .sidebar .brand {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Rockwell", "Rockwell Nova", "Roboto Slab", Georgia, serif;
   font-size: 1.3rem;
   font-weight: 700;
   color: var(--ink);
@@ -255,7 +255,7 @@ h1.page-title { margin-top: 0; font-size: 1.9rem; }
   flex: 1 1 160px;
 }
 .stat-box .value {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Rockwell", "Rockwell Nova", "Roboto Slab", Georgia, serif;
   font-size: 1.7rem;
   font-weight: 700;
   background: var(--accent-grad);
