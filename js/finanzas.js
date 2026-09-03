@@ -1,5 +1,5 @@
 const FINANCE_KEY = "manolo_finanzas";
-const TYPE_LABELS = { ingreso: "Ingreso", gasto: "Gasto", inversion: "Inversión" };
+const TYPE_LABELS = { ingreso: "Ingreso", gasto: "Gasto" };
 
 function loadMovements() {
   return JSON.parse(localStorage.getItem(FINANCE_KEY) || "[]");
@@ -16,12 +16,11 @@ function renderStats() {
   const list = loadMovements();
   const ingresos = list.filter(m => m.type === "ingreso").reduce((s, m) => s + m.amount, 0);
   const gastos = list.filter(m => m.type === "gasto").reduce((s, m) => s + m.amount, 0);
-  const inversiones = list.filter(m => m.type === "inversion").reduce((s, m) => s + m.amount, 0);
-  const balance = ingresos - gastos - inversiones;
+  const balance = ingresos - gastos;
 
   document.getElementById("finance-stats").innerHTML = `
     <div class="stat-box"><div class="value">${formatMoney(balance)}</div><div class="label">Balance</div></div>
-    <div class="stat-box"><div class="value">${formatMoney(inversiones)}</div><div class="label">En inversiones</div></div>
+    <div class="stat-box"><div class="value">${formatMoney(gastos)}</div><div class="label">Gastos totales</div></div>
   `;
 }
 

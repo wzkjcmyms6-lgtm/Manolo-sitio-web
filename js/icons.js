@@ -10,6 +10,8 @@ const ICONS = {
 
   finance: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><rect x="3" y="6.5" width="18" height="12" rx="2.2"/><path d="M3 10h18"/><path d="M15.5 14.5h2.5"/></svg>`,
 
+  investing: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M3 16.5 9 10l4 4 7-8"/><path d="M15 5.5h5v5"/></svg>`,
+
   plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>`,
 
   trash: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M4 7h16"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M6.5 7l0.9 12.1a1.5 1.5 0 0 0 1.5 1.4h6.2a1.5 1.5 0 0 0 1.5-1.4L17.5 7"/><path d="M10 11v6M14 11v6"/></svg>`,

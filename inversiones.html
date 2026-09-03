@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manolo — Hábitos</title>
+  <title>Manolo — Inversiones</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
@@ -36,16 +36,20 @@
       </div>
 
       <div class="content">
-        <h1 class="page-title">Hábitos</h1>
+        <h1 class="page-title">Inversiones</h1>
 
-        <form class="tracker-form" id="habit-form">
-          <input type="text" id="habit-name" placeholder="Nuevo hábito (ej: Leer 10 min)" required>
-          <button type="submit">Agregar</button>
+        <div class="stat-row" id="investing-stats"></div>
+
+        <form class="tracker-form" id="investing-form">
+          <input type="date" id="investing-date" required>
+          <input type="text" id="investing-name" placeholder="Activo (ej: AAPL, Fondo indexado)" required>
+          <input type="number" id="investing-amount" placeholder="Monto invertido" min="0.01" step="0.01" required>
+          <input type="text" id="investing-notes" placeholder="Notas (opcional)">
+          <button type="submit">Registrar</button>
         </form>
 
-        <div class="habit-days-header" id="habit-days-header"></div>
-        <div id="habit-list"></div>
-        <p class="empty-state" id="habit-empty" style="display:none;">Aún no tienes hábitos. Agrega el primero arriba.</p>
+        <div id="investing-list"></div>
+        <p class="empty-state" id="investing-empty" style="display:none;">Aún no registras aportes.</p>
       </div>
     </div>
   </div>
@@ -61,6 +65,6 @@
   <script src="js/verses.js"></script>
   <script src="js/icons.js"></script>
   <script src="js/main.js"></script>
-  <script src="js/habitos.js"></script>
+  <script src="js/inversiones.js"></script>
 </body>
 </html>
