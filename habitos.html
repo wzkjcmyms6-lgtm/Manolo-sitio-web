@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manolo — Hábitos</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <span class="brand">Manolo</span>
+    <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-label="Abrir menú">☰</button>
+  </div>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <span class="brand">Manolo</span>
+      <nav>
+        <a href="index.html" data-nav-link>🏠 Inicio</a>
+        <a href="habitos.html" data-nav-link>✅ Hábitos</a>
+        <a href="ejercicio.html" data-nav-link>🏃 Ejercicio</a>
+        <a href="finanzas.html" data-nav-link>💰 Finanzas</a>
+      </nav>
+    </aside>
+
+    <div class="main">
+      <div class="verse-banner" id="verse-banner">
+        <span class="verse-text"></span>
+        <span class="verse-ref"></span>
+      </div>
+
+      <div class="content">
+        <h1 class="page-title">Hábitos</h1>
+
+        <form class="tracker-form" id="habit-form">
+          <input type="text" id="habit-name" placeholder="Nuevo hábito (ej: Leer 10 min)" required>
+          <button type="submit">Agregar</button>
+        </form>
+
+        <div class="habit-days-header" id="habit-days-header"></div>
+        <div id="habit-list"></div>
+        <p class="empty-state" id="habit-empty" style="display:none;">Aún no tienes hábitos. Agrega el primero arriba.</p>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="index.html" data-nav-link><span class="icon">🏠</span>Inicio</a>
+    <a href="habitos.html" data-nav-link><span class="icon">✅</span>Hábitos</a>
+    <a href="ejercicio.html" data-nav-link><span class="icon">🏃</span>Ejercicio</a>
+    <a href="finanzas.html" data-nav-link><span class="icon">💰</span>Finanzas</a>
+  </nav>
+
+  <script src="js/verses.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/habitos.js"></script>
+</body>
+</html>

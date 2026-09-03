@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manolo — Ejercicio</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <span class="brand">Manolo</span>
+    <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-label="Abrir menú">☰</button>
+  </div>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <span class="brand">Manolo</span>
+      <nav>
+        <a href="index.html" data-nav-link>🏠 Inicio</a>
+        <a href="habitos.html" data-nav-link>✅ Hábitos</a>
+        <a href="ejercicio.html" data-nav-link>🏃 Ejercicio</a>
+        <a href="finanzas.html" data-nav-link>💰 Finanzas</a>
+      </nav>
+    </aside>
+
+    <div class="main">
+      <div class="verse-banner" id="verse-banner">
+        <span class="verse-text"></span>
+        <span class="verse-ref"></span>
+      </div>
+
+      <div class="content">
+        <h1 class="page-title">Ejercicio</h1>
+
+        <div class="stat-row" id="exercise-stats"></div>
+
+        <form class="tracker-form" id="exercise-form">
+          <input type="date" id="exercise-date" required>
+          <input type="text" id="exercise-type" placeholder="Tipo (ej: Correr, Pesas)" required>
+          <input type="number" id="exercise-duration" placeholder="Minutos" min="1" required>
+          <input type="text" id="exercise-notes" placeholder="Notas (opcional)">
+          <button type="submit">Registrar</button>
+        </form>
+
+        <div id="exercise-list"></div>
+        <p class="empty-state" id="exercise-empty" style="display:none;">Aún no registras entrenamientos.</p>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="index.html" data-nav-link><span class="icon">🏠</span>Inicio</a>
+    <a href="habitos.html" data-nav-link><span class="icon">✅</span>Hábitos</a>
+    <a href="ejercicio.html" data-nav-link><span class="icon">🏃</span>Ejercicio</a>
+    <a href="finanzas.html" data-nav-link><span class="icon">💰</span>Finanzas</a>
+  </nav>
+
+  <script src="js/verses.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/ejercicio.js"></script>
+</body>
+</html>

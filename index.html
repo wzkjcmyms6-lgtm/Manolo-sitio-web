@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manolo — Panel personal</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <span class="brand">Manolo</span>
+    <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-label="Abrir menú">☰</button>
+  </div>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <span class="brand">Manolo</span>
+      <nav>
+        <a href="index.html" data-nav-link>🏠 Inicio</a>
+        <a href="habitos.html" data-nav-link>✅ Hábitos</a>
+        <a href="ejercicio.html" data-nav-link>🏃 Ejercicio</a>
+        <a href="finanzas.html" data-nav-link>💰 Finanzas</a>
+      </nav>
+    </aside>
+
+    <div class="main">
+      <div class="verse-banner" id="verse-banner">
+        <span class="verse-text"></span>
+        <span class="verse-ref"></span>
+      </div>
+
+      <div class="content">
+        <h1 class="page-title">Bienvenido, Manolo</h1>
+        <p style="font-family: system-ui, sans-serif; color: var(--muted);">Tu panel de control personal. Elige una sección para empezar.</p>
+
+        <div class="card-grid">
+          <a class="card" href="habitos.html">
+            <span class="icon">✅</span>
+            <h3>Hábitos</h3>
+            <p>Registra y sigue tus hábitos diarios.</p>
+          </a>
+          <a class="card" href="ejercicio.html">
+            <span class="icon">🏃</span>
+            <h3>Ejercicio</h3>
+            <p>Lleva el control de tus entrenamientos.</p>
+          </a>
+          <a class="card" href="finanzas.html">
+            <span class="icon">💰</span>
+            <h3>Finanzas e Inversiones</h3>
+            <p>Controla ingresos, gastos e inversiones.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="index.html" data-nav-link><span class="icon">🏠</span>Inicio</a>
+    <a href="habitos.html" data-nav-link><span class="icon">✅</span>Hábitos</a>
+    <a href="ejercicio.html" data-nav-link><span class="icon">🏃</span>Ejercicio</a>
+    <a href="finanzas.html" data-nav-link><span class="icon">💰</span>Finanzas</a>
+  </nav>
+
+  <script src="js/verses.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

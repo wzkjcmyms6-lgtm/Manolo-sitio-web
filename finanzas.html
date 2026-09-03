@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manolo — Finanzas</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <span class="brand">Manolo</span>
+    <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-label="Abrir menú">☰</button>
+  </div>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <span class="brand">Manolo</span>
+      <nav>
+        <a href="index.html" data-nav-link>🏠 Inicio</a>
+        <a href="habitos.html" data-nav-link>✅ Hábitos</a>
+        <a href="ejercicio.html" data-nav-link>🏃 Ejercicio</a>
+        <a href="finanzas.html" data-nav-link>💰 Finanzas</a>
+      </nav>
+    </aside>
+
+    <div class="main">
+      <div class="verse-banner" id="verse-banner">
+        <span class="verse-text"></span>
+        <span class="verse-ref"></span>
+      </div>
+
+      <div class="content">
+        <h1 class="page-title">Finanzas e Inversiones</h1>
+
+        <div class="stat-row" id="finance-stats"></div>
+
+        <form class="tracker-form" id="finance-form">
+          <input type="date" id="finance-date" required>
+          <select id="finance-type">
+            <option value="ingreso">Ingreso</option>
+            <option value="gasto">Gasto</option>
+            <option value="inversion">Inversión</option>
+          </select>
+          <input type="text" id="finance-desc" placeholder="Descripción" required>
+          <input type="number" id="finance-amount" placeholder="Monto" min="0.01" step="0.01" required>
+          <button type="submit">Registrar</button>
+        </form>
+
+        <div id="finance-list"></div>
+        <p class="empty-state" id="finance-empty" style="display:none;">Aún no registras movimientos.</p>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="index.html" data-nav-link><span class="icon">🏠</span>Inicio</a>
+    <a href="habitos.html" data-nav-link><span class="icon">✅</span>Hábitos</a>
+    <a href="ejercicio.html" data-nav-link><span class="icon">🏃</span>Ejercicio</a>
+    <a href="finanzas.html" data-nav-link><span class="icon">💰</span>Finanzas</a>
+  </nav>
+
+  <script src="js/verses.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/finanzas.js"></script>
+</body>
+</html>
