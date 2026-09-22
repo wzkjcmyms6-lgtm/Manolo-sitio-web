@@ -21,13 +21,12 @@ document.addEventListener("DOMContentLoaded", () => {
       sidebar.classList.contains("open") ? closeMenu() : openMenu();
     });
     overlay.addEventListener("click", closeMenu);
-    sidebar.querySelectorAll("a").forEach(link => link.addEventListener("click", closeMenu));
+    // Delegado en el contenedor: cubre los enlaces que arma renderNav(),
+    // incluidos los de módulos agregados más adelante.
+    sidebar.addEventListener("click", e => {
+      if (e.target.closest("a")) closeMenu();
+    });
   }
-
-  const path = window.location.pathname.split("/").pop() || "index.html";
-  document.querySelectorAll("[data-nav-link]").forEach(link => {
-    if (link.getAttribute("href") === path) link.classList.add("active");
-  });
 
   renderVerse("verse-banner");
 });
