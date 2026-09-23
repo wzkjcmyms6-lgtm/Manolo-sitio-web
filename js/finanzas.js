@@ -31,8 +31,6 @@ let financeCache = [];
 let budgetsCache = {};
 let gastoCategoriesCache = CATEGORIES.gasto; // se reemplaza por la lista guardada en Firestore
 let ahorrosCache = [];
-let investingCache = []; // lectura del módulo Inversiones (US$); reservado para sumarlo a la cartera de inversión más adelante
-let investmentWalletAmount = 0; // cartera de inversión (Bs), cargada a mano por ahora
 
 function financeCollection() {
   return db.collection("users").doc(currentUser.uid).collection("finanzas");
@@ -45,12 +43,6 @@ function categoriasDocRef() {
 }
 function ahorrosCollection() {
   return db.collection("users").doc(currentUser.uid).collection("ahorros");
-}
-function investingCollectionRO() {
-  return db.collection("users").doc(currentUser.uid).collection("inversiones");
-}
-function investmentWalletDocRef() {
-  return db.collection("users").doc(currentUser.uid).collection("meta").doc("cartera_inversion");
 }
 
 function findCategory(type, id) {
@@ -457,22 +449,18 @@ document.getElementById("new-category-form").addEventListener("submit", e => {
 // ================= Herramientas: Carteras =================
 
 // La cartera de gastos y la de tarjeta de crédito salen de los movimientos
-// de Finanzas (Bs). Ahorros se lleva en US$. Inversión es, por ahora, un
-// monto en Bs que vos cargás acá a mano — más adelante también va a sumar
-// lo que ya tenés cargado en el módulo de Inversiones (en US$).
+// de Finanzas (Bs). Ahorros se lleva en US$.
 function renderWallets() {
   const { saldo, deuda } = computeTotals(financeCache);
   const totalAhorros = ahorrosCache.reduce((s, a) => s + a.amount, 0);
-  const netoBs = saldo - deuda + investmentWalletAmount;
-  const netoUsd = totalAhorros;
+  const netoBs = saldo - deuda;
   const deudaText = deuda > 0 ? "−" + formatMoney(deuda) : formatMoney(0);
 
   const panels = [
-    { label: "Patrimonio total", lines: [formatMoney(netoBs), formatUSD(netoUsd)] },
+    { label: "Patrimonio total", lines: [formatUSD(totalAhorros), formatMoney(netoBs)] },
     { label: "Cartera de gastos", lines: [formatMoney(saldo)] },
     { label: "Cartera de tarjeta de crédito", lines: [deudaText] },
-    { label: "Cartera de ahorro", lines: [formatUSD(totalAhorros)] },
-    { label: "Cartera de inversión", lines: [formatMoney(investmentWalletAmount)] }
+    { label: "Cartera de ahorro", lines: [formatUSD(totalAhorros)] }
   ];
 
   document.getElementById("wallet-hero-track").innerHTML = panels.map(p => `
@@ -486,13 +474,12 @@ function renderWallets() {
     `<button type="button" class="wallet-hero-dot${i === 0 ? " active" : ""}" data-panel="${i}" aria-label="Panel ${i + 1}"></button>`
   ).join("");
 
-  const walletHTML = (icon, color, label, value, neg, extra) => `
+  const walletHTML = (icon, color, label, value, neg) => `
     <div class="wallet-card">
       <span class="wallet-icon" style="background:${color}22; color:${color}" data-icon="${icon}"></span>
       <div class="wallet-info">
         <div class="wallet-label">${label}</div>
         <div class="wallet-value${neg ? " neg" : ""}">${value}</div>
-        ${extra || ""}
       </div>
     </div>
   `;
@@ -500,19 +487,11 @@ function renderWallets() {
   document.getElementById("wallet-list").innerHTML =
     walletHTML("finance", "#ff9a4d", "Gastos", formatMoney(saldo)) +
     walletHTML("finance", "#e05656", "Tarjeta de crédito", deudaText, deuda > 0) +
-    walletHTML("wallet", "#5cc98a", "Ahorro (US$)", formatUSD(totalAhorros)) +
-    walletHTML("investing", "#4d9de0", "Inversión (Bs)", formatMoney(investmentWalletAmount), false, `
-      <button type="button" class="link-btn" id="investment-edit-toggle">Editar</button>
-      <form id="investment-form" class="pay-card-form" hidden>
-        <input type="number" id="investment-amount" placeholder="Monto (Bs)" min="0" step="0.01" value="${investmentWalletAmount || ""}">
-        <button type="submit">Guardar</button>
-      </form>
-    `);
+    walletHTML("wallet", "#5cc98a", "Ahorro (US$)", formatUSD(totalAhorros));
 
   renderIcons(document.getElementById("wallet-hero-track"));
   renderIcons(document.getElementById("wallet-list"));
   wireWalletHero();
-  wireInvestmentForm();
 }
 
 function wireWalletHero() {
@@ -527,19 +506,6 @@ function wireWalletHero() {
     const idx = Math.round(track.scrollLeft / track.clientWidth);
     dots.forEach((d, i) => d.classList.toggle("active", i === idx));
   };
-}
-
-function wireInvestmentForm() {
-  const toggle = document.getElementById("investment-edit-toggle");
-  const form = document.getElementById("investment-form");
-  if (!toggle || !form) return;
-  toggle.addEventListener("click", () => { form.hidden = !form.hidden; });
-  form.addEventListener("submit", e => {
-    e.preventDefault();
-    const v = parseFloat(document.getElementById("investment-amount").value);
-    investmentWalletDocRef().set({ monto: isNaN(v) ? 0 : v });
-    form.hidden = true;
-  });
 }
 
 function renderSavingsList() {
@@ -565,24 +531,6 @@ function renderSavingsList() {
     container.appendChild(item);
   });
 }
-
-document.getElementById("savings-add-toggle").addEventListener("click", () => {
-  document.getElementById("savings-form").hidden = !document.getElementById("savings-form").hidden;
-});
-
-document.getElementById("savings-date").valueAsDate = new Date();
-document.getElementById("savings-form").addEventListener("submit", e => {
-  e.preventDefault();
-  const date = document.getElementById("savings-date").value;
-  const amount = parseFloat(document.getElementById("savings-amount").value);
-  const notes = document.getElementById("savings-notes").value.trim();
-  if (!date || !amount) return;
-
-  ahorrosCollection().add({ date, amount, notes });
-  e.target.reset();
-  document.getElementById("savings-date").valueAsDate = new Date();
-  document.getElementById("savings-form").hidden = true;
-});
 
 // ================= Herramientas: Exportar =================
 
@@ -707,14 +655,6 @@ onAuthReady(() => {
   });
   ahorrosCollection().onSnapshot(snap => {
     ahorrosCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderAll();
-  });
-  investingCollectionRO().onSnapshot(snap => {
-    investingCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderAll();
-  });
-  investmentWalletDocRef().onSnapshot(doc => {
-    investmentWalletAmount = doc.exists ? (doc.data().monto || 0) : 0;
     renderAll();
   });
 });

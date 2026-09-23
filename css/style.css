@@ -706,7 +706,7 @@ button.delete:hover { opacity: 1; }
 .wallet-hero-panel {
   flex: 0 0 100%;
   scroll-snap-align: center;
-  background: var(--accent-grad);
+  background: var(--accent-1);
   padding: 2.2rem 1.5rem;
   text-align: center;
   color: #0a0a0a;
@@ -714,15 +714,15 @@ button.delete:hover { opacity: 1; }
 .wallet-hero-value {
   font-family: "DM Sans", system-ui, sans-serif;
   font-weight: 700;
-  font-size: 1.9rem;
+  font-size: 2.5rem;
   line-height: 1.2;
 }
 .wallet-hero-label {
-  font-size: 0.8rem;
+  font-size: 1rem;
   font-weight: 600;
-  letter-spacing: 0.03em;
-  margin-top: 0.6rem;
-  opacity: 0.75;
+  letter-spacing: 0.02em;
+  margin-top: 0.7rem;
+  opacity: 0.8;
 }
 .wallet-hero-dots { display: flex; justify-content: center; gap: 0.4rem; margin-top: 0.75rem; }
 .wallet-hero-dot {
@@ -759,8 +759,6 @@ button.delete:hover { opacity: 1; }
 .wallet-label { font-weight: 600; font-size: 0.9rem; color: var(--muted); }
 .wallet-value { font-weight: 700; font-size: 1.15rem; margin-top: 0.1rem; }
 .wallet-value.neg { color: var(--danger); }
-.wallet-add { margin: 1.25rem 0 0.75rem; }
-.wallet-info form.pay-card-form { margin-top: 0.6rem; }
 
 .budget-form { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.5rem; }
 .budget-input-row {
