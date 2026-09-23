@@ -587,7 +587,9 @@ function showCategorySelectorModal(sectionType, available) {
   console.log("Modal categories:", available);
   console.log("Icons to render:", available.map(c => c.icon));
   console.log("ICONS object available:", typeof ICONS !== "undefined");
-  console.log("Elements with data-icon in grid:", grid.querySelectorAll("[data-icon]").length);
+
+  const items = grid.querySelectorAll("[data-cat-id]");
+  console.log("Elements with data-cat-id in grid:", items.length);
 
   grid.querySelectorAll("[data-icon]").forEach(el => {
     console.log("Element icon:", el.dataset.icon, "exists in ICONS:", !!ICONS[el.dataset.icon]);
@@ -598,6 +600,10 @@ function showCategorySelectorModal(sectionType, available) {
   });
 
   renderIcons(grid);
+
+  // Debug: Check if items are clickable
+  console.log("First item catId:", items.length > 0 ? items[0].dataset.catId : "No items");
+
   document.getElementById("category-selector-modal").removeAttribute("hidden");
 }
 
@@ -627,7 +633,7 @@ document.getElementById("budget-inputs").addEventListener("click", e => {
 });
 
 // Manejar selección de categoría desde el modal
-document.getElementById("category-selector-grid").addEventListener("click", e => {
+const categoryGridListener = (e) => {
   let item = e.target.closest(".category-selector-item");
 
   // Si no encontró el item directamente, buscar por el atributo data-cat-id
@@ -635,13 +641,21 @@ document.getElementById("category-selector-grid").addEventListener("click", e =>
     item = e.target.closest("[data-cat-id]");
   }
 
-  if (!item) return;
+  if (!item) {
+    console.log("No item found. e.target:", e.target, "closest item:", e.target.closest(".category-selector-item"));
+    return;
+  }
 
+  console.log("Category clicked:", item.dataset.catId);
   const catId = item.dataset.catId;
   const cat = currentCategorySelectorAvailable.find(c => c.id === catId);
 
-  if (!cat) return;
+  if (!cat) {
+    console.log("Category not found in available:", catId);
+    return;
+  }
 
+  console.log("Adding budget for category:", cat);
   budgetsCache[cat.id] = 0;
   renderBudgetInputs();
   renderBudgetSummary();
@@ -651,6 +665,13 @@ document.getElementById("category-selector-grid").addEventListener("click", e =>
     const input = document.querySelector(`input[data-cat="${cat.id}"]`);
     if (input) input.focus();
   }, 10);
+};
+
+// Attach the listener using document delegation for better reliability
+document.addEventListener("click", (e) => {
+  if (e.target.closest("#category-selector-grid")) {
+    categoryGridListener(e);
+  }
 });
 
 // Botón para crear nueva categoría
