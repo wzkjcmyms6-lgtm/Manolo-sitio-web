@@ -61,7 +61,22 @@ const ICONS = {
   wallet: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M3 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2H5a2 2 0 0 0 0 4h14v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><circle cx="17" cy="13" r="1.1" fill="currentColor" stroke="none"/></svg>`,
   tag: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M20 12.7 12.7 20a1.5 1.5 0 0 1-2.1 0L3 12.4V5a2 2 0 0 1 2-2h7.4a1.5 1.5 0 0 1 1.1.4l6.9 6.9a1.5 1.5 0 0 1 0 2.1Z"/><circle cx="8" cy="8" r="1.3"/></svg>`,
   download: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M12 4v11"/><path d="M8 11l4 4 4-4"/><path d="M4 18h16"/></svg>`,
-  transfer: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M3 8h14"/><path d="M13 4l4 4-4 4"/><path d="M21 16H7"/><path d="M11 12l-4 4 4 4"/></svg>`
+  transfer: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M3 8h14"/><path d="M13 4l4 4-4 4"/><path d="M21 16H7"/><path d="M11 12l-4 4 4 4"/></svg>`,
+
+  // Repertorio genérico para elegir ícono al crear una subcategoría.
+  drink: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M4 4h16l-7 8v7h4"/><path d="M9 19h6"/></svg>`,
+  pet: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><circle cx="7" cy="8" r="1.6"/><circle cx="12" cy="6" r="1.6"/><circle cx="17" cy="8" r="1.6"/><path d="M8 14c0-2 1.8-3.5 4-3.5s4 1.5 4 3.5-1.8 5-4 5-4-3-4-5Z"/></svg>`,
+  education: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M2 9l10-4 10 4-10 4-10-4Z"/><path d="M6 11v4c0 1.5 2.5 3 6 3s6-1.5 6-3v-4"/><path d="M22 9v6"/></svg>`,
+  gift: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><rect x="3" y="9" width="18" height="12" rx="1.5"/><path d="M3 13h18"/><path d="M12 9v12"/><path d="M12 9c-1.5-3-6-3.5-6-1s3 1 6 1Z"/><path d="M12 9c1.5-3 6-3.5 6-1s-3 1-6 1Z"/></svg>`,
+  phone: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/></svg>`,
+  wifi: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M4 9.5a13 13 0 0 1 16 0"/><path d="M7 13a8.5 8.5 0 0 1 10 0"/><path d="M10 16.5a4 4 0 0 1 4 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor" stroke="none"/></svg>`,
+  music: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>`,
+  camera: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.3"/></svg>`,
+  coffee: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z"/><path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M8 3.5c-.7.7-.7 1.3 0 2M12 3.5c-.7.7-.7 1.3 0 2"/></svg>`,
+  fuel: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M4 21V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v16"/><path d="M4 12h9"/><path d="M15 8l3 3v6.5a1.5 1.5 0 0 0 3 0V9c0-1-.5-1.7-1.3-2.3L17 4.5"/><path d="M2 21h15"/></svg>`,
+  bank: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M3 10l9-5 9 5"/><path d="M5 10v9M9.5 10v9M14.5 10v9M19 10v9"/><path d="M3 19h18"/></svg>`,
+  bolt: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg>`,
+  water: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M12 3s6 7 6 11.5a6 6 0 0 1-12 0C6 10 12 3 12 3Z"/></svg>`
 };
 
 function renderIcons(root = document) {

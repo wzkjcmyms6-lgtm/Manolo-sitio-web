@@ -20,6 +20,27 @@ const CARD_PAYMENT_CATEGORY = { id: "pago_tarjeta", label: "Pago de tarjeta", ic
 
 const CATEGORY_COLOR_POOL = ["#4d9de0", "#9b6bde", "#3fb8af", "#e0567c", "#dbb84a", "#5cc98a", "#c96bde", "#e0894d", "#4dc9e0", "#9ae05c"];
 
+// Categorías de gasto organizadas en grupos (categoría) con subcategorías
+// adentro, como en Buddy. Cada grupo toma un color de CATEGORY_COLOR_POOL
+// según su posición; las subcategorías solo llevan ícono.
+const DEFAULT_CATEGORY_GROUPS = [
+  { id: "comida", nombre: "Comida y bebida", items: [{ id: "comida", label: "Comida", icon: "food" }] },
+  { id: "transporte", nombre: "Transporte", items: [{ id: "transporte", label: "Transporte", icon: "transport" }] },
+  { id: "vivienda", nombre: "Vivienda", items: [{ id: "vivienda", label: "Vivienda", icon: "home" }] },
+  { id: "salud", nombre: "Salud", items: [{ id: "salud", label: "Salud", icon: "health" }] },
+  { id: "entretenimiento", nombre: "Entretenimiento", items: [{ id: "entretenimiento", label: "Entretenimiento", icon: "entertainment" }] },
+  { id: "compras", nombre: "Compras", items: [{ id: "compras", label: "Compras", icon: "shopping" }] },
+  { id: "suscripciones", nombre: "Suscripciones", items: [{ id: "suscripciones", label: "Suscripciones", icon: "subscription" }] },
+  { id: "otros", nombre: "Otros", items: [{ id: "otros", label: "Otros", icon: "otherCategory" }] }
+];
+
+// Repertorio genérico de íconos para elegir al crear una subcategoría.
+const CATEGORY_ICON_CHOICES = [
+  "food", "drink", "coffee", "transport", "fuel", "home", "health", "entertainment",
+  "music", "camera", "shopping", "subscription", "gift", "pet", "education",
+  "phone", "wifi", "bank", "bolt", "water", "salary", "tools", "otherCategory"
+];
+
 const PAYMENTS = [
   { id: "efectivo", label: "Efectivo" },
   { id: "debito", label: "Débito" },
@@ -29,7 +50,8 @@ const PAYMENTS = [
 let monthOffset = 0; // 0 = mes actual, -1 = mes anterior, etc.
 let financeCache = [];
 let budgetsCache = {};
-let gastoCategoriesCache = CATEGORIES.gasto; // se reemplaza por la lista guardada en Firestore
+let categoryGroupsCache = DEFAULT_CATEGORY_GROUPS; // {id, nombre, items:[{id,label,icon}]}, guardado en Firestore
+let gastoCategoriesCache = CATEGORIES.gasto; // versión "plana" de categoryGroupsCache, la usa el resto de la app
 let ahorrosCache = [];
 let carterasCustomCache = []; // carteras que el usuario crea a mano, con su propio saldo
 let carterasMovCache = []; // movimientos (aportes, retiros, transferencias) de esas carteras
@@ -51,6 +73,20 @@ function carterasCustomDocRef() {
 }
 function carterasMovimientosCollection() {
   return db.collection("users").doc(currentUser.uid).collection("carteras_movimientos");
+}
+
+// Convierte los grupos con subcategorías a la lista plana {id,label,icon,color}
+// que ya usa el resto de la app (formularios, presupuesto, exportar CSV).
+// Todas las subcategorías de un mismo grupo comparten su color.
+function flattenCategoryGroups(groups) {
+  const flat = [];
+  groups.forEach((g, gi) => {
+    const color = CATEGORY_COLOR_POOL[gi % CATEGORY_COLOR_POOL.length];
+    (g.items || []).forEach(item => {
+      flat.push({ id: item.id, label: item.label, icon: item.icon, color, groupId: g.id });
+    });
+  });
+  return flat;
 }
 
 function findCategory(type, id) {
@@ -417,49 +453,139 @@ document.getElementById("budget-form").addEventListener("submit", e => {
 
 // ================= Herramientas: Categorías =================
 
-function renderCategoryList() {
-  const container = document.getElementById("category-list");
-  container.innerHTML = "";
-  gastoCategoriesCache.forEach(c => {
-    const row = document.createElement("div");
-    row.className = "list-item";
-    row.innerHTML = `
-      <div style="display:flex; align-items:center; gap:0.7rem;">
-        <span class="cat-icon" style="background:${c.color}22; color:${c.color}" data-icon="${c.icon}"></span>
-        <strong>${escapeHtml(c.label)}</strong>
+function saveCategoryGroups(groups) {
+  return categoriasDocRef().set({ groups });
+}
+
+function iconPickerHTML() {
+  return CATEGORY_ICON_CHOICES.map((key, i) =>
+    `<button type="button" class="icon-choice${i === 0 ? " selected" : ""}" data-icon-choice="${key}" data-icon="${key}"></button>`
+  ).join("");
+}
+
+function renderCategoryGroups() {
+  const container = document.getElementById("category-groups");
+  container.innerHTML = categoryGroupsCache.map((g, gi) => {
+    const color = CATEGORY_COLOR_POOL[gi % CATEGORY_COLOR_POOL.length];
+    const itemsHTML = g.items.map(item => `
+      <div class="list-item cat-item">
+        <div style="display:flex; align-items:center; gap:0.7rem;">
+          <span class="cat-icon" style="background:${color}22; color:${color}" data-icon="${item.icon}"></span>
+          <strong>${escapeHtml(item.label)}</strong>
+        </div>
+        ${item.id !== "otros" ? `<button type="button" class="delete" aria-label="Eliminar categoría" data-delete-cat="${item.id}" data-delete-group="${g.id}">${ICONS.trash}</button>` : ""}
+      </div>
+    `).join("");
+
+    return `
+      <div class="cat-group">
+        <div class="cat-group-header">
+          <h3>${escapeHtml(g.nombre)}</h3>
+          <button type="button" class="cat-add-btn" data-add-sub="${g.id}" aria-label="Agregar subcategoría en ${escapeHtml(g.nombre)}">${ICONS.plus}</button>
+        </div>
+        <div class="cat-group-items">${itemsHTML}</div>
+        <form class="tracker-form cat-subcategory-form" data-group-id="${g.id}" hidden>
+          <input type="text" class="cat-sub-name" placeholder="Nombre (ej: Mascotas)" required>
+          <div class="icon-picker">${iconPickerHTML()}</div>
+          <button type="submit">Agregar</button>
+          <button type="button" class="link-btn cat-sub-cancel">Cancelar</button>
+        </form>
       </div>
     `;
-    if (c.id !== "otros") {
-      const del = document.createElement("button");
-      del.className = "delete";
-      del.setAttribute("aria-label", "Eliminar categoría");
-      del.innerHTML = ICONS.trash;
-      del.addEventListener("click", () => deleteCategory(c.id));
-      row.appendChild(del);
-    }
-    container.appendChild(row);
-    renderIcons(row);
-  });
+  }).join("");
+  renderIcons(container);
 }
 
-function deleteCategory(id) {
-  categoriasDocRef().set({ list: gastoCategoriesCache.filter(c => c.id !== id) });
+function deleteCategoryItem(groupId, itemId) {
+  const group = categoryGroupsCache.find(g => g.id === groupId);
+  const item = group && group.items.find(i => i.id === itemId);
+  if (!group || !item) return;
+  if (!window.confirm(`¿Eliminar la categoría "${item.label}"? Esto no borra los gastos que ya la usan.`)) return;
+
+  const next = categoryGroupsCache
+    .map(g => g.id === groupId ? Object.assign({}, g, { items: g.items.filter(i => i.id !== itemId) }) : g)
+    .filter(g => g.items.length > 0);
+  saveCategoryGroups(next);
 }
 
-document.getElementById("new-category-form").addEventListener("submit", e => {
+document.getElementById("category-groups").addEventListener("click", e => {
+  const delBtn = e.target.closest("[data-delete-cat]");
+  if (delBtn) { deleteCategoryItem(delBtn.dataset.deleteGroup, delBtn.dataset.deleteCat); return; }
+
+  const addBtn = e.target.closest("[data-add-sub]");
+  if (addBtn) {
+    const form = document.querySelector(`.cat-subcategory-form[data-group-id="${addBtn.dataset.addSub}"]`);
+    if (form) form.hidden = !form.hidden;
+    return;
+  }
+
+  const iconChoice = e.target.closest(".icon-choice");
+  if (iconChoice) {
+    iconChoice.parentElement.querySelectorAll(".icon-choice").forEach(b => b.classList.remove("selected"));
+    iconChoice.classList.add("selected");
+    return;
+  }
+
+  const cancelBtn = e.target.closest(".cat-sub-cancel");
+  if (cancelBtn) {
+    const form = cancelBtn.closest("form");
+    form.reset();
+    form.querySelectorAll(".icon-choice").forEach((b, i) => b.classList.toggle("selected", i === 0));
+    form.hidden = true;
+  }
+});
+
+document.getElementById("category-groups").addEventListener("submit", e => {
+  const form = e.target.closest(".cat-subcategory-form");
+  if (!form) return;
   e.preventDefault();
-  const input = document.getElementById("new-category-name");
-  const label = input.value.trim();
-  if (!label) return;
+
+  const groupId = form.dataset.groupId;
+  const label = form.querySelector(".cat-sub-name").value.trim();
+  const iconChoice = form.querySelector(".icon-choice.selected");
+  if (!label || !iconChoice) return;
 
   const base = slugify(label);
   let id = base, suffix = 2;
   while (gastoCategoriesCache.some(c => c.id === id)) id = `${base}_${suffix++}`;
 
-  const color = CATEGORY_COLOR_POOL[gastoCategoriesCache.length % CATEGORY_COLOR_POOL.length];
-  const next = gastoCategoriesCache.concat([{ id, label, icon: "otherCategory", color }]);
-  categoriasDocRef().set({ list: next });
-  input.value = "";
+  const next = categoryGroupsCache.map(g =>
+    g.id === groupId ? Object.assign({}, g, { items: g.items.concat([{ id, label, icon: iconChoice.dataset.iconChoice }]) }) : g
+  );
+  saveCategoryGroups(next);
+  form.reset();
+  form.querySelectorAll(".icon-choice").forEach((b, i) => b.classList.toggle("selected", i === 0));
+  form.hidden = true;
+});
+
+document.getElementById("new-group-toggle").addEventListener("click", () => {
+  document.getElementById("new-group-form").hidden = false;
+  document.getElementById("new-group-toggle").hidden = true;
+  document.getElementById("new-group-name").focus();
+});
+document.getElementById("new-group-cancel").addEventListener("click", () => {
+  document.getElementById("new-group-form").reset();
+  document.getElementById("new-group-form").hidden = true;
+  document.getElementById("new-group-toggle").hidden = false;
+});
+document.getElementById("new-group-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const input = document.getElementById("new-group-name");
+  const nombre = input.value.trim();
+  if (!nombre) return;
+
+  const base = slugify(nombre);
+  let id = base, suffix = 2;
+  while (categoryGroupsCache.some(g => g.id === id)) id = `${base}_${suffix++}`;
+
+  let itemId = base, itemSuffix = 2;
+  while (gastoCategoriesCache.some(c => c.id === itemId)) itemId = `${base}_${itemSuffix++}`;
+
+  const next = categoryGroupsCache.concat([{ id, nombre, items: [{ id: itemId, label: nombre, icon: "otherCategory" }] }]);
+  saveCategoryGroups(next);
+  document.getElementById("new-group-form").reset();
+  document.getElementById("new-group-form").hidden = true;
+  document.getElementById("new-group-toggle").hidden = false;
 });
 
 // ================= Herramientas: Carteras =================
@@ -973,7 +1099,7 @@ function renderAll() {
   renderBudgetInputs();
   renderBudgetSummary();
   renderBudgetInfo();
-  renderCategoryList();
+  renderCategoryGroups();
   renderWallets();
   updateExportSummary();
 }
@@ -992,13 +1118,19 @@ onAuthReady(() => {
     renderAll();
   });
   categoriasDocRef().onSnapshot(doc => {
-    const list = doc.exists ? doc.data().list : null;
-    if (Array.isArray(list) && list.length) {
-      gastoCategoriesCache = list;
+    const data = doc.exists ? doc.data() : null;
+    if (data && Array.isArray(data.groups) && data.groups.length) {
+      categoryGroupsCache = data.groups;
+    } else if (data && Array.isArray(data.list) && data.list.length) {
+      // Formato viejo (lista plana, sin subcategorías): cada categoría pasa
+      // a ser su propio grupo con un solo ítem, para no perder nada.
+      categoryGroupsCache = data.list.map(c => ({ id: c.id, nombre: c.label, items: [{ id: c.id, label: c.label, icon: c.icon }] }));
+      categoriasDocRef().set({ groups: categoryGroupsCache });
     } else {
-      gastoCategoriesCache = CATEGORIES.gasto;
-      categoriasDocRef().set({ list: CATEGORIES.gasto });
+      categoryGroupsCache = DEFAULT_CATEGORY_GROUPS;
+      categoriasDocRef().set({ groups: DEFAULT_CATEGORY_GROUPS });
     }
+    gastoCategoriesCache = flattenCategoryGroups(categoryGroupsCache);
     renderAll();
   });
   ahorrosCollection().onSnapshot(snap => {

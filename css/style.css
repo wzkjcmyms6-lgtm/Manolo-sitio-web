@@ -929,6 +929,72 @@ button.delete:hover { opacity: 1; }
   flex-shrink: 0;
 }
 
+/* ---------- Categorías: grupos con subcategorías ---------- */
+.row-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 1.25rem;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.row-btn:hover { border-color: var(--accent-1); }
+.row-btn .icon-sm { width: 18px; height: 18px; }
+
+.cat-group { margin-bottom: 1.75rem; }
+.cat-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+.cat-group-header h3 { margin: 0; font-size: 1.05rem; }
+.cat-add-btn {
+  background: none;
+  border: none;
+  color: var(--accent-1);
+  cursor: pointer;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  flex-shrink: 0;
+}
+.cat-add-btn:hover { filter: brightness(1.2); }
+
+.icon-picker {
+  flex-basis: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 0.5rem;
+  margin: 0.2rem 0 0.3rem;
+}
+.icon-choice {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px;
+  cursor: pointer;
+}
+.icon-choice.selected {
+  background: var(--accent-1);
+  border-color: var(--accent-1);
+  color: #0a0a0a;
+}
+
 /* ---------- Gimnasio: home ---------- */
 .start-empty-btn {
   display: flex;
