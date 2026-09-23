@@ -1041,6 +1041,38 @@ button.delete:hover { opacity: 1; }
   margin-bottom: 0.8rem;
 }
 
+.color-picker {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.6rem;
+  margin: 0.2rem 0 0.3rem;
+}
+.color-choice {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+.color-choice:hover {
+  border-color: var(--ink);
+  transform: scale(1.05);
+}
+.color-choice.selected {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px var(--surface);
+  transform: scale(1.08);
+}
+
+.cat-color-line {
+  width: 4px;
+  height: 24px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
 /* ---------- Gimnasio: home ---------- */
 .start-empty-btn {
   display: flex;

@@ -81,7 +81,7 @@ function carterasMovimientosCollection() {
 function flattenCategoryGroups(groups) {
   const flat = [];
   groups.forEach((g, gi) => {
-    const color = CATEGORY_COLOR_POOL[gi % CATEGORY_COLOR_POOL.length];
+    const color = g.color || CATEGORY_COLOR_POOL[gi % CATEGORY_COLOR_POOL.length];
     (g.items || []).forEach(item => {
       flat.push({ id: item.id, label: item.label, icon: item.icon, color, groupId: g.id });
     });
@@ -471,10 +471,16 @@ function emojiPickerHTML() {
   ).join("");
 }
 
+function colorPickerHTML() {
+  return CATEGORY_COLOR_POOL.map((color, i) =>
+    `<button type="button" class="color-choice${i === 0 ? " selected" : ""}" data-color="${color}" style="background:${color};" aria-label="Color ${i + 1}"></button>`
+  ).join("");
+}
+
 function renderCategoryGroups() {
   const container = document.getElementById("category-groups");
   container.innerHTML = categoryGroupsCache.map((g, gi) => {
-    const color = CATEGORY_COLOR_POOL[gi % CATEGORY_COLOR_POOL.length];
+    const color = g.color || CATEGORY_COLOR_POOL[gi % CATEGORY_COLOR_POOL.length];
     const itemsHTML = g.items.map(item => {
       const displayEmoji = item.emoji;
       const displayIcon = !displayEmoji ? item.icon : null;
@@ -496,16 +502,16 @@ function renderCategoryGroups() {
     return `
       <div class="cat-group">
         <div class="cat-group-header">
-          <h3>${escapeHtml(g.nombre)}</h3>
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <div class="cat-color-line" style="background:${color};"></div>
+            <h3>${escapeHtml(g.nombre)}</h3>
+          </div>
           <button type="button" class="cat-add-btn" data-add-sub="${g.id}" aria-label="Agregar subcategoría en ${escapeHtml(g.nombre)}">${ICONS.plus}</button>
         </div>
         <div class="cat-group-items">${itemsHTML}</div>
         <form class="tracker-form cat-subcategory-form" data-group-id="${g.id}" data-color="${color}" hidden>
           <input type="text" class="cat-sub-name" placeholder="Nombre (ej: Mascotas)" required>
-          <div class="form-section">
-            <label style="font-size: 0.85rem; color: #999; display: block; margin-bottom: 0.5rem;">Emoji</label>
-            <div class="emoji-picker">${emojiPickerHTML()}</div>
-          </div>
+          <div class="emoji-picker" style="margin-top:0.8rem;">${emojiPickerHTML()}</div>
           <button type="submit">Agregar</button>
           <button type="button" class="link-btn cat-sub-cancel">Cancelar</button>
         </form>
@@ -583,12 +589,23 @@ document.getElementById("category-groups").addEventListener("submit", e => {
 document.getElementById("new-group-toggle").addEventListener("click", () => {
   document.getElementById("new-group-form").hidden = false;
   document.getElementById("new-group-toggle").hidden = true;
+  const picker = document.getElementById("new-group-color-picker");
+  picker.innerHTML = colorPickerHTML();
   document.getElementById("new-group-name").focus();
 });
 document.getElementById("new-group-cancel").addEventListener("click", () => {
   document.getElementById("new-group-form").reset();
   document.getElementById("new-group-form").hidden = true;
   document.getElementById("new-group-toggle").hidden = false;
+});
+
+// Handle color selection in new group form
+document.addEventListener("click", e => {
+  const colorBtn = e.target.closest("#new-group-color-picker .color-choice");
+  if (colorBtn) {
+    document.querySelectorAll("#new-group-color-picker .color-choice").forEach(b => b.classList.remove("selected"));
+    colorBtn.classList.add("selected");
+  }
 });
 
 document.getElementById("new-group-form").addEventListener("submit", e => {
@@ -604,9 +621,12 @@ document.getElementById("new-group-form").addEventListener("submit", e => {
   let itemId = base, itemSuffix = 2;
   while (gastoCategoriesCache.some(c => c.id === itemId)) itemId = `${base}_${itemSuffix++}`;
 
+  const selectedColor = document.querySelector("#new-group-color-picker .color-choice.selected");
   const newItem = { id: itemId, label: nombre, icon: "otherCategory" };
+  const newGroup = { id, nombre, items: [newItem] };
+  if (selectedColor) newGroup.color = selectedColor.dataset.color;
 
-  const next = categoryGroupsCache.concat([{ id, nombre, items: [newItem] }]);
+  const next = categoryGroupsCache.concat([newGroup]);
   saveCategoryGroups(next);
   document.getElementById("new-group-form").reset();
   document.getElementById("new-group-form").hidden = true;
