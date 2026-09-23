@@ -381,79 +381,76 @@
               <a href="#fin-herramientas" class="fin-tab" data-hash-link data-hash="fin-herramientas">Herramientas</a>
             </div>
 
-            <!-- ---- Herramientas: inicio ---- -->
-            <div id="herr-home">
-              <h1 class="page-title">Herramientas</h1>
+            <h1 class="page-title">Herramientas</h1>
 
-              <div class="profile-card">
-                <span class="profile-avatar">JML</span>
-                <div>
-                  <div class="profile-name">Juan Manuel Llorenti</div>
-                  <div class="profile-sub">Cuenta personal</div>
-                </div>
-              </div>
-
-              <div class="tool-grid">
-                <button type="button" class="tool-card" data-tool="carteras">
-                  <span class="icon" data-icon="wallet"></span>
-                  <h3>Carteras</h3>
-                  <p>Tus saldos de gastos, ahorros e inversión.</p>
-                </button>
-                <button type="button" class="tool-card" data-tool="categorias">
-                  <span class="icon" data-icon="tag"></span>
-                  <h3>Categorías</h3>
-                  <p>Crea o elimina categorías de gasto.</p>
-                </button>
-                <button type="button" class="tool-card" data-tool="exportar">
-                  <span class="icon" data-icon="download"></span>
-                  <h3>Exportar datos</h3>
-                  <p>Descarga tus movimientos en CSV.</p>
-                </button>
+            <div class="profile-card">
+              <span class="profile-avatar">JML</span>
+              <div>
+                <div class="profile-name">Juan Manuel Llorenti</div>
+                <div class="profile-sub">Cuenta personal</div>
               </div>
             </div>
 
-            <!-- ---- Herramientas: Carteras ---- -->
-            <div id="herr-carteras" hidden>
-              <button type="button" class="back-link" data-tool-back><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</button>
-              <h1 class="page-title">Carteras</h1>
+            <div class="tool-grid">
+              <a class="tool-card" href="#fin-herramientas-carteras">
+                <span class="icon" data-icon="wallet"></span>
+                <h3>Carteras</h3>
+                <p>Tus saldos de gastos, ahorros e inversión.</p>
+              </a>
+              <a class="tool-card" href="#fin-herramientas-categorias">
+                <span class="icon" data-icon="tag"></span>
+                <h3>Categorías</h3>
+                <p>Crea o elimina categorías de gasto.</p>
+              </a>
+              <a class="tool-card" href="#fin-herramientas-exportar">
+                <span class="icon" data-icon="download"></span>
+                <h3>Exportar datos</h3>
+                <p>Descarga tus movimientos en CSV.</p>
+              </a>
+            </div>
+          </section>
 
-              <div class="wallet-hero">
-                <div class="wallet-hero-track" id="wallet-hero-track"></div>
-                <div class="wallet-hero-dots" id="wallet-hero-dots"></div>
-              </div>
+          <!-- ---- Herramientas: Carteras ---- -->
+          <section id="panel-fin-herramientas-carteras" hidden>
+            <a class="back-link" href="#fin-herramientas"><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</a>
+            <h1 class="page-title">Carteras</h1>
 
-              <div id="wallet-list"></div>
-
-              <div id="savings-list"></div>
+            <div class="wallet-hero">
+              <div class="wallet-hero-track" id="wallet-hero-track"></div>
+              <div class="wallet-hero-dots" id="wallet-hero-dots"></div>
             </div>
 
-            <!-- ---- Herramientas: Categorías ---- -->
-            <div id="herr-categorias" hidden>
-              <button type="button" class="back-link" data-tool-back><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</button>
-              <h1 class="page-title">Categorías</h1>
+            <div id="wallet-list"></div>
 
-              <form id="new-category-form" class="tracker-form">
-                <input type="text" id="new-category-name" placeholder="Nueva categoría (ej: Mascotas)" required>
-                <button type="submit">Crear</button>
-              </form>
+            <div id="savings-list"></div>
+          </section>
 
-              <div id="category-list"></div>
-            </div>
+          <!-- ---- Herramientas: Categorías ---- -->
+          <section id="panel-fin-herramientas-categorias" hidden>
+            <a class="back-link" href="#fin-herramientas"><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</a>
+            <h1 class="page-title">Categorías</h1>
 
-            <!-- ---- Herramientas: Exportar ---- -->
-            <div id="herr-exportar" hidden>
-              <button type="button" class="back-link" data-tool-back><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</button>
-              <h1 class="page-title">Exportar datos</h1>
-              <p class="panel-sub">Elige un rango de fechas y descarga tus movimientos en un archivo CSV, listo para abrir en Excel o Google Sheets.</p>
+            <form id="new-category-form" class="tracker-form">
+              <input type="text" id="new-category-name" placeholder="Nueva categoría (ej: Mascotas)" required>
+              <button type="submit">Crear</button>
+            </form>
 
-              <form id="export-form" class="tracker-form">
-                <input type="date" id="export-from" required>
-                <input type="date" id="export-to" required>
-                <button type="submit">Exportar CSV</button>
-              </form>
+            <div id="category-list"></div>
+          </section>
 
-              <p class="empty-state" id="export-summary"></p>
-            </div>
+          <!-- ---- Herramientas: Exportar ---- -->
+          <section id="panel-fin-herramientas-exportar" hidden>
+            <a class="back-link" href="#fin-herramientas"><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</a>
+            <h1 class="page-title">Exportar datos</h1>
+            <p class="panel-sub">Elige un rango de fechas y descarga tus movimientos en un archivo CSV, listo para abrir en Excel o Google Sheets.</p>
+
+            <form id="export-form" class="tracker-form">
+              <input type="date" id="export-from" required>
+              <input type="date" id="export-to" required>
+              <button type="submit">Exportar CSV</button>
+            </form>
+
+            <p class="empty-state" id="export-summary"></p>
           </section>
 
           <!-- ===== Inversiones ===== -->

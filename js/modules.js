@@ -23,7 +23,10 @@ const SUB_PANELS = [
   { hash: "running", parent: "ejercicio" },
   { hash: "bicicleta", parent: "ejercicio" },
   { hash: "fin-presupuesto", parent: "finanzas" },
-  { hash: "fin-herramientas", parent: "finanzas" }
+  { hash: "fin-herramientas", parent: "finanzas" },
+  { hash: "fin-herramientas-carteras", parent: "fin-herramientas" },
+  { hash: "fin-herramientas-categorias", parent: "fin-herramientas" },
+  { hash: "fin-herramientas-exportar", parent: "fin-herramientas" }
 ];
 
 // Mientras estás dentro de Finanzas, la barra inferior (solo en móvil, que
@@ -43,9 +46,28 @@ function currentHash() {
   return ALL_HASHES.includes(h) ? h : "inicio";
 }
 
-// Para resaltar la nav: un sub-panel resuelve al hash de su módulo padre.
+function parentOf(hash) {
+  const found = SUB_PANELS.find(s => s.hash === hash);
+  return found ? found.parent : null;
+}
+
+// Para resaltar la nav: un sub-panel resuelve al hash de su módulo padre,
+// subiendo tantos niveles como haga falta (ej: fin-herramientas-carteras
+// → fin-herramientas → finanzas).
 function activeModuleHash(hash) {
-  return (SUB_PANELS.find(s => s.hash === hash) || {}).parent || hash;
+  let h = hash;
+  while (parentOf(h)) h = parentOf(h);
+  return h;
+}
+
+// Igual que activeModuleHash, pero se detiene en el primer nivel que sea
+// una pestaña de Finanzas (Vista general/Presupuesto/Herramientas), para
+// resaltar la barra inferior aunque estés más adentro (ej: en Carteras
+// sigue resaltando "Herramientas").
+function finTabHash(hash) {
+  let h = hash;
+  while (h && !FIN_TABS.some(t => t.hash === h)) h = parentOf(h);
+  return h || "finanzas";
 }
 
 function showPanel(hash) {
@@ -67,8 +89,9 @@ function showPanel(hash) {
 
   // Pestañas propias de Finanzas (Vista general/Presupuesto/Herramientas),
   // visibles como pills dentro del panel en escritorio.
+  const finTab = finTabHash(hash);
   document.querySelectorAll("[data-hash-link]").forEach(a => {
-    a.classList.toggle("active", a.dataset.hash === hash);
+    a.classList.toggle("active", a.dataset.hash === finTab);
   });
 }
 
@@ -95,7 +118,7 @@ function renderNav() {
   if (bottomNav) {
     bottomNav.classList.toggle("fin-mode", inFinanzas);
     bottomNav.innerHTML = inFinanzas
-      ? FIN_TABS.map(m => linkHTML(m, "icon", hash)).join("")
+      ? FIN_TABS.map(m => linkHTML(m, "icon", finTabHash(hash))).join("")
       : MODULES.map(m => linkHTML(m, "icon", current)).join("");
   }
 

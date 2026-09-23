@@ -667,11 +667,13 @@ button.delete:hover { opacity: 1; }
   gap: 1rem;
 }
 .tool-card {
+  display: block;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 1.3rem;
   text-align: left;
+  text-decoration: none;
   color: var(--ink);
   font-family: inherit;
   cursor: pointer;

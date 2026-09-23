@@ -583,23 +583,6 @@ document.getElementById("export-form").addEventListener("submit", e => {
   document.getElementById("export-to").valueAsDate = today;
 })();
 
-// ================= Herramientas: navegación de tarjetas =================
-
-document.querySelectorAll(".tool-card").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.getElementById("herr-home").hidden = true;
-    document.getElementById("herr-" + btn.dataset.tool).hidden = false;
-  });
-});
-document.querySelectorAll("[data-tool-back]").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.getElementById("herr-carteras").hidden = true;
-    document.getElementById("herr-categorias").hidden = true;
-    document.getElementById("herr-exportar").hidden = true;
-    document.getElementById("herr-home").hidden = false;
-  });
-});
-
 // ================= Tabs =================
 
 // Pestañas internas de Presupuesto (Planificación/Restante/Información).
