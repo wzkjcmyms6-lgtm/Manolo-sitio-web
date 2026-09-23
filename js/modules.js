@@ -31,9 +31,9 @@ const SUB_PANELS = [
 // muestra estas 3 pestañas en su lugar. Para volver a Inicio/Hábitos/etc
 // queda el menú de la barra superior (el ☰).
 const FIN_TABS = [
-  { hash: "finanzas", label: "Vista general", icon: "eye" },
-  { hash: "fin-presupuesto", label: "Presupuesto", icon: "finance" },
-  { hash: "fin-herramientas", label: "Herramientas", icon: "tools" }
+  { hash: "finanzas", label: "Vista general", icon: "eye", iconFilled: "eyeFilled" },
+  { hash: "fin-presupuesto", label: "Presupuesto", icon: "finance", iconFilled: "budgetFilled" },
+  { hash: "fin-herramientas", label: "Herramientas", icon: "tools", iconFilled: "toolsFilled" }
 ];
 
 const ALL_HASHES = MODULES.map(m => m.hash).concat(SUB_PANELS.map(s => s.hash));
@@ -77,9 +77,12 @@ function renderNav() {
   const current = activeModuleHash(hash);
   const inFinanzas = current === "finanzas";
 
-  const linkHTML = (m, iconClass, activeHash) =>
-    `<a href="#${m.hash}" data-nav-link data-hash="${m.hash}"${m.hash === activeHash ? ' class="active"' : ""}>` +
-    `<span class="${iconClass}" data-icon="${m.icon}"></span>${m.label}</a>`;
+  const linkHTML = (m, iconClass, activeHash) => {
+    const isActive = m.hash === activeHash;
+    const icon = isActive && m.iconFilled ? m.iconFilled : m.icon;
+    return `<a href="#${m.hash}" data-nav-link data-hash="${m.hash}"${isActive ? ' class="active"' : ""}>` +
+      `<span class="${iconClass}" data-icon="${icon}"></span>${m.label}</a>`;
+  };
 
   const sidebarNav = document.getElementById("nav-links");
   if (sidebarNav) {
@@ -90,6 +93,7 @@ function renderNav() {
 
   const bottomNav = document.getElementById("bottom-nav-links");
   if (bottomNav) {
+    bottomNav.classList.toggle("fin-mode", inFinanzas);
     bottomNav.innerHTML = inFinanzas
       ? FIN_TABS.map(m => linkHTML(m, "icon", hash)).join("")
       : MODULES.map(m => linkHTML(m, "icon", current)).join("");

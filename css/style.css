@@ -1061,6 +1061,16 @@ button.delete:hover { opacity: 1; }
     background: var(--accent-1);
   }
 
+  /* Barra inferior de Finanzas (Vista general/Presupuesto/Herramientas):
+     el ícono activo se ve relleno con un resplandor, como en Buddy, en vez
+     del puntito que usa el resto de la nav. */
+  #bottom-nav-links.fin-mode a.active::before { display: none; }
+  #bottom-nav-links.fin-mode a.active { font-weight: 700; }
+  #bottom-nav-links.fin-mode a.active .icon {
+    color: var(--accent-1);
+    filter: drop-shadow(0 0 8px rgba(255, 122, 48, 0.6));
+  }
+
   .habit-row, .habit-days-header {
     grid-template-columns: 1fr repeat(7, 28px) 28px;
     font-size: 0.7rem;

@@ -34,6 +34,12 @@ const ICONS = {
 
   tools: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M14.5 6.5a4 4 0 0 0-5 5L4 17l3 3 5.5-5.5a4 4 0 0 0 5-5l-2.7 2.7-2-2Z"/></svg>`,
 
+  // Variantes "rellenas" para el estado activo de la barra inferior de
+  // Finanzas (Vista general/Presupuesto/Herramientas), inspiradas en Buddy.
+  eyeFilled: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/></svg>`,
+  budgetFilled: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="9"/></svg>`,
+  toolsFilled: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M14.5 6.5a4 4 0 0 0-5 5L4 17l3 3 5.5-5.5a4 4 0 0 0 5-5l-2.7 2.7-2-2Z"/></svg>`,
+
   // Categorías de Finanzas
   food: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M7 2v8a2 2 0 0 0 4 0V2"/><path d="M9 10v12"/><path d="M17 2c-1.5 1-2 3-2 5s1.5 3 2 3v12"/></svg>`,
 
