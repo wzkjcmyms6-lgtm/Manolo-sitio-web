@@ -490,18 +490,31 @@ function ledgerWallets() {
 function addWalletMovement(walletId, monto, nota) {
   const fecha = new Date().toISOString().slice(0, 10);
   if (walletId === "ahorro") {
-    ahorrosCollection().add({ date: fecha, amount: monto, notes: nota });
+    return ahorrosCollection().add({ date: fecha, amount: monto, notes: nota });
   } else if (walletId === "gastos") {
     if (monto >= 0) {
-      financeCollection().add({ date: fecha, type: "ingreso", category: "otros_ingresos", payment: "efectivo", desc: nota, amount: monto });
+      return financeCollection().add({ date: fecha, type: "ingreso", category: "otros_ingresos", payment: "efectivo", desc: nota, amount: monto });
     } else {
-      financeCollection().add({ date: fecha, type: "gasto", category: "otros", payment: "efectivo", desc: nota, amount: -monto });
+      return financeCollection().add({ date: fecha, type: "gasto", category: "otros", payment: "efectivo", desc: nota, amount: -monto });
     }
   } else if (walletId === "tarjeta") {
-    financeCollection().add({ date: fecha, type: "ajuste_tarjeta", desc: nota, amount: monto });
+    return financeCollection().add({ date: fecha, type: "ajuste_tarjeta", desc: nota, amount: monto });
   } else {
-    carterasMovimientosCollection().add({ carteraId: walletId, fecha, monto, nota });
+    return carterasMovimientosCollection().add({ carteraId: walletId, fecha, monto, nota });
   }
+}
+
+// Muestra el error real de Firebase (permisos, red, etc.) en vez de fallar
+// en silencio: es la única forma de saber qué está pasando cuando algo no
+// se guarda, sin tener que adivinar.
+function showFormError(id, err) {
+  console.error("Manolo:", id, err);
+  const el = document.getElementById(id);
+  el.textContent = "No se pudo guardar: " + (err && err.message ? err.message : err);
+  el.hidden = false;
+}
+function clearFormError(id) {
+  document.getElementById(id).hidden = true;
 }
 function deleteCustomWallet(id) {
   carterasCustomDocRef().set({ list: carterasCustomCache.filter(w => w.id !== id) });
@@ -612,6 +625,7 @@ document.getElementById("new-wallet-cancel").addEventListener("click", () => {
 });
 document.getElementById("new-wallet-form").addEventListener("submit", e => {
   e.preventDefault();
+  clearFormError("new-wallet-error");
   const nombre = document.getElementById("new-wallet-name").value.trim();
   const moneda = document.getElementById("new-wallet-currency").value;
   if (!nombre) return;
@@ -621,9 +635,15 @@ document.getElementById("new-wallet-form").addEventListener("submit", e => {
   let id = base, suffix = 2;
   while (existingIds.includes(id)) id = `${base}_${suffix++}`;
 
-  carterasCustomDocRef().set({ list: carterasCustomCache.concat([{ id, nombre, moneda }]) });
-  e.target.reset();
-  document.getElementById("new-wallet-form").hidden = true;
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+  carterasCustomDocRef().set({ list: carterasCustomCache.concat([{ id, nombre, moneda }]) })
+    .then(() => {
+      e.target.reset();
+      document.getElementById("new-wallet-form").hidden = true;
+    })
+    .catch(err => showFormError("new-wallet-error", err))
+    .finally(() => { submitBtn.disabled = false; });
 });
 
 document.getElementById("wallet-menu-transfer").addEventListener("click", () => {
@@ -679,31 +699,49 @@ document.getElementById("transfer-to").addEventListener("change", updateTransfer
 
 document.getElementById("transfer-form").addEventListener("submit", e => {
   e.preventDefault();
+  clearFormError("transfer-error");
   const fromId = document.getElementById("transfer-from").value;
   const toId = document.getElementById("transfer-to").value;
   const notes = document.getElementById("transfer-notes").value.trim();
-  if (!fromId || !toId || fromId === toId) return;
+  if (!fromId || !toId || fromId === toId) {
+    showFormError("transfer-error", { message: "Elegí una cartera de origen y una de destino distintas." });
+    return;
+  }
 
   const wallets = ledgerWallets();
   const fromW = wallets.find(w => w.id === fromId);
   const toW = wallets.find(w => w.id === toId);
-  if (!fromW || !toW) return;
+  if (!fromW || !toW) {
+    showFormError("transfer-error", { message: "No se encontró alguna de las carteras elegidas." });
+    return;
+  }
 
   const amountFrom = parseFloat(document.getElementById("transfer-amount-from").value);
-  if (!amountFrom || amountFrom <= 0) return;
+  if (!amountFrom || amountFrom <= 0) {
+    showFormError("transfer-error", { message: "Ingresá un monto válido a descontar." });
+    return;
+  }
 
   let amountTo = amountFrom;
   if (fromW.moneda !== toW.moneda) {
     amountTo = parseFloat(document.getElementById("transfer-amount-to").value);
-    if (!amountTo || amountTo <= 0) return;
+    if (!amountTo || amountTo <= 0) {
+      showFormError("transfer-error", { message: "Ingresá un monto válido a añadir en la cartera de destino." });
+      return;
+    }
   }
 
-  addWalletMovement(fromId, -amountFrom, `Transferencia a ${toW.nombre}${notes ? " · " + notes : ""}`);
-  addWalletMovement(toId, amountTo, `Transferencia desde ${fromW.nombre}${notes ? " · " + notes : ""}`);
-
-  e.target.reset();
-  document.getElementById("transfer-amount-to").hidden = true;
-  document.getElementById("transfer-form").hidden = true;
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+  Promise.all([
+    addWalletMovement(fromId, -amountFrom, `Transferencia a ${toW.nombre}${notes ? " · " + notes : ""}`),
+    addWalletMovement(toId, amountTo, `Transferencia desde ${fromW.nombre}${notes ? " · " + notes : ""}`)
+  ]).then(() => {
+    e.target.reset();
+    document.getElementById("transfer-amount-to").hidden = true;
+    document.getElementById("transfer-form").hidden = true;
+  }).catch(err => showFormError("transfer-error", err))
+    .finally(() => { submitBtn.disabled = false; });
 });
 
 document.getElementById("wallet-list").addEventListener("click", e => {
