@@ -65,7 +65,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // login, así que pueden no existir todavía cuando este listener se registra.
   document.addEventListener("click", e => {
     if (e.target.closest("#logout-btn")) auth.signOut();
-    if (e.target.closest("#google-login-btn")) auth.signInWithRedirect(googleProvider);
+    if (e.target.closest("#google-login-btn")) {
+      errorEl.hidden = true;
+      auth.signInWithRedirect(googleProvider).catch(err => {
+        errorEl.textContent = translateAuthError(err.code);
+        errorEl.hidden = false;
+      });
+    }
   });
 
   auth.onAuthStateChanged(user => {
