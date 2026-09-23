@@ -286,57 +286,103 @@
             <p class="empty-state" id="cycling-empty" style="display:none;">Aún no registras rodadas.</p>
           </section>
 
-          <!-- ===== Finanzas ===== -->
+          <!-- ===== Finanzas: Vista general ===== -->
           <section id="panel-finanzas" hidden>
-            <h1 class="page-title">Finanzas</h1>
-
-            <div class="fin-tabs" id="fin-tabs">
-              <button type="button" class="fin-tab active" data-tab="resumen">Resumen</button>
-              <button type="button" class="fin-tab" data-tab="presupuesto">Presupuesto</button>
+            <div class="fin-tabs fin-outer-tabs">
+              <a href="#finanzas" class="fin-tab" data-hash-link data-hash="finanzas">Vista general</a>
+              <a href="#fin-presupuesto" class="fin-tab" data-hash-link data-hash="fin-presupuesto">Presupuesto</a>
+              <a href="#fin-herramientas" class="fin-tab" data-hash-link data-hash="fin-herramientas">Herramientas</a>
             </div>
 
-            <section id="tab-resumen" class="fin-panel">
-              <div class="stat-row" id="finance-stats"></div>
+            <h1 class="page-title">Finanzas</h1>
 
-              <div class="month-nav">
-                <button type="button" id="month-prev" aria-label="Mes anterior"><span data-icon="chevronLeft"></span></button>
-                <div class="month-label">
-                  <span id="month-label-text"></span>
-                  <span class="month-count" id="month-count"></span>
+            <div class="stat-row" id="finance-stats"></div>
+
+            <div class="month-nav">
+              <button type="button" id="month-prev" aria-label="Mes anterior"><span data-icon="chevronLeft"></span></button>
+              <div class="month-label">
+                <span id="month-label-text"></span>
+                <span class="month-count" id="month-count"></span>
+              </div>
+              <button type="button" id="month-next" aria-label="Mes siguiente"><span data-icon="chevronRight"></span></button>
+            </div>
+
+            <form class="tracker-form" id="finance-form">
+              <input type="date" id="finance-date" required>
+              <select id="finance-type">
+                <option value="ingreso">Ingreso</option>
+                <option value="gasto">Gasto</option>
+              </select>
+              <select id="finance-category"></select>
+              <select id="finance-payment"></select>
+              <input type="text" id="finance-desc" placeholder="Descripción" required>
+              <input type="number" id="finance-amount" placeholder="Monto" min="0.01" step="0.01" required>
+              <button type="submit">Registrar</button>
+            </form>
+
+            <div id="finance-list"></div>
+            <p class="empty-state" id="finance-empty" style="display:none;">Aún no registras movimientos este mes.</p>
+          </section>
+
+          <!-- ===== Finanzas: Presupuesto ===== -->
+          <section id="panel-fin-presupuesto" hidden>
+            <div class="fin-tabs fin-outer-tabs">
+              <a href="#finanzas" class="fin-tab" data-hash-link data-hash="finanzas">Vista general</a>
+              <a href="#fin-presupuesto" class="fin-tab" data-hash-link data-hash="fin-presupuesto">Presupuesto</a>
+              <a href="#fin-herramientas" class="fin-tab" data-hash-link data-hash="fin-herramientas">Herramientas</a>
+            </div>
+
+            <h1 class="page-title">Presupuesto</h1>
+
+            <div class="fin-tabs" id="budget-inner-tabs">
+              <button type="button" class="fin-tab active" data-budget-tab="planificacion">Planificación</button>
+              <button type="button" class="fin-tab" data-budget-tab="restante">Restante</button>
+              <button type="button" class="fin-tab" data-budget-tab="informacion">Información</button>
+            </div>
+
+            <div class="month-nav">
+              <button type="button" id="budget-month-prev" aria-label="Mes anterior"><span data-icon="chevronLeft"></span></button>
+              <div class="month-label">
+                <span id="budget-month-label"></span>
+              </div>
+              <button type="button" id="budget-month-next" aria-label="Mes siguiente"><span data-icon="chevronRight"></span></button>
+            </div>
+
+            <section id="budget-tab-planificacion" class="fin-panel">
+              <div class="budget-summary-card">
+                <div class="budget-summary-ring" id="budget-summary-ring"></div>
+                <div class="budget-summary-info">
+                  <span class="budget-summary-label">Total presupuestado</span>
+                  <span class="budget-summary-value" id="budget-summary-value"></span>
+                  <span class="budget-summary-sub" id="budget-summary-sub"></span>
                 </div>
-                <button type="button" id="month-next" aria-label="Mes siguiente"><span data-icon="chevronRight"></span></button>
               </div>
 
-              <form class="tracker-form" id="finance-form">
-                <input type="date" id="finance-date" required>
-                <select id="finance-type">
-                  <option value="ingreso">Ingreso</option>
-                  <option value="gasto">Gasto</option>
-                </select>
-                <select id="finance-category"></select>
-                <select id="finance-payment"></select>
-                <input type="text" id="finance-desc" placeholder="Descripción" required>
-                <input type="number" id="finance-amount" placeholder="Monto" min="0.01" step="0.01" required>
-                <button type="submit">Registrar</button>
-              </form>
-
-              <div id="finance-list"></div>
-              <p class="empty-state" id="finance-empty" style="display:none;">Aún no registras movimientos este mes.</p>
-            </section>
-
-            <section id="tab-presupuesto" class="fin-panel" hidden>
-              <div class="budget-header">
-                <h2 id="budget-month-label"></h2>
-                <button type="button" class="link-btn" id="budget-edit-toggle">Editar presupuestos</button>
-              </div>
-
-              <form id="budget-form" class="budget-form" hidden>
-                <div id="budget-inputs"></div>
+              <form id="budget-form" class="budget-form">
+                <div id="budget-inputs" class="budget-plan-list"></div>
                 <button type="submit">Guardar presupuestos</button>
               </form>
-
-              <div id="budget-grid" class="budget-grid"></div>
             </section>
+
+            <section id="budget-tab-restante" class="fin-panel" hidden>
+              <div class="budget-grid" id="budget-grid"></div>
+            </section>
+
+            <section id="budget-tab-informacion" class="fin-panel" hidden>
+              <div class="stat-row" id="budget-info-stats"></div>
+            </section>
+          </section>
+
+          <!-- ===== Finanzas: Herramientas ===== -->
+          <section id="panel-fin-herramientas" hidden>
+            <div class="fin-tabs fin-outer-tabs">
+              <a href="#finanzas" class="fin-tab" data-hash-link data-hash="finanzas">Vista general</a>
+              <a href="#fin-presupuesto" class="fin-tab" data-hash-link data-hash="fin-presupuesto">Presupuesto</a>
+              <a href="#fin-herramientas" class="fin-tab" data-hash-link data-hash="fin-herramientas">Herramientas</a>
+            </div>
+
+            <h1 class="page-title">Herramientas</h1>
+            <p class="panel-sub">Muy pronto vas a poder exportar tus movimientos y personalizar categorías y medios de pago desde acá.</p>
           </section>
 
           <!-- ===== Inversiones ===== -->

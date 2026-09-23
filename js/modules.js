@@ -21,7 +21,19 @@ const MODULES = [
 const SUB_PANELS = [
   { hash: "gimnasio", parent: "ejercicio" },
   { hash: "running", parent: "ejercicio" },
-  { hash: "bicicleta", parent: "ejercicio" }
+  { hash: "bicicleta", parent: "ejercicio" },
+  { hash: "fin-presupuesto", parent: "finanzas" },
+  { hash: "fin-herramientas", parent: "finanzas" }
+];
+
+// Mientras estás dentro de Finanzas, la barra inferior (solo en móvil, que
+// es donde hace falta el espacio) deja de mostrar los módulos generales y
+// muestra estas 3 pestañas en su lugar. Para volver a Inicio/Hábitos/etc
+// queda el menú de la barra superior (el ☰).
+const FIN_TABS = [
+  { hash: "finanzas", label: "Vista general", icon: "eye" },
+  { hash: "fin-presupuesto", label: "Presupuesto", icon: "finance" },
+  { hash: "fin-herramientas", label: "Herramientas", icon: "tools" }
 ];
 
 const ALL_HASHES = MODULES.map(m => m.hash).concat(SUB_PANELS.map(s => s.hash));
@@ -52,25 +64,35 @@ function showPanel(hash) {
   const isExercise = activeModule === "ejercicio";
   document.getElementById("verse-banner").hidden = isExercise || activeModule === "finanzas";
   document.getElementById("body-banner").hidden = !isExercise;
+
+  // Pestañas propias de Finanzas (Vista general/Presupuesto/Herramientas),
+  // visibles como pills dentro del panel en escritorio.
+  document.querySelectorAll("[data-hash-link]").forEach(a => {
+    a.classList.toggle("active", a.dataset.hash === hash);
+  });
 }
 
 function renderNav() {
-  const current = activeModuleHash(currentHash());
+  const hash = currentHash();
+  const current = activeModuleHash(hash);
+  const inFinanzas = current === "finanzas";
 
-  const linkHTML = (m, iconClass) =>
-    `<a href="#${m.hash}" data-nav-link data-hash="${m.hash}"${m.hash === current ? ' class="active"' : ""}>` +
+  const linkHTML = (m, iconClass, activeHash) =>
+    `<a href="#${m.hash}" data-nav-link data-hash="${m.hash}"${m.hash === activeHash ? ' class="active"' : ""}>` +
     `<span class="${iconClass}" data-icon="${m.icon}"></span>${m.label}</a>`;
 
   const sidebarNav = document.getElementById("nav-links");
   if (sidebarNav) {
     sidebarNav.innerHTML =
-      MODULES.map(m => linkHTML(m, "nav-icon")).join("") +
+      MODULES.map(m => linkHTML(m, "nav-icon", current)).join("") +
       `<button type="button" id="logout-btn" class="logout-btn">Cerrar sesión</button>`;
   }
 
   const bottomNav = document.getElementById("bottom-nav-links");
   if (bottomNav) {
-    bottomNav.innerHTML = MODULES.map(m => linkHTML(m, "icon")).join("");
+    bottomNav.innerHTML = inFinanzas
+      ? FIN_TABS.map(m => linkHTML(m, "icon", hash)).join("")
+      : MODULES.map(m => linkHTML(m, "icon", current)).join("");
   }
 
   renderIcons();

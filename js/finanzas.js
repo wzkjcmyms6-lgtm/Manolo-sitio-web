@@ -244,6 +244,8 @@ document.getElementById("finance-form").addEventListener("submit", e => {
 
 document.getElementById("month-prev").addEventListener("click", () => { monthOffset--; renderAll(); });
 document.getElementById("month-next").addEventListener("click", () => { monthOffset++; renderAll(); });
+document.getElementById("budget-month-prev").addEventListener("click", () => { monthOffset--; renderAll(); });
+document.getElementById("budget-month-next").addEventListener("click", () => { monthOffset++; renderAll(); });
 
 // ================= Presupuesto =================
 
@@ -269,10 +271,15 @@ function progressRing(pct, color) {
   </svg>`;
 }
 
-function renderBudgets() {
+function updateBudgetMonthLabel() {
   const monthDate = currentMonthDate();
   document.getElementById("budget-month-label").textContent = monthLabel(monthDate);
+  document.getElementById("budget-month-next").disabled = monthOffset >= 0;
+}
 
+// ---- Restante: anillo por categoría (spent vs. presupuestado) ----
+function renderBudgets() {
+  const monthDate = currentMonthDate();
   const spent = computeSpentByCategory(monthDate);
   const grid = document.getElementById("budget-grid");
   grid.innerHTML = "";
@@ -303,29 +310,55 @@ function renderBudgets() {
   });
 }
 
-document.getElementById("budget-edit-toggle").addEventListener("click", () => {
-  const form = document.getElementById("budget-form");
-  const grid = document.getElementById("budget-grid");
-  const toggle = document.getElementById("budget-edit-toggle");
+// ---- Planificación: lista editable + anillo con el total presupuestado ----
+function renderBudgetInputs() {
+  const container = document.getElementById("budget-inputs");
+  const focused = document.activeElement;
+  const focusedCat = focused && focused.dataset ? focused.dataset.cat : null;
 
-  if (form.hidden) {
-    document.getElementById("budget-inputs").innerHTML = CATEGORIES.gasto.map(c => `
-      <label class="budget-input-row">
-        <span class="cat-icon" style="background:${c.color}22; color:${c.color}" data-icon="${c.icon}"></span>
-        <span class="budget-input-label">${c.label}</span>
-        <input type="number" min="0" step="1" data-cat="${c.id}" value="${budgetsCache[c.id] || ""}" placeholder="0">
-      </label>
-    `).join("");
-    renderIcons(document.getElementById("budget-inputs"));
-    form.hidden = false;
-    grid.hidden = true;
-    toggle.textContent = "Cancelar";
-  } else {
-    form.hidden = true;
-    grid.hidden = false;
-    toggle.textContent = "Editar presupuestos";
+  container.innerHTML = CATEGORIES.gasto.map(c => `
+    <label class="budget-input-row">
+      <span class="cat-icon" style="background:${c.color}22; color:${c.color}" data-icon="${c.icon}"></span>
+      <span class="budget-input-label">${c.label}</span>
+      <input type="number" min="0" step="1" data-cat="${c.id}" value="${budgetsCache[c.id] || ""}" placeholder="0">
+    </label>
+  `).join("");
+  renderIcons(container);
+
+  if (focusedCat) {
+    const input = container.querySelector(`input[data-cat="${focusedCat}"]`);
+    if (input) input.focus();
   }
-});
+}
+
+function renderBudgetSummary() {
+  const monthDate = currentMonthDate();
+  const spent = computeSpentByCategory(monthDate);
+  const totalBudget = CATEGORIES.gasto.reduce((s, c) => s + (budgetsCache[c.id] || 0), 0);
+  const totalSpent = CATEGORIES.gasto.reduce((s, c) => s + (spent[c.id] || 0), 0);
+  const pct = totalBudget > 0 ? totalSpent / totalBudget : 0;
+
+  document.getElementById("budget-summary-ring").innerHTML =
+    progressRing(pct, totalBudget > 0 && totalSpent > totalBudget ? "var(--danger)" : "var(--accent-1)");
+  document.getElementById("budget-summary-value").textContent = formatMoney(totalBudget);
+  document.getElementById("budget-summary-sub").textContent = totalBudget > 0
+    ? `${formatMoney(Math.max(totalBudget - totalSpent, 0))} restante este mes`
+    : "Agrega montos abajo para empezar";
+}
+
+function renderBudgetInfo() {
+  const monthDate = currentMonthDate();
+  const spent = computeSpentByCategory(monthDate);
+  const withBudget = CATEGORIES.gasto.filter(c => (budgetsCache[c.id] || 0) > 0);
+  const totalBudget = withBudget.reduce((s, c) => s + budgetsCache[c.id], 0);
+  const totalSpent = CATEGORIES.gasto.reduce((s, c) => s + (spent[c.id] || 0), 0);
+
+  document.getElementById("budget-info-stats").innerHTML = `
+    <div class="stat-box"><div class="value">${withBudget.length}/${CATEGORIES.gasto.length}</div><div class="label">Categorías con presupuesto</div></div>
+    <div class="stat-box"><div class="value">${formatMoney(totalBudget)}</div><div class="label">Total presupuestado</div></div>
+    <div class="stat-box"><div class="value">${formatMoney(totalSpent)}</div><div class="label">Gastado en ${monthLabel(monthDate).toLowerCase()}</div></div>
+  `;
+}
 
 document.getElementById("budget-form").addEventListener("submit", e => {
   e.preventDefault();
@@ -335,19 +368,18 @@ document.getElementById("budget-form").addEventListener("submit", e => {
     if (v > 0) budgets[input.dataset.cat] = v;
   });
   budgetDocRef().set(budgets);
-  document.getElementById("budget-form").hidden = true;
-  document.getElementById("budget-grid").hidden = false;
-  document.getElementById("budget-edit-toggle").textContent = "Editar presupuestos";
 });
 
 // ================= Tabs =================
 
-document.querySelectorAll(".fin-tab").forEach(btn => {
+// Pestañas internas de Presupuesto (Planificación/Restante/Información).
+document.querySelectorAll("[data-budget-tab]").forEach(btn => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".fin-tab").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll("[data-budget-tab]").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-    document.getElementById("tab-resumen").hidden = btn.dataset.tab !== "resumen";
-    document.getElementById("tab-presupuesto").hidden = btn.dataset.tab !== "presupuesto";
+    document.getElementById("budget-tab-planificacion").hidden = btn.dataset.budgetTab !== "planificacion";
+    document.getElementById("budget-tab-restante").hidden = btn.dataset.budgetTab !== "restante";
+    document.getElementById("budget-tab-informacion").hidden = btn.dataset.budgetTab !== "informacion";
   });
 });
 
@@ -357,7 +389,11 @@ function renderAll() {
   renderStats();
   updateMonthLabel();
   renderMovements();
+  updateBudgetMonthLabel();
   renderBudgets();
+  renderBudgetInputs();
+  renderBudgetSummary();
+  renderBudgetInfo();
 }
 
 document.getElementById("finance-date").valueAsDate = new Date();

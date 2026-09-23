@@ -30,6 +30,10 @@ const ICONS = {
 
   cycling: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><circle cx="6" cy="17" r="3.3"/><circle cx="18" cy="17" r="3.3"/><path d="M6 17l5-8h3l4 8"/><path d="M11 9h3"/><path d="M9.5 17h5.5"/></svg>`,
 
+  eye: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>`,
+
+  tools: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M14.5 6.5a4 4 0 0 0-5 5L4 17l3 3 5.5-5.5a4 4 0 0 0 5-5l-2.7 2.7-2-2Z"/></svg>`,
+
   // Categorías de Finanzas
   food: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M7 2v8a2 2 0 0 0 4 0V2"/><path d="M9 10v12"/><path d="M17 2c-1.5 1-2 3-2 5s1.5 3 2 3v12"/></svg>`,
 

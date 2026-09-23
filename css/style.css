@@ -448,6 +448,12 @@ button.delete:hover { opacity: 1; }
 .fin-tab.active { background: var(--accent-grad); color: #0a0a0a; }
 .fin-panel[hidden] { display: none; }
 
+/* ---------- Finance: pestañas externas (Vista general/Presupuesto/Herramientas) ----------
+   En móvil esto lo resuelve la barra inferior (ver modules.js/renderNav), así que
+   estas pills solo hacen falta en escritorio, donde no hay bottom-nav. */
+.fin-outer-tabs { margin-bottom: 1.25rem; }
+.fin-outer-tabs .fin-tab { text-decoration: none; display: inline-block; }
+
 /* ---------- Finance: month navigator ---------- */
 .month-nav {
   display: flex;
@@ -595,6 +601,34 @@ button.delete:hover { opacity: 1; }
 .budget-amount { font-size: 0.82rem; color: var(--muted); margin-top: 0.15rem; }
 .budget-amount.over { color: var(--danger); font-weight: 600; }
 .budget-amount.muted { font-style: italic; }
+
+/* ---------- Finance: Presupuesto → Planificación (anillo resumen) ---------- */
+.budget-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.1rem 1.3rem;
+  margin-bottom: 1.5rem;
+}
+.budget-summary-ring { flex-shrink: 0; width: 60px; height: 60px; }
+.budget-summary-ring svg { display: block; }
+.budget-summary-info { display: flex; flex-direction: column; }
+.budget-summary-label { font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+.budget-summary-value {
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: var(--accent-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.budget-summary-sub { font-size: 0.82rem; color: var(--muted); margin-top: 0.1rem; }
+
+.budget-plan-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.6rem; }
 
 .budget-form { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.5rem; }
 .budget-input-row {
@@ -945,6 +979,11 @@ button.delete:hover { opacity: 1; }
    controls, gradient pill buttons.
 ===================================================== */
 @media (max-width: 768px) {
+  /* La barra inferior ya muestra Vista general/Presupuesto/Herramientas
+     mientras estás en Finanzas (ver modules.js), así que estas pills
+     dentro del panel solo hacen falta en escritorio. */
+  .fin-outer-tabs { display: none; }
+
   .sidebar {
     position: fixed;
     top: 0;
