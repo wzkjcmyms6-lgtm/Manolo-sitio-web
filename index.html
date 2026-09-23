@@ -97,22 +97,120 @@
             <p class="empty-state" id="habit-empty" style="display:none;">Aún no tienes hábitos. Agrega el primero arriba.</p>
           </section>
 
-          <!-- ===== Ejercicio ===== -->
+          <!-- ===== Ejercicio (hub) ===== -->
           <section id="panel-ejercicio" hidden>
             <h1 class="page-title">Ejercicio</h1>
+            <p class="panel-sub">Elige una disciplina para registrar tu progreso.</p>
 
-            <div class="stat-row" id="exercise-stats"></div>
+            <div class="card-grid card-grid-3">
+              <a class="card" href="#gimnasio">
+                <span class="icon" data-icon="exercise"></span>
+                <h3>Gimnasio</h3>
+                <p>Rutinas, series, peso y volumen.</p>
+              </a>
+              <a class="card" href="#running">
+                <span class="icon" data-icon="running"></span>
+                <h3>Running</h3>
+                <p>Tus salidas a correr y tu ritmo.</p>
+              </a>
+              <a class="card" href="#bicicleta">
+                <span class="icon" data-icon="cycling"></span>
+                <h3>Bicicleta</h3>
+                <p>Tus rodadas y tu velocidad.</p>
+              </a>
+            </div>
+          </section>
 
-            <form class="tracker-form" id="exercise-form">
-              <input type="date" id="exercise-date" required>
-              <input type="text" id="exercise-type" placeholder="Tipo (ej: Correr, Pesas)" required>
-              <input type="number" id="exercise-duration" placeholder="Minutos" min="1" required>
-              <input type="text" id="exercise-notes" placeholder="Notas (opcional)">
+          <!-- ===== Gimnasio ===== -->
+          <section id="panel-gimnasio" hidden>
+            <a class="back-link" href="#ejercicio"><span class="icon-sm" data-icon="chevronLeft"></span>Ejercicio</a>
+            <h1 class="page-title">Gimnasio</h1>
+
+            <div id="gym-home">
+              <button type="button" class="start-empty-btn" id="gym-start-empty">
+                <span class="icon-sm" data-icon="plus"></span> Empezar entrenamiento vacío
+              </button>
+
+              <div class="gym-section-header">
+                <h2>Rutinas</h2>
+                <button type="button" class="link-btn" id="gym-routine-new-toggle">+ Nueva rutina</button>
+              </div>
+
+              <form id="gym-routine-form" class="routine-form" hidden>
+                <input type="text" id="gym-routine-name" placeholder="Nombre de la rutina (ej: Push)" required>
+                <div id="gym-routine-exercise-rows"></div>
+                <button type="button" class="link-btn" id="gym-routine-add-row">+ Agregar ejercicio</button>
+                <div class="routine-form-actions">
+                  <button type="submit">Guardar rutina</button>
+                  <button type="button" class="link-btn" id="gym-routine-cancel">Cancelar</button>
+                </div>
+              </form>
+
+              <div id="gym-routines"></div>
+              <p class="empty-state" id="gym-routines-empty" hidden>Aún no tienes rutinas guardadas.</p>
+
+              <h2 class="gym-history-title">Historial</h2>
+              <div id="gym-history"></div>
+              <p class="empty-state" id="gym-history-empty" hidden>Aún no registras entrenamientos.</p>
+            </div>
+
+            <div id="gym-active" hidden>
+              <div class="workout-header">
+                <input type="text" id="gym-active-name" class="workout-name-input">
+                <span class="workout-timer" id="gym-active-timer">0:00</span>
+              </div>
+
+              <div id="gym-active-exercises"></div>
+
+              <form id="gym-active-add-exercise-form" class="add-exercise-form">
+                <input type="text" id="gym-active-exercise-name" list="gym-exercise-suggestions" placeholder="Nombre del ejercicio (ej: Press de banca)" required>
+                <button type="submit">Agregar</button>
+              </form>
+              <datalist id="gym-exercise-suggestions"></datalist>
+
+              <div class="workout-actions">
+                <button type="button" id="gym-active-finish">Finalizar entrenamiento</button>
+                <button type="button" class="link-btn danger" id="gym-active-discard">Descartar</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== Running ===== -->
+          <section id="panel-running" hidden>
+            <a class="back-link" href="#ejercicio"><span class="icon-sm" data-icon="chevronLeft"></span>Ejercicio</a>
+            <h1 class="page-title">Running</h1>
+
+            <div class="stat-row" id="running-stats"></div>
+
+            <form class="tracker-form" id="running-form">
+              <input type="date" id="running-date" required>
+              <input type="number" id="running-distance" placeholder="Distancia (km)" min="0.01" step="0.01" required>
+              <input type="number" id="running-duration" placeholder="Minutos" min="1" required>
+              <input type="text" id="running-notes" placeholder="Notas (opcional)">
               <button type="submit">Registrar</button>
             </form>
 
-            <div id="exercise-list"></div>
-            <p class="empty-state" id="exercise-empty" style="display:none;">Aún no registras entrenamientos.</p>
+            <div id="running-list"></div>
+            <p class="empty-state" id="running-empty" style="display:none;">Aún no registras salidas.</p>
+          </section>
+
+          <!-- ===== Bicicleta ===== -->
+          <section id="panel-bicicleta" hidden>
+            <a class="back-link" href="#ejercicio"><span class="icon-sm" data-icon="chevronLeft"></span>Ejercicio</a>
+            <h1 class="page-title">Bicicleta</h1>
+
+            <div class="stat-row" id="cycling-stats"></div>
+
+            <form class="tracker-form" id="cycling-form">
+              <input type="date" id="cycling-date" required>
+              <input type="number" id="cycling-distance" placeholder="Distancia (km)" min="0.01" step="0.01" required>
+              <input type="number" id="cycling-duration" placeholder="Minutos" min="1" required>
+              <input type="text" id="cycling-notes" placeholder="Notas (opcional)">
+              <button type="submit">Registrar</button>
+            </form>
+
+            <div id="cycling-list"></div>
+            <p class="empty-state" id="cycling-empty" style="display:none;">Aún no registras rodadas.</p>
           </section>
 
           <!-- ===== Finanzas ===== -->
@@ -203,7 +301,9 @@
   <script src="js/modules.js"></script>
   <script src="js/main.js"></script>
   <script src="js/habitos.js"></script>
-  <script src="js/ejercicio.js"></script>
+  <script src="js/gimnasio.js"></script>
+  <script src="js/running.js"></script>
+  <script src="js/bicicleta.js"></script>
   <script src="js/finanzas.js"></script>
   <script src="js/inversiones.js"></script>
 </body>

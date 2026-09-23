@@ -26,6 +26,10 @@ const ICONS = {
 
   chevronRight: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>`,
 
+  running: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><circle cx="14.2" cy="4.6" r="1.6"/><path d="M9 21l2-4.5-1.3-2.3 3-2.3"/><path d="M12.7 12l-1-3.3 3-1.6 2.3 2.4 3-1"/><path d="M7.5 12.3l3.2-2.3"/><path d="M13.5 15l3 1.7 2-2.4"/></svg>`,
+
+  cycling: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><circle cx="6" cy="17" r="3.3"/><circle cx="18" cy="17" r="3.3"/><path d="M6 17l5-8h3l4 8"/><path d="M11 9h3"/><path d="M9.5 17h5.5"/></svg>`,
+
   // Categorías de Finanzas
   food: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M7 2v8a2 2 0 0 0 4 0V2"/><path d="M9 10v12"/><path d="M17 2c-1.5 1-2 3-2 5s1.5 3 2 3v12"/></svg>`,
 

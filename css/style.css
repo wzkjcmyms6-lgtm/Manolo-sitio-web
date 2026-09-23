@@ -269,6 +269,22 @@ h1, h2, h3 { font-family: "DM Sans", system-ui, sans-serif; font-weight: 700; le
 h1.page-title { margin-top: 0; font-size: 1.9rem; }
 .panel-sub { color: var(--muted); }
 
+.card-grid.card-grid-3 { grid-template-columns: repeat(3, 1fr); }
+
+/* ---------- Back link (sub-paneles de Ejercicio) ---------- */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.9rem;
+}
+.back-link:hover { color: var(--ink); }
+.icon-sm { display: inline-flex; width: 14px; height: 14px; }
+
 /* ---------- Bottom nav (mobile only) ---------- */
 .bottom-nav { display: none; }
 
@@ -453,7 +469,8 @@ button.delete:hover { opacity: 1; }
 }
 .stat-box .value.value-debt { background: none; -webkit-text-fill-color: initial; color: var(--danger); }
 /* [hidden] must win over the display:flex/grid rules below it in the cascade */
-.pay-card-form[hidden], .budget-form[hidden], .budget-grid[hidden], .login-screen[hidden] { display: none; }
+.pay-card-form[hidden], .budget-form[hidden], .budget-grid[hidden], .login-screen[hidden],
+.routine-form[hidden], .add-exercise-form[hidden] { display: none; }
 
 /* ---------- Finance: transaction list grouped by day ---------- */
 .day-header {
@@ -576,6 +593,238 @@ button.delete:hover { opacity: 1; }
   padding: 8px;
   flex-shrink: 0;
 }
+
+/* ---------- Gimnasio: home ---------- */
+.start-empty-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  padding: 0.9rem;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 1.75rem;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.start-empty-btn:hover { border-color: var(--accent-1); background: var(--surface-raised); }
+.start-empty-btn .icon-sm { color: var(--accent-2); }
+
+.gym-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+.gym-section-header h2 { margin: 0; font-size: 1.1rem; }
+.gym-history-title { font-size: 1.1rem; margin: 1.75rem 0 0.75rem; }
+
+/* ---------- Gimnasio: crear rutina ---------- */
+.routine-form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.routine-form > input[type="text"] {
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+.routine-exercise-row { display: flex; gap: 0.5rem; align-items: center; }
+.routine-exercise-input {
+  flex: 1;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+.delete-row {
+  background: none;
+  border: none;
+  color: var(--muted);
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.delete-row:hover { color: var(--danger); }
+.routine-form-actions { display: flex; align-items: center; gap: 1rem; margin-top: 0.3rem; }
+.routine-form-actions button[type="submit"] {
+  background: var(--accent-grad);
+  color: #0a0a0a;
+  border: none;
+  border-radius: 999px;
+  padding: 0.55rem 1.3rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ---------- Gimnasio: tarjetas de rutina ---------- */
+.routine-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 0.75rem;
+}
+.routine-card-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.routine-card-head h3 { margin: 0; font-size: 1rem; }
+.routine-exercises-preview { color: var(--muted); font-size: 0.85rem; margin: 0.4rem 0 0.85rem; }
+.start-routine-btn {
+  background: var(--accent-grad);
+  color: #0a0a0a;
+  border: none;
+  border-radius: 999px;
+  padding: 0.55rem 1.2rem;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  width: 100%;
+}
+
+/* ---------- Gimnasio: entrenamiento activo ---------- */
+.workout-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.workout-name-input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid transparent;
+  color: var(--ink);
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.3rem;
+  padding: 0.2rem 0;
+}
+.workout-name-input:focus { outline: none; border-bottom-color: var(--accent-1); }
+.workout-timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--accent-2);
+  flex-shrink: 0;
+}
+
+.exercise-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 0.9rem;
+}
+.exercise-card-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.7rem; }
+.exercise-card-head h3 { margin: 0; font-size: 1rem; }
+
+.set-table { display: flex; flex-direction: column; gap: 0.35rem; }
+.set-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 1fr 28px;
+  align-items: center;
+  gap: 0.5rem;
+}
+.set-row-header { color: var(--muted); font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; }
+.set-num { font-weight: 700; text-align: center; }
+.set-row input {
+  width: 100%;
+  padding: 0.45rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.92rem;
+  text-align: center;
+}
+.set-row input:focus { outline: none; border-color: var(--accent-1); }
+.delete-set {
+  background: none;
+  border: none;
+  color: var(--muted);
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  cursor: pointer;
+}
+.delete-set:hover { color: var(--danger); }
+.add-set-btn { margin-top: 0.6rem; }
+
+.add-exercise-form { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+.add-exercise-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.92rem;
+}
+.add-exercise-form button {
+  background: var(--surface-raised);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.6rem 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.workout-actions { display: flex; align-items: center; gap: 1.25rem; margin-top: 0.5rem; }
+.workout-actions #gym-active-finish {
+  flex: 1;
+  background: var(--accent-grad);
+  color: #0a0a0a;
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1.4rem;
+  font-weight: 700;
+  font-size: 0.98rem;
+  cursor: pointer;
+}
+.link-btn.danger { color: var(--danger); }
+
+/* ---------- Gimnasio: historial ---------- */
+.workout-history-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 0.75rem;
+}
+.workout-history-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
+.workout-history-head h3 { margin: 0 0 0.15rem; font-size: 1rem; }
+.workout-history-head .meta { color: var(--muted); font-size: 0.8rem; text-transform: capitalize; }
+.stat-row-mini { display: flex; gap: 1.5rem; margin: 0.85rem 0; }
+.stat-row-mini .v { display: block; font-weight: 700; font-size: 0.95rem; }
+.stat-row-mini .l { display: block; color: var(--muted); font-size: 0.72rem; }
+.workout-history-exercises { color: var(--muted); font-size: 0.85rem; margin: 0; }
 
 .habit-row {
   display: grid;
