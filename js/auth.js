@@ -18,18 +18,23 @@ function showLogin() {
   document.getElementById("app-content").hidden = true;
 }
 
-const googleProvider = new firebase.auth.GoogleAuthProvider();
+// Firebase Auth solo entiende "correo + contraseña" por dentro; para que
+// vos veas un login simple de usuario + contraseña, convertimos el nombre
+// de usuario a una dirección interna que nunca se muestra ni se usa para
+// enviar nada (ej: "Manolo" -> "manolo@manolo-panel.local").
+function usernameToEmail(username) {
+  const clean = username.trim().toLowerCase().replace(/\s+/g, "");
+  return clean + "@manolo-panel.local";
+}
 
 function translateAuthError(code) {
   const map = {
-    "auth/invalid-email": "Ese correo no es válido.",
-    "auth/user-not-found": "No existe una cuenta con ese correo.",
+    "auth/invalid-email": "Ese usuario no es válido.",
+    "auth/user-not-found": "No existe una cuenta con ese usuario.",
     "auth/wrong-password": "Contraseña incorrecta.",
-    "auth/invalid-credential": "Correo o contraseña incorrectos.",
+    "auth/invalid-credential": "Usuario o contraseña incorrectos.",
     "auth/too-many-requests": "Demasiados intentos. Probá de nuevo en unos minutos.",
-    "auth/network-request-failed": "Sin conexión. Revisá tu internet.",
-    "auth/unauthorized-domain": "Este sitio todavía no está autorizado para iniciar sesión con Google (falta agregarlo en Firebase).",
-    "auth/account-exists-with-different-credential": "Ese correo ya está registrado con otro método de acceso."
+    "auth/network-request-failed": "Sin conexión. Revisá tu internet."
   };
   return map[code] || "No se pudo iniciar sesión. Intentá de nuevo.";
 }
@@ -41,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
   form.addEventListener("submit", e => {
     e.preventDefault();
     errorEl.hidden = true;
-    const email = document.getElementById("login-email").value.trim();
+    const email = usernameToEmail(document.getElementById("login-username").value);
     const password = document.getElementById("login-password").value;
     const submitBtn = form.querySelector("button[type=submit]");
     submitBtn.disabled = true;
@@ -54,24 +59,10 @@ document.addEventListener("DOMContentLoaded", () => {
       .finally(() => { submitBtn.disabled = false; });
   });
 
-  // Resultado de volver de Google (signInWithRedirect manda a otra página y
-  // vuelve); si falló, mostramos el error acá.
-  auth.getRedirectResult().catch(err => {
-    errorEl.textContent = translateAuthError(err.code);
-    errorEl.hidden = false;
-  });
-
-  // Delegados: estos botones los arma modules.js (logout) o viven en el
-  // login, así que pueden no existir todavía cuando este listener se registra.
+  // Delegado: el botón de "Cerrar sesión" lo arma modules.js dentro del
+  // menú, así que puede no existir todavía cuando este listener se registra.
   document.addEventListener("click", e => {
     if (e.target.closest("#logout-btn")) auth.signOut();
-    if (e.target.closest("#google-login-btn")) {
-      errorEl.hidden = true;
-      auth.signInWithRedirect(googleProvider).catch(err => {
-        errorEl.textContent = translateAuthError(err.code);
-        errorEl.hidden = false;
-      });
-    }
   });
 
   auth.onAuthStateChanged(user => {
