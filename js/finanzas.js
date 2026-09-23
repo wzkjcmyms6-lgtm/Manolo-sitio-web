@@ -50,7 +50,7 @@ function saveBudgets(budgets) {
 }
 
 function formatMoney(n) {
-  return n.toLocaleString("es-ES", { style: "currency", currency: "USD" });
+  return n.toLocaleString("es-BO", { style: "currency", currency: "BOB" });
 }
 function capitalize(s) {
   return s.charAt(0).toUpperCase() + s.slice(1);

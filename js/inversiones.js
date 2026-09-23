@@ -8,7 +8,7 @@ function saveInvestments(list) {
 }
 
 function formatMoney(n) {
-  return n.toLocaleString("es-ES", { style: "currency", currency: "USD" });
+  return n.toLocaleString("es-BO", { style: "currency", currency: "BOB" });
 }
 
 function renderStats() {
