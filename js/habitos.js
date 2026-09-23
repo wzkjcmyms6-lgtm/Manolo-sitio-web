@@ -1,11 +1,8 @@
-const HABITS_KEY = "manolo_habitos";
 const DAY_LABELS = ["L", "M", "X", "J", "V", "S", "D"];
+let habitsCache = [];
 
-function loadHabits() {
-  return JSON.parse(localStorage.getItem(HABITS_KEY) || "[]");
-}
-function saveHabits(habits) {
-  localStorage.setItem(HABITS_KEY, JSON.stringify(habits));
+function habitsCollection() {
+  return db.collection("users").doc(currentUser.uid).collection("habitos");
 }
 
 // Devuelve las fechas (YYYY-MM-DD) de la semana actual, de lunes a domingo.
@@ -25,20 +22,19 @@ function currentWeekDates() {
 
 function renderHabitsHeader() {
   const header = document.getElementById("habit-days-header");
-  const dates = currentWeekDates();
   header.innerHTML = "<span></span>" + DAY_LABELS.map(l => `<span>${l}</span>`).join("") + "<span></span>";
 }
 
 function renderHabits() {
-  const habits = loadHabits();
   const list = document.getElementById("habit-list");
   const empty = document.getElementById("habit-empty");
   const dates = currentWeekDates();
 
   list.innerHTML = "";
-  empty.style.display = habits.length ? "none" : "block";
+  empty.style.display = habitsCache.length ? "none" : "block";
 
-  habits.forEach((habit, idx) => {
+  habitsCache.forEach(habit => {
+    const done = habit.done || [];
     const row = document.createElement("div");
     row.className = "habit-row";
 
@@ -49,9 +45,10 @@ function renderHabits() {
     dates.forEach(date => {
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "day-toggle" + (habit.done.includes(date) ? " done" : "");
-      btn.innerHTML = habit.done.includes(date) ? ICONS.check : "";
-      btn.addEventListener("click", () => toggleDay(idx, date));
+      const isDone = done.includes(date);
+      btn.className = "day-toggle" + (isDone ? " done" : "");
+      btn.innerHTML = isDone ? ICONS.check : "";
+      btn.addEventListener("click", () => toggleDay(habit.id, date));
       row.appendChild(btn);
     });
 
@@ -60,28 +57,23 @@ function renderHabits() {
     del.className = "delete";
     del.setAttribute("aria-label", "Eliminar hábito");
     del.innerHTML = ICONS.trash;
-    del.addEventListener("click", () => deleteHabit(idx));
+    del.addEventListener("click", () => deleteHabit(habit.id));
     row.appendChild(del);
 
     list.appendChild(row);
   });
 }
 
-function toggleDay(idx, date) {
-  const habits = loadHabits();
-  const habit = habits[idx];
-  const pos = habit.done.indexOf(date);
-  if (pos === -1) habit.done.push(date);
-  else habit.done.splice(pos, 1);
-  saveHabits(habits);
-  renderHabits();
+function toggleDay(id, date) {
+  const habit = habitsCache.find(h => h.id === id);
+  if (!habit) return;
+  const done = habit.done || [];
+  const next = done.includes(date) ? done.filter(d => d !== date) : [...done, date];
+  habitsCollection().doc(id).update({ done: next });
 }
 
-function deleteHabit(idx) {
-  const habits = loadHabits();
-  habits.splice(idx, 1);
-  saveHabits(habits);
-  renderHabits();
+function deleteHabit(id) {
+  habitsCollection().doc(id).delete();
 }
 
 document.getElementById("habit-form").addEventListener("submit", e => {
@@ -89,12 +81,15 @@ document.getElementById("habit-form").addEventListener("submit", e => {
   const input = document.getElementById("habit-name");
   const name = input.value.trim();
   if (!name) return;
-  const habits = loadHabits();
-  habits.push({ name, done: [] });
-  saveHabits(habits);
+  habitsCollection().add({ name, done: [], createdAt: Date.now() });
   input.value = "";
-  renderHabits();
 });
 
 renderHabitsHeader();
-renderHabits();
+
+onAuthReady(() => {
+  habitsCollection().orderBy("createdAt").onSnapshot(snap => {
+    habitsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderHabits();
+  });
+});

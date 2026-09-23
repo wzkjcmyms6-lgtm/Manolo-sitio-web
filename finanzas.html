@@ -10,6 +10,20 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <span class="brand">Manolo</span>
+      <p class="login-sub">Ingresá para continuar</p>
+      <form id="login-form">
+        <input type="email" id="login-email" placeholder="Correo" autocomplete="username" required>
+        <input type="password" id="login-password" placeholder="Contraseña" autocomplete="current-password" required>
+        <button type="submit">Entrar</button>
+      </form>
+      <p class="login-error" id="login-error" hidden></p>
+    </div>
+  </div>
+
+  <div id="app-content" hidden>
   <div class="topbar">
     <span class="brand">Manolo</span>
     <button class="menu-toggle" id="menu-toggle" data-icon="menu" aria-expanded="false" aria-label="Abrir menú"></button>
@@ -86,6 +100,13 @@
 
   <nav class="bottom-nav" id="bottom-nav-links"></nav>
 
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-init.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/verses.js"></script>
   <script src="js/icons.js"></script>
   <script src="js/modules.js"></script>

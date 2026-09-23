@@ -1,10 +1,7 @@
-const INVESTING_KEY = "manolo_inversiones";
+let investingCache = [];
 
-function loadInvestments() {
-  return JSON.parse(localStorage.getItem(INVESTING_KEY) || "[]");
-}
-function saveInvestments(list) {
-  localStorage.setItem(INVESTING_KEY, JSON.stringify(list));
+function investingCollection() {
+  return db.collection("users").doc(currentUser.uid).collection("inversiones");
 }
 
 function formatMoney(n) {
@@ -12,17 +9,16 @@ function formatMoney(n) {
 }
 
 function renderStats() {
-  const list = loadInvestments();
-  const total = list.reduce((sum, i) => sum + i.amount, 0);
+  const total = investingCache.reduce((sum, i) => sum + i.amount, 0);
 
   document.getElementById("investing-stats").innerHTML = `
     <div class="stat-box"><div class="value">${formatMoney(total)}</div><div class="label">Total invertido</div></div>
-    <div class="stat-box"><div class="value">${list.length}</div><div class="label">Aportes registrados</div></div>
+    <div class="stat-box"><div class="value">${investingCache.length}</div><div class="label">Aportes registrados</div></div>
   `;
 }
 
 function renderInvestments() {
-  const list = loadInvestments().slice().sort((a, b) => b.date.localeCompare(a.date));
+  const list = investingCache.slice().sort((a, b) => b.date.localeCompare(a.date));
   const container = document.getElementById("investing-list");
   const empty = document.getElementById("investing-empty");
 
@@ -51,9 +47,7 @@ function renderInvestments() {
 }
 
 function deleteInvestment(id) {
-  const list = loadInvestments().filter(i => i.id !== id);
-  saveInvestments(list);
-  renderInvestments();
+  investingCollection().doc(id).delete();
 }
 
 document.getElementById("investing-form").addEventListener("submit", e => {
@@ -64,13 +58,16 @@ document.getElementById("investing-form").addEventListener("submit", e => {
   const notes = document.getElementById("investing-notes").value.trim();
   if (!date || !name || !amount) return;
 
-  const list = loadInvestments();
-  list.push({ id: Date.now(), date, name, amount, notes });
-  saveInvestments(list);
+  investingCollection().add({ date, name, amount, notes });
   e.target.reset();
   document.getElementById("investing-date").valueAsDate = new Date();
-  renderInvestments();
 });
 
 document.getElementById("investing-date").valueAsDate = new Date();
-renderInvestments();
+
+onAuthReady(() => {
+  investingCollection().onSnapshot(snap => {
+    investingCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderInvestments();
+  });
+});

@@ -1,6 +1,3 @@
-const FINANCE_KEY = "manolo_finanzas";
-const BUDGET_KEY = "manolo_presupuestos";
-
 const CATEGORIES = {
   gasto: [
     { id: "comida", label: "Comida", icon: "food", color: "#4d9de0" },
@@ -27,6 +24,15 @@ const PAYMENTS = [
 ];
 
 let monthOffset = 0; // 0 = mes actual, -1 = mes anterior, etc.
+let financeCache = [];
+let budgetsCache = {};
+
+function financeCollection() {
+  return db.collection("users").doc(currentUser.uid).collection("finanzas");
+}
+function budgetDocRef() {
+  return db.collection("users").doc(currentUser.uid).collection("meta").doc("presupuestos");
+}
 
 function findCategory(type, id) {
   if (type === "pago_tarjeta") return CARD_PAYMENT_CATEGORY;
@@ -34,19 +40,6 @@ function findCategory(type, id) {
 }
 function findPayment(id) {
   return PAYMENTS.find(p => p.id === id);
-}
-
-function loadMovements() {
-  return JSON.parse(localStorage.getItem(FINANCE_KEY) || "[]");
-}
-function saveMovements(list) {
-  localStorage.setItem(FINANCE_KEY, JSON.stringify(list));
-}
-function loadBudgets() {
-  return JSON.parse(localStorage.getItem(BUDGET_KEY) || "{}");
-}
-function saveBudgets(budgets) {
-  localStorage.setItem(BUDGET_KEY, JSON.stringify(budgets));
 }
 
 function formatMoney(n) {
@@ -92,10 +85,9 @@ function computeTotals(list) {
 // ================= Resumen =================
 
 function renderStats() {
-  const all = loadMovements();
-  const { saldo, deuda } = computeTotals(all);
+  const { saldo, deuda } = computeTotals(financeCache);
   const monthDate = currentMonthDate();
-  const gastosMes = all
+  const gastosMes = financeCache
     .filter(m => m.type === "gasto" && isInMonth(m.date, monthDate))
     .reduce((s, m) => s + m.amount, 0);
 
@@ -131,9 +123,7 @@ function renderStats() {
       const amount = parseFloat(document.getElementById("pay-card-amount").value);
       const source = document.getElementById("pay-card-source").value;
       if (!amount || amount <= 0) return;
-      const list = loadMovements();
-      list.push({
-        id: Date.now(),
+      financeCollection().add({
         date: new Date().toISOString().slice(0, 10),
         type: "pago_tarjeta",
         category: "pago_tarjeta",
@@ -141,8 +131,6 @@ function renderStats() {
         desc: "Pago de tarjeta de crédito",
         amount
       });
-      saveMovements(list);
-      renderAll();
     });
   }
 }
@@ -165,9 +153,9 @@ function populatePaymentSelect(type) {
 
 function renderMovements() {
   const monthDate = currentMonthDate();
-  const list = loadMovements()
+  const list = financeCache
     .filter(m => isInMonth(m.date, monthDate))
-    .sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
+    .sort((a, b) => b.date.localeCompare(a.date) || String(b.id).localeCompare(String(a.id)));
 
   const container = document.getElementById("finance-list");
   const empty = document.getElementById("finance-empty");
@@ -228,8 +216,7 @@ function renderMovements() {
 }
 
 function deleteMovement(id) {
-  saveMovements(loadMovements().filter(m => m.id !== id));
-  renderAll();
+  financeCollection().doc(id).delete();
 }
 
 document.getElementById("finance-type").addEventListener("change", e => {
@@ -247,14 +234,11 @@ document.getElementById("finance-form").addEventListener("submit", e => {
   const amount = parseFloat(document.getElementById("finance-amount").value);
   if (!date || !desc || !amount) return;
 
-  const list = loadMovements();
-  list.push({ id: Date.now(), date, type, category, payment, desc, amount });
-  saveMovements(list);
+  financeCollection().add({ date, type, category, payment, desc, amount });
   e.target.reset();
   document.getElementById("finance-date").valueAsDate = new Date();
   populateCategorySelect("ingreso");
   populatePaymentSelect("ingreso");
-  renderAll();
 });
 
 document.getElementById("month-prev").addEventListener("click", () => { monthOffset--; renderAll(); });
@@ -265,7 +249,7 @@ document.getElementById("month-next").addEventListener("click", () => { monthOff
 function computeSpentByCategory(monthDate) {
   const spent = {};
   CATEGORIES.gasto.forEach(c => { spent[c.id] = 0; });
-  loadMovements()
+  financeCache
     .filter(m => m.type === "gasto" && isInMonth(m.date, monthDate))
     .forEach(m => { spent[m.category] = (spent[m.category] || 0) + m.amount; });
   return spent;
@@ -288,13 +272,12 @@ function renderBudgets() {
   const monthDate = currentMonthDate();
   document.getElementById("budget-month-label").textContent = monthLabel(monthDate);
 
-  const budgets = loadBudgets();
   const spent = computeSpentByCategory(monthDate);
   const grid = document.getElementById("budget-grid");
   grid.innerHTML = "";
 
   CATEGORIES.gasto.forEach(cat => {
-    const budget = budgets[cat.id] || 0;
+    const budget = budgetsCache[cat.id] || 0;
     const s = spent[cat.id] || 0;
     const over = budget > 0 && s > budget;
     const pct = budget > 0 ? s / budget : 0;
@@ -325,12 +308,11 @@ document.getElementById("budget-edit-toggle").addEventListener("click", () => {
   const toggle = document.getElementById("budget-edit-toggle");
 
   if (form.hidden) {
-    const budgets = loadBudgets();
     document.getElementById("budget-inputs").innerHTML = CATEGORIES.gasto.map(c => `
       <label class="budget-input-row">
         <span class="cat-icon" style="background:${c.color}22; color:${c.color}" data-icon="${c.icon}"></span>
         <span class="budget-input-label">${c.label}</span>
-        <input type="number" min="0" step="1" data-cat="${c.id}" value="${budgets[c.id] || ""}" placeholder="0">
+        <input type="number" min="0" step="1" data-cat="${c.id}" value="${budgetsCache[c.id] || ""}" placeholder="0">
       </label>
     `).join("");
     renderIcons(document.getElementById("budget-inputs"));
@@ -351,11 +333,10 @@ document.getElementById("budget-form").addEventListener("submit", e => {
     const v = parseFloat(input.value);
     if (v > 0) budgets[input.dataset.cat] = v;
   });
-  saveBudgets(budgets);
+  budgetDocRef().set(budgets);
   document.getElementById("budget-form").hidden = true;
   document.getElementById("budget-grid").hidden = false;
   document.getElementById("budget-edit-toggle").textContent = "Editar presupuestos";
-  renderBudgets();
 });
 
 // ================= Tabs =================
@@ -381,4 +362,14 @@ function renderAll() {
 document.getElementById("finance-date").valueAsDate = new Date();
 populateCategorySelect("ingreso");
 populatePaymentSelect("ingreso");
-renderAll();
+
+onAuthReady(() => {
+  financeCollection().onSnapshot(snap => {
+    financeCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAll();
+  });
+  budgetDocRef().onSnapshot(doc => {
+    budgetsCache = doc.exists ? doc.data() : {};
+    renderAll();
+  });
+});

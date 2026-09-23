@@ -1,10 +1,7 @@
-const EXERCISE_KEY = "manolo_ejercicio";
+let exerciseCache = [];
 
-function loadExercises() {
-  return JSON.parse(localStorage.getItem(EXERCISE_KEY) || "[]");
-}
-function saveExercises(list) {
-  localStorage.setItem(EXERCISE_KEY, JSON.stringify(list));
+function exerciseCollection() {
+  return db.collection("users").doc(currentUser.uid).collection("ejercicio");
 }
 
 function startOfWeek() {
@@ -17,12 +14,11 @@ function startOfWeek() {
 }
 
 function renderStats() {
-  const list = loadExercises();
   const weekStart = startOfWeek();
-  const weekMinutes = list
+  const weekMinutes = exerciseCache
     .filter(e => new Date(e.date) >= weekStart)
     .reduce((sum, e) => sum + Number(e.duration), 0);
-  const totalSessions = list.length;
+  const totalSessions = exerciseCache.length;
 
   document.getElementById("exercise-stats").innerHTML = `
     <div class="stat-box"><div class="value">${weekMinutes}</div><div class="label">Minutos esta semana</div></div>
@@ -31,7 +27,7 @@ function renderStats() {
 }
 
 function renderExercises() {
-  const list = loadExercises().slice().sort((a, b) => b.date.localeCompare(a.date));
+  const list = exerciseCache.slice().sort((a, b) => b.date.localeCompare(a.date));
   const container = document.getElementById("exercise-list");
   const empty = document.getElementById("exercise-empty");
 
@@ -60,9 +56,7 @@ function renderExercises() {
 }
 
 function deleteExercise(id) {
-  const list = loadExercises().filter(e => e.id !== id);
-  saveExercises(list);
-  renderExercises();
+  exerciseCollection().doc(id).delete();
 }
 
 document.getElementById("exercise-form").addEventListener("submit", e => {
@@ -73,12 +67,16 @@ document.getElementById("exercise-form").addEventListener("submit", e => {
   const notes = document.getElementById("exercise-notes").value.trim();
   if (!date || !type || !duration) return;
 
-  const list = loadExercises();
-  list.push({ id: Date.now(), date, type, duration, notes });
-  saveExercises(list);
+  exerciseCollection().add({ date, type, duration, notes });
   e.target.reset();
-  renderExercises();
+  document.getElementById("exercise-date").valueAsDate = new Date();
 });
 
 document.getElementById("exercise-date").valueAsDate = new Date();
-renderExercises();
+
+onAuthReady(() => {
+  exerciseCollection().onSnapshot(snap => {
+    exerciseCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderExercises();
+  });
+});

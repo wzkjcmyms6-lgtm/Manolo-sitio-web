@@ -153,6 +153,79 @@ h1, h2, h3 { font-family: "DM Sans", system-ui, sans-serif; font-weight: 700; le
 
 .sidebar-overlay { display: none; }
 
+/* ---------- Logout button (sidebar) ---------- */
+.logout-btn {
+  display: block;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.logout-btn:hover { color: var(--danger); border-color: var(--danger); }
+
+/* ---------- Login screen ---------- */
+.login-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: radial-gradient(120% 160% at 100% 0%, #241109 0%, transparent 55%), #000000;
+}
+.login-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2rem 1.75rem;
+  text-align: center;
+}
+.login-card .brand { display: block; font-size: 1.5rem; margin-bottom: 0.4rem; }
+.login-card .login-sub { color: var(--muted); font-size: 0.9rem; margin: 0 0 1.5rem; }
+.login-card form { display: flex; flex-direction: column; gap: 0.7rem; }
+.login-card input {
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+.login-card input::placeholder { color: var(--muted); }
+.login-card input:focus {
+  outline: none;
+  border-color: var(--accent-1);
+  box-shadow: 0 0 0 3px rgba(255, 122, 48, 0.2);
+}
+.login-card button[type="submit"] {
+  margin-top: 0.4rem;
+  background: var(--accent-grad);
+  color: #0a0a0a;
+  border: none;
+  border-radius: 999px;
+  padding: 0.7rem 1rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+.login-card button[type="submit"]:hover { filter: brightness(1.08); }
+.login-card button[type="submit"]:disabled { opacity: 0.6; cursor: default; }
+.login-error { margin: 0.9rem 0 0; color: var(--danger); font-size: 0.85rem; }
+
 .main { flex: 1; min-width: 0; width: 100%; }
 .content { padding: 2.5rem 2rem; max-width: 960px; margin: 0 auto; }
 
@@ -379,7 +452,7 @@ button.delete:hover { opacity: 1; }
 }
 .stat-box .value.value-debt { background: none; -webkit-text-fill-color: initial; color: var(--danger); }
 /* [hidden] must win over the display:flex/grid rules below it in the cascade */
-.pay-card-form[hidden], .budget-form[hidden], .budget-grid[hidden] { display: none; }
+.pay-card-form[hidden], .budget-form[hidden], .budget-grid[hidden], .login-screen[hidden] { display: none; }
 
 /* ---------- Finance: transaction list grouped by day ---------- */
 .day-header {
@@ -567,7 +640,7 @@ button.delete:hover { opacity: 1; }
   .sidebar nav { display: flex; flex-direction: row; align-items: center; gap: 0.35rem; }
   .sidebar nav a { margin-bottom: 0; }
   .sidebar nav a.active { box-shadow: inset 0 -2px 0 var(--accent-1); background: transparent; border-radius: 4px; }
-  .sidebar nav a.nav-cta { margin-top: 0; margin-left: 0.5rem; }
+  .logout-btn { width: auto; margin-top: 0; margin-left: 0.5rem; }
 
   .bottom-nav { display: none !important; }
 }

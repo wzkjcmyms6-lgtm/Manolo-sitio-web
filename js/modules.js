@@ -19,7 +19,9 @@ function renderNav() {
 
   const sidebarNav = document.getElementById("nav-links");
   if (sidebarNav) {
-    sidebarNav.innerHTML = MODULES.map(m => linkHTML(m, "nav-icon")).join("");
+    sidebarNav.innerHTML =
+      MODULES.map(m => linkHTML(m, "nav-icon")).join("") +
+      `<button type="button" id="logout-btn" class="logout-btn">Cerrar sesión</button>`;
   }
 
   const bottomNav = document.getElementById("bottom-nav-links");
