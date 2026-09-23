@@ -600,9 +600,10 @@ document.getElementById("new-group-cancel").addEventListener("click", () => {
 });
 
 // Handle color selection in new group form
-document.addEventListener("click", e => {
-  const colorBtn = e.target.closest("#new-group-color-picker .color-choice");
+document.getElementById("new-group-color-picker").addEventListener("click", e => {
+  const colorBtn = e.target.closest(".color-choice");
   if (colorBtn) {
+    e.preventDefault();
     document.querySelectorAll("#new-group-color-picker .color-choice").forEach(b => b.classList.remove("selected"));
     colorBtn.classList.add("selected");
   }
