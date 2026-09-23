@@ -479,7 +479,7 @@ function renderCategoryGroups() {
       const displayEmoji = item.emoji;
       const displayIcon = !displayEmoji ? item.icon : null;
       const iconOrEmojiHTML = displayEmoji
-        ? `<span class="cat-emoji">${displayEmoji}</span>`
+        ? `<span class="cat-emoji" style="background:${color}; color:#fff;">${displayEmoji}</span>`
         : `<span class="cat-icon" style="background:${color}22; color:${color}" data-icon="${displayIcon}"></span>`;
 
       return `
@@ -500,14 +500,10 @@ function renderCategoryGroups() {
           <button type="button" class="cat-add-btn" data-add-sub="${g.id}" aria-label="Agregar subcategoría en ${escapeHtml(g.nombre)}">${ICONS.plus}</button>
         </div>
         <div class="cat-group-items">${itemsHTML}</div>
-        <form class="tracker-form cat-subcategory-form" data-group-id="${g.id}" hidden>
+        <form class="tracker-form cat-subcategory-form" data-group-id="${g.id}" data-color="${color}" hidden>
           <input type="text" class="cat-sub-name" placeholder="Nombre (ej: Mascotas)" required>
           <div class="form-section">
-            <label style="font-size: 0.85rem; color: #999; display: block; margin-bottom: 0.5rem;">Ícono</label>
-            <div class="icon-picker">${iconPickerHTML()}</div>
-          </div>
-          <div class="form-section">
-            <label style="font-size: 0.85rem; color: #999; display: block; margin-bottom: 0.5rem;">O emoji</label>
+            <label style="font-size: 0.85rem; color: #999; display: block; margin-bottom: 0.5rem;">Emoji</label>
             <div class="emoji-picker">${emojiPickerHTML()}</div>
           </div>
           <button type="submit">Agregar</button>
@@ -542,19 +538,9 @@ document.getElementById("category-groups").addEventListener("click", e => {
     return;
   }
 
-  const iconChoice = e.target.closest(".icon-choice");
-  if (iconChoice) {
-    const form = iconChoice.closest("form");
-    form.querySelectorAll(".icon-choice").forEach(b => b.classList.remove("selected"));
-    form.querySelectorAll(".emoji-choice").forEach(b => b.classList.remove("selected"));
-    iconChoice.classList.add("selected");
-    return;
-  }
-
   const emojiChoice = e.target.closest(".emoji-choice");
   if (emojiChoice) {
     const form = emojiChoice.closest("form");
-    form.querySelectorAll(".icon-choice").forEach(b => b.classList.remove("selected"));
     form.querySelectorAll(".emoji-choice").forEach(b => b.classList.remove("selected"));
     emojiChoice.classList.add("selected");
     return;
@@ -564,7 +550,6 @@ document.getElementById("category-groups").addEventListener("click", e => {
   if (cancelBtn) {
     const form = cancelBtn.closest("form");
     form.reset();
-    form.querySelectorAll(".icon-choice").forEach((b, i) => b.classList.toggle("selected", i === 0));
     form.querySelectorAll(".emoji-choice").forEach(b => b.classList.remove("selected"));
     form.hidden = true;
   }
@@ -578,22 +563,19 @@ document.getElementById("category-groups").addEventListener("submit", e => {
   const groupId = form.dataset.groupId;
   const label = form.querySelector(".cat-sub-name").value.trim();
   const emojiChoice = form.querySelector(".emoji-choice.selected");
-  const iconChoice = form.querySelector(".icon-choice.selected");
-  if (!label || (!emojiChoice && !iconChoice)) return;
+  if (!label || !emojiChoice) return;
 
   const base = slugify(label);
   let id = base, suffix = 2;
   while (gastoCategoriesCache.some(c => c.id === id)) id = `${base}_${suffix++}`;
 
-  const newItem = { id, label, icon: iconChoice.dataset.iconChoice };
-  if (emojiChoice) newItem.emoji = emojiChoice.dataset.emoji;
+  const newItem = { id, label, icon: "otherCategory", emoji: emojiChoice.dataset.emoji };
 
   const next = categoryGroupsCache.map(g =>
     g.id === groupId ? Object.assign({}, g, { items: g.items.concat([newItem]) }) : g
   );
   saveCategoryGroups(next);
   form.reset();
-  form.querySelectorAll(".icon-choice").forEach((b, i) => b.classList.toggle("selected", i === 0));
   form.querySelectorAll(".emoji-choice").forEach(b => b.classList.remove("selected"));
   form.hidden = true;
 });
@@ -601,24 +583,12 @@ document.getElementById("category-groups").addEventListener("submit", e => {
 document.getElementById("new-group-toggle").addEventListener("click", () => {
   document.getElementById("new-group-form").hidden = false;
   document.getElementById("new-group-toggle").hidden = true;
-  const picker = document.getElementById("new-group-emoji-picker");
-  picker.innerHTML = emojiPickerHTML();
-  document.getElementById("new-group-emoji-section").style.display = "block";
   document.getElementById("new-group-name").focus();
 });
 document.getElementById("new-group-cancel").addEventListener("click", () => {
   document.getElementById("new-group-form").reset();
   document.getElementById("new-group-form").hidden = true;
   document.getElementById("new-group-toggle").hidden = false;
-});
-
-// Handle emoji selection in new group form
-document.addEventListener("click", e => {
-  const emojiBtn = e.target.closest(".emoji-picker-inline .emoji-choice");
-  if (emojiBtn) {
-    document.querySelectorAll(".emoji-picker-inline .emoji-choice").forEach(b => b.classList.remove("selected"));
-    emojiBtn.classList.add("selected");
-  }
 });
 
 document.getElementById("new-group-form").addEventListener("submit", e => {
@@ -634,9 +604,7 @@ document.getElementById("new-group-form").addEventListener("submit", e => {
   let itemId = base, itemSuffix = 2;
   while (gastoCategoriesCache.some(c => c.id === itemId)) itemId = `${base}_${itemSuffix++}`;
 
-  const selectedEmoji = document.querySelector(".emoji-picker-inline .emoji-choice.selected");
   const newItem = { id: itemId, label: nombre, icon: "otherCategory" };
-  if (selectedEmoji) newItem.emoji = selectedEmoji.dataset.emoji;
 
   const next = categoryGroupsCache.concat([{ id, nombre, items: [newItem] }]);
   saveCategoryGroups(next);
