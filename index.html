@@ -412,8 +412,36 @@
 
           <!-- ---- Herramientas: Carteras ---- -->
           <section id="panel-fin-herramientas-carteras" hidden>
-            <a class="back-link" href="#fin-herramientas"><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</a>
+            <div class="panel-header-row">
+              <a class="back-link" href="#fin-herramientas"><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</a>
+              <div class="wallet-menu">
+                <button type="button" class="wallet-menu-btn" id="wallet-menu-btn" aria-label="Más opciones" data-icon="otherCategory"></button>
+                <div class="wallet-menu-dropdown" id="wallet-menu-dropdown" hidden>
+                  <button type="button" class="wallet-menu-item" id="wallet-menu-new"><span class="icon-sm" data-icon="plus"></span>Nueva cartera</button>
+                  <button type="button" class="wallet-menu-item" id="wallet-menu-transfer"><span class="icon-sm" data-icon="transfer"></span>Hacer una transferencia</button>
+                </div>
+              </div>
+            </div>
             <h1 class="page-title">Carteras</h1>
+
+            <form id="new-wallet-form" class="tracker-form" hidden>
+              <input type="text" id="new-wallet-name" placeholder="Nombre (ej: Vacaciones)" required>
+              <select id="new-wallet-currency">
+                <option value="Bs">Bolivianos (Bs)</option>
+                <option value="US$">Dólares (US$)</option>
+              </select>
+              <button type="submit">Crear cartera</button>
+              <button type="button" class="link-btn" id="new-wallet-cancel">Cancelar</button>
+            </form>
+
+            <form id="transfer-form" class="tracker-form" hidden>
+              <select id="transfer-from" required></select>
+              <select id="transfer-to" required></select>
+              <input type="number" id="transfer-amount" placeholder="Monto" min="0.01" step="0.01" required>
+              <input type="text" id="transfer-notes" placeholder="Nota (opcional)">
+              <button type="submit">Transferir</button>
+              <button type="button" class="link-btn" id="transfer-cancel">Cancelar</button>
+            </form>
 
             <div class="wallet-hero">
               <div class="wallet-hero-track" id="wallet-hero-track"></div>

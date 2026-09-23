@@ -31,6 +31,8 @@ let financeCache = [];
 let budgetsCache = {};
 let gastoCategoriesCache = CATEGORIES.gasto; // se reemplaza por la lista guardada en Firestore
 let ahorrosCache = [];
+let carterasCustomCache = []; // carteras que el usuario crea a mano, con su propio saldo
+let carterasMovCache = []; // movimientos (aportes, retiros, transferencias) de esas carteras
 
 function financeCollection() {
   return db.collection("users").doc(currentUser.uid).collection("finanzas");
@@ -43,6 +45,12 @@ function categoriasDocRef() {
 }
 function ahorrosCollection() {
   return db.collection("users").doc(currentUser.uid).collection("ahorros");
+}
+function carterasCustomDocRef() {
+  return db.collection("users").doc(currentUser.uid).collection("meta").doc("carteras_custom");
+}
+function carterasMovimientosCollection() {
+  return db.collection("users").doc(currentUser.uid).collection("carteras_movimientos");
 }
 
 function findCategory(type, id) {
@@ -449,19 +457,56 @@ document.getElementById("new-category-form").addEventListener("submit", e => {
 // ================= Herramientas: Carteras =================
 
 // La cartera de gastos y la de tarjeta de crédito salen de los movimientos
-// de Finanzas (Bs). Ahorros se lleva en US$.
+// de Finanzas (Bs). Ahorros se lleva en US$. Además de esas 3, el usuario
+// puede crear sus propias carteras (con su propio saldo y moneda) y
+// transferir plata entre Ahorro y esas carteras personalizadas.
+function customWalletBalance(id) {
+  return carterasMovCache.filter(m => m.carteraId === id).reduce((s, m) => s + m.monto, 0);
+}
+
+// Carteras que tienen su propio "libro" de movimientos y por eso admiten
+// transferencias entre sí (Ahorro + las que el usuario va creando). Gastos
+// y Tarjeta de crédito quedan fuera porque salen de la contabilidad real
+// de Finanzas, no de un saldo editable a mano.
+function ledgerWallets() {
+  return [{ id: "ahorro", nombre: "Ahorro", moneda: "US$", builtIn: true }]
+    .concat(carterasCustomCache.map(w => Object.assign({ builtIn: false }, w)));
+}
+function addWalletMovement(walletId, monto, nota) {
+  const fecha = new Date().toISOString().slice(0, 10);
+  if (walletId === "ahorro") {
+    ahorrosCollection().add({ date: fecha, amount: monto, notes: nota });
+  } else {
+    carterasMovimientosCollection().add({ carteraId: walletId, fecha, monto, nota });
+  }
+}
+function deleteCustomWallet(id) {
+  carterasCustomDocRef().set({ list: carterasCustomCache.filter(w => w.id !== id) });
+  carterasMovCache.filter(m => m.carteraId === id).forEach(m => carterasMovimientosCollection().doc(m.id).delete());
+}
+
 function renderWallets() {
   const { saldo, deuda } = computeTotals(financeCache);
   const totalAhorros = ahorrosCache.reduce((s, a) => s + a.amount, 0);
-  const netoBs = saldo - deuda;
+  let netoBs = saldo - deuda;
+  let netoUsd = totalAhorros;
+  carterasCustomCache.forEach(w => {
+    const bal = customWalletBalance(w.id);
+    if (w.moneda === "US$") netoUsd += bal; else netoBs += bal;
+  });
+
   const deudaText = deuda > 0 ? "−" + formatMoney(deuda) : formatMoney(0);
 
   const panels = [
-    { label: "Patrimonio total", lines: [formatMoney(netoBs), formatUSD(totalAhorros)] },
+    { label: "Patrimonio total", lines: [formatMoney(netoBs), formatUSD(netoUsd)] },
     { label: "Cartera de gastos", lines: [formatMoney(saldo)] },
     { label: "Cartera de tarjeta de crédito", lines: [deudaText] },
     { label: "Cartera de ahorro", lines: [formatUSD(totalAhorros)] }
   ];
+  carterasCustomCache.forEach(w => {
+    const bal = customWalletBalance(w.id);
+    panels.push({ label: w.nombre, lines: [w.moneda === "US$" ? formatUSD(bal) : formatMoney(bal)] });
+  });
 
   document.getElementById("wallet-hero-track").innerHTML = panels.map(p => `
     <div class="wallet-hero-panel">
@@ -483,15 +528,31 @@ function renderWallets() {
       </div>
     </div>
   `;
+  const walletCustomHTML = (w, i) => {
+    const bal = customWalletBalance(w.id);
+    const color = CATEGORY_COLOR_POOL[i % CATEGORY_COLOR_POOL.length];
+    return `
+      <div class="wallet-card">
+        <span class="wallet-icon" style="background:${color}22; color:${color}" data-icon="wallet"></span>
+        <div class="wallet-info">
+          <div class="wallet-label">${escapeHtml(w.nombre)} (${w.moneda})</div>
+          <div class="wallet-value">${w.moneda === "US$" ? formatUSD(bal) : formatMoney(bal)}</div>
+        </div>
+        <button type="button" class="delete" aria-label="Eliminar cartera" data-delete-wallet="${w.id}">${ICONS.trash}</button>
+      </div>
+    `;
+  };
 
   document.getElementById("wallet-list").innerHTML =
     walletHTML("finance", "#ff9a4d", "Gastos", formatMoney(saldo)) +
     walletHTML("finance", "#e05656", "Tarjeta de crédito", deudaText, deuda > 0) +
-    walletHTML("wallet", "#5cc98a", "Ahorro (US$)", formatUSD(totalAhorros));
+    walletHTML("wallet", "#5cc98a", "Ahorro (US$)", formatUSD(totalAhorros)) +
+    carterasCustomCache.map(walletCustomHTML).join("");
 
   renderIcons(document.getElementById("wallet-hero-track"));
   renderIcons(document.getElementById("wallet-list"));
   wireWalletHero();
+  populateTransferSelects();
 }
 
 function wireWalletHero() {
@@ -507,6 +568,94 @@ function wireWalletHero() {
     dots.forEach((d, i) => d.classList.toggle("active", i === idx));
   };
 }
+
+// ---- Menú "⋯": Nueva cartera / Hacer una transferencia ----
+
+document.getElementById("wallet-menu-btn").addEventListener("click", e => {
+  e.stopPropagation();
+  document.getElementById("wallet-menu-dropdown").hidden = !document.getElementById("wallet-menu-dropdown").hidden;
+});
+document.addEventListener("click", () => {
+  document.getElementById("wallet-menu-dropdown").hidden = true;
+});
+
+document.getElementById("wallet-menu-new").addEventListener("click", () => {
+  document.getElementById("wallet-menu-dropdown").hidden = true;
+  document.getElementById("transfer-form").hidden = true;
+  document.getElementById("new-wallet-form").hidden = false;
+});
+document.getElementById("new-wallet-cancel").addEventListener("click", () => {
+  document.getElementById("new-wallet-form").hidden = true;
+});
+document.getElementById("new-wallet-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const nombre = document.getElementById("new-wallet-name").value.trim();
+  const moneda = document.getElementById("new-wallet-currency").value;
+  if (!nombre) return;
+
+  const base = slugify(nombre);
+  const existingIds = carterasCustomCache.map(w => w.id).concat(["ahorro"]);
+  let id = base, suffix = 2;
+  while (existingIds.includes(id)) id = `${base}_${suffix++}`;
+
+  carterasCustomDocRef().set({ list: carterasCustomCache.concat([{ id, nombre, moneda }]) });
+  e.target.reset();
+  document.getElementById("new-wallet-form").hidden = true;
+});
+
+document.getElementById("wallet-menu-transfer").addEventListener("click", () => {
+  document.getElementById("wallet-menu-dropdown").hidden = true;
+  document.getElementById("new-wallet-form").hidden = true;
+  populateTransferSelects();
+  document.getElementById("transfer-form").hidden = false;
+});
+document.getElementById("transfer-cancel").addEventListener("click", () => {
+  document.getElementById("transfer-form").hidden = true;
+});
+
+function populateTransferSelects() {
+  const wallets = ledgerWallets();
+  const fromSel = document.getElementById("transfer-from");
+  const prevFrom = fromSel.value;
+  fromSel.innerHTML = wallets.map(w => `<option value="${w.id}">${escapeHtml(w.nombre)} (${w.moneda})</option>`).join("");
+  if (wallets.some(w => w.id === prevFrom)) fromSel.value = prevFrom;
+  updateTransferToOptions();
+}
+function updateTransferToOptions() {
+  const wallets = ledgerWallets();
+  const fromW = wallets.find(w => w.id === document.getElementById("transfer-from").value);
+  const options = wallets.filter(w => (!fromW || w.id !== fromW.id) && (!fromW || w.moneda === fromW.moneda));
+  const toSel = document.getElementById("transfer-to");
+  const prevTo = toSel.value;
+  toSel.innerHTML = options.map(w => `<option value="${w.id}">${escapeHtml(w.nombre)} (${w.moneda})</option>`).join("");
+  if (options.some(w => w.id === prevTo)) toSel.value = prevTo;
+}
+document.getElementById("transfer-from").addEventListener("change", updateTransferToOptions);
+
+document.getElementById("transfer-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const fromId = document.getElementById("transfer-from").value;
+  const toId = document.getElementById("transfer-to").value;
+  const amount = parseFloat(document.getElementById("transfer-amount").value);
+  const notes = document.getElementById("transfer-notes").value.trim();
+  if (!fromId || !toId || fromId === toId || !amount || amount <= 0) return;
+
+  const wallets = ledgerWallets();
+  const fromW = wallets.find(w => w.id === fromId);
+  const toW = wallets.find(w => w.id === toId);
+  if (!fromW || !toW || fromW.moneda !== toW.moneda) return;
+
+  addWalletMovement(fromId, -amount, `Transferencia a ${toW.nombre}${notes ? " · " + notes : ""}`);
+  addWalletMovement(toId, amount, `Transferencia desde ${fromW.nombre}${notes ? " · " + notes : ""}`);
+
+  e.target.reset();
+  document.getElementById("transfer-form").hidden = true;
+});
+
+document.getElementById("wallet-list").addEventListener("click", e => {
+  const btn = e.target.closest("[data-delete-wallet]");
+  if (btn) deleteCustomWallet(btn.dataset.deleteWallet);
+});
 
 function renderSavingsList() {
   const list = ahorrosCache.slice().sort((a, b) => b.date.localeCompare(a.date));
@@ -638,6 +787,14 @@ onAuthReady(() => {
   });
   ahorrosCollection().onSnapshot(snap => {
     ahorrosCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAll();
+  });
+  carterasCustomDocRef().onSnapshot(doc => {
+    carterasCustomCache = (doc.exists && Array.isArray(doc.data().list)) ? doc.data().list : [];
+    renderAll();
+  });
+  carterasMovimientosCollection().onSnapshot(snap => {
+    carterasMovCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();
   });
 });
