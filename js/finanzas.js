@@ -54,7 +54,7 @@ function carterasMovimientosCollection() {
 }
 
 function findCategory(type, id) {
-  if (type === "pago_tarjeta") return CARD_PAYMENT_CATEGORY;
+  if (type === "pago_tarjeta" || type === "ajuste_tarjeta") return CARD_PAYMENT_CATEGORY;
   const list = type === "gasto" ? gastoCategoriesCache : (CATEGORIES[type] || []);
   return list.find(c => c.id === id) || gastoCategoriesCache.find(c => c.id === "otros") || CATEGORIES.gasto[CATEGORIES.gasto.length - 1];
 }
@@ -113,6 +113,11 @@ function computeTotals(list) {
       else saldo -= m.amount;
     } else if (m.type === "pago_tarjeta") {
       saldo -= m.amount;
+      deuda -= m.amount;
+    } else if (m.type === "ajuste_tarjeta") {
+      // Pago de la tarjeta hecho con plata de otra cartera (Ahorro, etc.):
+      // solo baja la deuda, no toca el saldo de Gastos (esa plata no salió
+      // de ahí).
       deuda -= m.amount;
     }
   });
@@ -215,7 +220,10 @@ function renderMovements() {
   });
 
   groups.forEach(g => {
-    const dayTotal = g.items.reduce((s, m) => s + (m.type === "ingreso" ? m.amount : -m.amount), 0);
+    // ajuste_tarjeta no mueve plata de Gastos (viene de otra cartera), así
+    // que no cuenta para el total de efectivo del día.
+    const dayTotal = g.items.reduce((s, m) =>
+      s + (m.type === "ingreso" ? m.amount : m.type === "ajuste_tarjeta" ? 0 : -m.amount), 0);
     const dayLabel = capitalize(new Date(g.date + "T00:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "2-digit", month: "short" }));
 
     const header = document.createElement("div");
@@ -464,18 +472,33 @@ function customWalletBalance(id) {
   return carterasMovCache.filter(m => m.carteraId === id).reduce((s, m) => s + m.monto, 0);
 }
 
-// Carteras que tienen su propio "libro" de movimientos y por eso admiten
-// transferencias entre sí (Ahorro + las que el usuario va creando). Gastos
-// y Tarjeta de crédito quedan fuera porque salen de la contabilidad real
-// de Finanzas, no de un saldo editable a mano.
+// Todas las carteras que se pueden usar en una transferencia. Gastos y
+// Ahorro pueden ser origen o destino; Tarjeta de crédito solo puede ser
+// destino (pagarla con plata de otra cartera), nunca origen — no tiene
+// sentido "sacar" plata de una deuda.
 function ledgerWallets() {
-  return [{ id: "ahorro", nombre: "Ahorro", moneda: "US$", builtIn: true }]
-    .concat(carterasCustomCache.map(w => Object.assign({ builtIn: false }, w)));
+  return [
+    { id: "gastos", nombre: "Gastos", moneda: "Bs", builtIn: true },
+    { id: "tarjeta", nombre: "Tarjeta de crédito", moneda: "Bs", builtIn: true, soloDestino: true },
+    { id: "ahorro", nombre: "Ahorro", moneda: "US$", builtIn: true }
+  ].concat(carterasCustomCache.map(w => Object.assign({ builtIn: false }, w)));
 }
+
+// Registra que entró/salió plata de una cartera. Para Gastos y Tarjeta de
+// crédito, en vez de guardarlo aparte, crea el movimiento real de Finanzas
+// que corresponde, así el saldo y la deuda quedan siempre correctos.
 function addWalletMovement(walletId, monto, nota) {
   const fecha = new Date().toISOString().slice(0, 10);
   if (walletId === "ahorro") {
     ahorrosCollection().add({ date: fecha, amount: monto, notes: nota });
+  } else if (walletId === "gastos") {
+    if (monto >= 0) {
+      financeCollection().add({ date: fecha, type: "ingreso", category: "otros_ingresos", payment: "efectivo", desc: nota, amount: monto });
+    } else {
+      financeCollection().add({ date: fecha, type: "gasto", category: "otros", payment: "efectivo", desc: nota, amount: -monto });
+    }
+  } else if (walletId === "tarjeta") {
+    financeCollection().add({ date: fecha, type: "ajuste_tarjeta", desc: nota, amount: monto });
   } else {
     carterasMovimientosCollection().add({ carteraId: walletId, fecha, monto, nota });
   }
@@ -614,7 +637,7 @@ document.getElementById("transfer-cancel").addEventListener("click", () => {
 });
 
 function populateTransferSelects() {
-  const wallets = ledgerWallets();
+  const wallets = ledgerWallets().filter(w => !w.soloDestino);
   const fromSel = document.getElementById("transfer-from");
   const prevFrom = fromSel.value;
   fromSel.innerHTML = wallets.map(w => `<option value="${w.id}">${escapeHtml(w.nombre)} (${w.moneda})</option>`).join("");
