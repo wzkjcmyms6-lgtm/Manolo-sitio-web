@@ -851,6 +851,9 @@ button.delete:hover { opacity: 1; }
     padding: 0.6rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
     animation: wallet-sheet-rise 0.32s cubic-bezier(0.22, 1, 0.36, 1);
   }
+  #panel-fin-herramientas-carteras-detalle.wallet-sheet.closing:not([hidden]) {
+    animation: wallet-sheet-fall 0.26s cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
   .wallet-sheet-grip {
     display: block;
     width: 36px;
@@ -864,6 +867,10 @@ button.delete:hover { opacity: 1; }
 @keyframes wallet-sheet-rise {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
+}
+@keyframes wallet-sheet-fall {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
 }
 .wallet-card .wallet-info { flex: 1; min-width: 0; }
 .wallet-icon {

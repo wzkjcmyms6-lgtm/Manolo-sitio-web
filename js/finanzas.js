@@ -608,6 +608,21 @@ document.getElementById("wallet-list").addEventListener("click", e => {
   if (card) openWalletDetail(card.dataset.walletId);
 });
 
+// Al tocar "Carteras" para volver, la hoja debe bajar con animación en vez
+// de desaparecer de golpe. En escritorio no es una hoja flotante, así que
+// ahí se navega directo.
+document.querySelector("#panel-fin-herramientas-carteras-detalle .back-link").addEventListener("click", e => {
+  const panel = document.getElementById("panel-fin-herramientas-carteras-detalle");
+  if (!window.matchMedia("(max-width: 768px)").matches) return;
+  e.preventDefault();
+  if (panel.classList.contains("closing")) return;
+  panel.classList.add("closing");
+  setTimeout(() => {
+    panel.classList.remove("closing");
+    window.location.hash = "fin-herramientas-carteras";
+  }, 260);
+});
+
 // Movimientos de una cartera, normalizados para mostrarlos en su detalle.
 // Cada cartera guarda su historial en un lugar distinto (Gastos/Tarjeta en
 // "finanzas", Ahorro en "ahorros", las personalizadas en
