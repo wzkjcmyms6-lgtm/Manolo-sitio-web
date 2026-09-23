@@ -18,6 +18,8 @@ function showLogin() {
   document.getElementById("app-content").hidden = true;
 }
 
+const googleProvider = new firebase.auth.GoogleAuthProvider();
+
 function translateAuthError(code) {
   const map = {
     "auth/invalid-email": "Ese correo no es válido.",
@@ -25,7 +27,9 @@ function translateAuthError(code) {
     "auth/wrong-password": "Contraseña incorrecta.",
     "auth/invalid-credential": "Correo o contraseña incorrectos.",
     "auth/too-many-requests": "Demasiados intentos. Probá de nuevo en unos minutos.",
-    "auth/network-request-failed": "Sin conexión. Revisá tu internet."
+    "auth/network-request-failed": "Sin conexión. Revisá tu internet.",
+    "auth/unauthorized-domain": "Este sitio todavía no está autorizado para iniciar sesión con Google (falta agregarlo en Firebase).",
+    "auth/account-exists-with-different-credential": "Ese correo ya está registrado con otro método de acceso."
   };
   return map[code] || "No se pudo iniciar sesión. Intentá de nuevo.";
 }
@@ -50,10 +54,18 @@ document.addEventListener("DOMContentLoaded", () => {
       .finally(() => { submitBtn.disabled = false; });
   });
 
-  // Delegado: el botón de "Cerrar sesión" lo arma modules.js dentro del
-  // menú, así que puede no existir todavía cuando este listener se registra.
+  // Resultado de volver de Google (signInWithRedirect manda a otra página y
+  // vuelve); si falló, mostramos el error acá.
+  auth.getRedirectResult().catch(err => {
+    errorEl.textContent = translateAuthError(err.code);
+    errorEl.hidden = false;
+  });
+
+  // Delegados: estos botones los arma modules.js (logout) o viven en el
+  // login, así que pueden no existir todavía cuando este listener se registra.
   document.addEventListener("click", e => {
     if (e.target.closest("#logout-btn")) auth.signOut();
+    if (e.target.closest("#google-login-btn")) auth.signInWithRedirect(googleProvider);
   });
 
   auth.onAuthStateChanged(user => {
