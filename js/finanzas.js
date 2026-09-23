@@ -579,6 +579,13 @@ function showCategorySelectorModal(sectionType, available) {
     </button>
   `).join("");
 
+  console.log("Modal categories:", available);
+  console.log("Icons to render:", available.map(c => c.icon));
+  console.log("Elements with data-icon in grid:", grid.querySelectorAll("[data-icon]").length);
+  grid.querySelectorAll("[data-icon]").forEach(el => {
+    console.log("Element icon:", el.dataset.icon, "exists in ICONS:", !!ICONS[el.dataset.icon]);
+  });
+
   renderIcons(grid);
   document.getElementById("category-selector-modal").removeAttribute("hidden");
 }
