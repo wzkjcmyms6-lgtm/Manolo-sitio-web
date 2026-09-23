@@ -581,7 +581,7 @@ document.getElementById("budget-inputs").addEventListener("click", e => {
   ].join("\n");
 
   const selected = prompt(
-    `¿Qué quieres hacer?\n\n${options}`,
+    `Selecciona una categoría o crea una nueva:\n\n${options}`,
     "1"
   );
 
