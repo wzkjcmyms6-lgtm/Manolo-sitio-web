@@ -363,6 +363,19 @@
                 <div id="budget-inputs" class="budget-grouped-list"></div>
                 <button type="submit">Guardar presupuestos</button>
               </form>
+
+              <!-- Modal para seleccionar categoría -->
+              <div id="category-selector-modal" class="category-selector-modal" hidden>
+                <div class="category-selector-overlay"></div>
+                <div class="category-selector-content">
+                  <h3>Selecciona una categoría</h3>
+                  <div id="category-selector-grid" class="category-selector-grid"></div>
+                  <button type="button" id="category-selector-new" class="category-selector-new-btn">
+                    <span data-icon="plus"></span> Crear nueva categoría
+                  </button>
+                  <button type="button" id="category-selector-cancel" class="category-selector-cancel-btn">Cancelar</button>
+                </div>
+              </div>
             </section>
 
             <section id="budget-tab-restante" class="fin-panel" hidden>

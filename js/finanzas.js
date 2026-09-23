@@ -563,6 +563,32 @@ function createCustomCategory(name, sectionType = "gasto") {
   return cat;
 }
 
+// Variables globales para el modal de categorías
+let currentCategorySelectorSection = null;
+let currentCategorySelectorAvailable = [];
+
+function showCategorySelectorModal(sectionType, available) {
+  currentCategorySelectorSection = sectionType;
+  currentCategorySelectorAvailable = available;
+
+  const grid = document.getElementById("category-selector-grid");
+  grid.innerHTML = available.map(cat => `
+    <button type="button" class="category-selector-item" data-cat-id="${cat.id}">
+      <div class="category-selector-item-icon" style="color:${cat.color}" data-icon="${cat.icon}"></div>
+      <div class="category-selector-item-label">${cat.label}</div>
+    </button>
+  `).join("");
+
+  renderIcons(grid);
+  document.getElementById("category-selector-modal").removeAttribute("hidden");
+}
+
+function hideCategorySelectorModal() {
+  document.getElementById("category-selector-modal").setAttribute("hidden", "");
+  currentCategorySelectorSection = null;
+  currentCategorySelectorAvailable = [];
+}
+
 // Agregar categoría al presupuesto
 document.getElementById("budget-inputs").addEventListener("click", e => {
   const addBtn = e.target.closest(".budget-add-btn");
@@ -574,42 +600,62 @@ document.getElementById("budget-inputs").addEventListener("click", e => {
   const assigned = allCategories.filter(c => budgetsCache[c.id] > 0).map(c => c.id);
   const available = allCategories.filter(c => !assigned.includes(c.id));
 
-  // Mostrar opciones: seleccionar existente o crear nueva
-  const options = [
-    ...available.map((c, i) => `${i + 1}. ${c.label}`),
-    `${available.length + 1}. Crear nueva categoría`
-  ].join("\n");
-
-  const selected = prompt(
-    `Selecciona una categoría o crea una nueva:\n\n${options}`,
-    "1"
-  );
-
-  if (!selected || isNaN(selected)) return;
-  const idx = parseInt(selected) - 1;
-
-  if (idx < 0 || idx > available.length) return;
-
-  let cat;
-  if (idx === available.length) {
-    // Crear nueva categoría
-    const name = prompt("Nombre de la nueva categoría:");
-    if (!name || name.trim() === "") return;
-    cat = createCustomCategory(name.trim(), sectionType);
-  } else {
-    // Usar categoría existente
-    cat = available[idx];
+  if (available.length === 0) {
+    alert("No hay más categorías disponibles en esta sección");
+    return;
   }
 
-  budgetsCache[cat.id] = 0; // Agregar con presupuesto 0
+  showCategorySelectorModal(sectionType, available);
+});
+
+// Manejar selección de categoría desde el modal
+document.getElementById("category-selector-grid").addEventListener("click", e => {
+  const item = e.target.closest(".category-selector-item");
+  if (!item) return;
+
+  const catId = item.dataset.catId;
+  const cat = currentCategorySelectorAvailable.find(c => c.id === catId);
+
+  if (!cat) return;
+
+  budgetsCache[cat.id] = 0;
   renderBudgetInputs();
   renderBudgetSummary();
+  hideCategorySelectorModal();
 
-  // Enfocar el input de la categoría recién agregada
   setTimeout(() => {
     const input = document.querySelector(`input[data-cat="${cat.id}"]`);
     if (input) input.focus();
   }, 10);
+});
+
+// Botón para crear nueva categoría
+document.getElementById("category-selector-new").addEventListener("click", () => {
+  const name = prompt("Nombre de la nueva categoría:");
+  if (!name || name.trim() === "") return;
+
+  const cat = createCustomCategory(name.trim(), currentCategorySelectorSection);
+  budgetsCache[cat.id] = 0;
+  renderBudgetInputs();
+  renderBudgetSummary();
+  hideCategorySelectorModal();
+
+  setTimeout(() => {
+    const input = document.querySelector(`input[data-cat="${cat.id}"]`);
+    if (input) input.focus();
+  }, 10);
+});
+
+// Botón cancelar
+document.getElementById("category-selector-cancel").addEventListener("click", () => {
+  hideCategorySelectorModal();
+});
+
+// Cerrar modal al hacer click en el overlay
+document.getElementById("category-selector-modal").addEventListener("click", e => {
+  if (e.target.classList.contains("category-selector-overlay")) {
+    hideCategorySelectorModal();
+  }
 });
 
 // ================= Herramientas: Categorías =================
