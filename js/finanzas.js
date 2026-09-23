@@ -621,34 +621,65 @@ function populateTransferSelects() {
   if (wallets.some(w => w.id === prevFrom)) fromSel.value = prevFrom;
   updateTransferToOptions();
 }
+
+// El destino puede ser de otra moneda: no hay conversión automática, así
+// que cuando las monedas no coinciden se piden los dos montos por separado
+// (cuánto se descuenta del origen y cuánto se suma al destino).
 function updateTransferToOptions() {
   const wallets = ledgerWallets();
   const fromW = wallets.find(w => w.id === document.getElementById("transfer-from").value);
-  const options = wallets.filter(w => (!fromW || w.id !== fromW.id) && (!fromW || w.moneda === fromW.moneda));
+  const options = wallets.filter(w => !fromW || w.id !== fromW.id);
   const toSel = document.getElementById("transfer-to");
   const prevTo = toSel.value;
   toSel.innerHTML = options.map(w => `<option value="${w.id}">${escapeHtml(w.nombre)} (${w.moneda})</option>`).join("");
   if (options.some(w => w.id === prevTo)) toSel.value = prevTo;
+  updateTransferAmountFields();
 }
+
+function updateTransferAmountFields() {
+  const wallets = ledgerWallets();
+  const fromW = wallets.find(w => w.id === document.getElementById("transfer-from").value);
+  const toW = wallets.find(w => w.id === document.getElementById("transfer-to").value);
+  const amountFrom = document.getElementById("transfer-amount-from");
+  const amountTo = document.getElementById("transfer-amount-to");
+
+  amountFrom.placeholder = fromW ? `Monto a descontar (${fromW.moneda})` : "Monto";
+
+  const distinta = !!(fromW && toW && fromW.moneda !== toW.moneda);
+  amountTo.hidden = !distinta;
+  amountTo.required = distinta;
+  if (distinta) amountTo.placeholder = `Monto a añadir (${toW.moneda})`;
+}
+
 document.getElementById("transfer-from").addEventListener("change", updateTransferToOptions);
+document.getElementById("transfer-to").addEventListener("change", updateTransferAmountFields);
 
 document.getElementById("transfer-form").addEventListener("submit", e => {
   e.preventDefault();
   const fromId = document.getElementById("transfer-from").value;
   const toId = document.getElementById("transfer-to").value;
-  const amount = parseFloat(document.getElementById("transfer-amount").value);
   const notes = document.getElementById("transfer-notes").value.trim();
-  if (!fromId || !toId || fromId === toId || !amount || amount <= 0) return;
+  if (!fromId || !toId || fromId === toId) return;
 
   const wallets = ledgerWallets();
   const fromW = wallets.find(w => w.id === fromId);
   const toW = wallets.find(w => w.id === toId);
-  if (!fromW || !toW || fromW.moneda !== toW.moneda) return;
+  if (!fromW || !toW) return;
 
-  addWalletMovement(fromId, -amount, `Transferencia a ${toW.nombre}${notes ? " · " + notes : ""}`);
-  addWalletMovement(toId, amount, `Transferencia desde ${fromW.nombre}${notes ? " · " + notes : ""}`);
+  const amountFrom = parseFloat(document.getElementById("transfer-amount-from").value);
+  if (!amountFrom || amountFrom <= 0) return;
+
+  let amountTo = amountFrom;
+  if (fromW.moneda !== toW.moneda) {
+    amountTo = parseFloat(document.getElementById("transfer-amount-to").value);
+    if (!amountTo || amountTo <= 0) return;
+  }
+
+  addWalletMovement(fromId, -amountFrom, `Transferencia a ${toW.nombre}${notes ? " · " + notes : ""}`);
+  addWalletMovement(toId, amountTo, `Transferencia desde ${fromW.nombre}${notes ? " · " + notes : ""}`);
 
   e.target.reset();
+  document.getElementById("transfer-amount-to").hidden = true;
   document.getElementById("transfer-form").hidden = true;
 });
 

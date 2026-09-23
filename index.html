@@ -437,7 +437,8 @@
             <form id="transfer-form" class="tracker-form" hidden>
               <select id="transfer-from" required></select>
               <select id="transfer-to" required></select>
-              <input type="number" id="transfer-amount" placeholder="Monto" min="0.01" step="0.01" required>
+              <input type="number" id="transfer-amount-from" placeholder="Monto" min="0.01" step="0.01" required>
+              <input type="number" id="transfer-amount-to" placeholder="Monto" min="0.01" step="0.01" hidden>
               <input type="text" id="transfer-notes" placeholder="Nota (opcional)">
               <button type="submit">Transferir</button>
               <button type="button" class="link-btn" id="transfer-cancel">Cancelar</button>
