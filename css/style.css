@@ -998,22 +998,23 @@ button.delete:hover { opacity: 1; }
 .emoji-picker, .emoji-picker-inline {
   flex-basis: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
-  gap: 0.5rem;
-  margin: 0.2rem 0 0.3rem;
+  grid-template-columns: repeat(auto-fit, minmax(38px, 1fr));
+  gap: 0.4rem;
+  margin: 0.6rem 0;
 }
 .emoji-choice {
-  width: 44px;
-  height: 44px;
+  width: 100%;
+  aspect-ratio: 1;
   border-radius: 12px;
   background: var(--bg-soft);
   border: 1px solid var(--border);
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.15s ease;
+  padding: 0;
 }
 .emoji-choice:hover {
   border-color: var(--accent-1);
