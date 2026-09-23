@@ -58,7 +58,7 @@ function formatMoney(n) {
   return n.toLocaleString("es-BO", { style: "currency", currency: "BOB" });
 }
 function formatUSD(n) {
-  return n.toLocaleString("es-ES", { style: "currency", currency: "USD" });
+  return `US$ ${n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 function capitalize(s) {
   return s.charAt(0).toUpperCase() + s.slice(1);
@@ -457,7 +457,7 @@ function renderWallets() {
   const deudaText = deuda > 0 ? "−" + formatMoney(deuda) : formatMoney(0);
 
   const panels = [
-    { label: "Patrimonio total", lines: [formatUSD(totalAhorros), formatMoney(netoBs)] },
+    { label: "Patrimonio total", lines: [formatMoney(netoBs), formatUSD(totalAhorros)] },
     { label: "Cartera de gastos", lines: [formatMoney(saldo)] },
     { label: "Cartera de tarjeta de crédito", lines: [deudaText] },
     { label: "Cartera de ahorro", lines: [formatUSD(totalAhorros)] }
