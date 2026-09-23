@@ -266,7 +266,7 @@ h1, h2, h3 { font-family: "DM Sans", system-ui, sans-serif; font-weight: 700; le
 .card p { margin: 0; color: var(--muted); font-size: 0.92rem; }
 
 h1.page-title { margin-top: 0; font-size: 1.9rem; }
-.content > p { color: var(--muted); }
+.panel-sub { color: var(--muted); }
 
 /* ---------- Bottom nav (mobile only) ---------- */
 .bottom-nav { display: none; }

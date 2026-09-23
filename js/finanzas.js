@@ -1,3 +1,4 @@
+(function () {
 const CATEGORIES = {
   gasto: [
     { id: "comida", label: "Comida", icon: "food", color: "#4d9de0" },
@@ -373,3 +374,4 @@ onAuthReady(() => {
     renderAll();
   });
 });
+})();

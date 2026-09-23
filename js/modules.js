@@ -1,20 +1,39 @@
 // Lista central de módulos del panel. Para agregar un módulo nuevo:
-// 1. Crear su página HTML (copiando la estructura de una existente).
+// 1. Agregar su <section id="panel-XXX" hidden> en index.html.
 // 2. Agregar una línea acá abajo.
 // El menú de escritorio y el de móvil se arman solos a partir de esta lista.
+// Todo vive en una sola página (index.html): cambiar de sección solo mueve
+// el "hash" de la URL (#habitos, #ejercicio...) y muestra/oculta el bloque
+// correspondiente, sin recargar el navegador — así el login de Firebase no
+// se pierde nunca al pasar de una sección a otra.
 const MODULES = [
-  { href: "index.html", label: "Inicio", icon: "home" },
-  { href: "habitos.html", label: "Hábitos", icon: "habits" },
-  { href: "ejercicio.html", label: "Ejercicio", icon: "exercise" },
-  { href: "finanzas.html", label: "Finanzas", icon: "finance" },
-  { href: "inversiones.html", label: "Inversiones", icon: "investing" }
+  { hash: "inicio", label: "Inicio", icon: "home" },
+  { hash: "habitos", label: "Hábitos", icon: "habits" },
+  { hash: "ejercicio", label: "Ejercicio", icon: "exercise" },
+  { hash: "finanzas", label: "Finanzas", icon: "finance" },
+  { hash: "inversiones", label: "Inversiones", icon: "investing" }
 ];
 
+function currentHash() {
+  const h = window.location.hash.replace("#", "");
+  return MODULES.some(m => m.hash === h) ? h : "inicio";
+}
+
+function showPanel(hash) {
+  MODULES.forEach(m => {
+    const panel = document.getElementById("panel-" + m.hash);
+    if (panel) panel.hidden = m.hash !== hash;
+  });
+  document.querySelectorAll("[data-nav-link]").forEach(a => {
+    a.classList.toggle("active", a.dataset.hash === hash);
+  });
+}
+
 function renderNav() {
-  const path = window.location.pathname.split("/").pop() || "index.html";
+  const current = currentHash();
 
   const linkHTML = (m, iconClass) =>
-    `<a href="${m.href}" data-nav-link${m.href === path ? ' class="active"' : ""}>` +
+    `<a href="#${m.hash}" data-nav-link data-hash="${m.hash}"${m.hash === current ? ' class="active"' : ""}>` +
     `<span class="${iconClass}" data-icon="${m.icon}"></span>${m.label}</a>`;
 
   const sidebarNav = document.getElementById("nav-links");
@@ -32,4 +51,10 @@ function renderNav() {
   renderIcons();
 }
 
-document.addEventListener("DOMContentLoaded", renderNav);
+function router() {
+  showPanel(currentHash());
+  renderNav();
+}
+
+window.addEventListener("hashchange", router);
+document.addEventListener("DOMContentLoaded", router);

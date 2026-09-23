@@ -24,56 +24,163 @@
   </div>
 
   <div id="app-content" hidden>
-  <div class="topbar">
-    <span class="brand">Manolo</span>
-    <button class="menu-toggle" id="menu-toggle" data-icon="menu" aria-expanded="false" aria-label="Abrir menú"></button>
-  </div>
-  <div class="sidebar-overlay" id="sidebar-overlay"></div>
-
-  <div class="layout">
-    <aside class="sidebar" id="sidebar">
+    <div class="topbar">
       <span class="brand">Manolo</span>
-      <nav id="nav-links"></nav>
-    </aside>
+      <button class="menu-toggle" id="menu-toggle" data-icon="menu" aria-expanded="false" aria-label="Abrir menú"></button>
+    </div>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-    <div class="main">
-      <div class="verse-banner" id="verse-banner">
-        <span class="verse-text"></span>
-        <span class="verse-ref"></span>
-      </div>
+    <div class="layout">
+      <aside class="sidebar" id="sidebar">
+        <span class="brand">Manolo</span>
+        <nav id="nav-links"></nav>
+      </aside>
 
-      <div class="content">
-        <h1 class="page-title">Bienvenido, Manolo</h1>
-        <p>Tu panel de control personal. Elige una sección para empezar.</p>
+      <div class="main">
+        <div class="verse-banner" id="verse-banner">
+          <span class="verse-text"></span>
+          <span class="verse-ref"></span>
+        </div>
 
-        <div class="card-grid">
-          <a class="card" href="habitos.html">
-            <span class="icon" data-icon="habits"></span>
-            <h3>Hábitos</h3>
-            <p>Registra y sigue tus hábitos diarios.</p>
-          </a>
-          <a class="card" href="ejercicio.html">
-            <span class="icon" data-icon="exercise"></span>
-            <h3>Ejercicio</h3>
-            <p>Lleva el control de tus entrenamientos.</p>
-          </a>
-          <a class="card" href="finanzas.html">
-            <span class="icon" data-icon="finance"></span>
-            <h3>Finanzas</h3>
-            <p>Controla tus ingresos y gastos.</p>
-          </a>
-          <a class="card" href="inversiones.html">
-            <span class="icon" data-icon="investing"></span>
-            <h3>Inversiones</h3>
-            <p>Registra tus aportes y sigue tu portafolio.</p>
-          </a>
+        <div class="content">
+
+          <!-- ===== Inicio ===== -->
+          <section id="panel-inicio">
+            <h1 class="page-title">Bienvenido, Manolo</h1>
+            <p class="panel-sub">Tu panel de control personal. Elige una sección para empezar.</p>
+
+            <div class="card-grid">
+              <a class="card" href="#habitos">
+                <span class="icon" data-icon="habits"></span>
+                <h3>Hábitos</h3>
+                <p>Registra y sigue tus hábitos diarios.</p>
+              </a>
+              <a class="card" href="#ejercicio">
+                <span class="icon" data-icon="exercise"></span>
+                <h3>Ejercicio</h3>
+                <p>Lleva el control de tus entrenamientos.</p>
+              </a>
+              <a class="card" href="#finanzas">
+                <span class="icon" data-icon="finance"></span>
+                <h3>Finanzas</h3>
+                <p>Controla tus ingresos y gastos.</p>
+              </a>
+              <a class="card" href="#inversiones">
+                <span class="icon" data-icon="investing"></span>
+                <h3>Inversiones</h3>
+                <p>Registra tus aportes y sigue tu portafolio.</p>
+              </a>
+            </div>
+          </section>
+
+          <!-- ===== Hábitos ===== -->
+          <section id="panel-habitos" hidden>
+            <h1 class="page-title">Hábitos</h1>
+
+            <form class="tracker-form" id="habit-form">
+              <input type="text" id="habit-name" placeholder="Nuevo hábito (ej: Leer 10 min)" required>
+              <button type="submit">Agregar</button>
+            </form>
+
+            <div class="habit-days-header" id="habit-days-header"></div>
+            <div id="habit-list"></div>
+            <p class="empty-state" id="habit-empty" style="display:none;">Aún no tienes hábitos. Agrega el primero arriba.</p>
+          </section>
+
+          <!-- ===== Ejercicio ===== -->
+          <section id="panel-ejercicio" hidden>
+            <h1 class="page-title">Ejercicio</h1>
+
+            <div class="stat-row" id="exercise-stats"></div>
+
+            <form class="tracker-form" id="exercise-form">
+              <input type="date" id="exercise-date" required>
+              <input type="text" id="exercise-type" placeholder="Tipo (ej: Correr, Pesas)" required>
+              <input type="number" id="exercise-duration" placeholder="Minutos" min="1" required>
+              <input type="text" id="exercise-notes" placeholder="Notas (opcional)">
+              <button type="submit">Registrar</button>
+            </form>
+
+            <div id="exercise-list"></div>
+            <p class="empty-state" id="exercise-empty" style="display:none;">Aún no registras entrenamientos.</p>
+          </section>
+
+          <!-- ===== Finanzas ===== -->
+          <section id="panel-finanzas" hidden>
+            <h1 class="page-title">Finanzas</h1>
+
+            <div class="fin-tabs" id="fin-tabs">
+              <button type="button" class="fin-tab active" data-tab="resumen">Resumen</button>
+              <button type="button" class="fin-tab" data-tab="presupuesto">Presupuesto</button>
+            </div>
+
+            <section id="tab-resumen" class="fin-panel">
+              <div class="stat-row" id="finance-stats"></div>
+
+              <div class="month-nav">
+                <button type="button" id="month-prev" aria-label="Mes anterior"><span data-icon="chevronLeft"></span></button>
+                <div class="month-label">
+                  <span id="month-label-text"></span>
+                  <span class="month-count" id="month-count"></span>
+                </div>
+                <button type="button" id="month-next" aria-label="Mes siguiente"><span data-icon="chevronRight"></span></button>
+              </div>
+
+              <form class="tracker-form" id="finance-form">
+                <input type="date" id="finance-date" required>
+                <select id="finance-type">
+                  <option value="ingreso">Ingreso</option>
+                  <option value="gasto">Gasto</option>
+                </select>
+                <select id="finance-category"></select>
+                <select id="finance-payment"></select>
+                <input type="text" id="finance-desc" placeholder="Descripción" required>
+                <input type="number" id="finance-amount" placeholder="Monto" min="0.01" step="0.01" required>
+                <button type="submit">Registrar</button>
+              </form>
+
+              <div id="finance-list"></div>
+              <p class="empty-state" id="finance-empty" style="display:none;">Aún no registras movimientos este mes.</p>
+            </section>
+
+            <section id="tab-presupuesto" class="fin-panel" hidden>
+              <div class="budget-header">
+                <h2 id="budget-month-label"></h2>
+                <button type="button" class="link-btn" id="budget-edit-toggle">Editar presupuestos</button>
+              </div>
+
+              <form id="budget-form" class="budget-form" hidden>
+                <div id="budget-inputs"></div>
+                <button type="submit">Guardar presupuestos</button>
+              </form>
+
+              <div id="budget-grid" class="budget-grid"></div>
+            </section>
+          </section>
+
+          <!-- ===== Inversiones ===== -->
+          <section id="panel-inversiones" hidden>
+            <h1 class="page-title">Inversiones</h1>
+
+            <div class="stat-row" id="investing-stats"></div>
+
+            <form class="tracker-form" id="investing-form">
+              <input type="date" id="investing-date" required>
+              <input type="text" id="investing-name" placeholder="Activo (ej: AAPL, Fondo indexado)" required>
+              <input type="number" id="investing-amount" placeholder="Monto invertido" min="0.01" step="0.01" required>
+              <input type="text" id="investing-notes" placeholder="Notas (opcional)">
+              <button type="submit">Registrar</button>
+            </form>
+
+            <div id="investing-list"></div>
+            <p class="empty-state" id="investing-empty" style="display:none;">Aún no registras aportes.</p>
+          </section>
+
         </div>
       </div>
     </div>
-  </div>
 
-  <nav class="bottom-nav" id="bottom-nav-links"></nav>
-
+    <nav class="bottom-nav" id="bottom-nav-links"></nav>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -85,5 +192,9 @@
   <script src="js/icons.js"></script>
   <script src="js/modules.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/habitos.js"></script>
+  <script src="js/ejercicio.js"></script>
+  <script src="js/finanzas.js"></script>
+  <script src="js/inversiones.js"></script>
 </body>
 </html>

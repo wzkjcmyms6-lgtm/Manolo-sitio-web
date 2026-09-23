@@ -1,3 +1,4 @@
+(function () {
 const DAY_LABELS = ["L", "M", "X", "J", "V", "S", "D"];
 let habitsCache = [];
 
@@ -93,3 +94,4 @@ onAuthReady(() => {
     renderHabits();
   });
 });
+})();

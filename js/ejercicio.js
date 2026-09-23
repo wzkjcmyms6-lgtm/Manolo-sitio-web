@@ -1,3 +1,4 @@
+(function () {
 let exerciseCache = [];
 
 function exerciseCollection() {
@@ -80,3 +81,4 @@ onAuthReady(() => {
     renderExercises();
   });
 });
+})();

@@ -1,3 +1,4 @@
+(function () {
 let investingCache = [];
 
 function investingCollection() {
@@ -71,3 +72,4 @@ onAuthReady(() => {
     renderInvestments();
   });
 });
+})();
