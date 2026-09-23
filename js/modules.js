@@ -10,8 +10,6 @@ const MODULES = [
   { href: "inversiones.html", label: "Inversiones", icon: "investing" }
 ];
 
-const NAV_CTA = { href: "habitos.html", label: "Nuevo hábito", icon: "plus" };
-
 function renderNav() {
   const path = window.location.pathname.split("/").pop() || "index.html";
 
@@ -21,9 +19,7 @@ function renderNav() {
 
   const sidebarNav = document.getElementById("nav-links");
   if (sidebarNav) {
-    sidebarNav.innerHTML =
-      MODULES.map(m => linkHTML(m, "nav-icon")).join("") +
-      `<a href="${NAV_CTA.href}" class="nav-cta"><span class="nav-icon" data-icon="${NAV_CTA.icon}"></span>${NAV_CTA.label}</a>`;
+    sidebarNav.innerHTML = MODULES.map(m => linkHTML(m, "nav-icon")).join("");
   }
 
   const bottomNav = document.getElementById("bottom-nav-links");
