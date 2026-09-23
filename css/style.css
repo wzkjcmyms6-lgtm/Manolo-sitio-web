@@ -85,6 +85,50 @@ h1, h2, h3 { font-family: "DM Sans", system-ui, sans-serif; font-weight: 700; le
   border-top: 2px solid var(--gold);
 }
 
+/* ---------- Body banner (hero de Ejercicio) ---------- */
+.body-banner {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(120% 160% at 100% 0%, #241109 0%, transparent 55%), #000000;
+  padding: 2rem 1.5rem 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 2.5rem;
+  isolation: isolate;
+}
+.body-banner::after {
+  content: "";
+  position: absolute;
+  right: -10%;
+  bottom: -35%;
+  width: 55%;
+  padding-bottom: 55%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-1) 0%, #b34a1e 35%, transparent 70%);
+  filter: blur(50px);
+  opacity: 0.55;
+  z-index: -1;
+}
+.body-banner .fig-wrap { text-align: center; }
+.body-banner .body-fig {
+  width: 130px;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 0 16px rgba(255, 122, 48, 0.3));
+}
+.body-banner .silhouette { fill: #625f57; }
+.body-banner .limb { fill: none; stroke: #625f57; stroke-linecap: round; stroke-linejoin: round; }
+.body-banner .detail { fill: none; stroke: #8a877d; stroke-width: 1.5; stroke-linecap: round; opacity: 0.7; }
+.body-banner .fig-label {
+  display: block;
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 /* ---------- Top bar (mobile) ---------- */
 .topbar {
   display: none;
@@ -470,7 +514,7 @@ button.delete:hover { opacity: 1; }
 .stat-box .value.value-debt { background: none; -webkit-text-fill-color: initial; color: var(--danger); }
 /* [hidden] must win over the display:flex/grid rules below it in the cascade */
 .pay-card-form[hidden], .budget-form[hidden], .budget-grid[hidden], .login-screen[hidden],
-.routine-form[hidden], .add-exercise-form[hidden] { display: none; }
+.routine-form[hidden], .add-exercise-form[hidden], .body-banner[hidden] { display: none; }
 
 /* ---------- Finance: transaction list grouped by day ---------- */
 .day-header {
@@ -932,6 +976,9 @@ button.delete:hover { opacity: 1; }
 
   .verse-banner { padding: 2.25rem 1.25rem; border-radius: 0 0 28px 28px; }
   .verse-banner .verse-text { font-size: 1.4rem; }
+
+  .body-banner { padding: 1.5rem 1rem 1.25rem; border-radius: 0 0 28px 28px; gap: 1.5rem; }
+  .body-banner .body-fig { width: 105px; }
 
   .card-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
   .card { padding: 1.1rem; }

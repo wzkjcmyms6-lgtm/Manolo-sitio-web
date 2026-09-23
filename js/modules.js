@@ -45,6 +45,12 @@ function showPanel(hash) {
   document.querySelectorAll("[data-nav-link]").forEach(a => {
     a.classList.toggle("active", a.dataset.hash === activeModule);
   });
+
+  // En Ejercicio (y sus sub-paneles) el banner de versículos se reemplaza
+  // por la silueta de cuerpo humano.
+  const isExercise = activeModule === "ejercicio";
+  document.getElementById("verse-banner").hidden = isExercise;
+  document.getElementById("body-banner").hidden = !isExercise;
 }
 
 function renderNav() {
