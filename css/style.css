@@ -651,6 +651,9 @@ button.delete:hover { opacity: 1; }
   padding-top: 0.8rem;
   border-top: 1px solid var(--border);
 }
+.budget-breakdown:empty {
+  display: none;
+}
 .breakdown-item {
   display: flex;
   align-items: center;

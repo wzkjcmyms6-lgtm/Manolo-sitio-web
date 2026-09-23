@@ -484,6 +484,7 @@ function renderBudgetSummary() {
 
   if (withBudget.length === 0) {
     ringContainer.innerHTML = "";
+    document.getElementById("budget-breakdown").innerHTML = "";
     valueContainer.textContent = formatMoney(0);
     subContainer.textContent = "Agrega montos abajo para empezar";
     return;
@@ -503,13 +504,6 @@ function renderBudgetSummary() {
     .sort((a, b) => b.percentage - a.percentage)
     .map(seg => `<div class="breakdown-item"><span class="dot" style="background:${seg.color}"></span><span>${seg.label} ${Math.round(seg.percentage * 100)}%</span></div>`)
     .join("");
-
-  if (!document.getElementById("budget-breakdown")) {
-    const breakdownDiv = document.createElement("div");
-    breakdownDiv.id = "budget-breakdown";
-    breakdownDiv.className = "budget-breakdown";
-    ringContainer.parentElement.appendChild(breakdownDiv);
-  }
 
   document.getElementById("budget-breakdown").innerHTML = breakdown;
   valueContainer.textContent = formatMoney(totalBudget);
