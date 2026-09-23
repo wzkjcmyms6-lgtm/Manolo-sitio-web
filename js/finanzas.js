@@ -572,6 +572,11 @@ function showCategorySelectorModal(sectionType, available) {
   currentCategorySelectorAvailable = available;
 
   const grid = document.getElementById("category-selector-grid");
+  if (!grid) {
+    console.error("Grid element not found!");
+    return;
+  }
+
   grid.innerHTML = available.map(cat => `
     <button type="button" class="category-selector-item" data-cat-id="${cat.id}">
       <div class="category-selector-item-icon" style="color:${cat.color}" data-icon="${cat.icon}"></div>
@@ -581,9 +586,15 @@ function showCategorySelectorModal(sectionType, available) {
 
   console.log("Modal categories:", available);
   console.log("Icons to render:", available.map(c => c.icon));
+  console.log("ICONS object available:", typeof ICONS !== "undefined");
   console.log("Elements with data-icon in grid:", grid.querySelectorAll("[data-icon]").length);
+
   grid.querySelectorAll("[data-icon]").forEach(el => {
     console.log("Element icon:", el.dataset.icon, "exists in ICONS:", !!ICONS[el.dataset.icon]);
+    if (ICONS[el.dataset.icon]) {
+      el.innerHTML = ICONS[el.dataset.icon];
+      console.log("Icon rendered for:", el.dataset.icon);
+    }
   });
 
   renderIcons(grid);
