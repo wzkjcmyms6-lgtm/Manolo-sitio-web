@@ -16,3 +16,8 @@ firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.firestore();
+
+// Forzamos que la sesión quede guardada de forma persistente en el propio
+// navegador (en vez de confiar en el modo por defecto, que en Safari/iOS a
+// veces no sobrevive de una página a otra dentro del mismo sitio).
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
