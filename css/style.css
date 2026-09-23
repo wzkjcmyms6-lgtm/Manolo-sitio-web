@@ -250,7 +250,7 @@ h1.page-title { margin-top: 0; font-size: 1.9rem; }
   margin-bottom: 0.6rem;
 }
 .list-item .meta { color: var(--muted); font-size: 0.85rem; }
-.list-item button.delete {
+button.delete {
   background: none;
   border: none;
   color: var(--danger);
@@ -262,7 +262,7 @@ h1.page-title { margin-top: 0; font-size: 1.9rem; }
   opacity: 0.75;
   transition: opacity 0.15s ease;
 }
-.list-item button.delete:hover { opacity: 1; }
+button.delete:hover { opacity: 1; }
 .empty-state { color: var(--muted); font-style: italic; }
 
 .stat-row {
@@ -288,6 +288,220 @@ h1.page-title { margin-top: 0; font-size: 1.9rem; }
   color: transparent;
 }
 .stat-box .label { color: var(--muted); font-size: 0.85rem; }
+
+/* ---------- Finance: tabs ---------- */
+.fin-tabs {
+  display: inline-flex;
+  gap: 0.3rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.3rem;
+  margin-bottom: 1.5rem;
+}
+.fin-tab {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.fin-tab.active { background: var(--accent-grad); color: #0a0a0a; }
+.fin-panel[hidden] { display: none; }
+
+/* ---------- Finance: month navigator ---------- */
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.month-nav button:not(.link-btn) {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.month-nav button:not(.link-btn) span { width: 16px; height: 16px; display: flex; }
+.month-nav button:disabled { opacity: 0.3; cursor: default; }
+.month-label { text-align: center; }
+.month-label span:first-child { display: block; font-weight: 700; text-transform: capitalize; }
+.month-count { display: block; font-size: 0.75rem; color: var(--muted); letter-spacing: 0.04em; }
+
+/* ---------- Generic link-style button ---------- */
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--accent-2);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+.link-btn:hover { text-decoration: underline; }
+
+/* ---------- Finance: pay-card mini form ---------- */
+.pay-card-link { margin-top: 0.5rem; display: inline-block; }
+.pay-card-form { display: flex; gap: 0.4rem; margin-top: 0.6rem; flex-wrap: wrap; }
+.pay-card-form input, .pay-card-form select {
+  flex: 1 1 90px;
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+.pay-card-form button {
+  background: var(--accent-grad);
+  color: #0a0a0a;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.stat-box .value.value-debt { background: none; -webkit-text-fill-color: initial; color: var(--danger); }
+/* [hidden] must win over the display:flex/grid rules below it in the cascade */
+.pay-card-form[hidden], .budget-form[hidden], .budget-grid[hidden] { display: none; }
+
+/* ---------- Finance: transaction list grouped by day ---------- */
+.day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.9rem 0.2rem 0.5rem;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+.day-header span:first-child { text-transform: capitalize; }
+.day-header .pos { color: #5cc98a; }
+.day-header .neg { color: var(--danger); }
+
+.txn-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.7rem 0.9rem;
+  margin-bottom: 0.5rem;
+}
+.txn-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px;
+  flex-shrink: 0;
+}
+.txn-body { flex: 1; min-width: 0; }
+.txn-desc { font-weight: 600; font-size: 0.92rem; }
+.txn-amount { font-weight: 700; font-size: 0.95rem; white-space: nowrap; }
+.txn-amount.pos { color: #5cc98a; }
+.txn-amount.neg { color: var(--danger); }
+
+/* ---------- Finance: budget ---------- */
+.budget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.budget-header .link-btn { white-space: nowrap; }
+.budget-header h2 { margin: 0; font-size: 1.1rem; text-transform: capitalize; }
+
+.budget-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.9rem;
+}
+.budget-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1rem;
+}
+.budget-ring { position: relative; width: 60px; height: 60px; flex-shrink: 0; }
+.budget-ring svg { display: block; }
+.budget-ring-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 22px;
+  height: 22px;
+}
+.budget-cat-label { font-weight: 600; font-size: 0.92rem; }
+.budget-amount { font-size: 0.82rem; color: var(--muted); margin-top: 0.15rem; }
+.budget-amount.over { color: var(--danger); font-weight: 600; }
+.budget-amount.muted { font-style: italic; }
+
+.budget-form { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.5rem; }
+.budget-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.6rem 0.8rem;
+}
+.budget-input-label { flex: 1; font-size: 0.92rem; font-weight: 500; }
+.budget-input-row input {
+  width: 100px;
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  color: var(--ink);
+  font-family: inherit;
+  text-align: right;
+}
+.budget-form > button {
+  align-self: flex-start;
+  background: var(--accent-grad);
+  color: #0a0a0a;
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  flex-shrink: 0;
+}
 
 .habit-row {
   display: grid;

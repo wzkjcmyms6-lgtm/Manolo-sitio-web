@@ -31,21 +31,55 @@
       <div class="content">
         <h1 class="page-title">Finanzas</h1>
 
-        <div class="stat-row" id="finance-stats"></div>
+        <div class="fin-tabs" id="fin-tabs">
+          <button type="button" class="fin-tab active" data-tab="resumen">Resumen</button>
+          <button type="button" class="fin-tab" data-tab="presupuesto">Presupuesto</button>
+        </div>
 
-        <form class="tracker-form" id="finance-form">
-          <input type="date" id="finance-date" required>
-          <select id="finance-type">
-            <option value="ingreso">Ingreso</option>
-            <option value="gasto">Gasto</option>
-          </select>
-          <input type="text" id="finance-desc" placeholder="Descripción" required>
-          <input type="number" id="finance-amount" placeholder="Monto" min="0.01" step="0.01" required>
-          <button type="submit">Registrar</button>
-        </form>
+        <!-- ===== Resumen ===== -->
+        <section id="tab-resumen" class="fin-panel">
+          <div class="stat-row" id="finance-stats"></div>
 
-        <div id="finance-list"></div>
-        <p class="empty-state" id="finance-empty" style="display:none;">Aún no registras movimientos.</p>
+          <div class="month-nav">
+            <button type="button" id="month-prev" aria-label="Mes anterior"><span data-icon="chevronLeft"></span></button>
+            <div class="month-label">
+              <span id="month-label-text"></span>
+              <span class="month-count" id="month-count"></span>
+            </div>
+            <button type="button" id="month-next" aria-label="Mes siguiente"><span data-icon="chevronRight"></span></button>
+          </div>
+
+          <form class="tracker-form" id="finance-form">
+            <input type="date" id="finance-date" required>
+            <select id="finance-type">
+              <option value="ingreso">Ingreso</option>
+              <option value="gasto">Gasto</option>
+            </select>
+            <select id="finance-category"></select>
+            <select id="finance-payment"></select>
+            <input type="text" id="finance-desc" placeholder="Descripción" required>
+            <input type="number" id="finance-amount" placeholder="Monto" min="0.01" step="0.01" required>
+            <button type="submit">Registrar</button>
+          </form>
+
+          <div id="finance-list"></div>
+          <p class="empty-state" id="finance-empty" style="display:none;">Aún no registras movimientos este mes.</p>
+        </section>
+
+        <!-- ===== Presupuesto ===== -->
+        <section id="tab-presupuesto" class="fin-panel" hidden>
+          <div class="budget-header">
+            <h2 id="budget-month-label"></h2>
+            <button type="button" class="link-btn" id="budget-edit-toggle">Editar presupuestos</button>
+          </div>
+
+          <form id="budget-form" class="budget-form" hidden>
+            <div id="budget-inputs"></div>
+            <button type="submit">Guardar presupuestos</button>
+          </form>
+
+          <div id="budget-grid" class="budget-grid"></div>
+        </section>
       </div>
     </div>
   </div>
