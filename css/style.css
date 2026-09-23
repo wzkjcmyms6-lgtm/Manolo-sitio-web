@@ -646,26 +646,34 @@ button.delete:hover { opacity: 1; }
 .budget-breakdown {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.5rem;
   width: 100%;
+  margin-top: 0.8rem;
   padding-top: 0.8rem;
   border-top: 1px solid var(--border);
 }
 .budget-breakdown:empty {
   display: none;
+  margin: 0;
+  padding: 0;
+  border: none;
 }
 .breakdown-item {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  font-size: 0.9rem;
+  gap: 0.5rem;
+  font-size: 0.85rem;
   color: var(--ink);
+  padding: 0.3rem 0;
 }
 .breakdown-item .dot {
   flex-shrink: 0;
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
+}
+.breakdown-item span:last-child {
+  flex-grow: 1;
 }
 
 .budget-plan-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.6rem; }
