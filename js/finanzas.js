@@ -657,6 +657,14 @@ function walletMovementsFor(walletId) {
   }
 }
 
+function walletVisual(walletId) {
+  if (walletId === "gastos") return { icon: "finance", color: "#ff9a4d" };
+  if (walletId === "tarjeta") return { icon: "finance", color: "#e05656" };
+  if (walletId === "ahorro") return { icon: "wallet", color: "#5cc98a" };
+  const i = carterasCustomCache.findIndex(w => w.id === walletId);
+  return { icon: "wallet", color: CATEGORY_COLOR_POOL[Math.max(i, 0) % CATEGORY_COLOR_POOL.length] };
+}
+
 function walletBalanceText(walletId) {
   const { saldo, deuda } = computeTotals(financeCache);
   if (walletId === "gastos") return formatMoney(saldo);
@@ -675,6 +683,13 @@ function renderWalletDetail() {
 
   document.getElementById("wallet-detail-title").textContent = w.nombre;
   document.getElementById("wallet-detail-balance").textContent = walletBalanceText(selectedWalletId);
+
+  const visual = walletVisual(selectedWalletId);
+  const iconEl = document.getElementById("wallet-detail-icon");
+  iconEl.dataset.icon = visual.icon;
+  iconEl.style.background = visual.color;
+  iconEl.style.boxShadow = `0 0 28px ${visual.color}66`;
+  renderIcons(document.querySelector(".wallet-detail-hero"));
 
   const list = walletMovementsFor(selectedWalletId)
     .sort((a, b) => b.date.localeCompare(a.date) || String(b.id).localeCompare(String(a.id)))
