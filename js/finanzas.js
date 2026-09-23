@@ -610,7 +610,13 @@ document.getElementById("budget-inputs").addEventListener("click", e => {
 
 // Manejar selección de categoría desde el modal
 document.getElementById("category-selector-grid").addEventListener("click", e => {
-  const item = e.target.closest(".category-selector-item");
+  let item = e.target.closest(".category-selector-item");
+
+  // Si no encontró el item directamente, buscar por el atributo data-cat-id
+  if (!item && e.target.closest("[data-cat-id]")) {
+    item = e.target.closest("[data-cat-id]");
+  }
+
   if (!item) return;
 
   const catId = item.dataset.catId;
