@@ -354,39 +354,40 @@ function progressRing(pct, color) {
 
 function donutChart(segments) {
   const size = 120, innerRadius = 35, outerRadius = 55;
-  let circles = [];
+  let paths = [];
   let startAngle = -Math.PI / 2;
 
   segments.forEach(seg => {
-    const angle = seg.percentage * 2 * Math.PI;
-    const endAngle = startAngle + angle;
+    let angle = seg.percentage * 2 * Math.PI;
+    let currentAngle = startAngle;
 
-    const x1 = size / 2 + outerRadius * Math.cos(startAngle);
-    const y1 = size / 2 + outerRadius * Math.sin(startAngle);
+    // Handle full circle case (100%) by splitting into two arcs
+    if (angle > Math.PI * 1.999) {
+      angle = Math.PI * 1.99; // Slightly less than full circle
+    }
+
+    const endAngle = currentAngle + angle;
+
+    const x1 = size / 2 + outerRadius * Math.cos(currentAngle);
+    const y1 = size / 2 + outerRadius * Math.sin(currentAngle);
     const x2 = size / 2 + outerRadius * Math.cos(endAngle);
     const y2 = size / 2 + outerRadius * Math.sin(endAngle);
 
-    const ix1 = size / 2 + innerRadius * Math.cos(startAngle);
-    const iy1 = size / 2 + innerRadius * Math.sin(startAngle);
+    const ix1 = size / 2 + innerRadius * Math.cos(currentAngle);
+    const iy1 = size / 2 + innerRadius * Math.sin(currentAngle);
     const ix2 = size / 2 + innerRadius * Math.cos(endAngle);
     const iy2 = size / 2 + innerRadius * Math.sin(endAngle);
 
     const largeArc = angle > Math.PI ? 1 : 0;
 
-    const path = `
-      M ${x1} ${y1}
-      A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${x2} ${y2}
-      L ${ix2} ${iy2}
-      A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${ix1} ${iy1}
-      Z
-    `;
+    const path = `M ${x1} ${y1} A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${x2} ${y2} L ${ix2} ${iy2} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${ix1} ${iy1} Z`;
 
-    circles.push(`<path d="${path}" fill="${seg.color}" stroke="white" stroke-width="1"/>`);
+    paths.push(`<path d="${path}" fill="${seg.color}" stroke="white" stroke-width="1"/>`);
     startAngle = endAngle;
   });
 
-  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="display:block;margin:0 auto">
-    ${circles.join("")}
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    ${paths.join("")}
   </svg>`;
 }
 
