@@ -352,6 +352,44 @@ function progressRing(pct, color) {
   </svg>`;
 }
 
+function donutChart(segments) {
+  const size = 120, innerRadius = 35, outerRadius = 55;
+  let circles = [];
+  let startAngle = -Math.PI / 2;
+
+  segments.forEach(seg => {
+    const angle = seg.percentage * 2 * Math.PI;
+    const endAngle = startAngle + angle;
+
+    const x1 = size / 2 + outerRadius * Math.cos(startAngle);
+    const y1 = size / 2 + outerRadius * Math.sin(startAngle);
+    const x2 = size / 2 + outerRadius * Math.cos(endAngle);
+    const y2 = size / 2 + outerRadius * Math.sin(endAngle);
+
+    const ix1 = size / 2 + innerRadius * Math.cos(startAngle);
+    const iy1 = size / 2 + innerRadius * Math.sin(startAngle);
+    const ix2 = size / 2 + innerRadius * Math.cos(endAngle);
+    const iy2 = size / 2 + innerRadius * Math.sin(endAngle);
+
+    const largeArc = angle > Math.PI ? 1 : 0;
+
+    const path = `
+      M ${x1} ${y1}
+      A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${x2} ${y2}
+      L ${ix2} ${iy2}
+      A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${ix1} ${iy1}
+      Z
+    `;
+
+    circles.push(`<path d="${path}" fill="${seg.color}" stroke="white" stroke-width="1"/>`);
+    startAngle = endAngle;
+  });
+
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="display:block;margin:0 auto">
+    ${circles.join("")}
+  </svg>`;
+}
+
 function updateBudgetMonthLabel() {
   const monthDate = currentMonthDate();
   document.getElementById("budget-month-label").textContent = monthLabel(monthDate);
@@ -397,14 +435,13 @@ function renderBudgetInputs() {
   const focused = document.activeElement;
   const focusedCat = focused && focused.dataset ? focused.dataset.cat : null;
 
-  // Agrupar categorías por tipo
-  const ingresos = CATEGORIES.ingreso || [];
-  const ahorros = []; // No hay sección de ahorros directa en presupuesto
-  const gastos = gastoCategoriesCache;
+  // Agrupar solo las categorías que TIENEN presupuesto asignado
+  const ingresos = (CATEGORIES.ingreso || []).filter(c => budgetsCache[c.id] > 0);
+  const gastos = gastoCategoriesCache.filter(c => budgetsCache[c.id] > 0);
 
   const sections = [
-    { title: "Ingresos", categories: ingresos, type: "ingreso" },
-    { title: "Gastos", categories: gastos, type: "gasto" }
+    { title: "Ingresos", categories: ingresos, allCategories: CATEGORIES.ingreso || [], type: "ingreso" },
+    { title: "Gastos", categories: gastos, allCategories: gastoCategoriesCache, type: "gasto" }
   ];
 
   container.innerHTML = sections.map(section => `
@@ -418,6 +455,10 @@ function renderBudgetInputs() {
             <input type="number" min="0" step="1" data-cat="${c.id}" value="${budgetsCache[c.id] || ""}" placeholder="0">
           </label>
         `).join("")}
+        <button type="button" class="budget-add-btn" data-section="${section.type}" aria-label="Agregar categoría">
+          <span data-icon="plus"></span>
+          Añade una categoría
+        </button>
       </div>
     </div>
   `).join("");
@@ -432,14 +473,49 @@ function renderBudgetInputs() {
 function renderBudgetSummary() {
   const monthDate = currentMonthDate();
   const spent = computeSpentByCategory(monthDate);
-  const totalBudget = gastoCategoriesCache.reduce((s, c) => s + (budgetsCache[c.id] || 0), 0);
-  const totalSpent = gastoCategoriesCache.reduce((s, c) => s + (spent[c.id] || 0), 0);
-  const pct = totalBudget > 0 ? totalSpent / totalBudget : 0;
 
-  document.getElementById("budget-summary-ring").innerHTML =
-    progressRing(pct, totalBudget > 0 && totalSpent > totalBudget ? "var(--danger)" : "var(--accent-1)");
-  document.getElementById("budget-summary-value").textContent = formatMoney(totalBudget);
-  document.getElementById("budget-summary-sub").textContent = totalBudget > 0
+  // Get categories with budget and their percentages
+  const withBudget = gastoCategoriesCache.filter(c => (budgetsCache[c.id] || 0) > 0);
+  const totalBudget = withBudget.reduce((s, c) => s + budgetsCache[c.id], 0);
+
+  const ringContainer = document.getElementById("budget-summary-ring");
+  const valueContainer = document.getElementById("budget-summary-value");
+  const subContainer = document.getElementById("budget-summary-sub");
+
+  if (withBudget.length === 0) {
+    ringContainer.innerHTML = "";
+    valueContainer.textContent = formatMoney(0);
+    subContainer.textContent = "Agrega montos abajo para empezar";
+    return;
+  }
+
+  // Create donut chart segments
+  const segments = withBudget.map(c => ({
+    label: c.label,
+    color: c.color,
+    percentage: budgetsCache[c.id] / totalBudget
+  }));
+
+  ringContainer.innerHTML = donutChart(segments);
+
+  // Render category breakdown below chart
+  const breakdown = segments
+    .sort((a, b) => b.percentage - a.percentage)
+    .map(seg => `<div class="breakdown-item"><span class="dot" style="background:${seg.color}"></span><span>${seg.label} ${Math.round(seg.percentage * 100)}%</span></div>`)
+    .join("");
+
+  if (!document.getElementById("budget-breakdown")) {
+    const breakdownDiv = document.createElement("div");
+    breakdownDiv.id = "budget-breakdown";
+    breakdownDiv.className = "budget-breakdown";
+    ringContainer.parentElement.appendChild(breakdownDiv);
+  }
+
+  document.getElementById("budget-breakdown").innerHTML = breakdown;
+  valueContainer.textContent = formatMoney(totalBudget);
+
+  const totalSpent = withBudget.reduce((s, c) => s + (spent[c.id] || 0), 0);
+  subContainer.textContent = totalBudget > 0
     ? `${formatMoney(Math.max(totalBudget - totalSpent, 0))} restante este mes`
     : "Agrega montos abajo para empezar";
 }
@@ -466,6 +542,44 @@ document.getElementById("budget-form").addEventListener("submit", e => {
     if (v > 0) budgets[input.dataset.cat] = v;
   });
   budgetDocRef().set(budgets);
+});
+
+// Agregar categoría al presupuesto
+document.getElementById("budget-inputs").addEventListener("click", e => {
+  const addBtn = e.target.closest(".budget-add-btn");
+  if (!addBtn) return;
+  e.preventDefault();
+
+  const sectionType = addBtn.dataset.section;
+  const allCategories = sectionType === "ingreso" ? (CATEGORIES.ingreso || []) : gastoCategoriesCache;
+  const assigned = allCategories.filter(c => budgetsCache[c.id] > 0).map(c => c.id);
+  const available = allCategories.filter(c => !assigned.includes(c.id));
+
+  if (available.length === 0) {
+    alert("No hay más categorías disponibles en esta sección");
+    return;
+  }
+
+  // Mostrar selector de categoría
+  const selected = prompt(
+    `Selecciona una categoría:\n\n${available.map((c, i) => `${i + 1}. ${c.label}`).join("\n")}`,
+    "1"
+  );
+
+  if (!selected || isNaN(selected)) return;
+  const idx = parseInt(selected) - 1;
+  if (idx < 0 || idx >= available.length) return;
+
+  const cat = available[idx];
+  budgetsCache[cat.id] = 0; // Agregar con presupuesto 0
+  renderBudgetInputs();
+  renderBudgetSummary();
+
+  // Enfocar el input de la categoría recién agregada
+  setTimeout(() => {
+    const input = document.querySelector(`input[data-cat="${cat.id}"]`);
+    if (input) input.focus();
+  }, 10);
 });
 
 // ================= Herramientas: Categorías =================

@@ -614,17 +614,23 @@ button.delete:hover { opacity: 1; }
 /* ---------- Finance: Presupuesto → Planificación (anillo resumen) ---------- */
 .budget-summary-card {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 1.1rem;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 1.1rem 1.3rem;
+  padding: 1.5rem 1.3rem;
   margin-bottom: 1.5rem;
 }
-.budget-summary-ring { flex-shrink: 0; width: 60px; height: 60px; }
-.budget-summary-ring svg { display: block; }
-.budget-summary-info { display: flex; flex-direction: column; }
+.budget-summary-ring { width: 120px; height: 120px; margin-bottom: 0.5rem; }
+.budget-summary-ring svg { display: block; max-width: 100%; height: auto; }
+.budget-summary-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
 .budget-summary-label { font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
 .budget-summary-value {
   font-family: "DM Sans", system-ui, sans-serif;
@@ -636,6 +642,28 @@ button.delete:hover { opacity: 1; }
   color: transparent;
 }
 .budget-summary-sub { font-size: 0.82rem; color: var(--muted); margin-top: 0.1rem; }
+
+.budget-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+}
+.breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+.breakdown-item .dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
 
 .budget-plan-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.6rem; }
 
@@ -677,6 +705,31 @@ button.delete:hover { opacity: 1; }
 }
 .budget-input-row input::placeholder { color: var(--muted); }
 .budget-input-row input:focus { outline: none; border-color: var(--accent-1); }
+
+.budget-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.7rem;
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 0.93rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-top: 0.3rem;
+}
+.budget-add-btn:hover {
+  border-color: var(--accent-1);
+  color: var(--accent-1);
+}
+.budget-add-btn [data-icon] {
+  width: 18px;
+  height: 18px;
+}
 
 /* ---------- Herramientas: perfil ---------- */
 .profile-card {
