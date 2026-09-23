@@ -25,6 +25,7 @@ const SUB_PANELS = [
   { hash: "fin-presupuesto", parent: "finanzas" },
   { hash: "fin-herramientas", parent: "finanzas" },
   { hash: "fin-herramientas-carteras", parent: "fin-herramientas" },
+  { hash: "fin-herramientas-carteras-detalle", parent: "fin-herramientas-carteras" },
   { hash: "fin-herramientas-categorias", parent: "fin-herramientas" },
   { hash: "fin-herramientas-exportar", parent: "fin-herramientas" }
 ];

@@ -804,6 +804,9 @@ button.delete:hover { opacity: 1; }
   padding: 1rem 1.1rem;
   margin-bottom: 0.75rem;
 }
+.wallet-card[data-wallet-id] { cursor: pointer; }
+.wallet-card[data-wallet-id]:hover { border-color: var(--accent-1); }
+.wallet-detail-balance { font-size: 2rem; font-weight: 800; margin: 0.2rem 0 0.5rem; }
 .wallet-card .wallet-info { flex: 1; min-width: 0; }
 .wallet-icon {
   width: 40px;

@@ -555,8 +555,8 @@ function renderWallets() {
     `<button type="button" class="wallet-hero-dot${i === 0 ? " active" : ""}" data-panel="${i}" aria-label="Panel ${i + 1}"></button>`
   ).join("");
 
-  const walletHTML = (icon, color, label, value, neg) => `
-    <div class="wallet-card">
+  const walletHTML = (icon, color, label, value, neg, walletId) => `
+    <div class="wallet-card" data-wallet-id="${walletId}">
       <span class="wallet-icon" style="background:${color}22; color:${color}" data-icon="${icon}"></span>
       <div class="wallet-info">
         <div class="wallet-label">${label}</div>
@@ -568,7 +568,7 @@ function renderWallets() {
     const bal = customWalletBalance(w.id);
     const color = CATEGORY_COLOR_POOL[i % CATEGORY_COLOR_POOL.length];
     return `
-      <div class="wallet-card">
+      <div class="wallet-card" data-wallet-id="${w.id}">
         <span class="wallet-icon" style="background:${color}22; color:${color}" data-icon="wallet"></span>
         <div class="wallet-info">
           <div class="wallet-label">${escapeHtml(w.nombre)} (${w.moneda})</div>
@@ -580,33 +580,107 @@ function renderWallets() {
   };
 
   document.getElementById("wallet-list").innerHTML =
-    walletHTML("finance", "#ff9a4d", "Yo", formatMoney(saldo)) +
-    walletHTML("finance", "#e05656", "Tarjeta de crédito", deudaText, deuda > 0) +
-    walletHTML("wallet", "#5cc98a", "Ahorro (US$)", formatUSD(totalAhorros)) +
+    walletHTML("finance", "#ff9a4d", "Yo", formatMoney(saldo), false, "gastos") +
+    walletHTML("finance", "#e05656", "Tarjeta de crédito", deudaText, deuda > 0, "tarjeta") +
+    walletHTML("wallet", "#5cc98a", "Ahorro (US$)", formatUSD(totalAhorros), false, "ahorro") +
     carterasCustomCache.map(walletCustomHTML).join("");
 
   renderIcons(document.getElementById("wallet-hero-track"));
   renderIcons(document.getElementById("wallet-list"));
   wireWalletHero();
   populateTransferSelects();
-  renderGastosTransactions();
+  renderWalletDetail();
 }
 
-// Movimientos que efectivamente mueven la plata de la cartera "Yo" (antes
-// "Gastos"): ingresos, gastos que no son con tarjeta de crédito, y pagos de
-// tarjeta hechos con esa plata. Un ajuste_tarjeta no cuenta porque esa plata
-// viene de otra cartera.
-function gastosWalletMovements() {
-  return financeCache
-    .filter(m => m.type === "ingreso" || (m.type === "gasto" && m.payment !== "credito") || m.type === "pago_tarjeta")
+// ---- Detalle de cartera: se abre al tocar una cartera en la lista ----
+let selectedWalletId = null;
+
+function openWalletDetail(id) {
+  selectedWalletId = id;
+  renderWalletDetail();
+  window.location.hash = "fin-herramientas-carteras-detalle";
+}
+
+document.getElementById("wallet-list").addEventListener("click", e => {
+  const delBtn = e.target.closest("[data-delete-wallet]");
+  if (delBtn) { deleteCustomWallet(delBtn.dataset.deleteWallet); return; }
+  const card = e.target.closest("[data-wallet-id]");
+  if (card) openWalletDetail(card.dataset.walletId);
+});
+
+// Movimientos de una cartera, normalizados para mostrarlos en su detalle.
+// Cada cartera guarda su historial en un lugar distinto (Gastos/Tarjeta en
+// "finanzas", Ahorro en "ahorros", las personalizadas en
+// "carteras_movimientos"), así que acá se unifican en una sola forma.
+function walletMovementsFor(walletId) {
+  if (walletId === "gastos") {
+    return financeCache
+      .filter(m => m.type === "ingreso" || (m.type === "gasto" && m.payment !== "credito") || m.type === "pago_tarjeta")
+      .map(m => ({
+        id: m.id, date: m.date, desc: m.desc,
+        icon: findCategory(m.type, m.category).icon, color: findCategory(m.type, m.category).color,
+        amount: m.type === "ingreso" ? m.amount : -m.amount,
+        meta: findPayment(m.payment) ? findPayment(m.payment).label : "",
+        usd: false,
+        onDelete: () => deleteMovement(m.id)
+      }));
+  } else if (walletId === "tarjeta") {
+    return financeCache
+      .filter(m => (m.type === "gasto" && m.payment === "credito") || m.type === "pago_tarjeta" || m.type === "ajuste_tarjeta")
+      .map(m => ({
+        id: m.id, date: m.date, desc: m.desc,
+        icon: findCategory(m.type, m.category).icon, color: findCategory(m.type, m.category).color,
+        amount: m.type === "gasto" ? -m.amount : m.amount,
+        meta: "",
+        usd: false,
+        onDelete: () => deleteMovement(m.id)
+      }));
+  } else if (walletId === "ahorro") {
+    return ahorrosCache.map(a => ({
+      id: a.id, date: a.date, desc: a.notes || "Ahorro",
+      icon: "wallet", color: "#5cc98a",
+      amount: a.amount,
+      meta: "",
+      usd: true,
+      onDelete: () => ahorrosCollection().doc(a.id).delete()
+    }));
+  } else {
+    const w = carterasCustomCache.find(x => x.id === walletId);
+    return carterasMovCache.filter(m => m.carteraId === walletId).map(m => ({
+      id: m.id, date: m.fecha, desc: m.nota || "Movimiento",
+      icon: "wallet", color: "#9b6bde",
+      amount: m.monto,
+      meta: "",
+      usd: !!w && w.moneda === "US$",
+      onDelete: () => carterasMovimientosCollection().doc(m.id).delete()
+    }));
+  }
+}
+
+function walletBalanceText(walletId) {
+  const { saldo, deuda } = computeTotals(financeCache);
+  if (walletId === "gastos") return formatMoney(saldo);
+  if (walletId === "tarjeta") return deuda > 0 ? "−" + formatMoney(deuda) : formatMoney(0);
+  if (walletId === "ahorro") return formatUSD(ahorrosCache.reduce((s, a) => s + a.amount, 0));
+  const w = carterasCustomCache.find(x => x.id === walletId);
+  if (!w) return "";
+  return w.moneda === "US$" ? formatUSD(customWalletBalance(walletId)) : formatMoney(customWalletBalance(walletId));
+}
+
+function renderWalletDetail() {
+  if (!selectedWalletId) return;
+  const wallets = ledgerWallets();
+  const w = wallets.find(x => x.id === selectedWalletId);
+  if (!w) return;
+
+  document.getElementById("wallet-detail-title").textContent = w.nombre;
+  document.getElementById("wallet-detail-balance").textContent = walletBalanceText(selectedWalletId);
+
+  const list = walletMovementsFor(selectedWalletId)
     .sort((a, b) => b.date.localeCompare(a.date) || String(b.id).localeCompare(String(a.id)))
     .slice(0, 20);
-}
 
-function renderGastosTransactions() {
-  const container = document.getElementById("wallet-gastos-list");
-  const list = gastosWalletMovements();
-
+  const container = document.getElementById("wallet-detail-list");
   container.innerHTML = "";
   if (!list.length) {
     container.innerHTML = `<p class="meta">Todavía no hay movimientos.</p>`;
@@ -614,27 +688,26 @@ function renderGastosTransactions() {
   }
 
   list.forEach(m => {
-    const cat = findCategory(m.type, m.category);
-    const pay = findPayment(m.payment);
-    const sign = m.type === "ingreso" ? "+" : "−";
-    const amountClass = m.type === "ingreso" ? "pos" : "neg";
+    const sign = m.amount >= 0 ? "+" : "−";
+    const amountClass = m.amount >= 0 ? "pos" : "neg";
+    const amountText = m.usd ? formatUSD(Math.abs(m.amount)) : formatMoney(Math.abs(m.amount));
     const dateLabel = capitalize(new Date(m.date + "T00:00:00").toLocaleDateString("es-ES", { day: "2-digit", month: "short" }));
 
     const item = document.createElement("div");
     item.className = "txn-item";
     item.innerHTML = `
-      <span class="txn-icon" style="background:${cat.color}22; color:${cat.color}" data-icon="${cat.icon}"></span>
+      <span class="txn-icon" style="background:${m.color}22; color:${m.color}" data-icon="${m.icon}"></span>
       <div class="txn-body">
         <div class="txn-desc">${m.desc}</div>
-        <div class="meta">${dateLabel}${pay ? " · " + pay.label : ""}</div>
+        <div class="meta">${dateLabel}${m.meta ? " · " + m.meta : ""}</div>
       </div>
-      <div class="txn-amount ${amountClass}">${sign}${formatMoney(m.amount)}</div>
+      <div class="txn-amount ${amountClass}">${sign}${amountText}</div>
     `;
     const del = document.createElement("button");
     del.className = "delete";
     del.setAttribute("aria-label", "Eliminar movimiento");
     del.innerHTML = ICONS.trash;
-    del.addEventListener("click", () => deleteMovement(m.id));
+    del.addEventListener("click", () => m.onDelete());
     item.appendChild(del);
     container.appendChild(item);
   });
@@ -794,34 +867,6 @@ document.getElementById("transfer-form").addEventListener("submit", e => {
     .finally(() => { submitBtn.disabled = false; });
 });
 
-document.getElementById("wallet-list").addEventListener("click", e => {
-  const btn = e.target.closest("[data-delete-wallet]");
-  if (btn) deleteCustomWallet(btn.dataset.deleteWallet);
-});
-
-function renderSavingsList() {
-  const list = ahorrosCache.slice().sort((a, b) => b.date.localeCompare(a.date));
-  const container = document.getElementById("savings-list");
-  container.innerHTML = "";
-
-  list.forEach(entry => {
-    const item = document.createElement("div");
-    item.className = "list-item";
-    item.innerHTML = `
-      <div>
-        <strong>${formatUSD(entry.amount)}</strong>
-        <div class="meta">${entry.date}${entry.notes ? " · " + escapeHtml(entry.notes) : ""}</div>
-      </div>
-    `;
-    const del = document.createElement("button");
-    del.className = "delete";
-    del.setAttribute("aria-label", "Eliminar ahorro");
-    del.innerHTML = ICONS.trash;
-    del.addEventListener("click", () => ahorrosCollection().doc(entry.id).delete());
-    item.appendChild(del);
-    container.appendChild(item);
-  });
-}
 
 // ================= Herramientas: Exportar =================
 
@@ -900,7 +945,6 @@ function renderAll() {
   renderBudgetInfo();
   renderCategoryList();
   renderWallets();
-  renderSavingsList();
   updateExportSummary();
 }
 
