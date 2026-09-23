@@ -995,6 +995,50 @@ button.delete:hover { opacity: 1; }
   color: #0a0a0a;
 }
 
+.emoji-picker, .emoji-picker-inline {
+  flex-basis: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 0.5rem;
+  margin: 0.2rem 0 0.3rem;
+}
+.emoji-choice {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.emoji-choice:hover {
+  border-color: var(--accent-1);
+  transform: scale(1.05);
+}
+.emoji-choice.selected {
+  background: var(--accent-1);
+  border-color: var(--accent-1);
+  transform: scale(1.1);
+}
+
+.cat-emoji {
+  width: 32px;
+  height: 32px;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.form-section {
+  margin-bottom: 0.8rem;
+}
+
 /* ---------- Gimnasio: home ---------- */
 .start-empty-btn {
   display: flex;

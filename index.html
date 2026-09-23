@@ -485,7 +485,11 @@
               <span class="icon-sm" data-icon="plus"></span>
             </button>
             <form id="new-group-form" class="tracker-form" hidden>
-              <input type="text" id="new-group-name" placeholder="Nombre (ej: Mascotas)" required>
+              <input type="text" id="new-group-name" placeholder="Nombre (ej: 🍕 Comida)" required>
+              <div class="form-section" id="new-group-emoji-section" style="display: none;">
+                <label style="font-size: 0.85rem; color: #999; display: block; margin-bottom: 0.5rem;">Emoji (opcional)</label>
+                <div class="emoji-picker-inline" id="new-group-emoji-picker"></div>
+              </div>
               <button type="submit">Crear</button>
               <button type="button" class="link-btn" id="new-group-cancel">Cancelar</button>
             </form>
