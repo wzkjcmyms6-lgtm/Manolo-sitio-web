@@ -31,7 +31,8 @@ let financeCache = [];
 let budgetsCache = {};
 let gastoCategoriesCache = CATEGORIES.gasto; // se reemplaza por la lista guardada en Firestore
 let ahorrosCache = [];
-let investingCache = [];
+let investingCache = []; // lectura del módulo Inversiones (US$); reservado para sumarlo a la cartera de inversión más adelante
+let investmentWalletAmount = 0; // cartera de inversión (Bs), cargada a mano por ahora
 
 function financeCollection() {
   return db.collection("users").doc(currentUser.uid).collection("finanzas");
@@ -47,6 +48,9 @@ function ahorrosCollection() {
 }
 function investingCollectionRO() {
   return db.collection("users").doc(currentUser.uid).collection("inversiones");
+}
+function investmentWalletDocRef() {
+  return db.collection("users").doc(currentUser.uid).collection("meta").doc("cartera_inversion");
 }
 
 function findCategory(type, id) {
@@ -452,26 +456,90 @@ document.getElementById("new-category-form").addEventListener("submit", e => {
 
 // ================= Herramientas: Carteras =================
 
+// La cartera de gastos y la de tarjeta de crédito salen de los movimientos
+// de Finanzas (Bs). Ahorros se lleva en US$. Inversión es, por ahora, un
+// monto en Bs que vos cargás acá a mano — más adelante también va a sumar
+// lo que ya tenés cargado en el módulo de Inversiones (en US$).
 function renderWallets() {
-  const { saldo } = computeTotals(financeCache);
+  const { saldo, deuda } = computeTotals(financeCache);
   const totalAhorros = ahorrosCache.reduce((s, a) => s + a.amount, 0);
-  const totalInversion = investingCache.reduce((s, i) => s + i.amount, 0);
+  const netoBs = saldo - deuda + investmentWalletAmount;
+  const netoUsd = totalAhorros;
+  const deudaText = deuda > 0 ? "−" + formatMoney(deuda) : formatMoney(0);
 
-  const walletHTML = (icon, color, label, value) => `
+  const panels = [
+    { label: "Patrimonio total", lines: [formatMoney(netoBs), formatUSD(netoUsd)] },
+    { label: "Cartera de gastos", lines: [formatMoney(saldo)] },
+    { label: "Cartera de tarjeta de crédito", lines: [deudaText] },
+    { label: "Cartera de ahorro", lines: [formatUSD(totalAhorros)] },
+    { label: "Cartera de inversión", lines: [formatMoney(investmentWalletAmount)] }
+  ];
+
+  document.getElementById("wallet-hero-track").innerHTML = panels.map(p => `
+    <div class="wallet-hero-panel">
+      ${p.lines.map(l => `<div class="wallet-hero-value">${l}</div>`).join("")}
+      <div class="wallet-hero-label">${p.label}</div>
+    </div>
+  `).join("");
+
+  document.getElementById("wallet-hero-dots").innerHTML = panels.map((_, i) =>
+    `<button type="button" class="wallet-hero-dot${i === 0 ? " active" : ""}" data-panel="${i}" aria-label="Panel ${i + 1}"></button>`
+  ).join("");
+
+  const walletHTML = (icon, color, label, value, neg, extra) => `
     <div class="wallet-card">
       <span class="wallet-icon" style="background:${color}22; color:${color}" data-icon="${icon}"></span>
       <div class="wallet-info">
         <div class="wallet-label">${label}</div>
-        <div class="wallet-value">${value}</div>
+        <div class="wallet-value${neg ? " neg" : ""}">${value}</div>
+        ${extra || ""}
       </div>
     </div>
   `;
 
   document.getElementById("wallet-list").innerHTML =
     walletHTML("finance", "#ff9a4d", "Gastos", formatMoney(saldo)) +
-    walletHTML("wallet", "#5cc98a", "Ahorros", formatMoney(totalAhorros)) +
-    walletHTML("investing", "#4d9de0", "Inversión", formatUSD(totalInversion));
+    walletHTML("finance", "#e05656", "Tarjeta de crédito", deudaText, deuda > 0) +
+    walletHTML("wallet", "#5cc98a", "Ahorro (US$)", formatUSD(totalAhorros)) +
+    walletHTML("investing", "#4d9de0", "Inversión (Bs)", formatMoney(investmentWalletAmount), false, `
+      <button type="button" class="link-btn" id="investment-edit-toggle">Editar</button>
+      <form id="investment-form" class="pay-card-form" hidden>
+        <input type="number" id="investment-amount" placeholder="Monto (Bs)" min="0" step="0.01" value="${investmentWalletAmount || ""}">
+        <button type="submit">Guardar</button>
+      </form>
+    `);
+
+  renderIcons(document.getElementById("wallet-hero-track"));
   renderIcons(document.getElementById("wallet-list"));
+  wireWalletHero();
+  wireInvestmentForm();
+}
+
+function wireWalletHero() {
+  const track = document.getElementById("wallet-hero-track");
+  const dots = Array.from(document.querySelectorAll(".wallet-hero-dot"));
+  dots.forEach(dot => {
+    dot.addEventListener("click", () => {
+      track.scrollTo({ left: track.clientWidth * Number(dot.dataset.panel), behavior: "smooth" });
+    });
+  });
+  track.onscroll = () => {
+    const idx = Math.round(track.scrollLeft / track.clientWidth);
+    dots.forEach((d, i) => d.classList.toggle("active", i === idx));
+  };
+}
+
+function wireInvestmentForm() {
+  const toggle = document.getElementById("investment-edit-toggle");
+  const form = document.getElementById("investment-form");
+  if (!toggle || !form) return;
+  toggle.addEventListener("click", () => { form.hidden = !form.hidden; });
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const v = parseFloat(document.getElementById("investment-amount").value);
+    investmentWalletDocRef().set({ monto: isNaN(v) ? 0 : v });
+    form.hidden = true;
+  });
 }
 
 function renderSavingsList() {
@@ -484,7 +552,7 @@ function renderSavingsList() {
     item.className = "list-item";
     item.innerHTML = `
       <div>
-        <strong>${formatMoney(entry.amount)}</strong>
+        <strong>${formatUSD(entry.amount)}</strong>
         <div class="meta">${entry.date}${entry.notes ? " · " + escapeHtml(entry.notes) : ""}</div>
       </div>
     `;
@@ -643,6 +711,10 @@ onAuthReady(() => {
   });
   investingCollectionRO().onSnapshot(snap => {
     investingCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAll();
+  });
+  investmentWalletDocRef().onSnapshot(doc => {
+    investmentWalletAmount = doc.exists ? (doc.data().monto || 0) : 0;
     renderAll();
   });
 });

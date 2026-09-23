@@ -417,13 +417,18 @@
               <button type="button" class="back-link" data-tool-back><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</button>
               <h1 class="page-title">Carteras</h1>
 
+              <div class="wallet-hero">
+                <div class="wallet-hero-track" id="wallet-hero-track"></div>
+                <div class="wallet-hero-dots" id="wallet-hero-dots"></div>
+              </div>
+
               <div id="wallet-list"></div>
 
               <div class="wallet-add">
                 <button type="button" class="link-btn" id="savings-add-toggle">+ Agregar a ahorros</button>
                 <form id="savings-form" class="pay-card-form" hidden>
                   <input type="date" id="savings-date" required>
-                  <input type="number" id="savings-amount" placeholder="Monto" min="0.01" step="0.01" required>
+                  <input type="number" id="savings-amount" placeholder="Monto (US$)" min="0.01" step="0.01" required>
                   <input type="text" id="savings-notes" placeholder="Nota (opcional)">
                   <button type="submit">Agregar</button>
                 </form>

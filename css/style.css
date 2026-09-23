@@ -693,6 +693,49 @@ button.delete:hover { opacity: 1; }
 .tool-card p { margin: 0; color: var(--muted); font-size: 0.82rem; }
 
 /* ---------- Herramientas: carteras ---------- */
+.wallet-hero { margin-bottom: 1.5rem; }
+.wallet-hero-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  border-radius: 20px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.wallet-hero-track::-webkit-scrollbar { display: none; }
+.wallet-hero-panel {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  background: var(--accent-grad);
+  padding: 2.2rem 1.5rem;
+  text-align: center;
+  color: #0a0a0a;
+}
+.wallet-hero-value {
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.9rem;
+  line-height: 1.2;
+}
+.wallet-hero-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  margin-top: 0.6rem;
+  opacity: 0.75;
+}
+.wallet-hero-dots { display: flex; justify-content: center; gap: 0.4rem; margin-top: 0.75rem; }
+.wallet-hero-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.wallet-hero-dot.active { background: var(--accent-1); }
+
 .wallet-card {
   display: flex;
   align-items: center;
@@ -715,7 +758,9 @@ button.delete:hover { opacity: 1; }
 }
 .wallet-label { font-weight: 600; font-size: 0.9rem; color: var(--muted); }
 .wallet-value { font-weight: 700; font-size: 1.15rem; margin-top: 0.1rem; }
+.wallet-value.neg { color: var(--danger); }
 .wallet-add { margin: 1.25rem 0 0.75rem; }
+.wallet-info form.pay-card-form { margin-top: 0.6rem; }
 
 .budget-form { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.5rem; }
 .budget-input-row {
