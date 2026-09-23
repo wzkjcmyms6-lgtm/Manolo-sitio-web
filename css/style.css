@@ -891,6 +891,7 @@ button.delete:hover { opacity: 1; }
 }
 .gym-section-header h2 { margin: 0; font-size: 1.1rem; }
 .gym-history-title { font-size: 1.1rem; margin: 1.75rem 0 0.75rem; }
+.section-title { font-size: 1.1rem; margin: 1.75rem 0 0.75rem; }
 
 /* ---------- Gimnasio: crear rutina ---------- */
 .routine-form {

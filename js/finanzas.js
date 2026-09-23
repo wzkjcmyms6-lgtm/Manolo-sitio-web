@@ -478,7 +478,7 @@ function customWalletBalance(id) {
 // sentido "sacar" plata de una deuda.
 function ledgerWallets() {
   return [
-    { id: "gastos", nombre: "Gastos", moneda: "Bs", builtIn: true },
+    { id: "gastos", nombre: "Yo", moneda: "Bs", builtIn: true },
     { id: "tarjeta", nombre: "Tarjeta de crédito", moneda: "Bs", builtIn: true, soloDestino: true },
     { id: "ahorro", nombre: "Ahorro", moneda: "US$", builtIn: true }
   ].concat(carterasCustomCache.map(w => Object.assign({ builtIn: false }, w)));
@@ -535,7 +535,7 @@ function renderWallets() {
 
   const panels = [
     { label: "Patrimonio total", lines: [formatMoney(netoBs), formatUSD(netoUsd)] },
-    { label: "Cartera de gastos", lines: [formatMoney(saldo)] },
+    { label: "Yo", lines: [formatMoney(saldo)] },
     { label: "Cartera de tarjeta de crédito", lines: [deudaText] },
     { label: "Cartera de ahorro", lines: [formatUSD(totalAhorros)] }
   ];
@@ -580,7 +580,7 @@ function renderWallets() {
   };
 
   document.getElementById("wallet-list").innerHTML =
-    walletHTML("finance", "#ff9a4d", "Gastos", formatMoney(saldo)) +
+    walletHTML("finance", "#ff9a4d", "Yo", formatMoney(saldo)) +
     walletHTML("finance", "#e05656", "Tarjeta de crédito", deudaText, deuda > 0) +
     walletHTML("wallet", "#5cc98a", "Ahorro (US$)", formatUSD(totalAhorros)) +
     carterasCustomCache.map(walletCustomHTML).join("");
@@ -589,6 +589,56 @@ function renderWallets() {
   renderIcons(document.getElementById("wallet-list"));
   wireWalletHero();
   populateTransferSelects();
+  renderGastosTransactions();
+}
+
+// Movimientos que efectivamente mueven la plata de la cartera "Yo" (antes
+// "Gastos"): ingresos, gastos que no son con tarjeta de crédito, y pagos de
+// tarjeta hechos con esa plata. Un ajuste_tarjeta no cuenta porque esa plata
+// viene de otra cartera.
+function gastosWalletMovements() {
+  return financeCache
+    .filter(m => m.type === "ingreso" || (m.type === "gasto" && m.payment !== "credito") || m.type === "pago_tarjeta")
+    .sort((a, b) => b.date.localeCompare(a.date) || String(b.id).localeCompare(String(a.id)))
+    .slice(0, 20);
+}
+
+function renderGastosTransactions() {
+  const container = document.getElementById("wallet-gastos-list");
+  const list = gastosWalletMovements();
+
+  container.innerHTML = "";
+  if (!list.length) {
+    container.innerHTML = `<p class="meta">Todavía no hay movimientos.</p>`;
+    return;
+  }
+
+  list.forEach(m => {
+    const cat = findCategory(m.type, m.category);
+    const pay = findPayment(m.payment);
+    const sign = m.type === "ingreso" ? "+" : "−";
+    const amountClass = m.type === "ingreso" ? "pos" : "neg";
+    const dateLabel = capitalize(new Date(m.date + "T00:00:00").toLocaleDateString("es-ES", { day: "2-digit", month: "short" }));
+
+    const item = document.createElement("div");
+    item.className = "txn-item";
+    item.innerHTML = `
+      <span class="txn-icon" style="background:${cat.color}22; color:${cat.color}" data-icon="${cat.icon}"></span>
+      <div class="txn-body">
+        <div class="txn-desc">${m.desc}</div>
+        <div class="meta">${dateLabel}${pay ? " · " + pay.label : ""}</div>
+      </div>
+      <div class="txn-amount ${amountClass}">${sign}${formatMoney(m.amount)}</div>
+    `;
+    const del = document.createElement("button");
+    del.className = "delete";
+    del.setAttribute("aria-label", "Eliminar movimiento");
+    del.innerHTML = ICONS.trash;
+    del.addEventListener("click", () => deleteMovement(m.id));
+    item.appendChild(del);
+    container.appendChild(item);
+  });
+  renderIcons(container);
 }
 
 function wireWalletHero() {
