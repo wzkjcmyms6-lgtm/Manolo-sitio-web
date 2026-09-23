@@ -52,6 +52,7 @@ let financeCache = [];
 let budgetsCache = {};
 let categoryGroupsCache = DEFAULT_CATEGORY_GROUPS; // {id, nombre, items:[{id,label,icon,emoji?}]}, guardado en Firestore
 let gastoCategoriesCache = CATEGORIES.gasto; // versión "plana" de categoryGroupsCache, la usa el resto de la app
+let customCategoriesCache = []; // categorías personalizadas del usuario {id, label, icon, color}
 let ahorrosCache = [];
 let carterasCustomCache = []; // carteras que el usuario crea a mano, con su propio saldo
 let carterasMovCache = []; // movimientos (aportes, retiros, transferencias) de esas carteras
@@ -64,6 +65,9 @@ function budgetDocRef() {
 }
 function categoriasDocRef() {
   return db.collection("users").doc(currentUser.uid).collection("meta").doc("categorias_gasto");
+}
+function customCategoriesDocRef() {
+  return db.collection("users").doc(currentUser.uid).collection("meta").doc("categorias_personalizadas");
 }
 function ahorrosCollection() {
   return db.collection("users").doc(currentUser.uid).collection("ahorros");
@@ -539,6 +543,26 @@ document.getElementById("budget-form").addEventListener("submit", e => {
   budgetDocRef().set(budgets);
 });
 
+// Crear nueva categoría personalizada
+function createCustomCategory(name, sectionType = "gasto") {
+  const id = `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const colorIndex = (CATEGORIES.gasto.length + customCategoriesCache.length) % CATEGORY_COLOR_POOL.length;
+  const cat = {
+    id,
+    label: name,
+    icon: "otherCategory",
+    color: CATEGORY_COLOR_POOL[colorIndex]
+  };
+
+  customCategoriesCache.push(cat);
+  gastoCategoriesCache.push(cat);
+
+  // Guardar en Firestore
+  customCategoriesDocRef().set({ categories: customCategoriesCache });
+
+  return cat;
+}
+
 // Agregar categoría al presupuesto
 document.getElementById("budget-inputs").addEventListener("click", e => {
   const addBtn = e.target.closest(".budget-add-btn");
@@ -550,22 +574,33 @@ document.getElementById("budget-inputs").addEventListener("click", e => {
   const assigned = allCategories.filter(c => budgetsCache[c.id] > 0).map(c => c.id);
   const available = allCategories.filter(c => !assigned.includes(c.id));
 
-  if (available.length === 0) {
-    alert("No hay más categorías disponibles en esta sección");
-    return;
-  }
+  // Mostrar opciones: seleccionar existente o crear nueva
+  const options = [
+    ...available.map((c, i) => `${i + 1}. ${c.label}`),
+    `${available.length + 1}. Crear nueva categoría`
+  ].join("\n");
 
-  // Mostrar selector de categoría
   const selected = prompt(
-    `Selecciona una categoría:\n\n${available.map((c, i) => `${i + 1}. ${c.label}`).join("\n")}`,
+    `¿Qué quieres hacer?\n\n${options}`,
     "1"
   );
 
   if (!selected || isNaN(selected)) return;
   const idx = parseInt(selected) - 1;
-  if (idx < 0 || idx >= available.length) return;
 
-  const cat = available[idx];
+  if (idx < 0 || idx > available.length) return;
+
+  let cat;
+  if (idx === available.length) {
+    // Crear nueva categoría
+    const name = prompt("Nombre de la nueva categoría:");
+    if (!name || name.trim() === "") return;
+    cat = createCustomCategory(name.trim(), sectionType);
+  } else {
+    // Usar categoría existente
+    cat = available[idx];
+  }
+
   budgetsCache[cat.id] = 0; // Agregar con presupuesto 0
   renderBudgetInputs();
   renderBudgetSummary();
@@ -1289,6 +1324,18 @@ onAuthReady(() => {
     budgetsCache = doc.exists ? doc.data() : {};
     renderAll();
   });
+  function updateGastoCategoriesCache() {
+    let flat = flattenCategoryGroups(categoryGroupsCache);
+    // Agregar solo las categorías personalizadas que no estén duplicadas
+    if (customCategoriesCache.length > 0) {
+      const existingIds = flat.map(c => c.id);
+      const newCustom = customCategoriesCache.filter(c => !existingIds.includes(c.id));
+      gastoCategoriesCache = [...flat, ...newCustom];
+    } else {
+      gastoCategoriesCache = flat;
+    }
+  }
+
   categoriasDocRef().onSnapshot(doc => {
     const data = doc.exists ? doc.data() : null;
     if (data && Array.isArray(data.groups) && data.groups.length) {
@@ -1302,7 +1349,13 @@ onAuthReady(() => {
       categoryGroupsCache = DEFAULT_CATEGORY_GROUPS;
       categoriasDocRef().set({ groups: DEFAULT_CATEGORY_GROUPS });
     }
-    gastoCategoriesCache = flattenCategoryGroups(categoryGroupsCache);
+    updateGastoCategoriesCache();
+    renderAll();
+  });
+  customCategoriesDocRef().onSnapshot(doc => {
+    const data = doc.exists ? doc.data() : null;
+    customCategoriesCache = (data && Array.isArray(data.categories)) ? data.categories : [];
+    updateGastoCategoriesCache();
     renderAll();
   });
   ahorrosCollection().onSnapshot(snap => {
