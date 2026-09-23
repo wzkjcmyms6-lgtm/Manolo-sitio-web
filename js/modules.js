@@ -47,9 +47,10 @@ function showPanel(hash) {
   });
 
   // En Ejercicio (y sus sub-paneles) el banner de versículos se reemplaza
-  // por la silueta de cuerpo humano.
+  // por la silueta de cuerpo humano. En Finanzas se oculta sin reemplazo,
+  // para que el resumen quede más arriba.
   const isExercise = activeModule === "ejercicio";
-  document.getElementById("verse-banner").hidden = isExercise;
+  document.getElementById("verse-banner").hidden = isExercise || activeModule === "finanzas";
   document.getElementById("body-banner").hidden = !isExercise;
 }
 
