@@ -391,18 +391,35 @@ function renderBudgets() {
   });
 }
 
-// ---- Planificación: lista editable + anillo con el total presupuestado ----
+// ---- Planificación: lista editable agrupada por tipo (como Buddy) ----
 function renderBudgetInputs() {
   const container = document.getElementById("budget-inputs");
   const focused = document.activeElement;
   const focusedCat = focused && focused.dataset ? focused.dataset.cat : null;
 
-  container.innerHTML = gastoCategoriesCache.map(c => `
-    <label class="budget-input-row">
-      <span class="cat-icon" style="background:${c.color}22; color:${c.color}" data-icon="${c.icon}"></span>
-      <span class="budget-input-label">${c.label}</span>
-      <input type="number" min="0" step="1" data-cat="${c.id}" value="${budgetsCache[c.id] || ""}" placeholder="0">
-    </label>
+  // Agrupar categorías por tipo
+  const ingresos = CATEGORIES.ingreso || [];
+  const ahorros = []; // No hay sección de ahorros directa en presupuesto
+  const gastos = gastoCategoriesCache;
+
+  const sections = [
+    { title: "Ingresos", categories: ingresos, type: "ingreso" },
+    { title: "Gastos", categories: gastos, type: "gasto" }
+  ];
+
+  container.innerHTML = sections.map(section => `
+    <div class="budget-section">
+      <h3 class="budget-section-title">${section.title}</h3>
+      <div class="budget-section-items">
+        ${section.categories.map(c => `
+          <label class="budget-input-row">
+            <span class="cat-icon" style="background:${c.color}22; color:${c.color}" data-icon="${c.icon}"></span>
+            <span class="budget-input-label">${c.label}</span>
+            <input type="number" min="0" step="1" data-cat="${c.id}" value="${budgetsCache[c.id] || ""}" placeholder="0">
+          </label>
+        `).join("")}
+      </div>
+    </div>
   `).join("");
   renderIcons(container);
 

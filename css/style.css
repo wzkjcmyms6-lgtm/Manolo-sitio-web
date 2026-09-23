@@ -639,6 +639,45 @@ button.delete:hover { opacity: 1; }
 
 .budget-plan-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.6rem; }
 
+.budget-grouped-list { display: flex; flex-direction: column; gap: 1.2rem; margin-bottom: 0.6rem; }
+.budget-section { display: flex; flex-direction: column; gap: 0.6rem; }
+.budget-section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  color: var(--ink);
+  margin: 0;
+  padding: 0 0.2rem;
+}
+.budget-section-items { display: flex; flex-direction: column; gap: 0.5rem; }
+.budget-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: text;
+}
+.budget-input-row:focus-within {
+  border-color: var(--accent-1);
+  box-shadow: 0 0 0 3px rgba(255, 122, 48, 0.15);
+}
+.budget-input-label { flex: 1; font-size: 0.93rem; font-weight: 500; }
+.budget-input-row input {
+  width: 80px;
+  padding: 0.5rem 0.6rem;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-align: right;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+.budget-input-row input::placeholder { color: var(--muted); }
+.budget-input-row input:focus { outline: none; border-color: var(--accent-1); }
+
 /* ---------- Herramientas: perfil ---------- */
 .profile-card {
   display: flex;
