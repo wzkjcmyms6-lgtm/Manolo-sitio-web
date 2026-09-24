@@ -2094,10 +2094,10 @@ function renderWallets() {
   const deudaText = deuda > 0 ? "−" + formatMoney(deuda) : formatMoney(0);
 
   const panels = [
-    { label: "Patrimonio total", lines: [formatMoney(netoBs), formatUSD(netoUsd)] },
+    { label: "Patrimonio Total", lines: [formatMoney(netoBs), formatUSD(netoUsd)] },
     { label: "Yo", lines: [formatMoney(saldo)], sub: `Efectivo ${formatBsShort(efectivo)} · Débito ${formatBsShort(debito)}` },
-    { label: "Cartera de tarjeta de crédito", lines: [deudaText] },
-    { label: "Cartera de ahorro", lines: [formatUSD(totalAhorros)] }
+    { label: "Cartera de Tarjeta de Crédito", lines: [deudaText] },
+    { label: "Cartera de Ahorro", lines: [formatUSD(totalAhorros)] }
   ];
   carterasCustomCache.forEach(w => {
     const bal = customWalletBalance(w.id);
