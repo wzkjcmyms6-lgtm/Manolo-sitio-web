@@ -53,7 +53,7 @@ const CATEGORY_ICON_CHOICES = [
 const PAYMENTS = [
   { id: "efectivo", label: "Efectivo" },
   { id: "debito", label: "Débito" },
-  { id: "credito", label: "Tarjeta de crédito" }
+  { id: "credito", label: "Tarjeta de Crédito" }
 ];
 
 let monthOffset = 0; // 0 = mes actual, -1 = mes anterior, etc.
@@ -2013,7 +2013,7 @@ function ledgerWallets() {
   return [
     { id: "efectivo", nombre: "Efectivo", moneda: "Bs", builtIn: true },
     { id: "debito", nombre: "Débito", moneda: "Bs", builtIn: true },
-    { id: "tarjeta", nombre: "Tarjeta de crédito", moneda: "Bs", builtIn: true, soloDestino: true },
+    { id: "tarjeta", nombre: "Tarjeta de Crédito", moneda: "Bs", builtIn: true, soloDestino: true },
     { id: "ahorro", nombre: "Ahorro", moneda: "US$", builtIn: true }
   ].concat(carterasCustomCache.map(w => Object.assign({ builtIn: false }, w)));
 }
@@ -2162,7 +2162,7 @@ function renderWallets() {
         </button>
       </div>
     </div>` +
-    walletHTML("finance", "#e05656", "Tarjeta de crédito", deudaText, deuda > 0, "tarjeta") +
+    walletHTML("finance", "#e05656", "Tarjeta de Crédito", deudaText, deuda > 0, "tarjeta") +
     walletHTML("wallet", "#5cc98a", "Ahorro (US$)", formatUSD(totalAhorros), false, "ahorro") +
     carterasCustomCache.map(walletCustomHTML).join("");
 
