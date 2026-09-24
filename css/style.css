@@ -2294,3 +2294,24 @@ body.in-finanzas .topbar-clock { margin-right: 0; }
 #budget-inner-tabs { display: flex; max-width: 100%; }
 #budget-inner-tabs .fin-tab { flex: 1; min-width: 0; padding-left: 0.5rem; padding-right: 0.5rem; white-space: nowrap; }
 @media (max-width: 420px) { #budget-inner-tabs .fin-tab { font-size: 0.82rem; } }
+
+/* Aviso "Deshacer" al borrar un movimiento */
+.undo-toast {
+  position: fixed; left: 16px; right: 96px; bottom: calc(118px + env(safe-area-inset-bottom)); z-index: 60;
+  max-width: 440px; overflow: hidden;
+  display: flex; align-items: center; gap: 0.8rem; padding: 0.85rem 0.9rem 0.85rem 1.1rem;
+  background: #262624; color: var(--ink); border: 1px solid var(--border); border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5); font-size: 0.92rem;
+  opacity: 0; transform: translateY(12px); transition: opacity 0.2s, transform 0.2s;
+}
+.undo-toast[hidden] { display: none; }
+.undo-toast.show { opacity: 1; transform: none; }
+.undo-toast-msg { flex: 1; min-width: 0; }
+.undo-toast-btn {
+  background: none; border: none; padding: 0.35rem 0.5rem; margin: -0.35rem 0;
+  color: var(--accent-2); font: inherit; font-weight: 700; cursor: pointer;
+}
+.undo-toast-bar { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: var(--accent-2); transform-origin: left; }
+.undo-toast.show .undo-toast-bar { animation: undo-countdown 6s linear forwards; }
+@keyframes undo-countdown { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+.stat-box .value.value-neg { white-space: nowrap; font-size: min(1.45rem, 5.8vw); background: none; -webkit-text-fill-color: initial; color: var(--danger); }

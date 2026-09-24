@@ -268,7 +268,7 @@ function renderStats() {
   const stats = document.getElementById("finance-stats");
   stats.innerHTML = `
     <div class="stat-box">
-      <div class="value">${formatMoney(saldo)}</div>
+      <div class="value${saldo < 0 ? " value-neg" : ""}">${saldo < 0 ? "−" : ""}${formatMoney(Math.abs(saldo))}</div>
       <div class="label">Saldo disponible</div>
       <div class="cash-split">
         <span><i style="background:${PAYMENT_COLORS.efectivo}"></i>Efectivo ${efectivo < 0 ? "−" : ""}${formatBsShort(Math.abs(efectivo))}</span>
@@ -466,8 +466,67 @@ function renderMovements() {
   renderIcons(container);
 }
 
+// ---- Borrar con "Deshacer" ----
+// Se borra al instante y durante unos segundos aparece un aviso con
+// "Deshacer", que vuelve a escribir los mismos documentos con el mismo id
+// (así las transferencias recuperan sus dos lados).
+const UNDO_MS = 6000;
+let undoTimer = null;
+let undoRestore = null;
+
+function withoutId(obj) {
+  const data = Object.assign({}, obj);
+  delete data.id;
+  return data;
+}
+
+function removeWithUndo(message, entries) {
+  entries.forEach(e => e.ref.delete());
+  showUndoToast(message, () => Promise.all(entries.map(e => e.ref.set(e.data))));
+}
+
+function undoToastEl() {
+  let el = document.getElementById("undo-toast");
+  if (el) return el;
+  el = document.createElement("div");
+  el.id = "undo-toast";
+  el.className = "undo-toast";
+  el.setAttribute("role", "status");
+  el.hidden = true;
+  el.innerHTML = `<span class="undo-toast-msg"></span><button type="button" class="undo-toast-btn">Deshacer</button><span class="undo-toast-bar"></span>`;
+  el.querySelector(".undo-toast-btn").addEventListener("click", () => {
+    const restore = undoRestore;
+    hideUndoToast();
+    if (restore) restore();
+  });
+  document.body.appendChild(el);
+  return el;
+}
+
+function showUndoToast(message, restore) {
+  const el = undoToastEl();
+  clearTimeout(undoTimer);
+  undoRestore = restore;
+  el.querySelector(".undo-toast-msg").textContent = message;
+  el.hidden = false;
+  el.classList.remove("show");
+  void el.offsetWidth; // reinicia la barra de tiempo si se borra otro seguido
+  el.classList.add("show");
+  undoTimer = setTimeout(hideUndoToast, UNDO_MS);
+}
+
+function hideUndoToast() {
+  clearTimeout(undoTimer);
+  undoRestore = null;
+  const el = document.getElementById("undo-toast");
+  if (el) { el.classList.remove("show"); el.hidden = true; }
+}
+
 function deleteMovement(id) {
-  financeCollection().doc(id).delete();
+  const m = financeCache.find(x => x.id === id);
+  if (!m) { financeCollection().doc(id).delete(); return; }
+  removeWithUndo(m.type === "ingreso" ? "Ingreso eliminado" : "Transacción eliminada",
+    [{ ref: financeCollection().doc(id), data: withoutId(m) }]);
 }
 
 // ---- Pestañas internas de Vista general: Vista General / Gasto / Lista ----
@@ -1342,10 +1401,8 @@ async function saveTxn() {
   else await financeCollection().add(Object.assign({ createdAt: Date.now() }, data));
 }
 
-async function deleteTxnFromSheet() {
+function deleteTxnFromSheet() {
   const t = txnSheet;
-  const ok = await appDialog({ title: t.type === "transferencia" ? "¿Eliminar esta transferencia?" : "¿Eliminar esta transacción?", message: t.type === "transferencia" ? "Se revierte en las dos carteras. Esta acción no se puede deshacer." : "Esta acción no se puede deshacer.", confirmLabel: "Eliminar", danger: true });
-  if (!ok) return;
   closeTxnSheet();
   if (t.type === "transferencia") deleteTransfer(t.movement);
   else deleteMovement(t.id);
@@ -2780,11 +2837,16 @@ async function createTransfer({ from, to, amount, amountTo, desc, date, tipoCamb
 }
 
 function deleteTransfer(m) {
+  const entries = [{ ref: financeCollection().doc(m.id), data: withoutId(m) }];
   (m.links || []).forEach(l => {
-    if (l.kind === "ahorro") ahorrosCollection().doc(l.id).delete();
-    else if (l.kind === "cartera") carterasMovimientosCollection().doc(l.id).delete();
+    const ref = l.kind === "ahorro" ? ahorrosCollection().doc(l.id)
+      : l.kind === "cartera" ? carterasMovimientosCollection().doc(l.id) : null;
+    if (!ref) return;
+    const doc = (l.kind === "ahorro" ? ahorrosCache : carterasMovCache).find(x => x.id === l.id);
+    if (doc) entries.push({ ref, data: withoutId(doc) });
+    else ref.delete();
   });
-  return financeCollection().doc(m.id).delete();
+  removeWithUndo("Transferencia eliminada", entries);
 }
 
 // Muestra el error real de Firebase (permisos, red, etc.) en vez de fallar
@@ -3002,7 +3064,7 @@ function walletMovementsFor(walletId) {
       meta: cp ? cp.rate : "",
       subAmount: cp ? cp.sub : "",
       usd: true,
-      onDelete: () => ahorrosCollection().doc(a.id).delete()
+      onDelete: () => removeWithUndo("Movimiento eliminado", [{ ref: ahorrosCollection().doc(a.id), data: withoutId(a) }])
       };
     });
   } else {
@@ -3016,7 +3078,7 @@ function walletMovementsFor(walletId) {
       meta: cp ? cp.rate : "",
       subAmount: cp ? cp.sub : "",
       usd: !!w && w.moneda === "US$",
-      onDelete: () => carterasMovimientosCollection().doc(m.id).delete()
+      onDelete: () => removeWithUndo("Movimiento eliminado", [{ ref: carterasMovimientosCollection().doc(m.id), data: withoutId(m) }])
       };
     });
   }
