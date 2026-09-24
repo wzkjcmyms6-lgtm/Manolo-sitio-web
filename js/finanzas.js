@@ -723,7 +723,18 @@ function vgBudgetHTML(period) {
     .map(r => Object.assign({ state: budgetState(r.planned, r.used, r.type) }, r))
     .filter(r => r.state !== "ok")
     .sort((a, b) => (b.used / (b.planned || 1)) - (a.used / (a.planned || 1)));
-  const alertsHTML = alerts.length ? `
+  // Gastos en categorías sin presupuesto: igual restan, se resumen en una línea.
+  const unplanned = Object.keys(spent)
+    .filter(id => spent[id] > 0 && !isPlanned(id))
+    .sort((a, b) => spent[b] - spent[a]);
+  const unplannedTotal = unplanned.reduce((s, id) => s + spent[id], 0);
+  const unplannedHTML = unplanned.length ? `
+    <div class="vg-alert info">
+      <span class="vg-alert-dot"></span>
+      <span class="vg-alert-text"><strong>Sin presupuesto:</strong> ${formatBsShort(unplannedTotal)} en ${unplanned
+        .map(id => escapeHtml((findCategory("gasto", id) || { label: id }).label)).join(", ")}</span>
+    </div>` : "";
+  const alertsHTML = alerts.length || unplanned.length ? `
     <div class="vg-alerts">
       ${alerts.map(r => `
         <button type="button" class="vg-alert ${r.state}" data-cat-detail="${r.cat.id}" data-cat-type="${r.type}">
@@ -734,12 +745,14 @@ function vgBudgetHTML(period) {
               ? `vas rápido, ${Math.round(r.used / r.planned * 100)} % usado y pasó el ${Math.round(periodElapsed(period) * 100)} % del periodo`
               : `te quedan ${formatBsShort(r.planned - r.used)} (${Math.round(r.used / r.planned * 100)} % usado)`}</span>
         </button>`).join("")}
+      ${unplannedHTML}
     </div>` : "";
   return `
     <a class="vg-budget-head" href="#fin-presupuesto"><h3 class="budget-section-title">Presupuesto</h3><span data-icon="chevronRight"></span></a>
     <div class="vg-label">${left < 0 ? "Sobrepasado" : "Restante para gastar"}</div>
     <div class="vg-big${left < 0 ? " over" : ""}">${formatBsShort(Math.abs(left))}</div>
     <div class="vg-bar"><span style="width:${(pct * 100).toFixed(1)}%"></span></div>
+    ${dailyAllowanceHTML(period)}
     ${alertsHTML}
     <div class="vg-label vg-popular-label">Categorías populares</div>
     <div class="vg-popular">${popular.map(r => remainingCatHTML(r.cat, r.planned, r.used, r.type)).join("")}</div>`;
@@ -1557,7 +1570,7 @@ function isFastPace(planned, used, elapsed) {
   return elapsed < 1 && pct >= PACE_MIN && pct - elapsed >= PACE_MARGIN;
 }
 function budgetState(planned, used, type, elapsed = periodElapsed(currentBudgetPeriod())) {
-  if (type !== "gasto" || planned <= 0) return used > planned && type === "gasto" ? "over" : "ok";
+  if (type !== "gasto" || planned <= 0) return "ok"; // sin presupuesto: solo se muestra lo gastado
   if (used > planned) return "over";
   if (used / planned >= BUDGET_WARN || isFastPace(planned, used, elapsed)) return "warn";
   return "ok";
@@ -1567,7 +1580,7 @@ function budgetState(planned, used, type, elapsed = periodElapsed(currentBudgetP
 // tienen movimientos quedan en su orden original.
 const STATE_RANK = { over: 2, warn: 1, ok: 0 };
 function byUrgency(a, b) {
-  const pct = r => r.planned > 0 ? r.used / r.planned : (r.used > 0 ? 1 : 0);
+  const pct = r => r.planned > 0 ? r.used / r.planned : 0; // sin presupuesto: al final
   return STATE_RANK[budgetState(b.planned, b.used, "gasto")] - STATE_RANK[budgetState(a.planned, a.used, "gasto")]
     || pct(b) - pct(a);
 }
@@ -1581,7 +1594,9 @@ function remainingCatHTML(c, planned, used, type) {
   const done = type === "ingreso" && planned > 0 && used >= planned;
   const amountHTML = type === "ingreso"
     ? `<div class="remain-amount income${done ? " done" : ""}">${incomeProgressHTML(used, planned)}</div>`
-    : `<div class="remain-amount${over ? " over" : state === "warn" ? " warn" : ""}">${remainingText(remaining)}</div>`;
+    : planned <= 0
+      ? `<div class="remain-amount">${formatBsShort(used)} gastado</div>`
+      : `<div class="remain-amount${over ? " over" : state === "warn" ? " warn" : ""}">${remainingText(remaining)}</div>`;
   return `
     <button type="button" class="remain-cat" data-cat-detail="${c.id}" data-cat-type="${type}">
       <div class="remain-ring">
@@ -1600,7 +1615,9 @@ function remainingSectionHTML(title, rows, type) {
   const goal = rows.reduce((s, r) => s + r.planned, 0);
   const headAmount = type === "ingreso"
     ? `<span class="remain-section-amount income${goal > 0 && received >= goal ? " done" : ""}">${incomeProgressHTML(received, goal)}</span>`
-    : `<span class="remain-section-amount${remaining < 0 ? " over" : ""}">${remainingText(remaining)}</span>`;
+    : goal <= 0
+      ? `<span class="remain-section-amount">${formatBsShort(received)} gastado</span>`
+      : `<span class="remain-section-amount${remaining < 0 ? " over" : ""}">${remainingText(remaining)}</span>`;
   return `
     <div class="budget-section remain-section">
       <div class="remain-section-head">
@@ -1691,13 +1708,15 @@ function renderCategoryDetail() {
   const used = movements.reduce((s, m) => s + m.amount, 0);
   const remaining = planned - used;
   const isIncome = type === "ingreso";
-  const over = !isIncome && remaining < 0;
+  const over = !isIncome && planned > 0 && remaining < 0;
   const pct = planned > 0 ? used / planned : (used > 0 ? 1 : 0);
   const usedLabel = isIncome ? "Recibido" : "Gastado";
   const fast = !isIncome && !over && planned > 0 && used / planned < BUDGET_WARN && isFastPace(planned, used, periodElapsed(period));
   const headline = isIncome
     ? `<div class="cat-detail-remaining income${planned > 0 && used >= planned ? " done" : ""}">${incomeProgressHTML(used, planned)}</div>`
-    : `<div class="cat-detail-remaining${over ? " over" : budgetState(planned, used, type) === "warn" ? " warn" : ""}">${remainingText(remaining)}</div>
+    : planned <= 0
+      ? `<div class="cat-detail-remaining">${formatBsShort(used)} gastado</div>`
+      : `<div class="cat-detail-remaining${over ? " over" : budgetState(planned, used, type) === "warn" ? " warn" : ""}">${remainingText(remaining)}</div>
        ${fast ? `<div class="cat-detail-pace">Vas rápido: llevas ${Math.round(used / planned * 100)} % gastado y pasó el ${Math.round(periodElapsed(period) * 100)} % del periodo</div>` : ""}`;
 
   document.getElementById("cat-detail-title").textContent = cat.label;
@@ -1711,7 +1730,7 @@ function renderCategoryDetail() {
     ${headline}
     <div class="cat-detail-month">${periodLabel(period)}</div>
     <div class="cat-detail-stats">
-      <div><span>${isIncome ? "Meta" : "Presupuesto"}</span><strong>${formatBsShort(planned)}</strong></div>
+      <div><span>${isIncome ? "Meta" : "Presupuesto"}</span><strong>${planned > 0 ? formatBsShort(planned) : "—"}</strong></div>
       <div><span>${usedLabel}</span><strong>${formatBsShort(used)}</strong></div>
       <div><span>Movimientos</span><strong>${movements.length}</strong></div>
     </div>
@@ -1939,9 +1958,9 @@ function budgetProjection(period) {
 function dailyAllowanceHTML(period) {
   const { days, daily, result } = budgetProjection(period);
   if (days <= 0) return "";
-  return `<div class="remain-daily${result < 0 ? " over" : ""}">
-    Puedes gastar <strong>${formatBsShort(Math.round(daily))}</strong> por día · quedan ${days} día${days === 1 ? "" : "s"}
-  </div>`;
+  const left = `quedan ${days} día${days === 1 ? "" : "s"}`;
+  if (result <= 0) return `<div class="remain-daily over"><strong>Sin margen para gastar</strong> · ${left}</div>`;
+  return `<div class="remain-daily">Puedes gastar <strong>${formatBsShort(Math.round(daily))}</strong> por día · ${left}</div>`;
 }
 
 function renderBudgetInfo() {
