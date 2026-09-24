@@ -341,13 +341,21 @@ function renderMovements() {
 
   const ingresos = list.filter(m => m.type === "ingreso").reduce((s, m) => s + m.amount, 0);
   const gastos = list.filter(m => m.type === "gasto").reduce((s, m) => s + m.amount, 0);
-  const saldo = ingresos - gastos;
+  // Lo que salió de "Yo" hacia Ahorro u otras carteras (menos lo que volvió)
+  // tampoco se puede gastar. Pagar la tarjeta no se resta: esos gastos ya
+  // están en "Gastos".
+  const ahorro = list
+    .filter(m => m.type === "transferencia" && m.to !== "tarjeta")
+    .reduce((s, m) => s + (m.from === "gastos" ? m.amount : 0) - (m.to === "gastos" ? (m.amountTo != null ? m.amountTo : m.amount) : 0), 0);
+  const saldo = ingresos - gastos - ahorro;
+  const signed = n => `${n < 0 ? "−" : ""}${formatBsShort(Math.abs(n))}`;
 
   document.getElementById("month-count").textContent = `${list.length} transacci${list.length === 1 ? "ón" : "ones"}`;
   document.getElementById("finance-summary").innerHTML = `
     <div><strong>${formatBsShort(ingresos)}</strong><span>Ingresos</span></div>
     <div><strong>${formatBsShort(gastos)}</strong><span>Gastos</span></div>
-    <div><strong class="${saldo < 0 ? "neg" : ""}">${saldo < 0 ? "−" : ""}${formatBsShort(Math.abs(saldo))}</strong><span>Saldo</span></div>
+    <div><strong>${signed(ahorro)}</strong><span>Ahorro</span></div>
+    <div><strong class="${saldo < 0 ? "neg" : ""}">${signed(saldo)}</strong><span>Saldo</span></div>
   `;
   document.getElementById("finance-empty").style.display = list.length ? "none" : "block";
 
