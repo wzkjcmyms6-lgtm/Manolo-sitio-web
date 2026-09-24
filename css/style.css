@@ -582,34 +582,50 @@ button.delete:hover { opacity: 1; }
 .budget-header .link-btn { white-space: nowrap; }
 .budget-header h2 { margin: 0; font-size: 1.1rem; text-transform: capitalize; }
 
-.budget-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 0.9rem;
-}
-.budget-card {
+/* ---------- Finance: Presupuesto → Restante (como Buddy) ---------- */
+.remain-hero {
   display: flex;
-  align-items: center;
-  gap: 0.9rem;
+  justify-content: center;
+  padding: 1.2rem 1rem 0.4rem;
+  margin-bottom: 1.2rem;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 1rem;
+  border-radius: 24px;
 }
-.budget-ring { position: relative; width: 60px; height: 60px; flex-shrink: 0; }
-.budget-ring svg { display: block; }
-.budget-ring-icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 22px;
-  height: 22px;
+.remain-gauge { position: relative; width: 220px; height: 190px; }
+.remain-gauge > svg { display: block; width: 220px; height: 220px; }
+.remain-gauge-center {
+  position: absolute; inset: 0 0 20px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
 }
-.budget-cat-label { font-weight: 600; font-size: 0.92rem; }
-.budget-amount { font-size: 0.82rem; color: var(--muted); margin-top: 0.15rem; }
-.budget-amount.over { color: var(--danger); font-weight: 600; }
-.budget-amount.muted { font-style: italic; }
+.remain-gauge-icon { width: 56px; height: 56px; color: var(--ink); margin-bottom: 0.3rem; }
+.remain-gauge-value { font-size: 2rem; font-weight: 700; line-height: 1.2; }
+.remain-gauge-value.over { color: var(--danger); }
+.remain-gauge-label { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+.remain-section { padding-bottom: 1.2rem; }
+.remain-section-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 0.8rem;
+  padding-bottom: 0.9rem; margin-bottom: 1.1rem; border-bottom: 1px solid var(--border);
+}
+.remain-section-head .budget-section-title { margin: 0; }
+.remain-section-amount { font-size: 1.05rem; white-space: nowrap; }
+.remain-section-amount.over, .remain-amount.over { color: var(--danger); }
+.remain-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.3rem 0.4rem; }
+.remain-cat { display: flex; flex-direction: column; align-items: center; text-align: center; min-width: 0; }
+.remain-ring { position: relative; width: 84px; height: 84px; margin-bottom: 0.5rem; }
+.remain-ring svg { display: block; width: 100%; height: 100%; }
+.remain-ring-core {
+  position: absolute; inset: 12px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; color: #fff;
+}
+.remain-icon { width: 30px; height: 30px; }
+.remain-emoji { font-size: 1.7rem; line-height: 1; }
+.remain-label { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.remain-amount { font-size: 0.88rem; margin-top: 0.1rem; }
+.remain-empty { text-align: center; color: var(--muted); padding: 1rem; }
 
 /* ---------- Finance: Presupuesto → Planificación (anillo resumen) ---------- */
 .budget-summary-card {

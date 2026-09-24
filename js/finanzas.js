@@ -344,15 +344,16 @@ function computeSpentByCategory(monthDate) {
 }
 
 function progressRing(pct, color) {
-  const size = 60, strokeWidth = 6;
+  const size = 84, strokeWidth = 7;
   const r = (size - strokeWidth) / 2;
   const c = 2 * Math.PI * r;
   const offset = c * (1 - Math.min(Math.max(pct, 0), 1));
-  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-    <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(--border)" stroke-width="${strokeWidth}"/>
-    <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"
+  return `<svg viewBox="0 0 ${size} ${size}">
+    <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" style="stroke:#0c0c0c" stroke-width="${strokeWidth}"/>
+    ${pct > 0 ? `<circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" style="stroke:${color}" stroke-width="${strokeWidth}"
       stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${offset}"
-      transform="rotate(-90 ${size / 2} ${size / 2})"/>
+      transform="rotate(-90 ${size / 2} ${size / 2})"/>` : ""}
+    <line x1="${size / 2}" y1="0" x2="${size / 2}" y2="${strokeWidth}" style="stroke:${color}" stroke-width="1.5"/>
   </svg>`;
 }
 
@@ -401,37 +402,104 @@ function updateBudgetMonthLabel() {
   document.getElementById("budget-month-next").disabled = monthOffset >= 0;
 }
 
-// ---- Restante: anillo por categoría (spent vs. presupuestado) ----
+// ---- Restante (como Buddy): indicador grande + anillos por categoría ----
+function computeReceivedByCategory(monthDate) {
+  const received = {};
+  financeCache
+    .filter(m => m.type === "ingreso" && isInMonth(m.date, monthDate))
+    .forEach(m => { received[m.category] = (received[m.category] || 0) + m.amount; });
+  return received;
+}
+
+function remainingGauge(pct) {
+  const size = 220, stroke = 10, r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r, arc = c * 0.75;
+  const fill = arc * Math.min(Math.max(pct, 0), 1);
+  const circle = (len, color) => `<circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" style="stroke:${color}" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="${len} ${c}" transform="rotate(135 ${size / 2} ${size / 2})"/>`;
+  return `<svg viewBox="0 0 ${size} ${size}">${circle(arc, "rgba(255,255,255,0.12)")}${fill > 0 ? circle(fill, "var(--accent-1)") : ""}</svg>`;
+}
+
+function remainingText(remaining) {
+  return remaining >= 0
+    ? `${formatBsShort(remaining)} restante`
+    : `${formatBsShort(-remaining)} sobrepasado`;
+}
+
+function remainingCatHTML(c, planned, used) {
+  const remaining = planned - used;
+  const over = remaining < 0;
+  const pct = planned > 0 ? used / planned : (used > 0 ? 1 : 0);
+  const iconHTML = c.emoji ? `<span class="remain-emoji">${c.emoji}</span>` : `<span class="remain-icon" data-icon="${c.icon}"></span>`;
+  return `
+    <div class="remain-cat">
+      <div class="remain-ring">
+        ${progressRing(pct, over ? "var(--danger)" : c.color)}
+        <span class="remain-ring-core" style="background:${c.color}">${iconHTML}</span>
+      </div>
+      <div class="remain-label">${escapeHtml(c.label)}</div>
+      <div class="remain-amount${over ? " over" : ""}">${remainingText(remaining)}</div>
+    </div>
+  `;
+}
+
+function remainingSectionHTML(title, rows) {
+  const remaining = rows.reduce((s, r) => s + r.planned - r.used, 0);
+  return `
+    <div class="budget-section remain-section">
+      <div class="remain-section-head">
+        <h3 class="budget-section-title">${escapeHtml(title)}</h3>
+        <span class="remain-section-amount${remaining < 0 ? " over" : ""}">${remainingText(remaining)}</span>
+      </div>
+      <div class="remain-grid">${rows.map(r => remainingCatHTML(r.cat, r.planned, r.used)).join("")}</div>
+    </div>
+  `;
+}
+
 function renderBudgets() {
   const monthDate = currentMonthDate();
   const spent = computeSpentByCategory(monthDate);
-  const grid = document.getElementById("budget-grid");
-  grid.innerHTML = "";
+  const received = computeReceivedByCategory(monthDate);
+  const relevant = (c, used) => isPlanned(c.id) || used > 0;
 
-  gastoCategoriesCache.forEach(cat => {
-    const budget = budgetsCache[cat.id] || 0;
-    const s = spent[cat.id] || 0;
-    const over = budget > 0 && s > budget;
-    const pct = budget > 0 ? s / budget : 0;
-    const remaining = budget - s;
+  const ingresoRows = (CATEGORIES.ingreso || [])
+    .map(c => ({ cat: c, planned: budgetsCache[c.id] || 0, used: received[c.id] || 0 }))
+    .filter(r => relevant(r.cat, r.used));
 
-    const card = document.createElement("div");
-    card.className = "budget-card";
-    card.innerHTML = `
-      <div class="budget-ring">
-        ${progressRing(pct, over ? "var(--danger)" : cat.color)}
-        <span class="budget-ring-icon" style="color:${over ? "var(--danger)" : cat.color}" data-icon="${cat.icon}"></span>
+  const groupSections = categoryGroupsCache
+    .map(g => ({
+      title: g.nombre,
+      rows: groupCategories(g)
+        .map(c => ({ cat: c, planned: budgetsCache[c.id] || 0, used: spent[c.id] || 0 }))
+        .filter(r => relevant(r.cat, r.used))
+    }))
+    .filter(sec => sec.rows.length);
+
+  // Restante para gastar = ingresos planeados − lo gastado en el mes.
+  const totalIncome = ingresoRows.reduce((s, r) => s + r.planned, 0);
+  const totalBudget = groupSections.reduce((s, sec) => s + sec.rows.reduce((t, r) => t + r.planned, 0), 0);
+  const totalSpent = Object.values(spent).reduce((s, v) => s + v, 0);
+  const base = totalIncome > 0 ? totalIncome : totalBudget;
+  const leftToSpend = base - totalSpent;
+
+  document.getElementById("budget-remaining-hero").innerHTML = `
+    <div class="remain-gauge">
+      ${remainingGauge(base > 0 ? Math.max(leftToSpend, 0) / base : 0)}
+      <div class="remain-gauge-center">
+        <span class="remain-gauge-icon" data-icon="home"></span>
+        <span class="remain-gauge-value${leftToSpend < 0 ? " over" : ""}">${formatBsShort(Math.abs(leftToSpend))}</span>
+        <span class="remain-gauge-label">${leftToSpend < 0 ? "Sobrepasado" : "Restante para gastar"}</span>
       </div>
-      <div class="budget-info">
-        <div class="budget-cat-label">${cat.label}</div>
-        ${budget > 0
-          ? `<div class="budget-amount${over ? " over" : ""}">${over ? formatMoney(Math.abs(remaining)) + " sobrepasado" : formatMoney(remaining) + " restante"}</div>`
-          : `<div class="budget-amount muted">Sin presupuesto</div>`}
-      </div>
-    `;
-    grid.appendChild(card);
-    renderIcons(card);
-  });
+    </div>
+  `;
+
+  const list = document.getElementById("budget-grid");
+  const sectionsHTML = (ingresoRows.length ? [remainingSectionHTML("Ingresos", ingresoRows)] : [])
+    .concat(groupSections.map(sec => remainingSectionHTML(sec.title, sec.rows)));
+  list.innerHTML = sectionsHTML.length
+    ? sectionsHTML.join("")
+    : `<p class="remain-empty">Todavía no hay presupuesto para este mes. Agrégalo en Planificación.</p>`;
+
+  renderIcons(document.getElementById("budget-tab-restante"));
 }
 
 // ---- Planificación: secciones con sus categorías (como Buddy) ----
