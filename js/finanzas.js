@@ -60,6 +60,9 @@ let carterasMovCache = []; // movimientos (aportes, retiros, transferencias) de 
 function financeCollection() {
   return db.collection("users").doc(currentUser.uid).collection("finanzas");
 }
+function budgetConfigDocRef() {
+  return db.collection("users").doc(currentUser.uid).collection("meta").doc("config_presupuesto");
+}
 function budgetDocRef() {
   return db.collection("users").doc(currentUser.uid).collection("meta").doc("presupuestos");
 }
@@ -140,6 +143,47 @@ function monthLabel(date) {
 }
 function isInMonth(dateStr, monthDate) {
   return dateStr.slice(0, 7) === monthKey(monthDate);
+}
+
+// ---------- Periodo del presupuesto (ej: del 28 al 27 del mes siguiente) ----------
+let budgetStartDay = 1; // 1-28, se configura en Herramientas → Periodo del presupuesto
+
+function isoDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function currentBudgetPeriod() {
+  const today = new Date();
+  let year = today.getFullYear();
+  let month = today.getMonth();
+  if (today.getDate() < budgetStartDay) month--;
+  month += monthOffset;
+  const start = new Date(year, month, budgetStartDay);
+  const end = new Date(start.getFullYear(), start.getMonth() + 1, budgetStartDay - 1);
+  return { start, end, startISO: isoDate(start), endISO: isoDate(end) };
+}
+
+function isInPeriod(dateStr, period) {
+  return dateStr >= period.startISO && dateStr <= period.endISO;
+}
+
+function periodLabel(period) {
+  if (budgetStartDay === 1) return monthLabel(period.start);
+  const thisYear = new Date().getFullYear();
+  const fmt = d => {
+    const opts = { day: "numeric", month: "short" };
+    if (d.getFullYear() !== thisYear) opts.year = "numeric";
+    return d.toLocaleDateString("es-ES", opts).replace(".", "");
+  };
+  return `${fmt(period.start)} - ${fmt(period.end)}`;
+}
+
+function daysLeftInPeriod(period) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (today > period.end) return 0;
+  const from = today < period.start ? period.start : today;
+  return Math.round((period.end - from) / 86400000) + 1;
 }
 
 // ---------- Totales acumulados (saldo y deuda no se resetean por mes) ----------
@@ -334,11 +378,11 @@ document.getElementById("budget-month-next").addEventListener("click", () => { m
 
 // ================= Presupuesto =================
 
-function computeSpentByCategory(monthDate) {
+function computeSpentByCategory(period) {
   const spent = {};
   gastoCategoriesCache.forEach(c => { spent[c.id] = 0; });
   financeCache
-    .filter(m => m.type === "gasto" && isInMonth(m.date, monthDate))
+    .filter(m => m.type === "gasto" && isInPeriod(m.date, period))
     .forEach(m => { spent[m.category] = (spent[m.category] || 0) + m.amount; });
   return spent;
 }
@@ -397,16 +441,15 @@ function donutChart(segments) {
 }
 
 function updateBudgetMonthLabel() {
-  const monthDate = currentMonthDate();
-  document.getElementById("budget-month-label").textContent = monthLabel(monthDate);
+  document.getElementById("budget-month-label").textContent = periodLabel(currentBudgetPeriod());
   document.getElementById("budget-month-next").disabled = monthOffset >= 0;
 }
 
 // ---- Restante (como Buddy): indicador grande + anillos por categoría ----
-function computeReceivedByCategory(monthDate) {
+function computeReceivedByCategory(period) {
   const received = {};
   financeCache
-    .filter(m => m.type === "ingreso" && isInMonth(m.date, monthDate))
+    .filter(m => m.type === "ingreso" && isInPeriod(m.date, period))
     .forEach(m => { received[m.category] = (received[m.category] || 0) + m.amount; });
   return received;
 }
@@ -456,9 +499,9 @@ function remainingSectionHTML(title, rows, type) {
 }
 
 function renderBudgets() {
-  const monthDate = currentMonthDate();
-  const spent = computeSpentByCategory(monthDate);
-  const received = computeReceivedByCategory(monthDate);
+  const period = currentBudgetPeriod();
+  const spent = computeSpentByCategory(period);
+  const received = computeReceivedByCategory(period);
   const relevant = (c, used) => isPlanned(c.id) || used > 0;
 
   const ingresoRows = (CATEGORIES.ingreso || [])
@@ -519,10 +562,10 @@ function closeCategoryDetail() {
 
 function renderCategoryDetail() {
   const { type, catId } = catDetail;
-  const monthDate = currentMonthDate();
+  const period = currentBudgetPeriod();
   const cat = findBudgetCategory(type, catId) || findCategory(type, catId);
   const movements = financeCache
-    .filter(m => m.type === type && m.category === catId && isInMonth(m.date, monthDate))
+    .filter(m => m.type === type && m.category === catId && isInPeriod(m.date, period))
     .sort((a, b) => b.date.localeCompare(a.date) || String(b.id).localeCompare(String(a.id)));
 
   const planned = budgetsCache[catId] || 0;
@@ -541,7 +584,7 @@ function renderCategoryDetail() {
       </span>
     </div>
     <div class="cat-detail-remaining${over ? " over" : ""}">${remainingText(remaining)}</div>
-    <div class="cat-detail-month">${monthLabel(monthDate)}</div>
+    <div class="cat-detail-month">${periodLabel(period)}</div>
     <div class="cat-detail-stats">
       <div><span>Presupuesto</span><strong>${formatBsShort(planned)}</strong></div>
       <div><span>${usedLabel}</span><strong>${formatBsShort(used)}</strong></div>
@@ -551,7 +594,7 @@ function renderCategoryDetail() {
 
   const list = document.getElementById("cat-detail-list");
   if (!movements.length) {
-    list.innerHTML = `<p class="cat-detail-empty">No hay movimientos de ${escapeHtml(cat.label)} en ${monthLabel(monthDate).toLowerCase()}.</p>`;
+    list.innerHTML = `<p class="cat-detail-empty">No hay movimientos de ${escapeHtml(cat.label)} en este periodo (${periodLabel(period)}).</p>`;
   } else {
     let lastDate = null;
     list.innerHTML = movements.map(m => {
@@ -720,8 +763,8 @@ function renderBudgetSummary() {
 }
 
 function renderBudgetInfo() {
-  const monthDate = currentMonthDate();
-  const spent = computeSpentByCategory(monthDate);
+  const period = currentBudgetPeriod();
+  const spent = computeSpentByCategory(period);
   const withBudget = gastoCategoriesCache.filter(c => (budgetsCache[c.id] || 0) > 0);
   const totalBudget = withBudget.reduce((s, c) => s + budgetsCache[c.id], 0);
   const totalSpent = gastoCategoriesCache.reduce((s, c) => s + (spent[c.id] || 0), 0);
@@ -729,7 +772,7 @@ function renderBudgetInfo() {
   document.getElementById("budget-info-stats").innerHTML = `
     <div class="stat-box"><div class="value">${withBudget.length}/${gastoCategoriesCache.length}</div><div class="label">Categorías con presupuesto</div></div>
     <div class="stat-box"><div class="value">${formatMoney(totalBudget)}</div><div class="label">Total presupuestado</div></div>
-    <div class="stat-box"><div class="value">${formatMoney(totalSpent)}</div><div class="label">Gastado en ${monthLabel(monthDate).toLowerCase()}</div></div>
+    <div class="stat-box"><div class="value">${formatMoney(totalSpent)}</div><div class="label">Gastado del ${periodLabel(period)}</div></div>
   `;
 }
 
@@ -1031,6 +1074,32 @@ document.getElementById("category-selector-cancel").addEventListener("click", cl
 
 document.getElementById("category-selector-modal").addEventListener("click", e => {
   if (e.target.classList.contains("category-selector-overlay")) closePicker();
+});
+
+// ================= Herramientas: Periodo del presupuesto =================
+
+function renderPeriodSettings() {
+  const period = currentBudgetPeriod();
+  const days = daysLeftInPeriod(period);
+  document.getElementById("period-preview").innerHTML = `
+    <span class="period-preview-icon" data-icon="calendar"></span>
+    <div>
+      <div class="period-preview-range">${periodLabel(period)}</div>
+      <div class="period-preview-sub">${monthOffset === 0 ? `Periodo actual · quedan <strong>${days} día${days === 1 ? "" : "s"}</strong>` : "Periodo seleccionado en Presupuesto"}</div>
+    </div>
+  `;
+  document.getElementById("period-days").innerHTML = Array.from({ length: 28 }, (_, i) => i + 1).map(d => `
+    <button type="button" class="period-day${d === budgetStartDay ? " selected" : ""}" role="radio" aria-checked="${d === budgetStartDay}" data-start-day="${d}">${d}</button>
+  `).join("");
+  renderIcons(document.getElementById("period-preview"));
+}
+
+document.getElementById("period-days").addEventListener("click", e => {
+  const btn = e.target.closest("[data-start-day]");
+  if (!btn) return;
+  budgetStartDay = Number(btn.dataset.startDay);
+  renderAll();
+  budgetConfigDocRef().set({ startDay: budgetStartDay });
 });
 
 // ================= Herramientas: Categorías =================
@@ -1728,6 +1797,7 @@ function renderAll() {
   renderBudgetSummary();
   renderBudgetInfo();
   renderCategoryGroups();
+  renderPeriodSettings();
   renderWallets();
   updateExportSummary();
 }
@@ -1739,6 +1809,11 @@ populatePaymentSelect("ingreso");
 onAuthReady(() => {
   financeCollection().onSnapshot(snap => {
     financeCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAll();
+  });
+  budgetConfigDocRef().onSnapshot(doc => {
+    const day = doc.exists ? Number(doc.data().startDay) : 1;
+    budgetStartDay = day >= 1 && day <= 28 ? day : 1;
     renderAll();
   });
   budgetDocRef().onSnapshot(doc => {

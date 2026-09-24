@@ -59,6 +59,7 @@ const ICONS = {
 
   // Herramientas de Finanzas
   wallet: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M3 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2H5a2 2 0 0 0 0 4h14v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><circle cx="17" cy="13" r="1.1" fill="currentColor" stroke="none"/></svg>`,
+  calendar: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17"/><path d="M8 3v4M16 3v4"/></svg>`,
   tag: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M20 12.7 12.7 20a1.5 1.5 0 0 1-2.1 0L3 12.4V5a2 2 0 0 1 2-2h7.4a1.5 1.5 0 0 1 1.1.4l6.9 6.9a1.5 1.5 0 0 1 0 2.1Z"/><circle cx="8" cy="8" r="1.3"/></svg>`,
   download: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M12 4v11"/><path d="M8 11l4 4 4-4"/><path d="M4 18h16"/></svg>`,
   transfer: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M3 8h14"/><path d="M13 4l4 4-4 4"/><path d="M21 16H7"/><path d="M11 12l-4 4 4 4"/></svg>`,

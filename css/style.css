@@ -1785,3 +1785,22 @@ button.remain-cat:active .remain-ring { transform: scale(0.95); }
   color: var(--muted); cursor: pointer;
 }
 .budget-section-delete:hover, .budget-section-delete:active { color: var(--danger); border-color: var(--danger); }
+
+/* Herramientas: Periodo del presupuesto */
+.period-preview {
+  display: flex; align-items: center; gap: 1rem;
+  padding: 1.1rem 1.2rem; margin: 1rem 0 1.4rem;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+}
+.period-preview-icon { width: 44px; height: 44px; padding: 9px; flex-shrink: 0; border-radius: 12px; background: var(--surface-raised); color: var(--accent-1); }
+.period-preview-range { font-size: 1.4rem; font-weight: 700; }
+.period-preview-sub { font-size: 0.88rem; color: var(--muted); }
+.period-preview-sub strong { color: var(--ink); }
+.period-heading { margin: 0 0 0.7rem; font-size: 1rem; }
+.period-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.45rem; max-width: 420px; }
+.period-day {
+  aspect-ratio: 1; border-radius: 12px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 1rem; font-weight: 600; cursor: pointer;
+}
+.period-day:hover { border-color: var(--accent-1); }
+.period-day.selected { background: var(--accent-grad); border-color: transparent; color: #0a0a0a; }
