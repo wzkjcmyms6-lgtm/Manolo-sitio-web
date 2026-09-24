@@ -10,7 +10,11 @@ import sys
 import urllib.error
 import urllib.request
 
-URL = "https://www.bcb.gob.bo/?q=cotizaciones"
+URLS = [
+    "https://www.bcb.gob.bo/?q=cotizaciones_tc",
+    "https://www.bcb.gob.bo/?q=content/tipo-de-cambio-oficial-del-d%C3%B3lar-estadounidense",
+]
+URL = URLS[0]
 OUT = "data/tipo-cambio.json"
 MESES = {"ENERO": 1, "FEBRERO": 2, "MARZO": 3, "ABRIL": 4, "MAYO": 5, "JUNIO": 6, "JULIO": 7,
          "AGOSTO": 8, "SEPTIEMBRE": 9, "SETIEMBRE": 9, "OCTUBRE": 10, "NOVIEMBRE": 11, "DICIEMBRE": 12}
@@ -34,8 +38,8 @@ def fetch(url):
     return body.decode("utf-8", "replace")
 
 
-def page_text():
-    raw = fetch(URL)
+def page_text(url):
+    raw = fetch(url)
     raw = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", raw)
     return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", raw)))
 
@@ -58,17 +62,20 @@ def parse(text):
 
 
 def main():
-    text = page_text()
-    try:
-        tco, publicado = parse(text)
-    except ValueError as err:
-        k = max(text.upper().find("CAMBIO"), 0)
-        print("No se pudo leer el TCO:", err)
-        home = fetch("https://www.bcb.gob.bo/")
-        links = sorted(set(re.findall(r'href="([^"]*(?:cambio|cotiz|tipo)[^"]*)"', home, re.I)))
-        print("Enlaces con 'cambio/cotiz/tipo' en la portada:", links[:60])
-        print("Inicio de la página:", text[:1500])
-        print("Fragmento cerca de 'CAMBIO':", text[max(0, k - 500):k + 1500])
+    global URL
+    errors = []
+    for url in URLS:
+        text = page_text(url)
+        try:
+            tco, publicado = parse(text)
+            URL = url
+            break
+        except ValueError as err:
+            errors.append(f"{url}: {err}")
+            k = max(text.upper().find("CAMBIO OFICIAL"), 0)
+            print("Fragmento:", text[max(0, k - 300):k + 1200])
+    else:
+        print("No se pudo leer el TCO:", errors)
         sys.exit(1)
 
     hoy = (dt.datetime.utcnow() - dt.timedelta(hours=4)).date().isoformat()  # La Paz (UTC-4)
