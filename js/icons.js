@@ -62,6 +62,7 @@ const ICONS = {
   search: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>`,
   eyeOff: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M4 4l16 16"/><path d="M9.9 5.7A10 10 0 0 1 12 5.5c6.4 0 10 6.5 10 6.5a17.6 17.6 0 0 1-3.2 3.9M6.6 7.3A17.4 17.4 0 0 0 2 12s3.6 6.5 10 6.5a9.6 9.6 0 0 0 4.2-.9"/><path d="M9.9 10a3 3 0 0 0 4.1 4.1"/></svg>`,
   edit: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z"/><path d="M13.5 6.5l4 4"/></svg>`,
+  grip: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>`,
   receipt: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M6 3h12v18l-2.5-1.6L13 21l-2.5-1.6L8 21l-2-1.4z"/><path d="M9 8h6M9 11.5h6M9 15h3.5"/></svg>`,
   calendar: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17"/><path d="M8 3v4M16 3v4"/></svg>`,
   tag: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M20 12.7 12.7 20a1.5 1.5 0 0 1-2.1 0L3 12.4V5a2 2 0 0 1 2-2h7.4a1.5 1.5 0 0 1 1.1.4l6.9 6.9a1.5 1.5 0 0 1 0 2.1Z"/><circle cx="8" cy="8" r="1.3"/></svg>`,

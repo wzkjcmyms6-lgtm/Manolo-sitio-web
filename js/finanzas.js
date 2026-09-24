@@ -2598,7 +2598,7 @@ function saveIngresoCategories(list) {
 function ingresoGroupHTML() {
   const canDelete = CATEGORIES.ingreso.length > 1;
   const itemsHTML = CATEGORIES.ingreso.map(item => `
-    <div class="list-item cat-item">
+    <div class="list-item cat-item" data-item-id="${item.id}">
       <div style="display:flex; align-items:center; gap:0.7rem;">
         ${item.emoji
           ? `<span class="cat-emoji" style="background:${item.color}; color:#fff;">${item.emoji}</span>`
@@ -2608,6 +2608,7 @@ function ingresoGroupHTML() {
       <div class="cat-item-actions">
         <button type="button" class="cat-rename-btn" aria-label="Cambiar nombre de ${escapeHtml(item.label)}" data-rename-ingreso="${item.id}"><span data-icon="edit"></span></button>
         ${canDelete ? `<button type="button" class="delete" aria-label="Eliminar categoría" data-delete-cat="${item.id}" data-delete-group="${INGRESO_GROUP_ID}">${ICONS.trash}</button>` : ""}
+        <button type="button" class="cat-drag" data-drag-handle aria-label="Mover ${escapeHtml(item.label)}"><span data-icon="grip"></span></button>
       </div>
     </div>
   `).join("");
@@ -2620,7 +2621,7 @@ function ingresoGroupHTML() {
         </div>
         <button type="button" class="cat-add-btn" data-add-sub="${INGRESO_GROUP_ID}" aria-label="Agregar categoría de ingreso">${ICONS.plus}</button>
       </div>
-      <div class="cat-group-items">${itemsHTML}</div>
+      <div class="cat-group-items" data-group-id="${INGRESO_GROUP_ID}">${itemsHTML}</div>
       <form class="tracker-form cat-subcategory-form" data-group-id="${INGRESO_GROUP_ID}" data-color="${INGRESO_COLOR}" hidden>
         <input type="text" class="cat-sub-name" placeholder="Nombre (ej: Bonos, Alquiler cobrado)" required>
         <div class="emoji-picker" style="margin-top:0.8rem;">${emojiPickerHTML()}</div>
@@ -2632,6 +2633,7 @@ function ingresoGroupHTML() {
 }
 
 function renderCategoryGroups() {
+  if (catDrag) return; // no rehacer la lista mientras se arrastra una categoría
   const container = document.getElementById("category-groups");
   container.innerHTML = ingresoGroupHTML() + categoryGroupsCache.map((g, gi) => {
     const color = g.color || CATEGORY_COLOR_POOL[gi % CATEGORY_COLOR_POOL.length];
@@ -2643,12 +2645,15 @@ function renderCategoryGroups() {
         : `<span class="cat-icon" style="background:${color}22; color:${color}" data-icon="${displayIcon}"></span>`;
 
       return `
-        <div class="list-item cat-item">
+        <div class="list-item cat-item" data-item-id="${item.id}">
           <div style="display:flex; align-items:center; gap:0.7rem;">
             ${iconOrEmojiHTML}
             <strong>${escapeHtml(item.label)}</strong>
           </div>
-          ${item.id !== "otros" ? `<button type="button" class="delete" aria-label="Eliminar categoría" data-delete-cat="${item.id}" data-delete-group="${g.id}">${ICONS.trash}</button>` : ""}
+          <div class="cat-item-actions">
+            ${item.id !== "otros" ? `<button type="button" class="delete" aria-label="Eliminar categoría" data-delete-cat="${item.id}" data-delete-group="${g.id}">${ICONS.trash}</button>` : ""}
+            <button type="button" class="cat-drag" data-drag-handle aria-label="Mover ${escapeHtml(item.label)}"><span data-icon="grip"></span></button>
+          </div>
         </div>
       `;
     }).join("");
@@ -2662,7 +2667,7 @@ function renderCategoryGroups() {
           </div>
           <button type="button" class="cat-add-btn" data-add-sub="${g.id}" aria-label="Agregar subcategoría en ${escapeHtml(g.nombre)}">${ICONS.plus}</button>
         </div>
-        <div class="cat-group-items">${itemsHTML}</div>
+        <div class="cat-group-items" data-group-id="${g.id}">${itemsHTML}</div>
         <form class="tracker-form cat-subcategory-form" data-group-id="${g.id}" data-color="${color}" hidden>
           <input type="text" class="cat-sub-name" placeholder="Nombre (ej: Mascotas)" required>
           <div class="emoji-picker" style="margin-top:0.8rem;">${emojiPickerHTML()}</div>
@@ -2674,6 +2679,71 @@ function renderCategoryGroups() {
   }).join("");
   renderIcons(container);
 }
+
+// ---- Mover categorías: se arrastran desde el ícono ⋮⋮ dentro de su sección ----
+let catDrag = null; // { item, list, handle, grabOffset, startOrder }
+
+function catDragOrder(list) {
+  return Array.from(list.querySelectorAll(":scope > .cat-item")).map(el => el.dataset.itemId);
+}
+
+function saveCategoryOrder(groupId, order) {
+  const sortBy = items => order.map(id => items.find(i => i.id === id)).filter(Boolean)
+    .concat(items.filter(i => !order.includes(i.id)));
+  if (groupId === INGRESO_GROUP_ID) {
+    saveIngresoCategories(sortBy(CATEGORIES.ingreso));
+    return;
+  }
+  categoryGroupsCache = categoryGroupsCache.map(g => g.id === groupId ? Object.assign({}, g, { items: sortBy(g.items) }) : g);
+  gastoCategoriesCache = flattenCategoryGroups(categoryGroupsCache);
+  saveCategoryGroups(categoryGroupsCache);
+  renderAll();
+}
+
+function moveCatDrag(clientY) {
+  const { item, list, grabOffset } = catDrag;
+  item.style.transform = "";
+  const others = Array.from(list.querySelectorAll(":scope > .cat-item")).filter(el => el !== item);
+  const before = others.find(el => {
+    const r = el.getBoundingClientRect();
+    return clientY < r.top + r.height / 2;
+  });
+  if (before) { if (item.nextElementSibling !== before) list.insertBefore(item, before); }
+  else if (others.length && list.lastElementChild !== item) list.appendChild(item);
+  const natural = item.getBoundingClientRect().top;
+  item.style.transform = `translateY(${clientY - grabOffset - natural}px)`;
+  // Si el dedo llega al borde de la pantalla, se desplaza la página.
+  if (clientY < 110) window.scrollBy(0, -10);
+  else if (clientY > window.innerHeight - 130) window.scrollBy(0, 10);
+}
+
+function endCatDrag() {
+  if (!catDrag) return;
+  const { item, list, startOrder } = catDrag;
+  item.classList.remove("dragging");
+  item.style.transform = "";
+  list.classList.remove("sorting");
+  const order = catDragOrder(list);
+  catDrag = null;
+  if (order.join() !== startOrder.join()) saveCategoryOrder(list.dataset.groupId, order);
+}
+
+document.getElementById("category-groups").addEventListener("pointerdown", e => {
+  const handle = e.target.closest("[data-drag-handle]");
+  if (!handle || catDrag) return;
+  e.preventDefault();
+  const item = handle.closest(".cat-item");
+  const list = item.parentElement;
+  catDrag = { item, list, handle, grabOffset: e.clientY - item.getBoundingClientRect().top, startOrder: catDragOrder(list) };
+  handle.setPointerCapture(e.pointerId);
+  item.classList.add("dragging");
+  list.classList.add("sorting");
+});
+document.getElementById("category-groups").addEventListener("pointermove", e => {
+  if (catDrag) { e.preventDefault(); moveCatDrag(e.clientY); }
+});
+document.getElementById("category-groups").addEventListener("pointerup", endCatDrag);
+document.getElementById("category-groups").addEventListener("pointercancel", endCatDrag);
 
 async function deleteCategoryItem(groupId, itemId) {
   if (groupId === INGRESO_GROUP_ID) {
