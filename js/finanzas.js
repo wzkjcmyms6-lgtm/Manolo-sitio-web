@@ -3168,22 +3168,17 @@ document.querySelectorAll("[data-budget-tab]").forEach(btn => {
 
 // ================= Init =================
 
+// Cada parte se dibuja por separado: si una falla (por ejemplo, por un dato
+// viejo con un formato raro), las demás siguen apareciendo.
+const RENDERERS = [
+  renderStats, updateMonthLabel, renderMovements, renderGasto, renderVistaGeneral,
+  updateBudgetMonthLabel, renderBudgets, renderBudgetInputs, renderBudgetSummary, renderBudgetInfo,
+  renderCategoryGroups, renderPeriodSettings, renderCardSettings, renderWallets, updateExportSummary
+];
 function renderAll() {
-  renderStats();
-  updateMonthLabel();
-  renderMovements();
-  renderGasto();
-  renderVistaGeneral();
-  updateBudgetMonthLabel();
-  renderBudgets();
-  renderBudgetInputs();
-  renderBudgetSummary();
-  renderBudgetInfo();
-  renderCategoryGroups();
-  renderPeriodSettings();
-  renderCardSettings();
-  renderWallets();
-  updateExportSummary();
+  RENDERERS.forEach(fn => {
+    try { fn(); } catch (err) { console.error("Manolo: falló " + fn.name, err); }
+  });
 }
 
 
