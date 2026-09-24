@@ -285,7 +285,7 @@ function renderStats() {
       ${deuda > 0 ? `
         <button type="button" class="link-btn pay-card-link" id="pay-card-toggle">Pagar tarjeta</button>
         <form id="pay-card-form" class="pay-card-form" hidden>
-          <input type="number" id="pay-card-amount" placeholder="Monto" min="0.01" step="0.01" max="${deuda.toFixed(2)}" value="${deuda.toFixed(2)}" inputmode="decimal" required>
+          <input type="number" id="pay-card-amount" placeholder="Monto" min="0.01" step="0.01" max="${deuda.toFixed(2)}" value="${suggestedCardPayment(deuda).toFixed(2)}" inputmode="decimal" required>
           <select id="pay-card-source">
             <option value="debito">Débito</option>
             <option value="efectivo">Efectivo</option>
@@ -2220,89 +2220,157 @@ function appDialog({ title, message = "", input = null, confirmLabel = "Aceptar"
   });
 }
 
-// ================= Herramientas: Tarjeta de crédito (corte y pago) =================
-let cardConfig = { corte: null, pago: null }; // días del mes (1-31)
+// ================= Herramientas: Tarjeta de crédito (calendario de ciclos) =================
+// El banco no corta siempre el mismo día, así que se guarda la lista de
+// ciclos tal como los publica: fecha de corte y fecha límite de pago. Lo
+// gastado con tarjeta entre un corte y el siguiente se paga en la fecha de
+// pago de ese ciclo.
+let cardCycles = []; // [{ corte: "2026-10-20", pago: "2026-11-10" }], ordenados por corte
 
-// Fecha con ese día del mes, o el último día si el mes es más corto.
-function dayInMonth(year, month, day) {
-  const last = new Date(year, month + 1, 0).getDate();
-  return new Date(year, month, Math.min(day, last));
+function daysBetween(fromISO, toISO) {
+  return Math.round((new Date(toISO + "T00:00:00") - new Date(fromISO + "T00:00:00")) / 86400000);
 }
-
-function daysBetween(from, to) {
-  const a = new Date(from); a.setHours(0, 0, 0, 0);
-  const b = new Date(to); b.setHours(0, 0, 0, 0);
-  return Math.round((b - a) / 86400000);
+function shortDate(iso) {
+  return new Date(iso + "T00:00:00").toLocaleDateString("es-ES", { day: "numeric", month: "short" }).replace(".", "");
 }
-
-// Próxima fecha de corte (hoy incluido) y la fecha límite de pago que le sigue.
-function cardSchedule() {
-  if (!cardConfig.corte) return null;
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  let corte = dayInMonth(today.getFullYear(), today.getMonth(), cardConfig.corte);
-  if (corte < today) corte = dayInMonth(today.getFullYear(), today.getMonth() + 1, cardConfig.corte);
-  let pago = null;
-  if (cardConfig.pago) {
-    pago = dayInMonth(corte.getFullYear(), corte.getMonth(), cardConfig.pago);
-    if (pago <= corte) pago = dayInMonth(corte.getFullYear(), corte.getMonth() + 1, cardConfig.pago);
-  }
-  const prevCorte = dayInMonth(corte.getFullYear(), corte.getMonth() - 1, cardConfig.corte);
-  return { corte, pago, prevCorte, daysToCorte: daysBetween(today, corte), daysToPago: pago ? daysBetween(today, pago) : null };
-}
-
-function shortDate(d) {
-  return d.toLocaleDateString("es-ES", { day: "numeric", month: "short" }).replace(".", "");
-}
-
 function inDays(n) {
-  return n === 0 ? "hoy" : n === 1 ? "mañana" : `en ${n} días`;
+  return n === 0 ? "hoy" : n === 1 ? "mañana" : n < 0 ? `hace ${-n} días` : `en ${n} días`;
+}
+function addDaysISO(iso, n) {
+  const d = new Date(iso + "T00:00:00"); d.setDate(d.getDate() + n); return isoDate(d);
+}
+function addMonthISO(iso) {
+  const d = new Date(iso + "T00:00:00");
+  const last = new Date(d.getFullYear(), d.getMonth() + 2, 0).getDate();
+  return isoDate(new Date(d.getFullYear(), d.getMonth() + 1, Math.min(d.getDate(), last)));
 }
 
-// Línea de fechas para el panel de Deuda de tarjeta.
+function creditSpent(fromISO, toISO) {
+  return financeCache
+    .filter(m => m.type === "gasto" && m.payment === "credito" && m.date >= fromISO && m.date <= toISO)
+    .reduce((s, m) => s + m.amount, 0);
+}
+function cardPaidSince(fromISO) {
+  return financeCache
+    .filter(m => m.date >= fromISO && (m.type === "pago_tarjeta" || m.type === "ajuste_tarjeta" || (m.type === "transferencia" && m.to === "tarjeta")))
+    .reduce((s, m) => s + (m.type === "transferencia" && m.amountTo != null ? m.amountTo : m.amount), 0);
+}
+
+// Qué ciclo toca hoy: el próximo corte (ciclo abierto) y el pago pendiente
+// del último corte que ya pasó, con su monto.
+function cardSchedule() {
+  if (!cardCycles.length) return null;
+  const today = isoDate(new Date());
+  const idxNext = cardCycles.findIndex(c => c.corte >= today);
+  const next = idxNext >= 0 ? cardCycles[idxNext] : null;
+  const prevOfNext = idxNext > 0 ? cardCycles[idxNext - 1] : idxNext < 0 ? cardCycles[cardCycles.length - 1] : null;
+  const open = next ? { corte: next.corte, pago: next.pago, since: prevOfNext ? addDaysISO(prevOfNext.corte, 1) : null } : null;
+  if (open) open.spent = creditSpent(open.since || "0000-00-00", today);
+
+  // Estado de cuenta pendiente: último corte ya pasado cuya fecha de pago no venció.
+  let due = null;
+  const closedIdx = idxNext >= 0 ? idxNext - 1 : cardCycles.length - 1;
+  if (closedIdx >= 0) {
+    const c = cardCycles[closedIdx];
+    const before = closedIdx > 0 ? addDaysISO(cardCycles[closedIdx - 1].corte, 1) : "0000-00-00";
+    const statement = creditSpent(before, c.corte);
+    const pending = Math.max(statement - cardPaidSince(addDaysISO(c.corte, 1)), 0);
+    if (c.pago >= today || pending > 0) due = { corte: c.corte, pago: c.pago, statement, pending, daysToPago: daysBetween(today, c.pago) };
+  }
+  return { open, due, daysToCorte: open ? daysBetween(today, open.corte) : null, needsMore: !next || idxNext >= cardCycles.length - 1 };
+}
+
+// Líneas del panel de Deuda de tarjeta.
 function cardScheduleHTML(deuda) {
   const sch = cardSchedule();
-  if (!sch) return `<a class="card-sched-setup" href="#fin-herramientas-tarjeta">Configurar fechas de corte y pago</a>`;
-  const isCorte = sch.daysToCorte === 0;
-  return `
-    <div class="card-sched${isCorte && deuda > 0 ? " alert" : ""}">
-      ${isCorte && deuda > 0
-        ? `<strong>Hoy es tu corte:</strong> paga ${formatBsShort(deuda)}`
-        : `Corte ${inDays(sch.daysToCorte)} · ${shortDate(sch.corte)}`}
-      ${sch.pago ? `<span>Pagar antes del ${shortDate(sch.pago)}</span>` : ""}
-    </div>`;
+  if (!sch) return `<a class="card-sched-setup" href="#fin-herramientas-tarjeta">Cargar fechas de corte y pago</a>`;
+  const lines = [];
+  if (sch.due && sch.due.pending > 0) {
+    const late = sch.due.daysToPago < 0;
+    lines.push(`<strong class="${late ? "late" : ""}">${late ? "Vencido:" : "Pagar"} ${formatBsShort(sch.due.pending)} ${late ? "desde el" : "antes del"} ${shortDate(sch.due.pago)}</strong>`);
+  } else if (sch.due && sch.due.statement > 0) {
+    lines.push(`<span class="ok">Estado de cuenta del ${shortDate(sch.due.corte)} pagado ✓</span>`);
+  }
+  if (sch.open) {
+    lines.push(sch.daysToCorte === 0 && deuda > 0
+      ? `<strong>Hoy es tu corte</strong>`
+      : `<span>Corte ${inDays(sch.daysToCorte)} · ${shortDate(sch.open.corte)}</span>`);
+  } else {
+    lines.push(`<a class="card-sched-setup" href="#fin-herramientas-tarjeta">Carga los próximos cortes</a>`);
+  }
+  return `<div class="card-sched">${lines.join("")}</div>`;
+}
+
+// Monto sugerido al pagar: el estado de cuenta pendiente, o la deuda total.
+function suggestedCardPayment(deuda) {
+  const sch = cardSchedule();
+  if (sch && sch.due && sch.due.pending > 0) return Math.min(sch.due.pending, deuda);
+  return deuda;
+}
+
+function saveCardCycles(list) {
+  cardCycles = list.filter(c => c.corte).sort((a, b) => a.corte.localeCompare(b.corte));
+  renderAll();
+  return cardConfigDocRef().set({ ciclos: cardCycles });
 }
 
 function renderCardSettings() {
   const { deuda } = computeTotals(financeCache);
   const sch = cardSchedule();
-  const since = sch ? isoDate(new Date(sch.prevCorte.getTime() + 86400000)) : null;
-  const cicloGasto = sch ? financeCache
-    .filter(m => m.type === "gasto" && m.payment === "credito" && m.date >= since)
-    .reduce((s, m) => s + m.amount, 0) : 0;
+  const today = isoDate(new Date());
+  const rows = [];
+  if (sch && sch.due) {
+    rows.push(`<div class="card-prev-row"><span>Próximo pago (corte del ${shortDate(sch.due.corte)})</span><strong>${capitalize(shortDate(sch.due.pago))} · ${inDays(sch.due.daysToPago)}</strong></div>`);
+    rows.push(`<div class="card-prev-row"><span>Monto de ese estado de cuenta</span><strong>${formatBsShort(sch.due.statement)}</strong></div>`);
+    rows.push(`<div class="card-prev-row"><span>Falta pagar</span><strong class="${sch.due.pending > 0 ? "neg" : "okc"}">${sch.due.pending > 0 ? formatBsShort(sch.due.pending) : "Pagado ✓"}</strong></div>`);
+  }
+  if (sch && sch.open) {
+    rows.push(`<div class="card-prev-row"><span>Próximo corte</span><strong>${capitalize(shortDate(sch.open.corte))} · ${inDays(sch.daysToCorte)}</strong></div>`);
+    rows.push(`<div class="card-prev-row"><span>Gastado en este ciclo (se paga el ${shortDate(sch.open.pago)})</span><strong>${formatBsShort(sch.open.spent)}</strong></div>`);
+  }
+  rows.push(`<div class="card-prev-row"><span>Deuda total hoy</span><strong class="${deuda > 0 ? "neg" : ""}">${formatBsShort(deuda)}</strong></div>`);
+  document.getElementById("card-preview").innerHTML = sch
+    ? rows.join("") + (sch.needsMore ? `<p class="card-warn">Carga más ciclos para que el sistema siga avanzando solo.</p>` : "")
+    : `<p class="info-sub">Agrega los ciclos de tu tarjeta (fecha de corte y de pago) y aquí verás qué pagar y cuándo.</p>`;
 
-  document.getElementById("card-preview").innerHTML = sch ? `
-    <div class="card-prev-row"><span>Próximo corte</span><strong>${capitalize(shortDate(sch.corte))} · ${inDays(sch.daysToCorte)}</strong></div>
-    ${sch.pago ? `<div class="card-prev-row"><span>Fecha límite de pago</span><strong>${capitalize(shortDate(sch.pago))} · ${inDays(sch.daysToPago)}</strong></div>` : ""}
-    <div class="card-prev-row"><span>Gastado con tarjeta desde el último corte</span><strong>${formatBsShort(cicloGasto)}</strong></div>
-    <div class="card-prev-row"><span>Deuda total hoy</span><strong class="${deuda > 0 ? "neg" : ""}">${formatBsShort(deuda)}</strong></div>
-  ` : `<p class="info-sub">Elige tus fechas y aquí verás cuándo es tu próximo corte y hasta cuándo pagar.</p>`;
-
-  const opts = sel => `<option value="">—</option>` + Array.from({ length: 31 }, (_, i) => i + 1)
-    .map(d => `<option value="${d}"${d === sel ? " selected" : ""}>${d}</option>`).join("");
-  const corteSel = document.getElementById("card-corte");
-  const pagoSel = document.getElementById("card-pago");
-  if (document.activeElement !== corteSel) corteSel.innerHTML = opts(cardConfig.corte);
-  if (document.activeElement !== pagoSel) pagoSel.innerHTML = opts(cardConfig.pago);
+  const list = document.getElementById("card-cycles");
+  if (list.contains(document.activeElement)) return; // no pisar lo que se está editando
+  list.innerHTML = cardCycles.map((c, i) => `
+    <div class="card-cycle${c.pago < today ? " past" : ""}" data-cycle="${i}">
+      <label><span>Corte</span><input type="date" data-cycle-field="corte" value="${c.corte}"></label>
+      <label><span>Pago</span><input type="date" data-cycle-field="pago" value="${c.pago || ""}"></label>
+      <button type="button" class="card-cycle-del" data-cycle-del="${i}" aria-label="Eliminar ciclo"><span data-icon="trash"></span></button>
+    </div>`).join("") || `<p class="card-empty">Todavía no hay ciclos cargados.</p>`;
+  renderIcons(list);
 }
 
-["card-corte", "card-pago"].forEach(id => {
-  document.getElementById(id).addEventListener("change", () => {
-    const corte = Number(document.getElementById("card-corte").value) || null;
-    const pago = Number(document.getElementById("card-pago").value) || null;
-    cardConfig = { corte, pago };
-    renderAll();
-    cardConfigDocRef().set({ corte, pago });
-  });
+document.getElementById("card-cycle-add").addEventListener("click", () => {
+  const last = cardCycles[cardCycles.length - 1];
+  const today = isoDate(new Date());
+  const corte = last ? addMonthISO(last.corte) : today;
+  const pago = last && last.pago ? addMonthISO(last.pago) : addDaysISO(corte, 20);
+  saveCardCycles(cardCycles.concat([{ corte, pago }]));
+});
+
+const cardCyclesEl = document.getElementById("card-cycles");
+function onCycleEdit(e) {
+  const input = e.target.closest("[data-cycle-field]");
+  if (!input || !/^\d{4}-\d{2}-\d{2}$/.test(input.value)) return;
+  const i = Number(input.closest("[data-cycle]").dataset.cycle);
+  const field = input.dataset.cycleField;
+  if (cardCycles[i][field] === input.value) return;
+  const next = cardCycles.map((c, j) => j === i ? Object.assign({}, c, { [field]: input.value }) : c);
+  input.blur();
+  saveCardCycles(next);
+}
+cardCyclesEl.addEventListener("change", onCycleEdit);
+cardCyclesEl.addEventListener("input", onCycleEdit);
+cardCyclesEl.addEventListener("click", async e => {
+  const del = e.target.closest("[data-cycle-del]");
+  if (!del) return;
+  const c = cardCycles[Number(del.dataset.cycleDel)];
+  const ok = await appDialog({ title: "¿Eliminar este ciclo?", message: `Corte ${shortDate(c.corte)} · pago ${c.pago ? shortDate(c.pago) : "—"}`, confirmLabel: "Eliminar", danger: true });
+  if (ok) saveCardCycles(cardCycles.filter(x => x !== c));
 });
 
 // ================= Herramientas: Periodo del presupuesto =================
@@ -3126,8 +3194,11 @@ onAuthReady(() => {
   });
   cardConfigDocRef().onSnapshot(doc => {
     const d = doc.exists ? doc.data() : {};
-    const valid = n => (Number(n) >= 1 && Number(n) <= 31 ? Number(n) : null);
-    cardConfig = { corte: valid(d.corte), pago: valid(d.pago) };
+    const iso = v => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
+    cardCycles = (Array.isArray(d.ciclos) ? d.ciclos : [])
+      .map(c => ({ corte: iso(c.corte), pago: iso(c.pago) }))
+      .filter(c => c.corte)
+      .sort((a, b) => a.corte.localeCompare(b.corte));
     renderAll();
   });
   budgetConfigDocRef().onSnapshot(doc => {

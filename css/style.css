@@ -2278,3 +2278,19 @@ body.in-finanzas .topbar-clock { margin-right: 0; }
 .vg-alert.over .vg-alert-dot { background: var(--danger); }
 .txn-search input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
 .card-sched-setup { text-decoration: none; color: var(--accent-2); }
+
+/* Tarjeta: calendario de ciclos */
+.card-cycles { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 0.8rem; }
+.card-cycle { display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.5rem; align-items: end; padding: 0.8rem; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; }
+.card-cycle.past { opacity: 0.5; }
+.card-cycle label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.75rem; color: var(--muted); min-width: 0; }
+.card-cycle input {
+  height: 44px; padding: 0 0.6rem; border-radius: 10px; background: var(--bg); border: 1px solid var(--border);
+  color: var(--ink); font: inherit; font-size: 15px; min-width: 0; width: 100%;
+}
+.card-cycle-del { width: 44px; height: 44px; padding: 11px; border-radius: 50%; background: none; border: 1px solid var(--border); color: var(--danger); cursor: pointer; }
+.card-empty { color: var(--muted); margin: 0 0 0.4rem; }
+.card-warn { margin: 0.8rem 0 0.4rem; font-size: 0.85rem; color: #f0a847; }
+.card-prev-row strong.okc, .card-sched .ok { color: #5cc98a; }
+.card-sched strong.late { color: var(--danger); }
+#card-cycle-add { margin-bottom: 6rem; }
