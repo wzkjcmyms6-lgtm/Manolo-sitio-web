@@ -1737,3 +1737,75 @@ button.delete:hover { opacity: 1; }
 .category-selector-new-btn span { margin-right: 0; }
 .category-selector-item-emoji { border-radius: 50%; color: #fff; font-size: 1.3rem; }
 .category-selector-empty { grid-column: 1 / -1; text-align: center; color: var(--muted); font-size: 0.9rem; margin: 0.5rem 0; }
+
+/* Filas del presupuesto: tocar para editar el monto */
+button.budget-input-row {
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+button.budget-input-row:hover { border-color: var(--accent-1); }
+.budget-row-amount { font-weight: 600; font-size: 0.93rem; white-space: nowrap; }
+
+/* Hoja "Gasto de presupuesto" con teclado numérico */
+.budget-sheet { position: fixed; inset: 0; z-index: 900; display: flex; align-items: flex-end; justify-content: center; }
+.budget-sheet[hidden] { display: none; }
+.budget-sheet-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.6); }
+.budget-sheet-panel {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  max-height: 100dvh;
+  overflow-y: auto;
+  background: var(--bg-soft);
+  border-radius: 24px 24px 0 0;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  animation: budget-sheet-up 0.22s ease-out;
+}
+@keyframes budget-sheet-up { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.budget-sheet-header { display: flex; align-items: center; padding: 1rem; position: relative; }
+.budget-sheet-header h3 { flex: 1; margin: 0; text-align: center; font-size: 1.05rem; padding-right: 44px; }
+.budget-sheet-close {
+  width: 44px; height: 44px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 50%;
+  color: var(--ink); cursor: pointer;
+}
+.budget-sheet-close [data-icon] { width: 20px; height: 20px; }
+.budget-sheet-hero { background: var(--surface); padding: 1.4rem 1rem 1.2rem; text-align: center; }
+.budget-sheet-amount { display: flex; align-items: baseline; justify-content: center; gap: 0.5rem; font-size: 3rem; font-weight: 500; line-height: 1.1; word-break: break-all; }
+.budget-sheet-amount .cur { font-size: 1.5rem; }
+.budget-sheet-type { display: inline-flex; gap: 0.4rem; margin-top: 1rem; }
+.budget-sheet-type button {
+  padding: 0.55rem 1.3rem; border-radius: 999px; border: none; background: transparent;
+  color: var(--muted); font: inherit; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
+}
+.budget-sheet-type button.active { background: var(--bg); color: var(--ink); }
+.budget-sheet-row {
+  display: flex; align-items: center; gap: 0.8rem; width: 100%;
+  padding: 1rem; background: transparent; border: none; border-bottom: 1px solid var(--border);
+  color: var(--muted); font: inherit; font-size: 1rem; text-align: left; cursor: pointer;
+}
+.budget-sheet-row strong { color: var(--ink); }
+.budget-sheet-row .cat-icon, .budget-sheet-row .cat-emoji { width: 40px; height: 40px; flex-shrink: 0; }
+.budget-sheet-actions { display: flex; align-items: center; gap: 0.6rem; padding: 1rem; }
+.budget-sheet-choose, .budget-sheet-delete {
+  padding: 0.7rem 1.2rem; border-radius: 999px; border: 1px solid var(--border);
+  background: transparent; color: var(--ink); font: inherit; font-weight: 600; cursor: pointer;
+}
+.budget-sheet-delete { color: var(--danger); }
+.budget-sheet-delete[hidden] { display: none; }
+.budget-sheet-ok {
+  margin-left: auto; width: 52px; height: 52px; border-radius: 50%; border: none;
+  background: var(--accent-grad); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.budget-sheet-ok:disabled { opacity: 0.4; cursor: not-allowed; }
+.budget-sheet-ok [data-icon] { width: 24px; height: 24px; }
+.budget-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; padding: 0 1rem; }
+.budget-keypad button {
+  padding: 0.9rem 0; border-radius: 12px; border: none; background: var(--surface-raised);
+  color: var(--ink); font: inherit; font-size: 1.5rem; cursor: pointer;
+}
+.budget-keypad button:active { background: var(--border); }

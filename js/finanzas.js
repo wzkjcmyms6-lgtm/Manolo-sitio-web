@@ -471,11 +471,11 @@ function budgetSectionHTML(title, color, categories, sectionAttr) {
       <h3 class="budget-section-title">${color ? `<span class="dot" style="background:${color}"></span>` : ""}${escapeHtml(title)}</h3>
       <div class="budget-section-items">
         ${planned.map(c => `
-          <label class="budget-input-row">
+          <button type="button" class="budget-input-row" data-edit-cat="${c.id}">
             ${catBadgeHTML(c)}
             <span class="budget-input-label">${escapeHtml(c.label)}</span>
-            <input type="number" min="0" step="1" inputmode="decimal" data-cat="${c.id}" value="${budgetsCache[c.id] || ""}" placeholder="0">
-          </label>
+            <span class="budget-row-amount">${formatMoney(budgetsCache[c.id] || 0)}</span>
+          </button>
         `).join("")}
         <button type="button" class="budget-add-btn" ${sectionAttr}>
           <span data-icon="plus"></span>
@@ -488,9 +488,6 @@ function budgetSectionHTML(title, color, categories, sectionAttr) {
 
 function renderBudgetInputs() {
   const container = document.getElementById("budget-inputs");
-  const focused = document.activeElement;
-  const focusedCat = focused && focused.dataset ? focused.dataset.cat : null;
-
   const ingresoHTML = budgetSectionHTML("Ingresos", null, CATEGORIES.ingreso || [], `data-section-type="ingreso"`);
   const gastoHTML = categoryGroupsCache
     .filter(isSectionVisible)
@@ -506,11 +503,6 @@ function renderBudgetInputs() {
     </button>
   `;
   renderIcons(container);
-
-  if (focusedCat) {
-    const input = container.querySelector(`input[data-cat="${focusedCat}"]`);
-    if (input) input.focus();
-  }
 }
 
 function renderBudgetSummary() {
@@ -571,42 +563,8 @@ function renderBudgetInfo() {
   `;
 }
 
-function readBudgetInputs() {
-  document.querySelectorAll("#budget-inputs input[data-cat]").forEach(input => {
-    const v = parseFloat(input.value);
-    budgetsCache[input.dataset.cat] = v > 0 ? v : 0;
-  });
-}
-
 function saveBudgets() {
-  readBudgetInputs();
   return budgetDocRef().set(Object.assign({}, budgetsCache));
-}
-
-document.getElementById("budget-form").addEventListener("submit", e => {
-  e.preventDefault();
-  saveBudgets();
-});
-
-// Actualiza la dona en vivo mientras se escribe un monto.
-document.getElementById("budget-inputs").addEventListener("input", e => {
-  const input = e.target.closest("input[data-cat]");
-  if (!input) return;
-  const v = parseFloat(input.value);
-  budgetsCache[input.dataset.cat] = v > 0 ? v : 0;
-  renderBudgetSummary();
-});
-
-function planCategory(catId) {
-  readBudgetInputs();
-  budgetsCache[catId] = budgetsCache[catId] || 0;
-  renderBudgetInputs();
-  renderBudgetSummary();
-  saveBudgets();
-  setTimeout(() => {
-    const input = document.querySelector(`#budget-inputs input[data-cat="${catId}"]`);
-    if (input) input.focus();
-  }, 10);
 }
 
 function uniqueId(base, taken) {
@@ -647,37 +605,165 @@ function closePicker() {
   pickerState = null;
 }
 
-function openCategoryPickerForGroup(groupId) {
-  const group = categoryGroupsCache.find(g => g.id === groupId);
-  if (!group) return;
+// ---- Hoja "Gasto de presupuesto" con teclado numérico (como Buddy) ----
+let budgetSheet = null; // { type, groupId, catId, originalCatId, amount: "1234,5" }
+
+function findBudgetCategory(type, catId) {
+  if (!catId) return null;
+  if (type === "ingreso") {
+    const c = (CATEGORIES.ingreso || []).find(c => c.id === catId);
+    return c ? Object.assign({ groupId: null }, c) : null;
+  }
+  for (const g of categoryGroupsCache) {
+    const c = groupCategories(g).find(c => c.id === catId);
+    if (c) return Object.assign({ groupId: g.id }, c);
+  }
+  return null;
+}
+
+function sheetCandidates() {
+  const s = budgetSheet;
+  const free = c => !isPlanned(c.id) || c.id === s.originalCatId;
+  if (s.type === "ingreso") return (CATEGORIES.ingreso || []).filter(free);
+  const groups = s.groupId ? categoryGroupsCache.filter(g => g.id === s.groupId) : categoryGroupsCache;
+  return groups.flatMap(groupCategories).filter(free);
+}
+
+function formatSheetAmount(str) {
+  const [int, dec] = str.split(",");
+  const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return dec === undefined ? grouped : `${grouped},${dec}`;
+}
+
+function openBudgetSheet({ type, groupId = null, catId = null }) {
+  const amount = catId && budgetsCache[catId] ? String(budgetsCache[catId]).replace(".", ",") : "0";
+  budgetSheet = { type, groupId, catId, originalCatId: catId, amount };
+  if (!catId) {
+    const first = sheetCandidates()[0];
+    budgetSheet.catId = first ? first.id : null;
+  }
+  renderBudgetSheet();
+  document.getElementById("budget-sheet").removeAttribute("hidden");
+}
+
+function closeBudgetSheet() {
+  document.getElementById("budget-sheet").setAttribute("hidden", "");
+  budgetSheet = null;
+}
+
+function renderBudgetSheet() {
+  const s = budgetSheet;
+  document.getElementById("budget-sheet-title").textContent = s.type === "ingreso" ? "Ingreso de presupuesto" : "Gasto de presupuesto";
+  document.getElementById("budget-sheet-amount").textContent = formatSheetAmount(s.amount);
+  document.querySelectorAll("#budget-sheet [data-sheet-type]").forEach(b => {
+    b.classList.toggle("active", b.dataset.sheetType === s.type);
+  });
+
+  const cat = findBudgetCategory(s.type, s.catId);
+  const badge = document.getElementById("budget-sheet-cat-badge");
+  if (cat) {
+    badge.outerHTML = catBadgeHTML(cat).replace(/^<span /, '<span id="budget-sheet-cat-badge" ');
+  } else {
+    badge.outerHTML = `<span id="budget-sheet-cat-badge" class="cat-icon" data-icon="otherCategory"></span>`;
+  }
+  document.getElementById("budget-sheet-cat-label").textContent = cat ? cat.label : "Elige una";
+  document.getElementById("budget-sheet-delete").hidden = !s.originalCatId;
+  document.getElementById("budget-sheet-ok").disabled = !cat;
+  renderIcons(document.getElementById("budget-sheet"));
+}
+
+function chooseSheetCategory() {
+  const s = budgetSheet;
+  const group = s.groupId ? categoryGroupsCache.find(g => g.id === s.groupId) : null;
+  const pick = catId => { closePicker(); s.catId = catId; renderBudgetSheet(); };
   openPicker({
-    title: `Añadir a ${group.nombre}`,
-    items: groupCategories(group).filter(c => !isPlanned(c.id)),
+    title: s.type === "ingreso" ? "Elige un ingreso" : (group ? `Elige en ${group.nombre}` : "Elige una categoría"),
+    items: sheetCandidates(),
     createLabel: "Crear nueva categoría",
-    onPick: catId => { closePicker(); planCategory(catId); },
-    onCreate: () => {
+    onPick: pick,
+    onCreate: s.type === "ingreso" || !group ? null : () => {
       const name = (prompt("Nombre de la nueva categoría:") || "").trim();
       if (!name) return;
-      closePicker();
       const id = uniqueId(slugify(name), id => gastoCategoriesCache.some(c => c.id === id) || isPlanned(id));
       const next = categoryGroupsCache.map(g =>
-        g.id === groupId ? Object.assign({}, g, { items: (g.items || []).concat([{ id, label: name, icon: "otherCategory" }]) }) : g
+        g.id === group.id ? Object.assign({}, g, { items: (g.items || []).concat([{ id, label: name, icon: "otherCategory" }]) }) : g
       );
-      budgetsCache[id] = 0;
       categoryGroupsCache = next;
       saveCategoryGroups(next);
-      planCategory(id);
+      pick(id);
     }
   });
 }
 
-function openIngresoPicker() {
-  openPicker({
-    title: "Añadir ingreso",
-    items: (CATEGORIES.ingreso || []).filter(c => !isPlanned(c.id)),
-    onPick: catId => { closePicker(); planCategory(catId); }
-  });
+function pressSheetKey(key) {
+  const s = budgetSheet;
+  if (key === "back") {
+    s.amount = s.amount.slice(0, -1) || "0";
+  } else if (key === ",") {
+    if (!s.amount.includes(",")) s.amount += ",";
+  } else if (/^\d$/.test(key)) {
+    const dec = s.amount.split(",")[1];
+    if (dec !== undefined && dec.length >= 2) return;
+    if (s.amount.replace(",", "").length >= 10) return;
+    s.amount = s.amount === "0" ? key : s.amount + key;
+  }
+  document.getElementById("budget-sheet-amount").textContent = formatSheetAmount(s.amount);
 }
+
+function confirmBudgetSheet() {
+  const s = budgetSheet;
+  const cat = findBudgetCategory(s.type, s.catId);
+  if (!cat) return;
+  const amount = parseFloat(s.amount.replace(",", ".")) || 0;
+  if (s.originalCatId && s.originalCatId !== cat.id) delete budgetsCache[s.originalCatId];
+  budgetsCache[cat.id] = amount;
+  if (cat.groupId) visibleBudgetSections.add(cat.groupId);
+  closeBudgetSheet();
+  renderBudgetInputs();
+  renderBudgetSummary();
+  saveBudgets();
+}
+
+function deleteBudgetFromSheet() {
+  const s = budgetSheet;
+  if (!s.originalCatId) return;
+  delete budgetsCache[s.originalCatId];
+  closeBudgetSheet();
+  renderBudgetInputs();
+  renderBudgetSummary();
+  saveBudgets();
+}
+
+document.getElementById("budget-sheet").addEventListener("click", e => {
+  if (!budgetSheet) return;
+  const key = e.target.closest("[data-key]");
+  if (key) { pressSheetKey(key.dataset.key); return; }
+  const typeBtn = e.target.closest("[data-sheet-type]");
+  if (typeBtn) {
+    if (typeBtn.dataset.sheetType !== budgetSheet.type) {
+      budgetSheet.type = typeBtn.dataset.sheetType;
+      budgetSheet.groupId = null;
+      budgetSheet.catId = null;
+      renderBudgetSheet();
+    }
+    return;
+  }
+  if (e.target.closest("#budget-sheet-cat, #budget-sheet-choose")) { chooseSheetCategory(); return; }
+  if (e.target.closest("#budget-sheet-ok")) { confirmBudgetSheet(); return; }
+  if (e.target.closest("#budget-sheet-delete")) { deleteBudgetFromSheet(); return; }
+  if (e.target.closest(".budget-sheet-close") || e.target.classList.contains("budget-sheet-overlay")) closeBudgetSheet();
+});
+
+document.addEventListener("keydown", e => {
+  if (!budgetSheet || !document.getElementById("category-selector-modal").hidden) return;
+  if (/^\d$/.test(e.key)) pressSheetKey(e.key);
+  else if (e.key === "," || e.key === ".") pressSheetKey(",");
+  else if (e.key === "Backspace") pressSheetKey("back");
+  else if (e.key === "Enter") confirmBudgetSheet();
+  else if (e.key === "Escape") closeBudgetSheet();
+  else return;
+  e.preventDefault();
+});
 
 function openSectionPicker() {
   const hidden = categoryGroupsCache.filter(g => !isSectionVisible(g));
@@ -692,7 +778,7 @@ function openSectionPicker() {
       closePicker();
       visibleBudgetSections.add(groupId);
       renderBudgetInputs();
-      openCategoryPickerForGroup(groupId);
+      openBudgetSheet({ type: "gasto", groupId });
     },
     onCreate: () => {
       const nombre = (prompt("Nombre de la nueva sección:") || "").trim();
@@ -705,22 +791,28 @@ function openSectionPicker() {
       categoryGroupsCache = next;
       saveCategoryGroups(next);
       renderBudgetInputs();
-      openCategoryPickerForGroup(id);
+      openBudgetSheet({ type: "gasto", groupId: id });
     }
   });
 }
 
 document.getElementById("budget-inputs").addEventListener("click", e => {
   if (e.target.closest(".budget-add-section-btn")) {
-    e.preventDefault();
     openSectionPicker();
+    return;
+  }
+  const row = e.target.closest("[data-edit-cat]");
+  if (row) {
+    const catId = row.dataset.editCat;
+    const isIngreso = (CATEGORIES.ingreso || []).some(c => c.id === catId);
+    const cat = findBudgetCategory(isIngreso ? "ingreso" : "gasto", catId);
+    openBudgetSheet({ type: isIngreso ? "ingreso" : "gasto", groupId: cat && cat.groupId, catId });
     return;
   }
   const addBtn = e.target.closest(".budget-add-btn");
   if (!addBtn) return;
-  e.preventDefault();
-  if (addBtn.dataset.sectionType === "ingreso") openIngresoPicker();
-  else openCategoryPickerForGroup(addBtn.dataset.groupId);
+  if (addBtn.dataset.sectionType === "ingreso") openBudgetSheet({ type: "ingreso" });
+  else openBudgetSheet({ type: "gasto", groupId: addBtn.dataset.groupId });
 });
 
 document.getElementById("category-selector-grid").addEventListener("click", e => {
