@@ -233,43 +233,62 @@ function daysLeftInPeriod(period) {
 }
 
 // ---------- Totales acumulados (saldo y deuda no se resetean por mes) ----------
+// "Yo" son dos carteras: Efectivo y Débito. Las transferencias viejas usaban
+// "gastos" (antes era una sola cartera) y cuentan como Débito.
+function cashWallet(id) {
+  return id === "gastos" ? "debito" : id;
+}
+function isCash(id) {
+  return id === "efectivo" || id === "debito" || id === "gastos";
+}
+function paymentWallet(payment) {
+  return payment === "efectivo" ? "efectivo" : "debito";
+}
+
 function computeTotals(list) {
-  let saldo = 0, deuda = 0;
+  const cash = { efectivo: 0, debito: 0 };
+  let deuda = 0;
   list.forEach(m => {
     if (m.type === "ingreso") {
-      saldo += m.amount;
+      cash[paymentWallet(m.payment)] += m.amount;
     } else if (m.type === "gasto") {
       if (m.payment === "credito") deuda += m.amount;
-      else saldo -= m.amount;
+      else cash[paymentWallet(m.payment)] -= m.amount;
     } else if (m.type === "pago_tarjeta") {
-      saldo -= m.amount;
+      cash[paymentWallet(m.payment)] -= m.amount;
       deuda -= m.amount;
     } else if (m.type === "transferencia") {
       // Una transferencia solo mueve plata entre carteras: nunca cuenta como
-      // gasto ni ingreso. Acá solo importa si toca "Yo" o la tarjeta; el lado
-      // de Ahorro o de una cartera propia se guarda en su propia colección.
+      // gasto ni ingreso. Acá solo importa si toca Efectivo, Débito o la
+      // tarjeta; el lado de Ahorro o de una cartera propia se guarda aparte.
       const received = m.amountTo != null ? m.amountTo : m.amount;
-      if (m.from === "gastos") saldo -= m.amount;
-      if (m.to === "gastos") saldo += received;
+      if (isCash(m.from)) cash[cashWallet(m.from)] -= m.amount;
+      if (isCash(m.to)) cash[cashWallet(m.to)] += received;
       if (m.to === "tarjeta") deuda -= received;
     } else if (m.type === "ajuste_tarjeta") {
       // Pago de la tarjeta hecho con plata de otra cartera (Ahorro, etc.):
-      // solo baja la deuda, no toca el saldo de Gastos (esa plata no salió
-      // de ahí).
+      // solo baja la deuda.
       deuda -= m.amount;
     }
   });
-  return { saldo, deuda };
+  return { saldo: cash.efectivo + cash.debito, efectivo: cash.efectivo, debito: cash.debito, deuda };
 }
 
 // ================= Resumen =================
 
 function renderStats() {
-  const { saldo, deuda } = computeTotals(financeCache);
+  const { saldo, deuda, efectivo, debito } = computeTotals(financeCache);
 
   const stats = document.getElementById("finance-stats");
   stats.innerHTML = `
-    <div class="stat-box"><div class="value">${formatMoney(saldo)}</div><div class="label">Saldo disponible</div></div>
+    <div class="stat-box">
+      <div class="value">${formatMoney(saldo)}</div>
+      <div class="label">Saldo disponible</div>
+      <div class="cash-split">
+        <span><i style="background:${PAYMENT_COLORS.efectivo}"></i>Efectivo ${formatBsShort(efectivo)}</span>
+        <span><i style="background:${PAYMENT_COLORS.debito}"></i>Débito ${formatBsShort(debito)}</span>
+      </div>
+    </div>
     <div class="stat-box">
       <div class="value${deuda > 0 ? " value-debt" : ""}">${formatMoney(deuda)}</div>
       <div class="label">Deuda de tarjeta</div>
@@ -330,9 +349,7 @@ function movementDelta(m) {
   if (m.type === "ingreso") return m.amount;
   if (m.type === "ajuste_tarjeta") return 0;
   if (m.type === "transferencia") {
-    if (m.from === "gastos") return -m.amount;
-    if (m.to === "gastos") return m.amountTo != null ? m.amountTo : m.amount;
-    return 0;
+    return (isCash(m.to) ? (m.amountTo != null ? m.amountTo : m.amount) : 0) - (isCash(m.from) ? m.amount : 0);
   }
   return -m.amount;
 }
@@ -356,7 +373,8 @@ function renderMovements() {
   // gasto. Pagar la tarjeta no se resta: esos gastos ya están en "Gastos".
   const ahorro = list
     .filter(m => m.type === "transferencia" && m.to !== "tarjeta")
-    .reduce((s, m) => s + (m.from === "gastos" ? m.amount : 0) - (m.to === "gastos" ? (m.amountTo != null ? m.amountTo : m.amount) : 0), 0);
+    .reduce((s, m) => s + (isCash(m.from) && !isCash(m.to) ? m.amount : 0)
+      - (isCash(m.to) && !isCash(m.from) ? (m.amountTo != null ? m.amountTo : m.amount) : 0), 0);
   const saldo = ingresos - gastos - ahorro;
   const signed = n => `${n < 0 ? "−" : ""}${formatBsShort(Math.abs(n))}`;
 
@@ -396,7 +414,7 @@ function renderMovements() {
           const amount = m.type === "ingreso"
             ? `<span class="txn-amount pos">+${formatBsShort(m.amount)}</span>`
             : isTransfer
-              ? `<span class="txn-amount muted">(${formatWalletAmount(m.type === "transferencia" ? m.from : "gastos", m.amount)})</span>`
+              ? `<span class="txn-amount muted">(${formatWalletAmount(m.type === "transferencia" ? m.from : "debito", m.amount)})</span>`
               : `<span class="txn-amount">${formatBsShort(m.amount)}</span>`;
           return `
             <button type="button" class="txn-row" data-edit-txn="${m.id}">
@@ -435,11 +453,11 @@ function openTxnSheet(movement) {
         id: movement.id, type: movement.type, category: movement.category, payment: movement.payment || "efectivo",
         amount: toStr(movement.amount), desc: movement.desc || "", date: movement.date,
         excluded: !!movement.excluded, keypad: false,
-        from: movement.from || "gastos", to: movement.to || "ahorro",
+        from: cashWallet(movement.from || "debito"), to: cashWallet(movement.to || "ahorro"),
         amountTo: movement.amountTo != null ? toStr(movement.amountTo) : "",
         readonly: movement.type === "transferencia", movement
       }
-    : { id: null, type: "gasto", category: defaultCategory("gasto"), payment: "efectivo", amount: "0", desc: "", date: isoDate(new Date()), excluded: false, keypad: true, from: "gastos", to: "ahorro", amountTo: "", readonly: false };
+    : { id: null, type: "gasto", category: defaultCategory("gasto"), payment: "efectivo", amount: "0", desc: "", date: isoDate(new Date()), excluded: false, keypad: true, from: "debito", to: "ahorro", amountTo: "", readonly: false };
   renderTxnSheet();
   showSheet(document.getElementById("txn-sheet"));
 }
@@ -1993,18 +2011,19 @@ function customWalletBalance(id) {
 // sentido "sacar" plata de una deuda.
 function ledgerWallets() {
   return [
-    { id: "gastos", nombre: "Yo", moneda: "Bs", builtIn: true },
+    { id: "efectivo", nombre: "Efectivo", moneda: "Bs", builtIn: true },
+    { id: "debito", nombre: "Débito", moneda: "Bs", builtIn: true },
     { id: "tarjeta", nombre: "Tarjeta de crédito", moneda: "Bs", builtIn: true, soloDestino: true },
     { id: "ahorro", nombre: "Ahorro", moneda: "US$", builtIn: true }
   ].concat(carterasCustomCache.map(w => Object.assign({ builtIn: false }, w)));
 }
 
 function walletById(id) {
-  return ledgerWallets().find(w => w.id === id);
+  if (id === "gastos") return { id, nombre: "Yo", moneda: "Bs", builtIn: true };
+  return ledgerWallets().find(w => w.id === cashWallet(id)) || ledgerWallets().find(w => w.id === id);
 }
 function walletLabel(id) {
-  if (id === "gastos") return "Efectivo y débito";
-  const w = walletById(id);
+  const w = walletById(cashWallet(id));
   return w ? w.nombre : "Cartera";
 }
 function walletCurrency(id) {
@@ -2023,7 +2042,7 @@ async function createTransfer({ from, to, amount, amountTo, desc, date }) {
   const suffix = desc ? " · " + desc : "";
   const links = [];
   const side = async (walletId, monto, nota) => {
-    if (walletId === "gastos" || walletId === "tarjeta") return;
+    if (isCash(walletId) || walletId === "tarjeta") return;
     if (walletId === "ahorro") {
       const ref = await ahorrosCollection().add({ date, amount: monto, notes: nota, createdAt: Date.now() });
       links.push({ kind: "ahorro", id: ref.id });
@@ -2063,7 +2082,7 @@ function deleteCustomWallet(id) {
 }
 
 function renderWallets() {
-  const { saldo, deuda } = computeTotals(financeCache);
+  const { saldo, deuda, efectivo, debito } = computeTotals(financeCache);
   const totalAhorros = ahorrosCache.reduce((s, a) => s + a.amount, 0);
   let netoBs = saldo - deuda;
   let netoUsd = totalAhorros;
@@ -2076,7 +2095,7 @@ function renderWallets() {
 
   const panels = [
     { label: "Patrimonio total", lines: [formatMoney(netoBs), formatUSD(netoUsd)] },
-    { label: "Yo", lines: [formatMoney(saldo)] },
+    { label: "Yo", lines: [formatMoney(saldo)], sub: `Efectivo ${formatBsShort(efectivo)} · Débito ${formatBsShort(debito)}` },
     { label: "Cartera de tarjeta de crédito", lines: [deudaText] },
     { label: "Cartera de ahorro", lines: [formatUSD(totalAhorros)] }
   ];
@@ -2089,6 +2108,7 @@ function renderWallets() {
     <div class="wallet-hero-panel">
       ${p.lines.map(l => `<div class="wallet-hero-value">${l}</div>`).join("")}
       <div class="wallet-hero-label">${p.label}</div>
+      ${p.sub ? `<div class="wallet-hero-sub">${p.sub}</div>` : ""}
     </div>
   `).join("");
 
@@ -2121,7 +2141,27 @@ function renderWallets() {
   };
 
   document.getElementById("wallet-list").innerHTML =
-    walletHTML("finance", "#ff9a4d", "Yo", formatMoney(saldo), false, "gastos") +
+    `<div class="wallet-card wallet-card-yo">
+      <button type="button" class="wallet-yo-total" data-wallet-id="gastos">
+        <span class="wallet-icon" style="background:#ff9a4d22; color:#ff9a4d" data-icon="finance"></span>
+        <span class="wallet-info">
+          <span class="wallet-label">Yo · Total</span>
+          <span class="wallet-value">${formatMoney(saldo)}</span>
+        </span>
+      </button>
+      <div class="wallet-yo-split">
+        <button type="button" class="wallet-yo-part" data-wallet-id="efectivo">
+          <span class="wallet-yo-dot" style="background:${PAYMENT_COLORS.efectivo}" data-icon="salary"></span>
+          <span class="wallet-yo-name">Efectivo</span>
+          <span class="wallet-yo-amount${efectivo < 0 ? " neg" : ""}">${formatMoney(efectivo)}</span>
+        </button>
+        <button type="button" class="wallet-yo-part" data-wallet-id="debito">
+          <span class="wallet-yo-dot" style="background:${PAYMENT_COLORS.debito}" data-icon="bank"></span>
+          <span class="wallet-yo-name">Débito</span>
+          <span class="wallet-yo-amount${debito < 0 ? " neg" : ""}">${formatMoney(debito)}</span>
+        </button>
+      </div>
+    </div>` +
     walletHTML("finance", "#e05656", "Tarjeta de crédito", deudaText, deuda > 0, "tarjeta") +
     walletHTML("wallet", "#5cc98a", "Ahorro (US$)", formatUSD(totalAhorros), false, "ahorro") +
     carterasCustomCache.map(walletCustomHTML).join("");
@@ -2188,19 +2228,34 @@ function transferCounterpart(walletId, entryId) {
   return { title, sub: incoming ? `Pusiste ${text}` : `Llegaron ${text}`, rate };
 }
 
+// Cuánto movió un movimiento de Finanzas en una cartera de efectivo/débito
+// ("gastos" = las dos juntas). 0 si no la toca.
+function cashDelta(m, walletId) {
+  const hits = id => walletId === "gastos" ? isCash(id) : cashWallet(id) === walletId;
+  if (m.type === "ingreso") return hits(paymentWallet(m.payment)) ? m.amount : 0;
+  if (m.type === "gasto") return m.payment !== "credito" && hits(paymentWallet(m.payment)) ? -m.amount : 0;
+  if (m.type === "pago_tarjeta") return hits(paymentWallet(m.payment)) ? -m.amount : 0;
+  if (m.type === "transferencia") {
+    return (hits(m.to) ? (m.amountTo != null ? m.amountTo : m.amount) : 0) - (hits(m.from) ? m.amount : 0);
+  }
+  return 0;
+}
+
 function walletMovementsFor(walletId) {
-  if (walletId === "gastos") {
+  if (isCash(walletId)) {
     return financeCache
-      .filter(m => m.type === "ingreso" || (m.type === "gasto" && m.payment !== "credito") || m.type === "pago_tarjeta"
-        || (m.type === "transferencia" && (m.from === "gastos" || m.to === "gastos")))
-      .map(m => ({
-        id: m.id, date: m.date, createdAt: m.createdAt, desc: m.desc || findCategory(m.type, m.category).label,
-        icon: findCategory(m.type, m.category).icon, color: findCategory(m.type, m.category).color,
-        amount: m.type === "transferencia" ? movementDelta(m) : m.type === "ingreso" ? m.amount : -m.amount,
-        meta: m.type === "transferencia" ? `${walletLabel(m.from)} → ${walletLabel(m.to)}` : findPayment(m.payment) ? findPayment(m.payment).label : "",
-        usd: false,
-        onDelete: () => m.type === "transferencia" ? deleteTransfer(m) : deleteMovement(m.id)
-      }));
+      .filter(m => cashDelta(m, walletId) !== 0)
+      .map(m => {
+        const pay = findPayment(m.payment);
+        return {
+          id: m.id, date: m.date, createdAt: m.createdAt, desc: m.desc || findCategory(m.type, m.category).label,
+          icon: findCategory(m.type, m.category).icon, color: findCategory(m.type, m.category).color,
+          amount: cashDelta(m, walletId),
+          meta: m.type === "transferencia" ? `${walletLabel(m.from)} → ${walletLabel(m.to)}` : walletId === "gastos" && pay ? pay.label : "",
+          usd: false,
+          onDelete: () => m.type === "transferencia" ? deleteTransfer(m) : deleteMovement(m.id)
+        };
+      });
   } else if (walletId === "tarjeta") {
     return financeCache
       .filter(m => (m.type === "gasto" && m.payment === "credito") || m.type === "pago_tarjeta" || m.type === "ajuste_tarjeta"
@@ -2245,6 +2300,8 @@ function walletMovementsFor(walletId) {
 
 function walletVisual(walletId) {
   if (walletId === "gastos") return { icon: "finance", color: "#ff9a4d" };
+  if (walletId === "efectivo") return { icon: PAYMENT_ICONS.efectivo, color: PAYMENT_COLORS.efectivo };
+  if (walletId === "debito") return { icon: PAYMENT_ICONS.debito, color: PAYMENT_COLORS.debito };
   if (walletId === "tarjeta") return { icon: "finance", color: "#e05656" };
   if (walletId === "ahorro") return { icon: "wallet", color: "#5cc98a" };
   const i = carterasCustomCache.findIndex(w => w.id === walletId);
@@ -2252,8 +2309,10 @@ function walletVisual(walletId) {
 }
 
 function walletBalanceText(walletId) {
-  const { saldo, deuda } = computeTotals(financeCache);
+  const { saldo, deuda, efectivo, debito } = computeTotals(financeCache);
   if (walletId === "gastos") return formatMoney(saldo);
+  if (walletId === "efectivo") return formatMoney(efectivo);
+  if (walletId === "debito") return formatMoney(debito);
   if (walletId === "tarjeta") return deuda > 0 ? "−" + formatMoney(deuda) : formatMoney(0);
   if (walletId === "ahorro") return formatUSD(ahorrosCache.reduce((s, a) => s + a.amount, 0));
   const w = carterasCustomCache.find(x => x.id === walletId);
@@ -2263,8 +2322,7 @@ function walletBalanceText(walletId) {
 
 function renderWalletDetail() {
   if (!selectedWalletId) return;
-  const wallets = ledgerWallets();
-  const w = wallets.find(x => x.id === selectedWalletId);
+  const w = walletById(selectedWalletId);
   if (!w) return;
 
   document.getElementById("wallet-detail-title").textContent = w.nombre;

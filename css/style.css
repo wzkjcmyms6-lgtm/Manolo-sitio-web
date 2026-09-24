@@ -2088,3 +2088,30 @@ body.sheet-open { overflow: hidden; }
 .txn-sub-amount { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
 #wallet-detail-list .txn-desc { font-size: 0.95rem; line-height: 1.3; }
 #wallet-detail-list .meta { font-size: 0.8rem; color: var(--muted); margin-top: 0.15rem; }
+
+/* ---------- Efectivo y Débito por separado ---------- */
+.cash-split { display: flex; flex-direction: column; gap: 0.15rem; margin-top: 0.5rem; font-size: 0.8rem; color: var(--muted); }
+.cash-split span { display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
+.cash-split i { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+.wallet-hero-sub { margin-top: 0.35rem; font-size: 0.85rem; font-weight: 600; opacity: 0.8; }
+
+.wallet-card-yo { flex-direction: column; align-items: stretch; gap: 0; padding: 0; overflow: hidden; }
+.wallet-yo-total {
+  display: flex; align-items: center; gap: 0.9rem; width: 100%; padding: 1.1rem 1.1rem 0.9rem;
+  background: none; border: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer;
+}
+.wallet-yo-total .wallet-info { display: flex; flex-direction: column; }
+.wallet-yo-total .wallet-value { font-size: 1.5rem; }
+.wallet-yo-split { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border); }
+.wallet-yo-part {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 0.2rem; padding: 0.8rem 1.1rem;
+  background: none; border: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer;
+}
+.wallet-yo-part + .wallet-yo-part { border-left: 1px solid var(--border); }
+.wallet-yo-part:active, .wallet-yo-total:active { background: var(--surface-raised); }
+.wallet-yo-dot { width: 28px; height: 28px; padding: 6px; border-radius: 50%; color: #fff; margin-bottom: 0.2rem; }
+.wallet-yo-name { font-size: 0.8rem; color: var(--muted); font-weight: 600; }
+.wallet-yo-amount { font-size: 1.05rem; font-weight: 700; }
+.wallet-yo-amount.neg { color: var(--danger); }
+.wallet-card-yo:hover { border-color: var(--border); }
