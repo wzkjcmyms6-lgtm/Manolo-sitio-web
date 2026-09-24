@@ -117,6 +117,25 @@ function findCategory(type, id) {
   const list = type === "gasto" ? gastoCategoriesCache : (CATEGORIES[type] || []);
   return list.find(c => c.id === id) || gastoCategoriesCache.find(c => c.id === "otros") || CATEGORIES.gasto[CATEGORIES.gasto.length - 1];
 }
+// ---- Abrir/cerrar hojas y ventanas con animación ----
+function showSheet(el) {
+  clearTimeout(el._hideTimer);
+  el.classList.remove("is-closing");
+  el.hidden = false;
+  document.body.classList.add("sheet-open");
+}
+
+function hideSheet(el) {
+  if (el.hidden) return;
+  el.classList.add("is-closing");
+  clearTimeout(el._hideTimer);
+  el._hideTimer = setTimeout(() => {
+    el.hidden = true;
+    el.classList.remove("is-closing");
+    document.body.classList.toggle("sheet-open", !!document.querySelector(".js-sheet:not([hidden])"));
+  }, 200);
+}
+
 function findPayment(id) {
   return PAYMENTS.find(p => p.id === id);
 }
@@ -381,11 +400,11 @@ function openTxnSheet(movement) {
       }
     : { id: null, type: "gasto", category: defaultCategory("gasto"), payment: "efectivo", amount: "0", desc: "", date: isoDate(new Date()), excluded: false, keypad: true };
   renderTxnSheet();
-  document.getElementById("txn-sheet").removeAttribute("hidden");
+  showSheet(document.getElementById("txn-sheet"));
 }
 
 function closeTxnSheet() {
-  document.getElementById("txn-sheet").setAttribute("hidden", "");
+  hideSheet(document.getElementById("txn-sheet"));
   txnSheet = null;
 }
 
@@ -440,13 +459,160 @@ function shiftTxnDate(days) {
 
 function chooseTxnCategory() {
   const t = txnSheet;
-  const items = t.type === "ingreso" ? CATEGORIES.ingreso : gastoCategoriesCache;
+  openCatSheet(t.type, t.category, id => { t.category = id; renderTxnSheet(); });
+}
+
+// ---- Selector de categorías a pantalla completa (como Buddy) ----
+const CAT_COLLAPSE_KEY = "manolo.catSheetCollapsed";
+let catSheet = null; // { type, selected, onPick }
+
+function loadCollapsedSections() {
+  try { return new Set(JSON.parse(localStorage.getItem(CAT_COLLAPSE_KEY) || "[]")); } catch (e) { return new Set(); }
+}
+function saveCollapsedSections(set) {
+  try { localStorage.setItem(CAT_COLLAPSE_KEY, JSON.stringify([...set])); } catch (e) { /* sin almacenamiento: solo no se recuerda */ }
+}
+
+function normalizeText(str) {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+function catSheetSections(type) {
+  if (type === "ingreso") return [{ id: "__ingresos", title: "Ingresos", items: CATEGORIES.ingreso }];
+  return categoryGroupsCache
+    .map(g => ({ id: g.id, title: g.nombre, items: groupCategories(g) }))
+    .filter(sec => sec.items.length);
+}
+
+function mostUsedCategories(type) {
+  const counts = {};
+  financeCache.forEach(m => { if (m.type === type) counts[m.category] = (counts[m.category] || 0) + 1; });
+  return catSheetSections(type)
+    .flatMap(sec => sec.items)
+    .filter(c => counts[c.id])
+    .sort((a, b) => counts[b.id] - counts[a.id])
+    .slice(0, 8);
+}
+
+function catTileHTML(c, selected) {
+  return `
+    <button type="button" class="cat-tile${c.id === selected ? " selected" : ""}" data-cat-tile="${c.id}">
+      <span class="cat-tile-circle" style="background:${c.color}">
+        ${c.emoji ? `<span class="cat-tile-emoji">${c.emoji}</span>` : `<span class="cat-tile-icon" data-icon="${c.icon}"></span>`}
+      </span>
+      <span class="cat-tile-label">${escapeHtml(c.label)}</span>
+    </button>`;
+}
+
+function renderCatSheet() {
+  const { type, selected } = catSheet;
+  const rawQuery = document.getElementById("cat-sheet-search").value.trim();
+  const q = normalizeText(rawQuery);
+  const collapsed = loadCollapsedSections();
+  let sections = catSheetSections(type);
+
+  if (q) {
+    sections = sections
+      .map(sec => ({ ...sec, items: normalizeText(sec.title).includes(q) ? sec.items : sec.items.filter(c => normalizeText(c.label).includes(q)) }))
+      .filter(sec => sec.items.length);
+  } else {
+    const used = mostUsedCategories(type);
+    if (used.length) sections = [{ id: "__used", title: "Más usado", items: used }].concat(sections);
+  }
+
+  const body = document.getElementById("cat-sheet-body");
+  body.innerHTML = sections.length
+    ? sections.map(sec => {
+        const isCollapsed = !q && collapsed.has(sec.id);
+        return `
+          <section class="cat-sheet-section${isCollapsed ? " collapsed" : ""}">
+            <div class="cat-sheet-section-head">
+              <h4>${escapeHtml(sec.title)}</h4>
+              <button type="button" class="cat-sheet-eye" data-toggle-section="${sec.id}" aria-expanded="${!isCollapsed}" aria-label="${isCollapsed ? "Mostrar" : "Ocultar"} ${escapeHtml(sec.title)}">
+                <span data-icon="${isCollapsed ? "eyeOff" : "eye"}"></span>
+              </button>
+            </div>
+            <div class="cat-sheet-grid">${sec.items.map(c => catTileHTML(c, selected)).join("")}</div>
+          </section>`;
+      }).join("")
+    : `<p class="cat-sheet-empty">No hay categorías que coincidan con "${escapeHtml(rawQuery)}".</p>`;
+  renderIcons(body);
+}
+
+function openCatSheet(type, selected, onPick) {
+  catSheet = { type, selected, onPick };
+  document.getElementById("cat-sheet-search").value = "";
+  renderCatSheet();
+  const el = document.getElementById("cat-sheet");
+  showSheet(el);
+  document.getElementById("cat-sheet-body").scrollTop = 0;
+}
+
+function closeCatSheet() {
+  hideSheet(document.getElementById("cat-sheet"));
+  catSheet = null;
+}
+
+function pickFromCatSheet(id) {
+  const cb = catSheet && catSheet.onPick;
+  closeCatSheet();
+  if (cb) cb(id);
+}
+
+async function createFromCatSheet() {
+  const { type } = catSheet;
+  const label = await appDialog({ title: type === "ingreso" ? "Nueva categoría de ingreso" : "Nueva categoría", input: document.getElementById("cat-sheet-search").value.trim(), confirmLabel: "Siguiente" });
+  if (!label || !catSheet) return;
+  const base = slugify(label);
+  const taken = id => CATEGORIES.ingreso.some(c => c.id === id) || gastoCategoriesCache.some(c => c.id === id);
+  const id = uniqueId(base, taken);
+
+  if (type === "ingreso") {
+    saveIngresoCategories(CATEGORIES.ingreso.concat([{ id, label, icon: "salary", color: INGRESO_COLOR }]));
+    pickFromCatSheet(id);
+    return;
+  }
   openPicker({
-    title: t.type === "ingreso" ? "Categoría de ingreso" : "Categoría de gasto",
-    items,
-    onPick: id => { closePicker(); t.category = id; renderTxnSheet(); }
+    title: `¿En qué sección va "${label}"?`,
+    items: categoryGroupsCache.map(g => {
+      const first = (g.items || [])[0];
+      return { id: g.id, label: g.nombre, icon: first ? first.icon : "otherCategory", emoji: first && first.emoji, color: groupColor(g) };
+    }),
+    onPick: groupId => {
+      closePicker();
+      const next = categoryGroupsCache.map(g => g.id === groupId ? Object.assign({}, g, { items: (g.items || []).concat([{ id, label, icon: "otherCategory" }]) }) : g);
+      categoryGroupsCache = next;
+      gastoCategoriesCache = flattenCategoryGroups(next).concat(customCategoriesCache.filter(c => !next.some(g => (g.items || []).some(i => i.id === c.id))));
+      saveCategoryGroups(next);
+      pickFromCatSheet(id);
+    }
   });
 }
+
+document.getElementById("cat-sheet").addEventListener("click", e => {
+  if (!catSheet) return;
+  const tile = e.target.closest("[data-cat-tile]");
+  if (tile) { pickFromCatSheet(tile.dataset.catTile); return; }
+  const eye = e.target.closest("[data-toggle-section]");
+  if (eye) {
+    const set = loadCollapsedSections();
+    const id = eye.dataset.toggleSection;
+    if (set.has(id)) set.delete(id); else set.add(id);
+    saveCollapsedSections(set);
+    renderCatSheet();
+    return;
+  }
+  if (e.target.closest("#cat-sheet-close")) { closeCatSheet(); return; }
+  if (e.target.closest("#cat-sheet-add")) { createFromCatSheet(); return; }
+  if (e.target.closest("#cat-sheet-edit")) {
+    closeCatSheet();
+    closeTxnSheet();
+    location.hash = "#fin-herramientas-categorias";
+  }
+});
+
+document.getElementById("cat-sheet-search").addEventListener("input", () => { if (catSheet) renderCatSheet(); });
+
 
 function chooseTxnPayment() {
   const t = txnSheet;
@@ -712,11 +878,11 @@ let catDetail = null; // { type, catId }
 function openCategoryDetail(type, catId) {
   catDetail = { type, catId };
   renderCategoryDetail();
-  document.getElementById("cat-detail-sheet").removeAttribute("hidden");
+  showSheet(document.getElementById("cat-detail-sheet"));
 }
 
 function closeCategoryDetail() {
-  document.getElementById("cat-detail-sheet").setAttribute("hidden", "");
+  hideSheet(document.getElementById("cat-detail-sheet"));
   catDetail = null;
 }
 
@@ -1070,11 +1236,11 @@ function openPicker({ title, items, createLabel, onPick, onCreate }) {
   createBtn.hidden = !onCreate;
   document.getElementById("category-selector-new-label").textContent = createLabel || "";
 
-  document.getElementById("category-selector-modal").removeAttribute("hidden");
+  showSheet(document.getElementById("category-selector-modal"));
 }
 
 function closePicker() {
-  document.getElementById("category-selector-modal").setAttribute("hidden", "");
+  hideSheet(document.getElementById("category-selector-modal"));
   pickerState = null;
 }
 
@@ -1116,11 +1282,11 @@ function openBudgetSheet({ type, groupId = null, catId = null }) {
     budgetSheet.catId = first ? first.id : null;
   }
   renderBudgetSheet();
-  document.getElementById("budget-sheet").removeAttribute("hidden");
+  showSheet(document.getElementById("budget-sheet"));
 }
 
 function closeBudgetSheet() {
-  document.getElementById("budget-sheet").setAttribute("hidden", "");
+  hideSheet(document.getElementById("budget-sheet"));
   budgetSheet = null;
 }
 
@@ -1262,6 +1428,10 @@ document.getElementById("budget-sheet").addEventListener("click", e => {
 document.addEventListener("keydown", e => {
   if (e.target.closest && e.target.closest("input, textarea")) return;
   if (!document.getElementById("category-selector-modal").hidden) return;
+  if (catSheet) {
+    if (e.key === "Escape") { closeCatSheet(); e.preventDefault(); }
+    return;
+  }
   if (txnSheet) {
     if (/^\d$/.test(e.key)) pressTxnKey(e.key);
     else if (e.key === "," || e.key === ".") pressTxnKey(",");
@@ -1353,7 +1523,7 @@ function appDialog({ title, message = "", input = null, confirmLabel = "Aceptar"
   if (!el) {
     el = document.createElement("div");
     el.id = "app-dialog";
-    el.className = "app-dialog";
+    el.className = "app-dialog js-sheet";
     el.innerHTML = `
       <div class="app-dialog-overlay"></div>
       <form class="app-dialog-box" role="alertdialog" aria-modal="true" aria-labelledby="app-dialog-title">
@@ -1377,13 +1547,13 @@ function appDialog({ title, message = "", input = null, confirmLabel = "Aceptar"
   const ok = el.querySelector(".app-dialog-ok");
   ok.textContent = confirmLabel;
   ok.classList.toggle("danger", danger);
-  el.hidden = false;
+  showSheet(el);
   if (input !== null) setTimeout(() => { field.focus(); field.select(); }, 30);
 
   return new Promise(resolve => {
     const form = el.querySelector("form");
     const finish = value => {
-      el.hidden = true;
+      hideSheet(el);
       form.onsubmit = null;
       el.querySelector(".app-dialog-cancel").onclick = null;
       el.querySelector(".app-dialog-overlay").onclick = null;

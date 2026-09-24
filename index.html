@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=202609241600">
+  <link rel="stylesheet" href="css/style.css?v=202609241700">
 </head>
 <body>
   <div id="login-screen" class="login-screen">
@@ -316,7 +316,7 @@
             <button type="button" class="txn-fab" id="txn-add" aria-label="Nueva transacción"><span data-icon="plus"></span></button>
 
             <!-- Hoja "Nueva transacción" (como Buddy) -->
-            <div id="txn-sheet" class="budget-sheet txn-sheet" hidden>
+            <div id="txn-sheet" class="js-sheet budget-sheet txn-sheet" hidden>
               <div class="budget-sheet-overlay"></div>
               <div class="budget-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="txn-sheet-title">
                 <div class="budget-sheet-header">
@@ -431,7 +431,7 @@
             </section>
 
               <!-- Detalle de una categoría: sus movimientos del mes -->
-              <div id="cat-detail-sheet" class="budget-sheet" hidden>
+              <div id="cat-detail-sheet" class="js-sheet budget-sheet" hidden>
                 <div class="budget-sheet-overlay"></div>
                 <div class="budget-sheet-panel cat-detail-panel" role="dialog" aria-modal="true" aria-labelledby="cat-detail-title">
                   <div class="budget-sheet-header">
@@ -446,7 +446,7 @@
               </div>
 
               <!-- Hoja para cargar un monto del presupuesto (como Buddy) -->
-              <div id="budget-sheet" class="budget-sheet" hidden>
+              <div id="budget-sheet" class="js-sheet budget-sheet" hidden>
                 <div class="budget-sheet-overlay"></div>
                 <div class="budget-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="budget-sheet-title">
                   <div class="budget-sheet-header">
@@ -671,8 +671,27 @@
     <nav class="bottom-nav" id="bottom-nav-links"></nav>
   </div>
 
+  <!-- Selector de categorías a pantalla completa (como Buddy) -->
+  <div id="cat-sheet" class="js-sheet cat-sheet" hidden>
+    <div class="cat-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="cat-sheet-title">
+      <div class="cat-sheet-header">
+        <button type="button" class="cat-sheet-round" id="cat-sheet-close" aria-label="Cerrar"><span data-icon="close"></span></button>
+        <h3 id="cat-sheet-title">Categorías</h3>
+        <div class="cat-sheet-tools">
+          <button type="button" id="cat-sheet-edit" aria-label="Editar categorías"><span data-icon="edit"></span></button>
+          <button type="button" id="cat-sheet-add" aria-label="Crear categoría"><span data-icon="plus"></span></button>
+        </div>
+      </div>
+      <div class="cat-sheet-body" id="cat-sheet-body"></div>
+      <label class="cat-sheet-search">
+        <span data-icon="search"></span>
+        <input type="search" id="cat-sheet-search" placeholder="Buscar" autocomplete="off" enterkeyhint="search">
+      </label>
+    </div>
+  </div>
+
   <!-- Modal para seleccionar categoría -->
-  <div id="category-selector-modal" class="category-selector-modal" hidden>
+  <div id="category-selector-modal" class="js-sheet category-selector-modal" hidden>
     <div class="category-selector-overlay"></div>
     <div class="category-selector-content">
       <h3 id="category-selector-title">Selecciona una categoría</h3>
@@ -690,14 +709,14 @@
   <script src="js/firebase-init.js?v=202609241200"></script>
   <script src="js/auth.js?v=202609232200"></script>
   <script src="js/verses.js?v=202609232200"></script>
-  <script src="js/icons.js?v=202609241430"></script>
+  <script src="js/icons.js?v=202609241700"></script>
   <script src="js/modules.js?v=202609241200"></script>
   <script src="js/main.js?v=202609232200"></script>
   <script src="js/habitos.js?v=202609232200"></script>
   <script src="js/gimnasio.js?v=202609232200"></script>
   <script src="js/running.js?v=202609232200"></script>
   <script src="js/bicicleta.js?v=202609232200"></script>
-  <script src="js/finanzas.js?v=202609241600"></script>
+  <script src="js/finanzas.js?v=202609241700"></script>
   <script src="js/inversiones.js?v=202609232200"></script>
 </body>
 </html>
