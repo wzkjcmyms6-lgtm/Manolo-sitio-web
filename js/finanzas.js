@@ -622,11 +622,14 @@ function catBadgeHTML(c) {
     : `<span class="cat-icon" style="background:${c.color}22; color:${c.color}" data-icon="${c.icon}"></span>`;
 }
 
-function budgetSectionHTML(title, color, categories, sectionAttr) {
+function budgetSectionHTML(title, color, categories, sectionAttr, deletableGroupId) {
   const planned = categories.filter(c => isPlanned(c.id));
   return `
     <div class="budget-section">
-      <h3 class="budget-section-title">${escapeHtml(title)}</h3>
+      <div class="budget-section-head">
+        <h3 class="budget-section-title">${escapeHtml(title)}</h3>
+        ${deletableGroupId ? `<button type="button" class="budget-section-delete" data-delete-section="${deletableGroupId}" aria-label="Eliminar sección ${escapeHtml(title)}"><span data-icon="trash"></span></button>` : ""}
+      </div>
       <div class="budget-section-items">
         ${planned.map(c => `
           <button type="button" class="budget-input-row" data-edit-cat="${c.id}">
@@ -649,7 +652,7 @@ function renderBudgetInputs() {
   const ingresoHTML = budgetSectionHTML("Ingresos", null, CATEGORIES.ingreso || [], `data-section-type="ingreso"`);
   const gastoHTML = categoryGroupsCache
     .filter(isSectionVisible)
-    .map(g => budgetSectionHTML(g.nombre, groupColor(g), groupCategories(g), `data-group-id="${g.id}"`))
+    .map(g => budgetSectionHTML(g.nombre, groupColor(g), groupCategories(g), `data-group-id="${g.id}"`, g.id))
     .join("");
 
   container.innerHTML = `
@@ -963,9 +966,42 @@ function openSectionPicker() {
   });
 }
 
+// Quita la sección del presupuesto (con doble confirmación). Los movimientos
+// no se tocan; si la sección no tiene categorías, se borra del todo.
+function deleteBudgetSection(groupId) {
+  const group = categoryGroupsCache.find(g => g.id === groupId);
+  if (!group) return;
+  const items = group.items || [];
+  const planned = items.filter(i => isPlanned(i.id));
+  const total = planned.reduce((s, i) => s + (budgetsCache[i.id] || 0), 0);
+
+  if (!window.confirm(`¿Eliminar la sección "${group.nombre}" de tu presupuesto?`)) return;
+  const detail = planned.length
+    ? `Se borrarán los montos de ${planned.length} categoría${planned.length === 1 ? "" : "s"} (${formatBsShort(total)}).`
+    : "La sección no tiene montos cargados.";
+  if (!window.confirm(`¿Seguro? ${detail} Tus movimientos no se borran. Esta acción no se puede deshacer.`)) return;
+
+  planned.forEach(i => { delete budgetsCache[i.id]; });
+  visibleBudgetSections.delete(groupId);
+  if (!items.length) {
+    const next = categoryGroupsCache.filter(g => g.id !== groupId);
+    categoryGroupsCache = next;
+    saveCategoryGroups(next);
+  }
+  renderBudgetInputs();
+  renderBudgetSummary();
+  renderBudgets();
+  saveBudgets();
+}
+
 document.getElementById("budget-inputs").addEventListener("click", e => {
   if (e.target.closest(".budget-add-section-btn")) {
     openSectionPicker();
+    return;
+  }
+  const delSection = e.target.closest("[data-delete-section]");
+  if (delSection) {
+    deleteBudgetSection(delSection.dataset.deleteSection);
     return;
   }
   const row = e.target.closest("[data-edit-cat]");
