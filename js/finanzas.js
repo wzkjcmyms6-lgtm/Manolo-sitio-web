@@ -1517,6 +1517,12 @@ function remainingText(remaining) {
     : `${formatBsShort(-remaining)} sobrepasado`;
 }
 
+// Ingresos: se llenan en vez de gastarse → "Bs 3.000 / Bs 5.000".
+function incomeProgressHTML(received, goal) {
+  if (goal <= 0) return `${formatBsShort(received)} <span class="remain-goal">recibido</span>`;
+  return `${formatBsShort(received)}<span class="remain-goal"> / ${formatBsShort(goal)}</span>`;
+}
+
 // Estado de una categoría de gasto: "over" si se pasó, "warn" desde el 80 %.
 const BUDGET_WARN = 0.8;
 const WARN_COLOR = "#f0a847";
@@ -1533,6 +1539,10 @@ function remainingCatHTML(c, planned, used, type) {
   const over = state === "over";
   const pct = planned > 0 ? used / planned : (used > 0 ? 1 : 0);
   const iconHTML = c.emoji ? `<span class="remain-emoji">${c.emoji}</span>` : `<span class="remain-icon" data-icon="${c.icon}"></span>`;
+  const done = type === "ingreso" && planned > 0 && used >= planned;
+  const amountHTML = type === "ingreso"
+    ? `<div class="remain-amount income${done ? " done" : ""}">${incomeProgressHTML(used, planned)}</div>`
+    : `<div class="remain-amount${over ? " over" : state === "warn" ? " warn" : ""}">${remainingText(remaining)}</div>`;
   return `
     <button type="button" class="remain-cat" data-cat-detail="${c.id}" data-cat-type="${type}">
       <div class="remain-ring">
@@ -1540,18 +1550,23 @@ function remainingCatHTML(c, planned, used, type) {
         <span class="remain-ring-core" style="background:${c.color}">${iconHTML}</span>
       </div>
       <div class="remain-label">${escapeHtml(c.label)}</div>
-      <div class="remain-amount${over ? " over" : state === "warn" ? " warn" : ""}">${remainingText(remaining)}</div>
+      ${amountHTML}
     </button>
   `;
 }
 
 function remainingSectionHTML(title, rows, type) {
   const remaining = rows.reduce((s, r) => s + r.planned - r.used, 0);
+  const received = rows.reduce((s, r) => s + r.used, 0);
+  const goal = rows.reduce((s, r) => s + r.planned, 0);
+  const headAmount = type === "ingreso"
+    ? `<span class="remain-section-amount income${goal > 0 && received >= goal ? " done" : ""}">${incomeProgressHTML(received, goal)}</span>`
+    : `<span class="remain-section-amount${remaining < 0 ? " over" : ""}">${remainingText(remaining)}</span>`;
   return `
     <div class="budget-section remain-section">
       <div class="remain-section-head">
         <h3 class="budget-section-title">${escapeHtml(title)}</h3>
-        <span class="remain-section-amount${remaining < 0 ? " over" : ""}">${remainingText(remaining)}</span>
+        ${headAmount}
       </div>
       <div class="remain-grid">${rows.map(r => remainingCatHTML(r.cat, r.planned, r.used, type)).join("")}</div>
     </div>
@@ -1631,9 +1646,13 @@ function renderCategoryDetail() {
   const planned = budgetsCache[catId] || 0;
   const used = movements.reduce((s, m) => s + m.amount, 0);
   const remaining = planned - used;
-  const over = remaining < 0;
+  const isIncome = type === "ingreso";
+  const over = !isIncome && remaining < 0;
   const pct = planned > 0 ? used / planned : (used > 0 ? 1 : 0);
-  const usedLabel = type === "ingreso" ? "Recibido" : "Gastado";
+  const usedLabel = isIncome ? "Recibido" : "Gastado";
+  const headline = isIncome
+    ? `<div class="cat-detail-remaining income${planned > 0 && used >= planned ? " done" : ""}">${incomeProgressHTML(used, planned)}</div>`
+    : `<div class="cat-detail-remaining${over ? " over" : ""}">${remainingText(remaining)}</div>`;
 
   document.getElementById("cat-detail-title").textContent = cat.label;
   document.getElementById("cat-detail-hero").innerHTML = `
@@ -1643,10 +1662,10 @@ function renderCategoryDetail() {
         ${cat.emoji ? `<span class="remain-emoji">${cat.emoji}</span>` : `<span class="remain-icon" data-icon="${cat.icon}"></span>`}
       </span>
     </div>
-    <div class="cat-detail-remaining${over ? " over" : ""}">${remainingText(remaining)}</div>
+    ${headline}
     <div class="cat-detail-month">${periodLabel(period)}</div>
     <div class="cat-detail-stats">
-      <div><span>Presupuesto</span><strong>${formatBsShort(planned)}</strong></div>
+      <div><span>${isIncome ? "Meta" : "Presupuesto"}</span><strong>${formatBsShort(planned)}</strong></div>
       <div><span>${usedLabel}</span><strong>${formatBsShort(used)}</strong></div>
       <div><span>Movimientos</span><strong>${movements.length}</strong></div>
     </div>

@@ -2268,3 +2268,9 @@ body.in-finanzas .topbar-clock { margin-right: 0; }
 .txn-amount-to-label small { display: block; font-size: 0.72rem; color: var(--muted); opacity: 0.8; }
 #txn-sheet-rate-row .txn-amount-to-label { white-space: nowrap; }
 #txn-sheet-rate-row input, #txn-sheet-amount-to-row input { width: 6.5rem; }
+
+/* Ingresos en Presupuesto: se llenan hacia la meta */
+.remain-goal { color: var(--muted); }
+.remain-amount.income .remain-goal { display: block; font-size: 0.78rem; }
+.remain-amount.income.done, .remain-section-amount.income.done { color: #5fcf8a; }
+.cat-detail-remaining.income.done { color: #5fcf8a; }
