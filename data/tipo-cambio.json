@@ -1,5 +1,5 @@
 {
- "fuente": "https://www.bcb.gob.bo/?q=cotizaciones",
+ "fuente": "https://www.bcb.gob.bo/librerias/indicadores/otras/ultimo.php",
  "ultimo": {
   "fecha": "2026-09-24",
   "tco": 12.26,
