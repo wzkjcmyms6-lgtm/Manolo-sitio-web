@@ -1080,6 +1080,8 @@ function chooseTxnWallet(side) {
 }
 
 async function saveTxn() {
+  // Por si el selector de fecha no avisó el cambio, tomamos lo que muestra.
+  applyTxnDateInput(document.getElementById("txn-sheet-date-input").value);
   const t = txnSheet;
   const amount = parseFloat(t.amount.replace(",", ".")) || 0;
   if (amount <= 0) {
@@ -1162,11 +1164,19 @@ document.getElementById("txn-sheet-note").addEventListener("focus", () => {
 document.getElementById("txn-sheet-note").addEventListener("input", e => {
   if (txnSheet) txnSheet.desc = e.target.value;
 });
-document.getElementById("txn-sheet-date-input").addEventListener("change", e => {
-  if (!txnSheet || !e.target.value) return;
-  txnSheet.date = e.target.value > isoDate(new Date()) ? isoDate(new Date()) : e.target.value;
+// Safari en iPhone avisa el cambio de fecha con "input" (y a veces recién
+// al cerrar el selector con "change"), así que escuchamos los dos.
+function applyTxnDateInput(value) {
+  if (!txnSheet || !/^\d{4}-\d{2}-\d{2}$/.test(value || "")) return;
+  const today = isoDate(new Date());
+  const next = value > today ? today : value;
+  if (next === txnSheet.date) return;
+  txnSheet.date = next;
   renderTxnSheet();
-});
+}
+["input", "change", "blur"].forEach(evt =>
+  document.getElementById("txn-sheet-date-input").addEventListener(evt, e => applyTxnDateInput(e.target.value))
+);
 document.getElementById("txn-sheet-amount-to").addEventListener("input", e => {
   if (txnSheet) txnSheet.amountTo = e.target.value;
 });
