@@ -2608,7 +2608,6 @@ function ingresoGroupHTML() {
       <div class="cat-item-actions">
         <button type="button" class="cat-rename-btn" aria-label="Cambiar nombre de ${escapeHtml(item.label)}" data-rename-ingreso="${item.id}"><span data-icon="edit"></span></button>
         ${canDelete ? `<button type="button" class="delete" aria-label="Eliminar categoría" data-delete-cat="${item.id}" data-delete-group="${INGRESO_GROUP_ID}">${ICONS.trash}</button>` : ""}
-        <button type="button" class="cat-drag" data-drag-handle aria-label="Mover ${escapeHtml(item.label)}"><span data-icon="grip"></span></button>
       </div>
     </div>
   `).join("");
@@ -2650,10 +2649,7 @@ function renderCategoryGroups() {
             ${iconOrEmojiHTML}
             <strong>${escapeHtml(item.label)}</strong>
           </div>
-          <div class="cat-item-actions">
-            ${item.id !== "otros" ? `<button type="button" class="delete" aria-label="Eliminar categoría" data-delete-cat="${item.id}" data-delete-group="${g.id}">${ICONS.trash}</button>` : ""}
-            <button type="button" class="cat-drag" data-drag-handle aria-label="Mover ${escapeHtml(item.label)}"><span data-icon="grip"></span></button>
-          </div>
+          ${item.id !== "otros" ? `<button type="button" class="delete" aria-label="Eliminar categoría" data-delete-cat="${item.id}" data-delete-group="${g.id}">${ICONS.trash}</button>` : ""}
         </div>
       `;
     }).join("");
@@ -2683,32 +2679,17 @@ function renderCategoryGroups() {
   renderIcons(container);
 }
 
-// ---- Mover categorías y secciones: se arrastran desde el ícono ⋮⋮ ----
-// Una categoría se mueve dentro de su sección; una sección de gastos, entre
-// las demás secciones (Ingresos queda siempre arriba).
-let catDrag = null; // { kind, item, list, grabOffset, startOrder }
+// ---- Mover secciones: se arrastran desde el ícono ⋮⋮ de su título ----
+// Una sección de gastos se mueve entre las demás (Ingresos queda siempre
+// arriba, así que no se puede arrastrar).
+let catDrag = null; // { item, list, grabOffset, startOrder }
 
 function catDragSiblings(d) {
-  return d.kind === "section"
-    ? Array.from(d.list.querySelectorAll(":scope > .cat-group[data-section-id]"))
-    : Array.from(d.list.querySelectorAll(":scope > .cat-item"));
+  return Array.from(d.list.querySelectorAll(":scope > .cat-group[data-section-id]"));
 }
 
 function catDragOrder(d) {
-  return catDragSiblings(d).map(el => d.kind === "section" ? el.dataset.sectionId : el.dataset.itemId);
-}
-
-function saveCategoryOrder(groupId, order) {
-  const sortBy = items => order.map(id => items.find(i => i.id === id)).filter(Boolean)
-    .concat(items.filter(i => !order.includes(i.id)));
-  if (groupId === INGRESO_GROUP_ID) {
-    saveIngresoCategories(sortBy(CATEGORIES.ingreso));
-    return;
-  }
-  categoryGroupsCache = categoryGroupsCache.map(g => g.id === groupId ? Object.assign({}, g, { items: sortBy(g.items) }) : g);
-  gastoCategoriesCache = flattenCategoryGroups(categoryGroupsCache);
-  saveCategoryGroups(categoryGroupsCache);
-  renderAll();
+  return catDragSiblings(d).map(el => el.dataset.sectionId);
 }
 
 function saveSectionOrder(order) {
@@ -2744,33 +2725,27 @@ function endCatDrag() {
   const d = catDrag;
   d.item.classList.remove("dragging");
   d.item.style.transform = "";
-  d.list.classList.remove("sorting", "sorting-sections");
+  d.list.classList.remove("sorting-sections");
   const order = catDragOrder(d);
   catDrag = null;
-  if (order.join() === d.startOrder.join()) return;
-  if (d.kind === "section") saveSectionOrder(order);
-  else saveCategoryOrder(d.list.dataset.groupId, order);
+  if (order.join() !== d.startOrder.join()) saveSectionOrder(order);
 }
 
 document.getElementById("category-groups").addEventListener("pointerdown", e => {
-  const handle = e.target.closest("[data-drag-handle], [data-drag-section]");
+  const handle = e.target.closest("[data-drag-section]");
   if (!handle || catDrag) return;
   e.preventDefault();
-  const kind = handle.hasAttribute("data-drag-section") ? "section" : "item";
-  const item = handle.closest(kind === "section" ? ".cat-group" : ".cat-item");
+  const item = handle.closest(".cat-group");
   const list = item.parentElement;
-  if (kind === "section") {
-    // Mientras se mueven secciones se ven solo sus títulos; se ajusta el
-    // scroll para que la sección siga bajo el dedo.
-    const before = item.getBoundingClientRect().top;
-    list.classList.add("sorting-sections");
-    window.scrollBy(0, item.getBoundingClientRect().top - before);
-  }
-  catDrag = { kind, item, list, grabOffset: e.clientY - item.getBoundingClientRect().top };
+  // Mientras se mueven secciones se ven solo sus títulos; se ajusta el
+  // scroll para que la sección siga bajo el dedo.
+  const before = item.getBoundingClientRect().top;
+  list.classList.add("sorting-sections");
+  window.scrollBy(0, item.getBoundingClientRect().top - before);
+  catDrag = { item, list, grabOffset: e.clientY - item.getBoundingClientRect().top };
   catDrag.startOrder = catDragOrder(catDrag);
   handle.setPointerCapture(e.pointerId);
   item.classList.add("dragging");
-  list.classList.add("sorting");
 });
 document.getElementById("category-groups").addEventListener("pointermove", e => {
   if (catDrag) { e.preventDefault(); moveCatDrag(e.clientY); }

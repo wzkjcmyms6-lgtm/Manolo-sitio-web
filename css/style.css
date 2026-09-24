@@ -2346,12 +2346,6 @@ body.in-finanzas .topbar-clock { margin-right: 0; }
   cursor: grab; touch-action: none; -webkit-user-select: none; user-select: none;
 }
 .cat-drag:active { cursor: grabbing; background: var(--surface-raised); }
-.cat-group-items.sorting { -webkit-user-select: none; user-select: none; }
-.cat-group-items.sorting .cat-item:not(.dragging) { transition: transform 0.15s; }
-.cat-item.dragging {
-  position: relative; z-index: 5; background: var(--surface-raised);
-  border-color: rgba(255, 184, 77, 0.5); box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
-}
 .cat-group-actions { display: flex; align-items: center; gap: 0.2rem; }
 /* Mover secciones: solo se ven los títulos mientras se arrastra */
 #category-groups.sorting-sections .cat-group-items,
