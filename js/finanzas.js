@@ -712,7 +712,7 @@ function vgBudgetHTML(period) {
       <p class="info-sub">Todavía no tienes presupuesto para este periodo.</p>
       <a class="vg-link" href="#fin-presupuesto">Crear presupuesto</a>`;
   }
-  const totalIncome = rows.filter(r => r.type === "ingreso").reduce((s, r) => s + r.planned, 0);
+  const totalIncome = incomeBase(period);
   const totalBudget = rows.filter(r => r.type === "gasto").reduce((s, r) => s + r.planned, 0);
   const totalSpent = Object.values(spent).reduce((s, v) => s + v, 0);
   const base = totalIncome > 0 ? totalIncome : totalBudget;
@@ -730,7 +730,9 @@ function vgBudgetHTML(period) {
           <span class="vg-alert-dot"></span>
           <span class="vg-alert-text"><strong>${escapeHtml(r.cat.label)}:</strong> ${r.state === "over"
             ? `te pasaste ${formatBsShort(r.used - r.planned)}`
-            : `te quedan ${formatBsShort(r.planned - r.used)} (${Math.round(r.used / r.planned * 100)} % usado)`}</span>
+            : r.used / r.planned < BUDGET_WARN
+              ? `vas rápido, ${Math.round(r.used / r.planned * 100)} % usado y pasó el ${Math.round(periodElapsed(period) * 100)} % del periodo`
+              : `te quedan ${formatBsShort(r.planned - r.used)} (${Math.round(r.used / r.planned * 100)} % usado)`}</span>
         </button>`).join("")}
     </div>` : "";
   return `
@@ -1503,6 +1505,27 @@ function computeReceivedByCategory(period) {
   return received;
 }
 
+// Todo lo que entra en el periodo: cada ingreso cuenta lo recibido, o lo
+// planeado mientras todavía no llegó (el sueldo antes del depósito). Los
+// ingresos extra o sin presupuesto suman completos.
+function incomeBase(period) {
+  const received = computeReceivedByCategory(period);
+  const ids = new Set((CATEGORIES.ingreso || []).map(c => c.id).concat(Object.keys(received)));
+  let total = 0;
+  ids.forEach(id => { total += Math.max(budgetsCache[id] || 0, received[id] || 0); });
+  return total;
+}
+
+// Qué parte del periodo ya pasó (0 a 1), contando hoy.
+function periodElapsed(period) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (today < period.start) return 0;
+  if (today > period.end) return 1;
+  const total = Math.round((period.end - period.start) / 86400000) + 1;
+  return (Math.round((today - period.start) / 86400000) + 1) / total;
+}
+
 function remainingGauge(pct) {
   const size = 220, stroke = 10, r = (size - stroke) / 2;
   const c = 2 * Math.PI * r, arc = c * 0.75;
@@ -1526,11 +1549,27 @@ function incomeProgressHTML(received, goal) {
 // Estado de una categoría de gasto: "over" si se pasó, "warn" desde el 80 %.
 const BUDGET_WARN = 0.8;
 const WARN_COLOR = "#f0a847";
-function budgetState(planned, used, type) {
+// También avisa si vas rápido: gastaste bastante más que la parte del
+// periodo que ya pasó (ej. 70 % gastado cuando pasó el 40 % del mes).
+const PACE_MARGIN = 0.2, PACE_MIN = 0.3;
+function isFastPace(planned, used, elapsed) {
+  const pct = used / planned;
+  return elapsed < 1 && pct >= PACE_MIN && pct - elapsed >= PACE_MARGIN;
+}
+function budgetState(planned, used, type, elapsed = periodElapsed(currentBudgetPeriod())) {
   if (type !== "gasto" || planned <= 0) return used > planned && type === "gasto" ? "over" : "ok";
   if (used > planned) return "over";
-  if (used / planned >= BUDGET_WARN) return "warn";
+  if (used / planned >= BUDGET_WARN || isFastPace(planned, used, elapsed)) return "warn";
   return "ok";
+}
+
+// Más urgente primero: pasadas, en alerta y luego por % usado. Las que no
+// tienen movimientos quedan en su orden original.
+const STATE_RANK = { over: 2, warn: 1, ok: 0 };
+function byUrgency(a, b) {
+  const pct = r => r.planned > 0 ? r.used / r.planned : (r.used > 0 ? 1 : 0);
+  return STATE_RANK[budgetState(b.planned, b.used, "gasto")] - STATE_RANK[budgetState(a.planned, a.used, "gasto")]
+    || pct(b) - pct(a);
 }
 
 function remainingCatHTML(c, planned, used, type) {
@@ -1589,11 +1628,15 @@ function renderBudgets() {
       rows: groupCategories(g)
         .map(c => ({ cat: c, planned: budgetsCache[c.id] || 0, used: spent[c.id] || 0 }))
         .filter(r => relevant(r.cat, r.used))
+        .sort(byUrgency)
     }))
-    .filter(sec => sec.rows.length);
+    .filter(sec => sec.rows.length)
+    .sort((a, b) => STATE_RANK[budgetState(b.rows[0].planned, b.rows[0].used, "gasto")]
+      - STATE_RANK[budgetState(a.rows[0].planned, a.rows[0].used, "gasto")]);
 
-  // Restante para gastar = ingresos planeados − lo gastado en el mes.
-  const totalIncome = ingresoRows.reduce((s, r) => s + r.planned, 0);
+  // Restante para gastar = todo lo que entra − todo lo gastado (con o sin
+  // presupuesto).
+  const totalIncome = incomeBase(period);
   const totalBudget = groupSections.reduce((s, sec) => s + sec.rows.reduce((t, r) => t + r.planned, 0), 0);
   const totalSpent = Object.values(spent).reduce((s, v) => s + v, 0);
   const base = totalIncome > 0 ? totalIncome : totalBudget;
@@ -1608,6 +1651,7 @@ function renderBudgets() {
         <span class="remain-gauge-label">${leftToSpend < 0 ? "Sobrepasado" : "Restante para gastar"}</span>
       </div>
     </div>
+    ${dailyAllowanceHTML(period)}
   `;
 
   const list = document.getElementById("budget-grid");
@@ -1650,14 +1694,16 @@ function renderCategoryDetail() {
   const over = !isIncome && remaining < 0;
   const pct = planned > 0 ? used / planned : (used > 0 ? 1 : 0);
   const usedLabel = isIncome ? "Recibido" : "Gastado";
+  const fast = !isIncome && !over && planned > 0 && used / planned < BUDGET_WARN && isFastPace(planned, used, periodElapsed(period));
   const headline = isIncome
     ? `<div class="cat-detail-remaining income${planned > 0 && used >= planned ? " done" : ""}">${incomeProgressHTML(used, planned)}</div>`
-    : `<div class="cat-detail-remaining${over ? " over" : ""}">${remainingText(remaining)}</div>`;
+    : `<div class="cat-detail-remaining${over ? " over" : budgetState(planned, used, type) === "warn" ? " warn" : ""}">${remainingText(remaining)}</div>
+       ${fast ? `<div class="cat-detail-pace">Vas rápido: llevas ${Math.round(used / planned * 100)} % gastado y pasó el ${Math.round(periodElapsed(period) * 100)} % del periodo</div>` : ""}`;
 
   document.getElementById("cat-detail-title").textContent = cat.label;
   document.getElementById("cat-detail-hero").innerHTML = `
     <div class="remain-ring cat-detail-ring">
-      ${progressRing(pct, over ? "var(--danger)" : cat.color)}
+      ${progressRing(pct, over ? "var(--danger)" : !isIncome && budgetState(planned, used, type) === "warn" ? WARN_COLOR : cat.color)}
       <span class="remain-ring-core" style="background:${cat.color}">
         ${cat.emoji ? `<span class="remain-emoji">${cat.emoji}</span>` : `<span class="remain-icon" data-icon="${cat.icon}"></span>`}
       </span>
@@ -1872,15 +1918,14 @@ function computeBudgetInfo(period) {
   return info;
 }
 
-function renderBudgetInfo() {
-  const period = currentBudgetPeriod();
+// Proyección: todo lo que entra − ahorros − gastos fijos (lo presupuestado,
+// o lo gastado si ya se pasó) − gastos variables y otros (solo lo gastado).
+// Lo que sobra, dividido entre los días que quedan, es lo diario.
+function budgetProjection(period) {
   const info = computeBudgetInfo(period);
   const days = daysLeftInPeriod(period);
-
-  // Proyección: ingresos − ahorros − gastos fijos (lo presupuestado, o lo
-  // gastado si ya se pasó) − gastos variables y otros (solo lo ya gastado).
   const lines = [
-    { label: "Ingresos", value: Math.max(info.ingreso.planned, info.ingreso.used), sign: 1 },
+    { label: "Ingresos", value: incomeBase(period), sign: 1 },
     { label: "Ahorros", value: Math.max(info.ahorro.planned, info.ahorro.used), sign: -1 },
     { label: "Gastos fijos", value: Math.max(info.fijo.planned, info.fijo.used), sign: -1 },
     { label: "Gastos variables", value: info.variable.used, sign: -1 },
@@ -1888,6 +1933,20 @@ function renderBudgetInfo() {
   ];
   const result = lines.reduce((s, l) => s + l.sign * l.value, 0);
   const daily = days > 0 ? Math.max(result, 0) / days : 0;
+  return { info, days, lines, result, daily };
+}
+
+function dailyAllowanceHTML(period) {
+  const { days, daily, result } = budgetProjection(period);
+  if (days <= 0) return "";
+  return `<div class="remain-daily${result < 0 ? " over" : ""}">
+    Puedes gastar <strong>${formatBsShort(Math.round(daily))}</strong> por día · quedan ${days} día${days === 1 ? "" : "s"}
+  </div>`;
+}
+
+function renderBudgetInfo() {
+  const period = currentBudgetPeriod();
+  const { info, days, lines, result, daily } = budgetProjection(period);
 
   const breakdownRows = [
     { label: "Ingresos", color: "#5cc98a", ...info.ingreso },

@@ -2274,3 +2274,11 @@ body.in-finanzas .topbar-clock { margin-right: 0; }
 .remain-amount.income .remain-goal { display: block; font-size: 0.78rem; }
 .remain-amount.income.done, .remain-section-amount.income.done { color: #5fcf8a; }
 .cat-detail-remaining.income.done { color: #5fcf8a; }
+
+/* Presupuesto → Restante: gasto diario y ritmo */
+.remain-hero { flex-direction: column; align-items: center; }
+.remain-daily { font-size: 0.9rem; color: var(--muted); margin: 0.2rem 0 0.9rem; text-align: center; }
+.remain-daily strong { color: var(--ink); font-size: 1.05rem; }
+.remain-daily.over strong { color: var(--danger); }
+.cat-detail-remaining.warn { color: #f0a847; }
+.cat-detail-pace { font-size: 0.82rem; color: #f0a847; margin: 0.2rem 1rem 0.3rem; text-align: center; }
