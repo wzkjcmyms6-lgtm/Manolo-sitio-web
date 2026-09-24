@@ -2352,3 +2352,17 @@ body.in-finanzas .topbar-clock { margin-right: 0; }
   position: relative; z-index: 5; background: var(--surface-raised);
   border-color: rgba(255, 184, 77, 0.5); box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
 }
+.cat-group-actions { display: flex; align-items: center; gap: 0.2rem; }
+/* Mover secciones: solo se ven los títulos mientras se arrastra */
+#category-groups.sorting-sections .cat-group-items,
+#category-groups.sorting-sections .cat-subcategory-form { display: none; }
+#category-groups.sorting-sections .cat-group { margin-bottom: 0.6rem; }
+#category-groups.sorting-sections .cat-group[data-section-id] {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 0.5rem 0.4rem 0.5rem 0.9rem;
+}
+#category-groups.sorting-sections .cat-group-header { margin-bottom: 0; }
+#category-groups.sorting-sections .cat-group[data-section-id]:not(.dragging) { transition: transform 0.15s; }
+.cat-group.dragging { position: relative; z-index: 5; }
+#category-groups.sorting-sections .cat-group.dragging {
+  background: var(--surface-raised); border-color: rgba(255, 184, 77, 0.5); box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+}

@@ -2659,13 +2659,16 @@ function renderCategoryGroups() {
     }).join("");
 
     return `
-      <div class="cat-group">
+      <div class="cat-group" data-section-id="${g.id}">
         <div class="cat-group-header">
           <div style="display:flex; align-items:center; gap:0.6rem;">
             <div class="cat-color-line" style="background:${color};"></div>
             <h3>${escapeHtml(g.nombre)}</h3>
           </div>
-          <button type="button" class="cat-add-btn" data-add-sub="${g.id}" aria-label="Agregar subcategoría en ${escapeHtml(g.nombre)}">${ICONS.plus}</button>
+          <div class="cat-group-actions">
+            <button type="button" class="cat-add-btn" data-add-sub="${g.id}" aria-label="Agregar subcategoría en ${escapeHtml(g.nombre)}">${ICONS.plus}</button>
+            <button type="button" class="cat-drag" data-drag-section aria-label="Mover sección ${escapeHtml(g.nombre)}"><span data-icon="grip"></span></button>
+          </div>
         </div>
         <div class="cat-group-items" data-group-id="${g.id}">${itemsHTML}</div>
         <form class="tracker-form cat-subcategory-form" data-group-id="${g.id}" data-color="${color}" hidden>
@@ -2680,11 +2683,19 @@ function renderCategoryGroups() {
   renderIcons(container);
 }
 
-// ---- Mover categorías: se arrastran desde el ícono ⋮⋮ dentro de su sección ----
-let catDrag = null; // { item, list, handle, grabOffset, startOrder }
+// ---- Mover categorías y secciones: se arrastran desde el ícono ⋮⋮ ----
+// Una categoría se mueve dentro de su sección; una sección de gastos, entre
+// las demás secciones (Ingresos queda siempre arriba).
+let catDrag = null; // { kind, item, list, grabOffset, startOrder }
 
-function catDragOrder(list) {
-  return Array.from(list.querySelectorAll(":scope > .cat-item")).map(el => el.dataset.itemId);
+function catDragSiblings(d) {
+  return d.kind === "section"
+    ? Array.from(d.list.querySelectorAll(":scope > .cat-group[data-section-id]"))
+    : Array.from(d.list.querySelectorAll(":scope > .cat-item"));
+}
+
+function catDragOrder(d) {
+  return catDragSiblings(d).map(el => d.kind === "section" ? el.dataset.sectionId : el.dataset.itemId);
 }
 
 function saveCategoryOrder(groupId, order) {
@@ -2700,10 +2711,21 @@ function saveCategoryOrder(groupId, order) {
   renderAll();
 }
 
+function saveSectionOrder(order) {
+  // Cada sección conserva su color aunque cambie de lugar (el color por
+  // defecto depende de la posición).
+  const withColor = categoryGroupsCache.map(g => Object.assign({}, g, { color: groupColor(g) }));
+  categoryGroupsCache = order.map(id => withColor.find(g => g.id === id)).filter(Boolean)
+    .concat(withColor.filter(g => !order.includes(g.id)));
+  gastoCategoriesCache = flattenCategoryGroups(categoryGroupsCache);
+  saveCategoryGroups(categoryGroupsCache);
+  renderAll();
+}
+
 function moveCatDrag(clientY) {
   const { item, list, grabOffset } = catDrag;
   item.style.transform = "";
-  const others = Array.from(list.querySelectorAll(":scope > .cat-item")).filter(el => el !== item);
+  const others = catDragSiblings(catDrag).filter(el => el !== item);
   const before = others.find(el => {
     const r = el.getBoundingClientRect();
     return clientY < r.top + r.height / 2;
@@ -2719,22 +2741,33 @@ function moveCatDrag(clientY) {
 
 function endCatDrag() {
   if (!catDrag) return;
-  const { item, list, startOrder } = catDrag;
-  item.classList.remove("dragging");
-  item.style.transform = "";
-  list.classList.remove("sorting");
-  const order = catDragOrder(list);
+  const d = catDrag;
+  d.item.classList.remove("dragging");
+  d.item.style.transform = "";
+  d.list.classList.remove("sorting", "sorting-sections");
+  const order = catDragOrder(d);
   catDrag = null;
-  if (order.join() !== startOrder.join()) saveCategoryOrder(list.dataset.groupId, order);
+  if (order.join() === d.startOrder.join()) return;
+  if (d.kind === "section") saveSectionOrder(order);
+  else saveCategoryOrder(d.list.dataset.groupId, order);
 }
 
 document.getElementById("category-groups").addEventListener("pointerdown", e => {
-  const handle = e.target.closest("[data-drag-handle]");
+  const handle = e.target.closest("[data-drag-handle], [data-drag-section]");
   if (!handle || catDrag) return;
   e.preventDefault();
-  const item = handle.closest(".cat-item");
+  const kind = handle.hasAttribute("data-drag-section") ? "section" : "item";
+  const item = handle.closest(kind === "section" ? ".cat-group" : ".cat-item");
   const list = item.parentElement;
-  catDrag = { item, list, handle, grabOffset: e.clientY - item.getBoundingClientRect().top, startOrder: catDragOrder(list) };
+  if (kind === "section") {
+    // Mientras se mueven secciones se ven solo sus títulos; se ajusta el
+    // scroll para que la sección siga bajo el dedo.
+    const before = item.getBoundingClientRect().top;
+    list.classList.add("sorting-sections");
+    window.scrollBy(0, item.getBoundingClientRect().top - before);
+  }
+  catDrag = { kind, item, list, grabOffset: e.clientY - item.getBoundingClientRect().top };
+  catDrag.startOrder = catDragOrder(catDrag);
   handle.setPointerCapture(e.pointerId);
   item.classList.add("dragging");
   list.classList.add("sorting");
