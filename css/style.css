@@ -2115,3 +2115,7 @@ body.sheet-open { overflow: hidden; }
 .wallet-yo-amount { font-size: 1.05rem; font-weight: 700; }
 .wallet-yo-amount.neg { color: var(--danger); }
 .wallet-card-yo:hover { border-color: var(--border); }
+
+/* Panel de Carteras: textos más grandes (los números quedan igual) */
+.wallet-hero-label { font-size: 1.3rem; }
+.wallet-hero-sub { font-size: 1.1rem; margin-top: 0.45rem; }
