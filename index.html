@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=202609241230">
+  <link rel="stylesheet" href="css/style.css?v=202609241300">
 </head>
 <body>
   <div id="login-screen" class="login-screen">
@@ -371,7 +371,7 @@
             </section>
 
             <section id="budget-tab-informacion" class="fin-panel" hidden>
-              <div class="stat-row" id="budget-info-stats"></div>
+              <div id="budget-info" class="budget-grouped-list"></div>
             </section>
 
               <!-- Detalle de una categoría: sus movimientos del mes -->
@@ -408,6 +408,14 @@
                     <span id="budget-sheet-cat-badge" class="cat-icon"></span>
                     <span>Categoría: <strong id="budget-sheet-cat-label">Elige una</strong></span>
                   </button>
+                  <div class="budget-sheet-tipo" id="budget-sheet-tipo">
+                    <span>Tipo de gasto</span>
+                    <div class="budget-sheet-tipo-options">
+                      <button type="button" data-tipo="variable">Variable</button>
+                      <button type="button" data-tipo="fijo">Fijo</button>
+                      <button type="button" data-tipo="ahorro">Ahorro</button>
+                    </div>
+                  </div>
                   <div class="budget-sheet-actions">
                     <button type="button" class="budget-sheet-choose" id="budget-sheet-choose">Elegir la categoría</button>
                     <button type="button" class="budget-sheet-delete" id="budget-sheet-delete" hidden>Eliminar</button>
@@ -631,7 +639,7 @@
   <script src="js/gimnasio.js?v=202609232200"></script>
   <script src="js/running.js?v=202609232200"></script>
   <script src="js/bicicleta.js?v=202609232200"></script>
-  <script src="js/finanzas.js?v=202609241230"></script>
+  <script src="js/finanzas.js?v=202609241300"></script>
   <script src="js/inversiones.js?v=202609232200"></script>
 </body>
 </html>

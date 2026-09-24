@@ -652,7 +652,7 @@ function groupColor(group) {
 
 function groupCategories(group) {
   const color = groupColor(group);
-  return (group.items || []).map(item => ({ id: item.id, label: item.label, icon: item.icon, emoji: item.emoji, color }));
+  return (group.items || []).map(item => ({ id: item.id, label: item.label, icon: item.icon, emoji: item.emoji, color, tipo: item.tipo || "variable" }));
 }
 
 function isSectionVisible(group) {
@@ -759,19 +759,122 @@ function renderBudgetSummary() {
   `).join("");
 }
 
+// ---- Información (como Buddy): presupuesto diario, desglose y proyección ----
+const BUDGET_TIPOS = [
+  { id: "ahorro", label: "Ahorros", color: "#e8c9a0" },
+  { id: "fijo", label: "Gastos fijos", color: "#f0a847" },
+  { id: "variable", label: "Gastos variables", color: "#7fb0f0" }
+];
+let projectionOpen = true;
+
+function computeBudgetInfo(period) {
+  const spent = computeSpentByCategory(period);
+  const received = computeReceivedByCategory(period);
+  const info = {
+    ingreso: { planned: 0, used: 0 },
+    ahorro: { planned: 0, used: 0 },
+    fijo: { planned: 0, used: 0 },
+    variable: { planned: 0, used: 0 },
+    otros: { planned: 0, used: 0 }
+  };
+  (CATEGORIES.ingreso || []).forEach(c => {
+    info.ingreso.planned += budgetsCache[c.id] || 0;
+    info.ingreso.used += received[c.id] || 0;
+  });
+  const counted = new Set();
+  categoryGroupsCache.forEach(g => groupCategories(g).forEach(c => {
+    counted.add(c.id);
+    const bucket = isPlanned(c.id) ? info[c.tipo] || info.variable : info.otros;
+    bucket.planned += budgetsCache[c.id] || 0;
+    bucket.used += spent[c.id] || 0;
+  }));
+  // Gastos en categorías que no están en ninguna sección.
+  Object.keys(spent).forEach(id => { if (!counted.has(id)) info.otros.used += spent[id]; });
+  return info;
+}
+
 function renderBudgetInfo() {
   const period = currentBudgetPeriod();
-  const spent = computeSpentByCategory(period);
-  const withBudget = gastoCategoriesCache.filter(c => (budgetsCache[c.id] || 0) > 0);
-  const totalBudget = withBudget.reduce((s, c) => s + budgetsCache[c.id], 0);
-  const totalSpent = gastoCategoriesCache.reduce((s, c) => s + (spent[c.id] || 0), 0);
+  const info = computeBudgetInfo(period);
+  const days = daysLeftInPeriod(period);
 
-  document.getElementById("budget-info-stats").innerHTML = `
-    <div class="stat-box"><div class="value">${withBudget.length}/${gastoCategoriesCache.length}</div><div class="label">Categorías con presupuesto</div></div>
-    <div class="stat-box"><div class="value">${formatMoney(totalBudget)}</div><div class="label">Total presupuestado</div></div>
-    <div class="stat-box"><div class="value">${formatMoney(totalSpent)}</div><div class="label">Gastado del ${periodLabel(period)}</div></div>
+  // Proyección: ingresos − ahorros − gastos fijos (lo presupuestado, o lo
+  // gastado si ya se pasó) − gastos variables y otros (solo lo ya gastado).
+  const lines = [
+    { label: "Ingresos", value: Math.max(info.ingreso.planned, info.ingreso.used), sign: 1 },
+    { label: "Ahorros", value: Math.max(info.ahorro.planned, info.ahorro.used), sign: -1 },
+    { label: "Gastos fijos", value: Math.max(info.fijo.planned, info.fijo.used), sign: -1 },
+    { label: "Gastos variables", value: info.variable.used, sign: -1 },
+    { label: "Otros gastos", value: info.otros.used, sign: -1 }
+  ];
+  const result = lines.reduce((s, l) => s + l.sign * l.value, 0);
+  const daily = days > 0 ? Math.max(result, 0) / days : 0;
+
+  const breakdownRows = [
+    { label: "Ingresos", color: "#5cc98a", ...info.ingreso },
+    ...BUDGET_TIPOS.map(t => ({ label: t.label, color: t.color, ...info[t.id] })),
+    { label: "Otros gastos", color: "#6b6a66", ...info.otros }
+  ];
+
+  const dailyHTML = days > 0
+    ? `<p class="info-sub">Quedan <strong>${days} día${days === 1 ? "" : "s"}</strong> en este periodo.</p>
+       <div class="info-highlight">
+         <span class="info-cal"><span class="info-cal-top"></span><span class="info-cal-num">${days}</span></span>
+         <div>
+           <div class="info-highlight-value${result < 0 ? " over" : ""}">${formatBsShort(Math.round(daily))}</div>
+           <div class="info-highlight-label">Restante para gastar al día</div>
+         </div>
+       </div>`
+    : `<p class="info-sub">Este periodo ya terminó.</p>`;
+
+  document.getElementById("budget-info").innerHTML = `
+    <div class="budget-section info-card">
+      <h3 class="budget-section-title">Presupuesto diario</h3>
+      ${dailyHTML}
+    </div>
+
+    <div class="budget-section info-card">
+      <h3 class="budget-section-title">Desglose del presupuesto</h3>
+      <p class="info-sub">Un resumen del progreso de tu presupuesto hasta ahora durante este periodo.</p>
+      <div class="info-breakdown">
+        ${breakdownRows.map(r => `
+          <div class="info-breakdown-row">
+            <span class="swatch" style="background:${r.color}"></span>
+            <span class="info-breakdown-label">${r.label}</span>
+            <span class="info-breakdown-value">${r.planned > 0
+              ? `<span class="muted">${formatBsShort(r.used)} /</span> ${formatBsShort(r.planned)}`
+              : formatBsShort(r.used)}</span>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+
+    <div class="budget-section info-card">
+      <h3 class="budget-section-title">Proyección</h3>
+      <p class="info-sub">Un resultado estimado para este periodo de presupuesto.</p>
+      <div class="info-highlight info-projection${projectionOpen ? " open" : ""}">
+        <button type="button" class="info-projection-head" id="info-projection-toggle" aria-expanded="${projectionOpen}">
+          <span class="info-projection-icon" data-icon="finance"></span>
+          <span class="info-highlight-value${result < 0 ? " over" : ""}">${result < 0 ? "−" : ""}${formatBsShort(Math.abs(result))}</span>
+          <span class="info-chevron" data-icon="chevronRight"></span>
+        </button>
+        <div class="info-projection-lines">
+          ${lines.filter((l, i) => i === 0 || l.value > 0).map(l => `
+            <div class="info-line"><span>${l.label}</span><span class="breakdown-leader"></span><span>${l.sign > 0 ? "+" : "−"}${formatBsShort(l.value)}</span></div>
+          `).join("")}
+          <div class="info-line total"><span>Resultado proyectado</span><span class="breakdown-leader"></span><span>${result < 0 ? "−" : ""}${formatBsShort(Math.abs(result))}</span></div>
+        </div>
+      </div>
+    </div>
   `;
+  renderIcons(document.getElementById("budget-info"));
 }
+
+document.getElementById("budget-info").addEventListener("click", e => {
+  if (!e.target.closest("#info-projection-toggle")) return;
+  projectionOpen = !projectionOpen;
+  renderBudgetInfo();
+});
 
 function saveBudgets() {
   return budgetDocRef().set(Object.assign({}, budgetsCache));
@@ -847,7 +950,7 @@ function formatSheetAmount(str) {
 
 function openBudgetSheet({ type, groupId = null, catId = null }) {
   const amount = catId && budgetsCache[catId] ? String(budgetsCache[catId]).replace(".", ",") : "0";
-  budgetSheet = { type, groupId, catId, originalCatId: catId, amount };
+  budgetSheet = { type, groupId, catId, originalCatId: catId, amount, tipo: null };
   if (!catId) {
     const first = sheetCandidates()[0];
     budgetSheet.catId = first ? first.id : null;
@@ -877,15 +980,22 @@ function renderBudgetSheet() {
     badge.outerHTML = `<span id="budget-sheet-cat-badge" class="cat-icon" data-icon="otherCategory"></span>`;
   }
   document.getElementById("budget-sheet-cat-label").textContent = cat ? cat.label : "Elige una";
+  const tipo = sheetTipo(cat);
+  document.getElementById("budget-sheet-tipo").hidden = s.type !== "gasto";
+  document.querySelectorAll("#budget-sheet [data-tipo]").forEach(b => b.classList.toggle("active", b.dataset.tipo === tipo));
   document.getElementById("budget-sheet-delete").hidden = !s.originalCatId;
   document.getElementById("budget-sheet-ok").disabled = !cat;
   renderIcons(document.getElementById("budget-sheet"));
 }
 
+function sheetTipo(cat) {
+  return budgetSheet.tipo || (cat && cat.tipo) || "variable";
+}
+
 function chooseSheetCategory() {
   const s = budgetSheet;
   const group = s.groupId ? categoryGroupsCache.find(g => g.id === s.groupId) : null;
-  const pick = catId => { closePicker(); s.catId = catId; renderBudgetSheet(); };
+  const pick = catId => { closePicker(); s.catId = catId; s.tipo = null; renderBudgetSheet(); };
   openPicker({
     title: s.type === "ingreso" ? "Elige un ingreso" : (group ? `Elige en ${group.nombre}` : "Elige una categoría"),
     items: sheetCandidates(),
@@ -927,7 +1037,17 @@ function confirmBudgetSheet() {
   const amount = parseFloat(s.amount.replace(",", ".")) || 0;
   if (s.originalCatId && s.originalCatId !== cat.id) delete budgetsCache[s.originalCatId];
   budgetsCache[cat.id] = amount;
-  if (cat.groupId) visibleBudgetSections.add(cat.groupId);
+  if (cat.groupId) {
+    visibleBudgetSections.add(cat.groupId);
+    const tipo = sheetTipo(cat);
+    if (tipo !== (cat.tipo || "variable")) {
+      const next = categoryGroupsCache.map(g => g.id !== cat.groupId ? g : Object.assign({}, g, {
+        items: g.items.map(i => i.id === cat.id ? Object.assign({}, i, { tipo }) : i)
+      }));
+      categoryGroupsCache = next;
+      saveCategoryGroups(next);
+    }
+  }
   closeBudgetSheet();
   renderBudgetInputs();
   renderBudgetSummary();
@@ -955,6 +1075,8 @@ document.getElementById("budget-sheet").addEventListener("click", e => {
   if (!budgetSheet) return;
   const key = e.target.closest("[data-key]");
   if (key) { pressSheetKey(key.dataset.key); return; }
+  const tipoBtn = e.target.closest("[data-tipo]");
+  if (tipoBtn) { budgetSheet.tipo = tipoBtn.dataset.tipo; renderBudgetSheet(); return; }
   const typeBtn = e.target.closest("[data-sheet-type]");
   if (typeBtn) {
     if (typeBtn.dataset.sheetType !== budgetSheet.type) {
