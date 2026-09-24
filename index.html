@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=202609250140">
+  <link rel="stylesheet" href="css/style.css?v=202609250200">
 </head>
 <body>
   <div id="login-screen" class="login-screen">
@@ -531,7 +531,6 @@
                 <button type="button" class="wallet-menu-btn" id="wallet-menu-btn" aria-label="Más opciones" data-icon="otherCategory"></button>
                 <div class="wallet-menu-dropdown" id="wallet-menu-dropdown" hidden>
                   <button type="button" class="wallet-menu-item" id="wallet-menu-new"><span class="icon-sm" data-icon="plus"></span>Nueva cartera</button>
-                  <button type="button" class="wallet-menu-item" id="wallet-menu-transfer"><span class="icon-sm" data-icon="transfer"></span>Hacer una transferencia</button>
                 </div>
               </div>
             </div>
@@ -546,17 +545,6 @@
               <p class="form-error" id="new-wallet-error" hidden></p>
               <button type="submit">Crear cartera</button>
               <button type="button" class="link-btn" id="new-wallet-cancel">Cancelar</button>
-            </form>
-
-            <form id="transfer-form" class="tracker-form" hidden>
-              <select id="transfer-from" required></select>
-              <select id="transfer-to" required></select>
-              <input type="number" id="transfer-amount-from" placeholder="Monto" min="0.01" step="0.01" required>
-              <input type="number" id="transfer-amount-to" placeholder="Monto" min="0.01" step="0.01" hidden>
-              <input type="text" id="transfer-notes" placeholder="Nota (opcional)">
-              <p class="form-error" id="transfer-error" hidden></p>
-              <button type="submit">Transferir</button>
-              <button type="button" class="link-btn" id="transfer-cancel">Cancelar</button>
             </form>
 
             <div class="wallet-hero">
@@ -763,7 +751,7 @@
   <script src="js/gimnasio.js?v=202609232200"></script>
   <script src="js/running.js?v=202609232200"></script>
   <script src="js/bicicleta.js?v=202609232200"></script>
-  <script src="js/finanzas.js?v=202609250140"></script>
+  <script src="js/finanzas.js?v=202609250200"></script>
   <script src="js/inversiones.js?v=202609232200"></script>
 </body>
 </html>

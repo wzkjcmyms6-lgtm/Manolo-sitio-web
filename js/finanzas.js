@@ -1,15 +1,5 @@
 (function () {
 const CATEGORIES = {
-  gasto: [
-    { id: "comida", label: "Comida", icon: "food", color: "#4d9de0" },
-    { id: "transporte", label: "Transporte", icon: "transport", color: "#9b6bde" },
-    { id: "vivienda", label: "Vivienda", icon: "home", color: "#3fb8af" },
-    { id: "salud", label: "Salud", icon: "health", color: "#e0567c" },
-    { id: "entretenimiento", label: "Entretenimiento", icon: "entertainment", color: "#dbb84a" },
-    { id: "compras", label: "Compras", icon: "shopping", color: "#5cc98a" },
-    { id: "suscripciones", label: "Suscripciones", icon: "subscription", color: "#c96bde" },
-    { id: "otros", label: "Otros", icon: "otherCategory", color: "#9a978f" }
-  ],
   ingreso: [
     { id: "salario", label: "Salario", icon: "salary", color: "#5cc98a" },
     { id: "otros_ingresos", label: "Otros ingresos", icon: "otherCategory", color: "#9a978f" }
@@ -43,13 +33,6 @@ const DEFAULT_CATEGORY_GROUPS = [
   { id: "otros", nombre: "Otros", items: [{ id: "otros", label: "Otros", icon: "otherCategory" }] }
 ];
 
-// Repertorio genérico de íconos para elegir al crear una subcategoría.
-const CATEGORY_ICON_CHOICES = [
-  "food", "drink", "coffee", "transport", "fuel", "home", "health", "entertainment",
-  "music", "camera", "shopping", "subscription", "gift", "pet", "education",
-  "phone", "wifi", "bank", "bolt", "water", "salary", "tools", "otherCategory"
-];
-
 const PAYMENTS = [
   { id: "efectivo", label: "Efectivo" },
   { id: "debito", label: "Débito" },
@@ -60,8 +43,7 @@ let monthOffset = 0; // 0 = mes actual, -1 = mes anterior, etc.
 let financeCache = [];
 let budgetsCache = {};
 let categoryGroupsCache = DEFAULT_CATEGORY_GROUPS; // {id, nombre, items:[{id,label,icon,emoji?}]}, guardado en Firestore
-let gastoCategoriesCache = CATEGORIES.gasto; // versión "plana" de categoryGroupsCache, la usa el resto de la app
-let customCategoriesCache = []; // categorías personalizadas del usuario {id, label, icon, color}
+let gastoCategoriesCache = flattenCategoryGroups(DEFAULT_CATEGORY_GROUPS); // versión "plana" de categoryGroupsCache
 let ahorrosCache = [];
 let carterasCustomCache = []; // carteras que el usuario crea a mano, con su propio saldo
 let carterasMovCache = []; // movimientos (aportes, retiros, transferencias) de esas carteras
@@ -117,7 +99,7 @@ function findCategory(type, id) {
       || { id, label: "Ingreso", icon: "salary", color: INGRESO_COLOR };
   }
   const list = type === "gasto" ? gastoCategoriesCache : (CATEGORIES[type] || []);
-  return list.find(c => c.id === id) || gastoCategoriesCache.find(c => c.id === "otros") || CATEGORIES.gasto[CATEGORIES.gasto.length - 1];
+  return list.find(c => c.id === id) || gastoCategoriesCache.find(c => c.id === "otros") || { id, label: "Otros", icon: "otherCategory", color: "#9a978f" };
 }
 // ---- Abrir/cerrar hojas y ventanas con animación ----
 function showSheet(el) {
@@ -171,20 +153,8 @@ function csvEscape(v) {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
-function currentMonthDate() {
-  const d = new Date();
-  d.setDate(1);
-  d.setMonth(d.getMonth() + monthOffset);
-  return d;
-}
-function monthKey(date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
 function monthLabel(date) {
   return capitalize(date.toLocaleDateString("es-ES", { month: "long", year: "numeric" }));
-}
-function isInMonth(dateStr, monthDate) {
-  return dateStr.slice(0, 7) === monthKey(monthDate);
 }
 
 // ---------- Periodo del presupuesto (ej: del 28 al 27 del mes siguiente) ----------
@@ -311,7 +281,7 @@ function renderStats() {
       ${deuda > 0 ? `
         <button type="button" class="link-btn pay-card-link" id="pay-card-toggle">Pagar tarjeta</button>
         <form id="pay-card-form" class="pay-card-form" hidden>
-          <input type="number" id="pay-card-amount" placeholder="Monto" min="0.01" step="0.01" max="${deuda.toFixed(2)}" required>
+          <input type="number" id="pay-card-amount" placeholder="Monto" min="0.01" step="0.01" max="${deuda.toFixed(2)}" value="${deuda.toFixed(2)}" inputmode="decimal" required>
           <select id="pay-card-source">
             <option value="debito">Débito</option>
             <option value="efectivo">Efectivo</option>
@@ -335,7 +305,7 @@ function renderStats() {
       if (!amount || amount <= 0) return;
       financeCollection().add({
         createdAt: Date.now(),
-        date: new Date().toISOString().slice(0, 10),
+        date: isoDate(new Date()),
         type: "pago_tarjeta",
         category: "pago_tarjeta",
         payment: source,
@@ -1142,7 +1112,7 @@ async function createFromCatSheet() {
       closePicker();
       const next = categoryGroupsCache.map(g => g.id === groupId ? Object.assign({}, g, { items: (g.items || []).concat([{ id, label, icon: "otherCategory" }]) }) : g);
       categoryGroupsCache = next;
-      gastoCategoriesCache = flattenCategoryGroups(next).concat(customCategoriesCache.filter(c => !next.some(g => (g.items || []).some(i => i.id === c.id))));
+      gastoCategoriesCache = flattenCategoryGroups(next);
       saveCategoryGroups(next);
       pickFromCatSheet(id);
     }
@@ -1187,7 +1157,7 @@ function chooseTxnPayment() {
 function chooseTxnWallet(side) {
   const t = txnSheet;
   const other = side === "from" ? t.to : t.from;
-  const wallets = ledgerWallets().filter(w => (side === "to" || !w.soloDestino) && w.id !== other);
+  const wallets = ledgerWallets().filter(w => w.id !== "tarjeta" && w.id !== other);
   openPicker({
     title: side === "from" ? "¿Desde qué cartera?" : "¿A qué cartera?",
     items: wallets.map(w => {
@@ -2227,12 +2197,6 @@ const EMOJI_CHOICES = [
   "⭐", "❤️", "✅", "📌", "🔔", "♻️", "🌱", "☀️", "❓"
 ];
 
-function iconPickerHTML() {
-  return CATEGORY_ICON_CHOICES.map((key, i) =>
-    `<button type="button" class="icon-choice${i === 0 ? " selected" : ""}" data-icon-choice="${key}" data-icon="${key}"></button>`
-  ).join("");
-}
-
 function emojiPickerHTML() {
   return EMOJI_CHOICES.map((emoji, i) =>
     `<button type="button" class="emoji-choice${i === 0 ? " selected" : ""}" data-emoji="${emoji}">${emoji}</button>`
@@ -2498,7 +2462,7 @@ function ledgerWallets() {
   return [
     { id: "efectivo", nombre: "Efectivo", moneda: "Bs", builtIn: true },
     { id: "debito", nombre: "Débito", moneda: "Bs", builtIn: true },
-    { id: "tarjeta", nombre: "Tarjeta de Crédito", moneda: "Bs", builtIn: true, soloDestino: true },
+    { id: "tarjeta", nombre: "Tarjeta de Crédito", moneda: "Bs", builtIn: true },
     { id: "ahorro", nombre: "Ahorro", moneda: "US$", builtIn: true }
   ].concat(carterasCustomCache.map(w => Object.assign({ builtIn: false }, w)));
 }
@@ -2654,7 +2618,6 @@ function renderWallets() {
   renderIcons(document.getElementById("wallet-hero-track"));
   renderIcons(document.getElementById("wallet-list"));
   wireWalletHero();
-  populateTransferSelects();
   renderWalletDetail();
 }
 
@@ -2887,7 +2850,6 @@ document.addEventListener("click", () => {
 
 document.getElementById("wallet-menu-new").addEventListener("click", () => {
   document.getElementById("wallet-menu-dropdown").hidden = true;
-  document.getElementById("transfer-form").hidden = true;
   document.getElementById("new-wallet-form").hidden = false;
 });
 document.getElementById("new-wallet-cancel").addEventListener("click", () => {
@@ -2915,102 +2877,6 @@ document.getElementById("new-wallet-form").addEventListener("submit", e => {
     .catch(err => showFormError("new-wallet-error", err))
     .finally(() => { submitBtn.disabled = false; });
 });
-
-document.getElementById("wallet-menu-transfer").addEventListener("click", () => {
-  document.getElementById("wallet-menu-dropdown").hidden = true;
-  document.getElementById("new-wallet-form").hidden = true;
-  populateTransferSelects();
-  document.getElementById("transfer-form").hidden = false;
-});
-document.getElementById("transfer-cancel").addEventListener("click", () => {
-  document.getElementById("transfer-form").hidden = true;
-});
-
-function populateTransferSelects() {
-  const wallets = ledgerWallets().filter(w => !w.soloDestino);
-  const fromSel = document.getElementById("transfer-from");
-  const prevFrom = fromSel.value;
-  fromSel.innerHTML = wallets.map(w => `<option value="${w.id}">${escapeHtml(w.nombre)} (${w.moneda})</option>`).join("");
-  if (wallets.some(w => w.id === prevFrom)) fromSel.value = prevFrom;
-  updateTransferToOptions();
-}
-
-// El destino puede ser de otra moneda: no hay conversión automática, así
-// que cuando las monedas no coinciden se piden los dos montos por separado
-// (cuánto se descuenta del origen y cuánto se suma al destino).
-function updateTransferToOptions() {
-  const wallets = ledgerWallets();
-  const fromW = wallets.find(w => w.id === document.getElementById("transfer-from").value);
-  const options = wallets.filter(w => !fromW || w.id !== fromW.id);
-  const toSel = document.getElementById("transfer-to");
-  const prevTo = toSel.value;
-  toSel.innerHTML = options.map(w => `<option value="${w.id}">${escapeHtml(w.nombre)} (${w.moneda})</option>`).join("");
-  if (options.some(w => w.id === prevTo)) toSel.value = prevTo;
-  updateTransferAmountFields();
-}
-
-function updateTransferAmountFields() {
-  const wallets = ledgerWallets();
-  const fromW = wallets.find(w => w.id === document.getElementById("transfer-from").value);
-  const toW = wallets.find(w => w.id === document.getElementById("transfer-to").value);
-  const amountFrom = document.getElementById("transfer-amount-from");
-  const amountTo = document.getElementById("transfer-amount-to");
-
-  amountFrom.placeholder = fromW ? `Monto a descontar (${fromW.moneda})` : "Monto";
-
-  const distinta = !!(fromW && toW && fromW.moneda !== toW.moneda);
-  amountTo.hidden = !distinta;
-  amountTo.required = distinta;
-  if (distinta) amountTo.placeholder = `Monto a añadir (${toW.moneda})`;
-}
-
-document.getElementById("transfer-from").addEventListener("change", updateTransferToOptions);
-document.getElementById("transfer-to").addEventListener("change", updateTransferAmountFields);
-
-document.getElementById("transfer-form").addEventListener("submit", e => {
-  e.preventDefault();
-  clearFormError("transfer-error");
-  const fromId = document.getElementById("transfer-from").value;
-  const toId = document.getElementById("transfer-to").value;
-  const notes = document.getElementById("transfer-notes").value.trim();
-  if (!fromId || !toId || fromId === toId) {
-    showFormError("transfer-error", { message: "Elegí una cartera de origen y una de destino distintas." });
-    return;
-  }
-
-  const wallets = ledgerWallets();
-  const fromW = wallets.find(w => w.id === fromId);
-  const toW = wallets.find(w => w.id === toId);
-  if (!fromW || !toW) {
-    showFormError("transfer-error", { message: "No se encontró alguna de las carteras elegidas." });
-    return;
-  }
-
-  const amountFrom = parseFloat(document.getElementById("transfer-amount-from").value);
-  if (!amountFrom || amountFrom <= 0) {
-    showFormError("transfer-error", { message: "Ingresá un monto válido a descontar." });
-    return;
-  }
-
-  let amountTo = amountFrom;
-  if (fromW.moneda !== toW.moneda) {
-    amountTo = parseFloat(document.getElementById("transfer-amount-to").value);
-    if (!amountTo || amountTo <= 0) {
-      showFormError("transfer-error", { message: "Ingresá un monto válido a añadir en la cartera de destino." });
-      return;
-    }
-  }
-
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-  submitBtn.disabled = true;
-  createTransfer({ from: fromId, to: toId, amount: amountFrom, amountTo, desc: notes, date: isoDate(new Date()) }).then(() => {
-    e.target.reset();
-    document.getElementById("transfer-amount-to").hidden = true;
-    document.getElementById("transfer-form").hidden = true;
-  }).catch(err => showFormError("transfer-error", err))
-    .finally(() => { submitBtn.disabled = false; });
-});
-
 
 // ================= Herramientas: Exportar =================
 
@@ -3110,16 +2976,27 @@ onAuthReady(() => {
     budgetsCache = doc.exists ? doc.data() : {};
     renderAll();
   });
+  let groupsLoaded = false;
+  let legacyCustom = null;
   function updateGastoCategoriesCache() {
-    let flat = flattenCategoryGroups(categoryGroupsCache);
-    // Agregar solo las categorías personalizadas que no estén duplicadas
-    if (customCategoriesCache.length > 0) {
-      const existingIds = flat.map(c => c.id);
-      const newCustom = customCategoriesCache.filter(c => !existingIds.includes(c.id));
-      gastoCategoriesCache = [...flat, ...newCustom];
-    } else {
-      gastoCategoriesCache = flat;
+    gastoCategoriesCache = flattenCategoryGroups(categoryGroupsCache);
+  }
+  // Las categorías que se creaban con la versión vieja del selector vivían en
+  // un documento aparte; se pasan una sola vez a la sección "Otros".
+  function migrateLegacyCustom() {
+    if (!groupsLoaded || !legacyCustom || !legacyCustom.length) return;
+    const known = new Set(gastoCategoriesCache.map(c => c.id));
+    const missing = legacyCustom.filter(c => c && c.id && !known.has(c.id))
+      .map(c => ({ id: c.id, label: c.label || "Categoría", icon: c.icon || "otherCategory" }));
+    legacyCustom = null;
+    if (missing.length) {
+      const hasOtros = categoryGroupsCache.some(g => g.id === "otros");
+      const next = hasOtros
+        ? categoryGroupsCache.map(g => g.id === "otros" ? Object.assign({}, g, { items: (g.items || []).concat(missing) }) : g)
+        : categoryGroupsCache.concat([{ id: "otros", nombre: "Otros", items: missing }]);
+      saveCategoryGroups(next);
     }
+    customCategoriesDocRef().delete();
   }
 
   categoriasDocRef().onSnapshot(doc => {
@@ -3136,6 +3013,8 @@ onAuthReady(() => {
       categoriasDocRef().set({ groups: DEFAULT_CATEGORY_GROUPS });
     }
     updateGastoCategoriesCache();
+    groupsLoaded = true;
+    migrateLegacyCustom();
     renderAll();
   });
   ingresoCategoriesDocRef().onSnapshot(doc => {
@@ -3149,12 +3028,11 @@ onAuthReady(() => {
     }
     renderAll();
   });
-  customCategoriesDocRef().onSnapshot(doc => {
+  customCategoriesDocRef().get().then(doc => {
     const data = doc.exists ? doc.data() : null;
-    customCategoriesCache = (data && Array.isArray(data.categories)) ? data.categories : [];
-    updateGastoCategoriesCache();
-    renderAll();
-  });
+    legacyCustom = (data && Array.isArray(data.categories)) ? data.categories : [];
+    migrateLegacyCustom();
+  }).catch(() => {});
   ahorrosCollection().onSnapshot(snap => {
     ahorrosCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAll();

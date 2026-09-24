@@ -571,16 +571,6 @@ button.delete:hover { opacity: 1; }
 .txn-amount.neg { color: var(--danger); }
 
 /* ---------- Finance: budget ---------- */
-.budget-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-}
-.budget-header .link-btn { white-space: nowrap; }
-.budget-header h2 { margin: 0; font-size: 1.1rem; text-transform: capitalize; }
 
 /* ---------- Finance: Presupuesto → Restante (como Buddy) ---------- */
 .remain-hero {
@@ -668,7 +658,6 @@ button.delete:hover { opacity: 1; }
 .breakdown-leader { flex: 1; min-width: 0.4rem; border-bottom: 2px dotted var(--border); align-self: center; }
 .breakdown-amount { font-weight: 600; white-space: nowrap; }
 
-.budget-plan-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.6rem; }
 
 .budget-grouped-list { display: flex; flex-direction: column; gap: 1.2rem; margin-bottom: 0.6rem; }
 .budget-section {
@@ -1029,31 +1018,6 @@ button.delete:hover { opacity: 1; }
 }
 .cat-add-btn:hover { filter: brightness(1.2); }
 
-.icon-picker {
-  flex-basis: 100%;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-  gap: 0.5rem;
-  margin: 0.2rem 0 0.3rem;
-}
-.icon-choice {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: var(--bg-soft);
-  border: 1px solid var(--border);
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 9px;
-  cursor: pointer;
-}
-.icon-choice.selected {
-  background: var(--accent-1);
-  border-color: var(--accent-1);
-  color: #0a0a0a;
-}
 
 .emoji-picker, .emoji-picker-inline {
   flex-basis: 100%;
@@ -2123,7 +2087,6 @@ body.sheet-open { overflow: hidden; }
 /* ---------- Vista general: pestañas internas ---------- */
 .fin-inner-tabs { display: flex; width: 100%; margin-bottom: 1rem; }
 .fin-inner-tabs .fin-tab { flex: 1; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.74rem; padding: 0.65rem 0.3rem; white-space: nowrap; }
-.vg-soon { text-align: left; }
 
 /* ---------- Pestaña Gasto (como Buddy) ---------- */
 .gasto-summary { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; margin-bottom: 1rem; padding: 1.1rem 0.4rem; }
