@@ -11,6 +11,8 @@ import urllib.error
 import urllib.request
 
 URLS = [
+    # La tabla de cotizaciones_tc se carga en un iframe desde esta página.
+    "https://www.bcb.gob.bo/librerias/indicadores/otras/ultimo.php",
     "https://www.bcb.gob.bo/?q=cotizaciones_tc",
     "https://www.bcb.gob.bo/?q=content/tipo-de-cambio-oficial-del-d%C3%B3lar-estadounidense",
 ]
@@ -35,7 +37,10 @@ def fetch(url):
     except urllib.error.HTTPError as err:  # el sitio a veces responde 404 pero con la página completa
         code, body = err.code, err.read()
     print(f"GET {url} -> {code}, {len(body)} bytes")
-    return body.decode("utf-8", "replace")
+    try:
+        return body.decode("utf-8")
+    except UnicodeDecodeError:
+        return body.decode("latin-1")
 
 
 def page_text(url):
@@ -65,25 +70,18 @@ def main():
     global URL
     errors = []
     for url in URLS:
-        text = page_text(url)
         try:
+            text = page_text(url)
             tco, publicado = parse(text)
             URL = url
             break
-        except ValueError as err:
+        except (OSError, ValueError) as err:
             errors.append(f"{url}: {err}")
-            k = max(text.upper().find("CAMBIO OFICIAL"), 0)
-            print("Fragmento:", text[max(0, k - 300):k + 1200])
+            if isinstance(err, ValueError):
+                k = max(text.upper().find("CAMBIO OFICIAL"), 0)
+                print("Fragmento:", text[max(0, k - 300):k + 600])
     else:
         print("No se pudo leer el TCO:", errors)
-        raw = fetch(URLS[0])
-        refs = re.findall(r'(?:src|href|action|data-url|url)\s*[=:]\s*["\']([^"\']+)["\']', raw, re.I)
-        refs = [r for r in refs if re.search(r"cotiz|cambio|tc|xls|ods|json|php|ajax|iframe|reporte|imprimir", r, re.I)]
-        print("Referencias en cotizaciones_tc:", sorted(set(refs))[:80])
-        for tag in re.findall(r"(?is)<(?:iframe|form|select)[^>]*>", raw)[:20]:
-            print("TAG:", tag[:300])
-        k = raw.upper().find("USD")
-        print("HTML cerca de USD:", raw[max(0, k - 800):k + 400] if k >= 0 else "(no hay USD)")
         sys.exit(1)
 
     hoy = (dt.datetime.utcnow() - dt.timedelta(hours=4)).date().isoformat()  # La Paz (UTC-4)
