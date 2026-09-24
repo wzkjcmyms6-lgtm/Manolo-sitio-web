@@ -1775,17 +1775,6 @@ button.remain-cat:active .remain-ring { transform: scale(0.95); }
 .cat-detail-list { padding: 0 1rem 1rem; }
 .cat-detail-empty { color: var(--muted); text-align: center; padding: 1.2rem 0; }
 
-/* Encabezado de sección con botón para eliminarla */
-.budget-section-head { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; margin-bottom: 0.8rem; }
-.budget-section-head .budget-section-title { margin: 0; }
-.budget-section-delete {
-  width: 38px; height: 38px; flex-shrink: 0; padding: 9px;
-  display: flex; align-items: center; justify-content: center;
-  background: transparent; border: 1px solid var(--border); border-radius: 50%;
-  color: var(--muted); cursor: pointer;
-}
-.budget-section-delete:hover, .budget-section-delete:active { color: var(--danger); border-color: var(--danger); }
-
 /* Herramientas: Periodo del presupuesto */
 .period-preview {
   display: flex; align-items: center; gap: 1rem;
