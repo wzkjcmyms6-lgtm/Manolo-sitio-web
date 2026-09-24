@@ -132,7 +132,15 @@ function renderNav() {
 function router() {
   showPanel(currentHash());
   renderNav();
+  window.scrollTo(0, 0);
 }
+
+// Tocar la pestaña en la que ya estás (ej: "Vista general" abajo) también
+// vuelve arriba del todo; si es otra, el cambio de página ya lo hace.
+document.addEventListener("click", e => {
+  const link = e.target.closest("a[href^='#']");
+  if (link && link.getAttribute("href") === window.location.hash) window.scrollTo({ top: 0, behavior: "smooth" });
+});
 
 window.addEventListener("hashchange", router);
 document.addEventListener("DOMContentLoaded", router);
