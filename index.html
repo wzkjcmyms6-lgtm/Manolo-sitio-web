@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=202609250200">
+  <link rel="stylesheet" href="css/style.css?v=202609250300">
 </head>
 <body>
   <div id="login-screen" class="login-screen">
@@ -338,6 +338,11 @@
             </section>
 
             <section id="fin-tab-lista" class="fin-panel">
+              <div class="txn-search" id="txn-search">
+                <button type="button" class="txn-search-toggle" id="txn-search-toggle" aria-label="Buscar transacciones"><span data-icon="search"></span></button>
+                <input type="search" id="txn-search-input" placeholder="Buscar nota, categoría o monto" autocomplete="off" enterkeyhint="search">
+                <button type="button" class="txn-search-clear" id="txn-search-clear" aria-label="Cerrar búsqueda"><span data-icon="close"></span></button>
+              </div>
               <div class="txn-card">
                 <div class="txn-summary" id="finance-summary"></div>
                 <div id="finance-list"></div>
@@ -510,6 +515,11 @@
                 <h3>Categorías</h3>
                 <p>Crea o elimina categorías de ingreso y de gasto.</p>
               </a>
+              <a class="tool-card" href="#fin-herramientas-tarjeta">
+                <span class="icon" data-icon="finance"></span>
+                <h3>Tarjeta de Crédito</h3>
+                <p>Tus fechas de corte y de pago.</p>
+              </a>
               <a class="tool-card" href="#fin-herramientas-periodo">
                 <span class="icon" data-icon="calendar"></span>
                 <h3>Periodo del presupuesto</h3>
@@ -599,6 +609,20 @@
           </section>
 
           <!-- ---- Herramientas: Exportar ---- -->
+          <!-- ---- Herramientas: Tarjeta de crédito ---- -->
+          <section id="panel-fin-herramientas-tarjeta" hidden>
+            <a class="back-link" href="#fin-herramientas"><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</a>
+            <h1 class="page-title">Tarjeta de Crédito</h1>
+            <p class="panel-sub">Pon el día de corte y el día límite de pago que figuran en tu estado de cuenta. Te recomendamos pagar el total el día del corte: así empiezas cada ciclo en cero y nunca pagas intereses.</p>
+
+            <div class="card-days">
+              <label class="card-day-field"><span>Día de corte</span><select id="card-corte"></select></label>
+              <label class="card-day-field"><span>Día límite de pago</span><select id="card-pago"></select></label>
+            </div>
+
+            <div class="budget-section card-preview" id="card-preview"></div>
+          </section>
+
           <!-- ---- Herramientas: Periodo del presupuesto ---- -->
           <section id="panel-fin-herramientas-periodo" hidden>
             <a class="back-link" href="#fin-herramientas"><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</a>
@@ -745,13 +769,13 @@
   <script src="js/auth.js?v=202609232200"></script>
   <script src="js/verses.js?v=202609232200"></script>
   <script src="js/icons.js?v=202609241700"></script>
-  <script src="js/modules.js?v=202609250130"></script>
+  <script src="js/modules.js?v=202609250300"></script>
   <script src="js/main.js?v=202609232200"></script>
   <script src="js/habitos.js?v=202609232200"></script>
   <script src="js/gimnasio.js?v=202609232200"></script>
   <script src="js/running.js?v=202609232200"></script>
   <script src="js/bicicleta.js?v=202609232200"></script>
-  <script src="js/finanzas.js?v=202609250200"></script>
+  <script src="js/finanzas.js?v=202609250300"></script>
   <script src="js/inversiones.js?v=202609232200"></script>
 </body>
 </html>

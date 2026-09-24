@@ -54,6 +54,9 @@ function financeCollection() {
 function budgetConfigDocRef() {
   return db.collection("users").doc(currentUser.uid).collection("meta").doc("config_presupuesto");
 }
+function cardConfigDocRef() {
+  return db.collection("users").doc(currentUser.uid).collection("meta").doc("config_tarjeta");
+}
 function budgetDocRef() {
   return db.collection("users").doc(currentUser.uid).collection("meta").doc("presupuestos");
 }
@@ -278,6 +281,7 @@ function renderStats() {
     <div class="stat-box">
       <div class="value${deuda > 0 ? " value-debt" : ""}">${formatMoney(deuda)}</div>
       <div class="label">Deuda de tarjeta</div>
+      ${cardScheduleHTML(deuda)}
       ${deuda > 0 ? `
         <button type="button" class="link-btn pay-card-link" id="pay-card-toggle">Pagar tarjeta</button>
         <form id="pay-card-form" class="pay-card-form" hidden>
@@ -327,7 +331,24 @@ function dayLabel(dateStr) {
   const y = new Date(); y.setDate(y.getDate() - 1);
   if (dateStr === today) return "Hoy";
   if (dateStr === isoDate(y)) return "Ayer";
-  return capitalize(new Date(dateStr + "T00:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "2-digit", month: "short" }).replace(".", ""));
+  const opts = { weekday: "long", day: "2-digit", month: "short" };
+  if (dateStr.slice(0, 4) !== today.slice(0, 4)) opts.year = "numeric";
+  return capitalize(new Date(dateStr + "T00:00:00").toLocaleDateString("es-ES", opts).replace(".", ""));
+}
+
+// ---- Buscar en la Lista: nota, categoría, sección, forma de pago o monto,
+// en todos los periodos ----
+let txnQuery = "";
+
+function movementMatches(m, q) {
+  const cat = findCategory(m.type, m.category);
+  const group = m.type === "gasto" ? categoryGroupsCache.find(g => (g.items || []).some(i => i.id === m.category)) : null;
+  const pay = findPayment(m.payment);
+  const parts = [m.desc, cat.label, group && group.nombre, pay && pay.label,
+    m.type === "ingreso" ? "ingreso" : m.type === "transferencia" ? `transferencia ${walletLabel(m.from)} ${walletLabel(m.to)}` : m.type === "pago_tarjeta" ? "pago tarjeta" : "gasto"];
+  if (parts.some(t => t && normalizeText(String(t)).includes(q))) return true;
+  const num = q.replace(/\./g, "").replace(",", ".");
+  return /^\d+(\.\d+)?$/.test(num) && String(m.amount).includes(num);
 }
 
 function movementDelta(m) {
@@ -375,20 +396,33 @@ function periodSummary(list) {
 
 function renderMovements() {
   const period = currentBudgetPeriod();
+  const q = normalizeText(txnQuery.trim());
+  const searching = q.length > 0;
   const list = financeCache
-    .filter(m => isInPeriod(m.date, period))
+    .filter(m => searching ? movementMatches(m, q) : isInPeriod(m.date, period))
     .sort(byNewest);
 
   const { ingresos, gastos, saldo } = periodSummary(list);
   const signed = n => `${n < 0 ? "−" : ""}${formatBsShort(Math.abs(n))}`;
+  const count = `${list.length} ${searching ? `resultado${list.length === 1 ? "" : "s"}` : `transacci${list.length === 1 ? "ón" : "ones"}`}`;
 
-  document.getElementById("month-count").textContent = `${list.length} transacci${list.length === 1 ? "ón" : "ones"}`;
-  document.getElementById("finance-summary").innerHTML = `
+  document.getElementById("month-count").textContent = count;
+  document.getElementById("finance-summary").innerHTML = searching ? `
+    <div><strong>${list.length}</strong><span>Resultados</span></div>
+    <div><strong>${formatBsShort(ingresos)}</strong><span>Ingresos</span></div>
+    <div><strong>${formatBsShort(gastos)}</strong><span>Gastos</span></div>
+  ` : `
     <div><strong>${formatBsShort(ingresos)}</strong><span>Ingresos</span></div>
     <div><strong>${formatBsShort(gastos)}</strong><span>Gastos</span></div>
     <div><strong class="${saldo < 0 ? "neg" : ""}">${signed(saldo)}</strong><span>Saldo</span></div>
   `;
-  document.getElementById("finance-empty").style.display = list.length ? "none" : "block";
+  const empty = document.getElementById("finance-empty");
+  empty.textContent = searching
+    ? `No hay transacciones que coincidan con "${txnQuery.trim()}".`
+    : "Aún no hay transacciones en este periodo. Toca + para agregar una.";
+  empty.style.display = list.length ? "none" : "block";
+  document.getElementById("fin-tab-lista").classList.toggle("is-searching", searching);
+  if (currentFinTab() === "lista") document.getElementById("fin-month-nav").hidden = searching;
 
   const groups = [];
   list.forEach(m => {
@@ -450,7 +484,7 @@ function showFinTab(tab) {
   ["vg", "gasto", "lista"].forEach(t => { document.getElementById(`fin-tab-${t}`).hidden = t !== tab; });
   document.getElementById("fin-tab-lista").classList.remove("day-jump");
   document.getElementById("finance-stats").hidden = tab !== "lista";
-  document.getElementById("fin-month-nav").hidden = tab === "vg";
+  document.getElementById("fin-month-nav").hidden = tab === "vg" || (tab === "lista" && txnQuery.trim() !== "");
 }
 document.getElementById("fin-inner-tabs").addEventListener("click", e => {
   const btn = e.target.closest("[data-fin-tab]");
@@ -688,11 +722,26 @@ function vgBudgetHTML(period) {
   const left = base - totalSpent;
   const pct = base > 0 ? Math.min(totalSpent / base, 1) : 0;
   const popular = rows.slice().sort((a, b) => b.planned - a.planned).slice(0, 8);
+  const alerts = rows
+    .map(r => Object.assign({ state: budgetState(r.planned, r.used, r.type) }, r))
+    .filter(r => r.state !== "ok")
+    .sort((a, b) => (b.used / (b.planned || 1)) - (a.used / (a.planned || 1)));
+  const alertsHTML = alerts.length ? `
+    <div class="vg-alerts">
+      ${alerts.map(r => `
+        <button type="button" class="vg-alert ${r.state}" data-cat-detail="${r.cat.id}" data-cat-type="${r.type}">
+          <span class="vg-alert-dot"></span>
+          <span class="vg-alert-text"><strong>${escapeHtml(r.cat.label)}:</strong> ${r.state === "over"
+            ? `te pasaste ${formatBsShort(r.used - r.planned)}`
+            : `te quedan ${formatBsShort(r.planned - r.used)} (${Math.round(r.used / r.planned * 100)} % usado)`}</span>
+        </button>`).join("")}
+    </div>` : "";
   return `
     <a class="vg-budget-head" href="#fin-presupuesto"><h3 class="budget-section-title">Presupuesto</h3><span data-icon="chevronRight"></span></a>
     <div class="vg-label">${left < 0 ? "Sobrepasado" : "Restante para gastar"}</div>
     <div class="vg-big${left < 0 ? " over" : ""}">${formatBsShort(Math.abs(left))}</div>
     <div class="vg-bar"><span style="width:${(pct * 100).toFixed(1)}%"></span></div>
+    ${alertsHTML}
     <div class="vg-label vg-popular-label">Categorías populares</div>
     <div class="vg-popular">${popular.map(r => remainingCatHTML(r.cat, r.planned, r.used, r.type)).join("")}</div>`;
 }
@@ -879,6 +928,17 @@ document.getElementById("fin-tab-gasto").addEventListener("click", e => {
     if (gastoMode !== "ahorro") openCategoryDetail(gastoMode, gastoSelected);
   }
 });
+
+(function wireTxnSearch() {
+  const box = document.getElementById("txn-search");
+  const input = document.getElementById("txn-search-input");
+  const open = () => { box.classList.add("open"); setTimeout(() => input.focus(), 30); };
+  const clear = () => { input.value = ""; txnQuery = ""; box.classList.remove("open"); renderMovements(); };
+  document.getElementById("txn-search-toggle").addEventListener("click", () => box.classList.contains("open") ? clear() : open());
+  document.getElementById("txn-search-clear").addEventListener("click", clear);
+  input.addEventListener("input", () => { txnQuery = input.value; renderMovements(); });
+  input.addEventListener("keydown", e => { if (e.key === "Escape") clear(); });
+})();
 
 // ---- Hoja "Nueva transacción" (como Buddy) ----
 const PAYMENT_ICONS = { efectivo: "salary", debito: "bank", credito: "finance" };
@@ -1378,19 +1438,30 @@ function remainingText(remaining) {
     : `${formatBsShort(-remaining)} sobrepasado`;
 }
 
+// Estado de una categoría de gasto: "over" si se pasó, "warn" desde el 80 %.
+const BUDGET_WARN = 0.8;
+const WARN_COLOR = "#f0a847";
+function budgetState(planned, used, type) {
+  if (type !== "gasto" || planned <= 0) return used > planned && type === "gasto" ? "over" : "ok";
+  if (used > planned) return "over";
+  if (used / planned >= BUDGET_WARN) return "warn";
+  return "ok";
+}
+
 function remainingCatHTML(c, planned, used, type) {
   const remaining = planned - used;
-  const over = remaining < 0;
+  const state = budgetState(planned, used, type);
+  const over = state === "over";
   const pct = planned > 0 ? used / planned : (used > 0 ? 1 : 0);
   const iconHTML = c.emoji ? `<span class="remain-emoji">${c.emoji}</span>` : `<span class="remain-icon" data-icon="${c.icon}"></span>`;
   return `
     <button type="button" class="remain-cat" data-cat-detail="${c.id}" data-cat-type="${type}">
       <div class="remain-ring">
-        ${progressRing(pct, over ? "var(--danger)" : c.color)}
+        ${progressRing(pct, over ? "var(--danger)" : state === "warn" ? WARN_COLOR : c.color)}
         <span class="remain-ring-core" style="background:${c.color}">${iconHTML}</span>
       </div>
       <div class="remain-label">${escapeHtml(c.label)}</div>
-      <div class="remain-amount${over ? " over" : ""}">${remainingText(remaining)}</div>
+      <div class="remain-amount${over ? " over" : state === "warn" ? " warn" : ""}">${remainingText(remaining)}</div>
     </button>
   `;
 }
@@ -2148,6 +2219,91 @@ function appDialog({ title, message = "", input = null, confirmLabel = "Aceptar"
     el.querySelector(".app-dialog-overlay").onclick = () => finish(input === null ? false : null);
   });
 }
+
+// ================= Herramientas: Tarjeta de crédito (corte y pago) =================
+let cardConfig = { corte: null, pago: null }; // días del mes (1-31)
+
+// Fecha con ese día del mes, o el último día si el mes es más corto.
+function dayInMonth(year, month, day) {
+  const last = new Date(year, month + 1, 0).getDate();
+  return new Date(year, month, Math.min(day, last));
+}
+
+function daysBetween(from, to) {
+  const a = new Date(from); a.setHours(0, 0, 0, 0);
+  const b = new Date(to); b.setHours(0, 0, 0, 0);
+  return Math.round((b - a) / 86400000);
+}
+
+// Próxima fecha de corte (hoy incluido) y la fecha límite de pago que le sigue.
+function cardSchedule() {
+  if (!cardConfig.corte) return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  let corte = dayInMonth(today.getFullYear(), today.getMonth(), cardConfig.corte);
+  if (corte < today) corte = dayInMonth(today.getFullYear(), today.getMonth() + 1, cardConfig.corte);
+  let pago = null;
+  if (cardConfig.pago) {
+    pago = dayInMonth(corte.getFullYear(), corte.getMonth(), cardConfig.pago);
+    if (pago <= corte) pago = dayInMonth(corte.getFullYear(), corte.getMonth() + 1, cardConfig.pago);
+  }
+  const prevCorte = dayInMonth(corte.getFullYear(), corte.getMonth() - 1, cardConfig.corte);
+  return { corte, pago, prevCorte, daysToCorte: daysBetween(today, corte), daysToPago: pago ? daysBetween(today, pago) : null };
+}
+
+function shortDate(d) {
+  return d.toLocaleDateString("es-ES", { day: "numeric", month: "short" }).replace(".", "");
+}
+
+function inDays(n) {
+  return n === 0 ? "hoy" : n === 1 ? "mañana" : `en ${n} días`;
+}
+
+// Línea de fechas para el panel de Deuda de tarjeta.
+function cardScheduleHTML(deuda) {
+  const sch = cardSchedule();
+  if (!sch) return `<a class="card-sched-setup" href="#fin-herramientas-tarjeta">Configurar fechas de corte y pago</a>`;
+  const isCorte = sch.daysToCorte === 0;
+  return `
+    <div class="card-sched${isCorte && deuda > 0 ? " alert" : ""}">
+      ${isCorte && deuda > 0
+        ? `<strong>Hoy es tu corte:</strong> paga ${formatBsShort(deuda)}`
+        : `Corte ${inDays(sch.daysToCorte)} · ${shortDate(sch.corte)}`}
+      ${sch.pago ? `<span>Pagar antes del ${shortDate(sch.pago)}</span>` : ""}
+    </div>`;
+}
+
+function renderCardSettings() {
+  const { deuda } = computeTotals(financeCache);
+  const sch = cardSchedule();
+  const since = sch ? isoDate(new Date(sch.prevCorte.getTime() + 86400000)) : null;
+  const cicloGasto = sch ? financeCache
+    .filter(m => m.type === "gasto" && m.payment === "credito" && m.date >= since)
+    .reduce((s, m) => s + m.amount, 0) : 0;
+
+  document.getElementById("card-preview").innerHTML = sch ? `
+    <div class="card-prev-row"><span>Próximo corte</span><strong>${capitalize(shortDate(sch.corte))} · ${inDays(sch.daysToCorte)}</strong></div>
+    ${sch.pago ? `<div class="card-prev-row"><span>Fecha límite de pago</span><strong>${capitalize(shortDate(sch.pago))} · ${inDays(sch.daysToPago)}</strong></div>` : ""}
+    <div class="card-prev-row"><span>Gastado con tarjeta desde el último corte</span><strong>${formatBsShort(cicloGasto)}</strong></div>
+    <div class="card-prev-row"><span>Deuda total hoy</span><strong class="${deuda > 0 ? "neg" : ""}">${formatBsShort(deuda)}</strong></div>
+  ` : `<p class="info-sub">Elige tus fechas y aquí verás cuándo es tu próximo corte y hasta cuándo pagar.</p>`;
+
+  const opts = sel => `<option value="">—</option>` + Array.from({ length: 31 }, (_, i) => i + 1)
+    .map(d => `<option value="${d}"${d === sel ? " selected" : ""}>${d}</option>`).join("");
+  const corteSel = document.getElementById("card-corte");
+  const pagoSel = document.getElementById("card-pago");
+  if (document.activeElement !== corteSel) corteSel.innerHTML = opts(cardConfig.corte);
+  if (document.activeElement !== pagoSel) pagoSel.innerHTML = opts(cardConfig.pago);
+}
+
+["card-corte", "card-pago"].forEach(id => {
+  document.getElementById(id).addEventListener("change", () => {
+    const corte = Number(document.getElementById("card-corte").value) || null;
+    const pago = Number(document.getElementById("card-pago").value) || null;
+    cardConfig = { corte, pago };
+    renderAll();
+    cardConfigDocRef().set({ corte, pago });
+  });
+});
 
 // ================= Herramientas: Periodo del presupuesto =================
 
@@ -2957,6 +3113,7 @@ function renderAll() {
   renderBudgetInfo();
   renderCategoryGroups();
   renderPeriodSettings();
+  renderCardSettings();
   renderWallets();
   updateExportSummary();
 }
@@ -2965,6 +3122,12 @@ function renderAll() {
 onAuthReady(() => {
   financeCollection().onSnapshot(snap => {
     financeCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAll();
+  });
+  cardConfigDocRef().onSnapshot(doc => {
+    const d = doc.exists ? doc.data() : {};
+    const valid = n => (Number(n) >= 1 && Number(n) <= 31 ? Number(n) : null);
+    cardConfig = { corte: valid(d.corte), pago: valid(d.pago) };
     renderAll();
   });
   budgetConfigDocRef().onSnapshot(doc => {

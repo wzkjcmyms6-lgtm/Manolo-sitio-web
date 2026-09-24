@@ -2229,3 +2229,52 @@ body.in-finanzas .topbar-clock { margin-right: 0; }
 .vg-tip-rows { display: flex; gap: 0.9rem; font-size: 0.85rem; font-weight: 600; white-space: nowrap; }
 .vg-tip-rows span { display: flex; align-items: center; gap: 0.35rem; }
 .vg-tip-rows i { width: 8px; height: 8px; border-radius: 50%; }
+
+/* ---------- Buscar en la Lista ---------- */
+.txn-search { display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; margin: -0.3rem 0 0.8rem; }
+.txn-search-toggle, .txn-search-clear {
+  width: 42px; height: 42px; padding: 11px; flex-shrink: 0; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border); color: var(--ink); cursor: pointer;
+}
+.txn-search input, .txn-search-clear { display: none; }
+.txn-search.open { justify-content: stretch; }
+.txn-search.open .txn-search-toggle { display: none; }
+.txn-search.open input {
+  display: block; flex: 1; min-width: 0; height: 46px; padding: 0 1.1rem; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--accent-1); color: var(--ink); font: inherit; font-size: 16px;
+}
+.txn-search.open input:focus { outline: none; }
+.txn-search.open .txn-search-clear { display: block; }
+#fin-tab-lista.is-searching .txn-summary span { font-size: 0.62rem; }
+
+/* ---------- Tarjeta: fechas de corte y pago ---------- */
+.card-sched { margin-top: 0.45rem; font-size: 0.8rem; color: var(--muted); display: flex; flex-direction: column; gap: 0.1rem; }
+.card-sched.alert { color: var(--accent-2); }
+.card-sched strong { color: var(--accent-2); }
+.card-sched-setup { display: inline-block; margin-top: 0.45rem; font-size: 0.8rem; color: var(--muted); }
+.card-days { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin: 1.2rem 0; }
+.card-day-field { display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.85rem; color: var(--muted); }
+.card-day-field select {
+  height: 52px; padding: 0 1rem; border-radius: 14px; background: var(--surface); border: 1px solid var(--border);
+  color: var(--ink); font: inherit; font-size: 1.2rem; font-weight: 700;
+}
+.card-preview { padding-bottom: 0.4rem; }
+.card-prev-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.85rem 0; border-top: 1px solid var(--border); font-size: 0.95rem; }
+.card-prev-row:first-child { border-top: none; }
+.card-prev-row span { color: var(--muted); }
+.card-prev-row strong { text-align: right; white-space: nowrap; }
+.card-prev-row strong.neg { color: var(--danger); }
+
+/* ---------- Avisos de presupuesto ---------- */
+.remain-amount.warn { color: #f0a847; }
+.vg-alerts { display: flex; flex-direction: column; gap: 0.5rem; margin: -0.4rem 0 1.4rem; }
+.vg-alert {
+  display: flex; align-items: center; gap: 0.7rem; width: 100%; padding: 0.75rem 0.9rem; border-radius: 14px;
+  background: rgba(240, 168, 71, 0.12); border: 1px solid rgba(240, 168, 71, 0.35);
+  color: var(--ink); font: inherit; font-size: 0.92rem; text-align: left; cursor: pointer;
+}
+.vg-alert.over { background: rgba(226, 89, 63, 0.12); border-color: rgba(226, 89, 63, 0.4); }
+.vg-alert-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; background: #f0a847; }
+.vg-alert.over .vg-alert-dot { background: var(--danger); }
+.txn-search input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
+.card-sched-setup { text-decoration: none; color: var(--accent-2); }
