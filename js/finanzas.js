@@ -462,6 +462,7 @@ function showFinTab(tab) {
   try { localStorage.setItem(FIN_TAB_KEY, tab); } catch (e) { /* sin almacenamiento */ }
   document.querySelectorAll("[data-fin-tab]").forEach(b => b.classList.toggle("active", b.dataset.finTab === tab));
   ["vg", "gasto", "lista"].forEach(t => { document.getElementById(`fin-tab-${t}`).hidden = t !== tab; });
+  document.getElementById("finance-stats").hidden = tab !== "lista";
 }
 document.getElementById("fin-inner-tabs").addEventListener("click", e => {
   const btn = e.target.closest("[data-fin-tab]");

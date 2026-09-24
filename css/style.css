@@ -2172,3 +2172,15 @@ body.sheet-open { overflow: hidden; }
 .gasto-cat-row.selected .gasto-cat-name { font-weight: 700; }
 .gasto-view { flex: 1 1 auto; font-size: 0.68rem; letter-spacing: 0.08em; padding: 0.7rem 0.4rem; }
 .gasto-views { overflow: hidden; }
+
+/* ---------- Finanzas: barra de arriba con solo la casita ---------- */
+.topbar-home { display: none; }
+body.in-finanzas .topbar .brand,
+body.in-finanzas .topbar .menu-toggle { display: none; }
+body.in-finanzas .topbar-home {
+  display: flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; padding: 9px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border); color: var(--ink);
+}
+body.in-finanzas .topbar-home:active { transform: scale(0.94); }
+#panel-finanzas #finance-stats[hidden] { display: none; }
