@@ -468,17 +468,17 @@ function budgetSectionHTML(title, color, categories, sectionAttr) {
   const planned = categories.filter(c => isPlanned(c.id));
   return `
     <div class="budget-section">
-      <h3 class="budget-section-title">${color ? `<span class="dot" style="background:${color}"></span>` : ""}${escapeHtml(title)}</h3>
+      <h3 class="budget-section-title">${escapeHtml(title)}</h3>
       <div class="budget-section-items">
         ${planned.map(c => `
           <button type="button" class="budget-input-row" data-edit-cat="${c.id}">
             ${catBadgeHTML(c)}
             <span class="budget-input-label">${escapeHtml(c.label)}</span>
-            <span class="budget-row-amount">${formatMoney(budgetsCache[c.id] || 0)}</span>
+            <span class="budget-row-amount">${formatBsShort(budgetsCache[c.id] || 0)}</span>
           </button>
         `).join("")}
         <button type="button" class="budget-add-btn" ${sectionAttr}>
-          <span data-icon="plus"></span>
+          <span class="budget-add-plus" data-icon="plus"></span>
           Añade una categoría
         </button>
       </div>
@@ -505,57 +505,57 @@ function renderBudgetInputs() {
   renderIcons(container);
 }
 
+function formatBsShort(n) {
+  return `Bs ${n.toLocaleString("es-BO", { maximumFractionDigits: 2 })}`;
+}
+
+const BUDGET_FREE_COLOR = "#e8e6e1";
+
 function renderBudgetSummary() {
-  const monthDate = currentMonthDate();
-  const spent = computeSpentByCategory(monthDate);
-
-  // El círculo completo son los ingresos planeados; cada gasto ocupa su parte
-  // y lo que queda sin asignar se ve en gris.
+  // El círculo completo son los ingresos planeados; cada sección de gastos
+  // ocupa su parte y lo que queda libre se ve claro, como en Buddy.
   const totalIncome = (CATEGORIES.ingreso || []).reduce((s, c) => s + (budgetsCache[c.id] || 0), 0);
-  const withBudget = gastoCategoriesCache.filter(c => (budgetsCache[c.id] || 0) > 0);
-  const totalBudget = withBudget.reduce((s, c) => s + budgetsCache[c.id], 0);
+  const sections = categoryGroupsCache
+    .map(g => ({
+      label: g.nombre,
+      color: groupColor(g),
+      amount: (g.items || []).reduce((s, i) => s + (budgetsCache[i.id] || 0), 0)
+    }))
+    .filter(sec => sec.amount > 0)
+    .sort((a, b) => b.amount - a.amount);
+  const totalBudget = sections.reduce((s, sec) => s + sec.amount, 0);
+  const remaining = totalIncome - totalBudget;
 
-  const ringContainer = document.getElementById("budget-summary-ring");
-  const valueContainer = document.getElementById("budget-summary-value");
-  const subContainer = document.getElementById("budget-summary-sub");
-  const breakdownContainer = document.getElementById("budget-breakdown");
+  document.getElementById("budget-summary-value").textContent = formatBsShort(totalBudget);
 
-  valueContainer.textContent = formatMoney(totalBudget);
-
+  const sub = document.getElementById("budget-summary-sub");
+  sub.classList.toggle("over", remaining < 0);
   if (totalIncome === 0 && totalBudget === 0) {
-    ringContainer.innerHTML = donutChart([{ label: "Sin asignar", color: "#4a4944", percentage: 1 }]);
-    breakdownContainer.innerHTML = "";
-    subContainer.textContent = "Agrega tus ingresos y gastos abajo para empezar";
-    return;
+    sub.textContent = "Agrega tus ingresos y gastos abajo para empezar";
+  } else if (remaining >= 0) {
+    sub.innerHTML = `<strong>${formatBsShort(remaining)}</strong> restante en el presupuesto`;
+  } else {
+    sub.innerHTML = `<strong>${formatBsShort(-remaining)}</strong> por encima de tus ingresos`;
   }
 
   const base = Math.max(totalIncome, totalBudget);
-  const unassigned = totalIncome - totalBudget;
-  const segments = withBudget.map(c => ({
-    label: c.label,
-    color: c.color,
-    percentage: budgetsCache[c.id] / base
-  }));
-  if (unassigned > 0) segments.push({ label: "Sin asignar", color: "#4a4944", percentage: unassigned / base, free: true });
+  const segments = base > 0
+    ? sections.map(sec => ({ color: sec.color, percentage: sec.amount / base }))
+    : [];
+  if (remaining > 0) segments.push({ color: BUDGET_FREE_COLOR, percentage: remaining / base });
+  if (!segments.length) segments.push({ color: "#4a4944", percentage: 1 });
+  document.getElementById("budget-summary-ring").innerHTML = donutChart(segments);
 
-  ringContainer.innerHTML = donutChart(segments);
-
-  const pctOfIncome = amount => totalIncome > 0 ? `${Math.round(amount / totalIncome * 100)}%` : "";
-  breakdownContainer.innerHTML = withBudget
-    .slice()
-    .sort((a, b) => budgetsCache[b.id] - budgetsCache[a.id])
-    .map(c => `<div class="breakdown-item"><span class="dot" style="background:${c.color}"></span><span>${escapeHtml(c.label)} ${pctOfIncome(budgetsCache[c.id])}</span></div>`)
-    .concat(unassigned > 0 ? [`<div class="breakdown-item"><span class="dot" style="background:#4a4944"></span><span>Sin asignar ${pctOfIncome(unassigned)}</span></div>`] : [])
-    .join("");
-
-  if (totalIncome === 0) {
-    subContainer.textContent = "Agrega tu salario en Ingresos para ver cuánto te queda";
-  } else if (unassigned >= 0) {
-    subContainer.textContent = `de ${formatMoney(totalIncome)} de ingresos · ${formatMoney(unassigned)} sin asignar`;
-  } else {
-    subContainer.textContent = `Te pasas ${formatMoney(-unassigned)} de tus ingresos (${formatMoney(totalIncome)})`;
-  }
-  subContainer.classList.toggle("over", unassigned < 0);
+  const pct = amount => totalIncome > 0 ? `${Math.round(amount / totalIncome * 100)}%` : "";
+  document.getElementById("budget-breakdown").innerHTML = sections.map(sec => `
+    <div class="breakdown-item">
+      <span class="swatch" style="background:${sec.color}"></span>
+      <span class="breakdown-name">${escapeHtml(sec.label)}</span>
+      <span class="breakdown-pct">${pct(sec.amount)}</span>
+      <span class="breakdown-leader"></span>
+      <span class="breakdown-amount">${formatBsShort(sec.amount)}</span>
+    </div>
+  `).join("");
 }
 
 function renderBudgetInfo() {
