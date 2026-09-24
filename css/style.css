@@ -1853,3 +1853,11 @@ button.remain-cat:active .remain-ring { transform: scale(0.95); }
 .tracker-form .emoji-choice:hover { border-color: var(--accent-1); transform: scale(1.05); }
 .tracker-form .emoji-choice.selected { background: var(--accent-1); border-color: var(--accent-1); transform: scale(1.08); }
 .tracker-form .cat-sub-cancel { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+
+/* Herramientas → Categorías: acciones de cada categoría de ingreso */
+.cat-item-actions { display: flex; align-items: center; gap: 1rem; flex-shrink: 0; }
+.cat-rename-btn {
+  width: 20px; height: 20px; padding: 0; flex-shrink: 0;
+  background: none; border: none; color: var(--muted); cursor: pointer; opacity: 0.85;
+}
+.cat-rename-btn:hover { color: var(--ink); opacity: 1; }

@@ -16,10 +16,13 @@ const CATEGORIES = {
   ]
 };
 
+// Las categorías de ingreso las maneja el usuario (nombre, agregar, eliminar)
+// y se guardan en Firestore. Estas por defecto quedan para mostrar bien
+// movimientos viejos que usen una categoría que ya no está en la lista.
 const DEFAULT_INGRESO_CATEGORIES = CATEGORIES.ingreso.slice();
+CATEGORIES.ingreso = DEFAULT_INGRESO_CATEGORIES.filter(c => c.id !== "otros_ingresos");
 const INGRESO_GROUP_ID = "__ingreso";
 const INGRESO_COLOR = "#5cc98a";
-let customIngresoCache = []; // categorías de ingreso creadas por el usuario
 
 const CARD_PAYMENT_CATEGORY = { id: "pago_tarjeta", label: "Pago de tarjeta", icon: "finance", color: "#ffb84d" };
 
@@ -106,6 +109,11 @@ function flattenCategoryGroups(groups) {
 
 function findCategory(type, id) {
   if (type === "pago_tarjeta" || type === "ajuste_tarjeta") return CARD_PAYMENT_CATEGORY;
+  if (type === "ingreso") {
+    return CATEGORIES.ingreso.find(c => c.id === id)
+      || DEFAULT_INGRESO_CATEGORIES.find(c => c.id === id)
+      || { id, label: "Ingreso", icon: "salary", color: INGRESO_COLOR };
+  }
   const list = type === "gasto" ? gastoCategoriesCache : (CATEGORIES[type] || []);
   return list.find(c => c.id === id) || gastoCategoriesCache.find(c => c.id === "otros") || CATEGORIES.gasto[CATEGORIES.gasto.length - 1];
 }
@@ -1243,12 +1251,14 @@ function colorPickerHTML() {
   ).join("");
 }
 
-function saveIngresoCategories(items) {
-  return ingresoCategoriesDocRef().set({ items });
+function saveIngresoCategories(list) {
+  CATEGORIES.ingreso = list;
+  renderAll();
+  return ingresoCategoriesDocRef().set({ list });
 }
 
 function ingresoGroupHTML() {
-  const custom = new Set(customIngresoCache.map(c => c.id));
+  const canDelete = CATEGORIES.ingreso.length > 1;
   const itemsHTML = CATEGORIES.ingreso.map(item => `
     <div class="list-item cat-item">
       <div style="display:flex; align-items:center; gap:0.7rem;">
@@ -1257,7 +1267,10 @@ function ingresoGroupHTML() {
           : `<span class="cat-icon" style="background:${item.color}22; color:${item.color}" data-icon="${item.icon}"></span>`}
         <strong>${escapeHtml(item.label)}</strong>
       </div>
-      ${custom.has(item.id) ? `<button type="button" class="delete" aria-label="Eliminar categoría" data-delete-cat="${item.id}" data-delete-group="${INGRESO_GROUP_ID}">${ICONS.trash}</button>` : ""}
+      <div class="cat-item-actions">
+        <button type="button" class="cat-rename-btn" aria-label="Cambiar nombre de ${escapeHtml(item.label)}" data-rename-ingreso="${item.id}"><span data-icon="edit"></span></button>
+        ${canDelete ? `<button type="button" class="delete" aria-label="Eliminar categoría" data-delete-cat="${item.id}" data-delete-group="${INGRESO_GROUP_ID}">${ICONS.trash}</button>` : ""}
+      </div>
     </div>
   `).join("");
   return `
@@ -1326,10 +1339,12 @@ function renderCategoryGroups() {
 
 function deleteCategoryItem(groupId, itemId) {
   if (groupId === INGRESO_GROUP_ID) {
-    const item = customIngresoCache.find(i => i.id === itemId);
-    if (!item) return;
+    const item = CATEGORIES.ingreso.find(i => i.id === itemId);
+    if (!item || CATEGORIES.ingreso.length <= 1) return;
     if (!window.confirm(`¿Eliminar la categoría "${item.label}"? Esto no borra los ingresos que ya la usan.`)) return;
-    saveIngresoCategories(customIngresoCache.filter(i => i.id !== itemId));
+    delete budgetsCache[itemId];
+    saveBudgets();
+    saveIngresoCategories(CATEGORIES.ingreso.filter(i => i.id !== itemId));
     return;
   }
   const group = categoryGroupsCache.find(g => g.id === groupId);
@@ -1344,6 +1359,14 @@ function deleteCategoryItem(groupId, itemId) {
 }
 
 document.getElementById("category-groups").addEventListener("click", e => {
+  const renameBtn = e.target.closest("[data-rename-ingreso]");
+  if (renameBtn) {
+    const item = CATEGORIES.ingreso.find(i => i.id === renameBtn.dataset.renameIngreso);
+    const name = item && (prompt("Nuevo nombre:", item.label) || "").trim();
+    if (!name || name === item.label) return;
+    saveIngresoCategories(CATEGORIES.ingreso.map(i => i.id === item.id ? Object.assign({}, i, { label: name }) : i));
+    return;
+  }
   const delBtn = e.target.closest("[data-delete-cat]");
   if (delBtn) { deleteCategoryItem(delBtn.dataset.deleteGroup, delBtn.dataset.deleteCat); return; }
 
@@ -1385,7 +1408,7 @@ document.getElementById("category-groups").addEventListener("submit", e => {
     const base = slugify(label);
     let id = base, suffix = 2;
     while (CATEGORIES.ingreso.some(c => c.id === id) || gastoCategoriesCache.some(c => c.id === id)) id = `${base}_${suffix++}`;
-    saveIngresoCategories(customIngresoCache.concat([{ id, label, icon: "salary", emoji: emojiChoice.dataset.emoji, color: INGRESO_COLOR }]));
+    saveIngresoCategories(CATEGORIES.ingreso.concat([{ id, label, icon: "salary", emoji: emojiChoice.dataset.emoji, color: INGRESO_COLOR }]));
     form.reset();
     form.querySelectorAll(".emoji-choice").forEach(b => b.classList.remove("selected"));
     form.hidden = true;
@@ -2020,8 +2043,13 @@ onAuthReady(() => {
   });
   ingresoCategoriesDocRef().onSnapshot(doc => {
     const data = doc.exists ? doc.data() : null;
-    customIngresoCache = (data && Array.isArray(data.items)) ? data.items : [];
-    CATEGORIES.ingreso = DEFAULT_INGRESO_CATEGORIES.concat(customIngresoCache);
+    if (data && Array.isArray(data.list) && data.list.length) {
+      CATEGORIES.ingreso = data.list;
+    } else {
+      // Formato anterior: solo guardaba las creadas por el usuario.
+      const custom = (data && Array.isArray(data.items)) ? data.items : [];
+      CATEGORIES.ingreso = DEFAULT_INGRESO_CATEGORIES.filter(c => c.id !== "otros_ingresos").concat(custom);
+    }
     const catSel = document.getElementById("finance-category");
     const selectedCat = catSel.value;
     populateCategorySelect(document.getElementById("finance-type").value);
