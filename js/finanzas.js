@@ -425,24 +425,24 @@ function remainingText(remaining) {
     : `${formatBsShort(-remaining)} sobrepasado`;
 }
 
-function remainingCatHTML(c, planned, used) {
+function remainingCatHTML(c, planned, used, type) {
   const remaining = planned - used;
   const over = remaining < 0;
   const pct = planned > 0 ? used / planned : (used > 0 ? 1 : 0);
   const iconHTML = c.emoji ? `<span class="remain-emoji">${c.emoji}</span>` : `<span class="remain-icon" data-icon="${c.icon}"></span>`;
   return `
-    <div class="remain-cat">
+    <button type="button" class="remain-cat" data-cat-detail="${c.id}" data-cat-type="${type}">
       <div class="remain-ring">
         ${progressRing(pct, over ? "var(--danger)" : c.color)}
         <span class="remain-ring-core" style="background:${c.color}">${iconHTML}</span>
       </div>
       <div class="remain-label">${escapeHtml(c.label)}</div>
       <div class="remain-amount${over ? " over" : ""}">${remainingText(remaining)}</div>
-    </div>
+    </button>
   `;
 }
 
-function remainingSectionHTML(title, rows) {
+function remainingSectionHTML(title, rows, type) {
   const remaining = rows.reduce((s, r) => s + r.planned - r.used, 0);
   return `
     <div class="budget-section remain-section">
@@ -450,7 +450,7 @@ function remainingSectionHTML(title, rows) {
         <h3 class="budget-section-title">${escapeHtml(title)}</h3>
         <span class="remain-section-amount${remaining < 0 ? " over" : ""}">${remainingText(remaining)}</span>
       </div>
-      <div class="remain-grid">${rows.map(r => remainingCatHTML(r.cat, r.planned, r.used)).join("")}</div>
+      <div class="remain-grid">${rows.map(r => remainingCatHTML(r.cat, r.planned, r.used, type)).join("")}</div>
     </div>
   `;
 }
@@ -493,14 +493,104 @@ function renderBudgets() {
   `;
 
   const list = document.getElementById("budget-grid");
-  const sectionsHTML = (ingresoRows.length ? [remainingSectionHTML("Ingresos", ingresoRows)] : [])
-    .concat(groupSections.map(sec => remainingSectionHTML(sec.title, sec.rows)));
+  const sectionsHTML = (ingresoRows.length ? [remainingSectionHTML("Ingresos", ingresoRows, "ingreso")] : [])
+    .concat(groupSections.map(sec => remainingSectionHTML(sec.title, sec.rows, "gasto")));
   list.innerHTML = sectionsHTML.length
     ? sectionsHTML.join("")
     : `<p class="remain-empty">Todavía no hay presupuesto para este mes. Agrégalo en Planificación.</p>`;
 
   renderIcons(document.getElementById("budget-tab-restante"));
+  if (catDetail) renderCategoryDetail();
 }
+
+// ---- Detalle de una categoría: sus movimientos del mes ----
+let catDetail = null; // { type, catId }
+
+function openCategoryDetail(type, catId) {
+  catDetail = { type, catId };
+  renderCategoryDetail();
+  document.getElementById("cat-detail-sheet").removeAttribute("hidden");
+}
+
+function closeCategoryDetail() {
+  document.getElementById("cat-detail-sheet").setAttribute("hidden", "");
+  catDetail = null;
+}
+
+function renderCategoryDetail() {
+  const { type, catId } = catDetail;
+  const monthDate = currentMonthDate();
+  const cat = findBudgetCategory(type, catId) || findCategory(type, catId);
+  const movements = financeCache
+    .filter(m => m.type === type && m.category === catId && isInMonth(m.date, monthDate))
+    .sort((a, b) => b.date.localeCompare(a.date) || String(b.id).localeCompare(String(a.id)));
+
+  const planned = budgetsCache[catId] || 0;
+  const used = movements.reduce((s, m) => s + m.amount, 0);
+  const remaining = planned - used;
+  const over = remaining < 0;
+  const pct = planned > 0 ? used / planned : (used > 0 ? 1 : 0);
+  const usedLabel = type === "ingreso" ? "Recibido" : "Gastado";
+
+  document.getElementById("cat-detail-title").textContent = cat.label;
+  document.getElementById("cat-detail-hero").innerHTML = `
+    <div class="remain-ring cat-detail-ring">
+      ${progressRing(pct, over ? "var(--danger)" : cat.color)}
+      <span class="remain-ring-core" style="background:${cat.color}">
+        ${cat.emoji ? `<span class="remain-emoji">${cat.emoji}</span>` : `<span class="remain-icon" data-icon="${cat.icon}"></span>`}
+      </span>
+    </div>
+    <div class="cat-detail-remaining${over ? " over" : ""}">${remainingText(remaining)}</div>
+    <div class="cat-detail-month">${monthLabel(monthDate)}</div>
+    <div class="cat-detail-stats">
+      <div><span>Presupuesto</span><strong>${formatBsShort(planned)}</strong></div>
+      <div><span>${usedLabel}</span><strong>${formatBsShort(used)}</strong></div>
+      <div><span>Movimientos</span><strong>${movements.length}</strong></div>
+    </div>
+  `;
+
+  const list = document.getElementById("cat-detail-list");
+  if (!movements.length) {
+    list.innerHTML = `<p class="cat-detail-empty">No hay movimientos de ${escapeHtml(cat.label)} en ${monthLabel(monthDate).toLowerCase()}.</p>`;
+  } else {
+    let lastDate = null;
+    list.innerHTML = movements.map(m => {
+      let header = "";
+      if (m.date !== lastDate) {
+        lastDate = m.date;
+        const dayLabel = capitalize(new Date(m.date + "T00:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "2-digit", month: "short" }));
+        header = `<div class="day-header"><span>${dayLabel}</span></div>`;
+      }
+      const pay = findPayment(m.payment);
+      const sign = type === "ingreso" ? "+" : "−";
+      return `${header}
+        <div class="txn-item">
+          <span class="txn-icon" style="background:${cat.color}22; color:${cat.color}" data-icon="${cat.icon}"></span>
+          <div class="txn-body">
+            <div class="txn-desc">${escapeHtml(m.desc || cat.label)}</div>
+            <div class="meta">${pay ? escapeHtml(pay.label) : ""}</div>
+          </div>
+          <div class="txn-amount ${type === "ingreso" ? "pos" : "neg"}">${sign}${formatMoney(m.amount)}</div>
+        </div>`;
+    }).join("");
+  }
+  renderIcons(document.getElementById("cat-detail-sheet"));
+}
+
+document.getElementById("budget-grid").addEventListener("click", e => {
+  const btn = e.target.closest("[data-cat-detail]");
+  if (btn) openCategoryDetail(btn.dataset.catType, btn.dataset.catDetail);
+});
+
+document.getElementById("cat-detail-sheet").addEventListener("click", e => {
+  if (e.target.closest("#cat-detail-edit")) {
+    const { type, catId } = catDetail;
+    const cat = findBudgetCategory(type, catId);
+    openBudgetSheet({ type, groupId: cat && cat.groupId, catId });
+    return;
+  }
+  if (e.target.closest(".budget-sheet-close") || e.target.classList.contains("budget-sheet-overlay")) closeCategoryDetail();
+});
 
 // ---- Planificación: secciones con sus categorías (como Buddy) ----
 // Una categoría está "planificada" cuando su id existe en budgetsCache (aunque
