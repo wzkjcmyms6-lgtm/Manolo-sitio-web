@@ -478,6 +478,7 @@ function showFinTab(tab) {
   try { localStorage.setItem(FIN_TAB_KEY, tab); } catch (e) { /* sin almacenamiento */ }
   document.querySelectorAll("[data-fin-tab]").forEach(b => b.classList.toggle("active", b.dataset.finTab === tab));
   ["vg", "gasto", "lista"].forEach(t => { document.getElementById(`fin-tab-${t}`).hidden = t !== tab; });
+  document.getElementById("fin-tab-lista").classList.remove("day-jump");
   document.getElementById("finance-stats").hidden = tab !== "lista";
   document.getElementById("fin-month-nav").hidden = tab === "vg";
 }
@@ -650,13 +651,30 @@ document.getElementById("fin-tab-vg").addEventListener("click", e => {
   const day = e.target.closest("[data-vg-day].has");
   if (day) {
     showFinTab("lista");
-    const target = document.querySelector(`#finance-list [data-day="${day.dataset.vgDay}"]`);
-    if (target) setTimeout(() => target.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    jumpToDay(day.dataset.vgDay);
     return;
   }
   const cat = e.target.closest("[data-cat-detail]");
   if (cat) openCategoryDetail(cat.dataset.catType, cat.dataset.catDetail);
 });
+
+// Lleva la Lista al día elegido: la fecha queda arriba de todo (justo bajo
+// la barra fija) y sus transacciones debajo. Se agrega espacio al final para
+// que también los primeros días del periodo puedan subir hasta arriba.
+function jumpToDay(date) {
+  const target = document.querySelector(`#finance-list [data-day="${date}"]`);
+  if (!target) return;
+  document.getElementById("fin-tab-lista").classList.add("day-jump");
+  const topbar = document.querySelector(".topbar");
+  const offset = (topbar && topbar.offsetHeight) || 0;
+  requestAnimationFrame(() => {
+    const y = target.getBoundingClientRect().top + window.scrollY - offset - 12;
+    window.scrollTo({ top: Math.max(y, 0), behavior: "smooth" });
+    target.classList.remove("day-flash");
+    void target.offsetWidth;
+    target.classList.add("day-flash");
+  });
+}
 
 // ---- Pestaña Gasto (como Buddy): anillo por categoría ----
 const GASTO_MODES = {

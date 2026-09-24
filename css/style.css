@@ -2242,3 +2242,8 @@ body.in-finanzas .topbar-home:active { transform: scale(0.94); }
 .topbar-clock { margin-left: auto; margin-right: 0.8rem; font-size: 0.9rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
 body.in-finanzas .topbar-clock { margin-right: 0; }
 .sidebar-clock { display: block; margin: 0.2rem 0 1rem; font-size: 0.85rem; color: var(--muted); }
+
+/* Saltar a un día desde el calendario */
+#fin-tab-lista.day-jump { padding-bottom: 75vh; }
+@keyframes day-flash { 0%, 60% { background: rgba(255, 122, 48, 0.18); } 100% { background: transparent; } }
+.txn-day.day-flash { animation: day-flash 1.6s ease-out; border-radius: 14px; }
