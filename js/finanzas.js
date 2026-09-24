@@ -1017,8 +1017,8 @@ function chooseSheetCategory() {
     items: sheetCandidates(),
     createLabel: "Crear nueva categoría",
     onPick: pick,
-    onCreate: s.type === "ingreso" || !group ? null : () => {
-      const name = (prompt("Nombre de la nueva categoría:") || "").trim();
+    onCreate: s.type === "ingreso" || !group ? null : async () => {
+      const name = await appDialog({ title: "Nueva categoría", input: "", confirmLabel: "Crear" });
       if (!name) return;
       const id = uniqueId(slugify(name), id => gastoCategoriesCache.some(c => c.id === id) || isPlanned(id));
       const next = categoryGroupsCache.map(g =>
@@ -1071,13 +1071,16 @@ function confirmBudgetSheet() {
 }
 
 // Al quitar la última categoría de una sección, la sección sale del presupuesto.
-function deleteBudgetFromSheet() {
+async function deleteBudgetFromSheet() {
   const s = budgetSheet;
   if (!s.originalCatId) return;
   const cat = findBudgetCategory(s.type, s.originalCatId);
   const group = cat && cat.groupId ? categoryGroupsCache.find(g => g.id === cat.groupId) : null;
   const isLast = group && (group.items || []).filter(i => isPlanned(i.id)).length === 1;
-  if (isLast && !window.confirm(`"${cat.label}" es la última categoría de ${group.nombre}. Si la eliminas, la sección también se quita del presupuesto. Tus movimientos no se borran. ¿Continuar?`)) return;
+  if (isLast) {
+    const ok = await appDialog({ title: `¿Eliminar "${cat.label}"?`, message: `Es la última categoría de ${group.nombre}, así que la sección también se quita del presupuesto. Tus movimientos no se borran.`, confirmLabel: "Eliminar", danger: true });
+    if (!ok) return;
+  }
 
   delete budgetsCache[s.originalCatId];
   if (isLast) visibleBudgetSections.delete(group.id);
@@ -1135,8 +1138,8 @@ function openSectionPicker() {
       renderBudgetInputs();
       openBudgetSheet({ type: "gasto", groupId });
     },
-    onCreate: () => {
-      const nombre = (prompt("Nombre de la nueva sección:") || "").trim();
+    onCreate: async () => {
+      const nombre = await appDialog({ title: "Nueva sección", input: "", confirmLabel: "Crear" });
       if (!nombre) return;
       closePicker();
       const id = uniqueId(slugify(nombre), id => categoryGroupsCache.some(g => g.id === id));
@@ -1184,6 +1187,55 @@ document.getElementById("category-selector-cancel").addEventListener("click", cl
 document.getElementById("category-selector-modal").addEventListener("click", e => {
   if (e.target.classList.contains("category-selector-overlay")) closePicker();
 });
+
+// ---- Diálogo propio (en vez de confirm/prompt del navegador, que algunos
+// navegadores móviles bloquean sin avisar) ----
+function appDialog({ title, message = "", input = null, confirmLabel = "Aceptar", danger = false }) {
+  let el = document.getElementById("app-dialog");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "app-dialog";
+    el.className = "app-dialog";
+    el.innerHTML = `
+      <div class="app-dialog-overlay"></div>
+      <form class="app-dialog-box" role="alertdialog" aria-modal="true" aria-labelledby="app-dialog-title">
+        <h3 id="app-dialog-title"></h3>
+        <p class="app-dialog-msg"></p>
+        <input type="text" class="app-dialog-input" maxlength="40">
+        <div class="app-dialog-actions">
+          <button type="button" class="app-dialog-cancel">Cancelar</button>
+          <button type="submit" class="app-dialog-ok"></button>
+        </div>
+      </form>`;
+    document.body.appendChild(el);
+  }
+  el.querySelector("#app-dialog-title").textContent = title;
+  const msg = el.querySelector(".app-dialog-msg");
+  msg.textContent = message;
+  msg.hidden = !message;
+  const field = el.querySelector(".app-dialog-input");
+  field.hidden = input === null;
+  field.value = input || "";
+  const ok = el.querySelector(".app-dialog-ok");
+  ok.textContent = confirmLabel;
+  ok.classList.toggle("danger", danger);
+  el.hidden = false;
+  if (input !== null) setTimeout(() => { field.focus(); field.select(); }, 30);
+
+  return new Promise(resolve => {
+    const form = el.querySelector("form");
+    const finish = value => {
+      el.hidden = true;
+      form.onsubmit = null;
+      el.querySelector(".app-dialog-cancel").onclick = null;
+      el.querySelector(".app-dialog-overlay").onclick = null;
+      resolve(value);
+    };
+    form.onsubmit = e => { e.preventDefault(); finish(input === null ? true : field.value.trim()); };
+    el.querySelector(".app-dialog-cancel").onclick = () => finish(input === null ? false : null);
+    el.querySelector(".app-dialog-overlay").onclick = () => finish(input === null ? false : null);
+  });
+}
 
 // ================= Herramientas: Periodo del presupuesto =================
 
@@ -1337,11 +1389,12 @@ function renderCategoryGroups() {
   renderIcons(container);
 }
 
-function deleteCategoryItem(groupId, itemId) {
+async function deleteCategoryItem(groupId, itemId) {
   if (groupId === INGRESO_GROUP_ID) {
     const item = CATEGORIES.ingreso.find(i => i.id === itemId);
     if (!item || CATEGORIES.ingreso.length <= 1) return;
-    if (!window.confirm(`¿Eliminar la categoría "${item.label}"? Esto no borra los ingresos que ya la usan.`)) return;
+    const ok = await appDialog({ title: `¿Eliminar "${item.label}"?`, message: "Los ingresos que ya registraste con esta categoría no se borran.", confirmLabel: "Eliminar", danger: true });
+    if (!ok) return;
     delete budgetsCache[itemId];
     saveBudgets();
     saveIngresoCategories(CATEGORIES.ingreso.filter(i => i.id !== itemId));
@@ -1350,7 +1403,12 @@ function deleteCategoryItem(groupId, itemId) {
   const group = categoryGroupsCache.find(g => g.id === groupId);
   const item = group && group.items.find(i => i.id === itemId);
   if (!group || !item) return;
-  if (!window.confirm(`¿Eliminar la categoría "${item.label}"? Esto no borra los gastos que ya la usan.`)) return;
+  const ok = await appDialog({ title: `¿Eliminar "${item.label}"?`, message: "Los gastos que ya registraste con esta categoría no se borran.", confirmLabel: "Eliminar", danger: true });
+  if (!ok) return;
+  if (isPlanned(itemId)) {
+    delete budgetsCache[itemId];
+    saveBudgets();
+  }
 
   const next = categoryGroupsCache
     .map(g => g.id === groupId ? Object.assign({}, g, { items: g.items.filter(i => i.id !== itemId) }) : g)
@@ -1362,9 +1420,11 @@ document.getElementById("category-groups").addEventListener("click", e => {
   const renameBtn = e.target.closest("[data-rename-ingreso]");
   if (renameBtn) {
     const item = CATEGORIES.ingreso.find(i => i.id === renameBtn.dataset.renameIngreso);
-    const name = item && (prompt("Nuevo nombre:", item.label) || "").trim();
-    if (!name || name === item.label) return;
-    saveIngresoCategories(CATEGORIES.ingreso.map(i => i.id === item.id ? Object.assign({}, i, { label: name }) : i));
+    if (!item) return;
+    appDialog({ title: "Cambiar nombre", input: item.label, confirmLabel: "Guardar" }).then(name => {
+      if (!name || name === item.label) return;
+      saveIngresoCategories(CATEGORIES.ingreso.map(i => i.id === item.id ? Object.assign({}, i, { label: name }) : i));
+    });
     return;
   }
   const delBtn = e.target.closest("[data-delete-cat]");
