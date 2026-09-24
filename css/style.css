@@ -2253,6 +2253,7 @@ body.in-finanzas .topbar-clock { margin-right: 0; }
 .card-sched { margin-top: 0.45rem; font-size: 0.8rem; color: var(--muted); display: flex; flex-direction: column; gap: 0.1rem; }
 .card-sched.alert { color: var(--accent-2); }
 .card-sched strong { color: var(--accent-2); }
+.card-sched-days { color: var(--ink); font-weight: 600; font-size: 0.9rem; }
 
 /* ---------- Avisos de presupuesto ---------- */
 .remain-amount.warn { color: #f0a847; }

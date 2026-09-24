@@ -2412,9 +2412,13 @@ function nextCardPayDate() {
 function cardScheduleHTML(deuda) {
   const { date, days } = nextCardPayDate();
   const when = date.toLocaleDateString("es-ES", { day: "numeric", month: "short" }).replace(".", "");
-  if (deuda <= 0) return `<div class="card-sched"><span>Próximo pago: ${when}</span></div>`;
-  if (days === 0) return `<div class="card-sched alert"><strong>Hoy toca pagar la tarjeta: ${formatBsShort(deuda)}</strong></div>`;
-  return `<div class="card-sched"><span>Pagar el ${when} · ${days === 1 ? "mañana" : `en ${days} días`}</span></div>`;
+  if (days === 0) {
+    return deuda > 0
+      ? `<div class="card-sched alert"><strong>Hoy toca pagar la tarjeta: ${formatBsShort(deuda)}</strong></div>`
+      : `<div class="card-sched"><span class="card-sched-days">Hoy es día de pago</span></div>`;
+  }
+  const left = days === 1 ? "Falta 1 día" : `Faltan ${days} días`;
+  return `<div class="card-sched"><span class="card-sched-days">${left}</span><span>Pago: ${when}</span></div>`;
 }
 
 // ================= Herramientas: Periodo del presupuesto =================
