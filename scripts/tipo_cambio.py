@@ -64,6 +64,9 @@ def main():
     except ValueError as err:
         k = max(text.upper().find("CAMBIO"), 0)
         print("No se pudo leer el TCO:", err)
+        home = fetch("https://www.bcb.gob.bo/")
+        links = sorted(set(re.findall(r'href="([^"]*(?:cambio|cotiz|tipo)[^"]*)"', home, re.I)))
+        print("Enlaces con 'cambio/cotiz/tipo' en la portada:", links[:60])
         print("Inicio de la página:", text[:1500])
         print("Fragmento cerca de 'CAMBIO':", text[max(0, k - 500):k + 1500])
         sys.exit(1)
