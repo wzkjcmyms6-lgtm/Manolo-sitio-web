@@ -198,14 +198,21 @@ function currentBudgetPeriod() {
   return budgetPeriodAt(monthOffset);
 }
 
+// Día de inicio en un mes dado; si el mes es más corto (ej: 30 en febrero),
+// empieza el último día de ese mes.
+function periodStartIn(year, month) {
+  const last = new Date(year, month + 1, 0).getDate();
+  return new Date(year, month, Math.min(budgetStartDay, last));
+}
+
 function budgetPeriodAt(offset) {
   const today = new Date();
-  let year = today.getFullYear();
   let month = today.getMonth();
-  if (today.getDate() < budgetStartDay) month--;
+  if (today < periodStartIn(today.getFullYear(), month)) month--;
   month += offset;
-  const start = new Date(year, month, budgetStartDay);
-  const end = new Date(start.getFullYear(), start.getMonth() + 1, budgetStartDay - 1);
+  const start = periodStartIn(today.getFullYear(), month);
+  const next = periodStartIn(start.getFullYear(), start.getMonth() + 1);
+  const end = new Date(next.getFullYear(), next.getMonth(), next.getDate() - 1);
   return { start, end, startISO: isoDate(start), endISO: isoDate(end) };
 }
 
@@ -2067,7 +2074,7 @@ function renderPeriodSettings() {
       <div class="period-preview-sub">${monthOffset === 0 ? `Periodo actual · quedan <strong>${days} día${days === 1 ? "" : "s"}</strong>` : "Periodo seleccionado en Presupuesto"}</div>
     </div>
   `;
-  document.getElementById("period-days").innerHTML = Array.from({ length: 28 }, (_, i) => i + 1).map(d => `
+  document.getElementById("period-days").innerHTML = Array.from({ length: 30 }, (_, i) => i + 1).map(d => `
     <button type="button" class="period-day${d === budgetStartDay ? " selected" : ""}" role="radio" aria-checked="${d === budgetStartDay}" data-start-day="${d}">${d}</button>
   `).join("");
   renderIcons(document.getElementById("period-preview"));
@@ -2979,7 +2986,7 @@ onAuthReady(() => {
   });
   budgetConfigDocRef().onSnapshot(doc => {
     const day = doc.exists ? Number(doc.data().startDay) : 1;
-    budgetStartDay = day >= 1 && day <= 28 ? day : 1;
+    budgetStartDay = day >= 1 && day <= 30 ? day : 1;
     renderAll();
   });
   budgetDocRef().onSnapshot(doc => {
