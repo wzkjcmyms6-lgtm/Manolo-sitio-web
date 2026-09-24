@@ -1809,3 +1809,4 @@ button.budget-input-row:hover { border-color: var(--accent-1); }
   color: var(--ink); font: inherit; font-size: 1.5rem; cursor: pointer;
 }
 .budget-keypad button:active { background: var(--border); }
+.budget-summary-sub.over { color: var(--danger); }

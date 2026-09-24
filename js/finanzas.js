@@ -386,7 +386,7 @@ function donutChart(segments) {
 
     const path = `M ${x1} ${y1} A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${x2} ${y2} L ${ix2} ${iy2} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${ix1} ${iy1} Z`;
 
-    paths.push(`<path d="${path}" fill="${seg.color}" stroke="white" stroke-width="1"/>`);
+    paths.push(`<path d="${path}" style="fill:${seg.color}; stroke:var(--surface); stroke-width:1.5"/>`);
     startAngle = endAngle;
   });
 
@@ -509,44 +509,53 @@ function renderBudgetSummary() {
   const monthDate = currentMonthDate();
   const spent = computeSpentByCategory(monthDate);
 
-  // Get categories with budget and their percentages
+  // El círculo completo son los ingresos planeados; cada gasto ocupa su parte
+  // y lo que queda sin asignar se ve en gris.
+  const totalIncome = (CATEGORIES.ingreso || []).reduce((s, c) => s + (budgetsCache[c.id] || 0), 0);
   const withBudget = gastoCategoriesCache.filter(c => (budgetsCache[c.id] || 0) > 0);
   const totalBudget = withBudget.reduce((s, c) => s + budgetsCache[c.id], 0);
 
   const ringContainer = document.getElementById("budget-summary-ring");
   const valueContainer = document.getElementById("budget-summary-value");
   const subContainer = document.getElementById("budget-summary-sub");
+  const breakdownContainer = document.getElementById("budget-breakdown");
 
-  if (withBudget.length === 0) {
-    ringContainer.innerHTML = "";
-    document.getElementById("budget-breakdown").innerHTML = "";
-    valueContainer.textContent = formatMoney(0);
-    subContainer.textContent = "Agrega montos abajo para empezar";
+  valueContainer.textContent = formatMoney(totalBudget);
+
+  if (totalIncome === 0 && totalBudget === 0) {
+    ringContainer.innerHTML = donutChart([{ label: "Sin asignar", color: "#4a4944", percentage: 1 }]);
+    breakdownContainer.innerHTML = "";
+    subContainer.textContent = "Agrega tus ingresos y gastos abajo para empezar";
     return;
   }
 
-  // Create donut chart segments
+  const base = Math.max(totalIncome, totalBudget);
+  const unassigned = totalIncome - totalBudget;
   const segments = withBudget.map(c => ({
     label: c.label,
     color: c.color,
-    percentage: budgetsCache[c.id] / totalBudget
+    percentage: budgetsCache[c.id] / base
   }));
+  if (unassigned > 0) segments.push({ label: "Sin asignar", color: "#4a4944", percentage: unassigned / base, free: true });
 
   ringContainer.innerHTML = donutChart(segments);
 
-  // Render category breakdown below chart
-  const breakdown = segments
-    .sort((a, b) => b.percentage - a.percentage)
-    .map(seg => `<div class="breakdown-item"><span class="dot" style="background:${seg.color}"></span><span>${seg.label} ${Math.round(seg.percentage * 100)}%</span></div>`)
+  const pctOfIncome = amount => totalIncome > 0 ? `${Math.round(amount / totalIncome * 100)}%` : "";
+  breakdownContainer.innerHTML = withBudget
+    .slice()
+    .sort((a, b) => budgetsCache[b.id] - budgetsCache[a.id])
+    .map(c => `<div class="breakdown-item"><span class="dot" style="background:${c.color}"></span><span>${escapeHtml(c.label)} ${pctOfIncome(budgetsCache[c.id])}</span></div>`)
+    .concat(unassigned > 0 ? [`<div class="breakdown-item"><span class="dot" style="background:#4a4944"></span><span>Sin asignar ${pctOfIncome(unassigned)}</span></div>`] : [])
     .join("");
 
-  document.getElementById("budget-breakdown").innerHTML = breakdown;
-  valueContainer.textContent = formatMoney(totalBudget);
-
-  const totalSpent = withBudget.reduce((s, c) => s + (spent[c.id] || 0), 0);
-  subContainer.textContent = totalBudget > 0
-    ? `${formatMoney(Math.max(totalBudget - totalSpent, 0))} restante este mes`
-    : "Agrega montos abajo para empezar";
+  if (totalIncome === 0) {
+    subContainer.textContent = "Agrega tu salario en Ingresos para ver cuánto te queda";
+  } else if (unassigned >= 0) {
+    subContainer.textContent = `de ${formatMoney(totalIncome)} de ingresos · ${formatMoney(unassigned)} sin asignar`;
+  } else {
+    subContainer.textContent = `Te pasas ${formatMoney(-unassigned)} de tus ingresos (${formatMoney(totalIncome)})`;
+  }
+  subContainer.classList.toggle("over", unassigned < 0);
 }
 
 function renderBudgetInfo() {
