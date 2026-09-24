@@ -136,3 +136,14 @@ function router() {
 
 window.addEventListener("hashchange", router);
 document.addEventListener("DOMContentLoaded", router);
+
+// Fecha y hora arriba (ej: "Mié 24 sept · 13:20"), se actualiza cada minuto.
+function renderClock() {
+  const now = new Date();
+  const day = now.toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" }).replace(/\./g, "").replace(",", "");
+  const time = now.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+  const text = `${day.charAt(0).toUpperCase()}${day.slice(1)} · ${time}`;
+  document.querySelectorAll("[data-clock]").forEach(el => { el.textContent = text; });
+}
+renderClock();
+setTimeout(() => { renderClock(); setInterval(renderClock, 60000); }, (60 - new Date().getSeconds()) * 1000);

@@ -2237,3 +2237,8 @@ body.in-finanzas .topbar-home:active { transform: scale(0.94); }
 .vg-popular .remain-cat { flex: 0 0 31%; scroll-snap-align: start; }
 .vg-link { display: inline-block; margin-top: 0.4rem; color: var(--accent-1); font-weight: 600; text-decoration: none; }
 .vg-chart-plot { position: relative; }
+
+/* Fecha y hora en la barra de arriba */
+.topbar-clock { margin-left: auto; margin-right: 0.8rem; font-size: 0.9rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
+body.in-finanzas .topbar-clock { margin-right: 0; }
+.sidebar-clock { display: block; margin: 0.2rem 0 1rem; font-size: 0.85rem; color: var(--muted); }
