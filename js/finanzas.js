@@ -2151,6 +2151,26 @@ document.querySelector("#panel-fin-herramientas-carteras-detalle .back-link").ad
 // Cada cartera guarda su historial en un lugar distinto (Gastos/Tarjeta en
 // "finanzas", Ahorro en "ahorros", las personalizadas en
 // "carteras_movimientos"), así que acá se unifican en una sola forma.
+// Para un movimiento de Ahorro o de una cartera propia que vino de una
+// transferencia, muestra lo que pasó del otro lado (ej: cuántos Bs salieron
+// para comprar esos US$) y el tipo de cambio si las monedas son distintas.
+function transferCounterpart(walletId, entryId) {
+  const t = financeCache.find(m => m.type === "transferencia" && (m.links || []).some(l => l.id === entryId));
+  if (!t) return null;
+  const received = t.amountTo != null ? t.amountTo : t.amount;
+  const incoming = t.to === walletId;
+  const otherId = incoming ? t.from : t.to;
+  const otherAmount = incoming ? t.amount : received;
+  const text = formatWalletAmount(otherId, otherAmount);
+  let rate = "";
+  const [bs, usd] = walletCurrency(t.from) === "US$" ? [received, t.amount] : [t.amount, received];
+  if (walletCurrency(t.from) !== walletCurrency(t.to) && usd > 0) {
+    rate = `1 US$ = Bs ${(bs / usd).toLocaleString("es-BO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+  const title = (incoming ? `Desde ${walletLabel(t.from)}` : `Hacia ${walletLabel(t.to)}`) + (t.desc ? ` · ${t.desc}` : "");
+  return { title, sub: incoming ? `Pusiste ${text}` : `Llegaron ${text}`, rate };
+}
+
 function walletMovementsFor(walletId) {
   if (walletId === "gastos") {
     return financeCache
@@ -2177,24 +2197,32 @@ function walletMovementsFor(walletId) {
         onDelete: () => m.type === "transferencia" ? deleteTransfer(m) : deleteMovement(m.id)
       }));
   } else if (walletId === "ahorro") {
-    return ahorrosCache.map(a => ({
-      id: a.id, date: a.date, desc: a.notes || "Ahorro",
+    return ahorrosCache.map(a => {
+      const cp = transferCounterpart("ahorro", a.id);
+      return {
+      id: a.id, date: a.date, desc: cp ? cp.title : (a.notes || "Ahorro"),
       icon: "wallet", color: "#5cc98a",
       amount: a.amount,
-      meta: "",
+      meta: cp ? cp.rate : "",
+      subAmount: cp ? cp.sub : "",
       usd: true,
       onDelete: () => ahorrosCollection().doc(a.id).delete()
-    }));
+      };
+    });
   } else {
     const w = carterasCustomCache.find(x => x.id === walletId);
-    return carterasMovCache.filter(m => m.carteraId === walletId).map(m => ({
-      id: m.id, date: m.fecha, desc: m.nota || "Movimiento",
+    return carterasMovCache.filter(m => m.carteraId === walletId).map(m => {
+      const cp = transferCounterpart(walletId, m.id);
+      return {
+      id: m.id, date: m.fecha, desc: cp ? cp.title : (m.nota || "Movimiento"),
       icon: "wallet", color: "#9b6bde",
       amount: m.monto,
-      meta: "",
+      meta: cp ? cp.rate : "",
+      subAmount: cp ? cp.sub : "",
       usd: !!w && w.moneda === "US$",
       onDelete: () => carterasMovimientosCollection().doc(m.id).delete()
-    }));
+      };
+    });
   }
 }
 
@@ -2254,10 +2282,13 @@ function renderWalletDetail() {
     item.innerHTML = `
       <span class="txn-icon" style="background:${m.color}22; color:${m.color}" data-icon="${m.icon}"></span>
       <div class="txn-body">
-        <div class="txn-desc">${m.desc}</div>
+        <div class="txn-desc">${escapeHtml(m.desc)}</div>
         <div class="meta">${dateLabel}${m.meta ? " · " + m.meta : ""}</div>
       </div>
-      <div class="txn-amount ${amountClass}">${sign}${amountText}</div>
+      <div class="txn-amount-col">
+        <div class="txn-amount ${amountClass}">${sign}${amountText}</div>
+        ${m.subAmount ? `<div class="txn-sub-amount">${escapeHtml(m.subAmount)}</div>` : ""}
+      </div>
     `;
     const del = document.createElement("button");
     del.className = "delete";
