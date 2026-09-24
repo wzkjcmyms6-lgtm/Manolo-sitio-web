@@ -28,6 +28,7 @@ const SUB_PANELS = [
   { hash: "fin-herramientas-carteras-detalle", parent: "fin-herramientas-carteras" },
   { hash: "fin-herramientas-categorias", parent: "fin-herramientas" },
   { hash: "fin-herramientas-periodo", parent: "fin-herramientas" },
+  { hash: "fin-herramientas-reiva", parent: "fin-herramientas" },
   { hash: "fin-herramientas-exportar", parent: "fin-herramientas" }
 ];
 

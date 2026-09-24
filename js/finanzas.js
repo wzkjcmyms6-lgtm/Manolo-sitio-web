@@ -439,7 +439,7 @@ function renderMovements() {
           const cat = findCategory(m.type, m.category);
           const pay = findPayment(m.payment);
           let title = m.desc || cat.label;
-          let sub = [m.desc ? cat.label : "", m.payment === "credito" ? (pay ? pay.label : "") : "", m.excluded ? "Excluido del presupuesto" : ""].filter(Boolean).join(" · ");
+          let sub = [m.desc ? cat.label : "", m.payment === "credito" ? (pay ? pay.label : "") : "", m.type === "gasto" && m.factura ? "Con factura" : "", m.excluded ? "Excluido del presupuesto" : ""].filter(Boolean).join(" · ");
           if (m.type === "transferencia") {
             const route = `${walletLabel(m.from)} → ${walletLabel(m.to)}`;
             title = m.desc || route;
@@ -1067,13 +1067,13 @@ function openTxnSheet(movement) {
     ? {
         id: movement.id, type: movement.type, category: movement.category, payment: movement.payment || "efectivo",
         amount: toStr(movement.amount), desc: movement.desc || "", date: movement.date,
-        excluded: !!movement.excluded, keypad: false,
+        excluded: !!movement.excluded, factura: !!movement.factura, keypad: false,
         from: cashWallet(movement.from || "debito"), to: cashWallet(movement.to || "ahorro"),
         amountTo: movement.amountTo != null ? toStr(movement.amountTo) : "",
         rate: movement.tipoCambio ? toStr(movement.tipoCambio) : "", rateTouched: true,
         readonly: movement.type === "transferencia", movement
       }
-    : { id: null, type: "gasto", category: defaultCategory("gasto"), payment: "efectivo", amount: "0", desc: "", date: isoDate(new Date()), excluded: false, keypad: true, from: "debito", to: "ahorro", amountTo: "", rate: "", rateTouched: false, readonly: false };
+    : { id: null, type: "gasto", category: defaultCategory("gasto"), payment: "efectivo", amount: "0", desc: "", date: isoDate(new Date()), excluded: false, factura: false, keypad: true, from: "debito", to: "ahorro", amountTo: "", rate: "", rateTouched: false, readonly: false };
   renderTxnSheet();
   showSheet(document.getElementById("txn-sheet"));
 }
@@ -1149,6 +1149,8 @@ function renderTxnSheet() {
   const excl = document.getElementById("txn-sheet-excluded");
   excl.checked = t.excluded;
   document.getElementById("txn-sheet-excluded-row").hidden = !editable || isTransfer;
+  document.getElementById("txn-sheet-factura").checked = !!t.factura;
+  document.getElementById("txn-sheet-factura-row").hidden = !editable || isTransfer || t.type !== "gasto";
   document.getElementById("txn-sheet-prev-day").disabled = !!t.readonly;
   document.getElementById("txn-sheet-date-input").disabled = !!t.readonly;
   if (t.readonly) document.getElementById("txn-sheet-next-day").disabled = true;
@@ -1395,7 +1397,7 @@ async function saveTxn() {
     await createTransfer(payload);
     return;
   }
-  const data = { date: t.date, type: t.type, category: t.category, payment: t.payment, desc: t.desc.trim(), amount, excluded: t.excluded };
+  const data = { date: t.date, type: t.type, category: t.category, payment: t.payment, desc: t.desc.trim(), amount, excluded: t.excluded, factura: t.type === "gasto" && !!t.factura };
   closeTxnSheet();
   if (t.id) await financeCollection().doc(t.id).update(data);
   else await financeCollection().add(Object.assign({ createdAt: Date.now() }, data));
@@ -1490,6 +1492,9 @@ document.getElementById("txn-sheet-amount-to").addEventListener("focus", () => {
 });
 document.getElementById("txn-sheet-excluded").addEventListener("change", e => {
   if (txnSheet) txnSheet.excluded = e.target.checked;
+});
+document.getElementById("txn-sheet-factura").addEventListener("change", e => {
+  if (txnSheet) txnSheet.factura = e.target.checked;
 });
 
 document.getElementById("month-prev").addEventListener("click", () => { monthOffset--; renderAll(); });
@@ -2478,6 +2483,52 @@ function cardScheduleHTML(deuda) {
   return `<div class="card-sched"><span class="card-sched-days">${left}</span><span>Pago: ${when}</span></div>`;
 }
 
+// ================= Herramientas: RE-IVA =================
+// Cada compra marcada "con factura" suma el 5 % de su monto al mes
+// calendario (1 al 30/31) en que se hizo, sin importar el periodo del
+// presupuesto.
+const REIVA_RATE = 0.05;
+const MONTH_NAMES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+function renderReiva() {
+  const byMonth = {};
+  financeCache
+    .filter(m => m.type === "gasto" && m.factura && m.date)
+    .forEach(m => { (byMonth[m.date.slice(0, 7)] = byMonth[m.date.slice(0, 7)] || []).push(m); });
+  const thisMonth = isoDate(new Date()).slice(0, 7);
+  const thisYear = thisMonth.slice(0, 4);
+  const months = Object.keys(byMonth).sort().reverse();
+  const el = document.getElementById("reiva-list");
+  if (!months.length) {
+    el.innerHTML = `<p class="empty-state">Todavía no marcaste compras con factura. Al registrar un gasto, activa <strong>Compra con factura</strong> y aparecerá aquí.</p>`;
+    return;
+  }
+  el.innerHTML = months.map(key => {
+    const items = byMonth[key].slice().sort(byNewest);
+    const total = items.reduce((s, m) => s + m.amount, 0);
+    const [y, mo] = key.split("-");
+    const name = `${MONTH_NAMES[Number(mo) - 1]}${y !== thisYear ? " " + y : ""}`;
+    return `
+      <details class="reiva-month${key === thisMonth ? " current" : ""}">
+        <summary>
+          <div class="reiva-month-main">
+            <span class="reiva-month-name">${name}${key === thisMonth ? `<span class="reiva-badge">En curso</span>` : ""}</span>
+            <span class="reiva-month-sub">${items.length} factura${items.length === 1 ? "" : "s"} · ${formatMoney(total)} en compras</span>
+          </div>
+          <span class="reiva-month-amount">${formatMoney(total * REIVA_RATE)}</span>
+        </summary>
+        <div class="reiva-items">
+          ${items.map(m => `
+            <div class="reiva-item">
+              <span class="reiva-item-date">${Number(m.date.slice(8, 10))}</span>
+              <span class="reiva-item-desc">${escapeHtml(m.desc || findCategory("gasto", m.category).label)}</span>
+              <span class="reiva-item-amount">${formatMoney(m.amount)}<small>${formatMoney(m.amount * REIVA_RATE)}</small></span>
+            </div>`).join("")}
+        </div>
+      </details>`;
+  }).join("");
+}
+
 // ================= Herramientas: Periodo del presupuesto =================
 
 function renderPeriodSettings() {
@@ -3240,12 +3291,12 @@ document.getElementById("export-form").addEventListener("submit", e => {
     .filter(m => m.date >= from && m.date <= to)
     .sort((a, b) => a.date.localeCompare(b.date));
 
-  const header = ["Fecha", "Tipo", "Categoría", "Medio de pago", "Descripción", "Monto (Bs)"];
+  const header = ["Fecha", "Tipo", "Categoría", "Medio de pago", "Descripción", "Monto (Bs)", "Factura"];
   const lines = [header.map(csvEscape).join(",")];
   rows.forEach(m => {
     const cat = findCategory(m.type, m.category);
     const pay = findPayment(m.payment);
-    lines.push([m.date, m.type, cat.label, pay ? pay.label : "", m.desc || "", m.amount.toFixed(2)]
+    lines.push([m.date, m.type, cat.label, pay ? pay.label : "", m.desc || "", m.amount.toFixed(2), m.factura ? "Sí" : ""]
       .map(csvEscape).join(","));
   });
 
@@ -3287,7 +3338,7 @@ document.querySelectorAll("[data-budget-tab]").forEach(btn => {
 const RENDERERS = [
   renderStats, updateMonthLabel, renderMovements, renderGasto, renderVistaGeneral,
   updateBudgetMonthLabel, renderBudgets, renderBudgetInputs, renderBudgetSummary, renderBudgetInfo,
-  renderCategoryGroups, renderPeriodSettings, renderWallets, updateExportSummary
+  renderCategoryGroups, renderPeriodSettings, renderWallets, updateExportSummary, renderReiva
 ];
 function renderAll() {
   RENDERERS.forEach(fn => {

@@ -2315,3 +2315,25 @@ body.in-finanzas .topbar-clock { margin-right: 0; }
 .undo-toast.show .undo-toast-bar { animation: undo-countdown 6s linear forwards; }
 @keyframes undo-countdown { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 .stat-box .value.value-neg { white-space: nowrap; font-size: min(1.45rem, 5.8vw); background: none; -webkit-text-fill-color: initial; color: var(--danger); }
+
+/* ---------- Herramientas: RE-IVA ---------- */
+.txn-toggle-hint { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; color: var(--muted); margin-left: 0.35rem; }
+#reiva-list { display: flex; flex-direction: column; gap: 0.7rem; margin-top: 1rem; }
+.reiva-month { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
+.reiva-month.current { border-color: rgba(255, 184, 77, 0.45); }
+.reiva-month summary {
+  display: flex; align-items: center; gap: 0.8rem; padding: 1rem 1.1rem; cursor: pointer; list-style: none;
+}
+.reiva-month summary::-webkit-details-marker { display: none; }
+.reiva-month-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.reiva-month-name { font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+.reiva-badge { white-space: nowrap; flex-shrink: 0; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #0a0a0a; background: var(--accent-2); border-radius: 999px; padding: 0.15rem 0.5rem; }
+.reiva-month-sub { font-size: 0.82rem; color: var(--muted); }
+.reiva-month-amount { font-size: 1.25rem; font-weight: 700; color: #5cc98a; white-space: nowrap; }
+.reiva-items { border-top: 1px solid var(--border); padding: 0.4rem 1.1rem 0.8rem; }
+.reiva-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.55rem 0; border-bottom: 1px dashed var(--border); font-size: 0.9rem; }
+.reiva-item:last-child { border-bottom: none; }
+.reiva-item-date { width: 1.8rem; text-align: center; color: var(--muted); font-weight: 600; }
+.reiva-item-desc { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reiva-item-amount { text-align: right; white-space: nowrap; display: flex; flex-direction: column; }
+.reiva-item-amount small { color: #5cc98a; font-size: 0.78rem; }

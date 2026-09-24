@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=202609251100">
+  <link rel="stylesheet" href="css/style.css?v=202609251200">
 </head>
 <body>
   <div id="login-screen" class="login-screen">
@@ -418,6 +418,11 @@
                     <span class="txn-toggle-label">Excluir del presupuesto</span>
                     <input type="checkbox" id="txn-sheet-excluded" class="switch">
                   </label>
+                  <label class="budget-sheet-row txn-toggle-row txn-extra" id="txn-sheet-factura-row">
+                    <span class="txn-row-icon" data-icon="receipt"></span>
+                    <span class="txn-toggle-label">Compra con factura <small class="txn-toggle-hint">RE-IVA</small></span>
+                    <input type="checkbox" id="txn-sheet-factura" class="switch">
+                  </label>
                 </div>
 
                 <div class="txn-keypad-wrap">
@@ -526,6 +531,11 @@
                 <h3>Periodo del presupuesto</h3>
                 <p>Elige el día en que empieza tu mes de presupuesto.</p>
               </a>
+              <a class="tool-card" href="#fin-herramientas-reiva">
+                <span class="icon" data-icon="receipt"></span>
+                <h3>RE-IVA</h3>
+                <p>El 5 % de tus compras con factura, mes a mes.</p>
+              </a>
               <a class="tool-card" href="#fin-herramientas-exportar">
                 <span class="icon" data-icon="download"></span>
                 <h3>Exportar datos</h3>
@@ -620,6 +630,13 @@
 
             <h3 class="period-heading">Empieza el día</h3>
             <div class="period-days" id="period-days" role="radiogroup" aria-label="Día de inicio del periodo"></div>
+          </section>
+
+          <section id="panel-fin-herramientas-reiva" hidden>
+            <a class="back-link" href="#fin-herramientas"><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</a>
+            <h1 class="page-title">RE-IVA</h1>
+            <p class="panel-sub">Cada compra que marques <strong>con factura</strong> suma el 5 % de su monto al mes calendario en que la hiciste (del 1 al 30 o 31).</p>
+            <div id="reiva-list"></div>
           </section>
 
           <section id="panel-fin-herramientas-exportar" hidden>
@@ -755,14 +772,14 @@
   <script src="js/firebase-init.js?v=202609241200"></script>
   <script src="js/auth.js?v=202609232200"></script>
   <script src="js/verses.js?v=202609232200"></script>
-  <script src="js/icons.js?v=202609241700"></script>
-  <script src="js/modules.js?v=202609250500"></script>
+  <script src="js/icons.js?v=202609251200"></script>
+  <script src="js/modules.js?v=202609251200"></script>
   <script src="js/main.js?v=202609232200"></script>
   <script src="js/habitos.js?v=202609232200"></script>
   <script src="js/gimnasio.js?v=202609232200"></script>
   <script src="js/running.js?v=202609232200"></script>
   <script src="js/bicicleta.js?v=202609232200"></script>
-  <script src="js/finanzas.js?v=202609251100"></script>
+  <script src="js/finanzas.js?v=202609251200"></script>
   <script src="js/inversiones.js?v=202609232200"></script>
 </body>
 </html>
