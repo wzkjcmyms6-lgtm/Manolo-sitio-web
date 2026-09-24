@@ -536,6 +536,10 @@ function vgChartHTML(period) {
     ? days.map((_, i) => previous.reduce((s, arr) => s + arr[Math.min(i, arr.length - 1)], 0) / previous.length)
     : null;
 
+  const byDay = {};
+  financeCache.filter(m => m.type === "gasto" && isInPeriod(m.date, period))
+    .forEach(m => { byDay[m.date] = (byDay[m.date] || 0) + m.amount; });
+
   const W = 320, H = 170, padX = 6, top = 14, bottom = 150;
   const maxY = Math.max(current[current.length - 1] || 0, media ? media[n - 1] : 0, 1) * 1.08;
   const x = i => padX + (n > 1 ? (i / (n - 1)) * (W - padX * 2) : 0);
@@ -545,6 +549,12 @@ function vgChartHTML(period) {
   const last = curPts[curPts.length - 1];
   const area = `${linePath} L ${last[0].toFixed(1)} ${bottom} L ${curPts[0][0].toFixed(1)} ${bottom} Z`;
   const mediaPath = media ? smoothPath(media.map((v, i) => [x(i), y(v)])) : "";
+  vgChartData = {
+    days, byDay, current, media,
+    xPct: days.map((_, i) => x(i) / W * 100),
+    yCur: current.map(v => y(v) / (H + 18) * 100),
+    yMedia: media ? media.map(v => y(v) / (H + 18) * 100) : null
+  };
   const ticks = days.map((d, i) => ({ i, label: Number(d.slice(8)) })).filter(t => t.i % 5 === 0 || t.i === n - 1)
     .filter((t, idx, arr) => !(t.i === n - 1 && idx > 0 && n - 1 - arr[idx - 1].i < 3));
 
@@ -562,10 +572,99 @@ function vgChartHTML(period) {
       <path d="${linePath}" fill="none" style="stroke:#ff7a30" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
     </svg>
     <span class="vg-chart-dot" style="left:${(last[0] / W * 100).toFixed(2)}%; top:${(last[1] / (H + 18) * 100).toFixed(2)}%"></span>
+    <span class="vg-scrub-line" hidden></span>
+    <span class="vg-scrub-dot" hidden></span>
+    <span class="vg-scrub-dot media" hidden></span>
+    <button type="button" class="vg-tooltip" hidden></button>
     </div>
     <div class="vg-chart-ticks">${ticks.map(t => `<span style="left:${(x(t.i) / W * 100).toFixed(2)}%">${t.label}</span>`).join("")}</div>
     <div class="vg-legend"><span><i style="background:#ff7a30"></i>Este periodo</span>${media ? `<span><i style="background:#77756f"></i>Media</span>` : ""}</div>`;
 }
+
+// ---- Deslizar por el gráfico: línea vertical + recuadro con el día ----
+let vgChartData = null;
+let vgScrubDay = null;
+
+function showVgScrub(i) {
+  const d = vgChartData;
+  const plot = document.querySelector("#vg-chart .vg-chart-plot");
+  if (!d || !plot) return;
+  i = Math.max(0, Math.min(d.days.length - 1, i));
+  const date = d.days[i];
+  vgScrubDay = date;
+  const left = d.xPct[i];
+  const line = plot.querySelector(".vg-scrub-line");
+  line.hidden = false;
+  line.style.left = `${left}%`;
+
+  const [dot, mediaDot] = plot.querySelectorAll(".vg-scrub-dot");
+  const hasCur = i < d.current.length;
+  dot.hidden = !hasCur;
+  if (hasCur) { dot.style.left = `${left}%`; dot.style.top = `${d.yCur[i]}%`; }
+  mediaDot.hidden = !d.yMedia;
+  if (d.yMedia) { mediaDot.style.left = `${left}%`; mediaDot.style.top = `${d.yMedia[i]}%`; }
+
+  const label = capitalize(new Date(date + "T00:00:00").toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" }).replace(/\./g, ""));
+  const tip = plot.querySelector(".vg-tooltip");
+  tip.innerHTML = `
+    <span class="vg-tip-date">${label}<span class="vg-tip-chev" data-icon="chevronRight"></span></span>
+    <span class="vg-tip-value">${formatBsShort(d.byDay[date] || 0)}</span>
+    <span class="vg-tip-rows">
+      <span><i style="background:#ff7a30"></i>${hasCur ? formatBsShort(Math.round(d.current[i])) : "—"}</span>
+      ${d.media ? `<span><i style="background:#77756f"></i>${formatBsShort(Math.round(d.media[i]))}</span>` : ""}
+    </span>`;
+  renderIcons(tip);
+  tip.hidden = false;
+  // Centrado sobre la línea, sin salirse del gráfico.
+  const w = plot.clientWidth, tw = tip.offsetWidth;
+  const px = Math.max(0, Math.min(w - tw, left / 100 * w - tw / 2));
+  tip.style.left = `${px}px`;
+}
+
+function hideVgScrub() {
+  vgScrubDay = null;
+  document.querySelectorAll("#vg-chart .vg-scrub-line, #vg-chart .vg-scrub-dot, #vg-chart .vg-tooltip").forEach(el => { el.hidden = true; });
+}
+
+(function wireVgScrub() {
+  const host = document.getElementById("vg-chart");
+  let dragging = false;
+  const indexAt = e => {
+    const svg = host.querySelector(".vg-chart");
+    const d = vgChartData;
+    if (!svg || !d) return null;
+    const r = svg.getBoundingClientRect();
+    const pct = (e.clientX - r.left) / r.width * 100;
+    let best = 0;
+    d.xPct.forEach((p, i) => { if (Math.abs(p - pct) < Math.abs(d.xPct[best] - pct)) best = i; });
+    return best;
+  };
+  host.addEventListener("pointerdown", e => {
+    if (e.target.closest(".vg-tooltip")) return;
+    if (!e.target.closest(".vg-chart-plot")) return;
+    dragging = true;
+    const i = indexAt(e);
+    if (i != null) showVgScrub(i);
+  });
+  host.addEventListener("pointermove", e => {
+    if (!dragging) return;
+    const i = indexAt(e);
+    if (i != null) showVgScrub(i);
+  });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(evt => host.addEventListener(evt, () => { dragging = false; }));
+  host.addEventListener("click", e => {
+    if (e.target.closest(".vg-tooltip") && vgScrubDay) {
+      const date = vgScrubDay;
+      if (!financeCache.some(m => m.date === date)) return;
+      showFinTab("lista");
+      jumpToDay(date);
+    }
+  });
+  // Tocar fuera del gráfico cierra el recuadro.
+  document.addEventListener("pointerdown", e => {
+    if (vgScrubDay && !e.target.closest("#vg-chart")) hideVgScrub();
+  });
+})();
 
 function vgCalendarHTML(period) {
   const days = periodDays(period);

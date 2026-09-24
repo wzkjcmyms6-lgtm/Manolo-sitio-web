@@ -2247,3 +2247,22 @@ body.in-finanzas .topbar-clock { margin-right: 0; }
 #fin-tab-lista.day-jump { padding-bottom: 75vh; }
 @keyframes day-flash { 0%, 60% { background: rgba(255, 122, 48, 0.18); } 100% { background: transparent; } }
 .txn-day.day-flash { animation: day-flash 1.6s ease-out; border-radius: 14px; }
+
+/* Deslizar por el gráfico de Vista General */
+.vg-chart-plot { touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: crosshair; }
+.vg-scrub-line { position: absolute; top: 4%; bottom: 10%; width: 2px; margin-left: -1px; background: rgba(255, 122, 48, 0.7); pointer-events: none; }
+.vg-scrub-dot { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: #ff7a30; border: 2px solid var(--surface); transform: translate(-50%, -50%); pointer-events: none; }
+.vg-scrub-dot.media { background: #77756f; }
+.vg-scrub-line[hidden], .vg-scrub-dot[hidden], .vg-tooltip[hidden] { display: none; }
+.vg-tooltip {
+  position: absolute; top: -6px; z-index: 2; display: flex; flex-direction: column; gap: 0.15rem;
+  padding: 0.7rem 0.9rem; min-width: 150px; border-radius: 16px; border: 1px solid var(--border);
+  background: #0f0f0f; color: var(--ink); font: inherit; text-align: left; cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+.vg-tip-date { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; font-size: 0.85rem; color: var(--muted); }
+.vg-tip-chev { width: 16px; height: 16px; }
+.vg-tip-value { font-size: 1.3rem; font-weight: 700; }
+.vg-tip-rows { display: flex; gap: 0.9rem; font-size: 0.85rem; font-weight: 600; white-space: nowrap; }
+.vg-tip-rows span { display: flex; align-items: center; gap: 0.35rem; }
+.vg-tip-rows i { width: 8px; height: 8px; border-radius: 50%; }
