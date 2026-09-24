@@ -16,6 +16,11 @@ const CATEGORIES = {
   ]
 };
 
+const DEFAULT_INGRESO_CATEGORIES = CATEGORIES.ingreso.slice();
+const INGRESO_GROUP_ID = "__ingreso";
+const INGRESO_COLOR = "#5cc98a";
+let customIngresoCache = []; // categorías de ingreso creadas por el usuario
+
 const CARD_PAYMENT_CATEGORY = { id: "pago_tarjeta", label: "Pago de tarjeta", icon: "finance", color: "#ffb84d" };
 
 const CATEGORY_COLOR_POOL = ["#4d9de0", "#9b6bde", "#3fb8af", "#e0567c", "#dbb84a", "#5cc98a", "#c96bde", "#e0894d", "#4dc9e0", "#9ae05c"];
@@ -68,6 +73,9 @@ function budgetDocRef() {
 }
 function categoriasDocRef() {
   return db.collection("users").doc(currentUser.uid).collection("meta").doc("categorias_gasto");
+}
+function ingresoCategoriesDocRef() {
+  return db.collection("users").doc(currentUser.uid).collection("meta").doc("categorias_ingreso");
 }
 function customCategoriesDocRef() {
   return db.collection("users").doc(currentUser.uid).collection("meta").doc("categorias_personalizadas");
@@ -1235,9 +1243,46 @@ function colorPickerHTML() {
   ).join("");
 }
 
+function saveIngresoCategories(items) {
+  return ingresoCategoriesDocRef().set({ items });
+}
+
+function ingresoGroupHTML() {
+  const custom = new Set(customIngresoCache.map(c => c.id));
+  const itemsHTML = CATEGORIES.ingreso.map(item => `
+    <div class="list-item cat-item">
+      <div style="display:flex; align-items:center; gap:0.7rem;">
+        ${item.emoji
+          ? `<span class="cat-emoji" style="background:${item.color}; color:#fff;">${item.emoji}</span>`
+          : `<span class="cat-icon" style="background:${item.color}22; color:${item.color}" data-icon="${item.icon}"></span>`}
+        <strong>${escapeHtml(item.label)}</strong>
+      </div>
+      ${custom.has(item.id) ? `<button type="button" class="delete" aria-label="Eliminar categoría" data-delete-cat="${item.id}" data-delete-group="${INGRESO_GROUP_ID}">${ICONS.trash}</button>` : ""}
+    </div>
+  `).join("");
+  return `
+    <div class="cat-group">
+      <div class="cat-group-header">
+        <div style="display:flex; align-items:center; gap:0.6rem;">
+          <div class="cat-color-line" style="background:${INGRESO_COLOR};"></div>
+          <h3>Ingresos</h3>
+        </div>
+        <button type="button" class="cat-add-btn" data-add-sub="${INGRESO_GROUP_ID}" aria-label="Agregar categoría de ingreso">${ICONS.plus}</button>
+      </div>
+      <div class="cat-group-items">${itemsHTML}</div>
+      <form class="tracker-form cat-subcategory-form" data-group-id="${INGRESO_GROUP_ID}" data-color="${INGRESO_COLOR}" hidden>
+        <input type="text" class="cat-sub-name" placeholder="Nombre (ej: Bonos, Alquiler cobrado)" required>
+        <div class="emoji-picker" style="margin-top:0.8rem;">${emojiPickerHTML()}</div>
+        <button type="submit">Agregar</button>
+        <button type="button" class="link-btn cat-sub-cancel">Cancelar</button>
+      </form>
+    </div>
+  `;
+}
+
 function renderCategoryGroups() {
   const container = document.getElementById("category-groups");
-  container.innerHTML = categoryGroupsCache.map((g, gi) => {
+  container.innerHTML = ingresoGroupHTML() + categoryGroupsCache.map((g, gi) => {
     const color = g.color || CATEGORY_COLOR_POOL[gi % CATEGORY_COLOR_POOL.length];
     const itemsHTML = g.items.map(item => {
       const displayEmoji = item.emoji;
@@ -1280,6 +1325,13 @@ function renderCategoryGroups() {
 }
 
 function deleteCategoryItem(groupId, itemId) {
+  if (groupId === INGRESO_GROUP_ID) {
+    const item = customIngresoCache.find(i => i.id === itemId);
+    if (!item) return;
+    if (!window.confirm(`¿Eliminar la categoría "${item.label}"? Esto no borra los ingresos que ya la usan.`)) return;
+    saveIngresoCategories(customIngresoCache.filter(i => i.id !== itemId));
+    return;
+  }
   const group = categoryGroupsCache.find(g => g.id === groupId);
   const item = group && group.items.find(i => i.id === itemId);
   if (!group || !item) return;
@@ -1328,6 +1380,17 @@ document.getElementById("category-groups").addEventListener("submit", e => {
   const label = form.querySelector(".cat-sub-name").value.trim();
   const emojiChoice = form.querySelector(".emoji-choice.selected");
   if (!label || !emojiChoice) return;
+
+  if (groupId === INGRESO_GROUP_ID) {
+    const base = slugify(label);
+    let id = base, suffix = 2;
+    while (CATEGORIES.ingreso.some(c => c.id === id) || gastoCategoriesCache.some(c => c.id === id)) id = `${base}_${suffix++}`;
+    saveIngresoCategories(customIngresoCache.concat([{ id, label, icon: "salary", emoji: emojiChoice.dataset.emoji, color: INGRESO_COLOR }]));
+    form.reset();
+    form.querySelectorAll(".emoji-choice").forEach(b => b.classList.remove("selected"));
+    form.hidden = true;
+    return;
+  }
 
   const base = slugify(label);
   let id = base, suffix = 2;
@@ -1953,6 +2016,16 @@ onAuthReady(() => {
       categoriasDocRef().set({ groups: DEFAULT_CATEGORY_GROUPS });
     }
     updateGastoCategoriesCache();
+    renderAll();
+  });
+  ingresoCategoriesDocRef().onSnapshot(doc => {
+    const data = doc.exists ? doc.data() : null;
+    customIngresoCache = (data && Array.isArray(data.items)) ? data.items : [];
+    CATEGORIES.ingreso = DEFAULT_INGRESO_CATEGORIES.concat(customIngresoCache);
+    const catSel = document.getElementById("finance-category");
+    const selectedCat = catSel.value;
+    populateCategorySelect(document.getElementById("finance-type").value);
+    if ([...catSel.options].some(o => o.value === selectedCat)) catSel.value = selectedCat;
     renderAll();
   });
   customCategoriesDocRef().onSnapshot(doc => {
