@@ -200,6 +200,15 @@ function currentBudgetPeriod() {
   return { start, end, startISO: isoDate(start), endISO: isoDate(end) };
 }
 
+// Más reciente primero: por fecha y, dentro del mismo día, por la hora en que
+// se registró (createdAt). Los movimientos viejos no tienen hora guardada y
+// quedan debajo de los nuevos de ese día.
+function byNewest(a, b) {
+  return b.date.localeCompare(a.date)
+    || (b.createdAt || 0) - (a.createdAt || 0)
+    || String(b.id).localeCompare(String(a.id));
+}
+
 function isInPeriod(dateStr, period) {
   return dateStr >= period.startISO && dateStr <= period.endISO;
 }
@@ -290,6 +299,7 @@ function renderStats() {
       const source = document.getElementById("pay-card-source").value;
       if (!amount || amount <= 0) return;
       financeCollection().add({
+        createdAt: Date.now(),
         date: new Date().toISOString().slice(0, 10),
         type: "pago_tarjeta",
         category: "pago_tarjeta",
@@ -337,7 +347,7 @@ function renderMovements() {
   const period = currentBudgetPeriod();
   const list = financeCache
     .filter(m => isInPeriod(m.date, period))
-    .sort((a, b) => b.date.localeCompare(a.date) || String(b.id).localeCompare(String(a.id)));
+    .sort(byNewest);
 
   const ingresos = list.filter(m => m.type === "ingreso").reduce((s, m) => s + m.amount, 0);
   const gastos = list.filter(m => m.type === "gasto").reduce((s, m) => s + m.amount, 0);
@@ -729,7 +739,7 @@ async function saveTxn() {
   const data = { date: t.date, type: t.type, category: t.category, payment: t.payment, desc: t.desc.trim(), amount, excluded: t.excluded };
   closeTxnSheet();
   if (t.id) await financeCollection().doc(t.id).update(data);
-  else await financeCollection().add(data);
+  else await financeCollection().add(Object.assign({ createdAt: Date.now() }, data));
 }
 
 async function deleteTxnFromSheet() {
@@ -993,7 +1003,7 @@ function renderCategoryDetail() {
   const cat = findBudgetCategory(type, catId) || findCategory(type, catId);
   const movements = financeCache
     .filter(m => m.type === type && m.category === catId && !m.excluded && isInPeriod(m.date, period))
-    .sort((a, b) => b.date.localeCompare(a.date) || String(b.id).localeCompare(String(a.id)));
+    .sort(byNewest);
 
   const planned = budgetsCache[catId] || 0;
   const used = movements.reduce((s, m) => s + m.amount, 0);
@@ -2015,16 +2025,16 @@ async function createTransfer({ from, to, amount, amountTo, desc, date }) {
   const side = async (walletId, monto, nota) => {
     if (walletId === "gastos" || walletId === "tarjeta") return;
     if (walletId === "ahorro") {
-      const ref = await ahorrosCollection().add({ date, amount: monto, notes: nota });
+      const ref = await ahorrosCollection().add({ date, amount: monto, notes: nota, createdAt: Date.now() });
       links.push({ kind: "ahorro", id: ref.id });
     } else {
-      const ref = await carterasMovimientosCollection().add({ carteraId: walletId, fecha: date, monto, nota });
+      const ref = await carterasMovimientosCollection().add({ carteraId: walletId, fecha: date, monto, nota, createdAt: Date.now() });
       links.push({ kind: "cartera", id: ref.id });
     }
   };
   await side(from, -amount, `Transferencia a ${walletLabel(to)}${suffix}`);
   await side(to, amountTo, `Transferencia desde ${walletLabel(from)}${suffix}`);
-  return financeCollection().add({ date, type: "transferencia", category: "transferencia", from, to, amount, amountTo, desc: desc || "", links });
+  return financeCollection().add({ date, type: "transferencia", category: "transferencia", from, to, amount, amountTo, desc: desc || "", links, createdAt: Date.now() });
 }
 
 function deleteTransfer(m) {
@@ -2184,7 +2194,7 @@ function walletMovementsFor(walletId) {
       .filter(m => m.type === "ingreso" || (m.type === "gasto" && m.payment !== "credito") || m.type === "pago_tarjeta"
         || (m.type === "transferencia" && (m.from === "gastos" || m.to === "gastos")))
       .map(m => ({
-        id: m.id, date: m.date, desc: m.desc || findCategory(m.type, m.category).label,
+        id: m.id, date: m.date, createdAt: m.createdAt, desc: m.desc || findCategory(m.type, m.category).label,
         icon: findCategory(m.type, m.category).icon, color: findCategory(m.type, m.category).color,
         amount: m.type === "transferencia" ? movementDelta(m) : m.type === "ingreso" ? m.amount : -m.amount,
         meta: m.type === "transferencia" ? `${walletLabel(m.from)} → ${walletLabel(m.to)}` : findPayment(m.payment) ? findPayment(m.payment).label : "",
@@ -2196,7 +2206,7 @@ function walletMovementsFor(walletId) {
       .filter(m => (m.type === "gasto" && m.payment === "credito") || m.type === "pago_tarjeta" || m.type === "ajuste_tarjeta"
         || (m.type === "transferencia" && m.to === "tarjeta"))
       .map(m => ({
-        id: m.id, date: m.date, desc: m.desc || findCategory(m.type, m.category).label,
+        id: m.id, date: m.date, createdAt: m.createdAt, desc: m.desc || findCategory(m.type, m.category).label,
         icon: findCategory(m.type, m.category).icon, color: findCategory(m.type, m.category).color,
         amount: m.type === "gasto" ? -m.amount : m.type === "transferencia" ? (m.amountTo != null ? m.amountTo : m.amount) : m.amount,
         meta: m.type === "transferencia" ? `Desde ${walletLabel(m.from)}` : "",
@@ -2207,7 +2217,7 @@ function walletMovementsFor(walletId) {
     return ahorrosCache.map(a => {
       const cp = transferCounterpart("ahorro", a.id);
       return {
-      id: a.id, date: a.date, desc: cp ? cp.title : (a.notes || "Ahorro"),
+      id: a.id, date: a.date, createdAt: a.createdAt, desc: cp ? cp.title : (a.notes || "Ahorro"),
       icon: "wallet", color: "#5cc98a",
       amount: a.amount,
       meta: cp ? cp.rate : "",
@@ -2221,7 +2231,7 @@ function walletMovementsFor(walletId) {
     return carterasMovCache.filter(m => m.carteraId === walletId).map(m => {
       const cp = transferCounterpart(walletId, m.id);
       return {
-      id: m.id, date: m.fecha, desc: cp ? cp.title : (m.nota || "Movimiento"),
+      id: m.id, date: m.fecha, createdAt: m.createdAt, desc: cp ? cp.title : (m.nota || "Movimiento"),
       icon: "wallet", color: "#9b6bde",
       amount: m.monto,
       meta: cp ? cp.rate : "",
@@ -2268,7 +2278,7 @@ function renderWalletDetail() {
   renderIcons(document.querySelector(".wallet-detail-hero"));
 
   const list = walletMovementsFor(selectedWalletId)
-    .sort((a, b) => b.date.localeCompare(a.date) || String(b.id).localeCompare(String(a.id)))
+    .sort(byNewest)
     .slice(0, 20);
 
   const container = document.getElementById("wallet-detail-list");
