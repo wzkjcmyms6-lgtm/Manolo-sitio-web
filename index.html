@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=202609241700">
+  <link rel="stylesheet" href="css/style.css?v=202609241810">
 </head>
 <body>
   <div id="login-screen" class="login-screen">
@@ -325,20 +325,35 @@
                 </div>
                 <div class="budget-sheet-hero">
                   <button type="button" class="txn-amount-btn" id="txn-sheet-amount-btn" aria-label="Editar monto">
-                    <span class="budget-sheet-amount"><span class="cur">Bs</span><span id="txn-sheet-amount">0</span></span>
+                    <span class="budget-sheet-amount"><span class="cur" id="txn-sheet-currency">Bs</span><span id="txn-sheet-amount">0</span></span>
                   </button>
                   <div class="budget-sheet-type">
                     <button type="button" data-txn-type="gasto">Gasto</button>
                     <button type="button" data-txn-type="ingreso">Ingresos</button>
+                    <button type="button" data-txn-type="transferencia">Transferencia</button>
                   </div>
                 </div>
 
                 <div class="txn-sheet-fields">
-                  <button type="button" class="budget-sheet-row" id="txn-sheet-cat">
+                  <button type="button" class="budget-sheet-row txn-only-transfer" id="txn-sheet-from">
+                    <span id="txn-sheet-from-badge" class="txn-icon"></span>
+                    <span>Desde: <strong id="txn-sheet-from-label"></strong></span>
+                  </button>
+                  <button type="button" class="budget-sheet-row txn-only-transfer" id="txn-sheet-to">
+                    <span id="txn-sheet-to-badge" class="txn-icon"></span>
+                    <span>A la cartera: <strong id="txn-sheet-to-label"></strong></span>
+                  </button>
+                  <label class="budget-sheet-row txn-only-transfer txn-amount-to-row" id="txn-sheet-amount-to-row" hidden>
+                    <span class="txn-row-icon" data-icon="transfer"></span>
+                    <span class="txn-amount-to-label">Llega</span>
+                    <span class="txn-amount-to-cur" id="txn-sheet-amount-to-cur">US$</span>
+                    <input type="text" id="txn-sheet-amount-to" inputmode="decimal" placeholder="0" autocomplete="off">
+                  </label>
+                  <button type="button" class="budget-sheet-row txn-no-transfer" id="txn-sheet-cat">
                     <span id="txn-sheet-cat-badge" class="txn-icon"></span>
                     <span>Categoría: <strong id="txn-sheet-cat-label"></strong></span>
                   </button>
-                  <button type="button" class="budget-sheet-row" id="txn-sheet-pay">
+                  <button type="button" class="budget-sheet-row txn-no-transfer" id="txn-sheet-pay">
                     <span id="txn-sheet-pay-badge" class="txn-icon"></span>
                     <span><span id="txn-sheet-pay-prefix">Desde:</span> <strong id="txn-sheet-pay-label"></strong></span>
                   </button>
@@ -716,7 +731,7 @@
   <script src="js/gimnasio.js?v=202609232200"></script>
   <script src="js/running.js?v=202609232200"></script>
   <script src="js/bicicleta.js?v=202609232200"></script>
-  <script src="js/finanzas.js?v=202609241700"></script>
+  <script src="js/finanzas.js?v=202609241810"></script>
   <script src="js/inversiones.js?v=202609232200"></script>
 </body>
 </html>

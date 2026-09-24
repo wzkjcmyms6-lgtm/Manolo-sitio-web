@@ -24,6 +24,7 @@ CATEGORIES.ingreso = DEFAULT_INGRESO_CATEGORIES.filter(c => c.id !== "otros_ingr
 const INGRESO_GROUP_ID = "__ingreso";
 const INGRESO_COLOR = "#5cc98a";
 
+const TRANSFER_CATEGORY = { id: "transferencia", label: "Transferencia", icon: "transfer", color: "#4dc9e0" };
 const CARD_PAYMENT_CATEGORY = { id: "pago_tarjeta", label: "Pago de tarjeta", icon: "finance", color: "#ffb84d" };
 
 const CATEGORY_COLOR_POOL = ["#4d9de0", "#9b6bde", "#3fb8af", "#e0567c", "#dbb84a", "#5cc98a", "#c96bde", "#e0894d", "#4dc9e0", "#9ae05c"];
@@ -109,6 +110,7 @@ function flattenCategoryGroups(groups) {
 
 function findCategory(type, id) {
   if (type === "pago_tarjeta" || type === "ajuste_tarjeta") return CARD_PAYMENT_CATEGORY;
+  if (type === "transferencia") return TRANSFER_CATEGORY;
   if (type === "ingreso") {
     return CATEGORIES.ingreso.find(c => c.id === id)
       || DEFAULT_INGRESO_CATEGORIES.find(c => c.id === id)
@@ -233,6 +235,14 @@ function computeTotals(list) {
     } else if (m.type === "pago_tarjeta") {
       saldo -= m.amount;
       deuda -= m.amount;
+    } else if (m.type === "transferencia") {
+      // Una transferencia solo mueve plata entre carteras: nunca cuenta como
+      // gasto ni ingreso. Acá solo importa si toca "Yo" o la tarjeta; el lado
+      // de Ahorro o de una cartera propia se guarda en su propia colección.
+      const received = m.amountTo != null ? m.amountTo : m.amount;
+      if (m.from === "gastos") saldo -= m.amount;
+      if (m.to === "gastos") saldo += received;
+      if (m.to === "tarjeta") deuda -= received;
     } else if (m.type === "ajuste_tarjeta") {
       // Pago de la tarjeta hecho con plata de otra cartera (Ahorro, etc.):
       // solo baja la deuda, no toca el saldo de Gastos (esa plata no salió
@@ -309,6 +319,11 @@ function movementDelta(m) {
   // ajuste_tarjeta no mueve plata de Gastos (viene de otra cartera).
   if (m.type === "ingreso") return m.amount;
   if (m.type === "ajuste_tarjeta") return 0;
+  if (m.type === "transferencia") {
+    if (m.from === "gastos") return -m.amount;
+    if (m.to === "gastos") return m.amountTo != null ? m.amountTo : m.amount;
+    return 0;
+  }
   return -m.amount;
 }
 
@@ -353,13 +368,18 @@ function renderMovements() {
         ${g.items.map(m => {
           const cat = findCategory(m.type, m.category);
           const pay = findPayment(m.payment);
-          const title = m.desc || cat.label;
-          const sub = [m.desc ? cat.label : "", m.payment === "credito" ? (pay ? pay.label : "") : "", m.excluded ? "Excluido del presupuesto" : ""].filter(Boolean).join(" · ");
-          const isTransfer = m.type === "pago_tarjeta" || m.type === "ajuste_tarjeta";
+          let title = m.desc || cat.label;
+          let sub = [m.desc ? cat.label : "", m.payment === "credito" ? (pay ? pay.label : "") : "", m.excluded ? "Excluido del presupuesto" : ""].filter(Boolean).join(" · ");
+          if (m.type === "transferencia") {
+            const route = `${walletLabel(m.from)} → ${walletLabel(m.to)}`;
+            title = m.desc || route;
+            sub = m.desc ? route : "Transferencia";
+          }
+          const isTransfer = m.type === "pago_tarjeta" || m.type === "ajuste_tarjeta" || m.type === "transferencia";
           const amount = m.type === "ingreso"
             ? `<span class="txn-amount pos">+${formatBsShort(m.amount)}</span>`
             : isTransfer
-              ? `<span class="txn-amount muted">(${formatBsShort(m.amount)})</span>`
+              ? `<span class="txn-amount muted">(${formatWalletAmount(m.type === "transferencia" ? m.from : "gastos", m.amount)})</span>`
               : `<span class="txn-amount">${formatBsShort(m.amount)}</span>`;
           return `
             <button type="button" class="txn-row" data-edit-txn="${m.id}">
@@ -392,13 +412,17 @@ function defaultCategory(type) {
 }
 
 function openTxnSheet(movement) {
+  const toStr = n => String(n).replace(".", ",");
   txnSheet = movement
     ? {
         id: movement.id, type: movement.type, category: movement.category, payment: movement.payment || "efectivo",
-        amount: String(movement.amount).replace(".", ","), desc: movement.desc || "", date: movement.date,
-        excluded: !!movement.excluded, keypad: false
+        amount: toStr(movement.amount), desc: movement.desc || "", date: movement.date,
+        excluded: !!movement.excluded, keypad: false,
+        from: movement.from || "gastos", to: movement.to || "ahorro",
+        amountTo: movement.amountTo != null ? toStr(movement.amountTo) : "",
+        readonly: movement.type === "transferencia", movement
       }
-    : { id: null, type: "gasto", category: defaultCategory("gasto"), payment: "efectivo", amount: "0", desc: "", date: isoDate(new Date()), excluded: false, keypad: true };
+    : { id: null, type: "gasto", category: defaultCategory("gasto"), payment: "efectivo", amount: "0", desc: "", date: isoDate(new Date()), excluded: false, keypad: true, from: "gastos", to: "ahorro", amountTo: "", readonly: false };
   renderTxnSheet();
   showSheet(document.getElementById("txn-sheet"));
 }
@@ -410,13 +434,35 @@ function closeTxnSheet() {
 
 function renderTxnSheet() {
   const t = txnSheet;
-  const editable = t.type === "gasto" || t.type === "ingreso";
-  document.getElementById("txn-sheet-title").textContent = t.id ? "Editar transacción" : "Nueva transacción";
+  const isTransfer = t.type === "transferencia";
+  const editable = t.type === "gasto" || t.type === "ingreso" || (isTransfer && !t.readonly);
+  const sheet = document.getElementById("txn-sheet");
+  sheet.classList.toggle("is-transfer", isTransfer);
+  sheet.classList.toggle("is-readonly", !!t.readonly);
+  document.getElementById("txn-sheet-title").textContent = t.readonly ? "Transferencia" : t.id ? "Editar transacción" : "Nueva transacción";
   document.getElementById("txn-sheet-amount").textContent = formatSheetAmount(t.amount);
+  document.getElementById("txn-sheet-currency").textContent = isTransfer ? walletCurrency(t.from) : "Bs";
   document.querySelectorAll("#txn-sheet [data-txn-type]").forEach(b => {
     b.classList.toggle("active", b.dataset.txnType === t.type);
-    b.hidden = !editable;
+    b.hidden = !editable || (t.id && b.dataset.txnType === "transferencia");
   });
+
+  const walletRow = (key, id) => {
+    const v = walletVisual(id);
+    document.getElementById(`txn-sheet-${key}-badge`).outerHTML = `<span id="txn-sheet-${key}-badge" class="txn-icon txn-icon-solid" style="background:${v.color}" data-icon="${v.icon}"></span>`;
+    document.getElementById(`txn-sheet-${key}-label`).textContent = walletLabel(id);
+    document.getElementById(`txn-sheet-${key}`).disabled = !!t.readonly;
+  };
+  walletRow("from", t.from);
+  walletRow("to", t.to);
+  const needsAmountTo = isTransfer && walletCurrency(t.from) !== walletCurrency(t.to);
+  document.getElementById("txn-sheet-amount-to-row").hidden = !needsAmountTo;
+  document.getElementById("txn-sheet-amount-to-cur").textContent = walletCurrency(t.to);
+  const amountToInput = document.getElementById("txn-sheet-amount-to");
+  if (amountToInput.value !== t.amountTo) amountToInput.value = t.amountTo;
+  amountToInput.disabled = !!t.readonly;
+  document.getElementById("txn-sheet-note").disabled = !!t.readonly;
+  document.getElementById("txn-sheet-save").hidden = !!t.readonly;
 
   const cat = findCategory(t.type, t.category);
   document.getElementById("txn-sheet-cat-badge").outerHTML = txnIconHTML(cat).replace('<span class="txn-icon', '<span id="txn-sheet-cat-badge" class="txn-icon');
@@ -436,14 +482,18 @@ function renderTxnSheet() {
 
   const excl = document.getElementById("txn-sheet-excluded");
   excl.checked = t.excluded;
-  document.getElementById("txn-sheet-excluded-row").hidden = !editable;
+  document.getElementById("txn-sheet-excluded-row").hidden = !editable || isTransfer;
+  document.getElementById("txn-sheet-prev-day").disabled = !!t.readonly;
+  document.getElementById("txn-sheet-date-input").disabled = !!t.readonly;
+  if (t.readonly) document.getElementById("txn-sheet-next-day").disabled = true;
 
   document.getElementById("txn-sheet-delete").hidden = !t.id;
-  document.getElementById("txn-sheet").classList.toggle("keypad-open", t.keypad);
+  document.getElementById("txn-sheet").classList.toggle("keypad-open", t.keypad && !t.readonly);
   renderIcons(document.getElementById("txn-sheet"));
 }
 
 function pressTxnKey(key) {
+  if (txnSheet.readonly) return;
   txnSheet.amount = applyAmountKey(txnSheet.amount, key);
   document.getElementById("txn-sheet-amount").textContent = formatSheetAmount(txnSheet.amount);
 }
@@ -624,6 +674,25 @@ function chooseTxnPayment() {
   });
 }
 
+function chooseTxnWallet(side) {
+  const t = txnSheet;
+  const other = side === "from" ? t.to : t.from;
+  const wallets = ledgerWallets().filter(w => (side === "to" || !w.soloDestino) && w.id !== other);
+  openPicker({
+    title: side === "from" ? "¿Desde qué cartera?" : "¿A qué cartera?",
+    items: wallets.map(w => {
+      const v = walletVisual(w.id);
+      return { id: w.id, label: `${walletLabel(w.id)} (${w.moneda})`, icon: v.icon, color: v.color };
+    }),
+    onPick: id => {
+      closePicker();
+      t[side] = id;
+      if (walletCurrency(t.from) === walletCurrency(t.to)) t.amountTo = "";
+      renderTxnSheet();
+    }
+  });
+}
+
 async function saveTxn() {
   const t = txnSheet;
   const amount = parseFloat(t.amount.replace(",", ".")) || 0;
@@ -634,6 +703,22 @@ async function saveTxn() {
     setTimeout(() => document.getElementById("txn-sheet-amount").classList.remove("shake"), 400);
     return;
   }
+  if (t.type === "transferencia") {
+    let amountTo = amount;
+    if (walletCurrency(t.from) !== walletCurrency(t.to)) {
+      amountTo = parseFloat((t.amountTo || "").replace(",", ".")) || 0;
+      if (amountTo <= 0) {
+        t.keypad = false;
+        renderTxnSheet();
+        document.getElementById("txn-sheet-amount-to").focus();
+        return;
+      }
+    }
+    const payload = { from: t.from, to: t.to, amount, amountTo, desc: t.desc.trim(), date: t.date };
+    closeTxnSheet();
+    await createTransfer(payload);
+    return;
+  }
   const data = { date: t.date, type: t.type, category: t.category, payment: t.payment, desc: t.desc.trim(), amount, excluded: t.excluded };
   closeTxnSheet();
   if (t.id) await financeCollection().doc(t.id).update(data);
@@ -642,10 +727,11 @@ async function saveTxn() {
 
 async function deleteTxnFromSheet() {
   const t = txnSheet;
-  const ok = await appDialog({ title: "¿Eliminar esta transacción?", message: "Esta acción no se puede deshacer.", confirmLabel: "Eliminar", danger: true });
+  const ok = await appDialog({ title: t.type === "transferencia" ? "¿Eliminar esta transferencia?" : "¿Eliminar esta transacción?", message: t.type === "transferencia" ? "Se revierte en las dos carteras. Esta acción no se puede deshacer." : "Esta acción no se puede deshacer.", confirmLabel: "Eliminar", danger: true });
   if (!ok) return;
   closeTxnSheet();
-  deleteMovement(t.id);
+  if (t.type === "transferencia") deleteTransfer(t.movement);
+  else deleteMovement(t.id);
 }
 
 document.getElementById("txn-add").addEventListener("click", () => openTxnSheet(null));
@@ -665,16 +751,18 @@ document.getElementById("txn-sheet").addEventListener("click", e => {
   if (typeBtn) {
     if (typeBtn.dataset.txnType !== txnSheet.type) {
       txnSheet.type = typeBtn.dataset.txnType;
-      txnSheet.category = defaultCategory(txnSheet.type);
+      if (txnSheet.type !== "transferencia") txnSheet.category = defaultCategory(txnSheet.type);
       if (txnSheet.type === "ingreso" && txnSheet.payment === "credito") txnSheet.payment = "efectivo";
       renderTxnSheet();
     }
     return;
   }
-  if (e.target.closest("#txn-sheet-amount-btn")) { txnSheet.keypad = !txnSheet.keypad; renderTxnSheet(); return; }
+  if (e.target.closest("#txn-sheet-amount-btn")) { if (!txnSheet.readonly) { txnSheet.keypad = !txnSheet.keypad; renderTxnSheet(); } return; }
   if (e.target.closest("#txn-sheet-keypad-done")) { txnSheet.keypad = false; renderTxnSheet(); return; }
   if (e.target.closest("#txn-sheet-cat")) { chooseTxnCategory(); return; }
   if (e.target.closest("#txn-sheet-pay")) { chooseTxnPayment(); return; }
+  if (e.target.closest("#txn-sheet-from")) { if (!txnSheet.readonly) chooseTxnWallet("from"); return; }
+  if (e.target.closest("#txn-sheet-to")) { if (!txnSheet.readonly) chooseTxnWallet("to"); return; }
   if (e.target.closest("#txn-sheet-prev-day")) { shiftTxnDate(-1); return; }
   if (e.target.closest("#txn-sheet-next-day")) { shiftTxnDate(1); return; }
   if (e.target.closest("#txn-sheet-save")) { saveTxn(); return; }
@@ -692,6 +780,12 @@ document.getElementById("txn-sheet-date-input").addEventListener("change", e => 
   if (!txnSheet || !e.target.value) return;
   txnSheet.date = e.target.value > isoDate(new Date()) ? isoDate(new Date()) : e.target.value;
   renderTxnSheet();
+});
+document.getElementById("txn-sheet-amount-to").addEventListener("input", e => {
+  if (txnSheet) txnSheet.amountTo = e.target.value;
+});
+document.getElementById("txn-sheet-amount-to").addEventListener("focus", () => {
+  if (txnSheet && txnSheet.keypad) { txnSheet.keypad = false; renderTxnSheet(); }
 });
 document.getElementById("txn-sheet-excluded").addEventListener("change", e => {
   if (txnSheet) txnSheet.excluded = e.target.checked;
@@ -1888,24 +1982,50 @@ function ledgerWallets() {
   ].concat(carterasCustomCache.map(w => Object.assign({ builtIn: false }, w)));
 }
 
-// Registra que entró/salió plata de una cartera. Para Gastos y Tarjeta de
-// crédito, en vez de guardarlo aparte, crea el movimiento real de Finanzas
-// que corresponde, así el saldo y la deuda quedan siempre correctos.
-function addWalletMovement(walletId, monto, nota) {
-  const fecha = new Date().toISOString().slice(0, 10);
-  if (walletId === "ahorro") {
-    return ahorrosCollection().add({ date: fecha, amount: monto, notes: nota });
-  } else if (walletId === "gastos") {
-    if (monto >= 0) {
-      return financeCollection().add({ date: fecha, type: "ingreso", category: "otros_ingresos", payment: "efectivo", desc: nota, amount: monto });
+function walletById(id) {
+  return ledgerWallets().find(w => w.id === id);
+}
+function walletLabel(id) {
+  if (id === "gastos") return "Efectivo y débito";
+  const w = walletById(id);
+  return w ? w.nombre : "Cartera";
+}
+function walletCurrency(id) {
+  const w = walletById(id);
+  return w ? w.moneda : "Bs";
+}
+function formatWalletAmount(id, n) {
+  return walletCurrency(id) === "US$" ? `US$ ${n.toLocaleString("es-BO", { maximumFractionDigits: 2 })}` : formatBsShort(n);
+}
+
+// Transferencia entre carteras: un solo registro en Finanzas (para que se vea
+// en la lista y mueva el saldo de "Yo" o la deuda de la tarjeta) más, si hace
+// falta, el movimiento en Ahorro o en la cartera propia. Guardamos esos ids en
+// "links" para poder borrar todo junto.
+async function createTransfer({ from, to, amount, amountTo, desc, date }) {
+  const suffix = desc ? " · " + desc : "";
+  const links = [];
+  const side = async (walletId, monto, nota) => {
+    if (walletId === "gastos" || walletId === "tarjeta") return;
+    if (walletId === "ahorro") {
+      const ref = await ahorrosCollection().add({ date, amount: monto, notes: nota });
+      links.push({ kind: "ahorro", id: ref.id });
     } else {
-      return financeCollection().add({ date: fecha, type: "gasto", category: "otros", payment: "efectivo", desc: nota, amount: -monto });
+      const ref = await carterasMovimientosCollection().add({ carteraId: walletId, fecha: date, monto, nota });
+      links.push({ kind: "cartera", id: ref.id });
     }
-  } else if (walletId === "tarjeta") {
-    return financeCollection().add({ date: fecha, type: "ajuste_tarjeta", desc: nota, amount: monto });
-  } else {
-    return carterasMovimientosCollection().add({ carteraId: walletId, fecha, monto, nota });
-  }
+  };
+  await side(from, -amount, `Transferencia a ${walletLabel(to)}${suffix}`);
+  await side(to, amountTo, `Transferencia desde ${walletLabel(from)}${suffix}`);
+  return financeCollection().add({ date, type: "transferencia", category: "transferencia", from, to, amount, amountTo, desc: desc || "", links });
+}
+
+function deleteTransfer(m) {
+  (m.links || []).forEach(l => {
+    if (l.kind === "ahorro") ahorrosCollection().doc(l.id).delete();
+    else if (l.kind === "cartera") carterasMovimientosCollection().doc(l.id).delete();
+  });
+  return financeCollection().doc(m.id).delete();
 }
 
 // Muestra el error real de Firebase (permisos, red, etc.) en vez de fallar
@@ -2034,25 +2154,27 @@ document.querySelector("#panel-fin-herramientas-carteras-detalle .back-link").ad
 function walletMovementsFor(walletId) {
   if (walletId === "gastos") {
     return financeCache
-      .filter(m => m.type === "ingreso" || (m.type === "gasto" && m.payment !== "credito") || m.type === "pago_tarjeta")
+      .filter(m => m.type === "ingreso" || (m.type === "gasto" && m.payment !== "credito") || m.type === "pago_tarjeta"
+        || (m.type === "transferencia" && (m.from === "gastos" || m.to === "gastos")))
       .map(m => ({
-        id: m.id, date: m.date, desc: m.desc,
+        id: m.id, date: m.date, desc: m.desc || findCategory(m.type, m.category).label,
         icon: findCategory(m.type, m.category).icon, color: findCategory(m.type, m.category).color,
-        amount: m.type === "ingreso" ? m.amount : -m.amount,
-        meta: findPayment(m.payment) ? findPayment(m.payment).label : "",
+        amount: m.type === "transferencia" ? movementDelta(m) : m.type === "ingreso" ? m.amount : -m.amount,
+        meta: m.type === "transferencia" ? `${walletLabel(m.from)} → ${walletLabel(m.to)}` : findPayment(m.payment) ? findPayment(m.payment).label : "",
         usd: false,
-        onDelete: () => deleteMovement(m.id)
+        onDelete: () => m.type === "transferencia" ? deleteTransfer(m) : deleteMovement(m.id)
       }));
   } else if (walletId === "tarjeta") {
     return financeCache
-      .filter(m => (m.type === "gasto" && m.payment === "credito") || m.type === "pago_tarjeta" || m.type === "ajuste_tarjeta")
+      .filter(m => (m.type === "gasto" && m.payment === "credito") || m.type === "pago_tarjeta" || m.type === "ajuste_tarjeta"
+        || (m.type === "transferencia" && m.to === "tarjeta"))
       .map(m => ({
-        id: m.id, date: m.date, desc: m.desc,
+        id: m.id, date: m.date, desc: m.desc || findCategory(m.type, m.category).label,
         icon: findCategory(m.type, m.category).icon, color: findCategory(m.type, m.category).color,
-        amount: m.type === "gasto" ? -m.amount : m.amount,
-        meta: "",
+        amount: m.type === "gasto" ? -m.amount : m.type === "transferencia" ? (m.amountTo != null ? m.amountTo : m.amount) : m.amount,
+        meta: m.type === "transferencia" ? `Desde ${walletLabel(m.from)}` : "",
         usd: false,
-        onDelete: () => deleteMovement(m.id)
+        onDelete: () => m.type === "transferencia" ? deleteTransfer(m) : deleteMovement(m.id)
       }));
   } else if (walletId === "ahorro") {
     return ahorrosCache.map(a => ({
@@ -2290,10 +2412,7 @@ document.getElementById("transfer-form").addEventListener("submit", e => {
 
   const submitBtn = e.target.querySelector('button[type="submit"]');
   submitBtn.disabled = true;
-  Promise.all([
-    addWalletMovement(fromId, -amountFrom, `Transferencia a ${toW.nombre}${notes ? " · " + notes : ""}`),
-    addWalletMovement(toId, amountTo, `Transferencia desde ${fromW.nombre}${notes ? " · " + notes : ""}`)
-  ]).then(() => {
+  createTransfer({ from: fromId, to: toId, amount: amountFrom, amountTo, desc: notes, date: isoDate(new Date()) }).then(() => {
     e.target.reset();
     document.getElementById("transfer-amount-to").hidden = true;
     document.getElementById("transfer-form").hidden = true;
