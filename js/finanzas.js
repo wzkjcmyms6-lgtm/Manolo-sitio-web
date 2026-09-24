@@ -434,39 +434,77 @@ function renderBudgets() {
   });
 }
 
-// ---- Planificación: lista editable agrupada por tipo (como Buddy) ----
-function renderBudgetInputs() {
-  const container = document.getElementById("budget-inputs");
-  const focused = document.activeElement;
-  const focusedCat = focused && focused.dataset ? focused.dataset.cat : null;
+// ---- Planificación: secciones con sus categorías (como Buddy) ----
+// Una categoría está "planificada" cuando su id existe en budgetsCache (aunque
+// el monto sea 0). Una sección de gasto se muestra si tiene alguna categoría
+// planificada o si el usuario la acaba de añadir.
+const visibleBudgetSections = new Set();
 
-  // Agrupar solo las categorías que TIENEN presupuesto asignado
-  const ingresos = (CATEGORIES.ingreso || []).filter(c => budgetsCache[c.id] > 0);
-  const gastos = gastoCategoriesCache.filter(c => budgetsCache[c.id] > 0);
+function isPlanned(catId) {
+  return Object.prototype.hasOwnProperty.call(budgetsCache, catId);
+}
 
-  const sections = [
-    { title: "Ingresos", categories: ingresos, allCategories: CATEGORIES.ingreso || [], type: "ingreso" },
-    { title: "Gastos", categories: gastos, allCategories: gastoCategoriesCache, type: "gasto" }
-  ];
+function groupColor(group) {
+  const gi = categoryGroupsCache.indexOf(group);
+  return group.color || CATEGORY_COLOR_POOL[Math.max(gi, 0) % CATEGORY_COLOR_POOL.length];
+}
 
-  container.innerHTML = sections.map(section => `
+function groupCategories(group) {
+  const color = groupColor(group);
+  return (group.items || []).map(item => ({ id: item.id, label: item.label, icon: item.icon, emoji: item.emoji, color }));
+}
+
+function isSectionVisible(group) {
+  return visibleBudgetSections.has(group.id) || (group.items || []).some(i => isPlanned(i.id));
+}
+
+function catBadgeHTML(c) {
+  return c.emoji
+    ? `<span class="cat-emoji" style="background:${c.color}; color:#fff;">${c.emoji}</span>`
+    : `<span class="cat-icon" style="background:${c.color}22; color:${c.color}" data-icon="${c.icon}"></span>`;
+}
+
+function budgetSectionHTML(title, color, categories, sectionAttr) {
+  const planned = categories.filter(c => isPlanned(c.id));
+  return `
     <div class="budget-section">
-      <h3 class="budget-section-title">${section.title}</h3>
+      <h3 class="budget-section-title">${color ? `<span class="dot" style="background:${color}"></span>` : ""}${escapeHtml(title)}</h3>
       <div class="budget-section-items">
-        ${section.categories.map(c => `
+        ${planned.map(c => `
           <label class="budget-input-row">
-            <span class="cat-icon" style="background:${c.color}22; color:${c.color}" data-icon="${c.icon}"></span>
-            <span class="budget-input-label">${c.label}</span>
-            <input type="number" min="0" step="1" data-cat="${c.id}" value="${budgetsCache[c.id] || ""}" placeholder="0">
+            ${catBadgeHTML(c)}
+            <span class="budget-input-label">${escapeHtml(c.label)}</span>
+            <input type="number" min="0" step="1" inputmode="decimal" data-cat="${c.id}" value="${budgetsCache[c.id] || ""}" placeholder="0">
           </label>
         `).join("")}
-        <button type="button" class="budget-add-btn" data-section="${section.type}" aria-label="Agregar categoría">
+        <button type="button" class="budget-add-btn" ${sectionAttr}>
           <span data-icon="plus"></span>
           Añade una categoría
         </button>
       </div>
     </div>
-  `).join("");
+  `;
+}
+
+function renderBudgetInputs() {
+  const container = document.getElementById("budget-inputs");
+  const focused = document.activeElement;
+  const focusedCat = focused && focused.dataset ? focused.dataset.cat : null;
+
+  const ingresoHTML = budgetSectionHTML("Ingresos", null, CATEGORIES.ingreso || [], `data-section-type="ingreso"`);
+  const gastoHTML = categoryGroupsCache
+    .filter(isSectionVisible)
+    .map(g => budgetSectionHTML(g.nombre, groupColor(g), groupCategories(g), `data-group-id="${g.id}"`))
+    .join("");
+
+  container.innerHTML = `
+    ${ingresoHTML}
+    ${gastoHTML}
+    <button type="button" class="budget-add-section-btn">
+      <span data-icon="plus"></span>
+      Añadir sección
+    </button>
+  `;
   renderIcons(container);
 
   if (focusedCat) {
@@ -533,174 +571,171 @@ function renderBudgetInfo() {
   `;
 }
 
-document.getElementById("budget-form").addEventListener("submit", e => {
-  e.preventDefault();
-  const budgets = {};
-  document.querySelectorAll("#budget-inputs input").forEach(input => {
+function readBudgetInputs() {
+  document.querySelectorAll("#budget-inputs input[data-cat]").forEach(input => {
     const v = parseFloat(input.value);
-    if (v > 0) budgets[input.dataset.cat] = v;
+    budgetsCache[input.dataset.cat] = v > 0 ? v : 0;
   });
-  budgetDocRef().set(budgets);
-});
-
-// Crear nueva categoría personalizada
-function createCustomCategory(name, sectionType = "gasto") {
-  const id = `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  const colorIndex = (CATEGORIES.gasto.length + customCategoriesCache.length) % CATEGORY_COLOR_POOL.length;
-  const cat = {
-    id,
-    label: name,
-    icon: "otherCategory",
-    color: CATEGORY_COLOR_POOL[colorIndex]
-  };
-
-  customCategoriesCache.push(cat);
-  gastoCategoriesCache.push(cat);
-
-  // Guardar en Firestore
-  customCategoriesDocRef().set({ categories: customCategoriesCache });
-
-  return cat;
 }
 
-// Variables globales para el modal de categorías
-let currentCategorySelectorSection = null;
-let currentCategorySelectorAvailable = [];
+function saveBudgets() {
+  readBudgetInputs();
+  return budgetDocRef().set(Object.assign({}, budgetsCache));
+}
 
-function showCategorySelectorModal(sectionType, available) {
-  currentCategorySelectorSection = sectionType;
-  currentCategorySelectorAvailable = available;
+document.getElementById("budget-form").addEventListener("submit", e => {
+  e.preventDefault();
+  saveBudgets();
+});
+
+// Actualiza la dona en vivo mientras se escribe un monto.
+document.getElementById("budget-inputs").addEventListener("input", e => {
+  const input = e.target.closest("input[data-cat]");
+  if (!input) return;
+  const v = parseFloat(input.value);
+  budgetsCache[input.dataset.cat] = v > 0 ? v : 0;
+  renderBudgetSummary();
+});
+
+function planCategory(catId) {
+  readBudgetInputs();
+  budgetsCache[catId] = budgetsCache[catId] || 0;
+  renderBudgetInputs();
+  renderBudgetSummary();
+  saveBudgets();
+  setTimeout(() => {
+    const input = document.querySelector(`#budget-inputs input[data-cat="${catId}"]`);
+    if (input) input.focus();
+  }, 10);
+}
+
+function uniqueId(base, taken) {
+  let id = base || "cat", suffix = 2;
+  while (taken(id)) id = `${base}_${suffix++}`;
+  return id;
+}
+
+// ---- Selector visual (modal) reutilizable para categorías y secciones ----
+let pickerState = null; // { onPick(id), onCreate() }
+
+function openPicker({ title, items, createLabel, onPick, onCreate }) {
+  pickerState = { onPick, onCreate };
+  document.getElementById("category-selector-title").textContent = title;
 
   const grid = document.getElementById("category-selector-grid");
-  if (!grid) {
-    console.error("Grid element not found!");
-    return;
-  }
-
-  grid.innerHTML = available.map(cat => `
-    <button type="button" class="category-selector-item" data-cat-id="${cat.id}">
-      <div class="category-selector-item-icon" style="color:${cat.color}" data-icon="${cat.icon}"></div>
-      <div class="category-selector-item-label">${cat.label}</div>
-    </button>
-  `).join("");
-
-  console.log("Modal categories:", available);
-  console.log("Icons to render:", available.map(c => c.icon));
-  console.log("ICONS object available:", typeof ICONS !== "undefined");
-
-  const items = grid.querySelectorAll("[data-cat-id]");
-  console.log("Elements with data-cat-id in grid:", items.length);
-
-  grid.querySelectorAll("[data-icon]").forEach(el => {
-    console.log("Element icon:", el.dataset.icon, "exists in ICONS:", !!ICONS[el.dataset.icon]);
-    if (ICONS[el.dataset.icon]) {
-      el.innerHTML = ICONS[el.dataset.icon];
-      console.log("Icon rendered for:", el.dataset.icon);
-    }
-  });
-
+  grid.innerHTML = items.length
+    ? items.map(it => `
+        <button type="button" class="category-selector-item" data-pick-id="${it.id}">
+          ${it.emoji
+            ? `<div class="category-selector-item-icon category-selector-item-emoji" style="background:${it.color}">${it.emoji}</div>`
+            : `<div class="category-selector-item-icon" style="color:${it.color}" data-icon="${it.icon}"></div>`}
+          <div class="category-selector-item-label">${escapeHtml(it.label)}</div>
+        </button>
+      `).join("")
+    : `<p class="category-selector-empty">No hay opciones disponibles. Crea una nueva.</p>`;
   renderIcons(grid);
 
-  // Debug: Check if items are clickable
-  console.log("First item catId:", items.length > 0 ? items[0].dataset.catId : "No items");
+  const createBtn = document.getElementById("category-selector-new");
+  createBtn.hidden = !onCreate;
+  document.getElementById("category-selector-new-label").textContent = createLabel || "";
 
   document.getElementById("category-selector-modal").removeAttribute("hidden");
 }
 
-function hideCategorySelectorModal() {
+function closePicker() {
   document.getElementById("category-selector-modal").setAttribute("hidden", "");
-  currentCategorySelectorSection = null;
-  currentCategorySelectorAvailable = [];
+  pickerState = null;
 }
 
-// Agregar categoría al presupuesto
+function openCategoryPickerForGroup(groupId) {
+  const group = categoryGroupsCache.find(g => g.id === groupId);
+  if (!group) return;
+  openPicker({
+    title: `Añadir a ${group.nombre}`,
+    items: groupCategories(group).filter(c => !isPlanned(c.id)),
+    createLabel: "Crear nueva categoría",
+    onPick: catId => { closePicker(); planCategory(catId); },
+    onCreate: () => {
+      const name = (prompt("Nombre de la nueva categoría:") || "").trim();
+      if (!name) return;
+      closePicker();
+      const id = uniqueId(slugify(name), id => gastoCategoriesCache.some(c => c.id === id) || isPlanned(id));
+      const next = categoryGroupsCache.map(g =>
+        g.id === groupId ? Object.assign({}, g, { items: (g.items || []).concat([{ id, label: name, icon: "otherCategory" }]) }) : g
+      );
+      budgetsCache[id] = 0;
+      categoryGroupsCache = next;
+      saveCategoryGroups(next);
+      planCategory(id);
+    }
+  });
+}
+
+function openIngresoPicker() {
+  openPicker({
+    title: "Añadir ingreso",
+    items: (CATEGORIES.ingreso || []).filter(c => !isPlanned(c.id)),
+    onPick: catId => { closePicker(); planCategory(catId); }
+  });
+}
+
+function openSectionPicker() {
+  const hidden = categoryGroupsCache.filter(g => !isSectionVisible(g));
+  openPicker({
+    title: "Añadir sección",
+    items: hidden.map(g => {
+      const first = (g.items || [])[0];
+      return { id: g.id, label: g.nombre, icon: first ? first.icon : "otherCategory", emoji: first && first.emoji, color: groupColor(g) };
+    }),
+    createLabel: "Crear nueva sección",
+    onPick: groupId => {
+      closePicker();
+      visibleBudgetSections.add(groupId);
+      renderBudgetInputs();
+      openCategoryPickerForGroup(groupId);
+    },
+    onCreate: () => {
+      const nombre = (prompt("Nombre de la nueva sección:") || "").trim();
+      if (!nombre) return;
+      closePicker();
+      const id = uniqueId(slugify(nombre), id => categoryGroupsCache.some(g => g.id === id));
+      const color = CATEGORY_COLOR_POOL[categoryGroupsCache.length % CATEGORY_COLOR_POOL.length];
+      const next = categoryGroupsCache.concat([{ id, nombre, color, items: [] }]);
+      visibleBudgetSections.add(id);
+      categoryGroupsCache = next;
+      saveCategoryGroups(next);
+      renderBudgetInputs();
+      openCategoryPickerForGroup(id);
+    }
+  });
+}
+
 document.getElementById("budget-inputs").addEventListener("click", e => {
+  if (e.target.closest(".budget-add-section-btn")) {
+    e.preventDefault();
+    openSectionPicker();
+    return;
+  }
   const addBtn = e.target.closest(".budget-add-btn");
   if (!addBtn) return;
   e.preventDefault();
-
-  const sectionType = addBtn.dataset.section;
-  const allCategories = sectionType === "ingreso" ? (CATEGORIES.ingreso || []) : gastoCategoriesCache;
-  const assigned = allCategories.filter(c => budgetsCache[c.id] > 0).map(c => c.id);
-  const available = allCategories.filter(c => !assigned.includes(c.id));
-
-  if (available.length === 0) {
-    alert("No hay más categorías disponibles en esta sección");
-    return;
-  }
-
-  showCategorySelectorModal(sectionType, available);
+  if (addBtn.dataset.sectionType === "ingreso") openIngresoPicker();
+  else openCategoryPickerForGroup(addBtn.dataset.groupId);
 });
 
-// Manejar selección de categoría desde el modal
-const categoryGridListener = (e) => {
-  let item = e.target.closest(".category-selector-item");
-
-  // Si no encontró el item directamente, buscar por el atributo data-cat-id
-  if (!item && e.target.closest("[data-cat-id]")) {
-    item = e.target.closest("[data-cat-id]");
-  }
-
-  if (!item) {
-    console.log("No item found. e.target:", e.target, "closest item:", e.target.closest(".category-selector-item"));
-    return;
-  }
-
-  console.log("Category clicked:", item.dataset.catId);
-  const catId = item.dataset.catId;
-  const cat = currentCategorySelectorAvailable.find(c => c.id === catId);
-
-  if (!cat) {
-    console.log("Category not found in available:", catId);
-    return;
-  }
-
-  console.log("Adding budget for category:", cat);
-  budgetsCache[cat.id] = 0;
-  renderBudgetInputs();
-  renderBudgetSummary();
-  hideCategorySelectorModal();
-
-  setTimeout(() => {
-    const input = document.querySelector(`input[data-cat="${cat.id}"]`);
-    if (input) input.focus();
-  }, 10);
-};
-
-// Attach the listener using document delegation for better reliability
-document.addEventListener("click", (e) => {
-  if (e.target.closest("#category-selector-grid")) {
-    categoryGridListener(e);
-  }
+document.getElementById("category-selector-grid").addEventListener("click", e => {
+  const item = e.target.closest("[data-pick-id]");
+  if (item && pickerState) pickerState.onPick(item.dataset.pickId);
 });
 
-// Botón para crear nueva categoría
 document.getElementById("category-selector-new").addEventListener("click", () => {
-  const name = prompt("Nombre de la nueva categoría:");
-  if (!name || name.trim() === "") return;
-
-  const cat = createCustomCategory(name.trim(), currentCategorySelectorSection);
-  budgetsCache[cat.id] = 0;
-  renderBudgetInputs();
-  renderBudgetSummary();
-  hideCategorySelectorModal();
-
-  setTimeout(() => {
-    const input = document.querySelector(`input[data-cat="${cat.id}"]`);
-    if (input) input.focus();
-  }, 10);
+  if (pickerState && pickerState.onCreate) pickerState.onCreate();
 });
 
-// Botón cancelar
-document.getElementById("category-selector-cancel").addEventListener("click", () => {
-  hideCategorySelectorModal();
-});
+document.getElementById("category-selector-cancel").addEventListener("click", closePicker);
 
-// Cerrar modal al hacer click en el overlay
 document.getElementById("category-selector-modal").addEventListener("click", e => {
-  if (e.target.classList.contains("category-selector-overlay")) {
-    hideCategorySelectorModal();
-  }
+  if (e.target.classList.contains("category-selector-overlay")) closePicker();
 });
 
 // ================= Herramientas: Categorías =================

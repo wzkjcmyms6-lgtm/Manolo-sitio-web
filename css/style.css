@@ -1712,3 +1712,28 @@ button.delete:hover { opacity: 1; }
   background: var(--border);
   color: var(--ink);
 }
+
+/* Planificación estilo Buddy: secciones + añadir sección */
+.budget-section-title { display: flex; align-items: center; gap: 0.5rem; }
+.budget-section-title .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.budget-add-section-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.9rem;
+  margin-top: 0.4rem;
+  background: var(--surface);
+  border: 1px dashed var(--accent, var(--border));
+  border-radius: 14px;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.budget-add-section-btn [data-icon] { display: inline-flex; width: 18px; height: 18px; }
+.category-selector-new-btn[hidden] { display: none; }
+.category-selector-new-btn span { margin-right: 0; }
+.category-selector-item-emoji { border-radius: 50%; color: #fff; font-size: 1.3rem; }
+.category-selector-empty { grid-column: 1 / -1; text-align: center; color: var(--muted); font-size: 0.9rem; margin: 0.5rem 0; }
