@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=202609242300">
+  <link rel="stylesheet" href="css/style.css?v=202609250010">
 </head>
 <body>
   <div id="login-screen" class="login-screen">
@@ -303,7 +303,7 @@
 
             <div class="stat-row" id="finance-stats"></div>
 
-            <div class="month-nav">
+            <div class="month-nav" id="fin-month-nav">
               <button type="button" id="month-prev" aria-label="Periodo anterior"><span data-icon="chevronLeft"></span></button>
               <div class="month-label">
                 <span id="month-label-text"></span>
@@ -313,10 +313,13 @@
             </div>
 
             <section id="fin-tab-vg" class="fin-panel" hidden>
-              <div class="budget-section vg-soon">
-                <h3 class="budget-section-title">Vista General</h3>
-                <p class="info-sub">Esta pestaña llega pronto. Mándame cómo se ve en Buddy y la armamos.</p>
+              <div class="vg-card vg-spent">
+                <div class="vg-label" id="vg-spent-label">Gastado</div>
+                <div class="vg-big" id="vg-spent-value">Bs 0</div>
+                <div class="vg-chart-wrap" id="vg-chart"></div>
               </div>
+              <div class="vg-card" id="vg-calendar"></div>
+              <div class="vg-card" id="vg-budget"></div>
             </section>
 
             <section id="fin-tab-gasto" class="fin-panel" hidden>
@@ -762,7 +765,7 @@
   <script src="js/gimnasio.js?v=202609232200"></script>
   <script src="js/running.js?v=202609232200"></script>
   <script src="js/bicicleta.js?v=202609232200"></script>
-  <script src="js/finanzas.js?v=202609242300"></script>
+  <script src="js/finanzas.js?v=202609250010"></script>
   <script src="js/inversiones.js?v=202609232200"></script>
 </body>
 </html>

@@ -127,6 +127,11 @@ function showSheet(el) {
   document.body.classList.add("sheet-open");
 }
 
+// Una hoja que se está cerrando (animación) ya cuenta como cerrada.
+function isSheetOpen(el) {
+  return !el.hidden && !el.classList.contains("is-closing");
+}
+
 function hideSheet(el) {
   if (el.hidden) return;
   el.classList.add("is-closing");
@@ -190,11 +195,15 @@ function isoDate(d) {
 }
 
 function currentBudgetPeriod() {
+  return budgetPeriodAt(monthOffset);
+}
+
+function budgetPeriodAt(offset) {
   const today = new Date();
   let year = today.getFullYear();
   let month = today.getMonth();
   if (today.getDate() < budgetStartDay) month--;
-  month += monthOffset;
+  month += offset;
   const start = new Date(year, month, budgetStartDay);
   const end = new Date(start.getFullYear(), start.getMonth() + 1, budgetStartDay - 1);
   return { start, end, startISO: isoDate(start), endISO: isoDate(end) };
@@ -416,7 +425,7 @@ function renderMovements() {
     const total = g.items.reduce((s, m) => s + movementDelta(m), 0);
     const totalText = total === 0 ? formatBsShort(0) : `${total > 0 ? "+" : "−"}${formatBsShort(Math.abs(total))}`;
     return `
-      <div class="txn-day">
+      <div class="txn-day" data-day="${g.date}">
         <div class="txn-day-head"><span>${dayLabel(g.date)}</span><span class="breakdown-leader"></span><span class="txn-day-total">${totalText}</span></div>
         ${g.items.map(m => {
           const cat = findCategory(m.type, m.category);
@@ -463,12 +472,184 @@ function showFinTab(tab) {
   document.querySelectorAll("[data-fin-tab]").forEach(b => b.classList.toggle("active", b.dataset.finTab === tab));
   ["vg", "gasto", "lista"].forEach(t => { document.getElementById(`fin-tab-${t}`).hidden = t !== tab; });
   document.getElementById("finance-stats").hidden = tab !== "lista";
+  document.getElementById("fin-month-nav").hidden = tab === "vg";
 }
 document.getElementById("fin-inner-tabs").addEventListener("click", e => {
   const btn = e.target.closest("[data-fin-tab]");
   if (btn) showFinTab(btn.dataset.finTab);
 });
 showFinTab(currentFinTab());
+
+// ---- Pestaña Vista General (como Buddy): gráfico, calendario y presupuesto ----
+function periodDays(period) {
+  const days = [];
+  for (let d = new Date(period.start); d <= period.end; d.setDate(d.getDate() + 1)) days.push(isoDate(d));
+  return days;
+}
+
+// Gasto acumulado por día del periodo: [g1, g1+g2, ...].
+function cumulativeSpend(period) {
+  const byDay = {};
+  financeCache.filter(m => m.type === "gasto" && isInPeriod(m.date, period))
+    .forEach(m => { byDay[m.date] = (byDay[m.date] || 0) + m.amount; });
+  let acc = 0;
+  return periodDays(period).map(d => (acc += byDay[d] || 0));
+}
+
+// Curva suave que pasa por todos los puntos (Catmull-Rom → Bézier).
+function smoothPath(pts) {
+  if (!pts.length) return "";
+  let d = `M ${pts[0][0]} ${pts[0][1]}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+    // Los puntos de control quedan entre p1 y p2 para que la curva no se
+    // pase de largo (el acumulado nunca baja).
+    const lo = Math.min(p1[1], p2[1]), hi = Math.max(p1[1], p2[1]);
+    const clamp = v => Math.min(Math.max(v, lo), hi);
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, clamp(p1[1] + (p2[1] - p0[1]) / 6)];
+    const c2 = [p2[0] - (p3[0] - p1[0]) / 6, clamp(p2[1] - (p3[1] - p1[1]) / 6)];
+    d += ` C ${c1[0].toFixed(1)} ${c1[1].toFixed(1)}, ${c2[0].toFixed(1)} ${c2[1].toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
+
+function vgChartHTML(period) {
+  const days = periodDays(period);
+  const n = days.length;
+  const today = isoDate(new Date());
+  const shownDays = days.filter(d => d <= today).length || (days[0] > today ? 0 : n);
+  const current = cumulativeSpend(period).slice(0, Math.max(shownDays, 1));
+
+  // Media de los 3 periodos anteriores que tengan gastos, día por día.
+  const previous = [1, 2, 3]
+    .map(k => cumulativeSpend(budgetPeriodAt(monthOffset - k)))
+    .filter(arr => arr[arr.length - 1] > 0);
+  const media = previous.length
+    ? days.map((_, i) => previous.reduce((s, arr) => s + arr[Math.min(i, arr.length - 1)], 0) / previous.length)
+    : null;
+
+  const W = 320, H = 170, padX = 6, top = 14, bottom = 150;
+  const maxY = Math.max(current[current.length - 1] || 0, media ? media[n - 1] : 0, 1) * 1.08;
+  const x = i => padX + (n > 1 ? (i / (n - 1)) * (W - padX * 2) : 0);
+  const y = v => bottom - (v / maxY) * (bottom - top);
+  const curPts = current.map((v, i) => [x(i), y(v)]);
+  const linePath = smoothPath(curPts);
+  const last = curPts[curPts.length - 1];
+  const area = `${linePath} L ${last[0].toFixed(1)} ${bottom} L ${curPts[0][0].toFixed(1)} ${bottom} Z`;
+  const mediaPath = media ? smoothPath(media.map((v, i) => [x(i), y(v)])) : "";
+  const ticks = days.map((d, i) => ({ i, label: Number(d.slice(8)) })).filter(t => t.i % 5 === 0 || t.i === n - 1)
+    .filter((t, idx, arr) => !(t.i === n - 1 && idx > 0 && n - 1 - arr[idx - 1].i < 3));
+
+  return `
+    <div class="vg-chart-plot">
+    <svg class="vg-chart" viewBox="0 0 ${W} ${H + 18}" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="vg-area" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ff7a30" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="#ff7a30" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      ${media ? `<path d="${mediaPath}" fill="none" style="stroke:#77756f" stroke-width="2" stroke-dasharray="6 6" vector-effect="non-scaling-stroke"/>` : ""}
+      <path d="${area}" fill="url(#vg-area)"/>
+      <path d="${linePath}" fill="none" style="stroke:#ff7a30" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+    </svg>
+    <span class="vg-chart-dot" style="left:${(last[0] / W * 100).toFixed(2)}%; top:${(last[1] / (H + 18) * 100).toFixed(2)}%"></span>
+    </div>
+    <div class="vg-chart-ticks">${ticks.map(t => `<span style="left:${(x(t.i) / W * 100).toFixed(2)}%">${t.label}</span>`).join("")}</div>
+    <div class="vg-legend"><span><i style="background:#ff7a30"></i>Este periodo</span>${media ? `<span><i style="background:#77756f"></i>Media</span>` : ""}</div>`;
+}
+
+function vgCalendarHTML(period) {
+  const days = periodDays(period);
+  const today = isoDate(new Date());
+  const spent = {}, income = {};
+  financeCache.filter(m => isInPeriod(m.date, period)).forEach(m => {
+    if (m.type === "gasto") spent[m.date] = (spent[m.date] || 0) + m.amount;
+    if (m.type === "ingreso") income[m.date] = (income[m.date] || 0) + m.amount;
+  });
+  const maxSpent = Math.max(...Object.values(spent), 0);
+  const hasMovements = new Set(financeCache.filter(m => isInPeriod(m.date, period)).map(m => m.date));
+  const lead = (new Date(days[0] + "T00:00:00").getDay() + 6) % 7; // lunes = 0
+  const round = n => Math.round(n).toLocaleString("es-BO");
+  const cells = Array(lead).fill(`<span class="vg-day empty"></span>`).concat(days.map(d => {
+    const amt = spent[d] || 0;
+    const alpha = amt > 0 && maxSpent > 0 ? (0.25 + 0.6 * amt / maxSpent).toFixed(2) : 0;
+    const cls = ["vg-day", d === today ? "today" : "", d > today ? "future" : "", hasMovements.has(d) ? "has" : ""].filter(Boolean).join(" ");
+    return `<button type="button" class="${cls}" data-vg-day="${d}"${alpha ? ` style="background:rgba(255,122,48,${alpha})"` : ""}>
+      <span class="vg-day-num">${Number(d.slice(8))}</span>
+      ${income[d] ? `<span class="vg-day-income">+${round(income[d])}</span>` : ""}
+      <span class="vg-day-amt">${round(amt)}</span>
+    </button>`;
+  }));
+  return `
+    <div class="vg-cal-head">
+      <button type="button" class="vg-cal-arrow" data-vg-period="-1" aria-label="Periodo anterior"><span data-icon="chevronLeft"></span></button>
+      <span class="vg-cal-title">${periodLabel(period)}</span>
+      <button type="button" class="vg-cal-arrow" data-vg-period="1" aria-label="Periodo siguiente"${monthOffset >= 0 ? " disabled" : ""}><span data-icon="chevronRight"></span></button>
+    </div>
+    <div class="vg-weekdays">${["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map(w => `<span>${w}</span>`).join("")}</div>
+    <div class="vg-grid">${cells.join("")}</div>`;
+}
+
+function vgBudgetHTML(period) {
+  const spent = computeSpentByCategory(period);
+  const received = computeReceivedByCategory(period);
+  const rows = [];
+  (CATEGORIES.ingreso || []).forEach(c => { if (isPlanned(c.id)) rows.push({ cat: c, planned: budgetsCache[c.id] || 0, used: received[c.id] || 0, type: "ingreso" }); });
+  categoryGroupsCache.forEach(g => groupCategories(g).forEach(c => {
+    if (isPlanned(c.id)) rows.push({ cat: c, planned: budgetsCache[c.id] || 0, used: spent[c.id] || 0, type: "gasto" });
+  }));
+  if (!rows.length) {
+    return `<h3 class="budget-section-title">Presupuesto</h3>
+      <p class="info-sub">Todavía no tienes presupuesto para este periodo.</p>
+      <a class="vg-link" href="#fin-presupuesto">Crear presupuesto</a>`;
+  }
+  const totalIncome = rows.filter(r => r.type === "ingreso").reduce((s, r) => s + r.planned, 0);
+  const totalBudget = rows.filter(r => r.type === "gasto").reduce((s, r) => s + r.planned, 0);
+  const totalSpent = Object.values(spent).reduce((s, v) => s + v, 0);
+  const base = totalIncome > 0 ? totalIncome : totalBudget;
+  const left = base - totalSpent;
+  const pct = base > 0 ? Math.min(totalSpent / base, 1) : 0;
+  const popular = rows.slice().sort((a, b) => b.planned - a.planned).slice(0, 8);
+  return `
+    <a class="vg-budget-head" href="#fin-presupuesto"><h3 class="budget-section-title">Presupuesto</h3><span data-icon="chevronRight"></span></a>
+    <div class="vg-label">${left < 0 ? "Sobrepasado" : "Restante para gastar"}</div>
+    <div class="vg-big${left < 0 ? " over" : ""}">${formatBsShort(Math.abs(left))}</div>
+    <div class="vg-bar"><span style="width:${(pct * 100).toFixed(1)}%"></span></div>
+    <div class="vg-label vg-popular-label">Categorías populares</div>
+    <div class="vg-popular">${popular.map(r => remainingCatHTML(r.cat, r.planned, r.used, r.type)).join("")}</div>`;
+}
+
+function renderVistaGeneral() {
+  const period = currentBudgetPeriod();
+  const gastado = financeCache.filter(m => m.type === "gasto" && isInPeriod(m.date, period)).reduce((s, m) => s + m.amount, 0);
+  document.getElementById("vg-spent-label").textContent = `Gastado: ${periodLabel(period)}`;
+  document.getElementById("vg-spent-value").textContent = formatBsShort(gastado);
+  document.getElementById("vg-chart").innerHTML = vgChartHTML(period);
+  document.getElementById("vg-calendar").innerHTML = vgCalendarHTML(period);
+  document.getElementById("vg-budget").innerHTML = vgBudgetHTML(period);
+  renderIcons(document.getElementById("fin-tab-vg"));
+}
+
+document.getElementById("fin-tab-vg").addEventListener("click", e => {
+  const arrow = e.target.closest("[data-vg-period]");
+  if (arrow) {
+    const step = Number(arrow.dataset.vgPeriod);
+    if (step > 0 && monthOffset >= 0) return;
+    monthOffset += step;
+    renderAll();
+    return;
+  }
+  const day = e.target.closest("[data-vg-day].has");
+  if (day) {
+    showFinTab("lista");
+    const target = document.querySelector(`#finance-list [data-day="${day.dataset.vgDay}"]`);
+    if (target) setTimeout(() => target.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    return;
+  }
+  const cat = e.target.closest("[data-cat-detail]");
+  if (cat) openCategoryDetail(cat.dataset.catType, cat.dataset.catDetail);
+});
 
 // ---- Pestaña Gasto (como Buddy): anillo por categoría ----
 const GASTO_MODES = {
@@ -1726,7 +1907,7 @@ document.getElementById("budget-sheet").addEventListener("click", e => {
 
 document.addEventListener("keydown", e => {
   if (e.target.closest && e.target.closest("input, textarea")) return;
-  if (!document.getElementById("category-selector-modal").hidden) return;
+  if (isSheetOpen(document.getElementById("category-selector-modal"))) return;
   if (catSheet) {
     if (e.key === "Escape") { closeCatSheet(); e.preventDefault(); }
     return;
@@ -2768,6 +2949,7 @@ function renderAll() {
   updateMonthLabel();
   renderMovements();
   renderGasto();
+  renderVistaGeneral();
   updateBudgetMonthLabel();
   renderBudgets();
   renderBudgetInputs();

@@ -2184,3 +2184,56 @@ body.in-finanzas .topbar-home {
 }
 body.in-finanzas .topbar-home:active { transform: scale(0.94); }
 #panel-finanzas #finance-stats[hidden] { display: none; }
+
+/* ---------- Pestaña Vista General (como Buddy) ---------- */
+#fin-month-nav[hidden] { display: none; }
+.vg-card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 1.3rem 1.2rem; margin-bottom: 1rem; }
+#vg-budget { margin-bottom: 6rem; }
+.vg-label { font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.vg-big { font-size: 2.3rem; font-weight: 700; line-height: 1.15; margin-top: 0.15rem; }
+.vg-big.over { color: var(--danger); }
+.vg-chart-wrap { position: relative; margin-top: 0.8rem; }
+.vg-chart { display: block; width: 100%; height: 190px; overflow: visible; }
+.vg-chart-dot {
+  position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #ff7a30;
+  transform: translate(-50%, -50%); box-shadow: 0 0 12px rgba(255, 122, 48, 0.7);
+}
+.vg-chart-ticks { position: relative; height: 1.2rem; margin-top: 0.2rem; color: var(--muted); font-size: 0.85rem; }
+.vg-chart-ticks span { position: absolute; transform: translateX(-50%); }
+.vg-chart-ticks span:first-child { transform: none; }
+.vg-chart-ticks span:last-child { transform: translateX(-100%); }
+.vg-legend { display: flex; gap: 1.2rem; margin-top: 0.9rem; font-size: 0.95rem; color: var(--muted); }
+.vg-legend span { display: flex; align-items: center; gap: 0.45rem; }
+.vg-legend i { width: 10px; height: 10px; border-radius: 50%; }
+
+.vg-cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.vg-cal-title { font-size: 1.25rem; font-weight: 600; }
+.vg-cal-arrow { width: 40px; height: 40px; padding: 9px; background: none; border: none; color: var(--ink); cursor: pointer; border-radius: 50%; }
+.vg-cal-arrow:disabled { opacity: 0.25; cursor: default; }
+.vg-weekdays, .vg-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.4rem; }
+.vg-weekdays { margin-bottom: 0.6rem; }
+.vg-weekdays span { text-align: center; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.vg-day {
+  aspect-ratio: 1; min-width: 0; border-radius: 10px; border: 1px solid transparent; background: var(--bg);
+  color: var(--ink); font: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.05rem; padding: 0; cursor: default; line-height: 1.1;
+}
+.vg-day.empty { background: none; }
+.vg-day.has { cursor: pointer; }
+.vg-day.has:active { transform: scale(0.94); }
+.vg-day.today .vg-day-num { font-weight: 800; }
+.vg-day.today { border-color: var(--ink); }
+.vg-day.future { background: transparent; border-color: var(--border); opacity: 0.5; }
+.vg-day-num { font-size: 0.78rem; color: var(--ink); opacity: 0.8; }
+.vg-day-amt { font-size: 0.82rem; font-weight: 600; }
+.vg-day-income { font-size: 0.55rem; color: #5cc98a; font-weight: 700; }
+
+.vg-budget-head { display: flex; align-items: center; justify-content: space-between; color: var(--ink); text-decoration: none; margin-bottom: 0.8rem; }
+.vg-budget-head [data-icon] { width: 22px; height: 22px; color: var(--muted); }
+.vg-bar { height: 10px; border-radius: 999px; background: var(--bg); margin: 0.9rem 0 1.4rem; overflow: hidden; }
+.vg-bar span { display: block; height: 100%; border-radius: inherit; background: var(--accent-grad); }
+.vg-popular-label { margin-bottom: 0.9rem; }
+.vg-popular { display: flex; gap: 0.6rem; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 0.3rem; -webkit-overflow-scrolling: touch; }
+.vg-popular .remain-cat { flex: 0 0 31%; scroll-snap-align: start; }
+.vg-link { display: inline-block; margin-top: 0.4rem; color: var(--accent-1); font-weight: 600; text-decoration: none; }
+.vg-chart-plot { position: relative; }
