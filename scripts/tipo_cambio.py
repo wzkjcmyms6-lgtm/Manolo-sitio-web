@@ -76,6 +76,14 @@ def main():
             print("Fragmento:", text[max(0, k - 300):k + 1200])
     else:
         print("No se pudo leer el TCO:", errors)
+        raw = fetch(URLS[0])
+        refs = re.findall(r'(?:src|href|action|data-url|url)\s*[=:]\s*["\']([^"\']+)["\']', raw, re.I)
+        refs = [r for r in refs if re.search(r"cotiz|cambio|tc|xls|ods|json|php|ajax|iframe|reporte|imprimir", r, re.I)]
+        print("Referencias en cotizaciones_tc:", sorted(set(refs))[:80])
+        for tag in re.findall(r"(?is)<(?:iframe|form|select)[^>]*>", raw)[:20]:
+            print("TAG:", tag[:300])
+        k = raw.upper().find("USD")
+        print("HTML cerca de USD:", raw[max(0, k - 800):k + 400] if k >= 0 else "(no hay USD)")
         sys.exit(1)
 
     hoy = (dt.datetime.utcnow() - dt.timedelta(hours=4)).date().isoformat()  # La Paz (UTC-4)
