@@ -2265,3 +2265,6 @@ body.in-finanzas .topbar-clock { margin-right: 0; }
 .vg-alert.over .vg-alert-dot { background: var(--danger); }
 .txn-search input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
 
+.txn-amount-to-label small { display: block; font-size: 0.72rem; color: var(--muted); opacity: 0.8; }
+#txn-sheet-rate-row .txn-amount-to-label { white-space: nowrap; }
+#txn-sheet-rate-row input, #txn-sheet-amount-to-row input { width: 6.5rem; }

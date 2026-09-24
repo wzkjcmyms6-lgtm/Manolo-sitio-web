@@ -1,0 +1,11 @@
+{
+ "fuente": "https://www.bcb.gob.bo/?q=cotizaciones",
+ "ultimo": {
+  "fecha": "2026-09-24",
+  "tco": 12.26,
+  "publicado": "2026-09-24"
+ },
+ "historial": {
+  "2026-09-24": 12.26
+ }
+}

@@ -937,6 +937,45 @@ document.getElementById("fin-tab-gasto").addEventListener("click", e => {
   input.addEventListener("keydown", e => { if (e.key === "Escape") clear(); });
 })();
 
+// ---- Tipo de cambio oficial (TCO) del BCB ----
+// Lo actualiza cada día una tarea de GitHub en data/tipo-cambio.json.
+let tcoData = null; // { ultimo: {fecha, tco}, historial: { "AAAA-MM-DD": tco } }
+
+function loadTco() {
+  fetch(`data/tipo-cambio.json?t=${Date.now()}`, { cache: "no-store" })
+    .then(r => (r.ok ? r.json() : null))
+    .then(d => { if (d && d.ultimo) { tcoData = d; renderAll(); if (txnSheet) renderTxnSheet(); } })
+    .catch(() => {});
+}
+loadTco();
+setInterval(loadTco, 3 * 60 * 60 * 1000);
+
+// TCO vigente en una fecha: el último publicado hasta ese día.
+function officialRateFor(dateISO) {
+  if (!tcoData) return null;
+  const days = Object.keys(tcoData.historial || {}).filter(d => d <= dateISO).sort();
+  return days.length ? tcoData.historial[days[days.length - 1]] : tcoData.ultimo.tco;
+}
+
+function fmtRate(n) {
+  return n.toLocaleString("es-BO", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+}
+function parseNum(str) {
+  return parseFloat(String(str || "").replace(/\s/g, "").replace(",", ".")) || 0;
+}
+
+// Con el tipo de cambio calcula cuánto llega en la otra moneda.
+function syncTransferAmounts() {
+  const t = txnSheet;
+  if (!t || t.type !== "transferencia" || walletCurrency(t.from) === walletCurrency(t.to)) return;
+  const rate = parseNum(t.rate);
+  const amount = parseNum(t.amount);
+  if (rate <= 0 || amount <= 0) return;
+  const toUsd = walletCurrency(t.to) === "US$";
+  const value = toUsd ? amount / rate : amount * rate;
+  t.amountTo = String(Math.round(value * 100) / 100).replace(".", ",");
+}
+
 // ---- Hoja "Nueva transacción" (como Buddy) ----
 const PAYMENT_ICONS = { efectivo: "salary", debito: "bank", credito: "finance" };
 const PAYMENT_COLORS = { efectivo: "#9b6bde", debito: "#4d9de0", credito: "#e0567c" };
@@ -957,9 +996,10 @@ function openTxnSheet(movement) {
         excluded: !!movement.excluded, keypad: false,
         from: cashWallet(movement.from || "debito"), to: cashWallet(movement.to || "ahorro"),
         amountTo: movement.amountTo != null ? toStr(movement.amountTo) : "",
+        rate: movement.tipoCambio ? toStr(movement.tipoCambio) : "", rateTouched: true,
         readonly: movement.type === "transferencia", movement
       }
-    : { id: null, type: "gasto", category: defaultCategory("gasto"), payment: "efectivo", amount: "0", desc: "", date: isoDate(new Date()), excluded: false, keypad: true, from: "debito", to: "ahorro", amountTo: "", readonly: false };
+    : { id: null, type: "gasto", category: defaultCategory("gasto"), payment: "efectivo", amount: "0", desc: "", date: isoDate(new Date()), excluded: false, keypad: true, from: "debito", to: "ahorro", amountTo: "", rate: "", rateTouched: false, readonly: false };
   renderTxnSheet();
   showSheet(document.getElementById("txn-sheet"));
 }
@@ -994,6 +1034,21 @@ function renderTxnSheet() {
   walletRow("to", t.to);
   const needsAmountTo = isTransfer && walletCurrency(t.from) !== walletCurrency(t.to);
   document.getElementById("txn-sheet-amount-to-row").hidden = !needsAmountTo;
+  document.getElementById("txn-sheet-rate-row").hidden = !needsAmountTo;
+  if (needsAmountTo && !t.readonly && !t.rateTouched) {
+    const official = officialRateFor(t.date);
+    if (official) { t.rate = String(official).replace(".", ","); syncTransferAmounts(); }
+  }
+  if (needsAmountTo && t.readonly && !t.rate) {
+    const bs = walletCurrency(t.from) === "US$" ? parseNum(t.amountTo) : parseNum(t.amount);
+    const usd = walletCurrency(t.from) === "US$" ? parseNum(t.amount) : parseNum(t.amountTo);
+    if (usd > 0) t.rate = fmtRate(bs / usd);
+  }
+  const rateInput = document.getElementById("txn-sheet-rate");
+  if (rateInput.value !== t.rate) rateInput.value = t.rate;
+  rateInput.disabled = !!t.readonly;
+  const official = officialRateFor(t.date);
+  document.getElementById("txn-sheet-rate-hint").textContent = official ? `Oficial BCB: ${fmtRate(official)}` : "";
   document.getElementById("txn-sheet-amount-to-cur").textContent = walletCurrency(t.to);
   const amountToInput = document.getElementById("txn-sheet-amount-to");
   if (amountToInput.value !== t.amountTo) amountToInput.value = t.amountTo;
@@ -1033,6 +1088,11 @@ function pressTxnKey(key) {
   if (txnSheet.readonly) return;
   txnSheet.amount = applyAmountKey(txnSheet.amount, key);
   document.getElementById("txn-sheet-amount").textContent = formatSheetAmount(txnSheet.amount);
+  if (txnSheet.type === "transferencia") {
+    syncTransferAmounts();
+    const el = document.getElementById("txn-sheet-amount-to");
+    if (el.value !== txnSheet.amountTo) el.value = txnSheet.amountTo;
+  }
 }
 
 function shiftTxnDate(days) {
@@ -1041,6 +1101,7 @@ function shiftTxnDate(days) {
   const next = isoDate(d);
   if (next > isoDate(new Date())) return;
   txnSheet.date = next;
+  if (!txnSheet.rateTouched) txnSheet.rate = "";
   renderTxnSheet();
 }
 
@@ -1253,7 +1314,9 @@ async function saveTxn() {
         return;
       }
     }
+    const rate = parseNum(t.rate);
     const payload = { from: t.from, to: t.to, amount, amountTo, desc: t.desc.trim(), date: t.date };
+    if (walletCurrency(t.from) !== walletCurrency(t.to) && rate > 0) payload.tipoCambio = rate;
     closeTxnSheet();
     await createTransfer(payload);
     return;
@@ -1323,13 +1386,32 @@ function applyTxnDateInput(value) {
   const next = value > today ? today : value;
   if (next === txnSheet.date) return;
   txnSheet.date = next;
+  if (!txnSheet.rateTouched) txnSheet.rate = "";
   renderTxnSheet();
 }
 ["input", "change", "blur"].forEach(evt =>
   document.getElementById("txn-sheet-date-input").addEventListener(evt, e => applyTxnDateInput(e.target.value))
 );
 document.getElementById("txn-sheet-amount-to").addEventListener("input", e => {
-  if (txnSheet) txnSheet.amountTo = e.target.value;
+  if (!txnSheet) return;
+  txnSheet.amountTo = e.target.value;
+  const amount = parseNum(txnSheet.amount), to = parseNum(e.target.value);
+  if (amount > 0 && to > 0) {
+    const toUsd = walletCurrency(txnSheet.to) === "US$";
+    txnSheet.rate = fmtRate(toUsd ? amount / to : to / amount).replace(/\./g, "");
+    txnSheet.rateTouched = true;
+    document.getElementById("txn-sheet-rate").value = txnSheet.rate;
+  }
+});
+document.getElementById("txn-sheet-rate").addEventListener("input", e => {
+  if (!txnSheet) return;
+  txnSheet.rate = e.target.value;
+  txnSheet.rateTouched = true;
+  syncTransferAmounts();
+  document.getElementById("txn-sheet-amount-to").value = txnSheet.amountTo;
+});
+document.getElementById("txn-sheet-rate").addEventListener("focus", () => {
+  if (txnSheet && txnSheet.keypad) { txnSheet.keypad = false; renderTxnSheet(); }
 });
 document.getElementById("txn-sheet-amount-to").addEventListener("focus", () => {
   if (txnSheet && txnSheet.keypad) { txnSheet.keypad = false; renderTxnSheet(); }
@@ -2576,7 +2658,7 @@ function formatWalletAmount(id, n) {
 // en la lista y mueva el saldo de "Yo" o la deuda de la tarjeta) más, si hace
 // falta, el movimiento en Ahorro o en la cartera propia. Guardamos esos ids en
 // "links" para poder borrar todo junto.
-async function createTransfer({ from, to, amount, amountTo, desc, date }) {
+async function createTransfer({ from, to, amount, amountTo, desc, date, tipoCambio }) {
   const suffix = desc ? " · " + desc : "";
   const links = [];
   const side = async (walletId, monto, nota) => {
@@ -2591,7 +2673,9 @@ async function createTransfer({ from, to, amount, amountTo, desc, date }) {
   };
   await side(from, -amount, `Transferencia a ${walletLabel(to)}${suffix}`);
   await side(to, amountTo, `Transferencia desde ${walletLabel(from)}${suffix}`);
-  return financeCollection().add({ date, type: "transferencia", category: "transferencia", from, to, amount, amountTo, desc: desc || "", links, createdAt: Date.now() });
+  const record = { date, type: "transferencia", category: "transferencia", from, to, amount, amountTo, desc: desc || "", links, createdAt: Date.now() };
+  if (tipoCambio) record.tipoCambio = tipoCambio;
+  return financeCollection().add(record);
 }
 
 function deleteTransfer(m) {
@@ -2632,10 +2716,12 @@ function renderWallets() {
   const deudaText = deuda > 0 ? "−" + formatMoney(deuda) : formatMoney(0);
 
   const panels = [
-    { label: "Patrimonio Total", lines: [formatMoney(netoBs), formatUSD(netoUsd)] },
+    { label: "Patrimonio Total", lines: [formatMoney(netoBs), formatUSD(netoUsd)],
+      sub: tcoData ? `≈ ${formatMoney(netoBs + netoUsd * tcoData.ultimo.tco)} al TC oficial ${fmtRate(tcoData.ultimo.tco)}` : "" },
     { label: "Yo", lines: [formatMoney(saldo)], sub: `Efectivo ${formatBsShort(efectivo)} · Débito ${formatBsShort(debito)}` },
     { label: "Cartera de Tarjeta de Crédito", lines: [deudaText] },
-    { label: "Cartera de Ahorro", lines: [formatUSD(totalAhorros)] }
+    { label: "Cartera de Ahorro", lines: [formatUSD(totalAhorros)],
+      sub: tcoData ? `≈ ${formatMoney(totalAhorros * tcoData.ultimo.tco)} al TC oficial` : "" }
   ];
   carterasCustomCache.forEach(w => {
     const bal = customWalletBalance(w.id);

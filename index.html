@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=202609250500">
+  <link rel="stylesheet" href="css/style.css?v=202609250600">
 </head>
 <body>
   <div id="login-screen" class="login-screen">
@@ -380,6 +380,12 @@
                     <span id="txn-sheet-to-badge" class="txn-icon"></span>
                     <span>A la cartera: <strong id="txn-sheet-to-label"></strong></span>
                   </button>
+                  <label class="budget-sheet-row txn-only-transfer txn-amount-to-row" id="txn-sheet-rate-row" hidden>
+                    <span class="txn-row-icon" data-icon="bank"></span>
+                    <span class="txn-amount-to-label">Tipo de cambio<small id="txn-sheet-rate-hint"></small></span>
+                    <span class="txn-amount-to-cur">Bs/US$</span>
+                    <input type="text" id="txn-sheet-rate" inputmode="decimal" placeholder="0" autocomplete="off">
+                  </label>
                   <label class="budget-sheet-row txn-only-transfer txn-amount-to-row" id="txn-sheet-amount-to-row" hidden>
                     <span class="txn-row-icon" data-icon="transfer"></span>
                     <span class="txn-amount-to-label">Llega</span>
@@ -756,7 +762,7 @@
   <script src="js/gimnasio.js?v=202609232200"></script>
   <script src="js/running.js?v=202609232200"></script>
   <script src="js/bicicleta.js?v=202609232200"></script>
-  <script src="js/finanzas.js?v=202609250500"></script>
+  <script src="js/finanzas.js?v=202609250600"></script>
   <script src="js/inversiones.js?v=202609232200"></script>
 </body>
 </html>
