@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=202609242110">
+  <link rel="stylesheet" href="css/style.css?v=202609242210">
 </head>
 <body>
   <div id="login-screen" class="login-screen">
@@ -298,6 +298,12 @@
 
             <div class="stat-row" id="finance-stats"></div>
 
+            <div class="fin-tabs fin-inner-tabs" id="fin-inner-tabs">
+              <button type="button" class="fin-tab" data-fin-tab="vg">Vista General</button>
+              <button type="button" class="fin-tab" data-fin-tab="gasto">Gasto</button>
+              <button type="button" class="fin-tab active" data-fin-tab="lista">Lista</button>
+            </div>
+
             <div class="month-nav">
               <button type="button" id="month-prev" aria-label="Periodo anterior"><span data-icon="chevronLeft"></span></button>
               <div class="month-label">
@@ -307,11 +313,33 @@
               <button type="button" id="month-next" aria-label="Periodo siguiente"><span data-icon="chevronRight"></span></button>
             </div>
 
-            <div class="txn-card">
-              <div class="txn-summary" id="finance-summary"></div>
-              <div id="finance-list"></div>
-              <p class="empty-state" id="finance-empty" style="display:none;">Aún no hay transacciones en este periodo. Toca + para agregar una.</p>
-            </div>
+            <section id="fin-tab-vg" class="fin-panel" hidden>
+              <div class="budget-section vg-soon">
+                <h3 class="budget-section-title">Vista General</h3>
+                <p class="info-sub">Esta pestaña llega pronto. Mándame cómo se ve en Buddy y la armamos.</p>
+              </div>
+            </section>
+
+            <section id="fin-tab-gasto" class="fin-panel" hidden>
+              <div class="txn-summary gasto-summary" id="gasto-summary"></div>
+              <div class="gasto-card">
+                <button type="button" class="gasto-mode" id="gasto-mode"><span id="gasto-mode-label">Gastos</span> ▾</button>
+                <div class="gasto-ring" id="gasto-ring"></div>
+                <div class="gasto-views">
+                  <button type="button" class="gasto-view" data-gasto-view="principales">Categorías principales</button>
+                  <button type="button" class="gasto-view active" data-gasto-view="categorias">Categorías</button>
+                </div>
+                <div id="gasto-list" class="gasto-list"></div>
+              </div>
+            </section>
+
+            <section id="fin-tab-lista" class="fin-panel">
+              <div class="txn-card">
+                <div class="txn-summary" id="finance-summary"></div>
+                <div id="finance-list"></div>
+                <p class="empty-state" id="finance-empty" style="display:none;">Aún no hay transacciones en este periodo. Toca + para agregar una.</p>
+              </div>
+            </section>
 
             <button type="button" class="txn-fab" id="txn-add" aria-label="Nueva transacción"><span data-icon="plus"></span></button>
 
@@ -445,61 +473,9 @@
               <div id="budget-info" class="budget-grouped-list"></div>
             </section>
 
-              <!-- Detalle de una categoría: sus movimientos del mes -->
-              <div id="cat-detail-sheet" class="js-sheet budget-sheet" hidden>
-                <div class="budget-sheet-overlay"></div>
-                <div class="budget-sheet-panel cat-detail-panel" role="dialog" aria-modal="true" aria-labelledby="cat-detail-title">
-                  <div class="budget-sheet-header">
-                    <button type="button" class="budget-sheet-close" aria-label="Cerrar"><span data-icon="close"></span></button>
-                    <h3 id="cat-detail-title"></h3>
-                  </div>
-                  <div id="cat-detail-hero" class="cat-detail-hero"></div>
-                  <button type="button" id="cat-detail-edit" class="budget-sheet-choose cat-detail-edit">Editar presupuesto</button>
-                  <h4 class="cat-detail-heading">Movimientos</h4>
-                  <div id="cat-detail-list" class="cat-detail-list"></div>
-                </div>
-              </div>
+              
 
-              <!-- Hoja para cargar un monto del presupuesto (como Buddy) -->
-              <div id="budget-sheet" class="js-sheet budget-sheet" hidden>
-                <div class="budget-sheet-overlay"></div>
-                <div class="budget-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="budget-sheet-title">
-                  <div class="budget-sheet-header">
-                    <button type="button" class="budget-sheet-close" aria-label="Cerrar"><span data-icon="close"></span></button>
-                    <h3 id="budget-sheet-title">Gasto de presupuesto</h3>
-                  </div>
-                  <div class="budget-sheet-hero">
-                    <div class="budget-sheet-amount"><span class="cur">Bs</span><span id="budget-sheet-amount">0</span></div>
-                    <div class="budget-sheet-type">
-                      <button type="button" data-sheet-type="gasto">Gasto</button>
-                      <button type="button" data-sheet-type="ingreso">Ingresos</button>
-                    </div>
-                  </div>
-                  <button type="button" class="budget-sheet-row" id="budget-sheet-cat">
-                    <span id="budget-sheet-cat-badge" class="cat-icon"></span>
-                    <span>Categoría: <strong id="budget-sheet-cat-label">Elige una</strong></span>
-                  </button>
-                  <div class="budget-sheet-tipo" id="budget-sheet-tipo">
-                    <span>Tipo de gasto</span>
-                    <div class="budget-sheet-tipo-options">
-                      <button type="button" data-tipo="variable">Variable</button>
-                      <button type="button" data-tipo="fijo">Fijo</button>
-                      <button type="button" data-tipo="ahorro">Ahorro</button>
-                    </div>
-                  </div>
-                  <div class="budget-sheet-actions">
-                    <button type="button" class="budget-sheet-choose" id="budget-sheet-choose">Elegir la categoría</button>
-                    <button type="button" class="budget-sheet-delete" id="budget-sheet-delete" hidden>Eliminar</button>
-                    <button type="button" class="budget-sheet-ok" id="budget-sheet-ok" aria-label="Guardar"><span data-icon="check"></span></button>
-                  </div>
-                  <div class="budget-keypad">
-                    <button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button>
-                    <button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button>
-                    <button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button>
-                    <button type="button" data-key=",">,</button><button type="button" data-key="0">0</button><button type="button" data-key="back" aria-label="Borrar">&#9003;</button>
-                  </div>
-                </div>
-              </div>
+              
 
 
 
@@ -686,6 +662,62 @@
     <nav class="bottom-nav" id="bottom-nav-links"></nav>
   </div>
 
+<!-- Detalle de una categoría: sus movimientos del mes -->
+  <div id="cat-detail-sheet" class="js-sheet budget-sheet" hidden>
+    <div class="budget-sheet-overlay"></div>
+    <div class="budget-sheet-panel cat-detail-panel" role="dialog" aria-modal="true" aria-labelledby="cat-detail-title">
+      <div class="budget-sheet-header">
+        <button type="button" class="budget-sheet-close" aria-label="Cerrar"><span data-icon="close"></span></button>
+        <h3 id="cat-detail-title"></h3>
+      </div>
+      <div id="cat-detail-hero" class="cat-detail-hero"></div>
+      <button type="button" id="cat-detail-edit" class="budget-sheet-choose cat-detail-edit">Editar presupuesto</button>
+      <h4 class="cat-detail-heading">Movimientos</h4>
+      <div id="cat-detail-list" class="cat-detail-list"></div>
+    </div>
+  </div>
+
+<!-- Hoja para cargar un monto del presupuesto (como Buddy) -->
+  <div id="budget-sheet" class="js-sheet budget-sheet" hidden>
+    <div class="budget-sheet-overlay"></div>
+    <div class="budget-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="budget-sheet-title">
+      <div class="budget-sheet-header">
+        <button type="button" class="budget-sheet-close" aria-label="Cerrar"><span data-icon="close"></span></button>
+        <h3 id="budget-sheet-title">Gasto de presupuesto</h3>
+      </div>
+      <div class="budget-sheet-hero">
+        <div class="budget-sheet-amount"><span class="cur">Bs</span><span id="budget-sheet-amount">0</span></div>
+        <div class="budget-sheet-type">
+          <button type="button" data-sheet-type="gasto">Gasto</button>
+          <button type="button" data-sheet-type="ingreso">Ingresos</button>
+        </div>
+      </div>
+      <button type="button" class="budget-sheet-row" id="budget-sheet-cat">
+        <span id="budget-sheet-cat-badge" class="cat-icon"></span>
+        <span>Categoría: <strong id="budget-sheet-cat-label">Elige una</strong></span>
+      </button>
+      <div class="budget-sheet-tipo" id="budget-sheet-tipo">
+        <span>Tipo de gasto</span>
+        <div class="budget-sheet-tipo-options">
+          <button type="button" data-tipo="variable">Variable</button>
+          <button type="button" data-tipo="fijo">Fijo</button>
+          <button type="button" data-tipo="ahorro">Ahorro</button>
+        </div>
+      </div>
+      <div class="budget-sheet-actions">
+        <button type="button" class="budget-sheet-choose" id="budget-sheet-choose">Elegir la categoría</button>
+        <button type="button" class="budget-sheet-delete" id="budget-sheet-delete" hidden>Eliminar</button>
+        <button type="button" class="budget-sheet-ok" id="budget-sheet-ok" aria-label="Guardar"><span data-icon="check"></span></button>
+      </div>
+      <div class="budget-keypad">
+        <button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button>
+        <button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button>
+        <button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button>
+        <button type="button" data-key=",">,</button><button type="button" data-key="0">0</button><button type="button" data-key="back" aria-label="Borrar">&#9003;</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Selector de categorías a pantalla completa (como Buddy) -->
   <div id="cat-sheet" class="js-sheet cat-sheet" hidden>
     <div class="cat-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="cat-sheet-title">
@@ -731,7 +763,7 @@
   <script src="js/gimnasio.js?v=202609232200"></script>
   <script src="js/running.js?v=202609232200"></script>
   <script src="js/bicicleta.js?v=202609232200"></script>
-  <script src="js/finanzas.js?v=202609242130"></script>
+  <script src="js/finanzas.js?v=202609242210"></script>
   <script src="js/inversiones.js?v=202609232200"></script>
 </body>
 </html>

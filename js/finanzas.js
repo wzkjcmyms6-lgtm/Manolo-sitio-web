@@ -285,8 +285,8 @@ function renderStats() {
       <div class="value">${formatMoney(saldo)}</div>
       <div class="label">Saldo disponible</div>
       <div class="cash-split">
-        <span><i style="background:${PAYMENT_COLORS.efectivo}"></i>Efectivo ${formatBsShort(efectivo)}</span>
-        <span><i style="background:${PAYMENT_COLORS.debito}"></i>Débito ${formatBsShort(debito)}</span>
+        <span><i style="background:${PAYMENT_COLORS.efectivo}"></i>Efectivo ${efectivo < 0 ? "−" : ""}${formatBsShort(Math.abs(efectivo))}</span>
+        <span><i style="background:${PAYMENT_COLORS.debito}"></i>Débito ${debito < 0 ? "−" : ""}${formatBsShort(Math.abs(debito))}</span>
       </div>
     </div>
     <div class="stat-box">
@@ -360,22 +360,40 @@ function txnIconHTML(cat) {
     : `<span class="txn-icon txn-icon-solid" style="background:${cat.color}" data-icon="${cat.icon}"></span>`;
 }
 
+function periodMovements() {
+  const period = currentBudgetPeriod();
+  return financeCache.filter(m => isInPeriod(m.date, period));
+}
+
+// Plata que salió de Efectivo/Débito hacia Ahorro u otras carteras (neto de
+// lo que volvió), agrupada por cartera. La tarjeta no cuenta: pagarla no es
+// ahorrar.
+function savingsByWallet(list) {
+  const byWallet = {};
+  list.filter(m => m.type === "transferencia").forEach(m => {
+    if (isCash(m.from) && !isCash(m.to) && m.to !== "tarjeta") byWallet[m.to] = (byWallet[m.to] || 0) + m.amount;
+    if (isCash(m.to) && !isCash(m.from) && m.from !== "tarjeta") byWallet[m.from] = (byWallet[m.from] || 0) - (m.amountTo != null ? m.amountTo : m.amount);
+  });
+  return byWallet;
+}
+
+function periodSummary(list) {
+  const ingresos = list.filter(m => m.type === "ingreso").reduce((s, m) => s + m.amount, 0);
+  const gastos = list.filter(m => m.type === "gasto").reduce((s, m) => s + m.amount, 0);
+  // El saldo es lo real: lo que se apartó a Ahorro u otras carteras ya no se
+  // puede gastar, aunque no sea un gasto. Pagar la tarjeta no se resta: esos
+  // gastos ya están en "Gastos".
+  const ahorro = Object.values(savingsByWallet(list)).reduce((s, v) => s + v, 0);
+  return { ingresos, gastos, ahorro, saldo: ingresos - gastos - ahorro };
+}
+
 function renderMovements() {
   const period = currentBudgetPeriod();
   const list = financeCache
     .filter(m => isInPeriod(m.date, period))
     .sort(byNewest);
 
-  const ingresos = list.filter(m => m.type === "ingreso").reduce((s, m) => s + m.amount, 0);
-  const gastos = list.filter(m => m.type === "gasto").reduce((s, m) => s + m.amount, 0);
-  // El saldo es lo real: lo que salió de "Yo" hacia Ahorro u otras carteras
-  // (menos lo que volvió) ya no se puede gastar, aunque no se muestre como
-  // gasto. Pagar la tarjeta no se resta: esos gastos ya están en "Gastos".
-  const ahorro = list
-    .filter(m => m.type === "transferencia" && m.to !== "tarjeta")
-    .reduce((s, m) => s + (isCash(m.from) && !isCash(m.to) ? m.amount : 0)
-      - (isCash(m.to) && !isCash(m.from) ? (m.amountTo != null ? m.amountTo : m.amount) : 0), 0);
-  const saldo = ingresos - gastos - ahorro;
+  const { ingresos, gastos, saldo } = periodSummary(list);
   const signed = n => `${n < 0 ? "−" : ""}${formatBsShort(Math.abs(n))}`;
 
   document.getElementById("month-count").textContent = `${list.length} transacci${list.length === 1 ? "ón" : "ones"}`;
@@ -434,6 +452,157 @@ function renderMovements() {
 function deleteMovement(id) {
   financeCollection().doc(id).delete();
 }
+
+// ---- Pestañas internas de Vista general: Vista General / Gasto / Lista ----
+const FIN_TAB_KEY = "manolo.finTab";
+function currentFinTab() {
+  try { return localStorage.getItem(FIN_TAB_KEY) || "lista"; } catch (e) { return "lista"; }
+}
+function showFinTab(tab) {
+  try { localStorage.setItem(FIN_TAB_KEY, tab); } catch (e) { /* sin almacenamiento */ }
+  document.querySelectorAll("[data-fin-tab]").forEach(b => b.classList.toggle("active", b.dataset.finTab === tab));
+  ["vg", "gasto", "lista"].forEach(t => { document.getElementById(`fin-tab-${t}`).hidden = t !== tab; });
+}
+document.getElementById("fin-inner-tabs").addEventListener("click", e => {
+  const btn = e.target.closest("[data-fin-tab]");
+  if (btn) showFinTab(btn.dataset.finTab);
+});
+showFinTab(currentFinTab());
+
+// ---- Pestaña Gasto (como Buddy): anillo por categoría ----
+const GASTO_MODES = {
+  gasto: { label: "Gastos", icon: "shopping", color: "#e0567c" },
+  ingreso: { label: "Ingresos", icon: "salary", color: INGRESO_COLOR },
+  ahorro: { label: "Ahorros", icon: "wallet", color: "#4dc9e0" }
+};
+let gastoMode = "gasto";
+let gastoView = "categorias";
+let gastoSelected = null;
+
+// Filas {id, label, icon, emoji, color, amount, group:{id,label,color}} del modo elegido.
+function gastoRows() {
+  const list = periodMovements();
+  if (gastoMode === "ahorro") {
+    const byWallet = savingsByWallet(list);
+    return Object.keys(byWallet).filter(id => byWallet[id] > 0).map(id => {
+      const v = walletVisual(id);
+      const label = walletLabel(id);
+      return { id, label, icon: v.icon, color: v.color, amount: byWallet[id], type: "ahorro", group: { id, label, color: v.color } };
+    }).sort((a, b) => b.amount - a.amount);
+  }
+  const totals = {};
+  list.filter(m => m.type === gastoMode).forEach(m => { totals[m.category] = (totals[m.category] || 0) + m.amount; });
+  return Object.keys(totals).map(id => {
+    const cat = findCategory(gastoMode, id);
+    let group = { id: "__ingresos", label: "Ingresos", color: INGRESO_COLOR };
+    if (gastoMode === "gasto") {
+      const g = categoryGroupsCache.find(gr => (gr.items || []).some(i => i.id === id));
+      group = g ? { id: g.id, label: g.nombre, color: groupColor(g) } : { id: "__otros", label: "Otros", color: "#9a978f" };
+    }
+    return { id, label: cat.label, icon: cat.icon, emoji: cat.emoji, color: cat.color, amount: totals[id], type: gastoMode, group };
+  }).sort((a, b) => b.amount - a.amount);
+}
+
+function gastoRingSVG(rows, selectedId) {
+  const size = 260, stroke = 22, r = (size - stroke) / 2 - 8, c = 2 * Math.PI * r;
+  const total = rows.reduce((s, x) => s + x.amount, 0);
+  const gap = rows.length > 1 ? stroke + 10 : stroke + 12;
+  let offset = gap / 2;
+  const arcs = total > 0 ? rows.map(row => {
+    const len = Math.max((row.amount / total) * c - gap, 2);
+    const arc = `<circle class="gasto-arc${selectedId && row.id !== selectedId ? " dim" : ""}" data-gasto-pick="${row.id}" cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none"
+      style="stroke:${row.color}" stroke-width="${stroke}" stroke-linecap="round"
+      stroke-dasharray="${len} ${c - len}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${size / 2} ${size / 2})"/>`;
+    offset += (row.amount / total) * c;
+    return arc;
+  }).join("") : `<circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" style="stroke:var(--border)" stroke-width="${stroke}"/>`;
+  return `<svg viewBox="0 0 ${size} ${size}" aria-hidden="true">
+    <defs><filter id="gasto-glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <g filter="url(#gasto-glow)">${arcs}</g>
+  </svg>`;
+}
+
+function renderGasto() {
+  const list = periodMovements();
+  const { ingresos, gastos, saldo } = periodSummary(list);
+  const signed = n => `${n < 0 ? "−" : ""}${formatBsShort(Math.abs(n))}`;
+  document.getElementById("gasto-summary").innerHTML = `
+    <div><strong>${formatBsShort(ingresos)}</strong><span>Ingresos</span></div>
+    <div><strong>${formatBsShort(gastos)}</strong><span>Gastos</span></div>
+    <div><strong class="${saldo < 0 ? "neg" : ""}">${signed(saldo)}</strong><span>Restante</span></div>
+  `;
+
+  const mode = GASTO_MODES[gastoMode];
+  document.getElementById("gasto-mode-label").textContent = mode.label;
+  const rows = gastoRows();
+  if (gastoSelected && !rows.some(r => r.id === gastoSelected)) gastoSelected = null;
+  const center = rows.find(r => r.id === gastoSelected) || rows[0];
+  const total = rows.reduce((s, r) => s + r.amount, 0);
+
+  document.getElementById("gasto-ring").innerHTML = `
+    ${gastoRingSVG(rows, gastoSelected)}
+    <div class="gasto-ring-center">
+      ${center
+        ? `<span class="gasto-center-icon" style="background:${center.color}">${center.emoji ? `<span class="gasto-center-emoji">${center.emoji}</span>` : `<span data-icon="${center.icon}"></span>`}</span>
+           <span class="gasto-center-value">${formatBsShort(center.amount)}</span>
+           <span class="gasto-center-label">${escapeHtml(center.label)}</span>`
+        : `<span class="gasto-center-icon" style="background:var(--border)"><span data-icon="${mode.icon}"></span></span>
+           <span class="gasto-center-value">${formatBsShort(0)}</span>
+           <span class="gasto-center-label">Sin ${mode.label.toLowerCase()} en este periodo</span>`}
+    </div>`;
+
+  document.querySelectorAll("[data-gasto-view]").forEach(b => b.classList.toggle("active", b.dataset.gastoView === gastoView));
+
+  const listEl = document.getElementById("gasto-list");
+  if (!rows.length) {
+    listEl.innerHTML = "";
+  } else if (gastoView === "principales") {
+    const groups = [];
+    rows.forEach(r => {
+      let g = groups.find(x => x.id === r.group.id);
+      if (!g) { g = Object.assign({ amount: 0 }, r.group); groups.push(g); }
+      g.amount += r.amount;
+    });
+    groups.sort((a, b) => b.amount - a.amount);
+    listEl.innerHTML = groups.map(g => `
+      <div class="gasto-group-row">
+        <span class="swatch" style="background:${g.color}"></span>
+        <span class="gasto-group-name">${escapeHtml(g.label)}</span>
+        <span class="breakdown-leader"></span>
+        <span class="gasto-group-pct">${total > 0 ? Math.round(g.amount / total * 100) : 0}%</span>
+        <span class="gasto-group-amount">${formatBsShort(g.amount)}</span>
+      </div>`).join("");
+  } else {
+    listEl.innerHTML = rows.map(r => `
+      <button type="button" class="gasto-cat-row${r.id === (center && center.id) ? " selected" : ""}" data-gasto-row="${r.id}">
+        <span class="txn-icon txn-icon-solid" style="background:${r.color}">${r.emoji ? r.emoji : `<span data-icon="${r.icon}"></span>`}</span>
+        <span class="gasto-cat-name">${escapeHtml(r.label)}</span>
+        <span class="gasto-cat-amount">${formatBsShort(r.amount)}</span>
+      </button>`).join("");
+  }
+  renderIcons(document.getElementById("fin-tab-gasto"));
+}
+
+document.getElementById("gasto-mode").addEventListener("click", () => {
+  openPicker({
+    title: "¿Qué quieres ver?",
+    items: Object.keys(GASTO_MODES).map(id => ({ id, label: GASTO_MODES[id].label, icon: GASTO_MODES[id].icon, color: GASTO_MODES[id].color })),
+    onPick: id => { closePicker(); gastoMode = id; gastoSelected = null; renderGasto(); }
+  });
+});
+
+document.getElementById("fin-tab-gasto").addEventListener("click", e => {
+  const view = e.target.closest("[data-gasto-view]");
+  if (view) { gastoView = view.dataset.gastoView; renderGasto(); return; }
+  const arc = e.target.closest("[data-gasto-pick]");
+  if (arc) { gastoSelected = arc.dataset.gastoPick === gastoSelected ? null : arc.dataset.gastoPick; renderGasto(); return; }
+  const row = e.target.closest("[data-gasto-row]");
+  if (row) {
+    gastoSelected = row.dataset.gastoRow;
+    renderGasto();
+    if (gastoMode !== "ahorro") openCategoryDetail(gastoMode, gastoSelected);
+  }
+});
 
 // ---- Hoja "Nueva transacción" (como Buddy) ----
 const PAYMENT_ICONS = { efectivo: "salary", debito: "bank", credito: "finance" };
@@ -2597,6 +2766,7 @@ function renderAll() {
   renderStats();
   updateMonthLabel();
   renderMovements();
+  renderGasto();
   updateBudgetMonthLabel();
   renderBudgets();
   renderBudgetInputs();

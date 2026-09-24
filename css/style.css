@@ -2119,3 +2119,56 @@ body.sheet-open { overflow: hidden; }
 /* Panel de Carteras: textos más grandes (los números quedan igual) */
 .wallet-hero-label { font-size: 1.3rem; }
 .wallet-hero-sub { font-size: 1.1rem; margin-top: 0.45rem; }
+
+/* ---------- Vista general: pestañas internas ---------- */
+.fin-inner-tabs { display: flex; width: 100%; margin-bottom: 1rem; }
+.fin-inner-tabs .fin-tab { flex: 1; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.74rem; padding: 0.65rem 0.3rem; white-space: nowrap; }
+.vg-soon { text-align: left; }
+
+/* ---------- Pestaña Gasto (como Buddy) ---------- */
+.gasto-summary { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; margin-bottom: 1rem; padding: 1.1rem 0.4rem; }
+.gasto-card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 1rem 1.1rem 0.6rem; margin-bottom: 6rem; }
+.gasto-mode {
+  display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1.1rem; border-radius: 999px; border: none;
+  background: var(--bg); color: var(--ink); font: inherit; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer;
+}
+.gasto-ring { position: relative; width: min(290px, 100%); aspect-ratio: 1; margin: 0.6rem auto 0.4rem; }
+.gasto-ring svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.gasto-arc { cursor: pointer; transition: opacity 0.2s ease; }
+.gasto-arc.dim { opacity: 0.35; }
+.gasto-ring-center {
+  position: absolute; inset: 22%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; pointer-events: none;
+}
+.gasto-center-icon { width: 58px; height: 58px; padding: 14px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; margin-bottom: 0.5rem; }
+.gasto-center-icon [data-icon] { width: 100%; height: 100%; }
+.gasto-center-emoji { font-size: 1.8rem; line-height: 1; }
+.gasto-center-value { font-size: 2rem; font-weight: 700; line-height: 1.1; }
+.gasto-center-label { font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-top: 0.3rem; max-width: 100%; }
+.gasto-views { display: flex; gap: 0.3rem; background: transparent; margin: 0.8rem 0 0.4rem; }
+.gasto-view {
+  flex: 1; padding: 0.7rem 0.5rem; border-radius: 999px; border: none; background: transparent; color: var(--ink);
+  font: inherit; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; white-space: nowrap;
+}
+.gasto-view.active { background: var(--bg); }
+.gasto-list { border-top: 1px solid var(--border); }
+.gasto-group-row { display: flex; align-items: center; gap: 0.7rem; padding: 1rem 0.2rem; font-size: 1.05rem; }
+.gasto-group-row + .gasto-group-row { border-top: 1px solid var(--border); }
+.gasto-group-row .swatch { width: 18px; height: 18px; border-radius: 5px; flex-shrink: 0; }
+.gasto-group-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.gasto-group-pct { color: var(--muted); font-size: 0.85rem; }
+.gasto-group-amount { font-weight: 600; white-space: nowrap; }
+.gasto-cat-row {
+  display: flex; align-items: center; gap: 0.9rem; width: 100%; padding: 0.75rem 0.2rem; background: none; border: none;
+  border-bottom: 1px solid var(--border); color: var(--ink); font: inherit; font-size: 1.05rem; text-align: left; cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.gasto-cat-row:last-child { border-bottom: none; }
+.gasto-cat-row:active { background: var(--surface-raised); }
+.gasto-cat-row .txn-icon-solid { width: 40px; height: 40px; padding: 9px; font-size: 1.2rem; }
+.gasto-cat-row .txn-icon-solid [data-icon] { width: 100%; height: 100%; }
+.gasto-cat-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gasto-cat-amount { font-weight: 500; white-space: nowrap; }
+.gasto-cat-row.selected .gasto-cat-name { font-weight: 700; }
+.gasto-view { flex: 1 1 auto; font-size: 0.68rem; letter-spacing: 0.08em; padding: 0.7rem 0.4rem; }
+.gasto-views { overflow: hidden; }
