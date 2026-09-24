@@ -101,7 +101,7 @@ function flattenCategoryGroups(groups) {
   groups.forEach((g, gi) => {
     const color = g.color || CATEGORY_COLOR_POOL[gi % CATEGORY_COLOR_POOL.length];
     (g.items || []).forEach(item => {
-      flat.push({ id: item.id, label: item.label, icon: item.icon, color, groupId: g.id });
+      flat.push({ id: item.id, label: item.label, icon: item.icon, emoji: item.emoji, color, groupId: g.id });
     });
   });
   return flat;
@@ -228,10 +228,6 @@ function computeTotals(list) {
 
 function renderStats() {
   const { saldo, deuda } = computeTotals(financeCache);
-  const monthDate = currentMonthDate();
-  const gastosMes = financeCache
-    .filter(m => m.type === "gasto" && isInMonth(m.date, monthDate))
-    .reduce((s, m) => s + m.amount, 0);
 
   const stats = document.getElementById("finance-stats");
   stats.innerHTML = `
@@ -251,7 +247,6 @@ function renderStats() {
         </form>
       ` : ""}
     </div>
-    <div class="stat-box"><div class="value">${formatMoney(gastosMes)}</div><div class="label">Gastos de ${monthLabel(monthDate).toLowerCase()}</div></div>
   `;
 
   const toggle = document.getElementById("pay-card-toggle");
@@ -278,113 +273,262 @@ function renderStats() {
 }
 
 function updateMonthLabel() {
-  const monthDate = currentMonthDate();
-  document.getElementById("month-label-text").textContent = monthLabel(monthDate);
+  document.getElementById("month-label-text").textContent = periodLabel(currentBudgetPeriod());
   document.getElementById("month-next").disabled = monthOffset >= 0;
 }
 
-function populateCategorySelect(type) {
-  const sel = document.getElementById("finance-category");
-  const list = type === "gasto" ? gastoCategoriesCache : (CATEGORIES[type] || []);
-  sel.innerHTML = list.map(c => `<option value="${c.id}">${c.label}</option>`).join("");
+// ---- Vista general: lista de transacciones del periodo (como Buddy) ----
+function dayLabel(dateStr) {
+  const today = isoDate(new Date());
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  if (dateStr === today) return "Hoy";
+  if (dateStr === isoDate(y)) return "Ayer";
+  return capitalize(new Date(dateStr + "T00:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "2-digit", month: "short" }).replace(".", ""));
 }
-function populatePaymentSelect(type) {
-  const sel = document.getElementById("finance-payment");
-  const options = type === "ingreso" ? PAYMENTS.filter(p => p.id !== "credito") : PAYMENTS;
-  sel.innerHTML = options.map(p => `<option value="${p.id}">${p.label}</option>`).join("");
+
+function movementDelta(m) {
+  // ajuste_tarjeta no mueve plata de Gastos (viene de otra cartera).
+  if (m.type === "ingreso") return m.amount;
+  if (m.type === "ajuste_tarjeta") return 0;
+  return -m.amount;
+}
+
+function txnIconHTML(cat) {
+  return cat.emoji
+    ? `<span class="txn-icon txn-icon-solid" style="background:${cat.color}">${cat.emoji}</span>`
+    : `<span class="txn-icon txn-icon-solid" style="background:${cat.color}" data-icon="${cat.icon}"></span>`;
 }
 
 function renderMovements() {
-  const monthDate = currentMonthDate();
+  const period = currentBudgetPeriod();
   const list = financeCache
-    .filter(m => isInMonth(m.date, monthDate))
+    .filter(m => isInPeriod(m.date, period))
     .sort((a, b) => b.date.localeCompare(a.date) || String(b.id).localeCompare(String(a.id)));
 
-  const container = document.getElementById("finance-list");
-  const empty = document.getElementById("finance-empty");
-  const count = document.getElementById("month-count");
+  const ingresos = list.filter(m => m.type === "ingreso").reduce((s, m) => s + m.amount, 0);
+  const gastos = list.filter(m => m.type === "gasto").reduce((s, m) => s + m.amount, 0);
+  const saldo = ingresos - gastos;
 
-  container.innerHTML = "";
-  count.textContent = list.length ? `${list.length} movimiento${list.length === 1 ? "" : "s"}` : "";
-  empty.style.display = list.length ? "none" : "block";
+  document.getElementById("month-count").textContent = `${list.length} transacci${list.length === 1 ? "ón" : "ones"}`;
+  document.getElementById("finance-summary").innerHTML = `
+    <div><strong>${formatBsShort(ingresos)}</strong><span>Ingresos</span></div>
+    <div><strong>${formatBsShort(gastos)}</strong><span>Gastos</span></div>
+    <div><strong class="${saldo < 0 ? "neg" : ""}">${saldo < 0 ? "−" : ""}${formatBsShort(Math.abs(saldo))}</strong><span>Saldo</span></div>
+  `;
+  document.getElementById("finance-empty").style.display = list.length ? "none" : "block";
 
   const groups = [];
-  let lastDate = null, group = null;
   list.forEach(m => {
-    if (m.date !== lastDate) {
-      group = { date: m.date, items: [] };
-      groups.push(group);
-      lastDate = m.date;
-    }
-    group.items.push(m);
+    const last = groups[groups.length - 1];
+    if (last && last.date === m.date) last.items.push(m);
+    else groups.push({ date: m.date, items: [m] });
   });
 
-  groups.forEach(g => {
-    // ajuste_tarjeta no mueve plata de Gastos (viene de otra cartera), así
-    // que no cuenta para el total de efectivo del día.
-    const dayTotal = g.items.reduce((s, m) =>
-      s + (m.type === "ingreso" ? m.amount : m.type === "ajuste_tarjeta" ? 0 : -m.amount), 0);
-    const dayLabel = capitalize(new Date(g.date + "T00:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "2-digit", month: "short" }));
-
-    const header = document.createElement("div");
-    header.className = "day-header";
-    const totalClass = dayTotal > 0 ? "pos" : dayTotal < 0 ? "neg" : "";
-    const totalText = dayTotal === 0 ? formatMoney(0) : (dayTotal > 0 ? "+" : "−") + formatMoney(Math.abs(dayTotal));
-    header.innerHTML = `<span>${dayLabel}</span><span class="${totalClass}">${totalText}</span>`;
-    container.appendChild(header);
-
-    g.items.forEach(m => {
-      const cat = findCategory(m.type, m.category);
-      const pay = findPayment(m.payment);
-      const sign = m.type === "ingreso" ? "+" : "−";
-      const amountClass = m.type === "ingreso" ? "pos" : "neg";
-
-      const item = document.createElement("div");
-      item.className = "txn-item";
-      item.innerHTML = `
-        <span class="txn-icon" style="background:${cat.color}22; color:${cat.color}" data-icon="${cat.icon}"></span>
-        <div class="txn-body">
-          <div class="txn-desc">${m.desc}</div>
-          <div class="meta">${cat.label}${pay ? " · " + pay.label : ""}</div>
-        </div>
-        <div class="txn-amount ${amountClass}">${sign}${formatMoney(m.amount)}</div>
-      `;
-      const del = document.createElement("button");
-      del.className = "delete";
-      del.setAttribute("aria-label", "Eliminar movimiento");
-      del.innerHTML = ICONS.trash;
-      del.addEventListener("click", () => deleteMovement(m.id));
-      item.appendChild(del);
-      container.appendChild(item);
-      renderIcons(item);
-    });
-  });
+  const container = document.getElementById("finance-list");
+  container.innerHTML = groups.map(g => {
+    const total = g.items.reduce((s, m) => s + movementDelta(m), 0);
+    const totalText = total === 0 ? formatBsShort(0) : `${total > 0 ? "+" : "−"}${formatBsShort(Math.abs(total))}`;
+    return `
+      <div class="txn-day">
+        <div class="txn-day-head"><span>${dayLabel(g.date)}</span><span class="breakdown-leader"></span><span class="txn-day-total">${totalText}</span></div>
+        ${g.items.map(m => {
+          const cat = findCategory(m.type, m.category);
+          const pay = findPayment(m.payment);
+          const title = m.desc || cat.label;
+          const sub = [m.desc ? cat.label : "", m.payment === "credito" ? (pay ? pay.label : "") : "", m.excluded ? "Excluido del presupuesto" : ""].filter(Boolean).join(" · ");
+          const isTransfer = m.type === "pago_tarjeta" || m.type === "ajuste_tarjeta";
+          const amount = m.type === "ingreso"
+            ? `<span class="txn-amount pos">+${formatBsShort(m.amount)}</span>`
+            : isTransfer
+              ? `<span class="txn-amount muted">(${formatBsShort(m.amount)})</span>`
+              : `<span class="txn-amount">${formatBsShort(m.amount)}</span>`;
+          return `
+            <button type="button" class="txn-row" data-edit-txn="${m.id}">
+              ${txnIconHTML(cat)}
+              <span class="txn-body">
+                <span class="txn-desc">${escapeHtml(title)}</span>
+                ${sub ? `<span class="meta">${escapeHtml(sub)}</span>` : ""}
+              </span>
+              ${amount}
+            </button>`;
+        }).join("")}
+      </div>`;
+  }).join("");
+  renderIcons(container);
 }
 
 function deleteMovement(id) {
   financeCollection().doc(id).delete();
 }
 
-document.getElementById("finance-type").addEventListener("change", e => {
-  populateCategorySelect(e.target.value);
-  populatePaymentSelect(e.target.value);
+// ---- Hoja "Nueva transacción" (como Buddy) ----
+const PAYMENT_ICONS = { efectivo: "salary", debito: "bank", credito: "finance" };
+const PAYMENT_COLORS = { efectivo: "#9b6bde", debito: "#4d9de0", credito: "#e0567c" };
+let txnSheet = null; // { id, type, category, payment, amount, desc, date, excluded, keypad }
+
+function defaultCategory(type) {
+  if (type === "ingreso") return (CATEGORIES.ingreso[0] || {}).id;
+  const otros = gastoCategoriesCache.find(c => c.id === "otros");
+  return (otros || gastoCategoriesCache[0] || {}).id;
+}
+
+function openTxnSheet(movement) {
+  txnSheet = movement
+    ? {
+        id: movement.id, type: movement.type, category: movement.category, payment: movement.payment || "efectivo",
+        amount: String(movement.amount).replace(".", ","), desc: movement.desc || "", date: movement.date,
+        excluded: !!movement.excluded, keypad: false
+      }
+    : { id: null, type: "gasto", category: defaultCategory("gasto"), payment: "efectivo", amount: "0", desc: "", date: isoDate(new Date()), excluded: false, keypad: true };
+  renderTxnSheet();
+  document.getElementById("txn-sheet").removeAttribute("hidden");
+}
+
+function closeTxnSheet() {
+  document.getElementById("txn-sheet").setAttribute("hidden", "");
+  txnSheet = null;
+}
+
+function renderTxnSheet() {
+  const t = txnSheet;
+  const editable = t.type === "gasto" || t.type === "ingreso";
+  document.getElementById("txn-sheet-title").textContent = t.id ? "Editar transacción" : "Nueva transacción";
+  document.getElementById("txn-sheet-amount").textContent = formatSheetAmount(t.amount);
+  document.querySelectorAll("#txn-sheet [data-txn-type]").forEach(b => {
+    b.classList.toggle("active", b.dataset.txnType === t.type);
+    b.hidden = !editable;
+  });
+
+  const cat = findCategory(t.type, t.category);
+  document.getElementById("txn-sheet-cat-badge").outerHTML = txnIconHTML(cat).replace('<span class="txn-icon', '<span id="txn-sheet-cat-badge" class="txn-icon');
+  document.getElementById("txn-sheet-cat-label").textContent = cat.label;
+  document.getElementById("txn-sheet-cat").disabled = !editable;
+
+  const pay = findPayment(t.payment) || PAYMENTS[0];
+  document.getElementById("txn-sheet-pay-badge").outerHTML = `<span id="txn-sheet-pay-badge" class="txn-icon txn-icon-solid" style="background:${PAYMENT_COLORS[pay.id]}" data-icon="${PAYMENT_ICONS[pay.id]}"></span>`;
+  document.getElementById("txn-sheet-pay-label").textContent = pay.label;
+  document.getElementById("txn-sheet-pay-prefix").textContent = t.type === "ingreso" ? "Hacia:" : "Desde:";
+
+  const note = document.getElementById("txn-sheet-note");
+  if (note.value !== t.desc) note.value = t.desc;
+  document.getElementById("txn-sheet-date-label").textContent = dayLabel(t.date);
+  document.getElementById("txn-sheet-date-input").value = t.date;
+  document.getElementById("txn-sheet-next-day").disabled = t.date >= isoDate(new Date());
+
+  const excl = document.getElementById("txn-sheet-excluded");
+  excl.checked = t.excluded;
+  document.getElementById("txn-sheet-excluded-row").hidden = !editable;
+
+  document.getElementById("txn-sheet-delete").hidden = !t.id;
+  document.getElementById("txn-sheet").classList.toggle("keypad-open", t.keypad);
+  renderIcons(document.getElementById("txn-sheet"));
+}
+
+function pressTxnKey(key) {
+  txnSheet.amount = applyAmountKey(txnSheet.amount, key);
+  document.getElementById("txn-sheet-amount").textContent = formatSheetAmount(txnSheet.amount);
+}
+
+function shiftTxnDate(days) {
+  const d = new Date(txnSheet.date + "T00:00:00");
+  d.setDate(d.getDate() + days);
+  const next = isoDate(d);
+  if (next > isoDate(new Date())) return;
+  txnSheet.date = next;
+  renderTxnSheet();
+}
+
+function chooseTxnCategory() {
+  const t = txnSheet;
+  const items = t.type === "ingreso" ? CATEGORIES.ingreso : gastoCategoriesCache;
+  openPicker({
+    title: t.type === "ingreso" ? "Categoría de ingreso" : "Categoría de gasto",
+    items,
+    onPick: id => { closePicker(); t.category = id; renderTxnSheet(); }
+  });
+}
+
+function chooseTxnPayment() {
+  const t = txnSheet;
+  const options = t.type === "ingreso" ? PAYMENTS.filter(p => p.id !== "credito") : PAYMENTS;
+  openPicker({
+    title: t.type === "ingreso" ? "¿A dónde entra?" : "¿Con qué pagaste?",
+    items: options.map(p => ({ id: p.id, label: p.label, icon: PAYMENT_ICONS[p.id], color: PAYMENT_COLORS[p.id] })),
+    onPick: id => { closePicker(); t.payment = id; renderTxnSheet(); }
+  });
+}
+
+async function saveTxn() {
+  const t = txnSheet;
+  const amount = parseFloat(t.amount.replace(",", ".")) || 0;
+  if (amount <= 0) {
+    t.keypad = true;
+    renderTxnSheet();
+    document.getElementById("txn-sheet-amount").classList.add("shake");
+    setTimeout(() => document.getElementById("txn-sheet-amount").classList.remove("shake"), 400);
+    return;
+  }
+  const data = { date: t.date, type: t.type, category: t.category, payment: t.payment, desc: t.desc.trim(), amount, excluded: t.excluded };
+  closeTxnSheet();
+  if (t.id) await financeCollection().doc(t.id).update(data);
+  else await financeCollection().add(data);
+}
+
+async function deleteTxnFromSheet() {
+  const t = txnSheet;
+  const ok = await appDialog({ title: "¿Eliminar esta transacción?", message: "Esta acción no se puede deshacer.", confirmLabel: "Eliminar", danger: true });
+  if (!ok) return;
+  closeTxnSheet();
+  deleteMovement(t.id);
+}
+
+document.getElementById("txn-add").addEventListener("click", () => openTxnSheet(null));
+
+document.getElementById("finance-list").addEventListener("click", e => {
+  const row = e.target.closest("[data-edit-txn]");
+  if (!row) return;
+  const m = financeCache.find(x => x.id === row.dataset.editTxn);
+  if (m) openTxnSheet(m);
 });
 
-document.getElementById("finance-form").addEventListener("submit", e => {
-  e.preventDefault();
-  const date = document.getElementById("finance-date").value;
-  const type = document.getElementById("finance-type").value;
-  const category = document.getElementById("finance-category").value;
-  const payment = document.getElementById("finance-payment").value;
-  const desc = document.getElementById("finance-desc").value.trim();
-  const amount = parseFloat(document.getElementById("finance-amount").value);
-  if (!date || !desc || !amount) return;
+document.getElementById("txn-sheet").addEventListener("click", e => {
+  if (!txnSheet) return;
+  const key = e.target.closest("[data-txn-key]");
+  if (key) { pressTxnKey(key.dataset.txnKey); return; }
+  const typeBtn = e.target.closest("[data-txn-type]");
+  if (typeBtn) {
+    if (typeBtn.dataset.txnType !== txnSheet.type) {
+      txnSheet.type = typeBtn.dataset.txnType;
+      txnSheet.category = defaultCategory(txnSheet.type);
+      if (txnSheet.type === "ingreso" && txnSheet.payment === "credito") txnSheet.payment = "efectivo";
+      renderTxnSheet();
+    }
+    return;
+  }
+  if (e.target.closest("#txn-sheet-amount-btn")) { txnSheet.keypad = !txnSheet.keypad; renderTxnSheet(); return; }
+  if (e.target.closest("#txn-sheet-keypad-done")) { txnSheet.keypad = false; renderTxnSheet(); return; }
+  if (e.target.closest("#txn-sheet-cat")) { chooseTxnCategory(); return; }
+  if (e.target.closest("#txn-sheet-pay")) { chooseTxnPayment(); return; }
+  if (e.target.closest("#txn-sheet-prev-day")) { shiftTxnDate(-1); return; }
+  if (e.target.closest("#txn-sheet-next-day")) { shiftTxnDate(1); return; }
+  if (e.target.closest("#txn-sheet-save")) { saveTxn(); return; }
+  if (e.target.closest("#txn-sheet-delete")) { deleteTxnFromSheet(); return; }
+  if (e.target.closest(".budget-sheet-close") || e.target.classList.contains("budget-sheet-overlay")) closeTxnSheet();
+});
 
-  financeCollection().add({ date, type, category, payment, desc, amount });
-  e.target.reset();
-  document.getElementById("finance-date").valueAsDate = new Date();
-  populateCategorySelect("ingreso");
-  populatePaymentSelect("ingreso");
+document.getElementById("txn-sheet-note").addEventListener("focus", () => {
+  if (txnSheet && txnSheet.keypad) { txnSheet.keypad = false; renderTxnSheet(); }
+});
+document.getElementById("txn-sheet-note").addEventListener("input", e => {
+  if (txnSheet) txnSheet.desc = e.target.value;
+});
+document.getElementById("txn-sheet-date-input").addEventListener("change", e => {
+  if (!txnSheet || !e.target.value) return;
+  txnSheet.date = e.target.value > isoDate(new Date()) ? isoDate(new Date()) : e.target.value;
+  renderTxnSheet();
+});
+document.getElementById("txn-sheet-excluded").addEventListener("change", e => {
+  if (txnSheet) txnSheet.excluded = e.target.checked;
 });
 
 document.getElementById("month-prev").addEventListener("click", () => { monthOffset--; renderAll(); });
@@ -398,7 +542,7 @@ function computeSpentByCategory(period) {
   const spent = {};
   gastoCategoriesCache.forEach(c => { spent[c.id] = 0; });
   financeCache
-    .filter(m => m.type === "gasto" && isInPeriod(m.date, period))
+    .filter(m => m.type === "gasto" && !m.excluded && isInPeriod(m.date, period))
     .forEach(m => { spent[m.category] = (spent[m.category] || 0) + m.amount; });
   return spent;
 }
@@ -465,7 +609,7 @@ function updateBudgetMonthLabel() {
 function computeReceivedByCategory(period) {
   const received = {};
   financeCache
-    .filter(m => m.type === "ingreso" && isInPeriod(m.date, period))
+    .filter(m => m.type === "ingreso" && !m.excluded && isInPeriod(m.date, period))
     .forEach(m => { received[m.category] = (received[m.category] || 0) + m.amount; });
   return received;
 }
@@ -581,7 +725,7 @@ function renderCategoryDetail() {
   const period = currentBudgetPeriod();
   const cat = findBudgetCategory(type, catId) || findCategory(type, catId);
   const movements = financeCache
-    .filter(m => m.type === type && m.category === catId && isInPeriod(m.date, period))
+    .filter(m => m.type === type && m.category === catId && !m.excluded && isInPeriod(m.date, period))
     .sort((a, b) => b.date.localeCompare(a.date) || String(b.id).localeCompare(String(a.id)));
 
   const planned = budgetsCache[catId] || 0;
@@ -1031,19 +1175,22 @@ function chooseSheetCategory() {
   });
 }
 
-function pressSheetKey(key) {
-  const s = budgetSheet;
-  if (key === "back") {
-    s.amount = s.amount.slice(0, -1) || "0";
-  } else if (key === ",") {
-    if (!s.amount.includes(",")) s.amount += ",";
-  } else if (/^\d$/.test(key)) {
-    const dec = s.amount.split(",")[1];
-    if (dec !== undefined && dec.length >= 2) return;
-    if (s.amount.replace(",", "").length >= 10) return;
-    s.amount = s.amount === "0" ? key : s.amount + key;
+// Aplica una tecla del teclado numérico a un monto escrito como "1234,5".
+function applyAmountKey(amount, key) {
+  if (key === "back") return amount.slice(0, -1) || "0";
+  if (key === ",") return amount.includes(",") ? amount : amount + ",";
+  if (/^\d$/.test(key)) {
+    const dec = amount.split(",")[1];
+    if (dec !== undefined && dec.length >= 2) return amount;
+    if (amount.replace(",", "").length >= 10) return amount;
+    return amount === "0" ? key : amount + key;
   }
-  document.getElementById("budget-sheet-amount").textContent = formatSheetAmount(s.amount);
+  return amount;
+}
+
+function pressSheetKey(key) {
+  budgetSheet.amount = applyAmountKey(budgetSheet.amount, key);
+  document.getElementById("budget-sheet-amount").textContent = formatSheetAmount(budgetSheet.amount);
 }
 
 function confirmBudgetSheet() {
@@ -1113,7 +1260,18 @@ document.getElementById("budget-sheet").addEventListener("click", e => {
 });
 
 document.addEventListener("keydown", e => {
-  if (!budgetSheet || !document.getElementById("category-selector-modal").hidden) return;
+  if (e.target.closest && e.target.closest("input, textarea")) return;
+  if (!document.getElementById("category-selector-modal").hidden) return;
+  if (txnSheet) {
+    if (/^\d$/.test(e.key)) pressTxnKey(e.key);
+    else if (e.key === "," || e.key === ".") pressTxnKey(",");
+    else if (e.key === "Backspace") pressTxnKey("back");
+    else if (e.key === "Escape") closeTxnSheet();
+    else return;
+    e.preventDefault();
+    return;
+  }
+  if (!budgetSheet) return;
   if (/^\d$/.test(e.key)) pressSheetKey(e.key);
   else if (e.key === "," || e.key === ".") pressSheetKey(",");
   else if (e.key === "Backspace") pressSheetKey("back");
@@ -2055,9 +2213,6 @@ function renderAll() {
   updateExportSummary();
 }
 
-document.getElementById("finance-date").valueAsDate = new Date();
-populateCategorySelect("ingreso");
-populatePaymentSelect("ingreso");
 
 onAuthReady(() => {
   financeCollection().onSnapshot(snap => {
@@ -2110,10 +2265,6 @@ onAuthReady(() => {
       const custom = (data && Array.isArray(data.items)) ? data.items : [];
       CATEGORIES.ingreso = DEFAULT_INGRESO_CATEGORIES.filter(c => c.id !== "otros_ingresos").concat(custom);
     }
-    const catSel = document.getElementById("finance-category");
-    const selectedCat = catSel.value;
-    populateCategorySelect(document.getElementById("finance-type").value);
-    if ([...catSel.options].some(o => o.value === selectedCat)) catSel.value = selectedCat;
     renderAll();
   });
   customCategoriesDocRef().onSnapshot(doc => {

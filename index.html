@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=202609241500">
+  <link rel="stylesheet" href="css/style.css?v=202609241600">
 </head>
 <body>
   <div id="login-screen" class="login-screen">
@@ -299,29 +299,85 @@
             <div class="stat-row" id="finance-stats"></div>
 
             <div class="month-nav">
-              <button type="button" id="month-prev" aria-label="Mes anterior"><span data-icon="chevronLeft"></span></button>
+              <button type="button" id="month-prev" aria-label="Periodo anterior"><span data-icon="chevronLeft"></span></button>
               <div class="month-label">
                 <span id="month-label-text"></span>
                 <span class="month-count" id="month-count"></span>
               </div>
-              <button type="button" id="month-next" aria-label="Mes siguiente"><span data-icon="chevronRight"></span></button>
+              <button type="button" id="month-next" aria-label="Periodo siguiente"><span data-icon="chevronRight"></span></button>
             </div>
 
-            <form class="tracker-form" id="finance-form">
-              <input type="date" id="finance-date" required>
-              <select id="finance-type">
-                <option value="ingreso">Ingreso</option>
-                <option value="gasto">Gasto</option>
-              </select>
-              <select id="finance-category"></select>
-              <select id="finance-payment"></select>
-              <input type="text" id="finance-desc" placeholder="Descripción" required>
-              <input type="number" id="finance-amount" placeholder="Monto" min="0.01" step="0.01" required>
-              <button type="submit">Registrar</button>
-            </form>
+            <div class="txn-card">
+              <div class="txn-summary" id="finance-summary"></div>
+              <div id="finance-list"></div>
+              <p class="empty-state" id="finance-empty" style="display:none;">Aún no hay transacciones en este periodo. Toca + para agregar una.</p>
+            </div>
 
-            <div id="finance-list"></div>
-            <p class="empty-state" id="finance-empty" style="display:none;">Aún no registras movimientos este mes.</p>
+            <button type="button" class="txn-fab" id="txn-add" aria-label="Nueva transacción"><span data-icon="plus"></span></button>
+
+            <!-- Hoja "Nueva transacción" (como Buddy) -->
+            <div id="txn-sheet" class="budget-sheet txn-sheet" hidden>
+              <div class="budget-sheet-overlay"></div>
+              <div class="budget-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="txn-sheet-title">
+                <div class="budget-sheet-header">
+                  <button type="button" class="budget-sheet-close" aria-label="Cerrar"><span data-icon="close"></span></button>
+                  <h3 id="txn-sheet-title">Nueva transacción</h3>
+                </div>
+                <div class="budget-sheet-hero">
+                  <button type="button" class="txn-amount-btn" id="txn-sheet-amount-btn" aria-label="Editar monto">
+                    <span class="budget-sheet-amount"><span class="cur">Bs</span><span id="txn-sheet-amount">0</span></span>
+                  </button>
+                  <div class="budget-sheet-type">
+                    <button type="button" data-txn-type="gasto">Gasto</button>
+                    <button type="button" data-txn-type="ingreso">Ingresos</button>
+                  </div>
+                </div>
+
+                <div class="txn-sheet-fields">
+                  <button type="button" class="budget-sheet-row" id="txn-sheet-cat">
+                    <span id="txn-sheet-cat-badge" class="txn-icon"></span>
+                    <span>Categoría: <strong id="txn-sheet-cat-label"></strong></span>
+                  </button>
+                  <button type="button" class="budget-sheet-row" id="txn-sheet-pay">
+                    <span id="txn-sheet-pay-badge" class="txn-icon"></span>
+                    <span><span id="txn-sheet-pay-prefix">Desde:</span> <strong id="txn-sheet-pay-label"></strong></span>
+                  </button>
+                  <label class="budget-sheet-row txn-note-row txn-extra">
+                    <span class="txn-row-icon" data-icon="edit"></span>
+                    <input type="text" id="txn-sheet-note" placeholder="Nota" maxlength="60" autocomplete="off">
+                  </label>
+                  <div class="budget-sheet-row txn-date-row txn-extra">
+                    <span class="txn-row-icon" data-icon="calendar"></span>
+                    <label class="txn-date-label">
+                      <span id="txn-sheet-date-label">Hoy</span>
+                      <input type="date" id="txn-sheet-date-input" aria-label="Elegir fecha">
+                    </label>
+                    <button type="button" class="txn-date-arrow" id="txn-sheet-prev-day" aria-label="Día anterior"><span data-icon="chevronLeft"></span></button>
+                    <button type="button" class="txn-date-arrow" id="txn-sheet-next-day" aria-label="Día siguiente"><span data-icon="chevronRight"></span></button>
+                  </div>
+                  <label class="budget-sheet-row txn-toggle-row txn-extra" id="txn-sheet-excluded-row">
+                    <span class="txn-row-icon" data-icon="budgetFilled"></span>
+                    <span class="txn-toggle-label">Excluir del presupuesto</span>
+                    <input type="checkbox" id="txn-sheet-excluded" class="switch">
+                  </label>
+                </div>
+
+                <div class="txn-keypad-wrap">
+                  <div class="budget-keypad">
+                    <button type="button" data-txn-key="1">1</button><button type="button" data-txn-key="2">2</button><button type="button" data-txn-key="3">3</button>
+                    <button type="button" data-txn-key="4">4</button><button type="button" data-txn-key="5">5</button><button type="button" data-txn-key="6">6</button>
+                    <button type="button" data-txn-key="7">7</button><button type="button" data-txn-key="8">8</button><button type="button" data-txn-key="9">9</button>
+                    <button type="button" data-txn-key=",">,</button><button type="button" data-txn-key="0">0</button><button type="button" data-txn-key="back" aria-label="Borrar">&#9003;</button>
+                  </div>
+                  <button type="button" class="txn-keypad-done" id="txn-sheet-keypad-done">Nota, fecha y más ▾</button>
+                </div>
+
+                <div class="txn-sheet-actions">
+                  <button type="button" class="budget-sheet-delete" id="txn-sheet-delete" hidden>Eliminar</button>
+                  <button type="button" class="txn-save" id="txn-sheet-save">Guardar</button>
+                </div>
+              </div>
+            </div>
           </section>
 
           <!-- ===== Finanzas: Presupuesto ===== -->
@@ -430,18 +486,7 @@
                 </div>
               </div>
 
-              <!-- Modal para seleccionar categoría -->
-              <div id="category-selector-modal" class="category-selector-modal" hidden>
-                <div class="category-selector-overlay"></div>
-                <div class="category-selector-content">
-                  <h3 id="category-selector-title">Selecciona una categoría</h3>
-                  <div id="category-selector-grid" class="category-selector-grid"></div>
-                  <button type="button" id="category-selector-new" class="category-selector-new-btn">
-                    <span data-icon="plus"></span> <span id="category-selector-new-label">Crear nueva categoría</span>
-                  </button>
-                  <button type="button" id="category-selector-cancel" class="category-selector-cancel-btn">Cancelar</button>
-                </div>
-              </div>
+
 
           </section>
 
@@ -626,6 +671,19 @@
     <nav class="bottom-nav" id="bottom-nav-links"></nav>
   </div>
 
+  <!-- Modal para seleccionar categoría -->
+  <div id="category-selector-modal" class="category-selector-modal" hidden>
+    <div class="category-selector-overlay"></div>
+    <div class="category-selector-content">
+      <h3 id="category-selector-title">Selecciona una categoría</h3>
+      <div id="category-selector-grid" class="category-selector-grid"></div>
+      <button type="button" id="category-selector-new" class="category-selector-new-btn">
+        <span data-icon="plus"></span> <span id="category-selector-new-label">Crear nueva categoría</span>
+      </button>
+      <button type="button" id="category-selector-cancel" class="category-selector-cancel-btn">Cancelar</button>
+    </div>
+  </div>
+
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -639,7 +697,7 @@
   <script src="js/gimnasio.js?v=202609232200"></script>
   <script src="js/running.js?v=202609232200"></script>
   <script src="js/bicicleta.js?v=202609232200"></script>
-  <script src="js/finanzas.js?v=202609241500"></script>
+  <script src="js/finanzas.js?v=202609241600"></script>
   <script src="js/inversiones.js?v=202609232200"></script>
 </body>
 </html>
