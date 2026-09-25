@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=202609251700">
+  <link rel="stylesheet" href="css/style.css?v=202609251800">
 </head>
 <body>
   <div id="login-screen" class="login-screen">
@@ -65,67 +65,64 @@
               </radialGradient>
             </defs>
           </svg>
-          <div class="fig-wrap">
-            <svg class="body-fig" viewBox="0 0 140 300">
-              <path class="muscle" d="M50,133 Q41,160 40,196 Q39,210 44,216 Q41,236 45,256 Q43,272 49,286 L61,286 Q63,272 61,256 Q64,232 63,212 Q66,175 65,133 Z"/>
-              <path class="muscle" d="M90,133 Q99,160 100,196 Q101,210 96,216 Q99,236 95,256 Q97,272 91,286 L79,286 Q77,272 79,256 Q76,232 77,212 Q74,175 75,133 Z"/>
-              <path class="seam" d="M55,150 Q52,190 51,225"/>
-              <path class="seam" d="M85,150 Q88,190 89,225"/>
-              <path class="seam" d="M50,133 L65,133"/>
-              <path class="seam" d="M75,133 L90,133"/>
-              <path class="muscle" d="M32,56 Q17,70 15,96 Q14,112 19,128 Q21,140 27,146 Q31,142 29,130 Q25,112 27,96 Q29,74 41,60 Z"/>
-              <path class="muscle" d="M108,56 Q123,70 125,96 Q126,112 121,128 Q119,140 113,146 Q109,142 111,130 Q115,112 113,96 Q111,74 99,60 Z"/>
-              <path class="seam" d="M22,80 Q19,96 22,115"/>
-              <path class="seam" d="M118,80 Q121,96 118,115"/>
-              <path class="muscle" d="M34,50 Q70,43 106,50 L102,80 Q98,102 90,120 L94,133 L46,133 L50,120 Q42,102 38,80 Z"/>
-              <path class="muscle-dk" d="M24,49 Q35,44 47,53 Q46,68 33,73 Q21,69 24,49 Z"/>
-              <path class="muscle-dk" d="M116,49 Q105,44 93,53 Q94,68 107,73 Q119,69 116,49 Z"/>
-              <path class="muscle-dk" d="M50,55 Q65,51 68,59 L68,79 Q58,83 48,77 Q44,65 50,55 Z"/>
-              <path class="muscle-dk" d="M90,55 Q75,51 72,59 L72,79 Q82,83 92,77 Q96,65 90,55 Z"/>
-              <path class="seam" d="M70,53 L70,120"/>
-              <path class="seam" d="M46,58 Q68,52 70,60"/>
-              <path class="seam" d="M94,58 Q72,52 70,60"/>
-              <rect class="muscle-dk" x="58" y="83" width="11" height="10" rx="2.5"/>
-              <rect class="muscle-dk" x="71" y="83" width="11" height="10" rx="2.5"/>
-              <rect class="muscle-dk" x="58" y="96" width="11" height="10" rx="2.5"/>
-              <rect class="muscle-dk" x="71" y="96" width="11" height="10" rx="2.5"/>
-              <rect class="muscle-dk" x="58" y="109" width="11" height="10" rx="2.5"/>
-              <rect class="muscle-dk" x="71" y="109" width="11" height="10" rx="2.5"/>
-              <path class="seam" d="M46,95 Q42,108 44,120"/>
-              <path class="seam" d="M94,95 Q98,108 96,120"/>
-              <ellipse class="muscle" cx="70" cy="24" rx="15" ry="17"/>
-              <rect class="muscle" x="61" y="36" width="18" height="14" rx="5"/>
-            </svg>
-            <span class="fig-label">Frente</span>
+
+          <div class="body-week-nav month-nav">
+            <button type="button" id="body-week-prev" aria-label="Semana anterior"><span data-icon="chevronLeft"></span></button>
+            <div class="month-label"><span id="body-week-label"></span></div>
+            <button type="button" id="body-week-next" aria-label="Semana siguiente"><span data-icon="chevronRight"></span></button>
           </div>
-          <div class="fig-wrap">
-            <svg class="body-fig" viewBox="0 0 140 300">
-              <path class="muscle" d="M50,133 Q41,160 40,196 Q39,210 44,216 Q41,236 45,256 Q43,272 49,286 L61,286 Q63,272 61,256 Q64,232 63,212 Q66,175 65,133 Z"/>
-              <path class="muscle" d="M90,133 Q99,160 100,196 Q101,210 96,216 Q99,236 95,256 Q97,272 91,286 L79,286 Q77,272 79,256 Q76,232 77,212 Q74,175 75,133 Z"/>
-              <path class="muscle-dk" d="M46,198 Q43,208 46,217 Q52,220 58,217 Q60,208 58,198 Q52,195 46,198 Z"/>
-              <path class="muscle-dk" d="M94,198 Q97,208 94,217 Q88,220 82,217 Q80,208 82,198 Q88,195 94,198 Z"/>
-              <path class="seam" d="M55,150 Q52,185 50,215"/>
-              <path class="seam" d="M85,150 Q88,185 90,215"/>
-              <path class="muscle-dk" d="M44,120 Q46,138 52,145 Q64,148 65,136 L65,120 Z"/>
-              <path class="muscle-dk" d="M96,120 Q94,138 88,145 Q76,148 75,136 L75,120 Z"/>
-              <path class="muscle" d="M32,56 Q17,70 15,96 Q14,112 19,128 Q21,140 27,146 Q31,142 29,130 Q25,112 27,96 Q29,74 41,60 Z"/>
-              <path class="muscle" d="M108,56 Q123,70 125,96 Q126,112 121,128 Q119,140 113,146 Q109,142 111,130 Q115,112 113,96 Q111,74 99,60 Z"/>
-              <path class="seam" d="M24,78 Q20,96 24,118"/>
-              <path class="seam" d="M116,78 Q120,96 116,118"/>
-              <path class="muscle" d="M34,50 Q70,43 106,50 L102,80 Q98,102 90,120 L94,133 L46,133 L50,120 Q42,102 38,80 Z"/>
-              <path class="muscle-dk" d="M55,50 L70,42 L85,50 L74,68 L70,74 L66,68 Z"/>
-              <path class="muscle-dk" d="M24,49 Q35,44 47,53 Q46,68 33,73 Q21,69 24,49 Z"/>
-              <path class="muscle-dk" d="M116,49 Q105,44 93,53 Q94,68 107,73 Q119,69 116,49 Z"/>
-              <path class="muscle-dk" d="M40,66 Q37,90 46,112 Q54,118 58,110 L58,68 Q50,64 40,66 Z"/>
-              <path class="muscle-dk" d="M100,66 Q103,90 94,112 Q86,118 82,110 L82,68 Q90,64 100,66 Z"/>
-              <path class="seam" d="M70,60 L70,120"/>
-              <path class="seam" d="M64,90 L64,118"/>
-              <path class="seam" d="M76,90 L76,118"/>
-              <ellipse class="muscle" cx="70" cy="24" rx="15" ry="17"/>
-              <rect class="muscle" x="61" y="36" width="18" height="14" rx="5"/>
-            </svg>
-            <span class="fig-label">Espalda</span>
+
+          <div class="body-figs">
+            <div class="fig-wrap">
+              <svg class="body-fig" viewBox="0 0 140 300">
+                <ellipse class="muscle" cx="70" cy="22" rx="13" ry="15"/>
+                <rect class="muscle" x="62" y="33" width="16" height="13" rx="4"/>
+                <path class="muscle" data-muscle="pecho" d="M44,50 Q70,42 96,50 L92,72 Q70,82 48,72 Z"/>
+                <ellipse class="muscle" data-muscle="hombros" cx="32" cy="58" rx="12" ry="13"/>
+                <ellipse class="muscle" data-muscle="hombros" cx="108" cy="58" rx="12" ry="13"/>
+                <path class="muscle" data-muscle="biceps" d="M22,55 Q14,66 14,84 Q14,96 19,104 L31,104 Q35,92 33,80 Q31,64 36,56 Z"/>
+                <path class="muscle" data-muscle="biceps" d="M118,55 Q126,66 126,84 Q126,96 121,104 L109,104 Q105,92 107,80 Q109,64 104,56 Z"/>
+                <path class="muscle" data-muscle="antebrazo" d="M19,104 L31,104 Q34,120 30,140 L20,140 Q16,120 19,104 Z"/>
+                <path class="muscle" data-muscle="antebrazo" d="M121,104 L109,104 Q106,120 110,140 L120,140 Q124,120 121,104 Z"/>
+                <rect class="muscle" data-muscle="abdomen" x="53" y="78" width="34" height="56" rx="12"/>
+                <path class="seam" d="M70,82 L70,130"/>
+                <path class="seam" d="M56,96 L84,96"/>
+                <path class="seam" d="M56,112 L84,112"/>
+                <path class="muscle" data-muscle="cuadriceps" d="M52,133 Q45,160 44,196 Q43,206 46,212 L64,212 Q66,196 65,175 Q66,150 65,133 Z"/>
+                <path class="muscle" data-muscle="cuadriceps" d="M88,133 Q95,160 96,196 Q97,206 94,212 L76,212 Q74,196 75,175 Q74,150 75,133 Z"/>
+                <path class="muscle" data-muscle="gemelos" d="M46,212 L64,212 Q65,240 63,258 Q64,272 60,286 L50,286 Q46,272 47,258 Q45,240 46,212 Z"/>
+                <path class="muscle" data-muscle="gemelos" d="M94,212 L76,212 Q75,240 77,258 Q76,272 80,286 L90,286 Q94,272 93,258 Q95,240 94,212 Z"/>
+              </svg>
+              <span class="fig-label">Frente</span>
+            </div>
+            <div class="fig-wrap">
+              <svg class="body-fig" viewBox="0 0 140 300">
+                <ellipse class="muscle" cx="70" cy="22" rx="13" ry="15"/>
+                <rect class="muscle" x="62" y="33" width="16" height="13" rx="4"/>
+                <path class="muscle" data-muscle="espalda" d="M44,50 Q70,42 96,50 L100,80 Q96,108 84,120 L56,120 Q44,108 40,80 Z"/>
+                <path class="seam" d="M70,44 L70,80"/>
+                <path class="seam" d="M52,58 Q70,68 88,58"/>
+                <ellipse class="muscle" data-muscle="hombros" cx="32" cy="58" rx="12" ry="13"/>
+                <ellipse class="muscle" data-muscle="hombros" cx="108" cy="58" rx="12" ry="13"/>
+                <path class="muscle" data-muscle="triceps" d="M22,55 Q14,66 14,84 Q14,96 19,104 L31,104 Q35,92 33,80 Q31,64 36,56 Z"/>
+                <path class="muscle" data-muscle="triceps" d="M118,55 Q126,66 126,84 Q126,96 121,104 L109,104 Q105,92 107,80 Q109,64 104,56 Z"/>
+                <path class="muscle" data-muscle="antebrazo" d="M19,104 L31,104 Q34,120 30,140 L20,140 Q16,120 19,104 Z"/>
+                <path class="muscle" data-muscle="antebrazo" d="M121,104 L109,104 Q106,120 110,140 L120,140 Q124,120 121,104 Z"/>
+                <path class="muscle" data-muscle="gluteos" d="M46,120 Q43,135 46,148 Q54,152 62,148 Q64,135 62,120 Z"/>
+                <path class="muscle" data-muscle="gluteos" d="M94,120 Q97,135 94,148 Q86,152 78,148 Q76,135 78,120 Z"/>
+                <path class="muscle" data-muscle="isquiotibiales" d="M46,148 Q43,175 44,196 Q43,206 46,212 L64,212 Q66,196 65,175 Q66,158 62,148 Z"/>
+                <path class="muscle" data-muscle="isquiotibiales" d="M94,148 Q97,175 96,196 Q97,206 94,212 L76,212 Q74,196 75,175 Q74,158 78,148 Z"/>
+                <path class="seam" d="M55,150 Q52,180 51,210"/>
+                <path class="seam" d="M85,150 Q88,180 89,210"/>
+                <path class="muscle" data-muscle="gemelos" d="M46,212 L64,212 Q66,232 64,250 Q66,270 60,286 L50,286 Q44,270 46,250 Q44,232 46,212 Z"/>
+                <path class="muscle" data-muscle="gemelos" d="M94,212 L76,212 Q74,232 76,250 Q74,270 80,286 L90,286 Q96,270 94,250 Q96,232 94,212 Z"/>
+              </svg>
+              <span class="fig-label">Espalda</span>
+            </div>
           </div>
+
+          <p class="body-legend-hint">Amarillo: 1 vez esta semana · Verde: 2 o más</p>
+          <div class="body-legend" id="body-legend"></div>
         </div>
 
         <div class="content">
@@ -777,6 +774,7 @@
   <script src="js/main.js?v=202609232200"></script>
   <script src="js/habitos.js?v=202609232200"></script>
   <script src="js/gimnasio.js?v=202609232200"></script>
+  <script src="js/body-map.js?v=202609251800"></script>
   <script src="js/running.js?v=202609232200"></script>
   <script src="js/bicicleta.js?v=202609232200"></script>
   <script src="js/finanzas.js?v=202609251700"></script>
