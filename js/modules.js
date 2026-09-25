@@ -89,7 +89,7 @@ function showPanel(hash) {
   const isExercise = activeModule === "ejercicio";
   // En Finanzas la barra de arriba solo muestra una casita para volver al inicio.
   document.body.classList.toggle("in-finanzas", activeModule === "finanzas");
-  document.getElementById("verse-banner").hidden = isExercise || activeModule === "finanzas";
+  document.getElementById("verse-banner").hidden = isExercise || activeModule === "finanzas" || activeModule === "habitos";
   document.getElementById("body-banner").hidden = !isExercise;
 
   // Pestañas propias de Finanzas (Vista general/Presupuesto/Herramientas),

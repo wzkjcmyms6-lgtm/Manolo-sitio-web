@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=202609252100">
+  <link rel="stylesheet" href="css/style.css?v=202609252200">
 </head>
 <body>
   <div id="login-screen" class="login-screen">
@@ -214,77 +214,7 @@
           <!-- ===== Hábitos ===== -->
           <section id="panel-habitos" hidden>
             <h1 class="page-title">Hábitos</h1>
-
-            <div class="hud-card">
-              <div class="hud-avatar">
-                <span data-icon="sword"></span>
-                <span class="hud-level" id="hud-level">1</span>
-              </div>
-              <div class="hud-bars">
-                <div class="hud-bar-row">
-                  <span class="hud-bar-icon hp" data-icon="heart"></span>
-                  <div class="hud-bar hud-bar-hp"><span class="hud-bar-fill" id="hud-hp-fill"></span></div>
-                  <span class="hud-bar-num" id="hud-hp-num">50/50</span>
-                </div>
-                <div class="hud-bar-row">
-                  <span class="hud-bar-icon xp" data-icon="star"></span>
-                  <div class="hud-bar hud-bar-xp"><span class="hud-bar-fill" id="hud-xp-fill"></span></div>
-                  <span class="hud-bar-num" id="hud-xp-num">0/50</span>
-                </div>
-              </div>
-              <div class="hud-gold"><span data-icon="coin"></span><span id="hud-gold-num">0</span></div>
-            </div>
-
-            <div class="fin-tabs habit-tabs" id="habit-tabs">
-              <button type="button" class="fin-tab active" data-habit-tab="habitos">Hábitos</button>
-              <button type="button" class="fin-tab" data-habit-tab="diarias">Diarias</button>
-              <button type="button" class="fin-tab" data-habit-tab="pendientes">Pendientes</button>
-              <button type="button" class="fin-tab" data-habit-tab="recompensas">Recompensas</button>
-            </div>
-
-            <div id="habit-tab-habitos" class="habit-tab-panel">
-              <p class="habit-tab-hint">Toca + cuando lo cumplas, o − cuando caigas en el mal hábito.</p>
-              <form class="tracker-form habit-add-form" id="habito-form">
-                <input type="text" id="habito-name" placeholder="Nuevo hábito (ej: Tomar agua)" required>
-                <label class="habit-sign-toggle pos checked"><input type="checkbox" id="habito-positive" checked><span>+</span></label>
-                <label class="habit-sign-toggle neg"><input type="checkbox" id="habito-negative"><span>−</span></label>
-                <button type="submit">Agregar</button>
-              </form>
-              <div id="habito-list"></div>
-              <p class="empty-state" id="habito-empty" hidden>Aún no tienes hábitos. Agrega el primero arriba.</p>
-            </div>
-
-            <div id="habit-tab-diarias" class="habit-tab-panel" hidden>
-              <p class="habit-tab-hint">Si no las cumples el día que tocan, pierdes vida.</p>
-              <form class="tracker-form habit-add-form" id="diaria-form">
-                <input type="text" id="diaria-name" placeholder="Nueva diaria (ej: Leer 10 min)" required>
-                <div class="diaria-days-pick" id="diaria-days-pick"></div>
-                <button type="submit">Agregar</button>
-              </form>
-              <div class="habit-days-header" id="habit-days-header"></div>
-              <div id="diaria-list"></div>
-              <p class="empty-state" id="diaria-empty" hidden>Aún no tienes diarias. Agrega la primera arriba.</p>
-            </div>
-
-            <div id="habit-tab-pendientes" class="habit-tab-panel" hidden>
-              <form class="tracker-form habit-add-form" id="pendiente-form">
-                <input type="text" id="pendiente-name" placeholder="Nuevo pendiente (ej: Renovar el carnet)" required>
-                <button type="submit">Agregar</button>
-              </form>
-              <div id="pendiente-list"></div>
-              <p class="empty-state" id="pendiente-empty" hidden>No tienes pendientes.</p>
-            </div>
-
-            <div id="habit-tab-recompensas" class="habit-tab-panel" hidden>
-              <p class="habit-tab-hint">Recompensas que tú mismo defines: cámbialas por el oro que ganes.</p>
-              <form class="tracker-form habit-add-form" id="recompensa-form">
-                <input type="text" id="recompensa-name" placeholder="Nueva recompensa (ej: Ver una película)" required>
-                <input type="number" id="recompensa-cost" placeholder="Oro" min="1" step="1" required>
-                <button type="submit">Agregar</button>
-              </form>
-              <div id="recompensa-list"></div>
-              <p class="empty-state" id="recompensa-empty" hidden>Aún no tienes recompensas. Crea alguna arriba.</p>
-            </div>
+            <!-- En blanco a propósito: el módulo anterior se quitó, pendiente de rediseño. -->
           </section>
 
           <!-- ===== Ejercicio (hub) ===== -->
@@ -887,9 +817,9 @@
   <script src="js/auth.js?v=202609232200"></script>
   <script src="js/verses.js?v=202609232200"></script>
   <script src="js/icons.js?v=202609252000"></script>
-  <script src="js/modules.js?v=202609251700"></script>
+  <script src="js/modules.js?v=202609252200"></script>
   <script src="js/main.js?v=202609232200"></script>
-  <script src="js/habitos.js?v=202609252000"></script>
+  <script src="js/habitos.js?v=202609252200"></script>
   <script src="js/gimnasio.js?v=202609232200"></script>
   <script src="js/body-map.js?v=202609251800"></script>
   <script src="js/running.js?v=202609232200"></script>
