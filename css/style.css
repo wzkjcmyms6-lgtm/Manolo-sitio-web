@@ -12,6 +12,7 @@
   --border: #2a2a28;
   --danger: #e2593f;
   --sidebar-w: 220px;
+  --font-body: "DM Sans", system-ui, sans-serif;
   --font-display: "Fraunces", "DM Sans", system-ui, serif;
 }
 
@@ -19,7 +20,7 @@
 
 body {
   margin: 0;
-  font-family: "DM Sans", system-ui, sans-serif;
+  font-family: var(--font-body);
   background: var(--bg);
   color: var(--ink);
   line-height: 1.5;
@@ -27,6 +28,8 @@ body {
 /* Resplandor cálido y sutil detrás de la barra superior, solo en Finanzas. */
 body.in-finanzas {
   background: radial-gradient(480px 320px at 300px -40px, rgba(255, 122, 48, 0.12), transparent 70%), var(--bg);
+  /* Toda la sección usa Fraunces (incluye lo que hereda con font-family: inherit). */
+  --font-body: var(--font-display);
 }
 
 a { color: inherit; }
@@ -45,7 +48,7 @@ a { color: inherit; }
 a:hover .nav-icon, a.active .nav-icon { color: var(--accent-2); }
 a.nav-cta .nav-icon { color: inherit; }
 
-h1, h2, h3 { font-family: "DM Sans", system-ui, sans-serif; font-weight: 700; letter-spacing: -0.01em; }
+h1, h2, h3 { font-family: var(--font-body); font-weight: 700; letter-spacing: -0.01em; }
 
 /* ---------- Verse banner (hero) ---------- */
 .verse-banner {
@@ -72,7 +75,7 @@ h1, h2, h3 { font-family: "DM Sans", system-ui, sans-serif; font-weight: 700; le
 }
 .verse-banner .verse-text {
   display: block;
-  font-family: "DM Sans", system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 2rem;
   line-height: 1.25;
@@ -148,7 +151,7 @@ h1, h2, h3 { font-family: "DM Sans", system-ui, sans-serif; font-weight: 700; le
   top: 0;
   z-index: 20;
 }
-.topbar .brand { font-family: "DM Sans", system-ui, sans-serif; font-weight: 700; font-size: 1.15rem; color: var(--ink); }
+.topbar .brand { font-family: var(--font-body); font-weight: 700; font-size: 1.15rem; color: var(--ink); }
 .menu-toggle {
   background: none;
   border: none;
@@ -172,7 +175,7 @@ h1, h2, h3 { font-family: "DM Sans", system-ui, sans-serif; font-weight: 700; le
   padding: 1.5rem 1rem;
 }
 .sidebar .brand {
-  font-family: "DM Sans", system-ui, sans-serif;
+  font-family: var(--font-body);
   font-size: 1.3rem;
   font-weight: 700;
   color: var(--ink);
@@ -736,7 +739,7 @@ button.delete:hover { opacity: 1; }
   justify-content: center;
   background: var(--accent-grad);
   color: #0a0a0a;
-  font-family: "DM Sans", system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 0.95rem;
   letter-spacing: 0.02em;
@@ -846,7 +849,7 @@ button.delete:hover { opacity: 1; }
   color: #0a0a0a;
 }
 .wallet-hero-value {
-  font-family: "DM Sans", system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 2.5rem;
   line-height: 1.2;
@@ -1228,7 +1231,7 @@ button.delete:hover { opacity: 1; }
   border: none;
   border-bottom: 1px solid transparent;
   color: var(--ink);
-  font-family: "DM Sans", system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 1.3rem;
   padding: 0.2rem 0;
