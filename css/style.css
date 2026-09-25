@@ -1402,6 +1402,7 @@ button.delete:hover { opacity: 1; }
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 .habit-row .day-toggle.done { background: var(--accent-grad); border-color: transparent; color: #0a0a0a; font-weight: 700; }
+.habit-row .day-toggle.off { opacity: 0.25; cursor: not-allowed; }
 .habit-days-header {
   display: grid;
   grid-template-columns: 1fr repeat(7, 36px) 32px;
@@ -1412,6 +1413,173 @@ button.delete:hover { opacity: 1; }
   font-size: 0.75rem;
   text-align: center;
 }
+
+/* ---------- Hábitos: HUD tipo Habitica ---------- */
+.hud-card {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  background: radial-gradient(120% 160% at 0% 0%, rgba(255, 122, 48, 0.1), transparent 60%), var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 1.1rem 1.3rem;
+  margin-bottom: 1.5rem;
+}
+.hud-avatar {
+  position: relative;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent-grad);
+  color: #0a0a0a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px -8px rgba(255, 122, 48, 0.7);
+}
+.hud-avatar [data-icon] { width: 24px; height: 24px; }
+.hud-level {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 2px solid var(--surface);
+  color: var(--ink);
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hud-bars { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.45rem; }
+.hud-bar-row { display: flex; align-items: center; gap: 0.5rem; }
+.hud-bar-icon { width: 16px; height: 16px; flex-shrink: 0; }
+.hud-bar-icon.hp { color: #e2593f; }
+.hud-bar-icon.xp { color: #f0c34d; }
+.hud-bar {
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.hud-bar-fill { display: block; height: 100%; border-radius: 999px; transition: width 0.4s ease; }
+.hud-bar-hp .hud-bar-fill { background: linear-gradient(90deg, #b3402b, #e2593f); }
+.hud-bar-xp .hud-bar-fill { background: linear-gradient(90deg, #c99a3a, #f0c34d); }
+.hud-bar-num { flex-shrink: 0; font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 48px; text-align: right; }
+.hud-gold {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.4rem 0.7rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.hud-gold [data-icon] { width: 16px; height: 16px; color: #f0c34d; }
+
+.habit-tabs {
+  display: flex;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  mask-image: linear-gradient(90deg, #000 92%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, #000 92%, transparent 100%);
+}
+.habit-tabs::-webkit-scrollbar { display: none; }
+.habit-tabs .fin-tab { flex: 0 0 auto; white-space: nowrap; }
+.habit-tab-hint { color: var(--muted); font-size: 0.85rem; margin: -0.6rem 0 1rem; }
+.habit-tab-panel[hidden] { display: none; }
+
+.habit-add-form { align-items: center; }
+.habit-sign-toggle {
+  display: flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px; flex: 0 0 auto;
+  border-radius: 12px; border: 1px solid var(--border); background: var(--bg-soft);
+  color: var(--muted); font-weight: 800; font-size: 1.1rem; cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.habit-sign-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+.habit-sign-toggle.pos.checked, .habit-sign-toggle.pos:has(input:checked) { background: rgba(95, 207, 138, 0.18); border-color: #5fcf8a; color: #5fcf8a; }
+.habit-sign-toggle.neg.checked, .habit-sign-toggle.neg:has(input:checked) { background: rgba(226, 89, 63, 0.18); border-color: var(--danger); color: var(--danger); }
+
+.diaria-days-pick { display: flex; gap: 0.3rem; flex: 1 1 100%; }
+.diaria-days-pick button {
+  flex: 1; padding: 0.5rem 0; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg-soft); color: var(--muted); font-size: 0.75rem; font-weight: 700; cursor: pointer;
+}
+.diaria-days-pick button.on { background: var(--accent-grad); border-color: transparent; color: #0a0a0a; }
+
+.habito-row, .pendiente-row, .recompensa-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.7rem 0.9rem;
+  margin-bottom: 0.5rem;
+}
+.habito-row .habito-name, .pendiente-row .pendiente-name, .recompensa-row .recompensa-name { flex: 1; min-width: 0; }
+.habito-row .habito-counts { font-size: 0.72rem; color: var(--muted); }
+.habito-sign-btn {
+  width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%; border: none; cursor: pointer;
+  font-weight: 800; font-size: 1.05rem; display: flex; align-items: center; justify-content: center;
+  transition: transform 0.1s ease;
+}
+.habito-sign-btn:active { transform: scale(0.9); }
+.habito-sign-btn.pos { background: rgba(95, 207, 138, 0.16); color: #5fcf8a; }
+.habito-sign-btn.neg { background: rgba(226, 89, 63, 0.16); color: var(--danger); }
+
+.pendiente-check, .recompensa-buy {
+  flex-shrink: 0;
+}
+.pendiente-check {
+  width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--border);
+  background: var(--bg-soft); cursor: pointer; display: flex; align-items: center; justify-content: center; color: #0a0a0a;
+}
+.pendiente-check.done { background: var(--accent-grad); border-color: transparent; }
+.pendiente-check span { width: 14px; height: 14px; }
+.pendiente-row.done .pendiente-name { color: var(--muted); text-decoration: line-through; }
+.recompensa-row .recompensa-cost { flex-shrink: 0; font-size: 0.85rem; color: #f0c34d; font-weight: 700; display: flex; align-items: center; gap: 0.3rem; }
+.recompensa-row .recompensa-cost [data-icon] { width: 14px; height: 14px; }
+.recompensa-buy {
+  border: none; border-radius: 999px; padding: 0.4rem 0.9rem; font-weight: 700; font-size: 0.82rem; cursor: pointer;
+  background: var(--accent-grad); color: #0a0a0a;
+}
+.recompensa-buy:disabled { background: var(--bg-soft); color: var(--muted); cursor: not-allowed; }
+
+/* Números "+10 XP" que flotan al tocar un botón, y aviso de subir de nivel */
+.hud-fx {
+  position: fixed; z-index: 500; pointer-events: none;
+  font-weight: 800; font-size: 0.95rem; white-space: nowrap;
+  animation: hud-fx-float 1s ease-out forwards;
+}
+.hud-fx.xp { color: #f0c34d; }
+.hud-fx.hp { color: var(--danger); }
+.hud-fx.gold { color: #f0c34d; }
+@keyframes hud-fx-float {
+  0% { opacity: 0; transform: translate(-50%, 0); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -34px); }
+}
+.levelup-toast {
+  position: fixed; left: 50%; top: 18%; z-index: 501; transform: translate(-50%, -10px);
+  background: var(--accent-grad); color: #0a0a0a; font-weight: 800; font-size: 0.95rem;
+  padding: 0.75rem 1.3rem; border-radius: 999px; box-shadow: 0 14px 30px -10px rgba(255, 122, 48, 0.6);
+  opacity: 0; transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.levelup-toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 /* =====================================================
    DESKTOP LAYOUT — bold dark navbar, inspired by RSNL Creative:
