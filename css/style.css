@@ -136,6 +136,10 @@ h1, h2, h3 { font-family: var(--font-body); font-weight: 700; letter-spacing: -0
 .body-banner .muscle[data-muscle] { cursor: default; }
 .body-banner .muscle[data-level="1"] { fill: #f0c34d; }
 .body-banner .muscle[data-level="2"] { fill: #5fcf8a; }
+/* Luz y sombra suaves sobre cada masa muscular, para que se vea "esculpida"
+   en vez de plana, sin importar de qué color esté pintada abajo. */
+.body-banner .hi { fill: #fff; opacity: 0.2; mix-blend-mode: soft-light; pointer-events: none; }
+.body-banner .sh { fill: #000; opacity: 0.24; mix-blend-mode: soft-light; pointer-events: none; }
 .body-banner .seam { fill: none; stroke: #2c2a25; stroke-width: 1.3; stroke-linecap: round; opacity: 0.8; }
 .body-banner .fig-label {
   display: block;
