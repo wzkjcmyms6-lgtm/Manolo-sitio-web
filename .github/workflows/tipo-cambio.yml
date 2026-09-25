@@ -4,6 +4,8 @@ on:
   schedule:
     # 8:00, 13:00 y 18:00 en La Paz (UTC-4)
     - cron: "0 12,17,22 * * *"
+    # 20:01 en La Paz (UTC-4): justo después de que el BCB publica el valor del día.
+    - cron: "1 0 * * *"
   workflow_dispatch:
 
 permissions:
