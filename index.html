@@ -213,8 +213,17 @@
 
           <!-- ===== Hábitos ===== -->
           <section id="panel-habitos" hidden>
-            <h1 class="page-title">Hábitos</h1>
-            <!-- En blanco a propósito: el módulo anterior se quitó, pendiente de rediseño. -->
+            <div class="fin-tabs habit-section-tabs" id="habit-section-tabs">
+              <button type="button" class="fin-tab active" data-habit-section="habitos">Hábitos</button>
+              <button type="button" class="fin-tab" data-habit-section="estadisticas">Estadísticas</button>
+            </div>
+
+            <div id="habit-section-habitos" class="habit-section">
+              <!-- En blanco a propósito, pendiente de rediseño. -->
+            </div>
+            <div id="habit-section-estadisticas" class="habit-section" hidden>
+              <!-- En blanco a propósito, pendiente de rediseño. -->
+            </div>
           </section>
 
           <!-- ===== Ejercicio (hub) ===== -->
@@ -819,7 +828,7 @@
   <script src="js/icons.js?v=202609252000"></script>
   <script src="js/modules.js?v=202609252200"></script>
   <script src="js/main.js?v=202609232200"></script>
-  <script src="js/habitos.js?v=202609252200"></script>
+  <script src="js/habitos.js?v=202609252300"></script>
   <script src="js/gimnasio.js?v=202609232200"></script>
   <script src="js/body-map.js?v=202609251800"></script>
   <script src="js/running.js?v=202609232200"></script>
