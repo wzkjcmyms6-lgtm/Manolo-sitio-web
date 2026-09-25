@@ -623,13 +623,17 @@ function vgChartHTML(period) {
     <svg class="vg-chart" viewBox="0 0 ${W} ${H + 18}" preserveAspectRatio="none" aria-hidden="true">
       <defs>
         <linearGradient id="vg-area" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#ff7a30" stop-opacity="0.35"/>
-          <stop offset="100%" stop-color="#ff7a30" stop-opacity="0"/>
+          <stop offset="0%" stop-color="#ffb84d" stop-opacity="0.32"/>
+          <stop offset="100%" stop-color="#ffb84d" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="vg-line" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#ff7a30"/>
+          <stop offset="100%" stop-color="#ffb84d"/>
         </linearGradient>
       </defs>
       ${media ? `<path d="${mediaPath}" fill="none" style="stroke:#77756f" stroke-width="2" stroke-dasharray="6 6" vector-effect="non-scaling-stroke"/>` : ""}
       <path d="${area}" fill="url(#vg-area)"/>
-      <path d="${linePath}" fill="none" style="stroke:#ff7a30" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+      <path d="${linePath}" fill="none" stroke="url(#vg-line)" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
     </svg>
     <span class="vg-chart-dot" style="left:${(last[0] / W * 100).toFixed(2)}%; top:${(last[1] / (H + 18) * 100).toFixed(2)}%"></span>
     <span class="vg-scrub-line" hidden></span>
