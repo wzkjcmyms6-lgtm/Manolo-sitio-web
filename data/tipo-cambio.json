@@ -1,11 +1,12 @@
 {
  "fuente": "https://www.bcb.gob.bo/librerias/indicadores/otras/ultimo.php",
  "ultimo": {
-  "fecha": "2026-09-24",
-  "tco": 12.26,
-  "publicado": "2026-09-24"
+  "fecha": "2026-09-25",
+  "tco": 12.22,
+  "publicado": "2026-09-25"
  },
  "historial": {
-  "2026-09-24": 12.26
+  "2026-09-24": 12.26,
+  "2026-09-25": 12.22
  }
 }
