@@ -5,7 +5,7 @@ const MONTH_NAMES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "se
 const HEAT_WEEKS = 10;
 const EMOJIS = ["💧", "🏃", "🧘", "📖", "💪", "🛌", "🥗", "🚭", "🧹", "🙏", "💊", "🎯", "✍️", "🎨", "🚴", "🧠"];
 
-const PERIOD_LABELS = { manana: "Mañana", tarde: "Tarde", noche: "Noche", todo: "Todo el día" };
+const PERIOD_LABELS = { manana: "Mañana", noche: "Noche" };
 
 let habitosCache = [];
 let emojiChoice = EMOJIS[0];
@@ -40,12 +40,10 @@ function isDue(habit, dateStr) {
   return true; // "diario" y "semana": cualquier día cuenta.
 }
 
-// ---------- Escena de la hora del día (mañana/tarde/noche) ----------
+// ---------- Escena de la hora del día (mañana/noche), con transición animada ----------
 function periodNow() {
   const h = new Date().getHours();
-  if (h >= 5 && h < 12) return "manana";
-  if (h >= 12 && h < 19) return "tarde";
-  return "noche";
+  return h >= 6 && h < 19 ? "manana" : "noche";
 }
 let selectedPeriod = periodNow();
 
@@ -64,6 +62,10 @@ function starsSVG(seedCount) {
   return pts.slice(0, seedCount).map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="${i % 3 === 0 ? 1.6 : 1}" fill="#e9e4d8" opacity="${0.35 + (i % 4) * 0.15}"/>`).join("");
 }
 
+// Ambas escenas comparten exactamente las mismas colinas/árboles (misma posición),
+// así que al alternar su opacidad con una transición CSS el fondo "se disuelve"
+// de una a otra en vez de saltar de golpe: eso es lo que da la sensación de
+// animación día/noche.
 function heroSceneSVG(period) {
   const trees = treeSVG(40, 0.9, "#3f7d6f", "#5aa08f") + treeSVG(345, 1.05, "#376c60", "#4f9585") + treeSVG(280, 0.55, "#3f7d6f", "#5aa08f");
   if (period === "noche") {
@@ -76,52 +78,38 @@ function heroSceneSVG(period) {
       ${trees}
     </svg>`;
   }
-  if (period === "manana") {
-    return `<svg viewBox="0 0 400 150" class="habit-hero-svg" preserveAspectRatio="xMidYMax slice">
-      <defs><linearGradient id="skyManana" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#1c140f"/><stop offset="100%" stop-color="#3a2312"/>
-      </linearGradient></defs>
-      <rect width="400" height="150" fill="url(#skyManana)"/>
-      <circle cx="180" cy="108" r="60" fill="var(--accent-1)" opacity="0.18"/>
-      <circle cx="180" cy="108" r="38" fill="var(--accent-2)" opacity="0.35"/>
-      <circle cx="180" cy="108" r="20" fill="#ffd9a0"/>
-      ${hillsSVG("#1f1a13")}
-      ${trees}
-    </svg>`;
-  }
-  if (period === "tarde") {
-    return `<svg viewBox="0 0 400 150" class="habit-hero-svg" preserveAspectRatio="xMidYMax slice">
-      <defs><linearGradient id="skyTarde" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#2a1c10"/><stop offset="100%" stop-color="#4a2c14"/>
-      </linearGradient></defs>
-      <rect width="400" height="150" fill="url(#skyTarde)"/>
-      <circle cx="290" cy="46" r="46" fill="var(--accent-1)" opacity="0.16"/>
-      <circle cx="290" cy="46" r="24" fill="#ffd9a0"/>
-      ${hillsSVG("#241d15")}
-      ${trees}
-    </svg>`;
-  }
-  // "todo": un cielo de transición, entre el atardecer y la noche.
   return `<svg viewBox="0 0 400 150" class="habit-hero-svg" preserveAspectRatio="xMidYMax slice">
-    <defs><linearGradient id="skyTodo" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#141019"/><stop offset="100%" stop-color="#3a2314"/>
+    <defs><linearGradient id="skyManana" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1c140f"/><stop offset="100%" stop-color="#3a2312"/>
     </linearGradient></defs>
-    <rect width="400" height="150" fill="url(#skyTodo)"/>
-    ${starsSVG(4)}
-    <circle cx="230" cy="90" r="40" fill="var(--accent-2)" opacity="0.2"/>
-    ${hillsSVG("#1c1712")}
+    <rect width="400" height="150" fill="url(#skyManana)"/>
+    <circle cx="180" cy="108" r="60" fill="var(--accent-1)" opacity="0.18"/>
+    <circle cx="180" cy="108" r="38" fill="var(--accent-2)" opacity="0.35"/>
+    <circle cx="180" cy="108" r="20" fill="#ffd9a0"/>
+    ${hillsSVG("#1f1a13")}
     ${trees}
   </svg>`;
 }
 
+function ensureHeroScenes() {
+  const hero = document.getElementById("habit-hero");
+  if (hero.dataset.built) return;
+  hero.innerHTML =
+    `<div class="hero-scene hero-scene-manana">${heroSceneSVG("manana")}</div>` +
+    `<div class="hero-scene hero-scene-noche">${heroSceneSVG("noche")}</div>`;
+  hero.dataset.built = "1";
+}
+
 function renderHero() {
-  document.getElementById("habit-hero").innerHTML = heroSceneSVG(selectedPeriod === "todo" ? "todo" : selectedPeriod);
+  ensureHeroScenes();
+  document.querySelector(".hero-scene-manana").classList.toggle("hero-scene--active", selectedPeriod === "manana");
+  document.querySelector(".hero-scene-noche").classList.toggle("hero-scene--active", selectedPeriod === "noche");
   document.querySelectorAll("#habit-period-tabs .fin-tab").forEach(b => b.classList.toggle("active", b.dataset.period === selectedPeriod));
-  document.getElementById("habit-period-label").textContent = selectedPeriod === "todo" ? "Todo el día" : PERIOD_LABELS[selectedPeriod];
+  document.getElementById("habit-period-label").textContent = PERIOD_LABELS[selectedPeriod];
 }
 document.getElementById("habit-period-tabs").addEventListener("click", e => {
   const btn = e.target.closest("[data-period]");
-  if (!btn) return;
+  if (!btn || btn.dataset.period === selectedPeriod) return;
   selectedPeriod = btn.dataset.period;
   renderHero();
   renderHabitos();
@@ -194,12 +182,13 @@ function renderHabitos() {
   const empty = document.getElementById("habito-empty");
   list.innerHTML = "";
 
-  const shown = selectedPeriod === "todo"
-    ? habitosCache
-    : habitosCache.filter(h => (h.timeOfDay || "cualquiera") === selectedPeriod || (h.timeOfDay || "cualquiera") === "cualquiera");
+  const shown = habitosCache.filter(h => {
+    const t = h.timeOfDay || "cualquiera";
+    return t === selectedPeriod || t !== "manana" && t !== "noche";
+  });
   empty.hidden = shown.length > 0;
   empty.textContent = habitosCache.length
-    ? `Nada para ${PERIOD_LABELS[selectedPeriod === "todo" ? "todo" : selectedPeriod].toLowerCase()}. Prueba con otro momento del día.`
+    ? `Nada para ${PERIOD_LABELS[selectedPeriod].toLowerCase()}. Prueba con otro momento del día.`
     : "Aún no tienes hábitos. Crea el primero en \"Añadir hábito\".";
 
   const today = todayISO();

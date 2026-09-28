@@ -1427,14 +1427,27 @@ button.delete:hover { opacity: 1; }
 .habit-section-tabs .fin-tab { flex: 0 0 auto; white-space: nowrap; }
 .habit-section[hidden] { display: none; }
 
-/* Escena de mañana/tarde/noche, arriba de la lista de Hábitos */
+/* Escena de mañana/noche, arriba de la lista de Hábitos. Ambas capas ocupan
+   el mismo lugar y se alternan con una transición para simular el paso del
+   día a la noche en vez de saltar de golpe. */
 .habit-hero {
+  position: relative;
+  height: 130px;
   border-radius: 20px;
   overflow: hidden;
   margin-bottom: 1rem;
   background: #0c0b10;
+}
+.hero-scene {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.7s ease, transform 0.7s ease;
   line-height: 0;
 }
+.hero-scene--active { opacity: 1; transform: translateY(0); }
+.hero-scene-manana:not(.hero-scene--active) { transform: translateY(10px); }
+.hero-scene-noche:not(.hero-scene--active) { transform: translateY(-10px); }
 .habit-hero-svg { display: block; width: 100%; height: 130px; }
 .habit-period-tabs { margin-bottom: 1rem; }
 .habit-period-tabs.fin-tabs { display: flex; }
