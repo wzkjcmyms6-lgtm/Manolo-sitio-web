@@ -65,6 +65,7 @@ const ICONS = {
   grip: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>`,
   receipt: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M6 3h12v18l-2.5-1.6L13 21l-2.5-1.6L8 21l-2-1.4z"/><path d="M9 8h6M9 11.5h6M9 15h3.5"/></svg>`,
   heart: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 20.5s-7.5-4.6-10-9.3C0.3 7.8 2 4.5 5.3 4c2-.3 3.9.6 5 2.3C11.4 4.6 13.3 3.7 15.3 4c3.3.5 5 3.8 3.3 7.2-2.5 4.7-10 9.3-10 9.3z"/></svg>`,
+  trophy: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M7 4h10v5a5 5 0 0 1-10 0Z"/><path d="M7 5H4a1 1 0 0 0-1 1v1a4 4 0 0 0 4 4"/><path d="M17 5h3a1 1 0 0 1 1 1v1a4 4 0 0 1-4 4"/><path d="M12 14v3"/><path d="M8.5 20.5h7"/><path d="M9.5 17.5l-1 3M14.5 17.5l1 3"/></svg>`,
   star: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2.5l2.9 6.2 6.6.7-5 4.6 1.4 6.6L12 17.4l-5.9 3.2 1.4-6.6-5-4.6 6.6-.7z"/></svg>`,
   coin: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="6.5" fill="none" stroke="#0a0a0a" stroke-width="1.3"/><text x="12" y="16" font-size="9" font-weight="700" text-anchor="middle" fill="#0a0a0a">$</text></svg>`,
   sword: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M14.5 3.5 20.5 9.5 11 19l-4-4z"/><path d="M11 15 5 21l-2-2 6-6"/><path d="M14.5 3.5 17 6"/></svg>`,

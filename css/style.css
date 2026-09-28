@@ -1414,6 +1414,121 @@ button.delete:hover { opacity: 1; }
   text-align: center;
 }
 
+/* ---------- Hábitos ---------- */
+.habit-section-tabs {
+  display: flex;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin-bottom: 1.5rem;
+}
+.habit-section-tabs::-webkit-scrollbar { display: none; }
+.habit-section-tabs .fin-tab { flex: 0 0 auto; white-space: nowrap; }
+.habit-section[hidden] { display: none; }
+
+.habito-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 0.5rem;
+}
+.habito-emoji { font-size: 1.5rem; flex-shrink: 0; line-height: 1; }
+.habito-name { flex: 1; min-width: 0; }
+.habito-freq { font-size: 0.78rem; color: var(--muted); margin-top: 0.1rem; }
+.habito-not-due { flex-shrink: 0; font-size: 0.75rem; color: var(--muted); font-style: italic; }
+.habito-check {
+  flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
+  border: 1.5px solid var(--border); background: var(--bg-soft);
+  cursor: pointer; display: flex; align-items: center; justify-content: center; color: #0a0a0a;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.habito-check span, .habito-check svg { width: 15px; height: 15px; }
+.habito-check.done { background: var(--accent-grad); border-color: transparent; }
+
+/* Añadir hábito */
+.habito-emoji-pick { display: flex; flex-wrap: wrap; gap: 0.4rem; flex-basis: 100%; }
+/* button.xxx (no solo .xxx) para empatar en especificidad con ".tracker-form
+   button" y ganar por ir después en la hoja de estilos: si no, todo botón
+   dentro del formulario sale naranja aunque no esté seleccionado. */
+button.habito-emoji-btn {
+  width: 42px; height: 42px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--bg-soft); font-size: 1.3rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+button.habito-emoji-btn.selected { border-color: var(--accent-1); background: rgba(255, 122, 48, 0.28); }
+.habito-freq-pick { display: flex; flex-wrap: wrap; gap: 0.4rem; flex-basis: 100%; }
+button.freq-opt {
+  padding: 0.5rem 0.9rem; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--bg-soft); color: var(--muted); font-size: 0.82rem; font-weight: 600; cursor: pointer;
+}
+button.freq-opt.active { background: var(--accent-grad); border-color: transparent; color: #0a0a0a; }
+.habito-times-pick { display: flex; align-items: center; gap: 0.6rem; flex-basis: 100%; color: var(--muted); font-size: 0.88rem; }
+.habito-times-pick input { width: 70px; padding: 0.5rem 0.7rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-soft); color: var(--ink); font-family: inherit; font-size: 0.95rem; }
+.diaria-days-pick { display: flex; gap: 0.3rem; flex: 1 1 100%; }
+button.diaria-days-pick-btn {
+  flex: 1; padding: 0.5rem 0; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg-soft); color: var(--muted); font-size: 0.75rem; font-weight: 700; cursor: pointer;
+}
+button.diaria-days-pick-btn.on { background: var(--accent-grad); border-color: transparent; color: #0a0a0a; }
+.habito-save-btn {
+  flex-basis: 100%; background: var(--accent-grad); color: #0a0a0a; border: none; border-radius: 999px;
+  padding: 0.75rem 1.4rem; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 0.2rem;
+}
+
+/* Estadísticas */
+.stats-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+  padding: 1.1rem 1rem; margin-bottom: 1.5rem;
+}
+.stats-card-head { margin-bottom: 0.9rem; }
+.stats-card-title { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.95rem; }
+.stats-card-title [data-icon] { width: 18px; height: 18px; color: var(--accent-2); }
+.heat-cal { display: grid; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 0.3rem; }
+.heat-wd { display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: var(--muted); }
+.heat-month { display: flex; align-items: flex-end; padding-bottom: 2px; font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.heat-day {
+  width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  font-size: 0.6rem; color: var(--muted); background: var(--bg-soft); border: 1px solid var(--border);
+}
+.heat-day.l1 { background: rgba(255, 122, 48, 0.25); border-color: transparent; color: var(--ink); }
+.heat-day.l2 { background: rgba(255, 122, 48, 0.5); border-color: transparent; color: var(--ink); }
+.heat-day.l3 { background: rgba(255, 148, 60, 0.78); border-color: transparent; color: #0a0a0a; }
+.heat-day.l4 { background: var(--accent-grad); border-color: transparent; color: #0a0a0a; font-weight: 700; }
+.heat-legend { display: flex; align-items: center; justify-content: flex-end; gap: 0.3rem; margin-top: 0.6rem; font-size: 0.68rem; color: var(--muted); }
+.heat-swatch { width: 12px; height: 12px; border-radius: 4px; background: var(--bg-soft); border: 1px solid var(--border); }
+.heat-swatch.l1 { background: rgba(255, 122, 48, 0.25); border-color: transparent; }
+.heat-swatch.l2 { background: rgba(255, 122, 48, 0.5); border-color: transparent; }
+.heat-swatch.l3 { background: rgba(255, 148, 60, 0.78); border-color: transparent; }
+.heat-swatch.l4 { background: var(--accent-grad); border-color: transparent; }
+
+.habit-stat-box { text-align: left; }
+.habit-stat-icon { width: 20px; height: 20px; color: var(--accent-2); margin-bottom: 0.5rem; }
+.habit-stat-box .value { font-size: 1.4rem; }
+
+.habito-breakdown-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+  padding: 1rem 1.1rem; margin-bottom: 0.8rem;
+}
+.habito-breakdown-head { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.9rem; }
+.habito-emoji-badge {
+  width: 38px; height: 38px; border-radius: 10px; background: var(--bg-soft);
+  display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;
+}
+.habito-breakdown-stats {
+  display: flex; justify-content: space-between; gap: 0.5rem;
+  padding-bottom: 0.8rem; margin-bottom: 0.6rem; border-bottom: 1px solid var(--border);
+}
+.habito-breakdown-stats > div { display: flex; flex-direction: column; gap: 0.2rem; }
+.habito-breakdown-stats span { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.habito-breakdown-stats strong { font-size: 1rem; }
+.habito-spark { display: block; width: 100%; height: 50px; }
+.habito-spark-area { fill: rgba(255, 184, 77, 0.22); }
+.habito-spark-line { stroke: var(--accent-2); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
 /* =====================================================
    DESKTOP LAYOUT — bold dark navbar, inspired by RSNL Creative:
    full-width sticky top bar, wordmark left, links + gradient

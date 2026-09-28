@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=202609252200">
+  <link rel="stylesheet" href="css/style.css?v=202609252600">
 </head>
 <body>
   <div id="login-screen" class="login-screen">
@@ -216,13 +216,49 @@
             <div class="fin-tabs habit-section-tabs" id="habit-section-tabs">
               <button type="button" class="fin-tab active" data-habit-section="habitos">Hábitos</button>
               <button type="button" class="fin-tab" data-habit-section="estadisticas">Estadísticas</button>
+              <button type="button" class="fin-tab" data-habit-section="anadir">Añadir hábito</button>
             </div>
 
             <div id="habit-section-habitos" class="habit-section">
-              <!-- En blanco a propósito, pendiente de rediseño. -->
+              <div id="habito-list"></div>
+              <p class="empty-state" id="habito-empty" hidden>Aún no tienes hábitos. Crea el primero en "Añadir hábito".</p>
             </div>
+
             <div id="habit-section-estadisticas" class="habit-section" hidden>
-              <!-- En blanco a propósito, pendiente de rediseño. -->
+              <div class="stats-card">
+                <div class="stats-card-head">
+                  <span class="stats-card-title"><span data-icon="calendar"></span>Finalización general</span>
+                </div>
+                <div class="heat-cal" id="heat-cal"></div>
+                <div class="heat-legend"><span>Menos</span><i class="heat-swatch l0"></i><i class="heat-swatch l1"></i><i class="heat-swatch l2"></i><i class="heat-swatch l3"></i><i class="heat-swatch l4"></i><span>Más</span></div>
+              </div>
+
+              <div class="stat-row" id="habit-stats-row"></div>
+
+              <h3 class="budget-section-title">Desglose de hábitos</h3>
+              <div id="habito-breakdown"></div>
+              <p class="empty-state" id="habito-breakdown-empty" hidden>Crea un hábito para ver sus estadísticas.</p>
+            </div>
+
+            <div id="habit-section-anadir" class="habit-section" hidden>
+              <form class="tracker-form habit-add-form" id="add-habito-form">
+                <input type="text" id="add-habito-name" placeholder="Nombre del hábito (ej: Tomar agua)" required>
+
+                <div class="habito-emoji-pick" id="habito-emoji-pick"></div>
+
+                <div class="habito-freq-pick" id="habito-freq-pick">
+                  <button type="button" class="freq-opt active" data-freq="diario">Todos los días</button>
+                  <button type="button" class="freq-opt" data-freq="dias">Días específicos</button>
+                  <button type="button" class="freq-opt" data-freq="semana">Veces por semana</button>
+                </div>
+                <div class="diaria-days-pick" id="add-habito-days" hidden></div>
+                <div class="habito-times-pick" id="add-habito-times" hidden>
+                  <input type="number" id="add-habito-times-input" min="1" max="7" value="3">
+                  <span>veces por semana</span>
+                </div>
+
+                <button type="submit" class="habito-save-btn">Guardar hábito</button>
+              </form>
             </div>
           </section>
 
@@ -825,10 +861,10 @@
   <script src="js/firebase-init.js?v=202609241200"></script>
   <script src="js/auth.js?v=202609232200"></script>
   <script src="js/verses.js?v=202609232200"></script>
-  <script src="js/icons.js?v=202609252000"></script>
+  <script src="js/icons.js?v=202609252400"></script>
   <script src="js/modules.js?v=202609252200"></script>
   <script src="js/main.js?v=202609232200"></script>
-  <script src="js/habitos.js?v=202609252300"></script>
+  <script src="js/habitos.js?v=202609252600"></script>
   <script src="js/gimnasio.js?v=202609232200"></script>
   <script src="js/body-map.js?v=202609251800"></script>
   <script src="js/running.js?v=202609232200"></script>
