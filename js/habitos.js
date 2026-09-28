@@ -5,9 +5,12 @@ const MONTH_NAMES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "se
 const HEAT_WEEKS = 10;
 const EMOJIS = ["💧", "🏃", "🧘", "📖", "💪", "🛌", "🥗", "🚭", "🧹", "🙏", "💊", "🎯", "✍️", "🎨", "🚴", "🧠"];
 
+const PERIOD_LABELS = { manana: "Mañana", tarde: "Tarde", noche: "Noche", todo: "Todo el día" };
+
 let habitosCache = [];
 let emojiChoice = EMOJIS[0];
 let freqChoice = "diario";
+let periodChoice = "cualquiera";
 
 function habitosCollection() {
   return db.collection("users").doc(currentUser.uid).collection("habitos");
@@ -36,6 +39,93 @@ function isDue(habit, dateStr) {
   if (habit.freqType === "dias") return !!(habit.days || [])[weekdayIndex(dateStr)];
   return true; // "diario" y "semana": cualquier día cuenta.
 }
+
+// ---------- Escena de la hora del día (mañana/tarde/noche) ----------
+function periodNow() {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 12) return "manana";
+  if (h >= 12 && h < 19) return "tarde";
+  return "noche";
+}
+let selectedPeriod = periodNow();
+
+function treeSVG(x, scale, fill, hi) {
+  return `<g transform="translate(${x},0) scale(${scale})">
+    <rect x="-2" y="58" width="4" height="16" fill="#241f19"/>
+    <ellipse cx="0" cy="50" rx="17" ry="19" fill="${fill}"/>
+    <ellipse cx="6" cy="43" rx="6" ry="7" fill="${hi}" opacity="0.75"/>
+  </g>`;
+}
+function hillsSVG(fill) {
+  return `<path d="M0,112 C60,88 130,88 190,108 C250,128 310,82 400,98 L400,150 L0,150 Z" fill="${fill}"/>`;
+}
+function starsSVG(seedCount) {
+  const pts = [[36, 30], [96, 18], [150, 42], [210, 22], [270, 34], [320, 16], [360, 46], [60, 55]];
+  return pts.slice(0, seedCount).map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="${i % 3 === 0 ? 1.6 : 1}" fill="#e9e4d8" opacity="${0.35 + (i % 4) * 0.15}"/>`).join("");
+}
+
+function heroSceneSVG(period) {
+  const trees = treeSVG(40, 0.9, "#3f7d6f", "#5aa08f") + treeSVG(345, 1.05, "#376c60", "#4f9585") + treeSVG(280, 0.55, "#3f7d6f", "#5aa08f");
+  if (period === "noche") {
+    return `<svg viewBox="0 0 400 150" class="habit-hero-svg" preserveAspectRatio="xMidYMax slice">
+      <rect width="400" height="150" fill="#0c0b10"/>
+      ${starsSVG(8)}
+      <circle cx="150" cy="46" r="20" fill="#f4d9a3"/>
+      <circle cx="158" cy="40" r="18" fill="#0c0b10"/>
+      ${hillsSVG("#1a1712")}
+      ${trees}
+    </svg>`;
+  }
+  if (period === "manana") {
+    return `<svg viewBox="0 0 400 150" class="habit-hero-svg" preserveAspectRatio="xMidYMax slice">
+      <defs><linearGradient id="skyManana" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#1c140f"/><stop offset="100%" stop-color="#3a2312"/>
+      </linearGradient></defs>
+      <rect width="400" height="150" fill="url(#skyManana)"/>
+      <circle cx="180" cy="108" r="60" fill="var(--accent-1)" opacity="0.18"/>
+      <circle cx="180" cy="108" r="38" fill="var(--accent-2)" opacity="0.35"/>
+      <circle cx="180" cy="108" r="20" fill="#ffd9a0"/>
+      ${hillsSVG("#1f1a13")}
+      ${trees}
+    </svg>`;
+  }
+  if (period === "tarde") {
+    return `<svg viewBox="0 0 400 150" class="habit-hero-svg" preserveAspectRatio="xMidYMax slice">
+      <defs><linearGradient id="skyTarde" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#2a1c10"/><stop offset="100%" stop-color="#4a2c14"/>
+      </linearGradient></defs>
+      <rect width="400" height="150" fill="url(#skyTarde)"/>
+      <circle cx="290" cy="46" r="46" fill="var(--accent-1)" opacity="0.16"/>
+      <circle cx="290" cy="46" r="24" fill="#ffd9a0"/>
+      ${hillsSVG("#241d15")}
+      ${trees}
+    </svg>`;
+  }
+  // "todo": un cielo de transición, entre el atardecer y la noche.
+  return `<svg viewBox="0 0 400 150" class="habit-hero-svg" preserveAspectRatio="xMidYMax slice">
+    <defs><linearGradient id="skyTodo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#141019"/><stop offset="100%" stop-color="#3a2314"/>
+    </linearGradient></defs>
+    <rect width="400" height="150" fill="url(#skyTodo)"/>
+    ${starsSVG(4)}
+    <circle cx="230" cy="90" r="40" fill="var(--accent-2)" opacity="0.2"/>
+    ${hillsSVG("#1c1712")}
+    ${trees}
+  </svg>`;
+}
+
+function renderHero() {
+  document.getElementById("habit-hero").innerHTML = heroSceneSVG(selectedPeriod === "todo" ? "todo" : selectedPeriod);
+  document.querySelectorAll("#habit-period-tabs .fin-tab").forEach(b => b.classList.toggle("active", b.dataset.period === selectedPeriod));
+  document.getElementById("habit-period-label").textContent = selectedPeriod === "todo" ? "Todo el día" : PERIOD_LABELS[selectedPeriod];
+}
+document.getElementById("habit-period-tabs").addEventListener("click", e => {
+  const btn = e.target.closest("[data-period]");
+  if (!btn) return;
+  selectedPeriod = btn.dataset.period;
+  renderHero();
+  renderHabitos();
+});
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -103,10 +193,17 @@ function renderHabitos() {
   const list = document.getElementById("habito-list");
   const empty = document.getElementById("habito-empty");
   list.innerHTML = "";
-  empty.hidden = habitosCache.length > 0;
+
+  const shown = selectedPeriod === "todo"
+    ? habitosCache
+    : habitosCache.filter(h => (h.timeOfDay || "cualquiera") === selectedPeriod || (h.timeOfDay || "cualquiera") === "cualquiera");
+  empty.hidden = shown.length > 0;
+  empty.textContent = habitosCache.length
+    ? `Nada para ${PERIOD_LABELS[selectedPeriod === "todo" ? "todo" : selectedPeriod].toLowerCase()}. Prueba con otro momento del día.`
+    : "Aún no tienes hábitos. Crea el primero en \"Añadir hábito\".";
 
   const today = todayISO();
-  habitosCache.forEach(h => {
+  shown.forEach(h => {
     const done = (h.done || []).includes(today);
     const due = isDue(h, today);
     const row = document.createElement("div");
@@ -281,13 +378,20 @@ document.getElementById("habito-freq-pick").addEventListener("click", e => {
   document.getElementById("add-habito-times").hidden = freqChoice !== "semana";
 });
 
+document.getElementById("habito-period-pick").addEventListener("click", e => {
+  const btn = e.target.closest("[data-period]");
+  if (!btn) return;
+  periodChoice = btn.dataset.period;
+  document.querySelectorAll("#habito-period-pick .freq-opt").forEach(b => b.classList.toggle("active", b === btn));
+});
+
 document.getElementById("add-habito-form").addEventListener("submit", e => {
   e.preventDefault();
   const nameInput = document.getElementById("add-habito-name");
   const name = nameInput.value.trim();
   if (!name) return;
 
-  const data = { name, emoji: emojiChoice, freqType: freqChoice, done: [], createdAt: Date.now() };
+  const data = { name, emoji: emojiChoice, freqType: freqChoice, timeOfDay: periodChoice, done: [], createdAt: Date.now() };
   if (freqChoice === "dias") {
     data.days = Array.from(document.querySelectorAll("#add-habito-days button")).map(b => b.classList.contains("on"));
     if (!data.days.some(Boolean)) return;
@@ -300,9 +404,11 @@ document.getElementById("add-habito-form").addEventListener("submit", e => {
   nameInput.value = "";
   emojiChoice = EMOJIS[0];
   freqChoice = "diario";
+  periodChoice = "cualquiera";
   renderEmojiPick();
   renderAddDaysPick();
   document.querySelectorAll("#habito-freq-pick .freq-opt").forEach(b => b.classList.toggle("active", b.dataset.freq === "diario"));
+  document.querySelectorAll("#habito-period-pick .freq-opt").forEach(b => b.classList.toggle("active", b.dataset.period === "cualquiera"));
   document.getElementById("add-habito-days").hidden = true;
   document.getElementById("add-habito-times").hidden = true;
   showHabitSection("habitos");
@@ -310,6 +416,7 @@ document.getElementById("add-habito-form").addEventListener("submit", e => {
 
 renderEmojiPick();
 renderAddDaysPick();
+renderHero();
 
 onAuthReady(() => {
   habitosCollection().orderBy("createdAt").onSnapshot(snap => {
