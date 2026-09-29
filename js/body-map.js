@@ -7,7 +7,6 @@
 // abre una hoja con su detalle.
 (function () {
 
-const NS = "http://www.w3.org/2000/svg";
 const DIAS = ["L", "M", "M", "J", "V", "S", "D"];
 const DIAS_LARGO = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
@@ -60,36 +59,10 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// ---- Dibujo de las figuras ----
-function el(tag, attrs) {
-  const e = document.createElementNS(NS, tag);
-  Object.keys(attrs || {}).forEach(k => e.setAttribute(k, attrs[k]));
-  return e;
-}
-
-function dibujarFigura(svg, piezas) {
-  svg.innerHTML = "";
-  ["izq", "der"].forEach(lado => {
-    const g = el("g", lado === "der" ? { transform: "matrix(-1 0 0 1 140 0)" } : {});
-    piezas.forEach(p => {
-      if (p.centro && lado === "der") return;
-      const forma = extra => p.el ? el(p.el, Object.assign({}, p.a, extra)) : el("path", Object.assign({ d: p.d }, extra));
-      if (p.m) {
-        const gm = el("g", { class: "mz", "data-muscle": p.m, "data-lado": lado });
-        gm.appendChild(forma({ class: "mz-base" }));
-        gm.appendChild(forma({ class: "mz-tinte" }));
-        g.appendChild(gm);
-      } else if (p.base) g.appendChild(forma({ class: "mz-pieza" }));
-      else if (p.seam) g.appendChild(forma({ class: "seam" }));
-      else if (p.hi) g.appendChild(forma({ class: "hi" }));
-    });
-    svg.appendChild(g);
-  });
-}
-
+// ---- Figuras ----
 const banner = document.getElementById("body-banner");
-dibujarFigura(document.getElementById("body-fig-frente"), BodyFigures.frente);
-dibujarFigura(document.getElementById("body-fig-espalda"), BodyFigures.espalda);
+BodyFigures.dibujar(document.getElementById("body-fig-frente"), BodyFigures.frente);
+BodyFigures.dibujar(document.getElementById("body-fig-espalda"), BodyFigures.espalda);
 
 // Un brillo que aparece y se va sobre los músculos que se acaban de encender.
 function pulso(musculos) {

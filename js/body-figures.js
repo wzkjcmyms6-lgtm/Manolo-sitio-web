@@ -91,5 +91,34 @@ const ESPALDA = [
   ...PIERNA_BASE
 ];
 
-root.BodyFigures = { frente: FRENTE, espalda: ESPALDA, ancho: 140, alto: 300 };
+// Dibuja una figura dentro de un <svg viewBox="0 0 140 300">. Cada región
+// queda como <g class="mz" data-muscle data-lado> con una base marfil y una
+// capa de tinte (el color lo decide el CSS según data-nivel / data-rol).
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs) {
+  const e = document.createElementNS(NS, tag);
+  Object.keys(attrs || {}).forEach(k => e.setAttribute(k, attrs[k]));
+  return e;
+}
+function dibujar(svg, piezas) {
+  svg.innerHTML = "";
+  ["izq", "der"].forEach(lado => {
+    const g = el("g", lado === "der" ? { transform: "matrix(-1 0 0 1 140 0)" } : {});
+    piezas.forEach(p => {
+      if (p.centro && lado === "der") return;
+      const forma = extra => p.el ? el(p.el, Object.assign({}, p.a, extra)) : el("path", Object.assign({ d: p.d }, extra));
+      if (p.m) {
+        const gm = el("g", { class: "mz", "data-muscle": p.m, "data-lado": lado });
+        gm.appendChild(forma({ class: "mz-base" }));
+        gm.appendChild(forma({ class: "mz-tinte" }));
+        g.appendChild(gm);
+      } else if (p.base) g.appendChild(forma({ class: "mz-pieza" }));
+      else if (p.seam) g.appendChild(forma({ class: "seam" }));
+      else if (p.hi) g.appendChild(forma({ class: "hi" }));
+    });
+    svg.appendChild(g);
+  });
+}
+
+root.BodyFigures = { frente: FRENTE, espalda: ESPALDA, ancho: 140, alto: 300, dibujar };
 })(typeof self !== "undefined" ? self : this);

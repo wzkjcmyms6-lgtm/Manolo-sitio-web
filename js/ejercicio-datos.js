@@ -13,7 +13,8 @@ const RUTA_BASE = "data/ejercicios.json?v=202609291";
 const estado = {
   base: [], destacados: 0, propios: [], asignaciones: {}, ajustes: {},
   registros: { gimnasio: [], running: [], bicicleta: [] },
-  cargado: { base: false, gimnasio: false },
+  // true cuando llegó una lectura confirmada por el servidor (no del caché)
+  cargado: { base: false, gimnasio: false, running: false, bicicleta: false, ajustes: false },
   indice: null, datos: null, version: 0
 };
 const oyentes = [];
@@ -44,6 +45,13 @@ function resolver(nombre, id) {
   const k = ExerciseSearch.clave(nombre);
   if (!cacheResolver.has(k)) cacheResolver.set(k, ExerciseSearch.resolver(estado.indice, nombre, { asignaciones: estado.asignaciones }));
   return cacheResolver.get(k);
+}
+
+// Para enterarse también de cuándo los datos pasan de "caché" a "confirmados
+// por el servidor" (lo necesita el respaldo automático).
+const CON_METADATOS = { includeMetadataChanges: true };
+function delServidor(snap) {
+  return !snap.metadata || !snap.metadata.fromCache;
 }
 
 function config() {
@@ -84,21 +92,24 @@ fetch(RUTA_BASE)
   .catch(err => console.error("No se pudo cargar la base de ejercicios", err));
 
 onAuthReady(() => {
-  coleccion("entrenamientos").onSnapshot(snap => {
+  coleccion("entrenamientos").onSnapshot(CON_METADATOS, snap => {
     estado.registros.gimnasio = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    estado.cargado.gimnasio = true;
+    if (delServidor(snap)) estado.cargado.gimnasio = true;
     avisar();
   });
-  coleccion("running").onSnapshot(snap => {
+  coleccion("running").onSnapshot(CON_METADATOS, snap => {
     estado.registros.running = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (delServidor(snap)) estado.cargado.running = true;
     avisar();
   });
-  coleccion("bicicleta").onSnapshot(snap => {
+  coleccion("bicicleta").onSnapshot(CON_METADATOS, snap => {
     estado.registros.bicicleta = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (delServidor(snap)) estado.cargado.bicicleta = true;
     avisar();
   });
-  meta("ajustes_ejercicio").onSnapshot(doc => {
+  meta("ajustes_ejercicio").onSnapshot(CON_METADATOS, doc => {
     estado.ajustes = (doc.exists && doc.data()) || {};
+    if (delServidor(doc)) estado.cargado.ajustes = true;
     avisar();
   });
   meta("ejercicios_propios").onSnapshot(doc => {

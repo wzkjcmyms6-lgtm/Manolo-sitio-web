@@ -17,6 +17,14 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+// Caché offline de Firestore: sin conexión se leen los últimos datos y lo
+// que registres se guarda en el teléfono y se sube solo al volver la red.
+// Tiene que activarse antes de cualquier lectura. synchronizeTabs permite
+// tener la app abierta en más de una pestaña.
+db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+  console.warn("Firestore sin caché offline:", err && err.code);
+});
+
 // Forzamos que la sesión quede guardada de forma persistente en el propio
 // navegador (en vez de confiar en el modo por defecto, que en Safari/iOS a
 // veces no sobrevive de una página a otra dentro del mismo sitio).

@@ -1,18 +1,15 @@
 (function () {
-const EXERCISE_SUGGESTIONS = [
-  "Sentadilla (Barra)", "Peso Muerto Rumano (Barra)", "Press de Banca (Barra)",
-  "Press de Banca (Mancuerna)", "Press de Banca Inclinado (Mancuerna)",
-  "Press de Hombros (Mancuerna)", "Empuje de Caderas (Barra)", "Press de Piernas",
-  "Extensión de Pierna", "Curl de Pierna", "Jalón al Pecho (Cable)",
-  "Remo en Punta", "Remo Sentado con Agarre en V (Cable)",
-  "Curl de Bíceps (Mancuerna)", "Curl de Bíceps Inclinado (Mancuerna)",
-  "Elevación Lateral (Mancuerna)", "Press Militar (Barra)", "Dominadas",
-  "Fondos", "Plancha", "Zancadas", "Caminar"
-];
+// Gimnasio: rutinas, entrenamiento activo (o edición de uno guardado) e
+// historial. Cada ejercicio queda ligado a su ficha de la base
+// (exerciseId), así el mapa y el radar saben qué músculos trabajó. Las
+// columnas cambian según el tipo: carga (KG × REPS), peso corporal
+// (+KG de lastre × REPS), isométrico (SEG) o cardio (minutos).
 
 let routinesCache = [];
 let historyCache = [];
-let activeWorkout = null; // { name, startedAt, exercises: [{ name, sets: [{kg, reps}] }] }
+// { name, startedAt, date, editingId, durationMin,
+//   exercises: [{ name, exerciseId, tipo, sets: [{kg, reps, seg}], rpe, notas, minutos }] }
+let activeWorkout = null;
 let timerInterval = null;
 
 function rutinasCollection() {
@@ -24,8 +21,14 @@ function entrenamientosCollection() {
 
 function escapeHtml(str) {
   const div = document.createElement("div");
-  div.textContent = str;
+  div.textContent = str == null ? "" : String(str);
   return div.innerHTML;
+}
+
+// Fecha local (no UTC): un entreno a las 21:00 en La Paz sigue siendo de hoy.
+function isoHoy() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function formatDateEs(dateStr) {
@@ -33,19 +36,48 @@ function formatDateEs(dateStr) {
   return d.toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
 }
 
-function defaultSets() {
-  return [{ kg: "", reps: "" }, { kg: "", reps: "" }, { kg: "", reps: "" }];
+function fmtKg(n) {
+  return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
-function computeVolume(exercises) {
-  return exercises.reduce((sum, ex) =>
-    sum + ex.sets.reduce((s, set) => s + (set.kg || 0) * (set.reps || 0), 0), 0);
+function defaultSets(tipo) {
+  if (tipo === "cardio") return [];
+  const vacia = tipo === "isometrico" ? { seg: "" } : { kg: "", reps: "" };
+  return [0, 1, 2].map(() => Object.assign({}, vacia));
 }
 
-function maxKgForExercise(name) {
+function fichaDe(ex) {
+  return EjercicioDatos.resolver(ex.name, ex.exerciseId);
+}
+
+function nuevoEjercicio(ficha, nombreLibre) {
+  const tipo = ficha ? ficha.tipo : "carga";
+  return {
+    name: ficha ? ficha.nombre : nombreLibre,
+    exerciseId: ficha ? ficha.id : null,
+    tipo,
+    sets: defaultSets(tipo),
+    rpe: "",
+    notas: "",
+    minutos: ""
+  };
+}
+
+// Volumen de un entreno con las mismas fórmulas que el mapa y el radar.
+function volumenEntreno(w) {
+  const cfg = EjercicioDatos.config();
+  return (w.exercises || []).reduce((sum, ex) => {
+    const f = fichaDe(ex);
+    if (f) return sum + MuscleEngine.cargaEjercicio({ ejercicio: f, series: ex.sets || [], minutos: ex.minutos, rpe: ex.rpe }, cfg).volumen;
+    return sum + (ex.sets || []).reduce((s, set) => s + (set.kg || 0) * (set.reps || 0), 0);
+  }, 0);
+}
+
+function maxKgForExercise(name, excluirId) {
   const key = name.trim().toLowerCase();
   let max = 0;
   historyCache.forEach(w => {
+    if (w.id === excluirId) return;
     (w.exercises || []).forEach(ex => {
       if (ex.name.trim().toLowerCase() === key) {
         (ex.sets || []).forEach(s => { if (s.reps > 0 && s.kg > max) max = s.kg; });
@@ -55,11 +87,13 @@ function maxKgForExercise(name) {
   return max;
 }
 
-function computePRs(exercises) {
+function computePRs(exercises, excluirId) {
   let count = 0;
   exercises.forEach(ex => {
-    const prevMax = maxKgForExercise(ex.name);
-    const sessionMax = Math.max(0, ...ex.sets.filter(s => s.reps > 0).map(s => s.kg));
+    const sets = (ex.sets || []).filter(s => s.reps > 0);
+    if (!sets.length) return;
+    const prevMax = maxKgForExercise(ex.name, excluirId);
+    const sessionMax = Math.max(0, ...sets.map(s => s.kg || 0));
     if (sessionMax > 0 && sessionMax > prevMax) count++;
   });
   return count;
@@ -95,10 +129,15 @@ function addRoutineExerciseRow(value = "") {
   const row = document.createElement("div");
   row.className = "routine-exercise-row";
   row.innerHTML = `
-    <input type="text" class="routine-exercise-input" list="gym-exercise-suggestions" placeholder="Ejercicio" value="${escapeHtml(value)}">
+    <input type="text" class="routine-exercise-input" placeholder="Ejercicio" value="${escapeHtml(value)}">
     <button type="button" class="delete-row" aria-label="Quitar">${ICONS.close}</button>
   `;
   row.querySelector(".delete-row").addEventListener("click", () => row.remove());
+  const input = row.querySelector("input");
+  ExercisePicker.adjuntar(input, {
+    alElegir: f => { input.value = f.nombre; },
+    alCrear: nombre => ExerciseCreator.abrir({ nombre, alGuardar: f => { input.value = f.nombre; } })
+  });
   rows.appendChild(row);
 }
 
@@ -135,18 +174,20 @@ document.getElementById("gym-routine-form").addEventListener("submit", e => {
 
 /* ---------- Historial ---------- */
 
+function resumenEjercicio(ex) {
+  if (ex.minutos && !(ex.sets || []).length) return `${ex.minutos} min ${ex.name}`;
+  return `${(ex.sets || []).length} series ${ex.name}`;
+}
+
 function renderHistory() {
-  const list = historyCache.slice().sort((a, b) => (b.startedAt || 0) - (a.startedAt || 0));
+  const list = historyCache.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.startedAt || 0) - (a.startedAt || 0));
   const container = document.getElementById("gym-history");
   const empty = document.getElementById("gym-history-empty");
   container.innerHTML = "";
   empty.hidden = list.length > 0;
 
   list.forEach(w => {
-    const volume = computeVolume(w.exercises || []);
-    const exSummary = (w.exercises || [])
-      .map(ex => `${ex.sets.length} series ${ex.name}`)
-      .join(" · ");
+    const exSummary = (w.exercises || []).map(resumenEjercicio).join(" · ");
     const card = document.createElement("div");
     card.className = "workout-history-card";
     card.innerHTML = `
@@ -155,33 +196,76 @@ function renderHistory() {
           <h3>${escapeHtml(w.name)}</h3>
           <span class="meta">${formatDateEs(w.date)}</span>
         </div>
-        <button type="button" class="delete" aria-label="Eliminar entrenamiento">${ICONS.trash}</button>
+        <div class="workout-history-actions">
+          <button type="button" class="edit" aria-label="Editar entrenamiento">${ICONS.edit}</button>
+          <button type="button" class="delete" aria-label="Eliminar entrenamiento">${ICONS.trash}</button>
+        </div>
       </div>
       <div class="stat-row-mini">
         <div><span class="v">${w.durationMin}min</span><span class="l">Tiempo</span></div>
-        <div><span class="v">${volume.toLocaleString("es-ES")} kg</span><span class="l">Volumen</span></div>
+        <div><span class="v">${fmtKg(volumenEntreno(w))} kg</span><span class="l">Volumen</span></div>
         <div><span class="v">${w.prs || 0} 🏅</span><span class="l">Récords</span></div>
       </div>
-      <p class="workout-history-exercises">${exSummary}</p>
+      <p class="workout-history-exercises">${escapeHtml(exSummary)}</p>
     `;
-    card.querySelector(".delete").addEventListener("click", () => entrenamientosCollection().doc(w.id).delete());
+    card.querySelector(".delete").addEventListener("click", () => {
+      if (confirm("¿Eliminar este entrenamiento? El mapa y el radar se recalculan al instante.")) entrenamientosCollection().doc(w.id).delete();
+    });
+    card.querySelector(".edit").addEventListener("click", () => editWorkout(w));
     container.appendChild(card);
   });
 }
 
-/* ---------- Entrenamiento activo ---------- */
+/* ---------- Entrenamiento activo / edición ---------- */
+
+function abrirEditor() {
+  document.getElementById("gym-active-name").value = activeWorkout.name;
+  document.getElementById("gym-active-date").value = activeWorkout.date;
+  const editando = !!activeWorkout.editingId;
+  document.getElementById("gym-active-timer").hidden = editando;
+  document.getElementById("gym-active-duration-wrap").hidden = !editando;
+  document.getElementById("gym-active-duration").value = editando ? activeWorkout.durationMin || "" : "";
+  document.getElementById("gym-active-finish").textContent = editando ? "Guardar cambios" : "Finalizar entrenamiento";
+  document.getElementById("gym-active-discard").textContent = editando ? "Cancelar" : "Descartar";
+  document.getElementById("gym-home").hidden = true;
+  document.getElementById("gym-active").hidden = false;
+  renderActiveExercises();
+  if (editando) stopTimer(); else startTimer();
+}
 
 function startWorkout(name, exerciseNames) {
   activeWorkout = {
     name: name || "Entrenamiento",
     startedAt: Date.now(),
-    exercises: (exerciseNames || []).map(n => ({ name: n, sets: defaultSets() }))
+    date: isoHoy(),
+    editingId: null,
+    exercises: (exerciseNames || []).map(n => nuevoEjercicio(EjercicioDatos.resolver(n), n))
   };
-  document.getElementById("gym-active-name").value = activeWorkout.name;
-  document.getElementById("gym-home").hidden = true;
-  document.getElementById("gym-active").hidden = false;
-  renderActiveExercises();
-  startTimer();
+  abrirEditor();
+}
+
+function editWorkout(w) {
+  activeWorkout = {
+    name: w.name || "Entrenamiento",
+    startedAt: w.startedAt || Date.now(),
+    date: w.date || isoHoy(),
+    editingId: w.id,
+    durationMin: w.durationMin || "",
+    exercises: (w.exercises || []).map(ex => {
+      const f = fichaDe(ex);
+      return {
+        name: ex.name,
+        exerciseId: ex.exerciseId || (f ? f.id : null),
+        tipo: f ? f.tipo : "carga",
+        sets: (ex.sets || []).map(s => ({ kg: s.kg != null ? s.kg : "", reps: s.reps != null ? s.reps : "", seg: s.seg != null ? s.seg : "" })),
+        rpe: ex.rpe || "",
+        notas: ex.notas || "",
+        minutos: ex.minutos || ""
+      };
+    })
+  };
+  abrirEditor();
+  window.scrollTo({ top: document.getElementById("panel-gimnasio").offsetTop - 60, behavior: "smooth" });
 }
 
 function endWorkout() {
@@ -212,33 +296,63 @@ function updateTimerDisplay() {
   document.getElementById("gym-active-timer").textContent = text;
 }
 
+const COLUMNAS = {
+  carga: { titulos: ["KG", "REPS"], campos: [["kg", "decimal", "0.5"], ["reps", "numeric", "1"]] },
+  peso_corporal: { titulos: ["+KG", "REPS"], campos: [["kg", "decimal", "0.5"], ["reps", "numeric", "1"]] },
+  isometrico: { titulos: ["SEG"], campos: [["seg", "numeric", "1"]] }
+};
+
+function tablaSeries(ex) {
+  const col = COLUMNAS[ex.tipo] || COLUMNAS.carga;
+  const una = col.campos.length === 1 ? " cols-1" : "";
+  const filas = ex.sets.map((set, setIndex) => `
+    <div class="set-row${una}" data-set-index="${setIndex}">
+      <span class="set-num">${setIndex + 1}</span>
+      ${col.campos.map(([campo, modo, paso]) => `<input type="number" class="set-${campo}" inputmode="${modo}" min="0" step="${paso}" placeholder="0" value="${escapeHtml(set[campo] != null ? set[campo] : "")}" aria-label="${campo} serie ${setIndex + 1}">`).join("")}
+      <button type="button" class="delete-set" aria-label="Eliminar serie">${ICONS.close}</button>
+    </div>`).join("");
+  return `
+    <div class="set-table">
+      <div class="set-row set-row-header${una}"><span>SERIE</span>${col.titulos.map(t => `<span>${t}</span>`).join("")}<span></span></div>
+      ${filas}
+    </div>
+    <button type="button" class="link-btn add-set-btn">+ Serie</button>`;
+}
+
 function renderActiveExercises() {
   const container = document.getElementById("gym-active-exercises");
   container.innerHTML = "";
 
   activeWorkout.exercises.forEach((ex, exIndex) => {
-    const setsHtml = ex.sets.map((set, setIndex) => `
-      <div class="set-row" data-set-index="${setIndex}">
-        <span class="set-num">${setIndex + 1}</span>
-        <input type="number" class="set-kg" inputmode="decimal" min="0" step="0.5" placeholder="0" value="${set.kg}">
-        <input type="number" class="set-reps" inputmode="numeric" min="0" step="1" placeholder="0" value="${set.reps}">
-        <button type="button" class="delete-set" aria-label="Eliminar serie">${ICONS.close}</button>
-      </div>
-    `).join("");
+    const f = fichaDe(ex);
+    const musculos = f
+      ? `<p class="exercise-muscles">${ExercisePicker.resumenMusculos(f)}</p>`
+      : `<p class="exercise-muscles sin">Sin músculos asignados · <button type="button" class="link-btn ex-definir">Definir</button></p>`;
+    const cuerpo = ex.tipo === "cardio"
+      ? `<label class="ex-inline-field">Minutos <input type="number" class="ex-min" inputmode="decimal" min="0" step="1" placeholder="0" value="${escapeHtml(ex.minutos)}"></label>`
+      : tablaSeries(ex);
 
     const card = document.createElement("div");
     card.className = "exercise-card";
     card.dataset.exIndex = exIndex;
     card.innerHTML = `
       <div class="exercise-card-head">
-        <h3>${escapeHtml(ex.name)}</h3>
+        <div class="exercise-card-title">
+          <h3>${escapeHtml(ex.name)}</h3>
+          ${musculos}
+        </div>
         <button type="button" class="delete" aria-label="Eliminar ejercicio">${ICONS.trash}</button>
       </div>
-      <div class="set-table">
-        <div class="set-row set-row-header"><span>SERIE</span><span>KG</span><span>REPS</span><span></span></div>
-        ${setsHtml}
+      ${cuerpo}
+      <div class="exercise-extra">
+        <label class="ex-inline-field">RPE
+          <select class="ex-rpe" aria-label="Esfuerzo percibido de 1 a 10">
+            <option value="">—</option>
+            ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<option value="${n}"${String(ex.rpe) === String(n) ? " selected" : ""}>${n}</option>`).join("")}
+          </select>
+        </label>
+        <input type="text" class="ex-notas" placeholder="Notas (opcional)" maxlength="200" value="${escapeHtml(ex.notas)}">
       </div>
-      <button type="button" class="link-btn add-set-btn">+ Serie</button>
     `;
     container.appendChild(card);
   });
@@ -248,11 +362,11 @@ document.getElementById("gym-active-exercises").addEventListener("click", e => {
   const exCard = e.target.closest(".exercise-card");
   if (!exCard) return;
   const exIndex = Number(exCard.dataset.exIndex);
+  const ex = activeWorkout.exercises[exIndex];
 
   if (e.target.closest(".delete-set")) {
-    const setRow = e.target.closest(".set-row");
-    const setIndex = Number(setRow.dataset.setIndex);
-    activeWorkout.exercises[exIndex].sets.splice(setIndex, 1);
+    const setIndex = Number(e.target.closest(".set-row").dataset.setIndex);
+    ex.sets.splice(setIndex, 1);
     renderActiveExercises();
     return;
   }
@@ -262,81 +376,131 @@ document.getElementById("gym-active-exercises").addEventListener("click", e => {
     return;
   }
   if (e.target.closest(".add-set-btn")) {
-    activeWorkout.exercises[exIndex].sets.push({ kg: "", reps: "" });
+    // La serie nueva copia la anterior (como en las apps de gimnasio).
+    const ultima = ex.sets[ex.sets.length - 1];
+    ex.sets.push(ultima ? Object.assign({}, ultima) : defaultSets(ex.tipo)[0]);
     renderActiveExercises();
+    return;
+  }
+  if (e.target.closest(".ex-definir")) {
+    ExerciseCreator.abrir({
+      nombre: ex.name,
+      alGuardar: f => { Object.assign(ex, { name: f.nombre, exerciseId: f.id, tipo: f.tipo }); if (!ex.sets.length && f.tipo !== "cardio") ex.sets = defaultSets(f.tipo); renderActiveExercises(); }
+    });
   }
 });
 
-document.getElementById("gym-active-exercises").addEventListener("input", e => {
+function onCampo(e) {
   const exCard = e.target.closest(".exercise-card");
   if (!exCard) return;
-  const exIndex = Number(exCard.dataset.exIndex);
-  const setRow = e.target.closest(".set-row");
+  const ex = activeWorkout.exercises[Number(exCard.dataset.exIndex)];
+  const t = e.target;
+  if (t.classList.contains("ex-rpe")) { ex.rpe = t.value ? Number(t.value) : ""; return; }
+  if (t.classList.contains("ex-notas")) { ex.notas = t.value; return; }
+  if (t.classList.contains("ex-min")) { ex.minutos = parseFloat(t.value) || ""; return; }
+  const setRow = t.closest(".set-row");
   if (!setRow || setRow.classList.contains("set-row-header")) return;
-  const setIndex = Number(setRow.dataset.setIndex);
-  const set = activeWorkout.exercises[exIndex].sets[setIndex];
-  if (e.target.classList.contains("set-kg")) set.kg = parseFloat(e.target.value) || 0;
-  if (e.target.classList.contains("set-reps")) set.reps = parseInt(e.target.value, 10) || 0;
+  const set = ex.sets[Number(setRow.dataset.setIndex)];
+  if (t.classList.contains("set-kg")) set.kg = parseFloat(t.value) || 0;
+  if (t.classList.contains("set-reps")) set.reps = parseInt(t.value, 10) || 0;
+  if (t.classList.contains("set-seg")) set.seg = parseInt(t.value, 10) || 0;
+}
+document.getElementById("gym-active-exercises").addEventListener("input", onCampo);
+document.getElementById("gym-active-exercises").addEventListener("change", onCampo);
+
+function agregarEjercicio(ficha) {
+  activeWorkout.exercises.push(nuevoEjercicio(ficha));
+  document.getElementById("gym-active-exercise-name").value = "";
+  renderActiveExercises();
+}
+
+const picker = ExercisePicker.adjuntar(document.getElementById("gym-active-exercise-name"), {
+  alElegir: agregarEjercicio,
+  alCrear: nombre => ExerciseCreator.abrir({ nombre, alGuardar: agregarEjercicio })
 });
 
 document.getElementById("gym-active-add-exercise-form").addEventListener("submit", e => {
   e.preventDefault();
-  const input = document.getElementById("gym-active-exercise-name");
-  const name = input.value.trim();
-  if (!name) return;
-  activeWorkout.exercises.push({ name, sets: defaultSets() });
-  input.value = "";
-  renderActiveExercises();
+  picker.confirmar();
 });
 
 document.getElementById("gym-active-name").addEventListener("input", e => {
   if (activeWorkout) activeWorkout.name = e.target.value;
 });
+document.getElementById("gym-active-date").addEventListener("change", e => {
+  if (activeWorkout && e.target.value) activeWorkout.date = e.target.value;
+});
+document.getElementById("gym-active-duration").addEventListener("input", e => {
+  if (activeWorkout) activeWorkout.durationMin = parseInt(e.target.value, 10) || "";
+});
 
 document.getElementById("gym-start-empty").addEventListener("click", () => startWorkout("Entrenamiento", []));
 
+// Deja solo lo que se completó y sin campos vacíos (Firestore no acepta undefined).
+function limpiarEjercicio(ex) {
+  const out = { name: ex.name, sets: [] };
+  if (ex.exerciseId) out.exerciseId = ex.exerciseId;
+  if (ex.tipo === "cardio") {
+    if (!(ex.minutos > 0)) return null;
+    out.minutos = Number(ex.minutos);
+  } else if (ex.tipo === "isometrico") {
+    out.sets = ex.sets.filter(s => (Number(s.seg) || 0) > 0).map(s => ({ seg: Number(s.seg) }));
+    if (!out.sets.length) return null;
+  } else {
+    out.sets = ex.sets
+      .filter(s => (Number(s.reps) || 0) > 0 || (Number(s.kg) || 0) > 0)
+      .map(s => ({ kg: Number(s.kg) || 0, reps: Number(s.reps) || 0 }));
+    if (!out.sets.length) return null;
+  }
+  if (ex.rpe) out.rpe = Number(ex.rpe);
+  if (ex.notas && ex.notas.trim()) out.notas = ex.notas.trim();
+  return out;
+}
+
 document.getElementById("gym-active-finish").addEventListener("click", () => {
   if (!activeWorkout) return;
+  const exercises = activeWorkout.exercises.map(limpiarEjercicio).filter(Boolean);
+  const name = (activeWorkout.name || "Entrenamiento").trim() || "Entrenamiento";
+  const date = activeWorkout.date || isoHoy();
 
-  const exercises = activeWorkout.exercises
-    .filter(ex => ex.sets.some(s => (s.reps || 0) > 0 || (s.kg || 0) > 0))
-    .map(ex => ({
-      name: ex.name,
-      sets: ex.sets
-        .filter(s => (s.reps || 0) > 0 || (s.kg || 0) > 0)
-        .map(s => ({ kg: Number(s.kg) || 0, reps: Number(s.reps) || 0 }))
-    }));
+  if (activeWorkout.editingId) {
+    if (!exercises.length) {
+      if (confirm("El entrenamiento quedó vacío. ¿Eliminarlo?")) entrenamientosCollection().doc(activeWorkout.editingId).delete();
+      else return;
+    } else {
+      entrenamientosCollection().doc(activeWorkout.editingId).update({
+        name, date, exercises,
+        durationMin: Math.max(1, parseInt(activeWorkout.durationMin, 10) || 1),
+        prs: computePRs(exercises, activeWorkout.editingId)
+      });
+    }
+    endWorkout();
+    return;
+  }
 
   if (!exercises.length) {
     endWorkout();
     return;
   }
 
-  const durationMin = Math.max(1, Math.round((Date.now() - activeWorkout.startedAt) / 60000));
-  const prs = computePRs(exercises);
-  const date = new Date().toISOString().slice(0, 10);
-
   entrenamientosCollection().add({
     date,
-    name: (activeWorkout.name || "Entrenamiento").trim() || "Entrenamiento",
+    name,
     startedAt: activeWorkout.startedAt,
-    durationMin,
+    durationMin: Math.max(1, Math.round((Date.now() - activeWorkout.startedAt) / 60000)),
     exercises,
-    prs
+    prs: computePRs(exercises)
   });
 
   endWorkout();
 });
 
 document.getElementById("gym-active-discard").addEventListener("click", () => {
-  if (activeWorkout.exercises.length && !confirm("¿Descartar este entrenamiento?")) return;
+  if (!activeWorkout.editingId && activeWorkout.exercises.length && !confirm("¿Descartar este entrenamiento?")) return;
   endWorkout();
 });
 
 /* ---------- Init ---------- */
-
-document.getElementById("gym-exercise-suggestions").innerHTML =
-  EXERCISE_SUGGESTIONS.map(n => `<option value="${escapeHtml(n)}"></option>`).join("");
 
 onAuthReady(() => {
   rutinasCollection().onSnapshot(snap => {
@@ -347,5 +511,20 @@ onAuthReady(() => {
     historyCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderHistory();
   });
+});
+
+// Cuando carga la base de ejercicios (o cambian los propios/asignaciones)
+// se recalculan los volúmenes del historial y los músculos del editor.
+EjercicioDatos.onCambio(() => {
+  renderHistory();
+  if (activeWorkout) {
+    activeWorkout.exercises.forEach(ex => {
+      if (ex.exerciseId) return;
+      const f = EjercicioDatos.resolver(ex.name);
+      if (f) Object.assign(ex, { exerciseId: f.id, tipo: f.tipo });
+    });
+    const enfocado = document.activeElement && document.activeElement.closest("#gym-active-exercises");
+    if (!enfocado) renderActiveExercises();
+  }
 });
 })();

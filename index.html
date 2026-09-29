@@ -17,9 +17,22 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=202609292">
+  <link rel="stylesheet" href="css/style.css?v=202609294">
 </head>
 <body>
+  <!-- Degradado marfil y brillo del maniquí (mapa corporal y creador de ejercicios) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <radialGradient id="bodyGrad" cx="40%" cy="25%" r="80%">
+        <stop offset="0%" stop-color="#cfccc0"/>
+        <stop offset="55%" stop-color="#a8a498"/>
+        <stop offset="100%" stop-color="#79766c"/>
+      </radialGradient>
+      <filter id="muscleGlow" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="3.2"/>
+      </filter>
+    </defs>
+  </svg>
   <div id="login-screen" class="login-screen">
     <div class="login-card">
       <span class="brand">Manolo</span>
@@ -56,18 +69,6 @@
         </div>
 
         <div class="body-banner" id="body-banner" hidden>
-          <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-            <defs>
-              <radialGradient id="bodyGrad" cx="40%" cy="25%" r="80%">
-                <stop offset="0%" stop-color="#cfccc0"/>
-                <stop offset="55%" stop-color="#a8a498"/>
-                <stop offset="100%" stop-color="#79766c"/>
-              </radialGradient>
-              <filter id="muscleGlow" x="-60%" y="-60%" width="220%" height="220%">
-                <feGaussianBlur stdDeviation="3.2"/>
-              </filter>
-            </defs>
-          </svg>
 
           <div class="body-week-nav month-nav">
             <button type="button" id="body-week-prev" aria-label="Semana anterior"><span data-icon="chevronLeft"></span></button>
@@ -79,11 +80,11 @@
 
           <div class="body-figs">
             <div class="fig-wrap">
-              <svg class="body-fig" id="body-fig-frente" viewBox="0 0 140 300" role="img" aria-label="Músculos trabajados, vista de frente"></svg>
+              <svg class="body-fig figura" id="body-fig-frente" viewBox="0 0 140 300" role="img" aria-label="Músculos trabajados, vista de frente"></svg>
               <span class="fig-label">Frente</span>
             </div>
             <div class="fig-wrap">
-              <svg class="body-fig" id="body-fig-espalda" viewBox="0 0 140 300" role="img" aria-label="Músculos trabajados, vista de espalda"></svg>
+              <svg class="body-fig figura" id="body-fig-espalda" viewBox="0 0 140 300" role="img" aria-label="Músculos trabajados, vista de espalda"></svg>
               <span class="fig-label">Espalda</span>
             </div>
           </div>
@@ -239,6 +240,36 @@
               <h3 class="radar-subtitle">Top 5 ejercicios de la semana</h3>
               <ol class="radar-top" id="radar-top"></ol>
             </section>
+
+            <section class="ej-revisar" id="ej-revisar" hidden aria-labelledby="ej-revisar-titulo">
+              <h2 id="ej-revisar-titulo">Ejercicios sin reconocer</h2>
+              <p class="ej-texto">Estos nombres de tus entrenos no coinciden con ningún ejercicio de la base, así que todavía no pintan el mapa. Asígnalos o créalos marcando sus músculos. Tus entrenos no se modifican.</p>
+              <ul class="ej-revisar-lista" id="ej-revisar-lista"></ul>
+            </section>
+
+            <details class="ej-ajustes" id="ej-ajustes">
+              <summary>Ajustes del mapa muscular</summary>
+              <form id="ej-ajustes-form" class="ej-ajustes-form" novalidate>
+                <label class="ex-field">Tu peso corporal (kg)
+                  <input type="number" id="aj-peso" step="0.1" min="20" max="300" inputmode="decimal">
+                </label>
+                <p class="ej-texto">Se usa en los ejercicios con peso corporal: peso × factor del ejercicio (+ lastre).</p>
+                <details class="ej-avanzado">
+                  <summary>Constantes del cálculo</summary>
+                  <div class="ej-avanzado-campos" id="aj-avanzado-campos"></div>
+                </details>
+                <div class="ej-ajustes-acciones">
+                  <button type="submit" class="ex-btn-primary">Guardar ajustes</button>
+                  <button type="button" class="link-btn" id="aj-reset">Valores por defecto</button>
+                </div>
+                <p class="ej-aviso" id="aj-aviso" hidden></p>
+              </form>
+              <h3 class="radar-subtitle">Mis ejercicios</h3>
+              <ul class="aj-propios" id="aj-propios"></ul>
+              <h3 class="radar-subtitle">Respaldo</h3>
+              <p class="ej-texto" id="aj-respaldo-info"></p>
+              <button type="button" class="ej-chip" id="aj-descargar"><span class="icon-sm" data-icon="download"></span> Descargar respaldo (JSON)</button>
+            </details>
           </section>
 
           <!-- ===== Gimnasio ===== -->
@@ -276,17 +307,20 @@
 
             <div id="gym-active" hidden>
               <div class="workout-header">
-                <input type="text" id="gym-active-name" class="workout-name-input">
+                <input type="text" id="gym-active-name" class="workout-name-input" aria-label="Nombre del entrenamiento">
                 <span class="workout-timer" id="gym-active-timer">0:00</span>
+              </div>
+              <div class="workout-meta-row">
+                <label>Fecha <input type="date" id="gym-active-date"></label>
+                <label id="gym-active-duration-wrap" hidden>Duración (min) <input type="number" id="gym-active-duration" min="1" step="1" inputmode="numeric"></label>
               </div>
 
               <div id="gym-active-exercises"></div>
 
               <form id="gym-active-add-exercise-form" class="add-exercise-form">
-                <input type="text" id="gym-active-exercise-name" list="gym-exercise-suggestions" placeholder="Nombre del ejercicio (ej: Press de banca)" required>
+                <input type="text" id="gym-active-exercise-name" placeholder="Buscar ejercicio (ej: press inclinado)" required>
                 <button type="submit">Agregar</button>
               </form>
-              <datalist id="gym-exercise-suggestions"></datalist>
 
               <div class="workout-actions">
                 <button type="button" id="gym-active-finish">Finalizar entrenamiento</button>
@@ -306,6 +340,12 @@
               <input type="date" id="running-date" required>
               <input type="number" id="running-distance" placeholder="Distancia (km)" min="0.01" step="0.01" required>
               <input type="number" id="running-duration" placeholder="Minutos" min="1" required>
+              <select id="running-rpe" aria-label="Esfuerzo percibido (RPE)">
+                <option value="">RPE (opcional)</option>
+                <option value="1">RPE 1 · muy suave</option><option value="2">RPE 2</option><option value="3">RPE 3</option>
+                <option value="4">RPE 4</option><option value="5">RPE 5 · moderado</option><option value="6">RPE 6</option>
+                <option value="7">RPE 7</option><option value="8">RPE 8 · duro</option><option value="9">RPE 9</option><option value="10">RPE 10 · máximo</option>
+              </select>
               <input type="text" id="running-notes" placeholder="Notas (opcional)">
               <button type="submit">Registrar</button>
             </form>
@@ -325,6 +365,12 @@
               <input type="date" id="cycling-date" required>
               <input type="number" id="cycling-distance" placeholder="Distancia (km)" min="0.01" step="0.01" required>
               <input type="number" id="cycling-duration" placeholder="Minutos" min="1" required>
+              <select id="cycling-rpe" aria-label="Esfuerzo percibido (RPE)">
+                <option value="">RPE (opcional)</option>
+                <option value="1">RPE 1 · muy suave</option><option value="2">RPE 2</option><option value="3">RPE 3</option>
+                <option value="4">RPE 4</option><option value="5">RPE 5 · moderado</option><option value="6">RPE 6</option>
+                <option value="7">RPE 7</option><option value="8">RPE 8 · duro</option><option value="9">RPE 9</option><option value="10">RPE 10 · máximo</option>
+              </select>
               <input type="text" id="cycling-notes" placeholder="Notas (opcional)">
               <button type="submit">Registrar</button>
             </form>
@@ -834,7 +880,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-init.js?v=202609241200"></script>
+  <script src="js/firebase-init.js?v=202609293"></script>
   <script src="js/auth.js?v=202609232200"></script>
   <script src="js/verses.js?v=202609232200"></script>
   <script src="js/icons.js?v=202609252400"></script>
@@ -843,13 +889,16 @@
   <script src="js/habitos.js?v=202609280100"></script>
   <script src="js/muscle-engine.js?v=202609292"></script>
   <script src="js/exercise-search.js?v=202609291"></script>
-  <script src="js/body-figures.js?v=202609291"></script>
-  <script src="js/ejercicio-datos.js?v=202609291"></script>
-  <script src="js/gimnasio.js?v=202609232200"></script>
-  <script src="js/body-map.js?v=202609292"></script>
+  <script src="js/body-figures.js?v=202609293"></script>
+  <script src="js/ejercicio-datos.js?v=202609293"></script>
+  <script src="js/exercise-picker.js?v=202609294"></script>
+  <script src="js/gimnasio.js?v=202609293"></script>
+  <script src="js/body-map.js?v=202609293"></script>
   <script src="js/muscle-radar.js?v=202609292"></script>
-  <script src="js/running.js?v=202609232200"></script>
-  <script src="js/bicicleta.js?v=202609232200"></script>
+  <script src="js/ejercicio-ajustes.js?v=202609293"></script>
+  <script src="js/offline.js?v=202609293"></script>
+  <script src="js/running.js?v=202609293"></script>
+  <script src="js/bicicleta.js?v=202609293"></script>
   <script src="js/finanzas.js?v=202609251700"></script>
   <script src="js/inversiones.js?v=202609232200"></script>
 </body>

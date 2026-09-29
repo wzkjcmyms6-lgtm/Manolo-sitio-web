@@ -1,4 +1,9 @@
 (function () {
+// Fecha local de hoy (valueAsDate usa UTC y de noche marcaba el día siguiente).
+function fechaLocalHoy() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 let runningCache = [];
 
 function runningCollection() {
@@ -60,14 +65,16 @@ document.getElementById("running-form").addEventListener("submit", e => {
   const distance = parseFloat(document.getElementById("running-distance").value);
   const duration = parseFloat(document.getElementById("running-duration").value);
   const notes = document.getElementById("running-notes").value.trim();
+  const rpe = parseInt(document.getElementById("running-rpe").value, 10);
   if (!date || !distance || !duration) return;
 
-  runningCollection().add({ date, distance, duration, notes });
+  // El RPE (opcional) lo usa el mapa muscular: minutos × RPE × constante.
+  runningCollection().add(Object.assign({ date, distance, duration, notes }, rpe ? { rpe } : {}));
   e.target.reset();
-  document.getElementById("running-date").valueAsDate = new Date();
+  document.getElementById("running-date").value = fechaLocalHoy();
 });
 
-document.getElementById("running-date").valueAsDate = new Date();
+document.getElementById("running-date").value = fechaLocalHoy();
 
 onAuthReady(() => {
   runningCollection().onSnapshot(snap => {

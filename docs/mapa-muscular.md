@@ -9,7 +9,7 @@ semana, al estilo Hevy pero con el arte y la paleta de Manolo.
 - [x] **Fase 1 — Base de ejercicios + cálculo + tests** (29 sept 2026)
 - [x] **Fase 2 — Mapa corporal** (29 sept 2026)
 - [x] **Fase 3 — Radar + tarjetas + top 5** (29 sept 2026)
-- [ ] Fase 4 — Integración (registro, respaldo, no reconocidos, offline) y prueba piernas → pecho
+- [x] **Fase 4 — Integración y prueba piernas → pecho** (29 sept 2026)
 - [ ] Fase 5 — Documentación final (agregar ejercicios, ajustar constantes)
 
 ## Archivos
@@ -25,6 +25,10 @@ semana, al estilo Hevy pero con el arte y la paleta de Manolo.
 | `js/ejercicio-datos.js` | Centro de datos en el navegador: base + propios + asignaciones + ajustes + entrenos (Firestore) → `EjercicioDatos.onCambio`. |
 | `js/body-map.js` | Mapa: niveles por región, fila L–D, pulso al encender, hoja de detalle al tocar. |
 | `js/muscle-radar.js` | Radar de 6 ejes (semana vs anterior), selector Volumen/Series, barras por músculo, tarjetas y top 5. |
+| `js/exercise-picker.js` | Autocompletado de ejercicios (con sus músculos) y creador de ejercicios propios tocando el maniquí. |
+| `js/gimnasio.js` | Registro: autocompletado, columnas según tipo, RPE, notas, fecha, edición de entrenos guardados. |
+| `js/ejercicio-ajustes.js` | Lista de no reconocidos, ajustes (peso corporal y constantes), mis ejercicios y respaldo. |
+| `sw.js` + `js/offline.js` | Modo sin conexión: guarda la app en el teléfono. |
 
 Ambos `js/` funcionan en el navegador (`window.MuscleEngine`,
 `window.ExerciseSearch`) y en Node (tests, script).
@@ -153,10 +157,69 @@ cardio | isometrico), equipo, primarios[], secundarios[], factorPesoCorporal`.
 - Tarjetas: entrenamientos, duración, volumen y series, con ↑/↓ respecto de la
   semana anterior. Top 5 por volumen (el cardio muestra minutos).
 
-## Datos del usuario (Firestore, pendiente Fase 4)
+## Integración (Fase 4)
 
-- Entrenos: `users/{uid}/entrenamientos` (sin cambios de formato; se agregan
-  `exerciseId`, `rpe`, `notas`, `minutos` por ejercicio, opcionales).
+### Registro (Gimnasio)
+- El buscador de "Agregar" usa la base: ignora tildes, tolera errores y
+  muestra los músculos de cada opción. "Agregar" sin elegir: si el nombre
+  coincide con seguridad se usa ese ejercicio; si no, abre el creador.
+- Cada ejercicio guarda `exerciseId`. Columnas según tipo: carga (KG × REPS),
+  peso corporal (+KG de lastre × REPS), isométrico (SEG), cardio (minutos).
+  Además RPE 1–10 y notas por ejercicio, y la fecha del entreno.
+- Historial: botón ✎ para editar (ejercicios, series, fecha, duración) y 🗑
+  para borrar. El mapa y el radar se recalculan al instante.
+- Running y Bicicleta: RPE opcional (si falta se usa `rpePorDefecto`).
+- Arreglo: las fechas nuevas se guardan en hora local (antes, de noche, la
+  fecha UTC marcaba el día siguiente). Los entrenos viejos no se tocaron.
+
+### Ejercicios propios
+- Si buscas un ejercicio que no existe: "+ Crear «…»" abre el maniquí. Tocar
+  un músculo 1 vez = primario, 2 = secundario, 3 = quitar. También tipo,
+  equipo y (si es de peso corporal) la parte del peso que mueves.
+- Se guardan en `users/{uid}/meta/ejercicios_propios` (un mapa id → ficha) y
+  se listan en Ajustes → Mis ejercicios (se pueden borrar).
+
+### Entrenos ya registrados
+- No se modifican: cada nombre guardado se resuelve contra la base al leerlo
+  (`ExerciseSearch.resolver`). Lo que no se reconoce aparece en Ejercicio →
+  "Ejercicios sin reconocer", con **Asignar** (buscar en la base) o **Crear
+  nuevo**. La elección se guarda en `meta/asignaciones_ejercicios`
+  (nombre normalizado → id).
+- **Respaldo**: la primera vez que la app abre con conexión copia todos los
+  entrenos (gimnasio, running, bici) en `meta/respaldo_entrenamientos_AAAA-MM-DD`
+  y lo anota en `meta/ajustes_ejercicio.respaldo`. Solo con datos confirmados
+  por el servidor (no del caché). En Ajustes → "Descargar respaldo (JSON)".
+
+### Ajustes
+- `meta/ajustes_ejercicio`: `pesoCorporal`, las constantes de la tabla de
+  arriba (en pantalla los % se muestran ×100) y `umbrales`.
+
+### Sin conexión
+- `js/firebase-init.js` activa el caché offline de Firestore
+  (`enablePersistence`): sin red se ven los últimos datos y lo que registres se
+  guarda en el teléfono y se sube solo al volver la conexión.
+- `sw.js`: archivos con `?v=` (y Firebase SDK / Google Fonts) se sirven desde
+  la copia; `index.html` y archivos sin versión, primero de la red. La página
+  (`js/offline.js`) le pasa al service worker la lista de archivos que cargó.
+- **Al publicar cambios**: subir el `?v=` del archivo modificado en
+  `index.html` (y `RUTA_BASE` en `js/ejercicio-datos.js` si cambia
+  `data/ejercicios.json`). Si cambia `sw.js`, subir `CACHE`.
+
+### Pruebas hechas
+- Con un Firebase simulado en memoria y Chromium tamaño iPhone: día de
+  piernas → se encienden cuádriceps, isquios, glúteos…; luego día de pecho →
+  el mapa acumula (pecho superior/medio + tríceps y deltoide anterior suaves).
+- "Press inclinado con barra 4×10×60" desde el buscador → pecho superior
+  nivel 2 (primario), tríceps y deltoide anterior suaves; radar actualizado
+  sin recargar.
+- Creador (roles 1/2/3 toques), asignación de no reconocidos, ajustes,
+  edición, respaldo automático y recarga sin conexión.
+
+## Datos del usuario (Firestore)
+
+- Entrenos: `users/{uid}/entrenamientos` (mismo formato; se agregan
+  opcionalmente `exerciseId`, `rpe`, `notas`, `minutos` por ejercicio y `seg`
+  por serie).
 - Running/Bici: `users/{uid}/running`, `users/{uid}/bicicleta` (+ `rpe` opcional).
-- Nuevos: ejercicios propios, asignaciones de nombres no reconocidos, ajustes
-  (peso corporal y constantes) y respaldo previo a la migración.
+- `users/{uid}/meta/`: `ejercicios_propios`, `asignaciones_ejercicios`,
+  `ajustes_ejercicio`, `respaldo_entrenamientos_AAAA-MM-DD`.
