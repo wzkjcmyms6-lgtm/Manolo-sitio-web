@@ -10,7 +10,7 @@ semana, al estilo Hevy pero con el arte y la paleta de Manolo.
 - [x] **Fase 2 — Mapa corporal** (29 sept 2026)
 - [x] **Fase 3 — Radar + tarjetas + top 5** (29 sept 2026)
 - [x] **Fase 4 — Integración y prueba piernas → pecho** (29 sept 2026)
-- [ ] Fase 5 — Documentación final (agregar ejercicios, ajustar constantes)
+- [x] **Fase 5 — Documentación final** (29 sept 2026)
 
 ## Archivos
 
@@ -223,3 +223,67 @@ cardio | isometrico), equipo, primarios[], secundarios[], factorPesoCorporal`.
 - Running/Bici: `users/{uid}/running`, `users/{uid}/bicicleta` (+ `rpe` opcional).
 - `users/{uid}/meta/`: `ejercicios_propios`, `asignaciones_ejercicios`,
   `ajustes_ejercicio`, `respaldo_entrenamientos_AAAA-MM-DD`.
+
+## Cómo agregar ejercicios
+
+**Desde la app (solo para ti, recomendado):** en Gimnasio escribe el nombre
+en "Buscar ejercicio"; si no aparece, toca **+ Crear «…»**, elige tipo y
+equipo y toca los músculos en el maniquí (1 = primario, 2 = secundario,
+3 = quitar). Queda guardado y se puede borrar en Ejercicio → Ajustes → Mis
+ejercicios.
+
+**En la base (para siempre, en el código):** editar
+`scripts/build-exercises.mjs` y regenerar.
+
+- Ejercicio que el dataset no trae → agregarlo a `EXTRA`:
+  ```js
+  { id: "manolo-remo-meadows", nombre: "Remo Meadows (Barra)", alias: ["meadows row"],
+    tipo: "carga", equipo: "barra", primarios: ["dorsales", "espalda_media"],
+    secundarios: ["biceps", "deltoide_posterior"] },
+  ```
+  El `id` no se debe cambiar después (los entrenos lo guardan).
+- Corregir nombre, músculos o tipo de uno del dataset → `AJUSTES`, con el
+  nombre en inglés como clave:
+  ```js
+  "Barbell Shrug": { nombre: "Encogimientos (Barra)", secundarios: ["antebrazos"], destacado: true },
+  ```
+  `destacado: true` lo pone primero cuando la búsqueda empata.
+- Nuevo sinónimo de búsqueda para todo un movimiento → `SINONIMOS`
+  (ej. `"zancada": ["estocada", …]`).
+- Excluir uno → `AJUSTES["Nombre"] = { excluir: true }`.
+
+Después: `npm run ejercicios` (regenera `data/ejercicios.json`), `npm test`, y
+subir el `?v=` de `RUTA_BASE` en `js/ejercicio-datos.js` para que el
+teléfono descargue la base nueva.
+
+## Cómo ajustar las constantes
+
+**Desde la app:** Ejercicio → Ajustes del mapa muscular → Constantes del
+cálculo. Cambia al instante el mapa, el radar y las tarjetas (solo para tu
+cuenta). "Valores por defecto" las restablece (tu peso se mantiene).
+
+**En el código (valores por defecto):** `DEFAULTS` en `js/muscle-engine.js`
+(subir su `?v=` en `index.html` y correr `npm test`). Qué mueve cada una:
+
+- `pesoSecundario` / `serieSecundaria`: cuánto cuentan los secundarios. Más
+  alto = el mapa se enciende más en los músculos que solo acompañan.
+- `umbrales` [4, 10]: series efectivas semanales para pasar a naranja (nivel
+  2) y a intenso (nivel 3). Subirlos si todo se ve demasiado encendido.
+- `cardioK`, `rpePorDefecto`, `minutosPorSerieCardio`: peso del cardio y los
+  isométricos frente a las pesas. Ej.: con `cardioK = 10`, 30 min a RPE 7 =
+  2100 kg equivalentes y 3 series efectivas.
+- Factor de peso corporal de un ejercicio: tabla `FACTORES` del script (para
+  todos) o en el creador (para los propios).
+
+## Otros cambios frecuentes
+
+- **Colores del mapa**: tokens `--musculo-1/2/3` y `--musculo-suave` en
+  `:root` de `css/style.css`.
+- **Formas del maniquí**: `js/body-figures.js` (coordenadas del lado
+  izquierdo en un lienzo de 140 × 300; el derecho es su espejo).
+- **Nueva fuente de cardio (ej. Strava)**: guardar cada actividad con fecha,
+  minutos y RPE, y sumarla en `desdeRegistros()` de `js/muscle-engine.js`
+  igual que `running` (id `manolo-correr`) y `bicicleta` (id `bicycling`); para
+  otros deportes, agregar su ficha en `EXTRA` (ej. natación ya existe:
+  `manolo-natacion`).
+- **Tests**: `npm test` (Node 18+ sin instalar nada).

@@ -6,16 +6,22 @@ Sitio web estático (HTML/CSS/JS puro, sin dependencias) para llevar control per
 
 - `index.html` — pantalla de inicio con versículo del día y accesos a cada sección.
 - `habitos.html` — seguimiento semanal de hábitos (marca los días cumplidos).
-- `ejercicio.html` — registro de entrenamientos (fecha, tipo, duración, notas).
+- `ejercicio.html` — Ejercicio: mapa muscular (frente/espalda) y radar de distribución por semana, Gimnasio (rutinas, registro con buscador de ~570 ejercicios, RPE, notas, edición), Running y Bicicleta. Detalles en [`docs/mapa-muscular.md`](docs/mapa-muscular.md).
 - `finanzas.html` — registro de ingresos, gastos e inversiones con balance.
 - `css/style.css` — estilos compartidos. Incluye un layout de **escritorio** (barra lateral fija) y uno de **móvil** distinto (barra superior + menú deslizante + barra de navegación inferior), controlados por media queries (`max-width: 768px`).
 - `js/verses.js` — banco de versículos y lógica del "versículo del día".
 - `js/main.js` — navegación (menú móvil, resaltado de sección activa).
-- `js/habitos.js`, `js/ejercicio.js`, `js/finanzas.js` — lógica de cada sección.
+- `js/habitos.js`, `js/gimnasio.js`, `js/running.js`, `js/bicicleta.js`, `js/finanzas.js` — lógica de cada sección.
+- `js/muscle-engine.js`, `js/exercise-search.js`, `js/body-map.js`, `js/muscle-radar.js` (y afines) — mapa muscular; `data/ejercicios.json` se genera con `npm run ejercicios` desde free-exercise-db (dominio público).
+- `sw.js` + `js/offline.js` — la app funciona sin conexión.
+
+## Tests
+
+`npm test` (usa el test runner de Node, sin dependencias).
 
 ## Datos
 
-Por ahora todos los datos se guardan en el navegador (`localStorage`), como primera versión rápida de usar. Es un buen punto de partida para migrar después a una base de datos independiente (por ejemplo, un backend propio o un servicio como Supabase/Firebase) sin tener que rediseñar la interfaz.
+Los datos se guardan en Firebase (Firestore), dentro de la carpeta de cada usuario, con caché offline en el teléfono: sin conexión se ve lo último y lo que registres se sube solo al volver la red.
 
 ## Cómo verlo
 
