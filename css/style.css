@@ -2003,14 +2003,61 @@ button.diaria-days-pick-btn.on { background: var(--accent-grad); border-color: t
     background: var(--accent-1);
   }
 
-  /* Barra inferior de Finanzas (Vista general/Presupuesto/Herramientas):
-     el ícono activo se ve relleno con un resplandor, como en Buddy, en vez
-     del puntito que usa el resto de la nav. */
+  /* Barra inferior de Finanzas: barra de vidrio esmerilado con un indicador
+     que se desliza entre pestañas (ver moveFinGlass en modules.js). */
+  #bottom-nav-links.fin-mode {
+    --pad: 6px;
+    padding: var(--pad);
+    border-radius: 999px;
+    background: rgba(30, 34, 38, 0.55);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    backdrop-filter: blur(22px) saturate(170%);
+    border: 1px solid rgba(150, 215, 215, 0.22);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 14px 32px rgba(0, 0, 0, 0.5);
+  }
+  #bottom-nav-links.fin-mode a {
+    z-index: 1;
+    color: #ececec;
+    font-weight: 600;
+    font-size: 0.72rem;
+    padding: 0.55rem 0.25rem 0.5rem;
+    -webkit-tap-highlight-color: transparent;
+  }
   #bottom-nav-links.fin-mode a.active::before { display: none; }
-  #bottom-nav-links.fin-mode a.active { font-weight: 700; }
+  #bottom-nav-links.fin-mode a .icon { color: #8e8e93; transition: color 0.3s ease; }
   #bottom-nav-links.fin-mode a.active .icon {
-    color: var(--accent-1);
-    filter: drop-shadow(0 0 8px rgba(255, 122, 48, 0.6));
+    color: var(--tab-color);
+    animation: fin-icon-pop 0.5s cubic-bezier(0.3, 0.6, 0.25, 1);
+  }
+  .fin-glass {
+    position: absolute;
+    top: var(--pad);
+    bottom: var(--pad);
+    left: var(--pad);
+    width: calc((100% - 2 * var(--pad)) / var(--fin-tabs));
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.09);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+    pointer-events: none;
+    will-change: transform;
+  }
+  /* Mientras viaja: lupa transparente con borde brillante, por encima de los íconos. */
+  .fin-glass.lens {
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.03);
+    -webkit-backdrop-filter: brightness(1.3) saturate(1.6);
+    backdrop-filter: brightness(1.3) saturate(1.6);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.3),
+      inset 0 4px 8px rgba(255, 255, 255, 0.2),
+      inset 0 -4px 8px rgba(120, 200, 255, 0.18),
+      0 8px 22px rgba(0, 0, 0, 0.35);
+  }
+  @keyframes fin-icon-pop {
+    0% { transform: scale(0.85); }
+    55% { transform: scale(1.15); }
+    100% { transform: scale(1); }
   }
 
   .habit-row, .habit-days-header {

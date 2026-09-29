@@ -34,11 +34,12 @@ const ICONS = {
 
   tools: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M14.5 6.5a4 4 0 0 0-5 5L4 17l3 3 5.5-5.5a4 4 0 0 0 5-5l-2.7 2.7-2-2Z"/></svg>`,
 
-  // Variantes "rellenas" para el estado activo de la barra inferior de
-  // Finanzas (Vista general/Presupuesto/Herramientas), inspiradas en Buddy.
-  eyeFilled: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/></svg>`,
   budgetFilled: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="9"/></svg>`,
-  toolsFilled: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M14.5 6.5a4 4 0 0 0-5 5L4 17l3 3 5.5-5.5a4 4 0 0 0 5-5l-2.7 2.7-2-2Z"/></svg>`,
+
+  // Glifos sólidos de la barra inferior de Finanzas (gris inactivo, color al activarse).
+  finEye: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M12 5C6.5 5 2.6 9.3 1.3 11.3a1.3 1.3 0 0 0 0 1.4C2.6 14.7 6.5 19 12 19s9.4-4.3 10.7-6.3a1.3 1.3 0 0 0 0-1.4C21.4 9.3 17.5 5 12 5Zm0 3.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z"/><circle cx="12" cy="12" r="2"/></svg>`,
+  finBudget: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="5"><circle cx="12" cy="12" r="7.5" pathLength="100" stroke-dasharray="58 5 17 5 10 5" transform="rotate(75 12 12)"/></svg>`,
+  finTools: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M9 3.5h6A1.5 1.5 0 0 1 16.5 5v1.5h-1.8V5.3H9.3v1.2H7.5V5A1.5 1.5 0 0 1 9 3.5Z"/><path d="M5 6.5h14A2.5 2.5 0 0 1 21.5 9v3h-19V9A2.5 2.5 0 0 1 5 6.5Z"/><path d="M2.5 13.4h19V18a2.5 2.5 0 0 1-2.5 2.5H5A2.5 2.5 0 0 1 2.5 18Z"/><rect x="10.2" y="10.6" width="3.6" height="4" rx="0.9"/></svg>`,
 
   // Categorías de Finanzas
   food: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M7 2v8a2 2 0 0 0 4 0V2"/><path d="M9 10v12"/><path d="M17 2c-1.5 1-2 3-2 5s1.5 3 2 3v12"/></svg>`,

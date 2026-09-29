@@ -37,9 +37,9 @@ const SUB_PANELS = [
 // muestra estas 3 pestañas en su lugar. Para volver a Inicio/Hábitos/etc
 // queda el menú de la barra superior (el ☰).
 const FIN_TABS = [
-  { hash: "finanzas", label: "Vista general", icon: "eye", iconFilled: "eyeFilled" },
-  { hash: "fin-presupuesto", label: "Presupuesto", icon: "finance", iconFilled: "budgetFilled" },
-  { hash: "fin-herramientas", label: "Herramientas", icon: "tools", iconFilled: "toolsFilled" }
+  { hash: "finanzas", label: "Vista general", icon: "finEye", color: "#ff6b7a" },
+  { hash: "fin-presupuesto", label: "Presupuesto", icon: "finBudget", color: "#3d8bff" },
+  { hash: "fin-herramientas", label: "Herramientas", icon: "finTools", color: "#ff6b7a" }
 ];
 
 const ALL_HASHES = MODULES.map(m => m.hash).concat(SUB_PANELS.map(s => s.hash));
@@ -107,9 +107,8 @@ function renderNav() {
 
   const linkHTML = (m, iconClass, activeHash) => {
     const isActive = m.hash === activeHash;
-    const icon = isActive && m.iconFilled ? m.iconFilled : m.icon;
     return `<a href="#${m.hash}" data-nav-link data-hash="${m.hash}"${isActive ? ' class="active"' : ""}>` +
-      `<span class="${iconClass}" data-icon="${icon}"></span>${m.label}</a>`;
+      `<span class="${iconClass}" data-icon="${m.icon}"></span>${m.label}</a>`;
   };
 
   const sidebarNav = document.getElementById("nav-links");
@@ -121,13 +120,60 @@ function renderNav() {
 
   const bottomNav = document.getElementById("bottom-nav-links");
   if (bottomNav) {
-    bottomNav.classList.toggle("fin-mode", inFinanzas);
-    bottomNav.innerHTML = inFinanzas
-      ? FIN_TABS.map(m => linkHTML(m, "icon", finTabHash(hash))).join("")
-      : MODULES.map(m => linkHTML(m, "icon", current)).join("");
+    if (inFinanzas) {
+      renderFinBottomNav(bottomNav, finTabHash(hash));
+    } else {
+      finGlassIndex = null;
+      bottomNav.classList.remove("fin-mode");
+      bottomNav.innerHTML = MODULES.map(m => linkHTML(m, "icon", current)).join("");
+    }
   }
 
   renderIcons();
+}
+
+// En Finanzas la barra no se reconstruye al cambiar de pestaña: se reutiliza
+// para que el indicador de vidrio pueda deslizarse desde la pestaña anterior.
+let finGlassIndex = null;
+
+function renderFinBottomNav(nav, activeHash) {
+  if (!nav.classList.contains("fin-mode")) {
+    nav.classList.add("fin-mode");
+    nav.style.setProperty("--fin-tabs", FIN_TABS.length);
+    nav.innerHTML = `<span class="fin-glass" aria-hidden="true"></span>` + FIN_TABS.map(m =>
+      `<a href="#${m.hash}" data-nav-link data-hash="${m.hash}" style="--tab-color:${m.color}">` +
+      `<span class="icon" data-icon="${m.icon}"></span>${m.label}</a>`).join("");
+  }
+  nav.querySelectorAll("a[data-hash]").forEach(a => a.classList.toggle("active", a.dataset.hash === activeHash));
+  moveFinGlass(nav, FIN_TABS.findIndex(t => t.hash === activeHash));
+}
+
+// Al cambiar de pestaña el indicador se "levanta" como una lupa de vidrio
+// (crece y se vuelve transparente), viaja hasta la nueva pestaña y se asienta.
+function moveFinGlass(nav, to) {
+  const glass = nav.querySelector(".fin-glass");
+  const from = finGlassIndex;
+  finGlassIndex = to;
+  glass.style.transform = `translateX(${to * 100}%)`;
+  if (from === null || from === to || !glass.animate) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const at = (i, s) => `translateX(${i * 100}%) scale(${s})`;
+  const d = to - from;
+  glass.classList.add("lens");
+  const anim = glass.animate([
+    { transform: at(from, "1, 1") },
+    { transform: at(from + d * 0.12, "1.16, 1.38"), offset: 0.25 },
+    { transform: at(to + d * 0.04, "1.16, 1.38"), offset: 0.72 },
+    { transform: at(to, "1, 1") }
+  ], { duration: 620, easing: "cubic-bezier(.4, .1, .2, 1)" });
+  anim.onfinish = anim.oncancel = () => glass.classList.remove("lens");
+  nav.animate([
+    { transform: "scale(1, 1)" },
+    { transform: "scale(1.035, 0.97)", offset: 0.3 },
+    { transform: "scale(0.995, 1.01)", offset: 0.75 },
+    { transform: "scale(1, 1)" }
+  ], { duration: 620, easing: "ease-out" });
 }
 
 function router() {
