@@ -5,7 +5,7 @@ const MONTH_NAMES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "se
 const HEAT_WEEKS = 10;
 const EMOJIS = ["💧", "🏃", "🧘", "📖", "💪", "🛌", "🥗", "🚭", "🧹", "🙏", "💊", "🎯", "✍️", "🎨", "🚴", "🧠"];
 
-const PERIOD_LABELS = { manana: "Mañana", noche: "Noche" };
+const PERIOD_LABELS = { manana: "Día", noche: "Noche" };
 
 let habitosCache = [];
 let emojiChoice = EMOJIS[0];
