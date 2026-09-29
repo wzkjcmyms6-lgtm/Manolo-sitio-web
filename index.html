@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=202609291">
+  <link rel="stylesheet" href="css/style.css?v=202609292">
 </head>
 <body>
   <div id="login-screen" class="login-screen">
@@ -215,6 +215,30 @@
                 <p>Tus rodadas y tu velocidad.</p>
               </a>
             </div>
+
+            <section class="radar-section" id="radar-section" aria-labelledby="radar-title">
+              <div class="radar-head">
+                <h2 id="radar-title">Distribución muscular</h2>
+                <p class="radar-sub" id="radar-sub"></p>
+              </div>
+              <div class="fin-tabs radar-tabs" id="radar-tabs" role="tablist" aria-label="Medir por">
+                <button type="button" class="fin-tab active" data-metrica="volumen" role="tab" aria-selected="true">Volumen</button>
+                <button type="button" class="fin-tab" data-metrica="series" role="tab" aria-selected="false">Series</button>
+              </div>
+              <div class="radar-chart">
+                <svg id="radar-svg" viewBox="0 0 320 244" role="img" aria-label="Radar de distribución por grupo muscular"></svg>
+                <p class="radar-empty-hint">Registra entrenamientos para ver tu distribución.</p>
+              </div>
+              <div class="radar-legend">
+                <span><i class="dot actual"></i>Esta semana</span>
+                <span><i class="dot anterior"></i>Semana anterior</span>
+                <span class="hint">Toca un eje para ver sus músculos</span>
+              </div>
+              <div class="radar-detail" id="radar-detail" hidden></div>
+              <div class="radar-cards" id="radar-cards"></div>
+              <h3 class="radar-subtitle">Top 5 ejercicios de la semana</h3>
+              <ol class="radar-top" id="radar-top"></ol>
+            </section>
           </section>
 
           <!-- ===== Gimnasio ===== -->
@@ -817,12 +841,13 @@
   <script src="js/modules.js?v=202609252200"></script>
   <script src="js/main.js?v=202609232200"></script>
   <script src="js/habitos.js?v=202609280100"></script>
-  <script src="js/muscle-engine.js?v=202609291"></script>
+  <script src="js/muscle-engine.js?v=202609292"></script>
   <script src="js/exercise-search.js?v=202609291"></script>
   <script src="js/body-figures.js?v=202609291"></script>
   <script src="js/ejercicio-datos.js?v=202609291"></script>
   <script src="js/gimnasio.js?v=202609232200"></script>
-  <script src="js/body-map.js?v=202609291"></script>
+  <script src="js/body-map.js?v=202609292"></script>
+  <script src="js/muscle-radar.js?v=202609292"></script>
   <script src="js/running.js?v=202609232200"></script>
   <script src="js/bicicleta.js?v=202609232200"></script>
   <script src="js/finanzas.js?v=202609251700"></script>

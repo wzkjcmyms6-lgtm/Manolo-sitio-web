@@ -273,10 +273,15 @@ banner.addEventListener("click", e => {
   }
 });
 
-document.getElementById("body-week-prev").addEventListener("click", () => { weekOffset--; diaElegido = null; renderBodyMap(); });
-document.getElementById("body-week-next").addEventListener("click", () => {
-  if (weekOffset < 0) { weekOffset++; diaElegido = null; renderBodyMap(); }
-});
+// El radar (js/muscle-radar.js) sigue la semana que se ve en el mapa.
+function cambiarSemana(delta) {
+  weekOffset += delta;
+  diaElegido = null;
+  renderBodyMap();
+  document.dispatchEvent(new CustomEvent("bodymap:semana", { detail: { offset: weekOffset } }));
+}
+document.getElementById("body-week-prev").addEventListener("click", () => cambiarSemana(-1));
+document.getElementById("body-week-next").addEventListener("click", () => { if (weekOffset < 0) cambiarSemana(1); });
 
 EjercicioDatos.onCambio(() => renderBodyMap());
 

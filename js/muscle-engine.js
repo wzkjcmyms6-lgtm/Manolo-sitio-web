@@ -228,9 +228,10 @@ function topEjercicios(entradas, cfgParcial, n) {
   (entradas || []).forEach(e => {
     const c = cargaEjercicio(e, cfg);
     const id = e.ejercicio.id;
-    const it = acc[id] || (acc[id] = { id, nombre: e.ejercicio.nombre, volumen: 0, series: 0, veces: 0 });
+    const it = acc[id] || (acc[id] = { id, nombre: e.ejercicio.nombre, tipo: e.ejercicio.tipo, volumen: 0, series: 0, minutos: 0, veces: 0 });
     it.volumen += c.volumen;
     it.series += c.series;
+    it.minutos += c.minutos || 0;
     it.veces++;
   });
   return Object.values(acc)

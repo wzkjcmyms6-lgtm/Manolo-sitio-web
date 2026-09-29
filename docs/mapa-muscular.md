@@ -8,7 +8,7 @@ semana, al estilo Hevy pero con el arte y la paleta de Manolo.
 
 - [x] **Fase 1 — Base de ejercicios + cálculo + tests** (29 sept 2026)
 - [x] **Fase 2 — Mapa corporal** (29 sept 2026)
-- [ ] Fase 3 — Radar + tarjetas + top 5
+- [x] **Fase 3 — Radar + tarjetas + top 5** (29 sept 2026)
 - [ ] Fase 4 — Integración (registro, respaldo, no reconocidos, offline) y prueba piernas → pecho
 - [ ] Fase 5 — Documentación final (agregar ejercicios, ajustar constantes)
 
@@ -24,6 +24,7 @@ semana, al estilo Hevy pero con el arte y la paleta de Manolo.
 | `js/body-figures.js` | Arte del maniquí (frente/espalda): una pieza por región, lado izquierdo; el mapa la refleja. |
 | `js/ejercicio-datos.js` | Centro de datos en el navegador: base + propios + asignaciones + ajustes + entrenos (Firestore) → `EjercicioDatos.onCambio`. |
 | `js/body-map.js` | Mapa: niveles por región, fila L–D, pulso al encender, hoja de detalle al tocar. |
+| `js/muscle-radar.js` | Radar de 6 ejes (semana vs anterior), selector Volumen/Series, barras por músculo, tarjetas y top 5. |
 
 Ambos `js/` funcionan en el navegador (`window.MuscleEngine`,
 `window.ExerciseSearch`) y en Node (tests, script).
@@ -138,6 +139,19 @@ cardio | isometrico), equipo, primarios[], secundarios[], factorPesoCorporal`.
   deslizando hacia abajo.
 - Pruebas visuales: se hicieron con un Firebase simulado en memoria y
   Chromium (capturas de iPhone 390 px y escritorio).
+
+## Radar (Fase 3)
+
+- Está en Ejercicio, debajo de las tarjetas Gimnasio/Running/Bicicleta, y
+  sigue la semana que se ve en el mapa (evento `bodymap:semana`).
+- Ejes en orden horario desde arriba a la izquierda: Espalda, Pecho, Core,
+  Hombros, Brazos, Piernas. Semana actual en acento (`--accent-1`), anterior en
+  gris punteado (`--radar-anterior`). Escala: el mayor valor de las dos semanas
+  llega al 89 % del radio.
+- Selector Volumen | Series (por defecto Volumen). Tocar un eje (o su
+  etiqueta) muestra barras de sus músculos: color = esta semana, gris = anterior.
+- Tarjetas: entrenamientos, duración, volumen y series, con ↑/↓ respecto de la
+  semana anterior. Top 5 por volumen (el cardio muestra minutos).
 
 ## Datos del usuario (Firestore, pendiente Fase 4)
 

@@ -136,6 +136,9 @@ test("top de ejercicios por volumen", () => {
     entrada(PRESS_INCLINADO, series(1, 60, 10))
   ], null, 5);
   assert.deepEqual(top.map(t => [t.id, t.volumen, t.veces]), [["press-inc", 3000, 2], ["sentadilla", 3000, 1]]);
+  const cardio = E.topEjercicios([entrada(CORRER, [], { minutos: 30, rpe: 7 }), entrada(CORRER, [], { minutos: 20, rpe: 7 })]);
+  assert.equal(cardio[0].minutos, 50);
+  assert.equal(cardio[0].tipo, "cardio");
 });
 
 test("cambio vs semana anterior", () => {

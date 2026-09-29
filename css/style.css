@@ -295,6 +295,75 @@ h1, h2, h3 { font-family: var(--font-body); font-weight: 700; letter-spacing: -0
 .muscle-sheet-list .muscle-ex-empty { color: var(--muted); font-size: 0.85rem; }
 body.sheet-open { overflow: hidden; }
 
+/* ---------- Radar "Distribución muscular" (Ejercicio) ---------- */
+.radar-section {
+  margin-top: 2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 1.25rem 1.1rem 1.3rem;
+}
+.radar-head h2 { margin: 0; font-size: 1.3rem; }
+.radar-sub { margin: 0.25rem 0 0.9rem; color: var(--muted); font-size: 0.82rem; }
+.radar-tabs.fin-tabs { margin-bottom: 0.4rem; }
+.radar-chart { position: relative; max-width: 380px; margin: 0 auto; }
+#radar-svg { width: 100%; height: auto; display: block; overflow: visible; -webkit-tap-highlight-color: transparent; }
+.radar-grid polygon { fill: none; stroke: #2e2c28; stroke-width: 1; }
+.radar-grid line { stroke: #2e2c28; stroke-width: 1; }
+.radar-area { stroke-linejoin: round; }
+.radar-area.actual { fill: rgba(255, 122, 48, 0.28); stroke: var(--accent-1); stroke-width: 2; }
+.radar-area.anterior { fill: rgba(154, 151, 143, 0.16); stroke: var(--radar-anterior); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.radar-vertex { fill: var(--accent-1); stroke: var(--surface); stroke-width: 1.5; }
+.radar-label { fill: var(--muted); font-size: 12.5px; font-family: var(--font-body); pointer-events: none; }
+.radar-label.is-selected { fill: var(--accent-2); font-weight: 700; }
+.radar-hit { fill: transparent; cursor: pointer; outline: none; }
+.radar-hit:focus-visible { fill: rgba(255, 184, 77, 0.12); }
+.radar-empty-hint { display: none; position: absolute; left: 0; right: 0; top: 46%; margin: 0; text-align: center; font-size: 0.8rem; color: var(--muted); pointer-events: none; }
+.radar-section.is-empty .radar-empty-hint { display: block; }
+.radar-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3rem 1rem; font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; }
+.radar-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.radar-legend .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.radar-legend .dot.actual { background: var(--accent-1); }
+.radar-legend .dot.anterior { background: var(--radar-anterior); }
+.radar-legend .hint { flex-basis: 100%; justify-content: center; font-size: 0.7rem; opacity: 0.8; }
+.radar-detail { margin-top: 1rem; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 16px; padding: 0.9rem 1rem 0.8rem; animation: sheet-fade-in 0.2s ease-out; }
+.radar-detail[hidden] { display: none; }
+.radar-detail-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+.radar-detail-head h3 { margin: 0; font-size: 1.05rem; }
+.radar-bar-row { padding: 0.35rem 0; }
+.radar-bar-top { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.82rem; margin-bottom: 0.3rem; }
+.radar-bar-top .v { color: var(--muted); font-variant-numeric: tabular-nums; }
+.radar-bar-track { display: flex; flex-direction: column; gap: 3px; }
+.radar-bar { height: 8px; border-radius: 4px; transition: width 0.45s ease; }
+.radar-bar.actual { background: var(--accent-grad); }
+.radar-bar.anterior { height: 4px; background: var(--radar-anterior); opacity: 0.7; }
+.radar-detail-note { margin: 0.5rem 0 0; font-size: 0.7rem; color: var(--muted); }
+.radar-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.65rem; margin-top: 1.2rem; }
+.radar-card { background: var(--bg-soft); border: 1px solid var(--border); border-radius: 16px; padding: 0.85rem 0.95rem; display: flex; flex-direction: column; gap: 0.15rem; }
+.radar-card .t { font-size: 0.8rem; color: var(--muted); }
+.radar-card .v { font-size: clamp(1.05rem, 5.2vw, 1.35rem); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.radar-card .v small { font-size: 0.7em; font-weight: 600; color: var(--muted); margin-left: 0.15em; }
+.radar-delta { font-size: 0.8rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.radar-delta.sube { color: #5fcf8a; }
+.radar-delta.baja { color: var(--danger); }
+.radar-delta.igual { color: var(--muted); font-weight: 500; }
+.radar-subtitle { margin: 1.4rem 0 0.6rem; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.radar-top { list-style: none; margin: 0; padding: 0; counter-reset: top; display: flex; flex-direction: column; gap: 0.45rem; }
+.radar-top li {
+  counter-increment: top;
+  display: grid; grid-template-columns: 1.8rem 1fr; grid-template-rows: auto auto; column-gap: 0.6rem;
+  background: var(--bg-soft); border: 1px solid var(--border); border-radius: 14px; padding: 0.6rem 0.8rem;
+}
+.radar-top li::before {
+  content: counter(top); grid-row: 1 / 3; align-self: center;
+  width: 1.8rem; height: 1.8rem; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 122, 48, 0.15); color: var(--accent-2); font-weight: 700; font-size: 0.85rem;
+}
+.radar-top .n { font-size: 0.9rem; font-weight: 600; }
+.radar-top .m { font-size: 0.75rem; color: var(--muted); }
+.radar-top li.vacio { display: block; color: var(--muted); font-size: 0.85rem; }
+.radar-top li.vacio::before { display: none; }
+
 /* ---------- Top bar (mobile) ---------- */
 .topbar {
   display: none;
