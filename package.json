@@ -1,0 +1,9 @@
+{
+  "name": "manolo-sitio-web",
+  "private": true,
+  "description": "Manolo — panel personal (sitio estático, sin dependencias)",
+  "scripts": {
+    "test": "node --test",
+    "ejercicios": "node scripts/build-exercises.mjs"
+  }
+}
