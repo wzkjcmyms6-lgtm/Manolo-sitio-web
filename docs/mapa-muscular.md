@@ -7,7 +7,7 @@ semana, al estilo Hevy pero con el arte y la paleta de Manolo.
 ## Estado
 
 - [x] **Fase 1 — Base de ejercicios + cálculo + tests** (29 sept 2026)
-- [ ] Fase 2 — Mapa corporal (SVG propio, 21 regiones × lado, hoja de detalle)
+- [x] **Fase 2 — Mapa corporal** (29 sept 2026)
 - [ ] Fase 3 — Radar + tarjetas + top 5
 - [ ] Fase 4 — Integración (registro, respaldo, no reconocidos, offline) y prueba piernas → pecho
 - [ ] Fase 5 — Documentación final (agregar ejercicios, ajustar constantes)
@@ -21,6 +21,9 @@ semana, al estilo Hevy pero con el arte y la paleta de Manolo.
 | `js/muscle-engine.js` | Cálculo puro: volumen, series efectivas, músculos, grupos, niveles, resumen. |
 | `js/exercise-search.js` | Búsqueda sin tildes/mayúsculas, tolerante a errores, y `resolver()` para nombres guardados. |
 | `tests/*.test.js` | Tests (`npm test`, usa `node --test`, sin dependencias). |
+| `js/body-figures.js` | Arte del maniquí (frente/espalda): una pieza por región, lado izquierdo; el mapa la refleja. |
+| `js/ejercicio-datos.js` | Centro de datos en el navegador: base + propios + asignaciones + ajustes + entrenos (Firestore) → `EjercicioDatos.onCambio`. |
+| `js/body-map.js` | Mapa: niveles por región, fila L–D, pulso al encender, hoja de detalle al tocar. |
 
 Ambos `js/` funcionan en el navegador (`window.MuscleEngine`,
 `window.ExerciseSearch`) y en Node (tests, script).
@@ -110,11 +113,31 @@ cardio | isometrico), equipo, primarios[], secundarios[], factorPesoCorporal`.
   pedirá en la lista de no reconocidos. Los 22 nombres que sugería la versión
   anterior se reconocen todos (test).
 
-## Plan de colores (Fase 2)
+## Mapa corporal (Fase 2)
 
-Sobre el maniquí marfil y fondo oscuro: 1–3 series `#F6C177` · 4–9 `#FF9A3C` ·
-10+ `#FF5A1F`; solo secundario = mismo color más suave. Radar: semana actual
-`#FF7A30`, anterior `#9A978F`.
+- **Arte**: SVG propio, evolución del maniquí marfil original de Manolo (no
+  usa ilustraciones de terceros). `js/body-figures.js` define cada región del
+  lado izquierdo con coordenadas en un viewBox 140 × 300; el lado derecho se
+  dibuja reflejado (`matrix(-1 0 0 1 140 0)`). Para retocar una forma basta
+  cambiar su `d`.
+- Cada región es `<g class="mz" data-muscle data-lado>` con dos capas: base
+  marfil (degradado `#bodyGrad`) y tinte de color que aparece con transición
+  de opacidad. `data-nivel` = 1/2/3 y `data-suave` si solo fue secundario.
+- **Colores** (tokens en `:root` de `css/style.css`): `--musculo-1` `#F6C177`
+  (1–3 series), `--musculo-2` `#FF9A3C` (4–9), `--musculo-3` `#FF5A1F` (10+),
+  `--musculo-suave` 0,5 = opacidad del tinte si solo fue secundario. Radar
+  (Fase 3): actual `#FF7A30` (`--accent-1`), anterior `--radar-anterior` `#9A978F`.
+- **Fila L–D**: punto en días con cualquier entreno (gimnasio, running, bici);
+  por defecto se ve la semana completa; tocar un día filtra y tocarlo otra vez
+  vuelve a la semana.
+- **Pulso**: cuando llegan datos nuevos (no al cambiar de semana/día), los
+  músculos que suben de nivel muestran un brillo (filtro `#muscleGlow`). Si
+  guardaste desde Gimnasio, el brillo se ve al volver al mapa.
+- **Hoja de detalle** (`#muscle-sheet`): series efectivas, volumen, días,
+  RPE promedio y ejercicios con su rol. Se cierra con la X, tocando afuera o
+  deslizando hacia abajo.
+- Pruebas visuales: se hicieron con un Firebase simulado en memoria y
+  Chromium (capturas de iPhone 390 px y escritorio).
 
 ## Datos del usuario (Firestore, pendiente Fase 4)
 

@@ -1,50 +1,23 @@
 // ---------- Mapa muscular de Ejercicio ----------
-// El cuerpo de arriba (Frente/Espalda) se pinta solo, según lo que
-// entrenaste en la semana que se ve (lunes a domingo): amarillo si tocaste
-// ese músculo una vez, verde si lo tocaste dos veces o más. Se arma
-// clasificando el nombre de cada ejercicio que registras en Gimnasio por
-// palabras clave; Running y Bicicleta suman también a Cuádriceps y
-// Gemelos, porque igual trabajan las piernas.
+// Frente y espalda (js/body-figures.js) con 21 regiones por lado. Cada
+// región se pinta según las series efectivas de la semana que se ve (o del
+// día elegido en la fila L–D): 1–3, 4–9, 10+; si el músculo solo trabajó
+// como secundario se ve más suave. Los números salen de js/muscle-engine.js
+// con los entrenamientos que junta js/ejercicio-datos.js. Tocar un músculo
+// abre una hoja con su detalle.
 (function () {
 
-const MUSCLE_LABELS = {
-  pecho: "Pecho", espalda: "Espalda", hombros: "Hombros",
-  biceps: "Bíceps", triceps: "Tríceps", antebrazo: "Antebrazo",
-  abdomen: "Abdomen", cuadriceps: "Cuádriceps", isquiotibiales: "Isquiotibiales",
-  gluteos: "Glúteos", gemelos: "Gemelos"
-};
+const NS = "http://www.w3.org/2000/svg";
+const DIAS = ["L", "M", "M", "J", "V", "S", "D"];
+const DIAS_LARGO = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
-// El orden importa: las frases más específicas van primero para que, por
-// ejemplo, "peso muerto rumano" caiga en isquiotibiales y no en espalda.
-const MUSCLE_KEYWORDS = [
-  ["isquiotibiales", ["curl femoral", "curl de pierna", "peso muerto rumano", "buenos dias", "femoral", "isquiotibial"]],
-  ["gluteos", ["hip thrust", "empuje de cadera", "puente de gluteo", "peso muerto sumo", "patada de gluteo", "abduccion de cadera", "gluteo"]],
-  ["cuadriceps", ["sentadilla", "squat", "prensa", "extension de pierna", "zancada", "bulgara", "hack squat", "press de pierna"]],
-  ["gemelos", ["elevacion de talon", "elevacion de talones", "pantorrilla", "gemelo", "calf"]],
-  ["pecho", ["press de banca", "press inclinado", "press declinado", "apertura", "cruce de polea", "pullover", "press pecho", "press plano"]],
-  ["espalda", ["remo", "dominada", "jalon", "pull up", "pull-up", "peso muerto convencional", "hiperextension", "jalon al pecho"]],
-  ["hombros", ["press militar", "press de hombro", "press hombros", "elevacion lateral", "pajaro", "press arnold", "encogimiento", "face pull"]],
-  ["biceps", ["curl de biceps", "curl biceps", "curl martillo", "curl concentrado", "curl banco scott", "curl mancuerna", "curl barra"]],
-  ["triceps", ["triceps", "fondos", "press frances", "extension de triceps", "jalon de triceps", "press cerrado", "patada de triceps"]],
-  ["antebrazo", ["curl de muñeca", "curl de muneca", "antebrazo", "farmer"]],
-  ["abdomen", ["abdominal", "crunch", "plancha", "elevacion de piernas", "rueda abdominal", "oblicuo"]]
-];
-
-function normalize(s) {
-  return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-}
-
-function classifyExercise(name) {
-  const n = normalize(name);
-  for (const [muscle, words] of MUSCLE_KEYWORDS) {
-    if (words.some(w => n.includes(normalize(w)))) return muscle;
-  }
-  return null;
-}
-
-// ---- Semana (lunes a domingo) ----
 let weekOffset = 0;
+let diaElegido = null;          // "2026-09-29" o null = semana completa
+let musculoAbierto = null;      // id del músculo en la hoja
+let ultimo = { clave: null, niveles: {}, version: -1 };
+let calculo = null;             // último cálculo (para la hoja)
 
+// ---- Fechas (lunes a domingo, hora local) ----
 function isoDate(d) {
   const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
@@ -52,118 +25,267 @@ function isoDate(d) {
 function mondayOf(date) {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
-  const day = (d.getDay() + 6) % 7; // 0 = lunes
-  d.setDate(d.getDate() - day);
+  d.setDate(d.getDate() - (d.getDay() + 6) % 7);
   return d;
 }
 function currentWeek() {
   const start = mondayOf(new Date());
   start.setDate(start.getDate() + weekOffset * 7);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 6);
-  return { start, end };
-}
-function inWeek(dateStr, week) {
-  return dateStr >= isoDate(week.start) && dateStr <= isoDate(week.end);
+  const dias = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    dias.push(d);
+  }
+  return { start, end: dias[6], dias };
 }
 function weekLabel(week) {
-  const opts = { day: "numeric", month: "short" };
-  const fmt = d => d.toLocaleDateString("es-ES", opts).replace(".", "");
+  const fmt = d => d.toLocaleDateString("es-ES", { day: "numeric", month: "short" }).replace(".", "");
   return `${fmt(week.start)} – ${fmt(week.end)}`;
 }
-
-// ---- Datos: Gimnasio, Running y Bicicleta ----
-let workoutsCache = [];
-let runningCache = [];
-let cyclingCache = [];
-
-function entrenamientosCollection() {
-  return db.collection("users").doc(currentUser.uid).collection("entrenamientos");
-}
-function runningCollection() {
-  return db.collection("users").doc(currentUser.uid).collection("running");
-}
-function cyclingCollection() {
-  return db.collection("users").doc(currentUser.uid).collection("bicicleta");
+function dayLabel(iso) {
+  const d = new Date(iso + "T00:00:00");
+  return `${DIAS_LARGO[(d.getDay() + 6) % 7]} ${d.getDate()}`;
 }
 
-// Cuenta, por músculo, en cuántos días distintos de la semana se trabajó.
-function computeCounts(week) {
-  const days = {}; // musculo -> Set de fechas
+// ---- Formato ----
+function fmtNum(n, dec) {
+  const r = dec ? Math.round(n * 10) / 10 : Math.round(n);
+  const [ent, fr] = String(r).split(".");
+  return ent.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + (fr ? "," + fr : "");
+}
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
 
-  workoutsCache
-    .filter(w => w.date && inWeek(w.date, week))
-    .forEach(w => {
-      (w.exercises || []).forEach(ex => {
-        const muscle = classifyExercise(ex.name);
-        if (!muscle) return;
-        (days[muscle] = days[muscle] || new Set()).add(w.date);
-      });
+// ---- Dibujo de las figuras ----
+function el(tag, attrs) {
+  const e = document.createElementNS(NS, tag);
+  Object.keys(attrs || {}).forEach(k => e.setAttribute(k, attrs[k]));
+  return e;
+}
+
+function dibujarFigura(svg, piezas) {
+  svg.innerHTML = "";
+  ["izq", "der"].forEach(lado => {
+    const g = el("g", lado === "der" ? { transform: "matrix(-1 0 0 1 140 0)" } : {});
+    piezas.forEach(p => {
+      if (p.centro && lado === "der") return;
+      const forma = extra => p.el ? el(p.el, Object.assign({}, p.a, extra)) : el("path", Object.assign({ d: p.d }, extra));
+      if (p.m) {
+        const gm = el("g", { class: "mz", "data-muscle": p.m, "data-lado": lado });
+        gm.appendChild(forma({ class: "mz-base" }));
+        gm.appendChild(forma({ class: "mz-tinte" }));
+        g.appendChild(gm);
+      } else if (p.base) g.appendChild(forma({ class: "mz-pieza" }));
+      else if (p.seam) g.appendChild(forma({ class: "seam" }));
+      else if (p.hi) g.appendChild(forma({ class: "hi" }));
     });
-
-  // Correr y andar en bici también trabajan las piernas.
-  runningCache.filter(r => r.date && inWeek(r.date, week)).forEach(r => {
-    (days.cuadriceps = days.cuadriceps || new Set()).add(r.date);
-    (days.gemelos = days.gemelos || new Set()).add(r.date);
+    svg.appendChild(g);
   });
-  cyclingCache.filter(r => r.date && inWeek(r.date, week)).forEach(r => {
-    (days.cuadriceps = days.cuadriceps || new Set()).add(r.date);
-    (days.gemelos = days.gemelos || new Set()).add(r.date);
-  });
+}
 
-  const counts = {};
-  Object.keys(days).forEach(m => { counts[m] = days[m].size; });
-  return counts;
+const banner = document.getElementById("body-banner");
+dibujarFigura(document.getElementById("body-fig-frente"), BodyFigures.frente);
+dibujarFigura(document.getElementById("body-fig-espalda"), BodyFigures.espalda);
+
+// Un brillo que aparece y se va sobre los músculos que se acaban de encender.
+function pulso(musculos) {
+  musculos.forEach(m => {
+    banner.querySelectorAll(`.mz[data-muscle="${m}"]`).forEach(g => {
+      const base = g.querySelector(".mz-base");
+      const brillo = base.cloneNode();
+      brillo.setAttribute("class", "mz-brillo");
+      brillo.setAttribute("filter", "url(#muscleGlow)");
+      g.appendChild(brillo);
+      setTimeout(() => brillo.remove(), 1600);
+    });
+  });
+}
+
+// ---- Render ----
+function rango(week) {
+  return diaElegido ? { desde: diaElegido, hasta: diaElegido } : { desde: isoDate(week.start), hasta: isoDate(week.end) };
 }
 
 function renderBodyMap() {
-  const banner = document.getElementById("body-banner");
   if (!banner || banner.hidden) return;
   const week = currentWeek();
   document.getElementById("body-week-label").textContent = weekLabel(week);
   document.getElementById("body-week-next").disabled = weekOffset >= 0;
 
-  const counts = computeCounts(week);
+  const st = EjercicioDatos.estado;
+  const datos = st.datos || { sesiones: [], entradas: [] };
+  const { desde, hasta } = rango(week);
+  const cfg = EjercicioDatos.config();
+  const filtrado = MuscleEngine.filtrar(datos, desde, hasta);
+  const musculos = MuscleEngine.calcularMusculos(filtrado.entradas, cfg);
+  calculo = { musculos, desde, hasta, cfg };
 
-  banner.querySelectorAll("[data-muscle]").forEach(el => {
-    const n = counts[el.dataset.muscle] || 0;
-    if (n <= 0) el.removeAttribute("data-level");
-    else el.setAttribute("data-level", n === 1 ? "1" : "2");
+  const niveles = {};
+  banner.querySelectorAll(".mz").forEach(g => {
+    const info = musculos[g.dataset.muscle];
+    const n = info ? info.nivel : 0;
+    niveles[g.dataset.muscle] = n;
+    if (n) g.setAttribute("data-nivel", String(n));
+    else g.removeAttribute("data-nivel");
+    g.toggleAttribute("data-suave", !!(info && info.soloSecundario));
   });
 
-  const trained = Object.keys(counts).filter(m => counts[m] > 0 && MUSCLE_LABELS[m])
-    .sort((a, b) => counts[b] - counts[a] || MUSCLE_LABELS[a].localeCompare(MUSCLE_LABELS[b]));
-  const legend = document.getElementById("body-legend");
-  legend.innerHTML = trained.length
-    ? trained.map(m => {
-        const n = counts[m];
-        const level = n === 1 ? "1" : "2";
-        return `<span class="body-legend-chip level-${level}"><span class="body-legend-dot"></span>${MUSCLE_LABELS[m]} · ${n}</span>`;
-      }).join("")
-    : `<span class="body-legend-chip">Todavía no registras entrenamientos esta semana</span>`;
+  // Pulso solo cuando cambiaron los datos (no al cambiar de semana o de día).
+  const clave = desde + "|" + hasta;
+  if (st.datos && ultimo.clave === clave && ultimo.version !== st.version) {
+    const encendidos = Object.keys(niveles).filter(m => niveles[m] > (ultimo.niveles[m] || 0));
+    if (encendidos.length) pulso(encendidos);
+  }
+  if (st.datos) ultimo = { clave, niveles, version: st.version };
+
+  renderDias(week, datos);
+  renderResumen(musculos, filtrado);
+  if (musculoAbierto) renderHoja();
 }
 
-document.getElementById("body-week-prev").addEventListener("click", () => { weekOffset--; renderBodyMap(); });
-document.getElementById("body-week-next").addEventListener("click", () => { if (weekOffset < 0) { weekOffset++; renderBodyMap(); } });
+function renderDias(week, datos) {
+  const conEntreno = new Set(datos.sesiones.map(s => s.fecha));
+  const hoy = isoDate(new Date());
+  document.getElementById("body-days").innerHTML = week.dias.map((d, i) => {
+    const iso = isoDate(d);
+    const cls = ["body-day"];
+    if (conEntreno.has(iso)) cls.push("has-data");
+    if (iso === hoy) cls.push("is-today");
+    if (iso === diaElegido) cls.push("selected");
+    if (iso > hoy) cls.push("future");
+    return `<button type="button" class="${cls.join(" ")}" data-dia="${iso}" aria-pressed="${iso === diaElegido}" aria-label="${dayLabel(iso)}">` +
+      `<span class="d">${DIAS[i]}</span><span class="n">${d.getDate()}</span><span class="dot"></span></button>`;
+  }).join("");
+}
 
-onAuthReady(() => {
-  entrenamientosCollection().onSnapshot(snap => {
-    workoutsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderBodyMap();
+function renderResumen(musculos, filtrado) {
+  const ids = Object.keys(musculos);
+  const legend = document.getElementById("body-legend");
+  const periodo = diaElegido ? "este día" : "esta semana";
+  if (!EjercicioDatos.estado.datos) {
+    legend.innerHTML = `<span class="body-legend-chip">Cargando tus entrenamientos…</span>`;
+  } else if (!filtrado.entradas.length) {
+    legend.innerHTML = `<span class="body-legend-chip">Todavía no registras entrenamientos ${periodo}</span>`;
+  } else {
+    const series = filtrado.entradas.reduce((s, e) => s + MuscleEngine.cargaEjercicio(e, calculo.cfg).series, 0);
+    legend.innerHTML = `<span class="body-legend-chip">${ids.length} músculos · ${fmtNum(series, true)} series · toca uno para ver el detalle</span>`;
+  }
+}
+
+// ---- Hoja de detalle del músculo ----
+const hoja = document.getElementById("muscle-sheet");
+
+function abrirHoja(m) {
+  musculoAbierto = m;
+  renderHoja();
+  hoja.hidden = false;
+  hoja.classList.remove("closing");
+  document.body.classList.add("sheet-open");
+  banner.querySelectorAll(".mz").forEach(g => g.classList.toggle("is-selected", g.dataset.muscle === m));
+}
+
+function cerrarHoja() {
+  if (hoja.hidden) return;
+  musculoAbierto = null;
+  banner.querySelectorAll(".mz.is-selected").forEach(g => g.classList.remove("is-selected"));
+  hoja.classList.add("closing");
+  document.body.classList.remove("sheet-open");
+  setTimeout(() => { hoja.hidden = true; hoja.classList.remove("closing"); hoja.querySelector(".muscle-sheet-panel").style.transform = ""; }, 220);
+}
+
+function renderHoja() {
+  const def = MuscleEngine.MUSCULO_POR_ID[musculoAbierto];
+  if (!def || !calculo) return;
+  const info = calculo.musculos[musculoAbierto];
+  const grupo = MuscleEngine.GRUPOS.find(g => g.id === def.grupo);
+  const periodo = diaElegido ? dayLabel(diaElegido) : "Semana " + weekLabel(currentWeek());
+
+  document.getElementById("muscle-sheet-title").textContent = def.nombre;
+  document.getElementById("muscle-sheet-group").textContent = grupo ? grupo.nombre : "";
+  document.getElementById("muscle-sheet-period").textContent = periodo;
+
+  const nivel = info ? info.nivel : 0;
+  const pill = document.getElementById("muscle-sheet-level");
+  pill.dataset.nivel = String(nivel);
+  pill.toggleAttribute("data-suave", !!(info && info.soloSecundario));
+  pill.textContent = !info ? "Sin trabajar" : info.soloSecundario ? "Solo secundario" : ["", "1–3 series", "4–9 series", "10+ series"][nivel];
+
+  const stat = (v, l) => `<div class="muscle-stat"><span class="v">${v}</span><span class="l">${l}</span></div>`;
+  document.getElementById("muscle-sheet-stats").innerHTML = [
+    stat(info ? fmtNum(info.series, true) : "0", "Series efectivas"),
+    stat(info ? fmtNum(info.volumen) + " kg" : "0 kg", "Volumen"),
+    stat(info ? String(info.dias.length) : "0", info && info.dias.length === 1 ? "Día" : "Días"),
+    stat(info && info.rpe ? fmtNum(info.rpe, true) : "—", "RPE promedio")
+  ].join("");
+
+  document.getElementById("muscle-sheet-days").textContent = info && info.dias.length
+    ? info.dias.map(dayLabel).join(" · ") : "";
+
+  const lista = document.getElementById("muscle-sheet-list");
+  lista.innerHTML = info && info.ejercicios.length
+    ? info.ejercicios.map(e => `
+        <li>
+          <div class="muscle-ex-main">
+            <span class="muscle-ex-name">${escapeHtml(e.nombre)}</span>
+            <span class="muscle-ex-role ${e.rol}">${e.rol === "primario" ? "Primario" : "Secundario"}</span>
+          </div>
+          <span class="muscle-ex-meta">${fmtNum(e.series, true)} series ef. · ${fmtNum(e.volumen)} kg</span>
+        </li>`).join("")
+    : `<li class="muscle-ex-empty">Ningún ejercicio trabajó este músculo ${diaElegido ? "ese día" : "esta semana"}.</li>`;
+}
+
+hoja.addEventListener("click", e => { if (e.target.closest("[data-cerrar]")) cerrarHoja(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") cerrarHoja(); });
+
+// Deslizar hacia abajo para cerrar.
+(function () {
+  const panel = hoja.querySelector(".muscle-sheet-panel");
+  let y0 = null, dy = 0;
+  panel.addEventListener("touchstart", e => {
+    if (panel.scrollTop > 0) return;
+    y0 = e.touches[0].clientY; dy = 0;
+  }, { passive: true });
+  panel.addEventListener("touchmove", e => {
+    if (y0 === null) return;
+    dy = Math.max(0, e.touches[0].clientY - y0);
+    panel.style.transform = dy ? `translateY(${dy}px)` : "";
+  }, { passive: true });
+  panel.addEventListener("touchend", () => {
+    if (y0 === null) return;
+    y0 = null;
+    if (dy > 80) cerrarHoja();
+    else panel.style.transform = "";
   });
-  runningCollection().onSnapshot(snap => {
-    runningCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+})();
+
+// ---- Eventos ----
+banner.addEventListener("click", e => {
+  const region = e.target.closest(".mz");
+  if (region) { abrirHoja(region.dataset.muscle); return; }
+  const dia = e.target.closest(".body-day");
+  if (dia) {
+    diaElegido = diaElegido === dia.dataset.dia ? null : dia.dataset.dia;
     renderBodyMap();
-  });
-  cyclingCollection().onSnapshot(snap => {
-    cyclingCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderBodyMap();
-  });
+  }
 });
+
+document.getElementById("body-week-prev").addEventListener("click", () => { weekOffset--; diaElegido = null; renderBodyMap(); });
+document.getElementById("body-week-next").addEventListener("click", () => {
+  if (weekOffset < 0) { weekOffset++; diaElegido = null; renderBodyMap(); }
+});
+
+EjercicioDatos.onCambio(() => renderBodyMap());
 
 // El router (modules.js) solo cambia [hidden]; cuando el banner se vuelve
 // a mostrar hay que repintar, porque mientras estaba oculto no se hizo.
-new MutationObserver(() => renderBodyMap())
-  .observe(document.getElementById("body-banner"), { attributes: true, attributeFilter: ["hidden"] });
+new MutationObserver(() => { if (banner.hidden) cerrarHoja(); renderBodyMap(); })
+  .observe(banner, { attributes: true, attributeFilter: ["hidden"] });
 
+renderBodyMap();
+
+window.BodyMap = { render: renderBodyMap, semana: () => ({ offset: weekOffset, dia: diaElegido }) };
 })();

@@ -25,11 +25,11 @@ const MUSCULOS = [
   { id: "triceps", nombre: "Tríceps", grupo: "brazos", vista: "espalda" },
   { id: "antebrazos", nombre: "Antebrazos", grupo: "brazos", vista: "ambas" },
   { id: "abdominales", nombre: "Abdominales", grupo: "core", vista: "frente" },
-  { id: "oblicuos", nombre: "Oblicuos", grupo: "core", vista: "frente" },
+  { id: "oblicuos", nombre: "Oblicuos", grupo: "core", vista: "ambas" },
   { id: "cuadriceps", nombre: "Cuádriceps", grupo: "piernas", vista: "frente" },
   { id: "isquiotibiales", nombre: "Isquiotibiales", grupo: "piernas", vista: "espalda" },
   { id: "gluteos", nombre: "Glúteos", grupo: "piernas", vista: "espalda" },
-  { id: "aductores", nombre: "Aductores", grupo: "piernas", vista: "frente" },
+  { id: "aductores", nombre: "Aductores", grupo: "piernas", vista: "ambas" },
   { id: "abductores", nombre: "Abductores", grupo: "piernas", vista: "ambas" },
   { id: "pantorrillas", nombre: "Pantorrillas", grupo: "piernas", vista: "ambas" }
 ];
