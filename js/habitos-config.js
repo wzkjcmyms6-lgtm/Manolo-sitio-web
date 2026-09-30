@@ -122,6 +122,26 @@ const MISIONES = {
   SEMANAS_BASE: 4             // semanas que se miran para el promedio
 };
 
+// ---------- Jefe semanal ----------
+// Cada lunes aparece un rival. Su vida es un % del daño que harías cumpliendo
+// todo lo de la semana; cada cumplimiento le quita el XP base del hábito (sin
+// bonus de racha). Si cae antes de que termine el domingo, deja botín.
+const JEFE = {
+  EXIGENCIA: 0.8,              // vida = 80 % de lo que podrías hacerle en la semana
+  XP: 50,                      // botín al derrotarlo
+  MONEDAS: 30,
+  RIVALES: [
+    { id: "pereza", nombre: "La Pereza", emoji: "🦥" },
+    { id: "scroll", nombre: "El Scroll Infinito", emoji: "📱" },
+    { id: "procrastinacion", nombre: "La Procrastinación", emoji: "⏳" },
+    { id: "sofa", nombre: "El Sofá", emoji: "🛋️" },
+    { id: "excusa", nombre: "La Excusa", emoji: "🙊" },
+    { id: "cansancio", nombre: "El Cansancio", emoji: "😴" },
+    { id: "caos", nombre: "El Caos", emoji: "🌪️" },
+    { id: "distraccion", nombre: "La Distracción", emoji: "🔔" }
+  ]
+};
+
 // ---------- Logros ----------
 // tipo + meta: el motor calcula el progreso de cada uno desde el historial.
 const L = (id, nombre, desc, tipo, meta, secreto) => ({ id, nombre, desc, tipo, meta, secreto: !!secreto });
@@ -159,5 +179,5 @@ const LOGROS = [
 ];
 
 return { CONST, TIPOS, FRECUENCIAS, MOMENTOS, ESTADOS, MOTIVOS_SALTO, DIFICULTADES, XP, NIVEL, AREAS,
-  FUERZA, RANGO_NOMBRES, AREA_NIVEL, TIENDA, MISIONES, LOGROS };
+  FUERZA, RANGO_NOMBRES, AREA_NIVEL, TIENDA, MISIONES, JEFE, LOGROS };
 });

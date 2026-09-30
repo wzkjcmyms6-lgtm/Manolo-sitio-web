@@ -106,7 +106,7 @@ function nombreArea(id) {
 }
 function recalcular() {
   const lista = Object.keys(normal).map(id => normal[id]);
-  res = HE.evaluar(lista, { hoy: hoy(), finDia: finDia(), compras: compras(), misiones: juego.misiones || {}, areas: areasDef() });
+  res = HE.evaluar(lista, { hoy: hoy(), finDia: finDia(), compras: compras(), misiones: juego.misiones || {}, jefes: juego.jefes || {}, areas: areasDef() });
 }
 
 // Misiones: se generan una vez por semana (el primer día que abras la app) y
@@ -123,6 +123,25 @@ function asegurarMisiones() {
   juego = Object.assign({}, juego, { misiones: Object.assign({}, juego.misiones, { [sem]: nuevas }) });
   metaJuego().set({ misiones: { [sem]: nuevas } }, { merge: true }).catch(errorGuardar);
   recalcular();
+}
+
+// Jefe semanal: igual que las misiones, se crea una vez por semana y se guarda.
+let jefeGenerado = null;
+function asegurarJefe() {
+  if (!juegoCargado || !res) return;
+  const lunes = HE.lunesDe(res.hoy);
+  const sem = HE.semanaId(lunes);
+  if ((juego.jefes || {})[sem] || jefeGenerado === sem) return;
+  const def = HE.generarJefe(res, lunes);
+  if (!def) return;
+  jefeGenerado = sem;
+  juego = Object.assign({}, juego, { jefes: Object.assign({}, juego.jefes, { [sem]: def }) });
+  metaJuego().set({ jefes: { [sem]: def } }, { merge: true }).catch(errorGuardar);
+  recalcular();
+}
+function jefeActual() {
+  const sem = HE.semanaId(HE.lunesDe(res.hoy));
+  return (res.jefes || []).find(j => j.semana === sem) || null;
 }
 
 // Hábitos visibles (sin archivar), en su orden.
@@ -372,13 +391,54 @@ function renderHoy() {
   const semanaPasada = HE.semanaId(HE.addDias(HE.lunesDe(f), -7));
   let visto = null;
   try { visto = localStorage.getItem("hb-resumen-visto"); } catch (e) { /* sin almacenamiento */ }
+  html = jefeMiniHtml() + html;
   if (HE.diaSemana(f) === 0 && visto !== semanaPasada) html = resumenSemanaHtml(true) + html;
   const abierto = lista.querySelector(".hb-notoca") && lista.querySelector(".hb-notoca").open;
   lista.innerHTML = html;
   if (abierto) lista.querySelector(".hb-notoca").open = true;
+  animarGolpe(lista);
   renderIcons(lista);
   renderIcons(document.getElementById("hb-personaje"));
   ultimoMarcado = null;
+}
+
+// ---------- Jefe semanal en Hoy ----------
+function vidaPct(j) {
+  return j.vida ? (j.vidaRestante / j.vida) * 100 : 0;
+}
+function jefeMiniHtml() {
+  const j = jefeActual();
+  if (!j) return "";
+  const caido = j.estado === "derrotado";
+  const etiqueta = caido ? `Derrotaste a ${j.nombre}. Ver el jefe de la semana`
+    : `Jefe de la semana: ${j.nombre}, le quedan ${j.vidaRestante} de ${j.vida} de vida. Ver detalles`;
+  return `<a class="hb-jefe-mini${caido ? " is-caido" : ""}" href="#hab-logros" data-ir-jefe data-semana="${j.semana}" aria-label="${escapeHtml(etiqueta)}">
+    <span class="hb-jefe-emoji" aria-hidden="true">${escapeHtml(j.emoji)}</span>
+    <span class="hb-jefe-mini-txt" aria-hidden="true">
+      <span class="hb-jefe-nombre">${caido ? `Derrotaste a ${escapeHtml(j.nombre)}` : escapeHtml(j.nombre)}</span>
+      ${caido ? `<span class="hb-jefe-botin">+${j.xp} XP · +${j.monedas} monedas</span>` : `<span class="hb-vida"><span style="width:${vidaPct(j).toFixed(1)}%"></span></span>`}
+    </span>
+    ${caido ? `<span class="hb-jefe-ok" aria-hidden="true"><span data-icon="check"></span></span>` : `<span class="hb-jefe-num" aria-hidden="true">${fmtNum(j.vidaRestante)}<small>/${fmtNum(j.vida)}</small></span>`}
+  </a>`;
+}
+// Al hacerle daño, la barra baja desde donde estaba y el rival se sacude.
+let vidaPintada = null; // { semana, pct }
+function animarGolpe(cont) {
+  const a = cont.querySelector(".hb-jefe-mini");
+  const j = jefeActual();
+  if (!a || !j) { vidaPintada = null; return; }
+  const pct = vidaPct(j);
+  const antes = vidaPintada && vidaPintada.semana === j.semana ? vidaPintada.pct : null;
+  vidaPintada = { semana: j.semana, pct };
+  if (antes == null || pct >= antes || reducirMovimiento()) return;
+  a.querySelector(".hb-jefe-emoji").classList.add("is-golpe");
+  const barra = a.querySelector(".hb-vida > span");
+  if (!barra) return;
+  barra.style.transition = "none";
+  barra.style.width = `${antes.toFixed(1)}%`;
+  barra.getBoundingClientRect();
+  barra.style.transition = "";
+  barra.style.width = `${pct.toFixed(1)}%`;
 }
 
 // "+N XP" flotando sobre el botón que se tocó.
@@ -970,8 +1030,102 @@ function hojaAjustes() {
     ${archivados.length ? `<ul class="hb-pausas">${archivados.map(h => `<li><span>${escapeHtml(h.emoji)} ${escapeHtml(h.name)}${h.archivadoEn ? ` · desde el ${fechaCorta(h.archivadoEn)}` : ""}</span>
       <span class="hb-chips"><button type="button" class="hb-btn-sec" data-restaurar="${h.id}">Restaurar</button>
       <button type="button" class="hb-btn-sec is-peligro" data-eliminar="${h.id}" aria-label="Eliminar ${escapeHtml(h.name)}"><span data-icon="trash"></span></button></span></li>`).join("")}</ul>`
-      : `<p class="hb-texto">No tienes hábitos archivados. Archivar guarda el historial sin mostrarlo en Hoy.</p>`}`, { tipo: "ajustes" });
+      : `<p class="hb-texto">No tienes hábitos archivados. Archivar guarda el historial sin mostrarlo en Hoy.</p>`}
+    <h4 class="hb-sub-t">Copia de seguridad</h4>
+    <p class="hb-texto">Guarda en un archivo tus hábitos, todo tu historial y tu progreso. Al importar una copia solo se agrega lo que te falta: nunca se borra ni se cambia lo que ya tienes.</p>
+    <div class="hb-chips">
+      <button type="button" class="hb-btn-sec" data-exportar><span data-icon="download"></span>Exportar</button>
+      <button type="button" class="hb-btn-sec" data-importar>Importar una copia</button>
+    </div>
+    <input type="file" accept="application/json,.json" data-archivo-importar hidden>`, { tipo: "ajustes" });
 }
+// ---------- Copia de seguridad (JSON) ----------
+// Los Timestamp de Firestore se guardan como milisegundos.
+const aJSON = (k, v) => (v && typeof v === "object" && typeof v.toMillis === "function" ? v.toMillis() : v);
+function exportar() {
+  const datos = HE.copiaDeSeguridad(docs, juego, diasMeta, Date.now());
+  const nombre = `manolo-habitos-${res ? res.hoy : HE.isoDate(new Date())}.json`;
+  const blob = new Blob([JSON.stringify(datos, aJSON, 1)], { type: "application/json" });
+  const n = Object.keys(docs).length;
+  // En el iPhone, compartir abre la hoja con "Guardar en Archivos".
+  try {
+    const archivo = new File([blob], nombre, { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+      navigator.share({ files: [archivo], title: "Copia de tus hábitos" }).catch(() => { /* cancelado */ });
+      return;
+    }
+  } catch (e) { /* sin compartir: se descarga */ }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nombre;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  toast(`Exportaste ${plural(n, "hábito", "hábitos")} con todo su historial.`);
+}
+const MAX_COPIA_BYTES = 15 * 1024 * 1024;
+let planImportar = null;
+function leerCopia(archivo) {
+  if (!archivo) return;
+  if (archivo.size > MAX_COPIA_BYTES) { toast("Ese archivo es demasiado grande para ser una copia de tus hábitos."); return; }
+  archivo.text().then(texto => {
+    let datos;
+    try { datos = JSON.parse(texto); } catch (e) { toast("No se pudo leer el archivo. Elige la copia que exportaste desde Manolo."); return; }
+    const plan = HE.planImportacion(datos, { docs, juego, dias: diasMeta });
+    if (!plan.valido) { toast(plan.error); return; }
+    hojaImportar(plan);
+  }).catch(() => toast("No se pudo abrir el archivo."));
+}
+function hojaImportar(plan) {
+  planImportar = plan;
+  ocultarToast();
+  const r = plan.resumen;
+  const fecha = plan.exportado ? new Date(plan.exportado) : null;
+  const cuando = fecha && !isNaN(fecha) ? `Copia del ${fechaCorta(HE.isoDate(fecha))} de ${fecha.getFullYear()} · ` : "";
+  const items = [];
+  if (r.nuevos) items.push(plural(r.nuevos, "hábito nuevo", "hábitos nuevos"));
+  if (r.actualizados) items.push(`Días que faltaban en ${plural(r.actualizados, "hábito que ya tienes", "hábitos que ya tienes")}`);
+  if (r.registros) items.push(`${plural(r.registros, "registro", "registros")} en total`);
+  if (r.dias) items.push(`Ánimo y notas de ${plural(r.dias, "día", "días")}`);
+  if (r.juego) items.push(`${plural(r.juego, "elemento", "elementos")} de misiones, jefes, recompensas y canjes`);
+  abrirHoja(cabecera("", "Importar una copia", `${cuando}${plural(r.enArchivo, "hábito", "hábitos")} en el archivo`) + (plan.vacio
+    ? `<p class="hb-texto">Ya tienes todo lo que trae esta copia. No hay nada que agregar.</p>
+      <div class="hb-acciones"><button type="button" class="hb-btn" data-cerrar>Entendido</button></div>`
+    : `<p class="hb-texto">Se agregará:</p>
+      <ul class="hb-lista-texto">${items.map(t => `<li>${escapeHtml(t)}</li>`).join("")}</ul>
+      <p class="hb-texto">No se borra ni se cambia nada de lo que ya tienes: si un día ya tiene registro, se queda el tuyo.</p>
+      ${r.descartados ? `<p class="hb-texto">${plural(r.descartados, "hábito del archivo no se pudo leer y se omitirá", "hábitos del archivo no se pudieron leer y se omitirán")}.</p>` : ""}
+      <div class="hb-acciones"><button type="button" class="hb-btn-sec" data-cerrar>Cancelar</button>
+        <button type="button" class="hb-btn" data-confirmar-importar>Importar</button></div>`), { tipo: "importar" });
+}
+function aplicarImportacion() {
+  const plan = planImportar;
+  planImportar = null;
+  if (!plan || plan.vacio) { cerrarHoja(); return; }
+  silencioHasta = Date.now() + SILENCIO_IMPORTAR_MS;
+  const ops = [];
+  plan.nuevos.forEach(n => ops.push(b => b.set(coleccion().doc(n.id), n.doc)));
+  plan.fusiones.forEach(f => {
+    const datos = {};
+    if (Object.keys(f.registros).length) datos.registros = f.registros;
+    if (f.done.length) datos.done = FV().arrayUnion(...f.done);
+    ops.push(b => b.set(coleccion().doc(f.id), datos, { merge: true }));
+  });
+  if (Object.keys(plan.juego).length) ops.push(b => b.set(metaJuego(), plan.juego, { merge: true }));
+  if (Object.keys(plan.dias).length) ops.push(b => b.set(metaDias(), { dias: plan.dias }, { merge: true }));
+  // Firestore acepta hasta 500 escrituras por lote.
+  for (let i = 0; i < ops.length; i += 400) {
+    const lote = db.batch();
+    ops.slice(i, i + 400).forEach(op => op(lote));
+    lote.commit().catch(errorGuardar);
+  }
+  cerrarHoja();
+  const r = plan.resumen;
+  toast(`Copia importada: ${plural(r.registros, "registro", "registros")}${r.nuevos ? ` y ${plural(r.nuevos, "hábito nuevo", "hábitos nuevos")}` : ""}.`);
+}
+
 function guardarPref(campos) {
   juego = Object.assign({}, juego, { prefs: Object.assign({}, juego.prefs, campos) });
   metaJuego().set({ prefs: campos }, { merge: true }).catch(errorGuardar);
@@ -1116,10 +1270,46 @@ function misionesHtml() {
     </li>`).join("")
     : `<li class="empty-state">Crea un hábito para recibir tus misiones de la semana.</li>`;
   const previas = Object.keys(anteriores).sort().reverse().slice(0, 4);
-  return `<p class="hb-texto">Se renuevan cada lunes con tus propios datos, un poco por encima de tu promedio. ${quedan ? `Te ${quedan === 1 ? "queda 1 día" : `quedan ${quedan} días`}.` : "Hoy es el último día."}</p>
+  return `${jefeHtml()}
+    <h3 class="hb-sub-t">Misiones de la semana</h3>
+    <p class="hb-texto">Se renuevan cada lunes con tus propios datos, un poco por encima de tu promedio. ${quedan ? `Te ${quedan === 1 ? "queda 1 día" : `quedan ${quedan} días`}.` : "Hoy es el último día."}</p>
     <ul class="hb-misiones">${filas}</ul>
     ${previas.length ? `<h3 class="hb-sub-t">Semanas anteriores</h3><ul class="hb-pausas">${previas.map(k =>
       `<li><span>Semana del ${fechaCorta(anteriores[k].lunes)}</span><span>${anteriores[k].hechas} de ${anteriores[k].total}</span></li>`).join("")}</ul>` : ""}`;
+}
+
+function jefeHtml() {
+  const j = jefeActual();
+  const J = HC.JEFE;
+  const sem = HE.semanaId(HE.lunesDe(res.hoy));
+  const previos = (res.jefes || []).filter(x => x.semana < sem).reverse();
+  const historial = previos.length ? `<details class="hb-jefe-hist"><summary>Jefes anteriores · derrotaste ${previos.filter(x => x.estado === "derrotado").length} de ${previos.length}</summary>
+    <ul class="hb-pausas">${previos.slice(0, 8).map(x => `<li><span>${escapeHtml(x.emoji)} ${escapeHtml(x.nombre)} · semana del ${fechaCorta(x.lunes)}</span>
+      <span>${x.estado === "derrotado" ? `Cayó el ${NOMBRES_DIA[HE.diaSemana(x.derrotadoEn)]}` : "Se escapó"}</span></li>`).join("")}</ul></details>` : "";
+  if (!j) {
+    return `<section class="hb-jefe" aria-label="Jefe de la semana"><p class="hb-texto">Cuando tengas un hábito activo, cada lunes aparecerá un rival para derrotar con tus hábitos.</p>${historial}</section>`;
+  }
+  const caido = j.estado === "derrotado";
+  const hoyIdx = HE.diaSemana(res.hoy);
+  const max = Math.max(1, ...j.porDia);
+  const quedan = 6 - hoyIdx;
+  const estado = caido ? `Cayó el ${NOMBRES_DIA[HE.diaSemana(j.derrotadoEn)]}. Ganaste +${j.xp} XP y +${j.monedas} monedas.`
+    : `Le quedan ${fmtNum(j.vidaRestante)} de ${fmtNum(j.vida)} de vida. ${quedan ? `Tienes ${quedan === 1 ? "1 día más" : `${quedan} días más`}.` : "Hoy es tu última oportunidad."}`;
+  return `<section class="hb-jefe${caido ? " is-caido" : ""}" aria-label="Jefe de la semana">
+    <div class="hb-jefe-top">
+      <span class="hb-jefe-emoji" aria-hidden="true">${escapeHtml(j.emoji)}</span>
+      <div><span class="hb-jefe-eyebrow">Jefe de la semana</span><h3 class="hb-jefe-t">${escapeHtml(j.nombre)}</h3></div>
+      ${caido ? `<span class="hb-tag">Derrotado</span>` : ""}
+    </div>
+    <div class="hb-vida hb-vida-grande" role="progressbar" aria-label="Vida de ${escapeHtml(j.nombre)}" aria-valuemin="0" aria-valuemax="${j.vida}" aria-valuenow="${j.vidaRestante}"><span style="width:${vidaPct(j).toFixed(1)}%"></span></div>
+    <p class="hb-jefe-estado">${estado}</p>
+    <ol class="hb-jefe-dias" aria-label="Daño por día">${j.porDia.map((v, i) => `<li class="${i === hoyIdx ? "is-hoy" : ""}${i > hoyIdx ? " is-futuro" : ""}" aria-label="${NOMBRES_DIA[i]}: ${v} de daño">
+      <span class="hb-jefe-v" aria-hidden="true">${i > hoyIdx ? "" : v}</span>
+      <span class="hb-jefe-col" aria-hidden="true"><span style="height:${((v / max) * 100).toFixed(0)}%"></span></span>
+      <span class="hb-jefe-d" aria-hidden="true">${DIAS_CORTOS[i]}</span></li>`).join("")}</ol>
+    <p class="hb-card-sub">Cada hábito que cumples le quita su XP base: fácil ${HC.DIFICULTADES.facil.xp}, media ${HC.DIFICULTADES.media.xp}, difícil ${HC.DIFICULTADES.dificil.xp}. Si cae antes de que termine el domingo, ganas +${J.XP} XP y +${J.MONEDAS} monedas.</p>
+    ${historial}
+  </section>`;
 }
 
 function logrosHtml() {
@@ -1241,6 +1431,8 @@ let juegoExiste = false;
 // a que dejes de tocar un momento y junta todo en una sola ventana.
 const ESPERA_CELEBRAR_MS = 2500;
 let ultimoToque = 0, timerCelebrar = null;
+let silencioHasta = 0; // tras importar una copia, no se celebra lo que trae
+const SILENCIO_IMPORTAR_MS = 5000;
 function anotarToque() {
   ultimoToque = Date.now();
   clearTimeout(timerCelebrar);
@@ -1249,7 +1441,7 @@ function anotarToque() {
 function canon(snap) {
   const r = {};
   Object.keys(snap.rangos || {}).sort().forEach(k => { r[k] = snap.rangos[k]; });
-  return JSON.stringify([snap.nivel, r, (snap.logros || []).slice().sort(), (snap.misiones || []).slice().sort(), (snap.perfectos || []).slice().sort()]);
+  return JSON.stringify([snap.nivel, r, (snap.logros || []).slice().sort(), (snap.misiones || []).slice().sort(), (snap.perfectos || []).slice().sort(), snap.jefes ? snap.jefes.slice().sort() : null]);
 }
 function guardarSnapshot(snap) {
   juego = Object.assign({}, juego, { snapshot: snap });
@@ -1257,10 +1449,17 @@ function guardarSnapshot(snap) {
   (juegoExiste ? ref.update({ snapshot: snap }) : ref.set({ snapshot: snap }, { merge: true })).catch(errorGuardar);
 }
 function revisarCelebraciones() {
-  if (!juegoCargado || !res || celebrando || deshacerPendiente) return;
+  if (!juegoCargado || !res || celebrando || deshacerPendiente || wrapped) return;
   const anterior = juego.snapshot;
   if (!anterior) { guardarSnapshot(HE.snapshot(res)); return; }
   const snap = HE.fusionarSnapshot(anterior, HE.snapshot(res), res.hoy);
+  // Lo que llega de una copia importada es historia, no un logro nuevo.
+  if (Date.now() < silencioHasta) {
+    if (canon(anterior) !== canon(snap)) guardarSnapshot(snap);
+    clearTimeout(timerCelebrar);
+    timerCelebrar = setTimeout(revisarCelebraciones, silencioHasta - Date.now() + 50);
+    return;
+  }
   const ups = HE.novedades(anterior, snap);
   const visible = !document.hidden && [panelHoy, panelStats, panelLogros].some(p => p && !p.hidden);
   if (ups.length && visible) {
@@ -1290,6 +1489,11 @@ function itemCelebracion(u, i) {
     const l = res.logros.find(x => x.id === u.id);
     return fila(icono("trophy"), "Logro", escapeHtml(l ? l.nombre : u.id), l ? escapeHtml(l.desc) : "");
   }
+  if (u.tipo === "jefe") {
+    const j = (res.jefes || []).find(x => x.semana === u.semana);
+    return fila(`<span class="hb-cel-jefe" aria-hidden="true">${j ? escapeHtml(j.emoji) : ""}</span>`, "Jefe derrotado", escapeHtml(j ? j.nombre : "El jefe de la semana"),
+      j ? `+${j.xp} XP · +${j.monedas} monedas` : "");
+  }
   if (u.tipo === "mision") {
     const m = res.misiones.find(x => x.id === u.id);
     return fila(icono("check"), "Misión cumplida", escapeHtml(m ? m.titulo : ""), m ? `+${m.xp} XP · +${m.monedas} monedas` : "");
@@ -1299,9 +1503,9 @@ function itemCelebracion(u, i) {
 
 function mostrarCelebracion(ups, snap) {
   celebrando = true;
-  const orden = { nivel: 0, perfecto: 1, rango: 2, mision: 3, logro: 4 };
+  const orden = { nivel: 0, jefe: 1, perfecto: 2, rango: 3, mision: 4, logro: 5 };
   ups.sort((a, b) => orden[a.tipo] - orden[b.tipo] || (b.despues || 0) - (a.despues || 0));
-  const titulo = { nivel: "¡Subiste de nivel!", perfecto: "¡Día perfecto!", rango: "Nuevo rango", mision: "Misión cumplida", logro: "Logro desbloqueado" }[ups[0].tipo];
+  const titulo = { nivel: "¡Subiste de nivel!", jefe: "¡Jefe derrotado!", perfecto: "¡Día perfecto!", rango: "Nuevo rango", mision: "Misión cumplida", logro: "Logro desbloqueado" }[ups[0].tipo];
   const modal = document.createElement("div");
   modal.className = "rk-aviso-modal hb-celebra";
   modal.setAttribute("role", "dialog");
@@ -1406,6 +1610,9 @@ function onClickHoja(e) {
   }
   if (q("[data-guardar-orden]")) { guardarOrden(); return; }
   if ((b = q("[data-fin-dia]"))) { guardarFinDia(Number(b.dataset.finDia)); return; }
+  if (q("[data-exportar]")) { exportar(); return; }
+  if (q("[data-importar]")) { const inp = hoja.querySelector("[data-archivo-importar]"); if (inp) { inp.value = ""; inp.click(); } return; }
+  if (q("[data-confirmar-importar]")) { aplicarImportacion(); return; }
   if ((b = q("[data-sonidos]"))) { guardarPref({ sonidos: b.dataset.sonidos === "1" }); if (b.dataset.sonidos === "1") sonar("moneda"); hojaAjustes(); return; }
   if ((b = q("[data-animo]"))) { guardarDiaMeta({ animo: Number(b.dataset.animo) }); hojaCierre(); return; }
   // Formulario: botones que cambian un campo y redibujan.
@@ -1439,6 +1646,7 @@ function cambiarEstado(id, estado, f) {
 
 function onCambioHoja(e) {
   const t = e.target;
+  if (t.hasAttribute("data-archivo-importar")) { leerCopia(t.files && t.files[0]); return; }
   const f = t.dataset.fecha || res.hoy;
   if (t.dataset.nota) {
     const v = t.value.trim().slice(0, 140);
@@ -1476,6 +1684,7 @@ document.getElementById("hb-lista").addEventListener("click", e => {
     return;
   }
   if (e.target.closest("[data-ordenar]")) { hojaOrdenar(); return; }
+  if (e.target.closest("[data-ir-jefe]")) { logrosTab = "misiones"; return; }
   if (e.target.closest("[data-ajustes]")) hojaAjustes();
 });
 document.getElementById("hb-nuevo").addEventListener("click", () => hojaForm(null));
@@ -1737,7 +1946,10 @@ function renderStats() {
   const cambio = periodoPrevio && periodoPrevio !== periodoStats;
   const scroll = el.querySelector(".hb-heat-scroll");
   const scrollHeat = scroll ? scroll.scrollLeft : null;
+  const mes = Number(res.hoy.slice(5, 7));
+  const wrappedArriba = mes === 12 || mes === 1;
   el.innerHTML = `
+    ${wrappedArriba ? wrappedEntradaHtml() : ""}
     ${heatmapHtml()}
     ${resumenSemanaHtml(false)}
     <div class="fin-tabs hb-periodos" role="tablist" aria-label="Periodo">${PERIODOS_UI.map(([id, t]) =>
@@ -1752,7 +1964,8 @@ function renderStats() {
       ${riesgoHtml()}
       ${rankingHtml()}
       ${correlacionesHtml(corr)}
-    </div>`;
+    </div>
+    ${wrappedArriba ? "" : wrappedEntradaHtml()}`;
   const s = el.querySelector(".hb-heat-scroll");
   if (s) s.scrollLeft = scrollHeat != null ? scrollHeat : s.scrollWidth;
   renderIcons(el);
@@ -1778,6 +1991,170 @@ function cambiarPeriodo(paso) {
   if (j === i) return;
   periodoStats = PERIODOS_UI[j][0];
   renderStats();
+}
+
+// ---------- Manolo Wrapped: tu año en hábitos ----------
+// En diciembre y enero la tarjeta sube arriba de Estadísticas; en enero
+// protagoniza el año que acaba de terminar.
+function anioWrappedPrincipal(anios) {
+  const mes = Number(res.hoy.slice(5, 7));
+  return mes === 1 && anios.length > 1 ? anios[1] : anios[0];
+}
+function wrappedEntradaHtml() {
+  const anios = HE.aniosWrapped(res);
+  if (!anios.length) return "";
+  const principal = anioWrappedPrincipal(anios);
+  return `<section class="hb-card hb-wrapped-card" aria-label="Manolo Wrapped">
+    <span class="hb-jefe-eyebrow">Manolo Wrapped</span>
+    <h2 class="hb-card-t">Tu ${principal} en hábitos</h2>
+    <p class="hb-texto">Tus números del año, uno por uno: tu hábito estrella, tu mejor racha, tu mejor mes y más.</p>
+    <div class="hb-chips">${anios.map(y => y === principal
+      ? `<button type="button" class="hb-btn" data-wrapped="${y}">Ver tu ${y}</button>`
+      : `<button type="button" class="hb-btn-sec" data-wrapped="${y}">${y}</button>`).join("")}</div>
+  </section>`;
+}
+
+const DIAS_PLURAL = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábados", "domingos"];
+const INICIAL_MES = ["E", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
+function slidesWrapped(w) {
+  const h = id => normal[id];
+  const nombre = id => (h(id) ? `${escapeHtml(h(id).emoji)} ${escapeHtml(h(id).name)}` : "un hábito que ya no está");
+  const s = [];
+  s.push({ tema: "fuego", html: `<p class="hb-wr-eyebrow">Manolo Wrapped</p>
+    <h2 class="hb-wr-t">Tu ${w.anio} en hábitos</h2>
+    <p class="hb-wr-p">${w.completo ? "Un año entero de pasos pequeños." : `Lo que va del año, hasta el ${fechaCorta(w.hasta)}.`}</p>
+    <p class="hb-wr-pista">Toca a la derecha para avanzar</p>` });
+  if (!w.registros) {
+    s.push({ tema: "oscuro", html: `<p class="hb-wr-eyebrow">${w.anio}</p><h2 class="hb-wr-t">Este año todavía no registraste hábitos</h2>
+      <p class="hb-wr-p">Marca uno hoy y este resumen empezará a llenarse.</p>` });
+  } else {
+    s.push({ tema: "oscuro", html: `<p class="hb-wr-eyebrow">Este año cumpliste</p>
+      <p class="hb-wr-grande">${fmtNum(w.registros)}</p>
+      <p class="hb-wr-p">${w.registros === 1 ? "vez" : "veces"} un hábito, en ${plural(w.diasActivos, "día distinto", "días distintos")}.</p>` });
+    if (w.cumplimiento != null) {
+      const meses = w.meses.map(m => `<li aria-label="${MESES_LARGOS[m.mes - 1]}: ${m.pct == null ? "sin datos" : pctTexto(m.pct)}">
+        <span class="hb-wr-mes-col" aria-hidden="true"><span style="height:${m.pct == null ? 0 : Math.max(4, m.pct * 100).toFixed(0)}%"></span></span>
+        <span class="hb-wr-mes-l" aria-hidden="true">${INICIAL_MES[m.mes - 1]}</span></li>`).join("");
+      s.push({ tema: "fuego", html: `<p class="hb-wr-eyebrow">Cumpliste</p>
+        <p class="hb-wr-grande">${pctTexto(w.cumplimiento)}</p>
+        <p class="hb-wr-p">de lo que te propusiste.</p>
+        <ol class="hb-wr-meses" aria-label="Cumplimiento por mes">${meses}</ol>
+        ${w.mejorMes ? `<p class="hb-wr-p">Tu mejor mes fue <b>${MESES_LARGOS[w.mejorMes.mes - 1]}</b>, con ${pctTexto(w.mejorMes.pct)}.</p>` : ""}` });
+    }
+    if (w.estrella) {
+      s.push({ tema: "oscuro", html: `<p class="hb-wr-eyebrow">Tu hábito estrella</p>
+        <p class="hb-wr-emoji" aria-hidden="true">${h(w.estrella.id) ? escapeHtml(h(w.estrella.id).emoji) : "⭐"}</p>
+        <h2 class="hb-wr-t">${h(w.estrella.id) ? escapeHtml(h(w.estrella.id).name) : "Un hábito que ya no está"}</h2>
+        <p class="hb-wr-p">Lo cumpliste ${plural(w.estrella.veces, "vez", "veces")} este año.</p>
+        ${w.constante && w.constante.id !== w.estrella.id ? `<p class="hb-wr-p">El más constante fue ${nombre(w.constante.id)}, con ${pctTexto(w.constante.pct)}.</p>` : ""}` });
+    }
+    if (w.racha) {
+      s.push({ tema: "oro", html: `<p class="hb-wr-eyebrow">Tu mejor racha</p>
+        <p class="hb-wr-grande">${fmtNum(w.racha.n)}</p>
+        <p class="hb-wr-p">${w.racha.unidad === "semanas" ? (w.racha.n === 1 ? "semana" : "semanas seguidas") : (w.racha.n === 1 ? "día" : "días seguidos")} con ${nombre(w.racha.id)}.</p>
+        ${w.perfectos ? `<p class="hb-wr-p">Y ${plural(w.perfectos, "día perfecto", "días perfectos")}, sin dejar nada pendiente.</p>` : ""}` });
+    }
+    if (w.mejorDia || w.momento) {
+      const mom = w.momento ? HC.MOMENTOS.find(m => m.id === w.momento.id).nombre.toLowerCase() : null;
+      s.push({ tema: "fuego", html: `<p class="hb-wr-eyebrow">Tu ritmo</p>
+        ${w.mejorDia ? `<h2 class="hb-wr-t">Los ${DIAS_PLURAL[w.mejorDia.dia]} fueron tu día</h2>
+          <p class="hb-wr-p">Cumpliste el ${pctTexto(w.mejorDia.pct)} de lo que tocaba.</p>` : ""}
+        ${mom ? `<p class="hb-wr-p">Tu momento fuerte fue la ${mom}: ${plural(w.momento.hechos, "hábito cumplido", "hábitos cumplidos")}.</p>` : ""}` });
+    }
+    const juegoTxt = [];
+    if (w.jefesTotal) juegoTxt.push(`derrotaste ${w.jefes} de ${plural(w.jefesTotal, "jefe", "jefes")}`);
+    if (w.misiones) juegoTxt.push(`cumpliste ${plural(w.misiones, "misión", "misiones")}`);
+    const rango = w.rango != null ? nivelHab(w.rango.nivel) : null;
+    s.push({ tema: "oscuro", html: `<p class="hb-wr-eyebrow">Tu progreso</p>
+      <p class="hb-wr-grande">+${fmtNum(w.xp)}</p>
+      <p class="hb-wr-p">XP este año. ${w.nivelFin > w.nivelInicio ? `Pasaste del nivel ${w.nivelInicio} al <b>${w.nivelFin}</b>.` : `Estás en el nivel <b>${w.nivelFin}</b>.`}</p>
+      ${rango ? `<div class="hb-wr-rango">${RangosInsignias.svg(rango, { tam: 64 })}<p class="hb-wr-p">Tu mejor rango: <b>${escapeHtml(rango.nombre)}</b>, con ${nombre(w.rango.id)}.</p></div>` : ""}
+      ${juegoTxt.length ? `<p class="hb-wr-p">${juegoTxt.join(" y ").replace(/^./, c => c.toUpperCase())}.</p>` : ""}` });
+  }
+  s.push({ tema: "fuego", html: `<p class="hb-wr-eyebrow">${w.anio}</p>
+    <h2 class="hb-wr-t">${w.completo ? "Gracias por un año más" : "Y el año todavía no termina"}</h2>
+    <p class="hb-wr-p">${w.completo ? `Lo que repites se vuelve parte de ti. Nos vemos en ${w.anio + 1}.` : "Cada día que marques suma a este resumen."}</p>
+    <div class="hb-wr-acciones"><button type="button" class="hb-wr-btn" data-wr-reiniciar>Verlo otra vez</button>
+      <button type="button" class="hb-wr-btn is-sec" data-wr-cerrar>Cerrar</button></div>` });
+  return s;
+}
+
+let wrapped = null; // { el, slides, i, anterior (foco) }
+function abrirWrapped(anio) {
+  const w = HE.wrapped(res, anio);
+  if (!w) return;
+  const slides = slidesWrapped(w);
+  const el = document.createElement("div");
+  el.className = "hb-wrapped";
+  el.setAttribute("role", "dialog");
+  el.setAttribute("aria-modal", "true");
+  el.setAttribute("aria-label", `Tu ${anio} en hábitos`);
+  el.innerHTML = `<div class="hb-wr-progreso" aria-hidden="true">${slides.map(() => "<span><i></i></span>").join("")}</div>
+    <button type="button" class="hb-wr-cerrar" data-wr-cerrar aria-label="Cerrar el resumen del año"><span data-icon="close"></span></button>
+    <button type="button" class="hb-wr-zona is-prev" data-wr-paso="-1" aria-label="Anterior"></button>
+    <button type="button" class="hb-wr-zona is-next" data-wr-paso="1" aria-label="Siguiente"></button>
+    <div class="hb-wr-slide" aria-live="polite"></div>
+    <p class="hb-wr-cuenta" aria-hidden="true"></p>`;
+  document.body.appendChild(el);
+  document.body.classList.add("sheet-open");
+  renderIcons(el);
+  wrapped = { el, slides, i: 0, anterior: document.activeElement };
+  el.addEventListener("click", e => {
+    if (e.target.closest("[data-wr-cerrar]")) { cerrarWrapped(); return; }
+    if (e.target.closest("[data-wr-reiniciar]")) { irWrapped(0); return; }
+    const z = e.target.closest("[data-wr-paso]");
+    if (z) irWrapped(wrapped.i + Number(z.dataset.wrPaso));
+  });
+  document.addEventListener("keydown", teclaWrapped);
+  irWrapped(0);
+  el.querySelector(".hb-wr-cerrar").focus();
+}
+function teclaWrapped(e) {
+  if (!wrapped) return;
+  const el = wrapped.el;
+  if (e.key === "Escape") { e.preventDefault(); cerrarWrapped(); }
+  else if (e.key === "ArrowRight") { e.preventDefault(); irWrapped(wrapped.i + 1); }
+  else if (e.key === "ArrowLeft") { e.preventDefault(); irWrapped(wrapped.i - 1); }
+  else if (e.key === "Tab") {
+    // El foco no sale del resumen mientras está abierto.
+    const f = Array.from(el.querySelectorAll("button:not([disabled])"));
+    const k = f.indexOf(document.activeElement);
+    e.preventDefault();
+    f[(k + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+  }
+}
+function irWrapped(i) {
+  if (!wrapped) return;
+  const { el, slides } = wrapped;
+  const j = Math.max(0, Math.min(slides.length - 1, i));
+  if (j === wrapped.i && el.querySelector(".hb-wr-slide").innerHTML) return;
+  wrapped.i = j;
+  el.dataset.tema = slides[j].tema;
+  const slide = el.querySelector(".hb-wr-slide");
+  slide.innerHTML = slides[j].html;
+  Array.from(slide.children).forEach((c, k) => c.style.setProperty("--i", k));
+  el.querySelectorAll(".hb-wr-progreso span").forEach((b, k) => { b.classList.toggle("is-visto", k < j); b.classList.toggle("is-on", k === j); });
+  el.querySelector(".hb-wr-cuenta").textContent = `${j + 1} de ${slides.length}`;
+  el.querySelector(".is-prev").disabled = j === 0;
+  el.querySelector(".is-next").disabled = j === slides.length - 1;
+  renderIcons(slide);
+  // El número grande se achica hasta caber en pantallas angostas.
+  const g = slide.querySelector(".hb-wr-grande");
+  if (g) {
+    let fs = parseFloat(getComputedStyle(g).fontSize);
+    while (g.scrollWidth > g.clientWidth && fs > 36) { fs -= 4; g.style.fontSize = `${fs}px`; }
+  }
+  if (!el.contains(document.activeElement) || document.activeElement.disabled) el.querySelector(".hb-wr-cerrar").focus();
+}
+function cerrarWrapped() {
+  if (!wrapped) return;
+  const { el, anterior } = wrapped;
+  wrapped = null;
+  document.removeEventListener("keydown", teclaWrapped);
+  el.classList.add("closing");
+  if (!hoja || hoja.hidden) document.body.classList.remove("sheet-open");
+  setTimeout(() => el.remove(), reducirMovimiento() ? 0 : 200);
+  if (anterior && anterior.focus) anterior.focus();
 }
 
 // ---------- Globo con el valor al tocar un gráfico ----------
@@ -1839,6 +2216,8 @@ if (panelStats) {
   panelStats.addEventListener("click", e => {
     const p = e.target.closest("[data-periodo]");
     if (p) { periodoStats = p.dataset.periodo; renderStats(); return; }
+    const wr = e.target.closest("[data-wrapped]");
+    if (wr) { abrirWrapped(Number(wr.dataset.wrapped)); return; }
     const dia = e.target.closest("[data-dia]");
     if (dia) { hojaDia(dia.dataset.dia); return; }
     const d = e.target.closest("[data-detalle]");
@@ -1860,7 +2239,7 @@ if (panelStats) {
     toque = null;
     if (Math.abs(dx) > 70 && Math.abs(dy) < 40) cambiarPeriodo(dx < 0 ? 1 : -1);
   }, { passive: true });
-  new MutationObserver(() => { if (!panelStats.hidden) renderStats(); else ocultarTip(); })
+  new MutationObserver(() => { if (!panelStats.hidden) renderStats(); else { ocultarTip(); cerrarWrapped(); } })
     .observe(panelStats, { attributes: true, attributeFilter: ["hidden"] });
 }
 if (panelHoy) {
@@ -1873,6 +2252,7 @@ function actualizar() {
   if (!cargado) return;
   recalcular();
   asegurarMisiones();
+  asegurarJefe();
   renderHoy();
   renderStats();
   renderLogros();

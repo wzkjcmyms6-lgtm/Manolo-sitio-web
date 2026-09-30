@@ -551,3 +551,101 @@ test("resumen de la semana pasada", () => {
   assert.ok(Math.abs(s.pct - 7 / 14) < 1e-9);
   assert.ok(s.xp > 0);
 });
+
+// ---------- Fase 4: jefe semanal, Wrapped y copia de seguridad ----------
+test("jefe semanal: vida según lo que toca en la semana; cae con tus cumplimientos y deja botín", () => {
+  const lunes = "2026-09-28";
+  const docs = r => [hab("a", { registros: r }), hab("b", { registros: r })];
+  // Vida = 80 % de 2 hábitos × 7 días × 10 XP = 112
+  const def = E.generarJefe(E.evaluar(docs({}), { hoy: lunes }), lunes);
+  assert.equal(def.vida, 112);
+  assert.equal(def.semana, "2026-W40");
+  assert.ok(CFG.JEFE.RIVALES.some(r => r.id === def.rival));
+  const jefes = { [def.semana]: def };
+
+  // Miércoles, 3 días cumplidos: 60 de daño, sigue en pie.
+  const mie = E.evaluar(docs(dias(lunes, 3)), { hoy: "2026-09-30", jefes });
+  assert.equal(mie.jefes[0].estado, "enCurso");
+  assert.equal(mie.jefes[0].dano, 60);
+  assert.equal(mie.jefes[0].vidaRestante, 52);
+
+  // Lunes a sábado: cae el sábado (120 ≥ 112) y suma botín.
+  const con = E.evaluar(docs(dias(lunes, 6)), { hoy: "2026-10-05", jefes });
+  const sin = E.evaluar(docs(dias(lunes, 6)), { hoy: "2026-10-05" });
+  assert.equal(con.jefes[0].estado, "derrotado");
+  assert.equal(con.jefes[0].derrotadoEn, "2026-10-03");
+  assert.equal(con.xp - sin.xp, CFG.JEFE.XP);
+  assert.equal(con.monedas.ganadas - sin.monedas.ganadas, CFG.JEFE.MONEDAS);
+
+  // Solo 3 días: termina la semana y se escapa, sin botín.
+  const esc = E.evaluar(docs(dias(lunes, 3)), { hoy: "2026-10-05", jefes });
+  assert.equal(esc.jefes[0].estado, "escapo");
+  assert.equal(esc.xpDesglose.jefes, 0);
+
+  // Lo marcado fuera de la ventana de 48 h no hace daño.
+  const tarde = E.evaluar(docs(dias(lunes, 6, () => hecho(ms(2026, 10, 20)))), { hoy: "2026-10-21", jefes });
+  assert.equal(tarde.jefes[0].dano, 0);
+
+  // Celebración: aparece como novedad una sola vez.
+  const antes = E.snapshot(mie), ahora = E.snapshot(E.evaluar(docs(dias(lunes, 6)), { hoy: "2026-10-04", jefes }));
+  assert.deepEqual(E.novedades(antes, ahora).filter(n => n.tipo === "jefe"), [{ tipo: "jefe", semana: "2026-W40" }]);
+  assert.deepEqual(E.novedades(E.fusionarSnapshot(antes, ahora, "2026-10-04"), ahora), []);
+});
+
+test("jefe semanal: sin hábitos no hay rival; semanales y Evitar cuentan su parte", () => {
+  assert.equal(E.generarJefe(E.evaluar([], { hoy: "2026-09-28" }), "2026-09-28"), null);
+  const docs = [hab("s", { freqType: "semana", timesPerWeek: 3 }), hab("e", { tipo: "evitar" })];
+  // 3 × 10 + 7 × 10 × 0,5 = 65 → 80 % = 52
+  assert.equal(E.generarJefe(E.evaluar(docs, { hoy: "2026-09-28" }), "2026-09-28").vida, 52);
+});
+
+test("Wrapped: tu año con registros, rachas, mejor mes y niveles", () => {
+  const docs = [
+    hab("a", { inicio: "2025-12-15", registros: dias("2026-01-01", 100) }),
+    hab("b", { inicio: "2025-12-15", registros: dias("2026-03-01", 30) })
+  ];
+  const res = E.evaluar(docs, { hoy: "2026-09-30" });
+  assert.deepEqual(E.aniosWrapped(res), [2026, 2025]);
+  const w = E.wrapped(res, 2026);
+  assert.equal(w.registros, 130);
+  assert.equal(w.estrella.id, "a");
+  assert.equal(w.estrella.veces, 100);
+  assert.equal(w.racha.n, 100);
+  assert.equal(w.meses.length, 9);
+  assert.equal(w.mejorMes.mes, 3);
+  assert.equal(w.completo, false);
+  assert.ok(w.xp > 0 && w.nivelFin > w.nivelInicio);
+  const w25 = E.wrapped(res, 2025);
+  assert.equal(w25.registros, 0);
+  assert.equal(w25.cumplimiento, 0);
+  assert.equal(w25.completo, true);
+  assert.equal(E.wrapped(res, 2024), null);
+});
+
+test("copia de seguridad: exporta todo e importa solo lo que falta, sin pisar nada", () => {
+  const local = { a: { name: "Leer", registros: { "2026-09-01": { e: "hecho", t: null } }, done: ["2026-09-01"] } };
+  const archivo = E.copiaDeSeguridad({
+    a: { name: "Leer", registros: { "2026-09-01": { e: "no", t: null }, "2026-09-02": { e: "hecho", t: null } }, done: ["2026-09-02", "2026-09-03"] },
+    b: { name: "Correr", registros: { "2026-09-05": { e: "hecho", t: null } }, done: [] }
+  }, { recompensas: { r1: { nombre: "Peli", precio: 150 } }, snapshot: { nivel: 3 } }, { "2026-09-01": { animo: 4 } }, ms(2026, 9, 30));
+  assert.equal(archivo.app, "manolo-habitos");
+  assert.equal(archivo.habitos.length, 2);
+  const json = JSON.parse(JSON.stringify(archivo));
+  const plan = E.planImportacion(json, { docs: local, juego: {}, dias: {} });
+  assert.ok(plan.valido);
+  assert.deepEqual(plan.nuevos.map(n => n.id), ["b"]);
+  assert.equal(plan.nuevos[0].doc.id, undefined);
+  assert.deepEqual(plan.fusiones, [{ id: "a", registros: { "2026-09-02": { e: "hecho", t: null } }, done: ["2026-09-02", "2026-09-03"] }]);
+  assert.deepEqual(plan.juego, { recompensas: { r1: { nombre: "Peli", precio: 150 } } }); // el snapshot no se importa
+  assert.deepEqual(Object.keys(plan.dias), ["2026-09-01"]);
+  assert.equal(plan.resumen.registros, 3);
+  // Importar la misma copia sobre los mismos datos no cambia nada.
+  const docsTodos = {}; json.habitos.forEach(h => { docsTodos[h.id] = h; });
+  assert.ok(E.planImportacion(json, { docs: docsTodos, juego: json.juego, dias: json.dias }).vacio);
+  // Archivos que no son una copia, o hábitos con id inválido.
+  assert.equal(E.planImportacion({ foo: 1 }).valido, false);
+  assert.equal(E.planImportacion(null).valido, false);
+  const raro = E.planImportacion({ app: "manolo-habitos", habitos: [{ id: "a/b", name: "x" }, { id: "c" }] }, {});
+  assert.equal(raro.resumen.descartados, 2);
+  assert.ok(raro.vacio);
+});

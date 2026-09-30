@@ -371,7 +371,7 @@ function diasPerfectos(habitos, porId, cal, finDia) {
 }
 
 // docs: [{ id, ...datos de Firestore }] (o ya normalizados).
-// opciones: { hoy, finDia, comodines: [fechas de compra] }
+// opciones: { hoy, finDia, compras, comodines, misiones, jefes, areas }
 function evaluar(docs, opciones) {
   const o = opciones || {};
   const finDia = horaFinDia(o.finDia);
@@ -412,13 +412,17 @@ function evaluar(docs, opciones) {
     diasPerfectos: perfectos
   };
   res.misiones = evaluarMisiones(res, o.misiones);
+  res.jefes = evaluarJefes(res, o.jefes);
   const mis = res.misiones.filter(m => m.estado === "completada");
+  const caidos = res.jefes.filter(j => j.estado === "derrotado");
   const xpMisiones = mis.reduce((s, m) => s + m.xp, 0);
-  const xpTotal = xpHabitos + xpPerfectos + xpMisiones;
-  const ganadas = Math.floor((xpHabitos + xpPerfectos) * X.MONEDAS_POR_XP) + mis.reduce((s, m) => s + m.monedas, 0);
+  const xpJefes = caidos.reduce((s, j) => s + j.xp, 0);
+  const xpTotal = xpHabitos + xpPerfectos + xpMisiones + xpJefes;
+  const ganadas = Math.floor((xpHabitos + xpPerfectos) * X.MONEDAS_POR_XP) + mis.reduce((s, m) => s + m.monedas, 0) +
+    caidos.reduce((s, j) => s + j.monedas, 0);
   const gastadas = compras.reduce((s, c) => s + (Number(c && c.precio) || 0), 0);
   res.xp = xpTotal;
-  res.xpDesglose = { habitos: xpHabitos, perfectos: xpPerfectos, misiones: xpMisiones };
+  res.xpDesglose = { habitos: xpHabitos, perfectos: xpPerfectos, misiones: xpMisiones, jefes: xpJefes };
   res.nivel = nivelDeXP(xpTotal);
   res.monedas = { ganadas, gastadas, saldo: ganadas - gastadas };
   res.monedasGanadas = ganadas;
@@ -628,6 +632,69 @@ function evaluarMisiones(res, misiones) {
   return out;
 }
 
+// ---------- Jefe semanal ----------
+// Daño de un día: el XP base del hábito por lo cumplido (sin bonus de racha).
+// Lo marcado fuera de la ventana de 48 h no hace daño, igual que no da XP.
+function danoDia(h, f, d, hoy, finDia) {
+  if (!d || (d.clase !== "cumple" && d.clase !== "extra")) return 0;
+  if (h.tipo === "evitar" && f >= hoy) return 0;
+  if (!dentroDeVentana(d.registro, f, finDia)) return 0;
+  return xpBase(h) * factorEstado(h, d);
+}
+function rival(id) {
+  return CFG.JEFE.RIVALES.find(r => r.id === id) || CFG.JEFE.RIVALES[0];
+}
+// Se genera una vez (el primer día que abras la app esa semana) y se guarda:
+// su vida no cambia si luego creas o archivas hábitos.
+function generarJefe(res, lunes) {
+  const J = CFG.JEFE;
+  const semana = semanaId(lunes);
+  const fechas = Array.from({ length: 7 }, (_, k) => addDias(lunes, k));
+  let esperado = 0;
+  Object.keys(res.habitos).forEach(id => {
+    const h = res.habitos[id].habito;
+    if (h.archivado) return;
+    if (porSemana(h)) {
+      const disp = fechas.filter(f => activoEn(h, f) && !enPausa(h, f)).length;
+      esperado += Math.min(h.timesPerWeek, disp) * xpBase(h);
+      return;
+    }
+    fechas.forEach((f, k) => {
+      if (h.inicio && f >= h.inicio && tocaDia(h, f, k)) esperado += xpBase(h) * (h.tipo === "evitar" ? X.EVITAR_DIA_LIMPIO : 1);
+    });
+  });
+  if (!esperado) return null;
+  const r = J.RIVALES[hash(semana) % J.RIVALES.length];
+  return { semana, lunes, rival: r.id, vida: Math.max(1, Math.round(esperado * J.EXIGENCIA)), xp: J.XP, monedas: J.MONEDAS };
+}
+// jefes: { "2026-W40": definición }. El daño se recalcula siempre con tus
+// registros: si desmarcas algo, el jefe recupera vida (y el botín se va).
+function evaluarJefes(res, jefes) {
+  const out = [];
+  Object.keys(jefes || {}).sort().forEach(sem => {
+    const j = jefes[sem];
+    if (!j || !esFecha(j.lunes) || j.lunes > res.hoy || !(j.vida > 0)) return;
+    const fechas = Array.from({ length: 7 }, (_, k) => addDias(j.lunes, k));
+    const porDia = [0, 0, 0, 0, 0, 0, 0];
+    Object.keys(res.habitos).forEach(id => {
+      const rh = res.habitos[id];
+      fechas.forEach((f, k) => { if (f <= res.hoy) porDia[k] += danoDia(rh.habito, f, rh.dias[f], res.hoy, res.finDia); });
+    });
+    let acum = 0, derrotadoEn = null;
+    porDia.forEach((v, k) => { acum += v; if (derrotadoEn == null && acum >= j.vida) derrotadoEn = fechas[k]; });
+    const terminado = fechas[6] < res.hoy;
+    const r = rival(j.rival);
+    out.push(Object.assign({}, j, {
+      nombre: r.nombre, emoji: r.emoji, domingo: fechas[6],
+      dano: Math.round(acum), porDia: porDia.map(v => Math.round(v)),
+      vidaRestante: Math.max(0, Math.round(j.vida - acum)),
+      derrotadoEn, estado: derrotadoEn ? "derrotado" : terminado ? "escapo" : "enCurso",
+      xp: j.xp || CFG.JEFE.XP, monedas: j.monedas || CFG.JEFE.MONEDAS
+    }));
+  });
+  return out;
+}
+
 // ---------- Logros ----------
 function calcularLogros(res, extra) {
   const lista = Object.keys(res.habitos).map(id => res.habitos[id]);
@@ -708,7 +775,8 @@ function snapshot(res) {
     rangos,
     logros: res.logros.filter(l => l.desbloqueado).map(l => l.id).sort(),
     misiones: res.misiones.filter(m => m.estado === "completada").map(m => m.id).sort(),
-    perfectos: res.diasPerfectos.filter(p => p.fecha >= addDias(res.hoy, -1)).map(p => p.fecha)
+    perfectos: res.diasPerfectos.filter(p => p.fecha >= addDias(res.hoy, -1)).map(p => p.fecha),
+    jefes: (res.jefes || []).filter(j => j.estado === "derrotado").map(j => j.semana).sort()
   };
 }
 // Solo lo que subió o apareció desde el snapshot anterior.
@@ -726,6 +794,11 @@ function novedades(anterior, actual) {
   actual.misiones.forEach(id => { if (!misAntes.has(id)) out.push({ tipo: "mision", id }); });
   const perfAntes = new Set(anterior.perfectos || []);
   actual.perfectos.forEach(f => { if (!perfAntes.has(f)) out.push({ tipo: "perfecto", fecha: f }); });
+  // Los snapshots viejos no tenían jefes: sin lista previa no se avisa (evita celebrar lo ya ganado).
+  if (anterior.jefes) {
+    const jefAntes = new Set(anterior.jefes);
+    (actual.jefes || []).forEach(s => { if (!jefAntes.has(s)) out.push({ tipo: "jefe", semana: s }); });
+  }
   return out;
 }
 
@@ -743,7 +816,8 @@ function fusionarSnapshot(anterior, actual, hoy) {
     rangos,
     logros: union(anterior.logros, actual.logros),
     misiones: union(anterior.misiones, actual.misiones).filter(id => id.indexOf(semana) === 0),
-    perfectos: union(anterior.perfectos, actual.perfectos).filter(f => f >= addDias(hoy, -1))
+    perfectos: union(anterior.perfectos, actual.perfectos).filter(f => f >= addDias(hoy, -1)),
+    jefes: union(anterior.jefes, actual.jefes).filter(id => id === semana)
   };
 }
 
@@ -788,6 +862,7 @@ function indice(res) {
     const i = pos[dom <= res.hoy ? dom : res.hoy];
     if (i != null) xp[i] += m.xp;
   });
+  (res.jefes || []).forEach(j => { const i = j.derrotadoEn ? pos[j.derrotadoEn] : null; if (i != null) xp[i] += j.xp; });
   const acum = arr => { const a = new Float64Array(n + 1); for (let i = 0; i < n; i++) a[i + 1] = a[i] + arr[i]; return a; };
   res._indice = { desde, fechas, pos, dow0: diaSemana(desde), hechos, esperados, xp, H: acum(hechos), E: acum(esperados), X: acum(xp) };
   return res._indice;
@@ -1057,6 +1132,143 @@ function resumenSemana(res, lunes) {
   };
 }
 
+// ---------- Manolo Wrapped: tu año en hábitos ----------
+// Años con algo que mostrar (del primer hábito a hoy), el más reciente primero.
+function aniosWrapped(res) {
+  const inicios = Object.keys(res.habitos).map(id => res.habitos[id].habito.inicio).filter(f => f && f <= res.hoy).sort();
+  if (!inicios.length) return [];
+  const out = [];
+  for (let y = Number(res.hoy.slice(0, 4)); y >= Number(inicios[0].slice(0, 4)); y--) out.push(y);
+  return out;
+}
+function wrapped(res, anio) {
+  const desde = `${anio}-01-01`, fin = `${anio}-12-31`;
+  const hasta = fin < res.hoy ? fin : res.hoy;
+  const ix = indice(res);
+  if (hasta < desde || hasta < ix.desde) return null;
+  const lista = Object.keys(res.habitos).map(id => res.habitos[id]);
+  const activos = new Set();
+  let registros = 0, racha = null, estrella = null, constante = null, rango = null;
+  lista.forEach(rh => {
+    const h = rh.habito;
+    let n = 0, mejorRacha = 0;
+    Object.keys(rh.dias).forEach(f => {
+      if (f < desde || f > hasta) return;
+      const d = rh.dias[f];
+      if (d.clase === "cumple" || d.clase === "extra") {
+        if (h.tipo !== "evitar") { n++; activos.add(f); }
+      }
+      if (!porSemana(h) && h.tipo !== "evitar" && d.racha > mejorRacha) mejorRacha = d.racha;
+    });
+    if (porSemana(h)) rh.semanas.forEach(sm => { if (sm.domingo >= desde && sm.lunes <= hasta && sm.racha > mejorRacha) mejorRacha = sm.racha; });
+    registros += n;
+    if (n && (!estrella || n > estrella.veces)) estrella = { id: h.id, veces: n };
+    if (mejorRacha && (!racha || mejorRacha > racha.n)) racha = { id: h.id, n: mejorRacha, unidad: porSemana(h) ? "semanas" : "dias" };
+    const c = cumplimiento(rh, desde, hasta);
+    const evaluados = porSemana(h) ? rh.semanas.filter(sm => sm.domingo >= desde && sm.lunes <= hasta && (sm.estado === "cumple" || sm.estado === "fallo")).length * 7
+      : Object.keys(rh.dias).filter(f => f >= desde && f <= hasta && (rh.dias[f].clase === "cumple" || rh.dias[f].clase === "fallo")).length;
+    if (h.tipo !== "evitar" && c != null && evaluados >= 28 && (!constante || c > constante.pct)) constante = { id: h.id, pct: c };
+    const nv = rangoEn(rh, hasta);
+    if (nv != null && (!rango || nv > rango.nivel)) rango = { id: h.id, nivel: nv };
+  });
+  const meses = [];
+  for (let m = 1; m <= 12; m++) {
+    const a = `${anio}-${pad(m)}-01`;
+    if (a > hasta) break;
+    const b = `${anio}-${pad(m)}-${pad(new Date(anio, m, 0).getDate())}`;
+    const c = cumplimientoGlobal(res, a, b < hasta ? b : hasta);
+    meses.push({ mes: m, pct: c.pct, hechos: c.hechos, esperados: c.esperados });
+  }
+  const conDatos = meses.filter(x => x.pct != null && x.esperados >= 10);
+  const mejorMes = conDatos.reduce((m, x) => (!m || x.pct > m.pct ? x : m), null);
+  const dias = porDiaSemana(res, desde, hasta);
+  const mejorDia = dias.reduce((m, x, i) => (x.pct != null && x.esperados >= 8 && (!m || x.pct > m.pct) ? { dia: i, pct: x.pct } : m), null);
+  const mom = porMomento(res, desde, hasta);
+  const momento = CFG.MOMENTOS.filter(m => m.id !== "cualquiera" && mom[m.id].esperados >= 10)
+    .reduce((m, x) => (!m || mom[x.id].hechos > m.hechos ? { id: x.id, hechos: mom[x.id].hechos, pct: mom[x.id].pct } : m), null);
+  const xpAntes = desde > ix.desde ? sumaRango(ix, ix.X, ix.desde, addDias(desde, -1)) : 0;
+  const xpAnio = sumaRango(ix, ix.X, desde, hasta);
+  const dentro = f => f >= desde && f <= hasta;
+  return {
+    anio, desde, hasta, completo: hasta === fin,
+    dias: diasEntre(desde < ix.desde ? ix.desde : desde, hasta) + 1,
+    diasActivos: activos.size,
+    registros,
+    cumplimiento: cumplimientoGlobal(res, desde, hasta).pct,
+    meses, mejorMes, mejorDia, momento,
+    estrella, constante, racha, rango,
+    perfectos: res.diasPerfectos.filter(p => dentro(p.fecha)).length,
+    misiones: (res.misiones || []).filter(m => m.estado === "completada" && dentro(m.lunes)).length,
+    jefes: (res.jefes || []).filter(j => j.estado === "derrotado" && dentro(j.derrotadoEn)).length,
+    jefesTotal: (res.jefes || []).filter(j => dentro(j.lunes) && j.estado !== "enCurso").length,
+    xp: Math.round(xpAnio),
+    nivelInicio: nivelDeXP(xpAntes).nivel,
+    nivelFin: nivelDeXP(xpAntes + xpAnio).nivel
+  };
+}
+
+// ---------- Copia de seguridad (JSON) ----------
+const FORMATO_COPIA = "manolo-habitos";
+function copiaDeSeguridad(docs, juego, dias, ahora) {
+  return {
+    app: FORMATO_COPIA, version: 1, exportado: new Date(ahora || Date.now()).toISOString(),
+    habitos: Object.keys(docs || {}).sort().map(id => Object.assign({ id }, docs[id])),
+    juego: juego || {}, dias: dias || {}
+  };
+}
+const idValido = id => typeof id === "string" && id.length > 0 && id.length <= 100 && id.indexOf("/") < 0 && id !== "." && id !== ".." && !/^__.*__$/.test(id);
+const esObjeto = v => !!v && typeof v === "object" && !Array.isArray(v);
+// Qué agregar al importar. Nunca pisa nada: los hábitos nuevos se crean, y en
+// los que ya tienes solo se suman los días que no tienen registro.
+function planImportacion(datos, actual) {
+  const a = actual || {};
+  if (!esObjeto(datos) || datos.app !== FORMATO_COPIA || !Array.isArray(datos.habitos)) {
+    return { valido: false, error: "Este archivo no es una copia de tus hábitos de Manolo." };
+  }
+  const docs = a.docs || {};
+  const nuevos = [], fusiones = [];
+  let registrosNuevos = 0, descartados = 0;
+  datos.habitos.forEach(x => {
+    if (!esObjeto(x) || !idValido(x.id) || typeof x.name !== "string" || !x.name.trim()) { descartados++; return; }
+    const regs = {};
+    if (esObjeto(x.registros)) Object.keys(x.registros).forEach(f => { if (esFecha(f) && esObjeto(x.registros[f])) regs[f] = x.registros[f]; });
+    const done = Array.isArray(x.done) ? Array.from(new Set(x.done.filter(esFecha))).sort() : [];
+    const loc = docs[x.id];
+    if (!loc) {
+      const doc = Object.assign({}, x, { registros: regs, done });
+      delete doc.id;
+      nuevos.push({ id: x.id, doc });
+      registrosNuevos += new Set(Object.keys(regs).concat(done)).size;
+      return;
+    }
+    const tiene = new Set(Object.keys(esObjeto(loc.registros) ? loc.registros : {}).concat(Array.isArray(loc.done) ? loc.done : []));
+    const addRegs = {};
+    Object.keys(regs).forEach(f => { if (!tiene.has(f)) addRegs[f] = regs[f]; });
+    const addDone = done.filter(f => !tiene.has(f));
+    const n = new Set(Object.keys(addRegs).concat(addDone)).size;
+    if (n) { fusiones.push({ id: x.id, registros: addRegs, done: addDone }); registrosNuevos += n; }
+  });
+  const aj = a.juego || {}, dj = esObjeto(datos.juego) ? datos.juego : {};
+  const juego = {};
+  ["recompensas", "compras", "misiones", "jefes"].forEach(k => {
+    if (!esObjeto(dj[k])) return;
+    const falta = {};
+    Object.keys(dj[k]).forEach(id => { if (idValido(id) && dj[k][id] != null && !(esObjeto(aj[k]) && aj[k][id] != null)) falta[id] = dj[k][id]; });
+    if (Object.keys(falta).length) juego[k] = falta;
+  });
+  const dias = {};
+  const ad = a.dias || {};
+  if (esObjeto(datos.dias)) Object.keys(datos.dias).forEach(f => { if (esFecha(f) && esObjeto(datos.dias[f]) && !ad[f]) dias[f] = datos.dias[f]; });
+  const nJuego = Object.keys(juego).reduce((s, k) => s + Object.keys(juego[k]).length, 0);
+  return {
+    valido: true, exportado: typeof datos.exportado === "string" ? datos.exportado : null,
+    nuevos, fusiones, juego, dias,
+    resumen: { enArchivo: datos.habitos.length, nuevos: nuevos.length, actualizados: fusiones.length, registros: registrosNuevos,
+      dias: Object.keys(dias).length, juego: nJuego, descartados },
+    vacio: !nuevos.length && !fusiones.length && !nJuego && !Object.keys(dias).length
+  };
+}
+
 // ---------- Resúmenes para las pantallas ----------
 // % de cumplimiento de un hábito entre dos fechas: cumplidos / (cumplidos +
 // fallados), por día o por semana. null si no hubo nada que evaluar.
@@ -1142,7 +1354,8 @@ function mesCalendario(anio, mes) {
 
 return {
   PERIODOS, indice, periodo, cumplimientoGlobal, kpis, serieSemanal, porDiaSemana, porMomento, areasPeriodo,
-  ranking, enRiesgo, correlaciones, insights, resumenSemana,
+  ranking, enRiesgo, correlaciones, insights, resumenSemana, aniosWrapped, wrapped,
+  generarJefe, evaluarJefes, rival, copiaDeSeguridad, planImportacion,
   NIVELES, percentilFuerza, intervalo, fuerzaHabito, rangoEn, subiriaConSemanaPerfecta, calcularAreas,
   generarMisiones, evaluarMisiones, calcularLogros, snapshot, novedades, fusionarSnapshot,
   cumplimiento, resumenDia, xpDelDiaTotal, formaCiclo, ordenarConCadenas, mesCalendario,
