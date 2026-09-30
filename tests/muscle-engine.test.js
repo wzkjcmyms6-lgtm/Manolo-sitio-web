@@ -33,6 +33,13 @@ test("peso corporal: peso × factor (+ lastre) × reps", () => {
   cerca(E.cargaEjercicio(entrada(DOMINADAS, series(2, 10, 8)), E.config(cfg)).volumen, (80 + 10) * 8 * 2);
 });
 
+test("calentamiento no cuenta; la asistencia resta en peso corporal", () => {
+  const c = E.cargaEjercicio(entrada(PRESS_INCLINADO, [{ kg: 40, reps: 10, calentamiento: true }, { kg: 60, reps: 10 }]));
+  assert.equal(c.series, 1);
+  assert.equal(c.volumen, 600);
+  cerca(E.cargaEjercicio(entrada(DOMINADAS, [{ asistencia: 20, reps: 8 }]), E.config({ pesoCorporal: 80 })).volumen, (80 - 20) * 8);
+});
+
 test("cardio: minutos × RPE × constante; 1 serie efectiva cada 10 min", () => {
   const c = E.cargaEjercicio(entrada(CORRER, [], { minutos: 30, rpe: 7 }));
   assert.equal(c.volumen, 30 * 7 * 10);

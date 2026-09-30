@@ -80,8 +80,8 @@ function volumenSerie(serie, ejercicio, cfg, rpe) {
   const reps = num(serie.reps);
   if (reps > 0) {
     if (ejercicio.tipo === "peso_corporal") {
-      const carga = cfg.pesoCorporal * num(ejercicio.factorPesoCorporal) + num(serie.lastre) + num(serie.kg);
-      return carga * reps;
+      const carga = cfg.pesoCorporal * num(ejercicio.factorPesoCorporal) + num(serie.lastre) + num(serie.kg) - num(serie.asistencia);
+      return Math.max(0, carga) * reps;
     }
     return num(serie.kg) * reps;
   }
@@ -90,8 +90,9 @@ function volumenSerie(serie, ejercicio, cfg, rpe) {
   return 0;
 }
 
+// Las series de calentamiento no cuentan.
 function serieValida(serie) {
-  return num(serie.reps) > 0 || num(serie.seg) > 0;
+  return !serie.calentamiento && (num(serie.reps) > 0 || num(serie.seg) > 0);
 }
 
 // Volumen y series de un ejercicio dentro de un entrenamiento.

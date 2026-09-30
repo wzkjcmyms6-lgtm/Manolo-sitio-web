@@ -6,7 +6,7 @@ Sitio web estático (HTML/CSS/JS puro, sin dependencias) para llevar control per
 
 - `index.html` — pantalla de inicio con versículo del día y accesos a cada sección.
 - `habitos.html` — seguimiento semanal de hábitos (marca los días cumplidos).
-- `ejercicio.html` — Ejercicio: mapa muscular (frente/espalda) y radar de distribución por semana, Gimnasio (rutinas, registro con buscador de ~570 ejercicios, RPE, notas, edición), Running y Bicicleta. Detalles en [`docs/mapa-muscular.md`](docs/mapa-muscular.md).
+- `ejercicio.html` — Ejercicio: mapa muscular (frente/espalda) y radar de distribución por semana, Gimnasio (rutinas, registro con buscador de ~570 ejercicios, RPE, notas, edición), Running y Bicicleta. Detalles en [`docs/mapa-muscular.md`](docs/mapa-muscular.md). Rangos de fuerza (estilo Symmetry) en Ejercicio › Rangos: [`docs/rangos.md`](docs/rangos.md).
 - `finanzas.html` — registro de ingresos, gastos e inversiones con balance.
 - `css/style.css` — estilos compartidos. Incluye un layout de **escritorio** (barra lateral fija) y uno de **móvil** distinto (barra superior + menú deslizante + barra de navegación inferior), controlados por media queries (`max-width: 768px`).
 - `js/verses.js` — banco de versículos y lógica del "versículo del día".

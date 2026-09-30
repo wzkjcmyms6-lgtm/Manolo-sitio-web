@@ -13,6 +13,9 @@ const RUTA_BASE = "data/ejercicios.json?v=202609301";
 
 const estado = {
   base: [], destacados: 0, propios: [], asignaciones: {}, ajustes: {},
+  // Rangos: perfil (altura, pesajes), vínculos con el catálogo y el snapshot
+  // del aviso "Nuevos rangos". snapshotRangos = undefined hasta que se lea.
+  perfil: {}, rangosVinculos: {}, snapshotRangos: undefined,
   registros: { gimnasio: [], running: [], bicicleta: [] },
   // true cuando llegó una lectura confirmada por el servidor (no del caché)
   cargado: { base: false, gimnasio: false, running: false, bicicleta: false, ajustes: false },
@@ -124,6 +127,18 @@ onAuthReady(() => {
   meta("asignaciones_ejercicios").onSnapshot(doc => {
     estado.asignaciones = (doc.exists && doc.data()) || {};
     cacheResolver = new Map();
+    avisar();
+  });
+  meta("perfil_ejercicio").onSnapshot(doc => {
+    estado.perfil = (doc.exists && doc.data()) || {};
+    avisar();
+  });
+  meta("rangos_vinculos").onSnapshot(doc => {
+    estado.rangosVinculos = (doc.exists && doc.data()) || {};
+    avisar();
+  });
+  meta("rangos_snapshot").onSnapshot(doc => {
+    estado.snapshotRangos = (doc.exists && doc.data()) || null;
     avisar();
   });
 });

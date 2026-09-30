@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=202609301300">
+  <link rel="stylesheet" href="css/style.css?v=202609301500">
 </head>
 <body>
   <!-- Degradado marfil y brillo del maniquí (mapa corporal y creador de ejercicios) -->
@@ -251,12 +251,34 @@
           <!-- ===== Ejercicio: Rangos ===== -->
           <section id="panel-ej-rangos" hidden>
             <h1 class="page-title">Rangos</h1>
-            <p class="empty-state">Aquí verás tus rangos. Próximamente.</p>
+            <div id="rk-app" class="rk"></div>
           </section>
 
           <!-- ===== Ejercicio: Perfil ===== -->
           <section id="panel-ej-perfil" hidden>
             <h1 class="page-title">Perfil</h1>
+            <div class="ej-ajustes pf-perfil">
+              <h2>Tu cuerpo</h2>
+              <p class="ej-texto">Tus rangos se ajustan a tu peso: para cada entreno se usa tu último pesaje de ese día o anterior. La altura se guarda, pero no cambia el cálculo.</p>
+              <form id="pf-altura-form" class="pf-fila" novalidate>
+                <label class="ex-field">Altura (cm)
+                  <input type="number" id="pf-altura" step="1" min="100" max="250" inputmode="numeric" placeholder="175">
+                </label>
+                <button type="submit" class="rk-btn-sec">Guardar</button>
+              </form>
+              <h3 class="radar-subtitle">Pesajes</h3>
+              <form id="pf-pesaje-form" class="pf-fila" novalidate>
+                <label class="ex-field">Fecha
+                  <input type="date" id="pf-fecha">
+                </label>
+                <label class="ex-field">Peso (kg)
+                  <input type="number" id="pf-kg" step="0.1" min="20" max="300" inputmode="decimal" placeholder="85">
+                </label>
+                <button type="submit" class="rk-btn-sec">Añadir</button>
+              </form>
+              <p class="ej-aviso" id="pf-aviso" hidden></p>
+              <ul class="pf-pesajes" id="pf-pesajes"></ul>
+            </div>
             <div class="ej-ajustes" id="ej-ajustes">
               <h2>Ajustes del mapa muscular</h2>
               <form id="ej-ajustes-form" class="ej-ajustes-form" novalidate>
@@ -897,15 +919,20 @@
   <script src="js/modules.js?v=202609300400"></script>
   <script src="js/main.js?v=202609232200"></script>
   <script src="js/habitos.js?v=202609280200"></script>
-  <script src="js/muscle-engine.js?v=202609301200"></script>
+  <script src="js/muscle-engine.js?v=202609301400"></script>
   <script src="js/exercise-search.js?v=202609291"></script>
   <script src="js/body-figures.js?v=202609301200"></script>
-  <script src="js/ejercicio-datos.js?v=202609301200"></script>
+  <script src="js/ejercicio-datos.js?v=202609301400"></script>
   <script src="js/exercise-picker.js?v=202609294"></script>
-  <script src="js/gimnasio.js?v=202609293"></script>
+  <script src="js/gimnasio.js?v=202609301500"></script>
   <script src="js/body-map.js?v=202609301300"></script>
   <script src="js/muscle-radar.js?v=202609292"></script>
   <script src="js/ejercicio-ajustes.js?v=202609293"></script>
+  <script src="js/rangos-config.js?v=202609301"></script>
+  <script src="js/rangos-engine.js?v=202609301"></script>
+  <script src="js/rangos-insignias.js?v=202609301500"></script>
+  <script src="js/rangos.js?v=202609301500"></script>
+  <script src="js/perfil-ejercicio.js?v=202609301"></script>
   <script src="js/offline.js?v=202609293"></script>
   <script src="js/running.js?v=202609293"></script>
   <script src="js/bicicleta.js?v=202609293"></script>

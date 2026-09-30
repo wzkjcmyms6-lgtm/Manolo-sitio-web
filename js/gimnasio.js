@@ -80,7 +80,7 @@ function maxKgForExercise(name, excluirId) {
     if (w.id === excluirId) return;
     (w.exercises || []).forEach(ex => {
       if (ex.name.trim().toLowerCase() === key) {
-        (ex.sets || []).forEach(s => { if (s.reps > 0 && s.kg > max) max = s.kg; });
+        (ex.sets || []).forEach(s => { if (s.reps > 0 && !s.calentamiento && !s.asistencia && s.kg > max) max = s.kg; });
       }
     });
   });
@@ -90,7 +90,7 @@ function maxKgForExercise(name, excluirId) {
 function computePRs(exercises, excluirId) {
   let count = 0;
   exercises.forEach(ex => {
-    const sets = (ex.sets || []).filter(s => s.reps > 0);
+    const sets = (ex.sets || []).filter(s => s.reps > 0 && !s.calentamiento && !s.asistencia);
     if (!sets.length) return;
     const prevMax = maxKgForExercise(ex.name, excluirId);
     const sessionMax = Math.max(0, ...sets.map(s => s.kg || 0));
@@ -176,7 +176,8 @@ document.getElementById("gym-routine-form").addEventListener("submit", e => {
 
 function resumenEjercicio(ex) {
   if (ex.minutos && !(ex.sets || []).length) return `${ex.minutos} min ${ex.name}`;
-  return `${(ex.sets || []).length} series ${ex.name}`;
+  const n = (ex.sets || []).filter(x => !x.calentamiento).length;
+  return `${n} ${n === 1 ? "serie" : "series"} ${ex.name}`;
 }
 
 function renderHistory() {
@@ -257,7 +258,12 @@ function editWorkout(w) {
         name: ex.name,
         exerciseId: ex.exerciseId || (f ? f.id : null),
         tipo: f ? f.tipo : "carga",
-        sets: (ex.sets || []).map(s => ({ kg: s.kg != null ? s.kg : "", reps: s.reps != null ? s.reps : "", seg: s.seg != null ? s.seg : "" })),
+        sets: (ex.sets || []).map(s => ({
+          kg: s.asistencia != null ? s.asistencia : s.kg != null ? s.kg : "",
+          reps: s.reps != null ? s.reps : "", seg: s.seg != null ? s.seg : "",
+          calentamiento: !!s.calentamiento
+        })),
+        asistencia: (ex.sets || []).some(s => s.asistencia > 0),
         rpe: ex.rpe || "",
         notas: ex.notas || "",
         minutos: ex.minutos || ""
@@ -302,21 +308,40 @@ const COLUMNAS = {
   isometrico: { titulos: ["SEG"], campos: [["seg", "numeric", "1"]] }
 };
 
+// En peso corporal, la columna de kg es lastre (+KG) o asistencia (−KG).
+// En mancuernas se anota el peso de cada mancuerna (KG C/U).
+function titulosColumnas(ex) {
+  const col = COLUMNAS[ex.tipo] || COLUMNAS.carga;
+  if (ex.tipo === "peso_corporal") return [ex.asistencia ? "−KG" : "+KG", "REPS"];
+  const f = fichaDe(ex);
+  if (ex.tipo === "carga" && f && f.equipo === "mancuerna") return ["KG C/U", "REPS"];
+  return col.titulos;
+}
+
 function tablaSeries(ex) {
   const col = COLUMNAS[ex.tipo] || COLUMNAS.carga;
   const una = col.campos.length === 1 ? " cols-1" : "";
+  let n = 0;
+  const modo = ex.tipo === "peso_corporal" ? `
+    <div class="ex-modo" role="group" aria-label="La columna de kg es">
+      <button type="button" data-modo="lastre" aria-pressed="${!ex.asistencia}"${ex.asistencia ? "" : ' class="active"'}>Lastre</button>
+      <button type="button" data-modo="asistencia" aria-pressed="${!!ex.asistencia}"${ex.asistencia ? ' class="active"' : ""}>Asistencia</button>
+    </div>` : "";
   const filas = ex.sets.map((set, setIndex) => `
-    <div class="set-row${una}" data-set-index="${setIndex}">
-      <span class="set-num">${setIndex + 1}</span>
+    <div class="set-row${una}${set.calentamiento ? " is-warm" : ""}" data-set-index="${setIndex}">
+      <button type="button" class="set-num${set.calentamiento ? " warm" : ""}" aria-label="Serie ${setIndex + 1}${set.calentamiento ? ", calentamiento" : ""}. Tocar para marcar o quitar calentamiento">${set.calentamiento ? "C" : ++n}</button>
       ${col.campos.map(([campo, modo, paso]) => `<input type="number" class="set-${campo}" inputmode="${modo}" min="0" step="${paso}" placeholder="0" value="${escapeHtml(set[campo] != null ? set[campo] : "")}" aria-label="${campo} serie ${setIndex + 1}">`).join("")}
       <button type="button" class="delete-set" aria-label="Eliminar serie">${ICONS.close}</button>
     </div>`).join("");
-  return `
+  return `${modo}
     <div class="set-table">
-      <div class="set-row set-row-header${una}"><span>SERIE</span>${col.titulos.map(t => `<span>${t}</span>`).join("")}<span></span></div>
+      <div class="set-row set-row-header${una}"><span>SERIE</span>${titulosColumnas(ex).map(t => `<span>${t}</span>`).join("")}<span></span></div>
       ${filas}
     </div>
-    <button type="button" class="link-btn add-set-btn">+ Serie</button>`;
+    <div class="set-foot">
+      <button type="button" class="link-btn add-set-btn">+ Serie</button>
+      <span class="set-hint">Toca el número para marcar calentamiento (C)</span>
+    </div>`;
 }
 
 function renderActiveExercises() {
@@ -378,7 +403,19 @@ document.getElementById("gym-active-exercises").addEventListener("click", e => {
   if (e.target.closest(".add-set-btn")) {
     // La serie nueva copia la anterior (como en las apps de gimnasio).
     const ultima = ex.sets[ex.sets.length - 1];
-    ex.sets.push(ultima ? Object.assign({}, ultima) : defaultSets(ex.tipo)[0]);
+    ex.sets.push(ultima ? Object.assign({}, ultima, { calentamiento: false }) : defaultSets(ex.tipo)[0]);
+    renderActiveExercises();
+    return;
+  }
+  if (e.target.closest(".set-num")) {
+    const set = ex.sets[Number(e.target.closest(".set-row").dataset.setIndex)];
+    set.calentamiento = !set.calentamiento;
+    renderActiveExercises();
+    return;
+  }
+  const modo = e.target.closest(".ex-modo [data-modo]");
+  if (modo) {
+    ex.asistencia = modo.dataset.modo === "asistencia";
     renderActiveExercises();
     return;
   }
@@ -436,6 +473,11 @@ document.getElementById("gym-active-duration").addEventListener("input", e => {
 
 document.getElementById("gym-start-empty").addEventListener("click", () => startWorkout("Entrenamiento", []));
 
+// Avisa (a js/rangos.js) que se guardó un entreno, para mostrar "Nuevos rangos".
+function avisarGuardado() {
+  document.dispatchEvent(new CustomEvent("entreno:guardado"));
+}
+
 // Deja solo lo que se completó y sin campos vacíos (Firestore no acepta undefined).
 function limpiarEjercicio(ex) {
   const out = { name: ex.name, sets: [] };
@@ -444,12 +486,19 @@ function limpiarEjercicio(ex) {
     if (!(ex.minutos > 0)) return null;
     out.minutos = Number(ex.minutos);
   } else if (ex.tipo === "isometrico") {
-    out.sets = ex.sets.filter(s => (Number(s.seg) || 0) > 0).map(s => ({ seg: Number(s.seg) }));
+    out.sets = ex.sets.filter(s => (Number(s.seg) || 0) > 0)
+      .map(s => Object.assign({ seg: Number(s.seg) }, s.calentamiento ? { calentamiento: true } : {}));
     if (!out.sets.length) return null;
   } else {
+    const asistida = ex.tipo === "peso_corporal" && ex.asistencia;
     out.sets = ex.sets
       .filter(s => (Number(s.reps) || 0) > 0 || (Number(s.kg) || 0) > 0)
-      .map(s => ({ kg: Number(s.kg) || 0, reps: Number(s.reps) || 0 }));
+      .map(s => {
+        const kg = Number(s.kg) || 0, reps = Number(s.reps) || 0;
+        const serie = asistida ? { asistencia: kg, reps } : { kg, reps };
+        if (s.calentamiento) serie.calentamiento = true;
+        return serie;
+      });
     if (!out.sets.length) return null;
   }
   if (ex.rpe) out.rpe = Number(ex.rpe);
@@ -473,6 +522,7 @@ document.getElementById("gym-active-finish").addEventListener("click", () => {
         durationMin: Math.max(1, parseInt(activeWorkout.durationMin, 10) || 1),
         prs: computePRs(exercises, activeWorkout.editingId)
       });
+      avisarGuardado();
     }
     endWorkout();
     return;
@@ -491,6 +541,7 @@ document.getElementById("gym-active-finish").addEventListener("click", () => {
     exercises,
     prs: computePRs(exercises)
   });
+  avisarGuardado();
 
   endWorkout();
 });
