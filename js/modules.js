@@ -110,11 +110,31 @@ function showPanel(hash) {
   document.getElementById("verse-banner").hidden = isExercise || activeModule === "finanzas" || activeModule === "habitos";
   document.getElementById("body-banner").hidden = !showBody;
 
-  // Pestañas propias de Finanzas (Vista general/Presupuesto/Herramientas),
-  // visibles como pills dentro del panel en escritorio.
-  const finTab = tabHash(hash, FIN_TABS);
+  // Pestañas propias de cada módulo (Finanzas, Hábitos, Ejercicio), visibles
+  // como pills dentro del panel en escritorio.
   document.querySelectorAll("[data-hash-link]").forEach(a => {
-    a.classList.toggle("active", a.dataset.hash === finTab);
+    const activa = a.dataset.hash === tabHash(hash, TAB_BARS[a.dataset.grupo || "finanzas"]);
+    a.classList.toggle("active", activa);
+    if (activa) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+  });
+}
+
+// En escritorio no hay barra inferior: Hábitos y Ejercicio muestran sus
+// pestañas como pills arriba de cada una de sus secciones (Finanzas ya las
+// tiene en index.html). En móvil se ocultan (.fin-outer-tabs).
+const PILLS_ESCRITORIO = { habitos: "Secciones de Hábitos", ejercicio: "Secciones de Ejercicio" };
+function crearPillsEscritorio() {
+  Object.keys(PILLS_ESCRITORIO).forEach(grupo => {
+    TAB_BARS[grupo].forEach(tab => {
+      const panel = document.getElementById("panel-" + tab.hash);
+      if (!panel || panel.querySelector(":scope > .fin-outer-tabs")) return;
+      const nav = document.createElement("nav");
+      nav.className = "fin-tabs fin-outer-tabs";
+      nav.setAttribute("aria-label", PILLS_ESCRITORIO[grupo]);
+      nav.innerHTML = TAB_BARS[grupo].map(t =>
+        `<a href="#${t.hash}" class="fin-tab" data-hash-link data-grupo="${grupo}" data-hash="${t.hash}">${t.label}</a>`).join("");
+      panel.prepend(nav);
+    });
   });
 }
 
@@ -198,6 +218,7 @@ function moveGlass(nav, to) {
 }
 
 function router() {
+  crearPillsEscritorio();
   showPanel(currentHash());
   renderNav();
   window.scrollTo(0, 0);
