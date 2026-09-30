@@ -436,8 +436,68 @@ function resumenDia(res, f) {
   return { hechos, esperados };
 }
 
+// XP ganado en una fecha (registros de ese día + bonus de día perfecto).
+function xpDelDiaTotal(res, f) {
+  let xp = 0;
+  Object.keys(res.habitos).forEach(id => { const d = res.habitos[id].dias[f]; if (d) xp += d.xp || 0; });
+  const p = res.diasPerfectos.find(x => x.fecha === f);
+  return xp + (p ? p.xp : 0);
+}
+
+// ---------- Cadenas: "Después de [hábito], haré [este]" ----------
+function formaCiclo(h, porId) {
+  const vistos = new Set([h.id]);
+  let p = h.despuesDe && porId.get(h.despuesDe);
+  while (p) {
+    if (vistos.has(p.id)) return true;
+    vistos.add(p.id);
+    p = p.despuesDe && porId.get(p.despuesDe);
+  }
+  return false;
+}
+// Devuelve la lista (ya ordenada por `orden`) con cada hábito justo después
+// del que lo encadena. Si el anterior no está en la lista, o la cadena da
+// una vuelta, el hábito queda en su lugar.
+function ordenarConCadenas(lista) {
+  const porId = new Map(lista.map(h => [h.id, h]));
+  const hijos = new Map();
+  const raices = [];
+  lista.forEach(h => {
+    const padre = h.despuesDe && porId.get(h.despuesDe);
+    if (padre && !formaCiclo(h, porId)) {
+      if (!hijos.has(padre.id)) hijos.set(padre.id, []);
+      hijos.get(padre.id).push(h);
+    } else raices.push(h);
+  });
+  const out = [], puesto = new Set();
+  const poner = h => {
+    if (puesto.has(h.id)) return;
+    puesto.add(h.id);
+    out.push(h);
+    (hijos.get(h.id) || []).forEach(poner);
+  };
+  raices.forEach(poner);
+  lista.forEach(poner);
+  return out;
+}
+
+// ---------- Calendario de un mes ----------
+// Semanas (de lunes a domingo) que cubren el mes; null fuera del mes.
+function mesCalendario(anio, mes) {
+  const primero = `${anio}-${pad(mes)}-01`;
+  const dias = new Date(anio, mes, 0).getDate();
+  const semanas = [];
+  let semana = new Array(diaSemana(primero)).fill(null);
+  for (let d = 1; d <= dias; d++) {
+    semana.push(`${anio}-${pad(mes)}-${pad(d)}`);
+    if (semana.length === 7) { semanas.push(semana); semana = []; }
+  }
+  if (semana.length) semanas.push(semana.concat(new Array(7 - semana.length).fill(null)));
+  return semanas;
+}
+
 return {
-  cumplimiento, resumenDia,
+  cumplimiento, resumenDia, xpDelDiaTotal, formaCiclo, ordenarConCadenas, mesCalendario,
   CFG, isoDate, addDias, diasEntre, diaSemana, lunesDe, semanaId, fechaLogica, finDelDiaMs,
   dentroDeVentana, normalizar, activoEn, enPausa, tocaDia, estadoDia, cumple, claseDia,
   asignarComodines, xpParaNivel, nivelDeXP, titulo, evaluar

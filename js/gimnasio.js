@@ -473,9 +473,10 @@ document.getElementById("gym-active-duration").addEventListener("input", e => {
 
 document.getElementById("gym-start-empty").addEventListener("click", () => startWorkout("Entrenamiento", []));
 
-// Avisa (a js/rangos.js) que se guardó un entreno, para mostrar "Nuevos rangos".
-function avisarGuardado() {
-  document.dispatchEvent(new CustomEvent("entreno:guardado"));
+// Avisa que se guardó un entreno: js/rangos.js muestra "Nuevos rangos" y
+// js/habitos.js marca solos los hábitos vinculados a Gimnasio en esa fecha.
+function avisarGuardado(fecha) {
+  document.dispatchEvent(new CustomEvent("entreno:guardado", { detail: { fecha } }));
 }
 
 // Deja solo lo que se completó y sin campos vacíos (Firestore no acepta undefined).
@@ -522,7 +523,7 @@ document.getElementById("gym-active-finish").addEventListener("click", () => {
         durationMin: Math.max(1, parseInt(activeWorkout.durationMin, 10) || 1),
         prs: computePRs(exercises, activeWorkout.editingId)
       });
-      avisarGuardado();
+      avisarGuardado(date);
     }
     endWorkout();
     return;
@@ -541,7 +542,7 @@ document.getElementById("gym-active-finish").addEventListener("click", () => {
     exercises,
     prs: computePRs(exercises)
   });
-  avisarGuardado();
+  avisarGuardado(date);
 
   endWorkout();
 });

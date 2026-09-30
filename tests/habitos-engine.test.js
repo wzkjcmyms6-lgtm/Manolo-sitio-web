@@ -274,6 +274,30 @@ test("cumplimiento de un periodo y resumen de un día", () => {
   assert.deepEqual(E.resumenDia(r, "2026-09-05"), { hechos: 0, esperados: 2 });
 });
 
+test("cadenas: cada hábito va justo después del que lo encadena; los ciclos no rompen nada", () => {
+  const h = (id, despuesDe) => ({ id, despuesDe: despuesDe || null });
+  const orden = l => E.ordenarConCadenas(l).map(x => x.id).join(",");
+  assert.equal(orden([h("cafe"), h("leer", "meditar"), h("meditar", "cafe"), h("agua")]), "cafe,meditar,leer,agua");
+  assert.equal(orden([h("a", "zzz"), h("b")]), "a,b"); // el anterior no está: queda en su lugar
+  assert.equal(orden([h("a", "b"), h("b", "a"), h("c")]), "a,b,c"); // ciclo: sin perder ninguno
+  assert.ok(E.formaCiclo(h("a", "b"), new Map([["a", h("a", "b")], ["b", h("b", "a")]])));
+});
+
+test("calendario de un mes (lunes primero)", () => {
+  const sept = E.mesCalendario(2026, 9);
+  assert.equal(sept[0][0], null);            // 1 de septiembre de 2026 es martes
+  assert.equal(sept[0][1], "2026-09-01");
+  assert.equal(sept[sept.length - 1].filter(Boolean).pop(), "2026-09-30");
+  assert.ok(sept.every(s => s.length === 7));
+  assert.equal(E.mesCalendario(2027, 2).flat().filter(Boolean).length, 28);
+  assert.equal(E.mesCalendario(2028, 2).flat().filter(Boolean).length, 29); // bisiesto
+});
+
+test("XP ganado en un día incluye el bonus de día perfecto", () => {
+  const r = E.evaluar([hab("a", { registros: dias("2026-09-01", 1) })], { hoy: "2026-09-01" });
+  assert.equal(E.xpDelDiaTotal(r, "2026-09-01"), r.habitos.a.dias["2026-09-01"].xp + CFG.XP.DIA_PERFECTO);
+});
+
 test("curva de niveles y títulos", () => {
   assert.equal(E.nivelDeXP(0).nivel, 1);
   assert.equal(E.nivelDeXP(E.xpParaNivel(10)).nivel, 10);

@@ -26,6 +26,8 @@ let cargado = false;
 let pendienteXP = null; // { id, xp } para mostrar "+N XP" tras marcar
 let ultimoMarcado = null;
 let momentoPintado = null;
+let diasMeta = {};      // meta/habitos_dias: ánimo y nota de cada día
+const pendientesAuto = []; // marcados automáticos que llegaron antes de cargar
 
 const panelHoy = document.getElementById("panel-habitos");
 const panelStats = document.getElementById("panel-hab-stats");
@@ -35,6 +37,9 @@ function coleccion() {
 }
 function metaJuego() {
   return db.collection("users").doc(currentUser.uid).collection("meta").doc("habitos_juego");
+}
+function metaDias() {
+  return db.collection("users").doc(currentUser.uid).collection("meta").doc("habitos_dias");
 }
 const FV = () => firebase.firestore.FieldValue;
 const FP = (...p) => new firebase.firestore.FieldPath(...p);
@@ -267,20 +272,23 @@ function subtitulo(h, x, f) {
     const s = x.rh.semanaActual;
     partes.push(s.estado === "cumple" ? `Semana cumplida (${s.hechas}/${s.meta})` : `${s.hechas}/${s.meta} esta semana`);
   }
+  const padre = h.despuesDe && normal[h.despuesDe];
+  if (padre && !padre.archivado) partes.unshift(`Después de ${escapeHtml(padre.name)}`);
   const racha = textoRacha(x.rh && x.rh.racha);
   return { texto: partes.join(" · "), racha };
 }
 
-function filaHtml(h, f) {
+function filaHtml(h, f, encadenado) {
   const x = filaHoy(h, f);
   const sub = subtitulo(h, x, f);
-  const clases = ["hb-fila", x.hecho && h.tipo !== "evitar" ? "is-hecho" : "", !x.toca ? "is-apagada" : ""].filter(Boolean).join(" ");
+  const clases = ["hb-fila", x.hecho && h.tipo !== "evitar" ? "is-hecho" : "", !x.toca ? "is-apagada" : "", encadenado ? "is-encadenado" : ""].filter(Boolean).join(" ");
+  const crono = cronoInicio(h.id);
   return `<li class="${clases}">
     <button type="button" class="hb-fila-info" data-detalle="${h.id}" aria-label="Ver detalle de ${escapeHtml(h.name)}">
       <span class="hb-emoji" aria-hidden="true">${escapeHtml(h.emoji)}</span>
       <span class="hb-fila-txt">
         <span class="hb-nombre">${escapeHtml(h.name)}</span>
-        <span class="hb-sub">${sub.texto ? `<span>${sub.texto}</span>` : ""}${sub.racha ? `<span class="hb-racha"><span class="hb-ico" data-icon="flame"></span>${escapeHtml(sub.racha)}</span>` : ""}</span>
+        <span class="hb-sub">${crono ? `<span class="hb-crono-fila"><span class="hb-crono" data-inicio="${crono}">${textoCrono(crono)}</span> en curso</span>` : ""}${sub.texto ? `<span>${sub.texto}</span>` : ""}${sub.racha ? `<span class="hb-racha"><span class="hb-ico" data-icon="flame"></span>${escapeHtml(sub.racha)}</span>` : ""}</span>
       </span>
     </button>
     ${x.toca ? botonCheck(h, x) : ""}
@@ -305,18 +313,34 @@ function renderHoy() {
   const orden = [actual, "cualquiera"].concat(["manana", "tarde", "noche"].filter(m => m !== actual));
   const hoyToca = [], noToca = [];
   todos.forEach(h => (filaHoy(h, f).toca ? hoyToca : noToca).push(h));
+  // Un hábito encadenado va en el grupo de su primer eslabón que toque hoy.
+  const enHoy = new Map(hoyToca.map(h => [h.id, h]));
+  const raiz = h => {
+    let r = h;
+    const vistos = new Set([h.id]);
+    while (r.despuesDe && enHoy.has(r.despuesDe) && !vistos.has(r.despuesDe)) { r = enHoy.get(r.despuesDe); vistos.add(r.id); }
+    return r;
+  };
   let html = orden.map(m => {
-    const hs = hoyToca.filter(h => h.timeOfDay === m);
+    const hs = HE.ordenarConCadenas(hoyToca.filter(h => raiz(h).timeOfDay === m));
     if (!hs.length) return "";
     const nombre = HC.MOMENTOS.find(x => x.id === m).nombre;
     return `<section class="hb-grupo" aria-label="${nombre}">
       <h2 class="hb-grupo-t">${nombre}${m === actual ? ` <span class="hb-ahora">Ahora</span>` : ""}</h2>
-      <ul class="hb-filas">${hs.map(h => filaHtml(h, f)).join("")}</ul></section>`;
+      <ul class="hb-filas">${hs.map(h => filaHtml(h, f, raiz(h) !== h)).join("")}</ul></section>`;
   }).join("");
   if (noToca.length) {
     html += `<details class="hb-grupo hb-notoca"><summary class="hb-grupo-t">No tocan hoy (${noToca.length})</summary>
       <ul class="hb-filas">${noToca.map(h => filaHtml(h, f)).join("")}</ul></details>`;
   }
+  const tarde = new Date().getHours() >= 18 || new Date().getHours() < finDia();
+  html += `<div class="hb-pie">
+    ${tarde ? `<button type="button" class="hb-btn hb-cerrar-dia" data-cerrar-dia><span data-icon="check"></span>Cerrar el día</button>` : ""}
+    <div class="hb-pie-sec">
+      ${!tarde ? `<button type="button" class="hb-btn-sec" data-cerrar-dia>Cerrar el día</button>` : ""}
+      <button type="button" class="hb-btn-sec" data-ordenar><span data-icon="grip"></span>Ordenar</button>
+      <button type="button" class="hb-btn-sec" data-ajustes><span data-icon="tools"></span>Ajustes</button>
+    </div></div>`;
   const abierto = lista.querySelector(".hb-notoca") && lista.querySelector(".hb-notoca").open;
   lista.innerHTML = html;
   if (abierto) lista.querySelector(".hb-notoca").open = true;
@@ -430,6 +454,7 @@ function abrirHoja(html, actual) {
     hoja.addEventListener("click", onClickHoja);
     hoja.addEventListener("change", onCambioHoja);
     hoja.addEventListener("submit", onSubmitHoja);
+    hoja.addEventListener("pointerdown", empezarArrastre);
     document.addEventListener("keydown", e => { if (e.key === "Escape") cerrarHoja(); });
   }
   const body = hoja.querySelector(".hb-sheet-body");
@@ -457,12 +482,23 @@ const cabecera = (arriba, titulo, sub) => `
   </div>`;
 
 // ---------- Hoja: detalle de un hábito ----------
-function hojaDetalle(id) {
+let diaSel = null;       // fecha elegida en el calendario del detalle
+let mesSel = null;       // "AAAA-MM" que muestra el calendario
+let pausaAbierta = false;
+const NOMBRES_DIA = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"];
+const MESES_LARGOS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+
+function hojaDetalle(id, fecha) {
   const h = normal[id];
   const rh = res && res.habitos[id];
   if (!h || !rh) { cerrarHoja(); return; }
   const f = res.hoy;
-  const x = filaHoy(h, f);
+  if (!hojaActual || hojaActual.tipo !== "detalle" || hojaActual.id !== id) {
+    diaSel = f;
+    mesSel = f.slice(0, 7);
+    pausaAbierta = false;
+  }
+  if (fecha) diaSel = fecha;
   const area = HC.AREAS.find(a => a.id === h.area);
   const arriba = [area ? area.nombre : null, HC.DIFICULTADES[h.dificultad].nombre, freqTexto(h)].filter(Boolean).join(" · ");
   const c30 = HE.cumplimiento(rh, HE.addDias(f, -29), f);
@@ -472,7 +508,6 @@ function hojaDetalle(id) {
   const r = rh.racha;
   const unidad = r.unidad === "semanas" ? (r.actual === 1 ? "semana" : "semanas") : r.actual === 1 ? "día" : "días";
   const pct = v => (v == null ? "—" : `${Math.round(v * 100)} %`);
-  const nota = (docs[id] && docs[id].registros && docs[id].registros[f] && docs[id].registros[f].n) || "";
 
   abrirHoja(cabecera(escapeHtml(arriba), `${escapeHtml(h.emoji)} ${escapeHtml(h.name)}`, h.inicio ? `Desde el ${fechaCorta(h.inicio)}` : "") + `
     <div class="hb-stats">
@@ -481,13 +516,10 @@ function hojaDetalle(id) {
       <div class="hb-stat"><span class="hb-num">${pct(c30)}</span><span>${semanal ? "últimas semanas" : "últimos 30 días"}</span></div>
       <div class="hb-stat"><span class="hb-num">${pct(cTotal)}</span><span>${plural(totalHechos, "vez", "veces")} en total</span></div>
     </div>
-    ${x.pausa ? `<p class="hb-aviso">En pausa: hoy no cuenta.</p>` : ""}
-    <h4 class="hb-sub-t">Hoy</h4>
-    ${controlesHoy(h, x, f)}
-    ${h.minima && h.tipo !== "evitar" ? `<p class="hb-texto">Versión mínima: ${escapeHtml(h.minima)}</p>` : ""}
-    <label class="hb-campo"><span>Nota de hoy <span class="hb-opcional">(opcional)</span></span>
-      <input type="text" maxlength="140" data-nota="${id}" value="${escapeHtml(nota)}" placeholder="Cómo te fue, en pocas palabras">
-    </label>
+    ${calendarioHtml(h, rh)}
+    ${editorDia(h, rh, diaSel)}
+    ${h.tipo === "tiempo" && diaSel === f ? cronometroHtml(h) : ""}
+    ${pausasHtml(h)}
     <div class="hb-acciones">
       <button type="button" class="hb-btn-sec" data-editar="${id}"><span data-icon="edit"></span>Editar</button>
       <button type="button" class="hb-btn-sec" data-archivar="${id}">Archivar</button>
@@ -495,11 +527,66 @@ function hojaDetalle(id) {
     </div>`, { tipo: "detalle", id });
 }
 
-function controlesHoy(h, x, f) {
+// Calendario del mes: cada día con su estado; tocar uno lo abre para corregirlo.
+function calendarioHtml(h, rh) {
+  const f = res.hoy;
+  const [y, m] = mesSel.split("-").map(Number);
+  const semanas = HE.mesCalendario(y, m);
+  const minimo = HE.addDias(f, -730).slice(0, 7);
+  const celda = fe => {
+    if (!fe) return `<span class="hb-cal-vacio"></span>`;
+    const d = rh.dias[fe];
+    const reg = h.registros[fe];
+    const futuro = fe > f;
+    let c = "c-fuera", txt = "sin datos";
+    if (futuro) { c = "c-futuro"; txt = "todavía no llega"; }
+    else if (d) {
+      c = { cumple: "c-cumple", extra: "c-cumple", fallo: "c-fallo", pendiente: "c-pend", neutral: d.protegido ? "c-comodin" : "c-neutral", noToca: "c-notoca", fuera: "c-fuera" }[d.clase] || "c-fuera";
+      if (d.estado === "parcial" || d.estado === "minima") c += " c-parcial";
+      txt = d.protegido ? "cubierto por un comodín" : d.estado ? HC.ESTADOS[d.estado].nombre.toLowerCase() : { fallo: "no hecho", pendiente: "pendiente", noToca: "no tocaba", neutral: "en pausa", fuera: "sin datos" }[d.clase] || "";
+    }
+    const clases = ["hb-cal-dia", c, fe === diaSel ? "is-sel" : "", fe === f ? "is-hoy" : ""].filter(Boolean).join(" ");
+    return `<button type="button" class="${clases}" data-dia-cal="${fe}" ${futuro ? "disabled" : ""} aria-label="${fechaCorta(fe)}: ${txt}" aria-pressed="${fe === diaSel}">
+      ${Number(fe.slice(8))}${reg && reg.n ? `<i class="hb-cal-nota" aria-hidden="true"></i>` : ""}</button>`;
+  };
+  return `<div class="hb-cal">
+    <div class="hb-cal-nav">
+      <button type="button" class="hb-cal-flecha" data-mes="-1" ${mesSel <= minimo ? "disabled" : ""} aria-label="Mes anterior"><span data-icon="chevronLeft"></span></button>
+      <span class="hb-cal-mes">${MESES_LARGOS[m - 1]} ${y}</span>
+      <button type="button" class="hb-cal-flecha" data-mes="1" ${mesSel >= f.slice(0, 7) ? "disabled" : ""} aria-label="Mes siguiente"><span data-icon="chevronRight"></span></button>
+    </div>
+    <div class="hb-cal-grid">${DIAS_CORTOS.map(l => `<span class="hb-cal-wd">${l}</span>`).join("")}${semanas.flat().map(celda).join("")}</div>
+    <div class="hb-cal-leyenda"><span><i class="c-cumple"></i>Hecho</span><span><i class="c-cumple c-parcial"></i>Parcial o mínima</span><span><i class="c-neutral"></i>Saltado o pausa</span><span><i class="c-fallo"></i>No hecho</span></div>
+  </div>`;
+}
+
+function editorDia(h, rh, fe) {
+  const f = res.hoy;
+  const d = rh.dias[fe];
+  const [y, m, dd] = fe.split("-").map(Number);
+  const titulo = fe === f ? "Hoy" : fe === HE.addDias(f, -1) ? "Ayer" : `${NOMBRES_DIA[HE.diaSemana(fe)]} ${dd} de ${MESES_LARGOS[m - 1]}${y !== Number(f.slice(0, 4)) ? " de " + y : ""}`;
+  const x = { d: d || { estado: HE.estadoDia(h, fe).estado } };
+  const nota = (docs[h.id] && docs[h.id].registros && docs[h.id].registros[fe] && docs[h.id].registros[fe].n) || "";
+  const tarde = fe < HE.addDias(f, -2);
+  const pausa = HE.enPausa(h, fe);
+  return `<div class="hb-dia-edit">
+    <h4 class="hb-sub-t">${titulo.charAt(0).toUpperCase() + titulo.slice(1)}</h4>
+    ${pausa ? `<p class="hb-aviso">Este día está en pausa: no cuenta.</p>` : ""}
+    ${controlesDia(h, x, fe)}
+    ${h.minima && h.tipo !== "evitar" ? `<p class="hb-texto">Versión mínima: ${escapeHtml(h.minima)}</p>` : ""}
+    ${tarde ? `<p class="hb-texto">Corregir días de hace más de 2 días arregla tu racha, pero no da XP ni monedas.</p>` : ""}
+    <label class="hb-campo"><span>Nota ${fe === f ? "de hoy" : "del día"} <span class="hb-opcional">(opcional)</span></span>
+      <input type="text" maxlength="140" data-nota="${h.id}" data-fecha="${fe}" value="${escapeHtml(nota)}" placeholder="Cómo te fue, en pocas palabras">
+    </label>
+  </div>`;
+}
+
+function controlesDia(h, x, f) {
   const est = x.d.estado;
   const reg = h.registros[f];
+  const saltar = f === res.hoy ? "Saltar hoy" : "Saltado";
   const opcion = (valor, texto, activo) =>
-    `<button type="button" class="hb-chip${activo ? " is-on" : ""}" data-estado="${valor}" data-id="${h.id}" aria-pressed="${!!activo}">${texto}</button>`;
+    `<button type="button" class="hb-chip${activo ? " is-on" : ""}" data-estado="${valor}" data-id="${h.id}" data-fecha="${f}" aria-pressed="${!!activo}">${texto}</button>`;
   if (h.tipo === "evitar") {
     return `<div class="hb-chips">${opcion("limpio", "Día limpio", est !== "recaida")}${opcion("recaida", "Recaída", est === "recaida")}</div>`;
   }
@@ -508,22 +595,91 @@ function controlesHoy(h, x, f) {
     const v = (reg && reg.v) || 0;
     const paso = h.tipo === "tiempo" ? 5 : 1;
     html += `<div class="hb-stepper">
-      <button type="button" class="hb-step" data-sumar="${-paso}" data-id="${h.id}" aria-label="Restar ${paso}">−</button>
-      <label class="hb-step-val"><input type="number" inputmode="decimal" min="0" step="any" value="${v}" data-valor="${h.id}" aria-label="Valor de hoy"><span>de ${fmtNum(h.meta)} ${escapeHtml(h.unidad)}</span></label>
-      <button type="button" class="hb-step" data-sumar="${paso}" data-id="${h.id}" aria-label="Sumar ${paso}">+</button>
+      <button type="button" class="hb-step" data-sumar="${-paso}" data-id="${h.id}" data-fecha="${f}" aria-label="Restar ${paso}">−</button>
+      <label class="hb-step-val"><input type="number" inputmode="decimal" min="0" step="any" value="${v}" data-valor="${h.id}" data-fecha="${f}" aria-label="Valor del día"><span>de ${fmtNum(h.meta)} ${escapeHtml(h.unidad)}</span></label>
+      <button type="button" class="hb-step" data-sumar="${paso}" data-id="${h.id}" data-fecha="${f}" aria-label="Sumar ${paso}">+</button>
     </div>`;
-    html += `<div class="hb-chips">${opcion("minima", "Versión mínima", est === "minima")}${opcion("saltado", "Saltar hoy", est === "saltado")}</div>`;
+    html += `<div class="hb-chips">${opcion("minima", "Versión mínima", est === "minima")}${opcion("saltado", saltar, est === "saltado")}</div>`;
   } else {
     html += `<div class="hb-chips">
       ${opcion("hecho", "Hecho", est === "hecho")}${opcion("minima", "Versión mínima", est === "minima")}
-      ${opcion("parcial", "Parcial", est === "parcial")}${opcion("saltado", "Saltar hoy", est === "saltado")}
+      ${opcion("parcial", "Parcial", est === "parcial")}${opcion("saltado", saltar, est === "saltado")}
       ${opcion("no", "No hecho", est === "no")}</div>`;
   }
   if (est === "saltado") {
     html += `<p class="hb-texto">Motivo (no rompe tu racha ni da XP):</p><div class="hb-chips">${HC.MOTIVOS_SALTO.map(m =>
-      `<button type="button" class="hb-chip${reg && reg.m === m.id ? " is-on" : ""}" data-motivo="${m.id}" data-id="${h.id}" aria-pressed="${!!(reg && reg.m === m.id)}">${m.nombre}</button>`).join("")}</div>`;
+      `<button type="button" class="hb-chip${reg && reg.m === m.id ? " is-on" : ""}" data-motivo="${m.id}" data-id="${h.id}" data-fecha="${f}" aria-pressed="${!!(reg && reg.m === m.id)}">${m.nombre}</button>`).join("")}</div>`;
   }
   return html;
+}
+
+// ---------- Cronómetro (hábitos de tiempo) ----------
+// El inicio se guarda en el teléfono: si cierras la app, sigue contando.
+const CLAVE_CRONO = id => "hb-crono:" + id;
+function cronoInicio(id) {
+  try { const v = Number(localStorage.getItem(CLAVE_CRONO(id))); return v > 0 ? v : null; } catch (e) { return null; }
+}
+function cronoGuardar(id, v) {
+  try { if (v) localStorage.setItem(CLAVE_CRONO(id), String(v)); else localStorage.removeItem(CLAVE_CRONO(id)); } catch (e) { /* sin almacenamiento: el cronómetro no sobrevive a cerrar la app */ }
+}
+function textoCrono(inicio) {
+  const s = Math.max(0, Math.floor((Date.now() - inicio) / 1000));
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), seg = s % 60;
+  const p = n => String(n).padStart(2, "0");
+  return h ? `${h}:${p(m)}:${p(seg)}` : `${p(m)}:${p(seg)}`;
+}
+function cronometroHtml(h) {
+  const inicio = cronoInicio(h.id);
+  return `<div class="hb-crono-box">
+    ${inicio ? `<span class="hb-crono hb-num" data-inicio="${inicio}" role="timer" aria-live="off">${textoCrono(inicio)}</span>
+      <div class="hb-chips"><button type="button" class="hb-btn" data-crono-parar="${h.id}">Detener y sumar</button>
+      <button type="button" class="hb-btn-sec" data-crono-descartar="${h.id}">Descartar</button></div>`
+    : `<button type="button" class="hb-btn-sec" data-crono-iniciar="${h.id}">Iniciar cronómetro</button>`}
+  </div>`;
+}
+function cronoParar(id) {
+  const inicio = cronoInicio(id);
+  cronoGuardar(id, null);
+  if (!inicio) return;
+  const minutos = Math.max(1, Math.round((Date.now() - inicio) / 60000));
+  sumarValor(id, hoy(), minutos);
+  toast(`Sumaste ${minutos} min a «${normal[id].name}».`);
+}
+setInterval(() => {
+  document.querySelectorAll(".hb-crono[data-inicio]").forEach(el => { el.textContent = textoCrono(Number(el.dataset.inicio)); });
+}, 1000);
+
+// ---------- Pausas por fechas ----------
+function pausasHtml(h) {
+  const lista = h.pausas.slice().sort((a, b) => b.desde.localeCompare(a.desde));
+  const f = res.hoy;
+  return `<h4 class="hb-sub-t">Pausas</h4>
+    ${lista.length ? `<ul class="hb-pausas">${lista.map(p => `<li><span>${fechaCorta(p.desde)} – ${fechaCorta(p.hasta)}${p.hasta < f ? " · terminó" : p.desde <= f ? " · ahora" : ""}</span>
+      <button type="button" class="hb-btn-sec" data-quitar-pausa="${h.id}" data-desde="${p.desde}" data-hasta="${p.hasta}">Quitar</button></li>`).join("")}</ul>` : ""}
+    ${pausaAbierta ? `<div class="hb-pausa-form">
+        <div class="hb-fila-campos">
+          <label class="hb-campo">Desde<input type="date" data-pausa-desde value="${f}"></label>
+          <label class="hb-campo">Hasta<input type="date" data-pausa-hasta value="${HE.addDias(f, 6)}"></label>
+        </div>
+        <p class="hb-texto">Los días en pausa no cuentan: ni cortan tu racha ni la suman. Ideal para vacaciones o si estás enfermo.</p>
+        <div class="hb-chips"><button type="button" class="hb-btn" data-guardar-pausa="${h.id}">Guardar pausa</button>
+          <button type="button" class="hb-btn-sec" data-cancelar-pausa>Cancelar</button></div>
+      </div>`
+    : `<button type="button" class="hb-btn-sec" data-pausar>Pausar por unas fechas</button>`}`;
+}
+
+function guardarPausa(id) {
+  const desde = hoja.querySelector("[data-pausa-desde]").value;
+  const hasta = hoja.querySelector("[data-pausa-hasta]").value;
+  if (!desde || !hasta || desde > hasta) { toast("Revisa las fechas: «Hasta» no puede ser antes de «Desde»."); return; }
+  const pausas = normal[id].pausas.concat([{ desde, hasta }]);
+  pausaAbierta = false;
+  coleccion().doc(id).update({ pausas }).catch(errorGuardar);
+  toast(`Pausado del ${fechaCorta(desde)} al ${fechaCorta(hasta)}.`);
+}
+function quitarPausa(id, desde, hasta) {
+  const pausas = normal[id].pausas.filter(p => !(p.desde === desde && p.hasta === hasta));
+  coleccion().doc(id).update({ pausas }).catch(errorGuardar);
 }
 
 // ---------- Hoja: crear / editar ----------
@@ -544,7 +700,9 @@ function formDesde(h) {
     timeOfDay: h ? h.timeOfDay : momentoActual(),
     dificultad: h ? h.dificultad : "media",
     area: h ? h.area : null,
-    minima: h ? h.minima : ""
+    minima: h ? h.minima : "",
+    despuesDe: h ? h.despuesDe || "" : "",
+    vinculo: h ? h.vinculo || "" : ""
   };
 }
 
@@ -591,6 +749,13 @@ function hojaForm(id) {
       <span class="hb-label">Área de vida</span>
       ${chips("area", HC.AREAS.map(a => [a.id, a.nombre]).concat([["", "Sin área"]]), f.area || "")}
 
+      <label class="hb-campo"><span>Después de <span class="hb-opcional">(opcional)</span></span>
+        <select name="despuesDe">${opcionesCadena(f)}</select>
+        <span class="hb-ayuda">Encadénalo a otro hábito: “Después de meditar, leeré”. Se muestran en secuencia.</span></label>
+
+      <span class="hb-label">Se marca solo</span>
+      ${chips("vinculo", [["", "No"], ["gimnasio", "Al guardar un entreno"]], f.vinculo)}
+
       ${evitar ? "" : `<label class="hb-campo"><span>Versión mínima <span class="hb-opcional">(opcional)</span></span>
         <input type="text" name="minima" maxlength="60" value="${escapeHtml(f.minima)}" placeholder="Ej: leer 1 página">
         <span class="hb-ayuda">Para los días difíciles: mantiene tu racha con menos XP.</span></label>`}
@@ -603,10 +768,17 @@ function hojaForm(id) {
     </form>`, { tipo: "form", id: f.id || "nuevo" });
 }
 
+// Hábitos a los que se puede encadenar (sin crear una vuelta).
+function opcionesCadena(f) {
+  const candidatos = activos().filter(h => h.id !== f.id && !(f.id && HE.formaCiclo({ id: f.id, despuesDe: h.id }, new Map(Object.keys(normal).map(k => [k, normal[k]])))));
+  return `<option value="">Ninguno</option>` + candidatos.map(h =>
+    `<option value="${h.id}"${h.id === f.despuesDe ? " selected" : ""}>${escapeHtml(h.emoji)} ${escapeHtml(h.name)}</option>`).join("");
+}
+
 // Pasa lo escrito en los campos de texto a `form` antes de redibujar.
 function leerCampos() {
   if (!hoja) return;
-  hoja.querySelectorAll(".hb-form input[name]").forEach(i => { form[i.name] = i.value; });
+  hoja.querySelectorAll(".hb-form input[name], .hb-form select[name]").forEach(i => { form[i.name] = i.value; });
 }
 
 function guardarForm() {
@@ -626,7 +798,9 @@ function guardarForm() {
     timeOfDay: f.timeOfDay,
     dificultad: f.dificultad,
     area: f.area || null,
-    minima: f.tipo === "evitar" ? "" : String(f.minima || "").trim()
+    minima: f.tipo === "evitar" ? "" : String(f.minima || "").trim(),
+    despuesDe: f.despuesDe || null,
+    vinculo: f.vinculo || null
   };
   if (medible) {
     datos.meta = Math.max(1, Number(String(f.meta).replace(",", ".")) || HC.CONST.META_DEFECTO[f.tipo]);
@@ -673,23 +847,189 @@ function eliminar(id) {
   toast(`Eliminaste «${nombre}».`, () => coleccion().doc(id).set(copia).catch(errorGuardar));
 }
 
+// ---------- Hoja: ordenar (arrastrando o con flechas) ----------
+function hojaOrdenar() {
+  const lista = activos();
+  abrirHoja(cabecera("", "Ordenar hábitos", "Arrastra desde el asa o usa las flechas") + `
+    <ul class="hb-orden" id="hb-orden">${lista.map(h => `
+      <li class="hb-orden-item" data-id="${h.id}">
+        <span class="hb-orden-mango" data-mango aria-hidden="true"><span data-icon="grip"></span></span>
+        <span class="hb-emoji" aria-hidden="true">${escapeHtml(h.emoji)}</span>
+        <span class="hb-orden-txt"><span class="hb-nombre">${escapeHtml(h.name)}</span><span class="hb-sub">${HC.MOMENTOS.find(m => m.id === h.timeOfDay).nombre}</span></span>
+        <button type="button" class="hb-orden-flecha" data-mover="-1" aria-label="Subir ${escapeHtml(h.name)}">↑</button>
+        <button type="button" class="hb-orden-flecha" data-mover="1" aria-label="Bajar ${escapeHtml(h.name)}">↓</button>
+      </li>`).join("")}</ul>
+    <p class="hb-texto">En Hoy se agrupan por momento del día; este orden manda dentro de cada grupo.</p>
+    <div class="hb-acciones">
+      <button type="button" class="hb-btn-sec" data-cerrar>Cancelar</button>
+      <button type="button" class="hb-btn" data-guardar-orden>Guardar orden</button>
+    </div>`, { tipo: "ordenar" });
+}
+
+let arrastre = null;
+function empezarArrastre(e) {
+  const mango = e.target.closest("[data-mango]");
+  if (!mango) return;
+  const item = mango.closest(".hb-orden-item");
+  e.preventDefault();
+  arrastre = { item, lista: item.parentElement };
+  item.classList.add("is-arrastrando");
+  document.addEventListener("pointermove", moverArrastre);
+  document.addEventListener("pointerup", terminarArrastre, { once: true });
+  document.addEventListener("pointercancel", terminarArrastre, { once: true });
+}
+function moverArrastre(e) {
+  if (!arrastre) return;
+  const otros = [...arrastre.lista.children].filter(li => li !== arrastre.item);
+  const antes = otros.find(li => { const r = li.getBoundingClientRect(); return e.clientY < r.top + r.height / 2; });
+  if (antes) arrastre.lista.insertBefore(arrastre.item, antes);
+  else arrastre.lista.appendChild(arrastre.item);
+}
+function terminarArrastre() {
+  if (!arrastre) return;
+  arrastre.item.classList.remove("is-arrastrando");
+  arrastre = null;
+  document.removeEventListener("pointermove", moverArrastre);
+}
+function guardarOrden() {
+  const ids = [...hoja.querySelectorAll(".hb-orden-item")].map(li => li.dataset.id);
+  const lote = db.batch();
+  let cambios = 0;
+  ids.forEach((id, i) => {
+    if (normal[id] && normal[id].orden !== i + 1) { lote.update(coleccion().doc(id), { orden: i + 1 }); cambios++; }
+  });
+  cerrarHoja();
+  if (!cambios) return;
+  lote.commit().catch(errorGuardar);
+  toast("Orden guardado.");
+}
+
+// ---------- Hoja: ajustes ----------
+function hojaAjustes() {
+  const fin = finDia();
+  const archivados = Object.keys(normal).map(id => normal[id]).filter(h => h.archivado);
+  const hora = n => (n === 0 ? "Medianoche" : `${n}:00 a. m.`);
+  abrirHoja(cabecera("", "Ajustes de hábitos") + `
+    <h4 class="hb-sub-t">Tu día termina a las</h4>
+    <div class="hb-chips">${Array.from({ length: HC.CONST.FIN_DIA_MAX + 1 }, (_, n) =>
+      `<button type="button" class="hb-chip${n === fin ? " is-on" : ""}" data-fin-dia="${n}" aria-pressed="${n === fin}">${hora(n)}</button>`).join("")}</div>
+    <p class="hb-texto">Si te acuestas tarde, lo que marques antes de esa hora cuenta para el día anterior. Ahora es ${fechaCorta(hoy())} para tus hábitos.</p>
+    <h4 class="hb-sub-t">Archivados</h4>
+    ${archivados.length ? `<ul class="hb-pausas">${archivados.map(h => `<li><span>${escapeHtml(h.emoji)} ${escapeHtml(h.name)}${h.archivadoEn ? ` · desde el ${fechaCorta(h.archivadoEn)}` : ""}</span>
+      <span class="hb-chips"><button type="button" class="hb-btn-sec" data-restaurar="${h.id}">Restaurar</button>
+      <button type="button" class="hb-btn-sec is-peligro" data-eliminar="${h.id}" aria-label="Eliminar ${escapeHtml(h.name)}"><span data-icon="trash"></span></button></span></li>`).join("")}</ul>`
+      : `<p class="hb-texto">No tienes hábitos archivados. Archivar guarda el historial sin mostrarlo en Hoy.</p>`}`, { tipo: "ajustes" });
+}
+function guardarFinDia(n) {
+  juego = Object.assign({}, juego, { prefs: Object.assign({}, juego.prefs, { finDia: n }) });
+  metaJuego().set({ prefs: { finDia: n } }, { merge: true }).catch(errorGuardar);
+  actualizar();
+  hojaAjustes();
+}
+function restaurar(id) {
+  coleccion().doc(id).update({ archivado: false, archivadoEn: FV().delete() }).catch(errorGuardar);
+  toast(`«${normal[id].name}» volvió a Hoy.`);
+}
+
+// ---------- Hoja: cerrar el día ----------
+const ANIMOS = [[1, "😞", "Muy mal"], [2, "🙁", "Mal"], [3, "😐", "Normal"], [4, "🙂", "Bien"], [5, "😄", "Muy bien"]];
+function hojaCierre() {
+  const f = res.hoy;
+  const pendientes = activos().filter(h => {
+    if (h.tipo === "evitar" || !HE.activoEn(h, f)) return false;
+    const x = filaHoy(h, f);
+    return x.toca && !x.hecho && !(x.semanal && x.semanaOk) && x.d.estado !== "saltado";
+  });
+  const dia = diasMeta[f] || {};
+  const xpHoy = HE.xpDelDiaTotal(res, f);
+  const perfecto = res.diasPerfectos.some(p => p.fecha === f);
+  const p = progresoHoy(f);
+  abrirHoja(cabecera(fechaCorta(f), "Cerrar el día") + `
+    <div class="hb-cierre-top">
+      <div class="hb-stat"><span class="hb-num">+${fmtNum(xpHoy)}</span><span>XP ganado hoy</span></div>
+      <div class="hb-stat"><span class="hb-num">${p.hechos}/${p.total}</span><span>${perfecto ? "¡Día perfecto!" : "hábitos de hoy"}</span></div>
+    </div>
+    <h4 class="hb-sub-t">${pendientes.length ? "Te quedan pendientes" : "No te queda nada pendiente"}</h4>
+    ${pendientes.length ? `<ul class="hb-filas">${pendientes.map(h => filaHtml(h, f)).join("")}</ul>
+      <p class="hb-texto">Si hoy no tocaba o no pudiste, ábrelo y márcalo como saltado: no corta la racha.</p>` : ""}
+    <h4 class="hb-sub-t">¿Cómo te sentiste hoy?</h4>
+    <div class="hb-animos" role="group" aria-label="Ánimo del día">${ANIMOS.map(([n, emoji, t]) =>
+      `<button type="button" class="hb-animo${dia.animo === n ? " is-on" : ""}" data-animo="${n}" aria-pressed="${dia.animo === n}" aria-label="${t}"><span aria-hidden="true">${emoji}</span><small>${t}</small></button>`).join("")}</div>
+    <label class="hb-campo"><span>Nota del día <span class="hb-opcional">(opcional)</span></span>
+      <input type="text" maxlength="200" data-nota-dia value="${escapeHtml(dia.nota || "")}" placeholder="Algo que quieras recordar de hoy"></label>
+    <div class="hb-acciones"><button type="button" class="hb-btn" data-cerrar>Listo</button></div>`, { tipo: "cierre" });
+}
+function guardarDiaMeta(campos) {
+  const f = res.hoy;
+  diasMeta[f] = Object.assign({}, diasMeta[f], campos);
+  metaDias().set({ dias: { [f]: campos } }, { merge: true }).catch(errorGuardar);
+}
+
+// ---------- Marcado automático desde otros módulos ----------
+// Gimnasio avisa con "entreno:guardado" ({ fecha }). Otros módulos pueden
+// avisar con: document.dispatchEvent(new CustomEvent("habito:auto", { detail: { modulo, fecha } })).
+function autoMarcar(modulo, fecha) {
+  if (!cargado) { pendientesAuto.push([modulo, fecha]); return; }
+  const f = /^\d{4}-\d{2}-\d{2}$/.test(fecha || "") ? fecha : hoy();
+  const marcados = [];
+  Object.keys(normal).map(id => normal[id]).forEach(h => {
+    if (h.vinculo !== modulo || h.archivado || h.tipo === "evitar") return;
+    if (HE.cumple(HE.estadoDia(h, f))) return;
+    if (h.tipo === "medible" || h.tipo === "tiempo") guardarDia(h.id, f, { v: h.meta, t: Date.now() });
+    else guardarDia(h.id, f, { e: "hecho", t: Date.now() });
+    marcados.push(`«${h.name}»`);
+  });
+  if (marcados.length) toast(`Marcado solo: ${marcados.join(", ")}${f === hoy() ? "" : ` (${fechaCorta(f)})`}.`);
+}
+document.addEventListener("entreno:guardado", e => autoMarcar("gimnasio", e.detail && e.detail.fecha));
+document.addEventListener("habito:auto", e => { const d = e.detail || {}; if (d.modulo) autoMarcar(d.modulo, d.fecha); });
+
 // ---------- Eventos ----------
 function onClickHoja(e) {
   const t = e.target;
   if (t.closest("[data-cerrar]")) { cerrarHoja(); return; }
   const q = sel => t.closest(sel);
+  const fechaDe = el => el.dataset.fecha || res.hoy;
   let b;
+  if ((b = q("[data-marcar]"))) { marcar(b.dataset.marcar); return; }
   if ((b = q("[data-detalle]"))) { hojaDetalle(b.dataset.detalle); return; }
   if ((b = q("[data-editar]"))) { hojaForm(b.dataset.editar); return; }
   if ((b = q("[data-archivar]"))) { archivar(b.dataset.archivar); return; }
   if ((b = q("[data-eliminar]"))) { confirmarEliminar(b.dataset.eliminar); return; }
   if ((b = q("[data-confirmar-eliminar]"))) { eliminar(b.dataset.confirmarEliminar); return; }
-  if ((b = q("[data-estado]"))) { cambiarEstado(b.dataset.id, b.dataset.estado); return; }
+  if ((b = q("[data-restaurar]"))) { restaurar(b.dataset.restaurar); return; }
+  if ((b = q("[data-estado]"))) { cambiarEstado(b.dataset.id, b.dataset.estado, fechaDe(b)); return; }
   if ((b = q("[data-motivo]"))) {
-    guardarDia(b.dataset.id, res.hoy, { e: "saltado", m: b.dataset.motivo, t: Date.now() });
+    guardarDia(b.dataset.id, fechaDe(b), { e: "saltado", m: b.dataset.motivo, t: Date.now() });
     return;
   }
-  if ((b = q("[data-sumar]"))) { sumarValor(b.dataset.id, res.hoy, Number(b.dataset.sumar)); return; }
+  if ((b = q("[data-sumar]"))) { sumarValor(b.dataset.id, fechaDe(b), Number(b.dataset.sumar)); return; }
+  // Detalle: calendario, pausas y cronómetro
+  if ((b = q("[data-dia-cal]"))) { hojaDetalle(hojaActual.id, b.dataset.diaCal); return; }
+  if ((b = q("[data-mes]"))) {
+    const [y, m] = mesSel.split("-").map(Number);
+    const d = new Date(y, m - 1 + Number(b.dataset.mes), 1);
+    mesSel = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    hojaDetalle(hojaActual.id);
+    return;
+  }
+  if (q("[data-pausar]")) { pausaAbierta = true; hojaDetalle(hojaActual.id); return; }
+  if (q("[data-cancelar-pausa]")) { pausaAbierta = false; hojaDetalle(hojaActual.id); return; }
+  if ((b = q("[data-guardar-pausa]"))) { guardarPausa(b.dataset.guardarPausa); return; }
+  if ((b = q("[data-quitar-pausa]"))) { quitarPausa(b.dataset.quitarPausa, b.dataset.desde, b.dataset.hasta); return; }
+  if ((b = q("[data-crono-iniciar]"))) { cronoGuardar(b.dataset.cronoIniciar, Date.now()); hojaDetalle(b.dataset.cronoIniciar); renderHoy(); return; }
+  if ((b = q("[data-crono-parar]"))) { cronoParar(b.dataset.cronoParar); return; }
+  if ((b = q("[data-crono-descartar]"))) { cronoGuardar(b.dataset.cronoDescartar, null); hojaDetalle(b.dataset.cronoDescartar); renderHoy(); return; }
+  // Ordenar, ajustes y cierre del día
+  if ((b = q("[data-mover]"))) {
+    const li = b.closest(".hb-orden-item");
+    const otro = Number(b.dataset.mover) < 0 ? li.previousElementSibling : li.nextElementSibling;
+    if (otro) { Number(b.dataset.mover) < 0 ? li.parentElement.insertBefore(li, otro) : li.parentElement.insertBefore(otro, li); b.focus(); }
+    return;
+  }
+  if (q("[data-guardar-orden]")) { guardarOrden(); return; }
+  if ((b = q("[data-fin-dia]"))) { guardarFinDia(Number(b.dataset.finDia)); return; }
+  if ((b = q("[data-animo]"))) { guardarDiaMeta({ animo: Number(b.dataset.animo) }); hojaCierre(); return; }
   // Formulario: botones que cambian un campo y redibujan.
   if ((b = q("[data-campo]"))) {
     leerCampos();
@@ -705,10 +1045,9 @@ function onClickHoja(e) {
   }
 }
 
-function cambiarEstado(id, estado) {
+function cambiarEstado(id, estado, f) {
   const h = normal[id];
-  const f = res.hoy;
-  const actual = filaHoy(h, f).d.estado;
+  const actual = HE.estadoDia(h, f).estado;
   pendienteXP = { id, xp: res.xp };
   if (h.tipo === "evitar") {
     guardarDia(id, f, estado === "recaida" ? { e: "recaida", t: Date.now() } : null);
@@ -722,15 +1061,18 @@ function cambiarEstado(id, estado) {
 
 function onCambioHoja(e) {
   const t = e.target;
+  const f = t.dataset.fecha || res.hoy;
   if (t.dataset.nota) {
     const v = t.value.trim().slice(0, 140);
-    coleccion().doc(t.dataset.nota).update(FP("registros", res.hoy, "n"), v || FV().delete()).catch(errorGuardar);
+    coleccion().doc(t.dataset.nota).update(FP("registros", f, "n"), v || FV().delete()).catch(errorGuardar);
     return;
   }
   if (t.dataset.valor) {
     const v = Number(String(t.value).replace(",", "."));
-    if (isFinite(v)) fijarValor(t.dataset.valor, res.hoy, v);
+    if (isFinite(v)) fijarValor(t.dataset.valor, f, v);
+    return;
   }
+  if (t.hasAttribute("data-nota-dia")) guardarDiaMeta({ nota: t.value.trim().slice(0, 200) });
 }
 
 function onSubmitHoja(e) {
@@ -743,7 +1085,10 @@ document.getElementById("hb-lista").addEventListener("click", e => {
   if (m) { marcar(m.dataset.marcar); return; }
   const d = e.target.closest("[data-detalle]");
   if (d) { hojaDetalle(d.dataset.detalle); return; }
-  if (e.target.closest("[data-nuevo]")) hojaForm(null);
+  if (e.target.closest("[data-nuevo]")) { hojaForm(null); return; }
+  if (e.target.closest("[data-cerrar-dia]")) { hojaCierre(); return; }
+  if (e.target.closest("[data-ordenar]")) { hojaOrdenar(); return; }
+  if (e.target.closest("[data-ajustes]")) hojaAjustes();
 });
 document.getElementById("hb-nuevo").addEventListener("click", () => hojaForm(null));
 
@@ -842,6 +1187,7 @@ function actualizar() {
   renderHoy();
   renderStats();
   if (hojaActual && hojaActual.tipo === "detalle") hojaDetalle(hojaActual.id);
+  else if (hojaActual && hojaActual.tipo === "cierre") hojaCierre();
   if (pendienteXP) {
     const ganado = res.xp - pendienteXP.xp;
     if (ganado > 0 && !reducirMovimiento()) mostrarXP(pendienteXP.id, ganado);
@@ -870,7 +1216,12 @@ onAuthReady(() => {
     ultimoHoy = hoy();
     ultimoMomento = momentoActual();
     actualizar();
+    while (pendientesAuto.length) autoMarcar(...pendientesAuto.shift());
   }, err => console.error("No se pudieron leer los hábitos", err));
+
+  metaDias().onSnapshot(doc => {
+    diasMeta = (doc.exists && doc.data() && doc.data().dias) || {};
+  }, err => console.error("No se pudo leer meta/habitos_dias", err));
 
   metaJuego().onSnapshot(doc => {
     juego = doc.exists ? doc.data() || {} : {};
