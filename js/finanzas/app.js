@@ -1001,19 +1001,49 @@ function gastoRows() {
   }).sort((a, b) => b.amount - a.amount);
 }
 
+// Anillo sin encimarse: cada tramo ocupa al menos lo que mide su punta
+// redonda más un espacio, y las categorías muy chicas (menos del 3 %) se
+// juntan en un solo tramo gris "Otras" (la lista de abajo las muestra todas).
+const ANILLO_MIN_PCT = 0.03;
+function tramosAnillo(rows) {
+  const total = rows.reduce((s, x) => s + x.amount, 0);
+  if (!(total > 0)) return [];
+  const grandes = rows.filter(r => r.amount / total >= ANILLO_MIN_PCT);
+  const chicas = rows.filter(r => r.amount / total < ANILLO_MIN_PCT);
+  const tramos = grandes.map(r => ({ id: r.id, color: r.color, amount: r.amount, ids: [r.id] }));
+  if (chicas.length === 1) tramos.push({ id: chicas[0].id, color: chicas[0].color, amount: chicas[0].amount, ids: [chicas[0].id] });
+  else if (chicas.length > 1) tramos.push({ id: "__otras", color: "#77756f", amount: chicas.reduce((s, x) => s + x.amount, 0), ids: chicas.map(x => x.id) });
+  return tramos;
+}
 function gastoRingSVG(rows, selectedId) {
   const size = 260, stroke = 22, r = (size - stroke) / 2 - 8, c = 2 * Math.PI * r;
-  const total = rows.reduce((s, x) => s + x.amount, 0);
-  const gap = rows.length > 1 ? stroke + 10 : stroke + 12;
-  let offset = gap / 2;
-  const arcs = total > 0 ? rows.map(row => {
-    const len = Math.max((row.amount / total) * c - gap, 2);
-    const arc = `<circle class="gasto-arc${selectedId && row.id !== selectedId ? " dim" : ""}" data-gasto-pick="${row.id}" cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none"
-      style="stroke:${row.color}" stroke-width="${stroke}" stroke-linecap="round"
-      stroke-dasharray="${len} ${c - len}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${size / 2} ${size / 2})"/>`;
-    offset += (row.amount / total) * c;
-    return arc;
-  }).join("") : `<circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" style="stroke:var(--border)" stroke-width="${stroke}"/>`;
+  const tramos = tramosAnillo(rows);
+  const total = tramos.reduce((s, x) => s + x.amount, 0);
+  let arcs;
+  if (!tramos.length) {
+    arcs = `<circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" style="stroke:var(--border)" stroke-width="${stroke}"/>`;
+  } else if (tramos.length === 1) {
+    arcs = `<circle class="gasto-arc" data-gasto-pick="${tramos[0].id}" cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" style="stroke:${tramos[0].color}" stroke-width="${stroke}"/>`;
+  } else {
+    const gap = 8;
+    const minimo = stroke + gap; // lo que ocupa una punta redonda + el espacio
+    // Los tramos chicos reciben el mínimo; el resto se reparte en proporción.
+    let largos = tramos.map(t => t.amount / total * c);
+    const chicos = largos.map(l => l < minimo);
+    const libre = c - chicos.filter(Boolean).length * minimo;
+    const sumaGrandes = largos.reduce((s, l, i) => s + (chicos[i] ? 0 : l), 0);
+    largos = largos.map((l, i) => (chicos[i] ? minimo : l / sumaGrandes * libre));
+    let inicio = 0;
+    const elegido = selectedId && (tramos.find(t => t.ids.includes(selectedId)) || {}).id;
+    arcs = tramos.map((t, i) => {
+      const trazo = Math.max(largos[i] - minimo, 0.01);
+      const desde = inicio + gap / 2 + stroke / 2;
+      inicio += largos[i];
+      return `<circle class="gasto-arc${elegido && t.id !== elegido ? " dim" : ""}"${t.id === "__otras" ? "" : ` data-gasto-pick="${t.id}"`} cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none"
+        style="stroke:${t.color}" stroke-width="${stroke}" stroke-linecap="round"
+        stroke-dasharray="${trazo.toFixed(2)} ${(c - trazo).toFixed(2)}" stroke-dashoffset="${(-desde).toFixed(2)}" transform="rotate(-90 ${size / 2} ${size / 2})"/>`;
+    }).join("");
+  }
   return `<svg viewBox="0 0 ${size} ${size}" aria-hidden="true">
     <defs><filter id="gasto-glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
     <g filter="url(#gasto-glow)">${arcs}</g>
@@ -4961,6 +4991,42 @@ function renderAll() {
     try { fn(); } catch (err) { console.error("Manolo: falló " + fn.name, err); }
   });
 }
+// ---- Montos que siempre caben ----
+// Si un número no entra en su espacio (montos grandes o pantallas chicas),
+// se achica la letra lo justo para que entre, sin cortarlo ni encimarse.
+const NUMEROS_AJUSTABLES = [".txn-summary strong", ".an-kpi strong", ".gasto-center-value", ".vg-big",
+  ".remain-gauge-value", ".fin-cartera-valor", ".pres-card-queda", ".budget-summary-value", ".cat-detail-remaining"].join(", ");
+function ajustarNumeros(raizEl) {
+  const els = (raizEl || document).querySelectorAll(NUMEROS_AJUSTABLES);
+  els.forEach(el => { el.style.fontSize = ""; });
+  // Cuánto hay que achicar cada uno (1 = cabe).
+  const escala = new Map();
+  els.forEach(el => {
+    const ancho = el.clientWidth;
+    escala.set(el, !ancho || el.scrollWidth <= ancho + 1 ? 1 : Math.max(ancho / el.scrollWidth * 0.97, 0.5));
+  });
+  // Los números de una misma fila (Ingresos · Gastos · Saldo, los cuadritos
+  // de Análisis) quedan todos del mismo tamaño: el del que más se achicó.
+  document.querySelectorAll(".txn-summary, .an-kpis").forEach(grupo => {
+    const miembros = Array.from(grupo.querySelectorAll(NUMEROS_AJUSTABLES)).filter(el => escala.has(el));
+    const min = Math.min(1, ...miembros.map(el => escala.get(el)));
+    miembros.forEach(el => escala.set(el, min));
+  });
+  els.forEach(el => {
+    const k = escala.get(el);
+    if (k < 1) el.style.fontSize = `${(parseFloat(getComputedStyle(el).fontSize) * k).toFixed(2)}px`;
+  });
+}
+let ajustePendiente = false;
+function pedirAjusteNumeros() {
+  if (ajustePendiente) return;
+  ajustePendiente = true;
+  requestAnimationFrame(() => { ajustePendiente = false; if (finanzasVisible()) ajustarNumeros(); });
+}
+window.addEventListener("resize", pedirAjusteNumeros);
+window.addEventListener("hashchange", pedirAjusteNumeros);
+new MutationObserver(pedirAjusteNumeros).observe(document.getElementById("app-content") || document.body, { childList: true, subtree: true });
+
 function pedirRender() {
   if (!finanzasVisible()) { renderPendiente = true; return; }
   if (renderProgramado) return;
