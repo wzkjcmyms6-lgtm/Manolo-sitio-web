@@ -242,11 +242,14 @@ window.addEventListener("hashchange", router);
 document.addEventListener("DOMContentLoaded", router);
 
 // Fecha y hora arriba (ej: "Mié 24 sept · 13:20"), se actualiza cada minuto.
+// Se arma a mano (sin Intl): la primera fecha con Intl carga datos del idioma
+// y frena la apertura de la app.
+const RELOJ_DIAS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+const RELOJ_MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sept", "oct", "nov", "dic"];
 function renderClock() {
   const now = new Date();
-  const day = now.toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" }).replace(/\./g, "").replace(",", "");
-  const time = now.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
-  const text = `${day.charAt(0).toUpperCase()}${day.slice(1)} · ${time}`;
+  const dos = n => String(n).padStart(2, "0");
+  const text = `${RELOJ_DIAS[now.getDay()]} ${now.getDate()} ${RELOJ_MESES[now.getMonth()]} · ${dos(now.getHours())}:${dos(now.getMinutes())}`;
   document.querySelectorAll("[data-clock]").forEach(el => { el.textContent = text; });
 }
 renderClock();

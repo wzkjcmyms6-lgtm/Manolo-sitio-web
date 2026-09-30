@@ -86,18 +86,20 @@ function buscar(consulta, limite) {
   return ExerciseSearch.buscar(estado.indice, consulta, limite);
 }
 
-fetch(RUTA_BASE)
-  .then(r => r.json())
-  .then(json => {
-    estado.base = json.ejercicios || [];
-    estado.destacados = json.destacados || 0;
-    estado.cargado.base = true;
-    reconstruirIndice();
-    avisar();
-  })
-  .catch(err => console.error("No se pudo cargar la base de ejercicios", err));
-
 onAuthReady(() => {
+  // La base de ejercicios (y su índice de búsqueda, que cuesta armar) solo
+  // hace falta con la sesión iniciada: así no frena la pantalla de ingreso.
+  fetch(RUTA_BASE)
+    .then(r => r.json())
+    .then(json => {
+      estado.base = json.ejercicios || [];
+      estado.destacados = json.destacados || 0;
+      estado.cargado.base = true;
+      reconstruirIndice();
+      avisar();
+    })
+    .catch(err => console.error("No se pudo cargar la base de ejercicios", err));
+
   coleccion("entrenamientos").onSnapshot(CON_METADATOS, snap => {
     estado.registros.gimnasio = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     if (delServidor(snap)) estado.cargado.gimnasio = true;
