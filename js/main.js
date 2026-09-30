@@ -30,3 +30,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderVerse("verse-banner");
 });
+
+// Zoom con dos dedos permitido (accesibilidad). Pero el iPhone acerca la
+// pantalla solo al tocar un campo con letra de menos de 16 px; para que eso
+// no pase (ni cambie el diseño), mientras escribes se fija la escala y al
+// salir del campo se vuelve a permitir el zoom.
+(function () {
+  const vp = document.querySelector('meta[name="viewport"]');
+  if (!vp) return;
+  const libre = vp.content;
+  const fijo = libre + ", maximum-scale=1";
+  const esCampo = t => t && t.closest && t.closest("input, select, textarea");
+  const fijar = e => { if (esCampo(e.target)) vp.content = fijo; };
+  document.addEventListener("touchstart", fijar, { capture: true, passive: true });
+  document.addEventListener("focusin", fijar);
+  document.addEventListener("focusout", () => {
+    setTimeout(() => { if (!esCampo(document.activeElement)) vp.content = libre; }, 300);
+  });
+})();

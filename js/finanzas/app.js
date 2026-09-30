@@ -3422,26 +3422,47 @@ const RENDERERS = [
   updateBudgetMonthLabel, renderBudgets, renderBudgetInputs, renderBudgetSummary, renderBudgetInfo,
   renderCategoryGroups, renderPeriodSettings, renderWallets, updateExportSummary, renderReiva
 ];
+// Finanzas solo se dibuja cuando se ve: si estás en otra sección, los
+// cambios quedan marcados y se dibujan al entrar (así no frena el resto de
+// Manolo, sobre todo al abrir la app). Los avisos de Firestore que llegan
+// juntos se agrupan en un solo dibujo por cuadro.
+let renderPendiente = false;
+let renderProgramado = false;
+function finanzasVisible() {
+  return !!document.querySelector('#panel-finanzas:not([hidden]), [id^="panel-fin-"]:not([hidden])');
+}
 function renderAll() {
+  if (!finanzasVisible()) { renderPendiente = true; return; }
+  renderPendiente = false;
   RENDERERS.forEach(fn => {
     try { fn(); } catch (err) { console.error("Manolo: falló " + fn.name, err); }
   });
 }
+function pedirRender() {
+  if (!finanzasVisible()) { renderPendiente = true; return; }
+  if (renderProgramado) return;
+  renderProgramado = true;
+  requestAnimationFrame(() => { renderProgramado = false; renderAll(); });
+}
+// Al entrar a cualquier pantalla de Finanzas se dibuja lo pendiente antes de
+// que se vea (el observador corre antes de pintar).
+new MutationObserver(() => { if (renderPendiente && finanzasVisible()) renderAll(); })
+  .observe(document.querySelector(".main") || document.body, { attributes: true, attributeFilter: ["hidden"], subtree: true });
 
 
 onAuthReady(() => {
   financeCollection().onSnapshot(snap => {
     financeCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderAll();
+    pedirRender();
   });
   budgetConfigDocRef().onSnapshot(doc => {
     const day = doc.exists ? Number(doc.data().startDay) : 1;
     budgetStartDay = day >= 1 && day <= 30 ? day : 1;
-    renderAll();
+    pedirRender();
   });
   budgetDocRef().onSnapshot(doc => {
     budgetsCache = doc.exists ? doc.data() : {};
-    renderAll();
+    pedirRender();
   });
   let groupsLoaded = false;
   let legacyCustom = null;
@@ -3482,7 +3503,7 @@ onAuthReady(() => {
     updateGastoCategoriesCache();
     groupsLoaded = true;
     migrateLegacyCustom();
-    renderAll();
+    pedirRender();
   });
   ingresoCategoriesDocRef().onSnapshot(doc => {
     const data = doc.exists ? doc.data() : null;
@@ -3493,7 +3514,7 @@ onAuthReady(() => {
       const custom = (data && Array.isArray(data.items)) ? data.items : [];
       CATEGORIES.ingreso = DEFAULT_INGRESO_CATEGORIES.filter(c => c.id !== "otros_ingresos").concat(custom);
     }
-    renderAll();
+    pedirRender();
   });
   customCategoriesDocRef().get().then(doc => {
     const data = doc.exists ? doc.data() : null;
@@ -3502,15 +3523,15 @@ onAuthReady(() => {
   }).catch(() => {});
   ahorrosCollection().onSnapshot(snap => {
     ahorrosCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderAll();
+    pedirRender();
   });
   carterasCustomDocRef().onSnapshot(doc => {
     carterasCustomCache = (doc.exists && Array.isArray(doc.data().list)) ? doc.data().list : [];
-    renderAll();
+    pedirRender();
   });
   carterasMovimientosCollection().onSnapshot(snap => {
     carterasMovCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderAll();
+    pedirRender();
   });
 });
 })();
