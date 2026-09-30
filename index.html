@@ -17,7 +17,7 @@
   <!-- Fuentes guardadas en el repo: la app no depende de internet para verse bien -->
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
-  <link rel="stylesheet" href="css/style.css?v=202610011000">
+  <link rel="stylesheet" href="css/style.css?v=202610012000">
   <link rel="stylesheet" href="css/finanzas.css?v=202610011900">
   <link rel="stylesheet" href="css/habitos.css?v=202610010600">
 </head>
@@ -109,7 +109,14 @@
 
           <!-- ===== Inicio ===== -->
           <section id="panel-inicio">
-            <h1 class="page-title">Bienvenido, Manolo</h1>
+            <h1 class="page-title" id="saludo-inicio">Te damos la bienvenida</h1>
+            <div class="saludo-eleccion" id="saludo-eleccion" role="group" aria-labelledby="saludo-eleccion-t" hidden>
+              <span id="saludo-eleccion-t">¿Cómo prefieres que te salude?</span>
+              <div class="saludo-botones">
+                <button type="button" data-saludo="bienvenido">Bienvenido</button>
+                <button type="button" data-saludo="bienvenida">Bienvenida</button>
+              </div>
+            </div>
             <p class="panel-sub">Tu panel de control personal. Elige una sección para empezar.</p>
 
             <div class="card-grid card-grid-home">
@@ -976,6 +983,7 @@
   <script defer src="vendor/firebase-10.7.1/firebase-firestore-compat.js"></script>
   <script defer src="js/firebase-init.js?v=202609293"></script>
   <script defer src="js/auth.js?v=202609232200"></script>
+  <script defer src="js/saludo.js?v=202610012000"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
   <script defer src="js/icons.js?v=202610011600"></script>
   <script defer src="js/modules.js?v=202610011400"></script>

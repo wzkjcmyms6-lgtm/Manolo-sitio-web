@@ -1484,3 +1484,10 @@ body.in-finanzas .topbar-ajustes {
   border: 1px solid var(--border); background: rgba(255, 255, 255, 0.04);
 }
 body.in-finanzas .topbar-ajustes span { width: 20px; height: 20px; display: flex; }
+
+/* Saludo de Inicio: elegir "Bienvenido" o "Bienvenida" (solo la primera vez) */
+.saludo-eleccion { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 0.9rem; margin: -0.2rem 0 1rem; padding: 0.8rem 1rem; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); font-size: 0.92rem; color: var(--muted); }
+.saludo-eleccion[hidden] { display: none; }
+.saludo-botones { display: flex; gap: 0.5rem; }
+.saludo-botones button { min-height: 44px; padding: 0.4rem 1rem; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-raised); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
+.saludo-botones button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
