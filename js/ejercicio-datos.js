@@ -2,7 +2,8 @@
 // Junta en un solo lugar lo que necesitan el mapa, el radar y el registro:
 // la base de ejercicios (data/ejercicios.json), los ejercicios propios, las
 // asignaciones de nombres no reconocidos, los ajustes (peso corporal y
-// constantes) y los entrenamientos de Gimnasio, Running y Bicicleta. Cada
+// constantes) y los entrenamientos de Gimnasio (Running y Bicicleta se cargan
+// solo para el respaldo; no entran en el cálculo del mapa). Cada
 // vez que algo cambia en Firestore recalcula y avisa a quien escuche con
 // EjercicioDatos.onCambio(cb). Firestore avisa al instante también de lo
 // que se guarda sin conexión, así que el mapa reacciona sin recargar.
@@ -64,7 +65,9 @@ function avisar() {
   pendiente = Promise.resolve().then(() => {
     pendiente = null;
     if (!estado.indice) return;
-    estado.datos = MuscleEngine.desdeRegistros(estado.registros, resolver);
+    // Running y Bicicleta no pintan el mapa ni cuentan en sus estadísticas: se
+    // siguen cargando (y respaldando) para usarlos más adelante en otra cosa.
+    estado.datos = MuscleEngine.desdeRegistros({ gimnasio: estado.registros.gimnasio }, resolver);
     estado.version++;
     oyentes.forEach(cb => { try { cb(estado); } catch (e) { console.error(e); } });
   });

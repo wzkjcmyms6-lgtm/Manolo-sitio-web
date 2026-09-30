@@ -305,7 +305,7 @@ body.sheet-open { overflow: hidden; }
 }
 .radar-head h2 { margin: 0; font-size: 1.3rem; }
 .radar-sub { margin: 0.25rem 0 0.9rem; color: var(--muted); font-size: 0.82rem; }
-.radar-tabs.fin-tabs { margin-bottom: 0.4rem; }
+.radar-tabs.fin-tabs { display: flex; width: fit-content; margin: 0 auto 0.4rem; }
 .radar-chart { position: relative; max-width: 380px; margin: 0 auto; }
 #radar-svg { width: 100%; height: auto; display: block; overflow: visible; -webkit-tap-highlight-color: transparent; }
 .radar-grid polygon { fill: none; stroke: #2e2c28; stroke-width: 1; }
@@ -671,6 +671,12 @@ body.sheet-open { overflow: hidden; }
   color: var(--accent-2);
 }
 .card h3 { margin: 0.9rem 0 0.3rem; }
+.card-badge {
+  display: inline-block; margin-top: 0.7rem;
+  padding: 0.2rem 0.55rem; border-radius: 999px;
+  background: rgba(255, 122, 48, 0.12); border: 1px solid rgba(255, 122, 48, 0.35);
+  color: var(--accent-2); font-size: 0.66rem; font-weight: 600; letter-spacing: 0.02em; white-space: nowrap;
+}
 .card p { margin: 0; color: var(--muted); font-size: 0.92rem; }
 
 h1.page-title { margin-top: 0; font-size: 1.9rem; }

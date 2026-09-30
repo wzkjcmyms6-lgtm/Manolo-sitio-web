@@ -286,4 +286,7 @@ cuenta). "Valores por defecto" las restablece (tu peso se mantiene).
   igual que `running` (id `manolo-correr`) y `bicicleta` (id `bicycling`); para
   otros deportes, agregar su ficha en `EXTRA` (ej. natación ya existe:
   `manolo-natacion`).
+- **Running y Bicicleta hoy no cuentan en el mapa**: `js/ejercicio-datos.js`
+  solo le pasa `gimnasio` a `desdeRegistros()`. Para volver a sumarlos, pasarle
+  también `running` y `bicicleta` desde `estado.registros`.
 - **Tests**: `npm test` (Node 18+ sin instalar nada).
