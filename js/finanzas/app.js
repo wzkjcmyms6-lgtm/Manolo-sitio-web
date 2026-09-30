@@ -331,6 +331,9 @@ function dayLabel(dateStr) {
 // ---- Buscar en la Lista: nota, categoría, sección, forma de pago o monto,
 // en todos los periodos ----
 let txnQuery = "";
+// Filtros de la lista (tipo, categoría, cartera, RE-IVA y fechas).
+let filtrosTxn = {};
+const busquedaActiva = () => txnQuery.trim() !== "" || FD.hayFiltros(filtrosTxn);
 
 function movementMatches(m, q) {
   const cat = findCategory(m.type, m.category);
@@ -390,10 +393,13 @@ function periodSummary(list) {
 function renderMovements() {
   const period = currentBudgetPeriod();
   const q = normalizeText(txnQuery.trim());
-  const searching = q.length > 0;
-  const list = financeCache
-    .filter(m => searching ? movementMatches(m, q) : isInPeriod(m.date, period))
-    .sort(byNewest);
+  // Con búsqueda o filtros se mira todo el historial (o las fechas elegidas).
+  const searching = busquedaActiva();
+  let base = searching ? financeCache : financeCache.filter(m => isInPeriod(m.date, period));
+  if (FD.hayFiltros(filtrosTxn)) base = FD.filtrarMovimientos(base, filtrosTxn);
+  if (q) base = base.filter(m => movementMatches(m, q));
+  const list = base.slice().sort(byNewest);
+  renderFiltrosActivos();
 
   const { ingresos, gastos, saldo } = periodSummary(list);
   const signed = n => `${n < 0 ? "−" : ""}${formatBsShort(Math.abs(n))}`;
@@ -410,9 +416,10 @@ function renderMovements() {
     <div><strong class="${saldo < 0 ? "neg" : ""}">${signed(saldo)}</strong><span>Saldo</span></div>
   `;
   const empty = document.getElementById("finance-empty");
-  empty.textContent = searching
-    ? `No hay transacciones que coincidan con "${txnQuery.trim()}".`
-    : "Aún no hay transacciones en este periodo. Toca + para agregar una.";
+  empty.innerHTML = searching
+    ? (q ? `No hay movimientos que coincidan con «${escapeHtml(txnQuery.trim())}»${FD.hayFiltros(filtrosTxn) ? " y los filtros elegidos" : ""}.` : "No hay movimientos con estos filtros.")
+      + (FD.hayFiltros(filtrosTxn) ? ` <button type="button" class="link-btn" data-quitar-filtro="todo">Quitar filtros</button>` : "")
+    : "Aún no hay movimientos en este periodo. Toca + para agregar uno.";
   empty.style.display = list.length ? "none" : "block";
   document.getElementById("fin-tab-lista").classList.toggle("is-searching", searching);
   if (currentFinTab() === "lista") document.getElementById("fin-month-nav").hidden = searching;
@@ -447,15 +454,22 @@ function renderMovements() {
             : isTransfer
               ? `<span class="txn-amount muted">(${formatWalletAmount(m.type === "transferencia" ? m.from : "debito", m.amount)})</span>`
               : `<span class="txn-amount">${formatBsShort(m.amount)}</span>`;
+          // Deslizar a la izquierda muestra Editar y Borrar.
           return `
-            <button type="button" class="txn-row" data-edit-txn="${m.id}">
-              ${txnIconHTML(cat)}
-              <span class="txn-body">
-                <span class="txn-desc">${escapeHtml(title)}</span>
-                ${sub ? `<span class="meta">${escapeHtml(sub)}</span>` : ""}
-              </span>
-              ${amount}
-            </button>`;
+            <div class="txn-swipe">
+              <div class="txn-swipe-acciones" aria-hidden="true">
+                <button type="button" class="txn-swipe-editar" data-swipe-editar="${m.id}" tabindex="-1"><span data-icon="edit"></span>Editar</button>
+                <button type="button" class="txn-swipe-borrar" data-swipe-borrar="${m.id}" tabindex="-1"><span data-icon="trash"></span>Borrar</button>
+              </div>
+              <button type="button" class="txn-row" data-edit-txn="${m.id}">
+                ${txnIconHTML(cat)}
+                <span class="txn-body">
+                  <span class="txn-desc">${escapeHtml(title)}</span>
+                  ${sub ? `<span class="meta">${escapeHtml(sub)}</span>` : ""}
+                </span>
+                ${amount}
+              </button>
+            </div>`;
         }).join("")}
       </div>`;
   }).join("");
@@ -466,7 +480,7 @@ function renderMovements() {
 // Se borra al instante y durante unos segundos aparece un aviso con
 // "Deshacer", que vuelve a escribir los mismos documentos con el mismo id
 // (así las transferencias recuperan sus dos lados).
-const UNDO_MS = 6000;
+const UNDO_MS = 5000;
 let undoTimer = null;
 let undoRestore = null;
 
@@ -547,7 +561,7 @@ function showFinTab(tab) {
   ["vg", "gasto", "lista"].forEach(t => { document.getElementById(`fin-tab-${t}`).hidden = t !== tab; });
   document.getElementById("fin-tab-lista").classList.remove("day-jump");
   document.getElementById("finance-stats").hidden = tab !== "lista";
-  document.getElementById("fin-month-nav").hidden = tab === "vg" || (tab === "lista" && txnQuery.trim() !== "");
+  document.getElementById("fin-month-nav").hidden = tab === "vg" || (tab === "lista" && busquedaActiva());
 }
 document.getElementById("fin-inner-tabs").addEventListener("click", e => {
   const btn = e.target.closest("[data-fin-tab]");
@@ -1516,10 +1530,193 @@ function deleteTxnFromSheet() {
 document.getElementById("txn-add").addEventListener("click", () => openTxnSheet(null));
 
 document.getElementById("finance-list").addEventListener("click", e => {
+  const ed = e.target.closest("[data-swipe-editar]");
+  if (ed) { cerrarDeslizada(); const m = financeCache.find(x => x.id === ed.dataset.swipeEditar); if (m) openTxnSheet(m); return; }
+  const bo = e.target.closest("[data-swipe-borrar]");
+  if (bo) { borrarDeslizada(bo.closest(".txn-swipe").querySelector(".txn-row")); return; }
   const row = e.target.closest("[data-edit-txn]");
   if (!row) return;
+  // Si la fila está abierta, tocarla solo la cierra.
+  if (row.classList.contains("is-abierto")) { cerrarDeslizada(); return; }
   const m = financeCache.find(x => x.id === row.dataset.editTxn);
   if (m) openTxnSheet(m);
+});
+
+// ---- Deslizar para editar o borrar ----
+// Deslizar a la izquierda deja ver Editar y Borrar; un deslizamiento largo
+// borra al instante (con «Deshacer» 5 s en el aviso de abajo).
+const ANCHO_ACCIONES = 168;
+let filaAbierta = null;
+function cerrarDeslizada() {
+  if (!filaAbierta) return;
+  filaAbierta.style.transform = "";
+  filaAbierta.classList.remove("is-abierto");
+  filaAbierta = null;
+}
+function borrarDeslizada(row) {
+  const id = row && row.dataset.editTxn;
+  const m = financeCache.find(x => x.id === id);
+  if (!m) return;
+  filaAbierta = null;
+  const caja = row.closest(".txn-swipe");
+  caja.classList.add("is-borrando");
+  row.style.transform = "translateX(-100%)";
+  setTimeout(() => { if (m.type === "transferencia") deleteTransfer(m); else deleteMovement(m.id); }, reduceMotion() ? 0 : 180);
+}
+function reduceMotion() {
+  return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+(function wireSwipe() {
+  const lista = document.getElementById("finance-list");
+  let g = null, anularClick = false;
+  lista.addEventListener("pointerdown", e => {
+    const row = e.target.closest(".txn-row");
+    if (!row || (e.pointerType === "mouse" && e.button !== 0)) return;
+    g = { row, x: e.clientX, y: e.clientY, dx: 0, activo: false, base: row.classList.contains("is-abierto") ? -ANCHO_ACCIONES : 0, id: e.pointerId };
+  });
+  lista.addEventListener("pointermove", e => {
+    if (!g || e.pointerId !== g.id) return;
+    const dx = e.clientX - g.x, dy = e.clientY - g.y;
+    if (!g.activo) {
+      if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+        g.activo = true;
+        g.row.classList.add("is-arrastrando");
+        if (filaAbierta && filaAbierta !== g.row) cerrarDeslizada();
+        try { g.row.setPointerCapture(e.pointerId); } catch (err) { /* sin captura */ }
+      } else if (Math.abs(dy) > 10) { g = null; }
+      return;
+    }
+    g.dx = Math.min(0, g.base + dx);
+    g.row.style.transform = `translateX(${g.dx}px)`;
+  });
+  const soltar = e => {
+    if (!g || (e && e.pointerId !== g.id)) return;
+    const { row, activo, dx } = g;
+    g = null;
+    row.classList.remove("is-arrastrando");
+    if (!activo) return;
+    anularClick = true;
+    setTimeout(() => { anularClick = false; }, 350);
+    if (e && e.type === "pointercancel") { row.style.transform = ""; return; }
+    if (-dx > row.offsetWidth * 0.6) borrarDeslizada(row);
+    else if (-dx > 56) { row.style.transform = `translateX(-${ANCHO_ACCIONES}px)`; row.classList.add("is-abierto"); filaAbierta = row; }
+    else { row.style.transform = ""; row.classList.remove("is-abierto"); if (filaAbierta === row) filaAbierta = null; }
+  };
+  lista.addEventListener("pointerup", soltar);
+  lista.addEventListener("pointercancel", soltar);
+  // El toque que termina un deslizamiento no abre la edición.
+  lista.addEventListener("click", e => { if (anularClick) { e.stopPropagation(); e.preventDefault(); anularClick = false; } }, true);
+  document.addEventListener("pointerdown", e => { if (filaAbierta && !e.target.closest(".txn-swipe")) cerrarDeslizada(); });
+})();
+
+// ---- Filtros de la lista ----
+const NOMBRE_TIPO_FILTRO = { gasto: "Gastos", ingreso: "Ingresos", transferencia: "Transferencias" };
+let borradorFiltros = {};
+function carterasFiltro() {
+  return [{ id: "efectivo", label: "Efectivo" }, { id: "debito", label: "Débito" }, { id: "tarjeta", label: "Tarjeta" }, { id: "ahorro", label: "Ahorro" }]
+    .concat(carterasCustomCache.map(w => ({ id: w.id, label: w.nombre })));
+}
+function etiquetaFiltro(k, v) {
+  if (k === "tipo") return NOMBRE_TIPO_FILTRO[v];
+  if (k === "categoria") return findCategory(gastoCategoriesCache.some(c => c.id === v) ? "gasto" : "ingreso", v).label;
+  if (k === "cartera") return (carterasFiltro().find(c => c.id === v) || { label: v }).label;
+  if (k === "factura") return v === "si" ? "Con factura" : "Sin factura";
+  if (k === "desde") return `Desde ${dayLabel(v).toLowerCase()}`;
+  if (k === "hasta") return `Hasta ${dayLabel(v).toLowerCase()}`;
+  return v;
+}
+function renderFiltrosActivos() {
+  const cont = document.getElementById("txn-filtros-activos");
+  const n = Object.keys(filtrosTxn).filter(k => filtrosTxn[k]).length;
+  const badge = document.getElementById("txn-filtros-n");
+  badge.hidden = !n;
+  badge.textContent = n;
+  document.getElementById("txn-filtros-btn").setAttribute("aria-label", n ? `Filtros (${n} activos)` : "Filtros");
+  cont.hidden = !n;
+  cont.innerHTML = n ? Object.keys(filtrosTxn).filter(k => filtrosTxn[k]).map(k =>
+    `<button type="button" class="txn-filtro-pill" data-quitar-filtro="${k}" aria-label="Quitar filtro ${escapeHtml(etiquetaFiltro(k, filtrosTxn[k]))}">${escapeHtml(etiquetaFiltro(k, filtrosTxn[k]))}<span aria-hidden="true">✕</span></button>`).join("")
+    + `<button type="button" class="txn-filtro-pill is-limpiar" data-quitar-filtro="todo">Quitar todo</button>` : "";
+}
+function chipsFiltro(clave, opciones) {
+  const actual = borradorFiltros[clave] || "";
+  return `<div class="txn-filtro-chips" role="radiogroup">${opciones.map(([v, t]) =>
+    `<button type="button" class="fin-tab${actual === v ? " active" : ""}" role="radio" aria-checked="${actual === v}" data-filtro="${clave}" data-valor="${v}">${escapeHtml(t)}</button>`).join("")}</div>`;
+}
+function renderFiltrosHoja() {
+  const f = borradorFiltros;
+  const period = currentBudgetPeriod();
+  const secciones = catSheetSections("gasto");
+  const hoy = isoDate(new Date());
+  document.getElementById("txn-filtros-cuerpo").innerHTML = `
+    <h4>Tipo</h4>${chipsFiltro("tipo", [["", "Todos"], ["gasto", "Gastos"], ["ingreso", "Ingresos"], ["transferencia", "Transferencias"]])}
+    <h4><label for="txn-filtro-cat">Categoría</label></h4>
+    <select id="txn-filtro-cat" class="txn-filtro-select">
+      <option value="">Todas</option>
+      ${secciones.map(sec => `<optgroup label="${escapeHtml(sec.title)}">${sec.items.map(c => `<option value="${escapeHtml(c.id)}"${f.categoria === c.id ? " selected" : ""}>${escapeHtml(c.label)}</option>`).join("")}</optgroup>`).join("")}
+      <optgroup label="Ingresos">${(CATEGORIES.ingreso || []).map(c => `<option value="${escapeHtml(c.id)}"${f.categoria === c.id ? " selected" : ""}>${escapeHtml(c.label)}</option>`).join("")}</optgroup>
+    </select>
+    <h4>Cartera</h4>${chipsFiltro("cartera", [["", "Todas"]].concat(carterasFiltro().map(c => [c.id, c.label])))}
+    <h4>RE-IVA</h4>${chipsFiltro("factura", [["", "Todas"], ["si", "Con factura"], ["no", "Sin factura"]])}
+    <h4>Fechas</h4>
+    <div class="txn-filtro-chips">
+      <button type="button" class="fin-tab" data-rango="periodo">Este periodo</button>
+      <button type="button" class="fin-tab" data-rango="anterior">Periodo anterior</button>
+      <button type="button" class="fin-tab" data-rango="90">Últimos 90 días</button>
+      <button type="button" class="fin-tab" data-rango="">Todo</button>
+    </div>
+    <div class="txn-filtro-fechas">
+      <label>Desde<input type="date" id="txn-filtro-desde" value="${f.desde || ""}" max="${hoy}"></label>
+      <label>Hasta<input type="date" id="txn-filtro-hasta" value="${f.hasta || ""}" max="${hoy}"></label>
+    </div>`;
+  const n = FD.filtrarMovimientos(financeCache, borradorFiltros).length;
+  document.getElementById("txn-filtros-ver").textContent = FD.hayFiltros(borradorFiltros) ? `Ver ${n} movimiento${n === 1 ? "" : "s"}` : "Ver todo el periodo";
+}
+function abrirFiltros() {
+  borradorFiltros = Object.assign({}, filtrosTxn);
+  renderFiltrosHoja();
+  showSheet(document.getElementById("txn-filtros-sheet"));
+}
+function aplicarFiltros(f) {
+  filtrosTxn = {};
+  Object.keys(f).forEach(k => { if (f[k]) filtrosTxn[k] = f[k]; });
+  cerrarDeslizada();
+  renderMovements();
+  showFinTab("lista");
+}
+document.getElementById("txn-filtros-btn").addEventListener("click", abrirFiltros);
+document.getElementById("txn-filtros-sheet").addEventListener("click", e => {
+  const b = e.target.closest("[data-filtro]");
+  if (b) { borradorFiltros[b.dataset.filtro] = b.dataset.valor || null; renderFiltrosHoja(); return; }
+  const r = e.target.closest("[data-rango]");
+  if (r) {
+    const hoy = new Date();
+    const v = r.dataset.rango;
+    if (v === "periodo") { const p = currentBudgetPeriod(); Object.assign(borradorFiltros, { desde: p.startISO, hasta: p.endISO }); }
+    else if (v === "anterior") { const p = budgetPeriodAt(monthOffset - 1); Object.assign(borradorFiltros, { desde: p.startISO, hasta: p.endISO }); }
+    else if (v === "90") { const d = new Date(hoy); d.setDate(d.getDate() - 89); Object.assign(borradorFiltros, { desde: isoDate(d), hasta: isoDate(hoy) }); }
+    else Object.assign(borradorFiltros, { desde: null, hasta: null });
+    renderFiltrosHoja();
+    return;
+  }
+  if (e.target.closest("#txn-filtros-limpiar")) { borradorFiltros = {}; renderFiltrosHoja(); return; }
+  if (e.target.closest("#txn-filtros-ver")) { aplicarFiltros(borradorFiltros); hideSheet(document.getElementById("txn-filtros-sheet")); return; }
+  if (e.target.closest(".budget-sheet-close") || e.target.classList.contains("budget-sheet-overlay")) hideSheet(document.getElementById("txn-filtros-sheet"));
+});
+document.getElementById("txn-filtros-sheet").addEventListener("change", e => {
+  if (e.target.id === "txn-filtro-cat") borradorFiltros.categoria = e.target.value || null;
+  if (e.target.id === "txn-filtro-desde") borradorFiltros.desde = e.target.value || null;
+  if (e.target.id === "txn-filtro-hasta") borradorFiltros.hasta = e.target.value || null;
+  if (borradorFiltros.desde && borradorFiltros.hasta && borradorFiltros.desde > borradorFiltros.hasta) {
+    [borradorFiltros.desde, borradorFiltros.hasta] = [borradorFiltros.hasta, borradorFiltros.desde];
+  }
+  renderFiltrosHoja();
+});
+document.getElementById("fin-tab-lista").addEventListener("click", e => {
+  const q = e.target.closest("[data-quitar-filtro]");
+  if (!q) return;
+  if (q.dataset.quitarFiltro === "todo") filtrosTxn = {};
+  else delete filtrosTxn[q.dataset.quitarFiltro];
+  renderMovements();
 });
 
 document.getElementById("txn-sheet").addEventListener("click", e => {

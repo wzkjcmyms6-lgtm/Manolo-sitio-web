@@ -18,7 +18,7 @@
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
   <link rel="stylesheet" href="css/style.css?v=202610011000">
-  <link rel="stylesheet" href="css/finanzas.css?v=202610011100">
+  <link rel="stylesheet" href="css/finanzas.css?v=202610011200">
   <link rel="stylesheet" href="css/habitos.css?v=202610010600">
 </head>
 <body>
@@ -428,7 +428,9 @@
                 <button type="button" class="txn-search-toggle" id="txn-search-toggle" aria-label="Buscar transacciones"><span data-icon="search"></span></button>
                 <input type="search" id="txn-search-input" placeholder="Buscar nota, categoría o monto" autocomplete="off" enterkeyhint="search">
                 <button type="button" class="txn-search-clear" id="txn-search-clear" aria-label="Cerrar búsqueda"><span data-icon="close"></span></button>
+                <button type="button" class="txn-filtros-btn" id="txn-filtros-btn" aria-label="Filtros" aria-haspopup="dialog"><span data-icon="filter"></span><span class="txn-filtros-n" id="txn-filtros-n" hidden></span></button>
               </div>
+              <div class="txn-filtros-activos" id="txn-filtros-activos" hidden></div>
               <div class="txn-card">
                 <div class="txn-summary" id="finance-summary"></div>
                 <div id="finance-list"></div>
@@ -786,6 +788,22 @@
     <nav class="bottom-nav" id="bottom-nav-links"></nav>
   </div>
 
+<!-- Filtros de la lista de movimientos -->
+  <div id="txn-filtros-sheet" class="js-sheet budget-sheet" hidden>
+    <div class="budget-sheet-overlay"></div>
+    <div class="budget-sheet-panel txn-filtros-panel" role="dialog" aria-modal="true" aria-labelledby="txn-filtros-title">
+      <div class="budget-sheet-header">
+        <button type="button" class="budget-sheet-close" aria-label="Cerrar"><span data-icon="close"></span></button>
+        <h3 id="txn-filtros-title">Filtros</h3>
+      </div>
+      <div class="txn-filtros-cuerpo" id="txn-filtros-cuerpo"></div>
+      <div class="txn-sheet-actions">
+        <button type="button" class="txn-save txn-save-otro" id="txn-filtros-limpiar">Limpiar</button>
+        <button type="button" class="txn-save" id="txn-filtros-ver">Ver resultados</button>
+      </div>
+    </div>
+  </div>
+
 <!-- Detalle de una categoría: sus movimientos del mes -->
   <div id="cat-detail-sheet" class="js-sheet budget-sheet" hidden>
     <div class="budget-sheet-overlay"></div>
@@ -902,7 +920,7 @@
   <script defer src="js/firebase-init.js?v=202609293"></script>
   <script defer src="js/auth.js?v=202609232200"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
-  <script defer src="js/icons.js?v=202610011000"></script>
+  <script defer src="js/icons.js?v=202610011200"></script>
   <script defer src="js/modules.js?v=202610011000"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
@@ -926,9 +944,9 @@
   <script defer src="js/offline.js?v=202610010700"></script>
   <script defer src="js/running.js?v=202609293"></script>
   <script defer src="js/bicicleta.js?v=202609293"></script>
-  <script defer src="js/finanzas/datos.js?v=202610011100"></script>
+  <script defer src="js/finanzas/datos.js?v=202610011200"></script>
   <script defer src="js/finanzas/demo.js?v=202610011000"></script>
-  <script defer src="js/finanzas/app.js?v=202610011100"></script>
+  <script defer src="js/finanzas/app.js?v=202610011200"></script>
   <script defer src="js/inversiones.js?v=202609232200"></script>
 </body>
 </html>

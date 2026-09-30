@@ -1313,7 +1313,7 @@ button.remain-cat:active .remain-ring { transform: scale(0.95); }
   color: var(--accent-2); font: inherit; font-weight: 700; cursor: pointer;
 }
 .undo-toast-bar { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: var(--accent-2); transform-origin: left; }
-.undo-toast.show .undo-toast-bar { animation: undo-countdown 6s linear forwards; }
+.undo-toast.show .undo-toast-bar { animation: undo-countdown 5s linear forwards; }
 .stat-box .value.value-neg { white-space: nowrap; font-size: min(1.45rem, 5.8vw); background: none; -webkit-text-fill-color: initial; color: var(--danger); }
 .txn-toggle-hint { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; color: var(--muted); margin-left: 0.35rem; }
 #reiva-list { display: flex; flex-direction: column; gap: 0.7rem; margin-top: 1rem; }
@@ -1464,3 +1464,58 @@ button.remain-cat:active .remain-ring { transform: scale(0.95); }
   .txn-keypad-done { margin-top: 0.3rem; padding: 0.3rem 1rem; }
   .txn-chips { padding-top: 0.5rem; }
 }
+
+/* ---------- Movimientos: filtros y deslizar (Fase 2b) ---------- */
+.txn-filtros-btn {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--ink); cursor: pointer;
+}
+.txn-filtros-btn [data-icon] { width: 20px; height: 20px; display: flex; }
+.txn-filtros-n {
+  position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px;
+  background: var(--accent-grad); color: #0a0a0a; font-size: 0.72rem; font-weight: 700; line-height: 20px; text-align: center;
+}
+.txn-filtros-n[hidden] { display: none; }
+.txn-filtros-activos { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: -0.3rem 0 0.8rem; }
+.txn-filtros-activos[hidden] { display: none; }
+.txn-filtro-pill {
+  display: inline-flex; align-items: center; gap: 0.4rem; min-height: 36px; padding: 0 0.8rem; border-radius: 999px; cursor: pointer;
+  border: 1px solid rgba(255, 184, 77, 0.45); background: rgba(255, 184, 77, 0.1); color: var(--ink); font: inherit; font-size: 0.82rem;
+}
+.txn-filtro-pill span { color: var(--muted); font-size: 0.75rem; }
+.txn-filtro-pill.is-limpiar { border-color: var(--border); background: none; color: var(--muted); }
+.txn-filtros-panel { max-height: 90dvh; display: flex; flex-direction: column; }
+.txn-filtros-cuerpo { overflow-y: auto; padding: 0.4rem 1rem 0.6rem; }
+.txn-filtros-cuerpo h4 { margin: 1rem 0 0.5rem; font-size: 0.9rem; color: var(--muted); font-weight: 600; }
+.txn-filtro-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.txn-filtro-chips .fin-tab { min-height: 40px; padding: 0 0.9rem; border: 1px solid var(--border); border-radius: 999px; }
+.txn-filtro-select, .txn-filtro-fechas input {
+  width: 100%; min-height: 44px; padding: 0 0.8rem; border-radius: 12px; border: 1px solid var(--border);
+  background: var(--bg-soft); color: var(--ink); font: inherit;
+}
+.txn-filtro-fechas { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-top: 0.6rem; }
+.txn-filtro-fechas label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.8rem; color: var(--muted); }
+
+.txn-swipe { position: relative; overflow: hidden; border-radius: 14px; }
+.txn-swipe .txn-row { position: relative; z-index: 1; background: var(--surface); touch-action: pan-y; transition: transform 0.2s ease; }
+.txn-swipe .txn-row.is-arrastrando { transition: none; }
+.txn-swipe-acciones { position: absolute; top: 0; right: 0; bottom: 0; display: flex; }
+.txn-swipe-acciones button {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem; width: 84px; border: 0;
+  font: inherit; font-size: 0.75rem; font-weight: 700; cursor: pointer; color: #fff;
+}
+.txn-swipe-acciones [data-icon] { width: 20px; height: 20px; display: flex; }
+.txn-swipe-editar { background: #4d7fd6; }
+.txn-swipe-borrar { background: var(--danger); }
+.txn-swipe.is-borrando { animation: txn-sale 0.2s ease-in forwards; }
+@keyframes txn-sale { to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .txn-swipe .txn-row { transition: none; }
+  .txn-swipe.is-borrando { animation: none; }
+}
+/* Las acciones solo existen mientras deslizas o la fila está abierta (así
+   su color no asoma por las esquinas redondeadas de las demás filas). */
+.txn-swipe-acciones { visibility: hidden; }
+.txn-swipe:has(.txn-row.is-abierto) .txn-swipe-acciones,
+.txn-swipe:has(.txn-row.is-arrastrando) .txn-swipe-acciones,
+.txn-swipe.is-borrando .txn-swipe-acciones { visibility: visible; }

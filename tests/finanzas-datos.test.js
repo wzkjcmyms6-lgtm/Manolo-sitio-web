@@ -287,3 +287,27 @@ test("teclado: escribe montos y suma o resta (25+18)", () => {
   assert.ok(D.tieneOperacion("25+18"));
   assert.ok(!D.tieneOperacion("25"));
 });
+
+// ---------- 2b: filtros ----------
+test("filtros: tipo, categoría, cartera, RE-IVA y fechas", () => {
+  const L = [
+    { id: "a", type: "gasto", category: "comida", payment: "efectivo", factura: true, date: "2026-09-01" },
+    { id: "b", type: "gasto", category: "comida", payment: "credito", factura: false, date: "2026-09-10" },
+    { id: "c", type: "ingreso", category: "salario", payment: "debito", date: "2026-09-02" },
+    { id: "d", type: "transferencia", from: "gastos", to: "ahorro", date: "2026-09-05" },
+    { id: "e", type: "pago_tarjeta", payment: "debito", date: "2026-09-29" }
+  ];
+  const ids = f => D.filtrarMovimientos(L, f).map(m => m.id).join("");
+  assert.equal(ids({}), "abcde");
+  assert.ok(!D.hayFiltros({}));
+  assert.equal(ids({ tipo: "gasto" }), "ab");
+  assert.equal(ids({ tipo: "transferencia" }), "de");  // pagar la tarjeta es una transferencia
+  assert.equal(ids({ categoria: "comida" }), "ab");
+  assert.equal(ids({ cartera: "tarjeta" }), "be");
+  assert.equal(ids({ cartera: "debito" }), "cde");       // "gastos" (viejo) cuenta como Débito
+  assert.equal(ids({ cartera: "ahorro" }), "d");
+  assert.equal(ids({ factura: "si" }), "a");
+  assert.equal(ids({ factura: "no" }), "b");
+  assert.equal(ids({ desde: "2026-09-02", hasta: "2026-09-10" }), "bcd");
+  assert.equal(ids({ tipo: "gasto", cartera: "efectivo", factura: "si" }), "a");
+});

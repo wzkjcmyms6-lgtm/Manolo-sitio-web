@@ -371,7 +371,38 @@ function evaluarMonto(expr) {
 }
 const tieneOperacion = expr => /[+−]/.test(String(expr || "").slice(1));
 
+// ---------- Filtros de movimientos ----------
+// filtros: { tipo: "gasto"|"ingreso"|"transferencia"|null, categoria, cartera,
+//            factura: "si"|"no"|null, desde: "AAAA-MM-DD", hasta }
+// Las carteras: "efectivo", "debito", "tarjeta", "ahorro" o una propia.
+function carterasDe(m) {
+  const pago = p => (p === "credito" ? "tarjeta" : p === "efectivo" ? "efectivo" : "debito");
+  if (m.type === "gasto" || m.type === "ingreso") return [pago(m.payment)];
+  if (m.type === "pago_tarjeta") return [pago(m.payment), "tarjeta"];
+  if (m.type === "ajuste_tarjeta") return ["tarjeta"];
+  if (m.type === "transferencia") return [carteraEfectivo(m.from), carteraEfectivo(m.to)];
+  return [];
+}
+const grupoTipo = t => (t === "gasto" || t === "ingreso" ? t : "transferencia");
+function hayFiltros(f) {
+  return !!(f && (f.tipo || f.categoria || f.cartera || f.factura || f.desde || f.hasta));
+}
+function filtrarMovimientos(lista, f) {
+  if (!hayFiltros(f)) return lista.slice();
+  return lista.filter(m => {
+    if (f.tipo && grupoTipo(m.type) !== f.tipo) return false;
+    if (f.categoria && (m.category !== f.categoria || grupoTipo(m.type) === "transferencia")) return false;
+    if (f.cartera && carterasDe(m).indexOf(f.cartera) < 0) return false;
+    if (f.factura === "si" && !(m.type === "gasto" && m.factura)) return false;
+    if (f.factura === "no" && !(m.type === "gasto" && !m.factura)) return false;
+    if (f.desde && (m.date || "") < f.desde) return false;
+    if (f.hasta && (m.date || "") > f.hasta) return false;
+    return true;
+  });
+}
+
 return {
+  carterasDe, hayFiltros, filtrarMovimientos,
   teclaMonto, evaluarMonto, tieneOperacion,
   FORMATO, COLECCIONES, META_COPIA, copiaCompleta, validarCopia, planImportacion, celdaCsv, aCsv, montoCsv,
   ESQUEMA, DOCS_POR_PARTE,
