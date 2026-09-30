@@ -6,6 +6,10 @@ semana, al estilo Hevy pero con el arte y la paleta de Manolo.
 
 ## Estado
 
+- [x] **Cuello como región 22** (30 sept 2026): se pinta en frente y nuca,
+  suma al eje Espalda del radar y tiene 7 ejercicios (isométricos, con disco,
+  con arnés, en máquina y puente de luchador).
+
 - [x] **Fase 1 — Base de ejercicios + cálculo + tests** (29 sept 2026)
 - [x] **Fase 2 — Mapa corporal** (29 sept 2026)
 - [x] **Fase 3 — Radar + tarjetas + top 5** (29 sept 2026)
@@ -17,7 +21,7 @@ semana, al estilo Hevy pero con el arte y la paleta de Manolo.
 | Archivo | Qué es |
 |---|---|
 | `scripts/build-exercises.mjs` | Genera la base a partir del dataset abierto (glosario, refinamientos, ajustes). |
-| `data/ejercicios.json` | Base generada (569 ejercicios). **No editar a mano**: regenerar con el script. |
+| `data/ejercicios.json` | Base generada (576 ejercicios). **No editar a mano**: regenerar con el script. |
 | `js/muscle-engine.js` | Cálculo puro: volumen, series efectivas, músculos, grupos, niveles, resumen. |
 | `js/exercise-search.js` | Búsqueda sin tildes/mayúsculas, tolerante a errores, y `resolver()` para nombres guardados. |
 | `tests/*.test.js` | Tests (`npm test`, usa `node --test`, sin dependencias). |
@@ -39,13 +43,13 @@ Ambos `js/` funcionan en el navegador (`window.MuscleEngine`,
 **Unlicense** (dominio público). Fijada al commit
 `f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5`. El script:
 
-1. Descarta estiramientos, rodillo de espuma, cuello, strongman y ejercicios de
+1. Descarta estiramientos, rodillo de espuma, strongman y ejercicios de
    técnica/pliometría muy específicos (lista `EXCLUIR_NOMBRE`).
 2. Traduce el nombre: movimiento (`CORES`) + modificadores (`MODS`) + equipo
    entre paréntesis. Formato: `Press de banca inclinado (Barra)`.
 3. Agrega alias: el nombre original en inglés y sinónimos (`SINONIMOS`), p. ej.
    "press plano", "bench press", "estocada", "polea al pecho".
-4. Pasa los músculos del dataset a las 21 regiones y refina lo que no separa:
+4. Pasa los músculos del dataset a las 22 regiones y refina lo que no separa:
    inclinado → pecho superior; declinado/fondos → pecho inferior; laterales y
    remo al mentón → deltoide lateral; face pull/pájaros/remos → deltoide
    posterior; press → deltoide anterior (+ lateral secundario); giros/laterales
@@ -53,7 +57,7 @@ Ambos `js/` funcionan en el navegador (`window.MuscleEngine`,
    cuenta las pantorrillas (solo estabilizan).
 5. `AJUSTES`: correcciones puntuales por nombre en inglés (nombre, músculos,
    tipo, `destacado` = gana los empates en la búsqueda).
-6. `EXTRA`: 15 ejercicios que el dataset no trae (Correr, Caminar, Natación,
+6. `EXTRA`: 17 ejercicios que el dataset no trae (Correr, Caminar, Natación,
    Burpees, Hip thrust en máquina, Remo Pendlay…).
 
 Regenerar: `npm run ejercicios` (o `node scripts/build-exercises.mjs --report`
@@ -64,10 +68,11 @@ curl y usar `--local archivo.json`. El resultado es determinista.
 Campos de cada ejercicio: `id, nombre, alias[], tipo (carga | peso_corporal |
 cardio | isometrico), equipo, primarios[], secundarios[], factorPesoCorporal`.
 
-## Músculos (21 regiones → 6 grupos)
+## Músculos (22 regiones → 6 grupos)
 
 - Pecho: `pecho_superior`, `pecho_medio`, `pecho_inferior`
-- Espalda: `dorsales`, `espalda_media`, `trapecio`, `lumbares`
+- Espalda: `dorsales`, `espalda_media`, `trapecio`, `cuello`, `lumbares`
+  (el cuello suma al eje Espalda del radar)
 - Hombros: `deltoide_anterior`, `deltoide_lateral`, `deltoide_posterior`
 - Brazos: `biceps`, `triceps`, `antebrazos`
 - Core: `abdominales`, `oblicuos`

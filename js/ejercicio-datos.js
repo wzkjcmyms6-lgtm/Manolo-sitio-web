@@ -9,7 +9,7 @@
 // que se guarda sin conexión, así que el mapa reacciona sin recargar.
 (function () {
 
-const RUTA_BASE = "data/ejercicios.json?v=202609291";
+const RUTA_BASE = "data/ejercicios.json?v=202609301";
 
 const estado = {
   base: [], destacados: 0, propios: [], asignaciones: {}, ajustes: {},

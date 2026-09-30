@@ -27,6 +27,11 @@ test("encuentra por nombre, alias en inglés y variantes", () => {
   assert.equal(nombreDe("empuje de caderas"), "Hip thrust (Barra)");
 });
 
+test("encuentra ejercicios de cuello", () => {
+  assert.deepEqual(primero("cuello").primarios, ["cuello"]);
+  assert.equal(nombreDe("neck curl"), "Flexión de cuello con disco");
+});
+
 test("tolera errores de tipeo", () => {
   assert.equal(nombreDe("pres banca"), "Press de banca (Barra)");
   assert.equal(nombreDe("sentadiya"), "Sentadilla (Barra)");

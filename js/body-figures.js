@@ -8,8 +8,7 @@
 (function (root) {
 
 const CABEZA = [
-  { centro: true, base: true, el: "ellipse", a: { cx: 70, cy: 20, rx: 12.5, ry: 15 } },
-  { centro: true, base: true, d: "M63.5,32 C64,37 64,41 62.5,45 L77.5,45 C76,41 76,37 76.5,32 Z" }
+  { centro: true, base: true, el: "ellipse", a: { cx: 70, cy: 20, rx: 12.5, ry: 15 } }
 ];
 
 const BRAZO_BASE = [
@@ -24,6 +23,8 @@ const PIERNA_BASE = [
 
 const FRENTE = [
   ...CABEZA,
+  // Cuello (esternocleidomastoideo, una mitad por lado)
+  { m: "cuello", d: "M70,32.4 L63.6,32.4 C64.2,37 64,41.4 62.6,45.4 C65,46.2 67.5,46.6 70,46.6 Z" },
   // Trapecio (se asoma entre cuello y hombro)
   { m: "trapecio", d: "M63.5,36 C60,42 53,45 45,46.5 L50,50.5 C56,49.5 61.5,47.5 63.5,45 Z" },
   // Deltoides: lateral (borde exterior) y anterior (frente)
@@ -59,8 +60,10 @@ const FRENTE = [
 
 const ESPALDA = [
   ...CABEZA,
+  // Cuello (nuca) entre la cabeza y el trapecio
+  { m: "cuello", d: "M70,32.4 L63.6,32.4 C64,35.2 64.2,37.8 64,40.4 C66,40 68,39.8 70,39.8 Z" },
   // Trapecio: superior y rombo central hasta media espalda
-  { m: "trapecio", d: "M70,31.5 L64.6,32.4 C63,40.5 55.5,44.8 45,47 C51.6,50.8 57.8,55.2 60.6,60.2 C62.6,70.2 65.6,80.2 70,90.4 Z" },
+  { m: "trapecio", d: "M70,39.8 C68,39.8 66,40 64,40.4 C62,43.6 55.5,45.4 45,47 C51.6,50.8 57.8,55.2 60.6,60.2 C62.6,70.2 65.6,80.2 70,90.4 Z" },
   // Deltoides: lateral (borde exterior) y posterior (atrás)
   { m: "deltoide_lateral", d: "M34,45.5 C26.5,46 21.5,51 20,57.5 C18.8,63.5 20,69 23.5,73.5 L27,72.5 C25.8,64 27.8,54.5 34,45.5 Z" },
   { m: "deltoide_posterior", d: "M34,45.5 C38.5,45.2 42.5,45.8 45,47 L45.6,55.8 C40,58.8 34,64.8 30.5,72 L27,72.5 C25.8,64 27.8,54.5 34,45.5 Z" },

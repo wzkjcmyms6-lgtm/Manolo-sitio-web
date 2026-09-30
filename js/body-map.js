@@ -1,5 +1,5 @@
 // ---------- Mapa muscular de Ejercicio ----------
-// Frente y espalda (js/body-figures.js) con 21 regiones por lado. Cada
+// Frente y espalda (js/body-figures.js) con 22 regiones por lado. Cada
 // región se pinta según las series efectivas de la semana que se ve (o del
 // día elegido en la fila L–D): 1–3, 4–9, 10+; si el músculo solo trabajó
 // como secundario se ve más suave. Los números salen de js/muscle-engine.js

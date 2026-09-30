@@ -9,7 +9,7 @@
   else root.MuscleEngine = factory();
 })(typeof self !== "undefined" ? self : this, function () {
 
-// 21 regiones. "vista" indica en qué figura del mapa se dibuja.
+// 22 regiones. "vista" indica en qué figura del mapa se dibuja.
 const MUSCULOS = [
   { id: "pecho_superior", nombre: "Pecho superior", grupo: "pecho", vista: "frente" },
   { id: "pecho_medio", nombre: "Pecho medio", grupo: "pecho", vista: "frente" },
@@ -17,6 +17,7 @@ const MUSCULOS = [
   { id: "dorsales", nombre: "Dorsales", grupo: "espalda", vista: "espalda" },
   { id: "espalda_media", nombre: "Espalda media", grupo: "espalda", vista: "espalda" },
   { id: "trapecio", nombre: "Trapecio", grupo: "espalda", vista: "ambas" },
+  { id: "cuello", nombre: "Cuello", grupo: "espalda", vista: "ambas" },
   { id: "lumbares", nombre: "Lumbares", grupo: "espalda", vista: "espalda" },
   { id: "deltoide_anterior", nombre: "Deltoide anterior", grupo: "hombros", vista: "frente" },
   { id: "deltoide_lateral", nombre: "Deltoide lateral", grupo: "hombros", vista: "ambas" },

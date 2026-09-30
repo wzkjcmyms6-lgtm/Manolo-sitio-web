@@ -42,7 +42,7 @@ test("cubre pesas, máquinas, poleas, calistenia, cardio e isométricos", () => 
   assert.ok(cuenta(e => e.tipo === "isometrico") >= 4);
 });
 
-test("las 21 regiones aparecen como primario en algún ejercicio", () => {
+test("las 22 regiones (cuello incluido) aparecen como primario en algún ejercicio", () => {
   const usados = new Set(ej.flatMap(e => e.primarios));
   E.MUSCULOS.forEach(m => assert.ok(usados.has(m.id), m.id));
 });
@@ -62,6 +62,12 @@ test("refinamientos: pecho superior/inferior, cabezas del deltoide, oblicuos", (
   assert.ok(porNombre("Remo inclinado (Barra)").secundarios.includes("deltoide_posterior"));
   assert.deepEqual(porNombre("Giro ruso").primarios, ["oblicuos"]);
   assert.deepEqual(porNombre("Crunch").primarios, ["abdominales"]);
+});
+
+test("ejercicios de cuello", () => {
+  assert.deepEqual(porNombre("Flexión de cuello con disco").primarios, ["cuello"]);
+  assert.equal(porNombre("Cuello isométrico lateral").tipo, "isometrico");
+  assert.ok(ej.filter(e => e.primarios.includes("cuello")).length >= 7);
 });
 
 test("tipos y factor de peso corporal", () => {

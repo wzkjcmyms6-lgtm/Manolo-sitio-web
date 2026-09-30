@@ -5,11 +5,11 @@
 //
 // Qué hace:
 //   1. Descarga el dataset (versión fijada por commit) o lee una copia local.
-//   2. Descarta estiramientos, rodillo de espuma, cuello, strongman y
+//   2. Descarta estiramientos, rodillo de espuma, strongman y
 //      ejercicios de técnica/pliometría muy específicos.
 //   3. Traduce el nombre al español con un glosario (movimiento + modificadores
 //      + equipo entre paréntesis) y agrega alias (inglés y variantes).
-//   4. Reparte los músculos del dataset en las 21 regiones de Manolo y refina
+//   4. Reparte los músculos del dataset en las 22 regiones de Manolo y refina
 //      lo que el dataset no separa (pecho superior/inferior, las 3 cabezas del
 //      deltoide, oblicuos).
 //   5. Asigna tipo (carga | peso_corporal | cardio | isometrico) y factor de
@@ -74,7 +74,6 @@ const EXCLUIR_NOMBRE = new RegExp([
 function excluir(e) {
   if (e.category === "stretching") return true;
   if (e.equipment === "foam roll") return true;
-  if (e.primaryMuscles.includes("neck")) return true;
   if (e.category === "strongman" && !MANTENER_STRONGMAN.test(e.name)) return true;
   if (e.category === "plyometrics" && !MANTENER_PLIO.test(e.name)) return true;
   if (EXCLUIR_NOMBRE.test(e.name)) return true;
@@ -784,6 +783,12 @@ const AJUSTES = {
   "Single-Arm Push-Up": { nombre: "Flexiones a una mano" },
   "Suspended Push-Up": { nombre: "Flexiones en suspensión (TRX)" },
   "Isometric Chest Squeezes": { tipo: "isometrico" },
+  // Cuello
+  "Isometric Neck Exercise - Front And Back": { nombre: "Cuello isométrico adelante y atrás", tipo: "isometrico", alias: ["cuello isometrico", "neck isometric"], destacado: true },
+  "Isometric Neck Exercise - Sides": { nombre: "Cuello isométrico lateral", tipo: "isometrico", alias: ["cuello lateral", "neck side isometric"] },
+  "Lying Face Down Plate Neck Resistance": { nombre: "Extensión de cuello con disco", tipo: "carga", equipo: "otro", alias: ["extensión de cuello", "neck extension"], secundarios: ["trapecio"], destacado: true },
+  "Lying Face Up Plate Neck Resistance": { nombre: "Flexión de cuello con disco", tipo: "carga", equipo: "otro", alias: ["flexión de cuello", "neck curl", "neck flexion"], destacado: true },
+  "Seated Head Harness Neck Resistance": { nombre: "Extensión de cuello con arnés", tipo: "carga", equipo: "otro", alias: ["arnés de cuello", "neck harness"], secundarios: ["trapecio"] },
   "Bent-Arm Barbell Pullover": { nombre: "Pullover con brazos flexionados (Barra)" },
   "Bent-Arm Dumbbell Pullover": { nombre: "Pullover con brazos flexionados (Mancuerna)" },
   "Straight-Arm Dumbbell Pullover": { nombre: "Pullover (Mancuerna)", destacado: true },
@@ -1070,11 +1075,13 @@ const EXTRA = [
   { id: "manolo-hip-thrust-maquina", nombre: "Hip thrust (Máquina)", alias: ["empuje de cadera en máquina", "glute drive"], tipo: "carga", equipo: "maquina", primarios: ["gluteos"], secundarios: ["isquiotibiales"] },
   { id: "manolo-peso-muerto-rumano-mancuerna", nombre: "Peso muerto rumano (Mancuerna)", alias: ["rdl con mancuernas", "romanian deadlift dumbbell"], tipo: "carga", equipo: "mancuerna", primarios: ["isquiotibiales"], secundarios: ["gluteos", "lumbares"] },
   { id: "manolo-remo-pendlay", nombre: "Remo Pendlay (Barra)", alias: ["pendlay row"], tipo: "carga", equipo: "barra", primarios: ["espalda_media", "dorsales"], secundarios: ["biceps", "deltoide_posterior", "lumbares"] },
+  { id: "manolo-puente-luchador", nombre: "Puente de luchador", alias: ["wrestler bridge", "puente de cuello", "neck bridge"], tipo: "peso_corporal", equipo: "peso_corporal", primarios: ["cuello"], secundarios: ["trapecio", "gluteos", "lumbares"], factorPesoCorporal: 0.4 },
+  { id: "manolo-extension-cuello-maquina", nombre: "Extensión de cuello (Máquina)", alias: ["máquina de cuello", "neck machine", "cuello en máquina"], tipo: "carga", equipo: "maquina", primarios: ["cuello"], secundarios: ["trapecio"] },
   { id: "manolo-l-sit", nombre: "L-sit", alias: ["l sit", "escuadra"], tipo: "isometrico", equipo: "peso_corporal", primarios: ["abdominales"], secundarios: ["cuadriceps", "triceps"] }
 ];
 
 // ---------------------------------------------------------------------------
-// Músculos: dataset → 21 regiones de Manolo, con refinamientos.
+// Músculos: dataset → 22 regiones de Manolo, con refinamientos.
 // ---------------------------------------------------------------------------
 
 function regionPecho(n) {
@@ -1105,7 +1112,7 @@ const DIRECTO = {
   lats: "dorsales", "middle back": "espalda_media", traps: "trapecio", "lower back": "lumbares",
   biceps: "biceps", triceps: "triceps", forearms: "antebrazos", quadriceps: "cuadriceps",
   hamstrings: "isquiotibiales", glutes: "gluteos", adductors: "aductores", abductors: "abductores",
-  calves: "pantorrillas", neck: "trapecio"
+  calves: "pantorrillas", neck: "cuello"
 };
 
 function mapear(musculo, n, e, rol) {

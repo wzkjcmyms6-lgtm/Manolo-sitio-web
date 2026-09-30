@@ -146,9 +146,9 @@ test("cambio vs semana anterior", () => {
   assert.deepEqual(E.cambio(5, 0), { delta: 5, pct: null });
 });
 
-test("las 21 regiones se agrupan en 6 grupos", () => {
-  assert.equal(E.MUSCULOS.length, 21);
+test("las 22 regiones se agrupan en 6 grupos", () => {
+  assert.equal(E.MUSCULOS.length, 22);
   const porGrupo = {};
   E.MUSCULOS.forEach(m => { porGrupo[m.grupo] = (porGrupo[m.grupo] || 0) + 1; });
-  assert.deepEqual(porGrupo, { pecho: 3, espalda: 4, hombros: 3, brazos: 3, core: 2, piernas: 6 });
+  assert.deepEqual(porGrupo, { pecho: 3, espalda: 5, hombros: 3, brazos: 3, core: 2, piernas: 6 });
 });
