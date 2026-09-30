@@ -137,9 +137,8 @@ cardio | isometrico), equipo, primarios[], secundarios[], factorPesoCorporal`.
   (1–3 series), `--musculo-2` `#FF9A3C` (4–9), `--musculo-3` `#FF5A1F` (10+),
   `--musculo-suave` 0,5 = opacidad del tinte si solo fue secundario. Radar
   (Fase 3): actual `#FF7A30` (`--accent-1`), anterior `--radar-anterior` `#9A978F`.
-- **Fila L–D**: punto en días con cualquier entreno (gimnasio, running, bici);
-  por defecto se ve la semana completa; tocar un día filtra y tocarlo otra vez
-  vuelve a la semana.
+- **Fila L–D**: solo informa: punto en los días con entreno. El mapa se
+  ilumina siempre por la semana completa (lunes a domingo), no por día.
 - **Pulso**: cuando llegan datos nuevos (no al cambiar de semana/día), los
   músculos que suben de nivel muestran un brillo (filtro `#muscleGlow`). Si
   guardaste desde Gimnasio, el brillo se ve al volver al mapa.

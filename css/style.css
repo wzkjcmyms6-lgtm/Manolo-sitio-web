@@ -172,7 +172,8 @@ h1, h2, h3 { font-family: var(--font-body); font-weight: 700; letter-spacing: -0
   text-transform: uppercase;
 }
 
-/* Fila de días L–D: punto en los días con entreno; tocar uno filtra. */
+/* Fila de días L–D: solo informa (punto en los días con entreno); el mapa
+   siempre muestra la semana completa. */
 .body-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -189,8 +190,6 @@ h1, h2, h3 { font-family: var(--font-body); font-weight: 700; letter-spacing: -0
   border-radius: 12px;
   color: var(--muted);
   font: inherit;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
 }
 .body-day .d { font-size: 0.66rem; letter-spacing: 0.04em; }
 .body-day .n { font-size: 0.85rem; font-weight: 600; color: var(--ink); }
@@ -198,10 +197,6 @@ h1, h2, h3 { font-family: var(--font-body); font-weight: 700; letter-spacing: -0
 .body-day.has-data .dot { background: var(--accent-1); }
 .body-day.is-today { border-color: var(--border); }
 .body-day.future .n { color: var(--muted); }
-.body-day.selected { background: var(--accent-grad); border-color: transparent; }
-.body-day.selected .d, .body-day.selected .n { color: #0a0a0a; }
-.body-day.selected .dot { background: #0a0a0a; }
-.body-day.selected:not(.has-data) .dot { background: transparent; }
 
 .body-scale {
   display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3rem 0.9rem;

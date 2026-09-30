@@ -1,7 +1,7 @@
 // ---------- Mapa muscular de Ejercicio ----------
 // Frente y espalda (js/body-figures.js) con 22 regiones por lado. Cada
-// región se pinta según las series efectivas de la semana que se ve (o del
-// día elegido en la fila L–D): 1–3, 4–9, 10+; si el músculo solo trabajó
+// región se pinta según las series efectivas de toda la semana que se ve
+// (lunes a domingo): 1–3, 4–9, 10+; si el músculo solo trabajó
 // como secundario se ve más suave. Los números salen de js/muscle-engine.js
 // con los entrenamientos que junta js/ejercicio-datos.js. Tocar un músculo
 // abre una hoja con su detalle.
@@ -11,7 +11,6 @@ const DIAS = ["L", "M", "M", "J", "V", "S", "D"];
 const DIAS_LARGO = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 let weekOffset = 0;
-let diaElegido = null;          // "2026-09-29" o null = semana completa
 let musculoAbierto = null;      // id del músculo en la hoja
 let ultimo = { clave: null, niveles: {}, version: -1 };
 let calculo = null;             // último cálculo (para la hoja)
@@ -80,7 +79,7 @@ function pulso(musculos) {
 
 // ---- Render ----
 function rango(week) {
-  return diaElegido ? { desde: diaElegido, hasta: diaElegido } : { desde: isoDate(week.start), hasta: isoDate(week.end) };
+  return { desde: isoDate(week.start), hasta: isoDate(week.end) };
 }
 
 function renderBodyMap() {
@@ -128,17 +127,16 @@ function renderDias(week, datos) {
     const cls = ["body-day"];
     if (conEntreno.has(iso)) cls.push("has-data");
     if (iso === hoy) cls.push("is-today");
-    if (iso === diaElegido) cls.push("selected");
     if (iso > hoy) cls.push("future");
-    return `<button type="button" class="${cls.join(" ")}" data-dia="${iso}" aria-pressed="${iso === diaElegido}" aria-label="${dayLabel(iso)}">` +
-      `<span class="d">${DIAS[i]}</span><span class="n">${d.getDate()}</span><span class="dot"></span></button>`;
+    return `<div class="${cls.join(" ")}" data-dia="${iso}" aria-label="${dayLabel(iso)}${conEntreno.has(iso) ? ", con entreno" : ""}">` +
+      `<span class="d">${DIAS[i]}</span><span class="n">${d.getDate()}</span><span class="dot"></span></div>`;
   }).join("");
 }
 
 function renderResumen(musculos, filtrado) {
   const ids = Object.keys(musculos);
   const legend = document.getElementById("body-legend");
-  const periodo = diaElegido ? "este día" : "esta semana";
+  const periodo = "esta semana";
   if (!EjercicioDatos.estado.datos) {
     legend.innerHTML = `<span class="body-legend-chip">Cargando tus entrenamientos…</span>`;
   } else if (!filtrado.entradas.length) {
@@ -175,7 +173,7 @@ function renderHoja() {
   if (!def || !calculo) return;
   const info = calculo.musculos[musculoAbierto];
   const grupo = MuscleEngine.GRUPOS.find(g => g.id === def.grupo);
-  const periodo = diaElegido ? dayLabel(diaElegido) : "Semana " + weekLabel(currentWeek());
+  const periodo = "Semana " + weekLabel(currentWeek());
 
   document.getElementById("muscle-sheet-title").textContent = def.nombre;
   document.getElementById("muscle-sheet-group").textContent = grupo ? grupo.nombre : "";
@@ -208,7 +206,7 @@ function renderHoja() {
           </div>
           <span class="muscle-ex-meta">${fmtNum(e.series, true)} series ef. · ${fmtNum(e.volumen)} kg</span>
         </li>`).join("")
-    : `<li class="muscle-ex-empty">Ningún ejercicio trabajó este músculo ${diaElegido ? "ese día" : "esta semana"}.</li>`;
+    : `<li class="muscle-ex-empty">Ningún ejercicio trabajó este músculo esta semana.</li>`;
 }
 
 hoja.addEventListener("click", e => { if (e.target.closest("[data-cerrar]")) cerrarHoja(); });
@@ -239,17 +237,11 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") cerrarHoja()
 banner.addEventListener("click", e => {
   const region = e.target.closest(".mz");
   if (region) { abrirHoja(region.dataset.muscle); return; }
-  const dia = e.target.closest(".body-day");
-  if (dia) {
-    diaElegido = diaElegido === dia.dataset.dia ? null : dia.dataset.dia;
-    renderBodyMap();
-  }
 });
 
 // El radar (js/muscle-radar.js) sigue la semana que se ve en el mapa.
 function cambiarSemana(delta) {
   weekOffset += delta;
-  diaElegido = null;
   renderBodyMap();
   document.dispatchEvent(new CustomEvent("bodymap:semana", { detail: { offset: weekOffset } }));
 }
@@ -265,5 +257,5 @@ new MutationObserver(() => { if (banner.hidden) cerrarHoja(); renderBodyMap(); }
 
 renderBodyMap();
 
-window.BodyMap = { render: renderBodyMap, semana: () => ({ offset: weekOffset, dia: diaElegido }) };
+window.BodyMap = { render: renderBodyMap, semana: () => ({ offset: weekOffset }) };
 })();
