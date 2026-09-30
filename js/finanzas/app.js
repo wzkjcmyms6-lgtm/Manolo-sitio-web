@@ -1054,7 +1054,7 @@ function syncTransferAmounts() {
   const t = txnSheet;
   if (!t || t.type !== "transferencia" || walletCurrency(t.from) === walletCurrency(t.to)) return;
   const rate = parseNum(t.rate);
-  const amount = parseNum(t.amount);
+  const amount = montoTxn(t) || 0;
   if (rate <= 0 || amount <= 0) return;
   const toUsd = walletCurrency(t.to) === "US$";
   const value = toUsd ? amount / rate : amount * rate;
@@ -1084,9 +1084,64 @@ function openTxnSheet(movement) {
         rate: movement.tipoCambio ? toStr(movement.tipoCambio) : "", rateTouched: true,
         readonly: movement.type === "transferencia", movement
       }
-    : { id: null, type: "gasto", category: defaultCategory("gasto"), payment: "efectivo", amount: "0", desc: "", date: isoDate(new Date()), excluded: false, factura: false, keypad: true, from: "debito", to: "ahorro", amountTo: "", rate: "", rateTouched: false, readonly: false };
+    : { id: null, type: "gasto", category: null, payment: ultimaCartera("gasto"), amount: "0", desc: "", date: isoDate(new Date()), excluded: false, factura: false, keypad: true, from: "debito", to: "ahorro", amountTo: "", rate: "", rateTouched: false, readonly: false };
+  txnError(null);
   renderTxnSheet();
   showSheet(document.getElementById("txn-sheet"));
+}
+
+// ---- Registro rápido ----
+// La cartera por defecto es la última que usaste (una para gastos y otra
+// para ingresos).
+const CLAVE_ULTIMA_CARTERA = "manolo.finanzas.ultimaCartera";
+function ultimaCartera(tipo) {
+  try {
+    const v = JSON.parse(localStorage.getItem(CLAVE_ULTIMA_CARTERA) || "{}")[tipo];
+    if (v && findPayment(v) && !(tipo === "ingreso" && v === "credito")) return v;
+  } catch (e) { /* sin almacenamiento */ }
+  return tipo === "ingreso" ? "debito" : "efectivo";
+}
+function recordarCartera(tipo, pago) {
+  try {
+    const o = JSON.parse(localStorage.getItem(CLAVE_ULTIMA_CARTERA) || "{}");
+    o[tipo] = pago;
+    localStorage.setItem(CLAVE_ULTIMA_CARTERA, JSON.stringify(o));
+  } catch (e) { /* sin almacenamiento */ }
+}
+// Monto del teclado en Bs (acepta "25+18").
+function montoTxn(t) {
+  const c = FD.evaluarMonto(t.amount);
+  return c == null ? null : FD.aBs(c);
+}
+function txnError(texto, donde) {
+  const el = document.getElementById("txn-sheet-error");
+  if (!el) return;
+  el.hidden = !texto;
+  el.textContent = texto || "";
+  if (!texto) return;
+  const blanco = document.getElementById(donde || "txn-sheet-amount");
+  if (blanco) { blanco.classList.add("shake"); setTimeout(() => blanco.classList.remove("shake"), 400); }
+}
+// Hasta 8 categorías más usadas como chips; "Más" abre la lista completa.
+function renderTxnChips() {
+  const t = txnSheet;
+  const el = document.getElementById("txn-sheet-chips");
+  if (!el) return;
+  if (t.type === "transferencia" || t.readonly) { el.innerHTML = ""; return; }
+  let lista = mostUsedCategories(t.type);
+  if (lista.length < 8) {
+    const resto = catSheetSections(t.type).flatMap(sec => sec.items).filter(c => !lista.some(x => x.id === c.id));
+    lista = lista.concat(resto).slice(0, 8);
+  }
+  if (t.category && !lista.some(c => c.id === t.category)) lista = [findCategory(t.type, t.category)].concat(lista).slice(0, 8);
+  el.innerHTML = lista.map(c => `
+    <button type="button" class="txn-chip${c.id === t.category ? " is-on" : ""}" data-txn-chip="${escapeHtml(c.id)}" aria-pressed="${c.id === t.category}">
+      <span class="txn-chip-ico" style="background:${c.color}">${c.emoji ? `<span class="txn-chip-emoji">${c.emoji}</span>` : `<span data-icon="${c.icon}"></span>`}</span>
+      <span class="txn-chip-t">${escapeHtml(c.label)}</span>
+    </button>`).join("") + `
+    <button type="button" class="txn-chip txn-chip-mas" data-txn-mas aria-label="Ver todas las categorías">
+      <span class="txn-chip-ico"><span data-icon="otherCategory"></span></span><span class="txn-chip-t">Más</span>
+    </button>`;
 }
 
 function closeTxnSheet() {
@@ -1102,7 +1157,7 @@ function renderTxnSheet() {
   sheet.classList.toggle("is-transfer", isTransfer);
   sheet.classList.toggle("is-readonly", !!t.readonly);
   document.getElementById("txn-sheet-title").textContent = t.readonly ? "Transferencia" : t.id ? "Editar transacción" : "Nueva transacción";
-  document.getElementById("txn-sheet-amount").textContent = formatSheetAmount(t.amount);
+  pintarMontoTxn();
   document.getElementById("txn-sheet-currency").textContent = isTransfer ? walletCurrency(t.from) : "Bs";
   document.querySelectorAll("#txn-sheet [data-txn-type]").forEach(b => {
     b.classList.toggle("active", b.dataset.txnType === t.type);
@@ -1141,9 +1196,10 @@ function renderTxnSheet() {
   document.getElementById("txn-sheet-note").disabled = !!t.readonly;
   document.getElementById("txn-sheet-save").hidden = !!t.readonly;
 
-  const cat = findCategory(t.type, t.category);
+  const cat = t.category ? findCategory(t.type, t.category) : { label: "Elige una", icon: "otherCategory", color: "#4a4944" };
   document.getElementById("txn-sheet-cat-badge").outerHTML = txnIconHTML(cat).replace('<span class="txn-icon', '<span id="txn-sheet-cat-badge" class="txn-icon');
   document.getElementById("txn-sheet-cat-label").textContent = cat.label;
+  renderTxnChips();
   document.getElementById("txn-sheet-cat").disabled = !editable;
 
   const pay = findPayment(t.payment) || PAYMENTS[0];
@@ -1167,14 +1223,32 @@ function renderTxnSheet() {
   if (t.readonly) document.getElementById("txn-sheet-next-day").disabled = true;
 
   document.getElementById("txn-sheet-delete").hidden = !t.id;
+  document.getElementById("txn-sheet-save-otro").hidden = !!t.id || !!t.readonly;
   document.getElementById("txn-sheet").classList.toggle("keypad-open", t.keypad && !t.readonly);
   renderIcons(document.getElementById("txn-sheet"));
 }
 
+// El monto se muestra como se escribe ("25 + 18") y abajo el resultado.
+function formatExpr(expr) {
+  return String(expr).split(/([+−])/).map(p => (p === "+" || p === "−" ? ` ${p} ` : formatSheetAmount(p))).join("");
+}
+function pintarMontoTxn() {
+  const t = txnSheet;
+  document.getElementById("txn-sheet-amount").textContent = formatExpr(t.amount);
+  const res = document.getElementById("txn-sheet-resultado");
+  const c = FD.evaluarMonto(t.amount);
+  res.textContent = FD.tieneOperacion(t.amount) && c != null ? `= ${c < 0 ? "−" : ""}${formatBsShort(Math.abs(FD.aBs(c)))}` : "";
+}
 function pressTxnKey(key) {
   if (txnSheet.readonly) return;
-  txnSheet.amount = applyAmountKey(txnSheet.amount, key);
-  document.getElementById("txn-sheet-amount").textContent = formatSheetAmount(txnSheet.amount);
+  if (key === "=") {
+    const c = FD.evaluarMonto(txnSheet.amount);
+    txnSheet.amount = c != null && c > 0 ? String(FD.aBs(c)).replace(".", ",") : "0";
+  } else {
+    txnSheet.amount = FD.teclaMonto(txnSheet.amount, key);
+  }
+  txnError(null);
+  pintarMontoTxn();
   if (txnSheet.type === "transferencia") {
     syncTransferAmounts();
     const el = document.getElementById("txn-sheet-amount-to");
@@ -1194,7 +1268,7 @@ function shiftTxnDate(days) {
 
 function chooseTxnCategory() {
   const t = txnSheet;
-  openCatSheet(t.type, t.category, id => { t.category = id; renderTxnSheet(); });
+  openCatSheet(t.type, t.category, id => { t.category = id; txnError(null); renderTxnSheet(); });
 }
 
 // ---- Selector de categorías a pantalla completa (como Buddy) ----
@@ -1378,25 +1452,26 @@ function chooseTxnWallet(side) {
   });
 }
 
-async function saveTxn() {
+function saveTxn(yOtro) {
   // Por si el selector de fecha no avisó el cambio, tomamos lo que muestra.
   applyTxnDateInput(document.getElementById("txn-sheet-date-input").value);
   const t = txnSheet;
-  const amount = parseFloat(t.amount.replace(",", ".")) || 0;
-  if (amount <= 0) {
+  const amount = montoTxn(t);
+  if (amount == null || amount <= 0) {
     t.keypad = true;
     renderTxnSheet();
-    document.getElementById("txn-sheet-amount").classList.add("shake");
-    setTimeout(() => document.getElementById("txn-sheet-amount").classList.remove("shake"), 400);
+    txnError(amount != null && amount < 0 ? "El resultado es negativo: revisa la resta." : "Escribe un monto mayor que cero.");
     return;
   }
   if (t.type === "transferencia") {
+    if (t.from === t.to) { txnError("Elige dos carteras distintas.", "txn-sheet-to"); return; }
     let amountTo = amount;
     if (walletCurrency(t.from) !== walletCurrency(t.to)) {
       amountTo = parseFloat((t.amountTo || "").replace(",", ".")) || 0;
       if (amountTo <= 0) {
         t.keypad = false;
         renderTxnSheet();
+        txnError(`Escribe cuánto llega en ${walletCurrency(t.to)}.`, "txn-sheet-amount-to");
         document.getElementById("txn-sheet-amount-to").focus();
         return;
       }
@@ -1404,14 +1479,31 @@ async function saveTxn() {
     const rate = parseNum(t.rate);
     const payload = { from: t.from, to: t.to, amount, amountTo, desc: t.desc.trim(), date: t.date };
     if (walletCurrency(t.from) !== walletCurrency(t.to) && rate > 0) payload.tipoCambio = rate;
-    closeTxnSheet();
     createTransfer(payload).catch(err => console.error("Manolo: no se pudo guardar la transferencia", err));
+    trasGuardar(yOtro, `Transferencia de ${formatBsShort(amount)} guardada`);
+    return;
+  }
+  if (!t.category) {
+    txnError("Elige una categoría.", "txn-sheet-chips");
     return;
   }
   const data = FD.conCentavos({ date: t.date, type: t.type, category: t.category, payment: t.payment, desc: t.desc.trim(), amount, excluded: t.excluded, factura: t.type === "gasto" && !!t.factura });
-  closeTxnSheet();
-  if (t.id) await financeCollection().doc(t.id).update(data);
-  else await financeCollection().add(Object.assign({ createdAt: Date.now() }, data));
+  recordarCartera(t.type, t.payment);
+  const guardado = t.id ? financeCollection().doc(t.id).update(data) : financeCollection().add(Object.assign({ createdAt: Date.now() }, data));
+  guardado.catch(err => console.error("Manolo: no se pudo guardar el movimiento", err));
+  trasGuardar(yOtro, `${t.type === "ingreso" ? "Ingreso" : "Gasto"} de ${formatBsShort(amount)} guardado · ${findCategory(t.type, t.category).label}`);
+}
+// Después de guardar: vibración corta (donde se pueda) y, con "Guardar y
+// otro", la hoja queda lista para el siguiente con el mismo tipo, fecha y
+// cartera.
+function trasGuardar(yOtro, texto) {
+  try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) { /* sin vibración */ }
+  if (!yOtro) { closeTxnSheet(); return; }
+  const t = txnSheet;
+  Object.assign(t, { id: null, amount: "0", desc: "", category: null, factura: false, excluded: false, amountTo: "", keypad: true });
+  txnError(null);
+  renderTxnSheet();
+  avisoFin(texto);
 }
 
 function deleteTxnFromSheet() {
@@ -1438,8 +1530,8 @@ document.getElementById("txn-sheet").addEventListener("click", e => {
   if (typeBtn) {
     if (typeBtn.dataset.txnType !== txnSheet.type) {
       txnSheet.type = typeBtn.dataset.txnType;
-      if (txnSheet.type !== "transferencia") txnSheet.category = defaultCategory(txnSheet.type);
-      if (txnSheet.type === "ingreso" && txnSheet.payment === "credito") txnSheet.payment = "efectivo";
+      if (txnSheet.type !== "transferencia") { txnSheet.category = null; txnSheet.payment = ultimaCartera(txnSheet.type); }
+      txnError(null);
       renderTxnSheet();
     }
     return;
@@ -1452,7 +1544,11 @@ document.getElementById("txn-sheet").addEventListener("click", e => {
   if (e.target.closest("#txn-sheet-to")) { if (!txnSheet.readonly) chooseTxnWallet("to"); return; }
   if (e.target.closest("#txn-sheet-prev-day")) { shiftTxnDate(-1); return; }
   if (e.target.closest("#txn-sheet-next-day")) { shiftTxnDate(1); return; }
-  if (e.target.closest("#txn-sheet-save")) { saveTxn(); return; }
+  if (e.target.closest("#txn-sheet-save")) { saveTxn(false); return; }
+  if (e.target.closest("#txn-sheet-save-otro")) { saveTxn(true); return; }
+  const chip = e.target.closest("[data-txn-chip]");
+  if (chip) { txnSheet.category = chip.dataset.txnChip; txnError(null); renderTxnSheet(); return; }
+  if (e.target.closest("[data-txn-mas]")) { chooseTxnCategory(); return; }
   if (e.target.closest("#txn-sheet-delete")) { deleteTxnFromSheet(); return; }
   if (e.target.closest(".budget-sheet-close") || e.target.classList.contains("budget-sheet-overlay")) closeTxnSheet();
 });
@@ -1480,7 +1576,7 @@ function applyTxnDateInput(value) {
 document.getElementById("txn-sheet-amount-to").addEventListener("input", e => {
   if (!txnSheet) return;
   txnSheet.amountTo = e.target.value;
-  const amount = parseNum(txnSheet.amount), to = parseNum(e.target.value);
+  const amount = montoTxn(txnSheet) || 0, to = parseNum(e.target.value);
   if (amount > 0 && to > 0) {
     const toUsd = walletCurrency(txnSheet.to) === "US$";
     txnSheet.rate = fmtRate(toUsd ? amount / to : to / amount).replace(/\./g, "");
@@ -2341,7 +2437,11 @@ document.addEventListener("keydown", e => {
   if (txnSheet) {
     if (/^\d$/.test(e.key)) pressTxnKey(e.key);
     else if (e.key === "," || e.key === ".") pressTxnKey(",");
+    else if (e.key === "+") pressTxnKey("+");
+    else if (e.key === "-") pressTxnKey("−");
+    else if (e.key === "=") pressTxnKey("=");
     else if (e.key === "Backspace") pressTxnKey("back");
+    else if (e.key === "Enter") saveTxn(false);
     else if (e.key === "Escape") closeTxnSheet();
     else return;
     e.preventDefault();
@@ -2508,6 +2608,8 @@ function cardScheduleHTML(deuda) {
 const MONTH_NAMES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
 function renderReiva() {
+  const pct = document.getElementById("reiva-pct-texto");
+  if (pct) pct.textContent = `${(reivaTasa() * 100).toLocaleString("es-BO", { maximumFractionDigits: 2 })} %`;
   const byMonth = {};
   financeCache
     .filter(m => m.type === "gasto" && m.factura && m.date)
@@ -3765,6 +3867,42 @@ new MutationObserver(() => { if (renderPendiente && finanzasVisible()) renderAll
   .observe(document.querySelector(".main") || document.body, { attributes: true, attributeFilter: ["hidden"], subtree: true });
 
 
+// ================= Categorías con color fijo y categorías nuevas =================
+// Antes el color de cada sección dependía de su posición (al reordenar,
+// cambiaba). Una sola vez se guarda el color actual de cada sección y se
+// agregan las categorías nuevas que falten (si ya tienes una con el mismo
+// nombre, no se duplica). Queda marcado en meta/finanzas_esquema.
+const CATEGORIAS_NUEVAS = [
+  { id: "inversiones_ahorros", nombre: "Inversiones y ahorros", color: "#2fa37a", items: [{ id: "inversiones_ahorros", label: "Inversiones y ahorros", icon: "bank", tipo: "ahorro" }] },
+  { id: "educacion", nombre: "Educación", color: "#5b7fe0", items: [{ id: "educacion", label: "Educación", icon: "education", tipo: "variable" }] },
+  { id: "higiene", nombre: "Higiene y fragancias", color: "#e38fb8", items: [{ id: "higiene", label: "Higiene y fragancias", icon: "otherCategory", emoji: "🧴", tipo: "variable" }] },
+  { id: "mascotas", nombre: "Mascotas", color: "#b98a5b", items: [{ id: "mascotas", label: "Mascotas", icon: "pet", tipo: "variable" }] },
+  { id: "ropa", nombre: "Ropa", color: "#e07a5f", items: [{ id: "ropa", label: "Ropa", icon: "shopping", emoji: "👕", tipo: "variable" }] }
+];
+let categoriasDelServidor = false, migrandoCategorias = false;
+function migrarCategoriasFijas() {
+  if (migrandoCategorias || !categoriasDelServidor || !esquemaCargado || (esquema && esquema.categoriasFijas)) return;
+  if (!DEMO && !(esquema && esquema.respaldo)) return; // primero el respaldo automático
+  migrandoCategorias = true;
+  const norm = t => normalizeText(String(t || "")).trim();
+  const ids = new Set(), nombres = new Set();
+  categoryGroupsCache.forEach(g => {
+    ids.add(g.id); nombres.add(norm(g.nombre));
+    (g.items || []).forEach(i => { ids.add(i.id); nombres.add(norm(i.label)); });
+  });
+  const fijos = categoryGroupsCache.map(g => Object.assign({}, g, { color: groupColor(g) }));
+  const nuevos = CATEGORIAS_NUEVAS.filter(g => !ids.has(g.id) && !nombres.has(norm(g.nombre)) && !g.items.some(i => nombres.has(norm(i.label))));
+  const next = fijos.concat(nuevos);
+  const lote = nuevoLote();
+  lote.set(categoriasDocRef(), { groups: next }, { merge: true });
+  lote.set(metaDocRef("finanzas_esquema"), { categoriasFijas: { fecha: Date.now(), agregadas: nuevos.map(g => g.id) } }, { merge: true });
+  categoryGroupsCache = next;
+  gastoCategoriesCache = flattenCategoryGroups(next);
+  // Una sola vez por sesión (aunque el aviso del esquema tarde en llegar).
+  lote.commit().catch(err => { console.error("Manolo: no se pudieron fijar las categorías", err); migrandoCategorias = false; });
+  pedirRender();
+}
+
 // ================= Respaldo automático y verificación =================
 // La primera vez que llegan tus datos desde el servidor (completos, no solo
 // la copia del teléfono) se guarda un respaldo de TODO Finanzas en
@@ -3859,6 +3997,7 @@ onAuthReady(() => {
     esquema = doc.exists ? doc.data() : null;
     esquemaCargado = doc.exists || !(doc.metadata && doc.metadata.fromCache);
     intentarRespaldo();
+    migrarCategoriasFijas();
     pedirRender();
   });
   budgetConfigDocRef().onSnapshot(doc => {
@@ -3917,6 +4056,8 @@ onAuthReady(() => {
       categoriasDocRef().set({ groups: DEFAULT_CATEGORY_GROUPS }, { merge: true });
     }
     updateGastoCategoriesCache();
+    if (!soloCache && data && Array.isArray(data.groups) && data.groups.length) categoriasDelServidor = true;
+    migrarCategoriasFijas();
     groupsLoaded = !soloCache || groupsLoaded;
     migrateLegacyCustom();
     pedirRender();

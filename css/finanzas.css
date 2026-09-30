@@ -1423,3 +1423,44 @@ button.remain-cat:active .remain-ring { transform: scale(0.95); }
 }
 .fin-demo-banner[hidden], body:not(.in-finanzas) .fin-demo-banner { display: none; }
 .fin-demo-salir { min-height: 36px; padding: 0 0.9rem; border-radius: 999px; border: 0; background: var(--accent-grad); color: #0a0a0a; font: inherit; font-weight: 700; cursor: pointer; }
+
+/* ---------- Registro rápido (Fase 2a) ---------- */
+.txn-sheet-resultado { display: block; min-height: 1.3em; margin-top: 0.2rem; font-size: 0.95rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.txn-sheet .budget-sheet-amount { font-variant-numeric: tabular-nums; }
+.txn-sheet-error { margin: 0.6rem auto 0; max-width: 22rem; font-size: 0.85rem; font-weight: 600; color: #f1a193; }
+.txn-sheet-error::before { content: "⚠ "; }
+.txn-chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(4.6rem, 1fr)); gap: 0.5rem; padding: 0.9rem 1rem 0.4rem; }
+.txn-chip {
+  display: flex; flex-direction: column; align-items: center; gap: 0.3rem; min-height: 64px; padding: 0.4rem 0.2rem;
+  border: 1px solid transparent; border-radius: 14px; background: none; color: var(--ink); font: inherit; cursor: pointer;
+}
+.txn-chip.is-on { border-color: var(--accent-2); background: rgba(255, 184, 77, 0.1); }
+.txn-chip-ico { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--surface-raised); color: #fff; }
+.txn-chip-ico [data-icon] { width: 18px; height: 18px; display: flex; }
+.txn-chip-emoji { font-size: 1.1rem; line-height: 1; }
+.txn-chip-t { max-width: 100%; font-size: 0.72rem; line-height: 1.2; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.txn-chip-mas .txn-chip-ico { color: var(--ink); border: 1px dashed var(--border); background: none; }
+.txn-sheet:not(.is-transfer):not(.is-readonly) #txn-sheet-cat { display: none; }
+.txn-keypad { grid-template-columns: repeat(4, 1fr); }
+.txn-keypad .txn-key-op { background: var(--surface); color: var(--accent-2); font-size: 1.35rem; }
+.txn-keypad .txn-key-igual { grid-column: span 2; }
+.txn-save-otro { background: var(--surface-raised); color: var(--ink); border: 1px solid var(--border); }
+.txn-save-otro[hidden] { display: none; }
+.txn-sheet-actions .txn-save { letter-spacing: 0.06em; font-size: 0.85rem; min-height: 52px; }
+.shake { animation: txn-shake 0.35s; }
+@media (prefers-reduced-motion: reduce) { .shake { animation: none; } }
+/* Chips en una sola fila que se desliza, para que el monto siempre se vea */
+.txn-chips { display: flex; overflow-x: auto; gap: 0.35rem; padding: 0.7rem 1rem 0.3rem; scrollbar-width: none; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; }
+.txn-chips::-webkit-scrollbar { display: none; }
+.txn-chip { flex: 0 0 4.5rem; scroll-snap-align: start; }
+.txn-keypad button { padding: 0.62rem 0; font-size: 1.35rem; }
+.txn-sheet-actions { padding: 0.8rem 1rem calc(0.8rem + env(safe-area-inset-bottom)); }
+.txn-sheet-actions .txn-save { white-space: nowrap; letter-spacing: 0.04em; padding: 0.9rem 0.6rem; }
+@media (max-height: 780px) {
+  .txn-sheet .budget-sheet-hero { padding: 0.8rem 1rem 0.7rem; }
+  .txn-sheet .budget-sheet-type { margin-top: 0.6rem; }
+  .txn-sheet .budget-sheet-row { min-height: 52px; }
+  .txn-keypad button { padding: 0.5rem 0; }
+  .txn-keypad-done { margin-top: 0.3rem; padding: 0.3rem 1rem; }
+  .txn-chips { padding-top: 0.5rem; }
+}

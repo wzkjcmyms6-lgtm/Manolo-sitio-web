@@ -325,7 +325,54 @@ function aCsv(encabezados, filas) {
 }
 const montoCsv = cent => (cent / 100).toFixed(2);
 
+// ---------- Teclado: montos con suma y resta (ej. "25+18−5") ----------
+// La expresión se guarda como texto con coma decimal y los signos + y −.
+const MAX_CIFRAS = 9;
+function teclaMonto(expr, tecla) {
+  const e = expr || "0";
+  const ultimo = e.slice(-1);
+  const esOp = c => c === "+" || c === "−";
+  const tramo = e.split(/[+−]/).pop();
+  if (tecla === "back") return e.length > 1 ? e.slice(0, -1) : "0";
+  if (tecla === "+" || tecla === "−") {
+    if (e === "0") return e;
+    if (esOp(ultimo)) return e.slice(0, -1) + tecla;          // cambia el signo
+    if (ultimo === ",") return e.slice(0, -1) + tecla;
+    return e + tecla;
+  }
+  if (tecla === ",") {
+    if (tramo.includes(",")) return e;
+    return esOp(ultimo) ? e + "0," : e + ",";
+  }
+  if (/^\d$/.test(tecla)) {
+    const dec = tramo.split(",")[1];
+    if (dec !== undefined && dec.length >= 2) return e;
+    if (tramo.replace(",", "").length >= MAX_CIFRAS) return e;
+    if (e === "0") return tecla;
+    if (tramo === "0") return e.slice(0, -1) + tecla;
+    return e + tecla;
+  }
+  return e;
+}
+// Resultado en centavos, o null si la expresión no se puede leer.
+function evaluarMonto(expr) {
+  const e = String(expr || "").replace(/-/g, "−").replace(/\s/g, "").replace(/[+−,]+$/, "");
+  if (!e) return 0;
+  const partes = e.match(/[+−]?[^+−]+/g);
+  if (!partes || partes.join("") !== e) return null;
+  let total = 0;
+  for (const p of partes) {
+    const signo = p[0] === "−" ? -1 : 1;
+    const num = p.replace(/^[+−]/, "");
+    if (!/^\d+(,\d{0,2})?$/.test(num)) return null;
+    total += signo * aCentavos(num);
+  }
+  return total;
+}
+const tieneOperacion = expr => /[+−]/.test(String(expr || "").slice(1));
+
 return {
+  teclaMonto, evaluarMonto, tieneOperacion,
   FORMATO, COLECCIONES, META_COPIA, copiaCompleta, validarCopia, planImportacion, celdaCsv, aCsv, montoCsv,
   ESQUEMA, DOCS_POR_PARTE,
   aCentavos, aBs, montoValido, decimalesExtra, sumaCent, sumaBs,

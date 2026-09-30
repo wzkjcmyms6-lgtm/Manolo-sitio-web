@@ -264,3 +264,26 @@ test("modo demo: almacén aparte con la forma de Firestore", async () => {
   assert.ok(!Demo.activo(memoria));
   assert.deepEqual(Object.keys(memoria._m), []);
 });
+
+// ---------- 2a: teclado con suma y resta ----------
+test("teclado: escribe montos y suma o resta (25+18)", () => {
+  const escribir = teclas => teclas.split("").reduce((e, t) => D.teclaMonto(e, t === "<" ? "back" : t === "-" ? "−" : t), "0");
+  assert.equal(escribir("25+18"), "25+18");
+  assert.equal(D.evaluarMonto("25+18"), 4300);
+  assert.equal(D.evaluarMonto(escribir("100-12,5")), 8750);
+  assert.equal(escribir("12,345"), "12,34");        // máximo 2 decimales por número
+  assert.equal(escribir("5,5+2,25"), "5,5+2,25");
+  assert.equal(D.evaluarMonto("5,5+2,25"), 775);
+  assert.equal(escribir("+"), "0");                 // no empieza con signo
+  assert.equal(escribir("7+-"), "7−");              // cambia el signo
+  assert.equal(escribir("8+,5"), "8+0,5");
+  assert.equal(escribir("9+<"), "9");
+  assert.equal(escribir("<<"), "0");
+  assert.equal(escribir("007"), "7");
+  assert.equal(escribir("1234567890"), "123456789");
+  assert.equal(D.evaluarMonto("25+"), 2500);        // un signo al final se ignora al guardar
+  assert.equal(D.evaluarMonto("10−20"), -1000);     // negativo: la pantalla lo rechaza
+  assert.equal(D.evaluarMonto("1,2,3"), null);
+  assert.ok(D.tieneOperacion("25+18"));
+  assert.ok(!D.tieneOperacion("25"));
+});

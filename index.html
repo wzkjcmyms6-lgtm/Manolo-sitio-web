@@ -18,7 +18,7 @@
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
   <link rel="stylesheet" href="css/style.css?v=202610011000">
-  <link rel="stylesheet" href="css/finanzas.css?v=202610011000">
+  <link rel="stylesheet" href="css/finanzas.css?v=202610011100">
   <link rel="stylesheet" href="css/habitos.css?v=202610010600">
 </head>
 <body>
@@ -449,7 +449,9 @@
                 <div class="budget-sheet-hero">
                   <button type="button" class="txn-amount-btn" id="txn-sheet-amount-btn" aria-label="Editar monto">
                     <span class="budget-sheet-amount"><span class="cur" id="txn-sheet-currency">Bs</span><span id="txn-sheet-amount">0</span></span>
+                    <span class="txn-sheet-resultado" id="txn-sheet-resultado" aria-live="polite"></span>
                   </button>
+                  <p class="txn-sheet-error" id="txn-sheet-error" role="alert" hidden></p>
                   <div class="budget-sheet-type">
                     <button type="button" data-txn-type="gasto">Gasto</button>
                     <button type="button" data-txn-type="ingreso">Ingresos</button>
@@ -478,6 +480,7 @@
                     <span class="txn-amount-to-cur" id="txn-sheet-amount-to-cur">US$</span>
                     <input type="text" id="txn-sheet-amount-to" inputmode="decimal" placeholder="0" autocomplete="off">
                   </label>
+                  <div class="txn-chips txn-no-transfer" id="txn-sheet-chips" role="group" aria-label="Categoría"></div>
                   <button type="button" class="budget-sheet-row txn-no-transfer" id="txn-sheet-cat">
                     <span id="txn-sheet-cat-badge" class="txn-icon"></span>
                     <span>Categoría: <strong id="txn-sheet-cat-label"></strong></span>
@@ -512,17 +515,18 @@
                 </div>
 
                 <div class="txn-keypad-wrap">
-                  <div class="budget-keypad">
-                    <button type="button" data-txn-key="1">1</button><button type="button" data-txn-key="2">2</button><button type="button" data-txn-key="3">3</button>
-                    <button type="button" data-txn-key="4">4</button><button type="button" data-txn-key="5">5</button><button type="button" data-txn-key="6">6</button>
-                    <button type="button" data-txn-key="7">7</button><button type="button" data-txn-key="8">8</button><button type="button" data-txn-key="9">9</button>
-                    <button type="button" data-txn-key=",">,</button><button type="button" data-txn-key="0">0</button><button type="button" data-txn-key="back" aria-label="Borrar">&#9003;</button>
+                  <div class="budget-keypad txn-keypad">
+                    <button type="button" data-txn-key="1">1</button><button type="button" data-txn-key="2">2</button><button type="button" data-txn-key="3">3</button><button type="button" class="txn-key-op" data-txn-key="back" aria-label="Borrar">&#9003;</button>
+                    <button type="button" data-txn-key="4">4</button><button type="button" data-txn-key="5">5</button><button type="button" data-txn-key="6">6</button><button type="button" class="txn-key-op" data-txn-key="−" aria-label="Restar">−</button>
+                    <button type="button" data-txn-key="7">7</button><button type="button" data-txn-key="8">8</button><button type="button" data-txn-key="9">9</button><button type="button" class="txn-key-op" data-txn-key="+" aria-label="Sumar">+</button>
+                    <button type="button" data-txn-key=",">,</button><button type="button" data-txn-key="0">0</button><button type="button" class="txn-key-op txn-key-igual" data-txn-key="=" aria-label="Calcular">=</button>
                   </div>
                   <button type="button" class="txn-keypad-done" id="txn-sheet-keypad-done">Nota, fecha y más ▾</button>
                 </div>
 
                 <div class="txn-sheet-actions">
                   <button type="button" class="budget-sheet-delete" id="txn-sheet-delete" hidden>Eliminar</button>
+                  <button type="button" class="txn-save txn-save-otro" id="txn-sheet-save-otro">Guardar y otro</button>
                   <button type="button" class="txn-save" id="txn-sheet-save">Guardar</button>
                 </div>
               </div>
@@ -728,7 +732,7 @@
           <section id="panel-fin-herramientas-reiva" hidden>
             <a class="back-link" href="#fin-herramientas"><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</a>
             <h1 class="page-title">RE-IVA</h1>
-            <p class="panel-sub">Cada compra que marques <strong>con factura</strong> suma el 5 % de su monto al mes calendario en que la hiciste (del 1 al 30 o 31).</p>
+            <p class="panel-sub">Cada compra que marques <strong>con factura</strong> suma el <span id="reiva-pct-texto">5 %</span> de su monto al mes calendario en que la hiciste (del 1 al 30 o 31).</p>
             <div id="reiva-list"></div>
           </section>
 
@@ -922,9 +926,9 @@
   <script defer src="js/offline.js?v=202610010700"></script>
   <script defer src="js/running.js?v=202609293"></script>
   <script defer src="js/bicicleta.js?v=202609293"></script>
-  <script defer src="js/finanzas/datos.js?v=202610011000"></script>
+  <script defer src="js/finanzas/datos.js?v=202610011100"></script>
   <script defer src="js/finanzas/demo.js?v=202610011000"></script>
-  <script defer src="js/finanzas/app.js?v=202610011000"></script>
+  <script defer src="js/finanzas/app.js?v=202610011100"></script>
   <script defer src="js/inversiones.js?v=202609232200"></script>
 </body>
 </html>
