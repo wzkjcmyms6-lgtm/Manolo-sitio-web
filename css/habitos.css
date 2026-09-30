@@ -327,6 +327,71 @@
 .hb-animo small { font-size: 0.66rem; }
 .hb-animo.is-on { border-color: var(--accent-1); background: rgba(255, 122, 48, 0.18); color: var(--ink); }
 
+/* ===== Fase 2: rangos, pestaña Logros, tienda, áreas y celebraciones ===== */
+.hb-insignia { flex-shrink: 0; display: inline-flex; }
+.hb-insignia .insignia { display: block; }
+.hb-rango { display: flex; align-items: center; gap: 0.9rem; margin: 1rem 0 0.2rem; padding: 0.85rem 0.9rem; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); }
+.hb-rango .insignia { flex-shrink: 0; }
+.hb-rango-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.8rem; color: var(--muted); }
+.hb-rango-txt b { color: var(--ink); font-size: 1.05rem; }
+.hb-rango-barra { margin-top: 0.2rem; }
+.hb-rango-escudo { color: var(--accent-2); }
+.hb-btn:disabled, .hb-btn-sec:disabled { opacity: 0.45; cursor: default; }
+
+.hb-resumen { padding: 1rem 1.1rem; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); margin-bottom: 1rem; }
+.hb-resumen .hb-pj-nivel .hb-num { font-size: 2.2rem; }
+.hb-resumen .hb-pj-t { color: var(--muted); }
+.hb-resumen .hb-xp { background: var(--bg-soft); }
+.hb-resumen .hb-pj-datos { color: var(--muted); }
+.hb-tabs { display: flex; margin-bottom: 1rem; }
+.hb-tabs .fin-tab { flex: 1; padding-left: 0.4rem; padding-right: 0.4rem; min-height: 40px; }
+.hb-tab-cuerpo .hb-xp, .hb-area .hb-xp, .hb-mision .hb-xp, .hb-logro .hb-xp { background: var(--bg-soft); height: 6px; }
+.hb-tag { display: inline-flex; align-self: flex-start; font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.55rem; border-radius: 999px; color: #0a0a0a; background: var(--accent-grad); }
+
+.hb-misiones, .hb-logros, .hb-areas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; }
+.hb-mision { padding: 0.85rem 0.95rem; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.55rem; }
+.hb-mision.is-hecha { border-color: rgba(255, 122, 48, 0.45); }
+.hb-mision-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.6rem; }
+.hb-mision-pie { display: flex; justify-content: space-between; gap: 0.6rem; font-size: 0.78rem; color: var(--muted); }
+
+.hb-logro { display: flex; gap: 0.8rem; padding: 0.8rem 0.9rem; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); }
+.hb-logro-ico { width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--bg-soft); color: var(--muted); }
+.hb-logro-ico [data-icon] { width: 22px; height: 22px; display: flex; }
+.hb-logro.is-on { border-color: rgba(211, 163, 90, 0.5); }
+.hb-logro.is-on .hb-logro-ico { background: rgba(211, 163, 90, 0.18); color: var(--gold); }
+.hb-logro-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.8rem; color: var(--muted); }
+.hb-logro-txt b { color: var(--ink); font-size: 0.95rem; }
+.hb-logro-prog { font-size: 0.72rem; }
+
+.hb-saldo { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--muted); }
+.hb-saldo .hb-ico { width: 26px; height: 26px; }
+.hb-saldo .hb-num { font-size: 2rem; color: var(--ink); }
+.hb-tienda-bloque { margin-top: 0.4rem; }
+.hb-tienda-fila { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; padding: 0.5rem 0.5rem 0.5rem 0.9rem; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); font-size: 0.9rem; }
+.hb-recompensa-form { display: grid; grid-template-columns: 1fr 96px; gap: 0 0.5rem; align-items: end; }
+.hb-recompensa-form .hb-btn { grid-column: 1 / -1; margin-top: 0.7rem; }
+.hb-pausas li b { color: var(--ink); }
+
+.hb-area { padding: 0.85rem 0.95rem; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.5rem; }
+.hb-area-top { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; font-size: 0.8rem; color: var(--muted); }
+.hb-area-top b { color: var(--ink); font-size: 1rem; }
+.hb-area-top .hb-num { font-size: 1.4rem; color: var(--ink); }
+.hb-area-pie { font-size: 0.76rem; color: var(--muted); }
+.hb-areas-nombres { display: grid; grid-template-columns: 1fr 1fr; gap: 0 0.5rem; }
+.hb-areas-nombres .hb-campo { margin-top: 0.5rem; }
+.hb-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.hb-eyebrow { font-size: 0.8rem; color: var(--accent-2); font-weight: 600; }
+.hb-cel-ico, .hb-cel-nivel {
+  width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--accent-grad); color: #0a0a0a;
+}
+.hb-cel-ico [data-icon] { width: 26px; height: 26px; display: flex; }
+.hb-cel-nivel { font-size: 1.6rem; }
+.hb-celebra .rk-sube .n { font-weight: 700; }
+.hb-celebra .rk-sube .r { font-size: 0.75rem; color: var(--muted); }
+.hb-celebra .rk-fila-txt { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+
 @media (prefers-reduced-motion: reduce) {
   .hb-capa, .hb-anillo-valor, .hb-xp span, .hb-toast { transition: none; }
   .hb-check.hb-pop, .hb-xp-flota { animation: none; }

@@ -20,7 +20,8 @@ const TOAST_MS = 6000;
 // ---------- Estado ----------
 let docs = {};          // id → datos crudos de Firestore (para Deshacer y notas)
 let normal = {};        // id → hábito normalizado por el motor
-let juego = {};         // meta/habitos_juego (preferencias; tienda y demás en la fase 2)
+let juego = {};         // meta/habitos_juego: preferencias, recompensas, compras, misiones y snapshot
+let juegoCargado = false;
 let res = null;         // último HE.evaluar()
 let cargado = false;
 let pendienteXP = null; // { id, xp } para mostrar "+N XP" tras marcar
@@ -90,12 +91,38 @@ function textoRacha(r) {
 }
 
 // ---------- Cálculo ----------
+function compras() {
+  return Object.keys(juego.compras || {}).map(id => Object.assign({ id }, juego.compras[id])).filter(c => c && c.t)
+    .sort((a, b) => a.t - b.t);
+}
+// Áreas por defecto con los nombres que hayas elegido en Ajustes.
+function areasDef() {
+  const nombres = (juego.prefs && juego.prefs.areas) || {};
+  return HC.AREAS.map(a => ({ id: a.id, nombre: String(nombres[a.id] || "").trim() || a.nombre }));
+}
+function nombreArea(id) {
+  const a = areasDef().find(x => x.id === id);
+  return a ? a.nombre : null;
+}
 function recalcular() {
   const lista = Object.keys(normal).map(id => normal[id]);
-  const compras = Object.values(juego.compras || {})
-    .filter(c => c && c.que === "comodin" && c.t)
-    .map(c => HE.fechaLogica(c.t, finDia()));
-  res = HE.evaluar(lista, { hoy: hoy(), finDia: finDia(), comodines: compras });
+  res = HE.evaluar(lista, { hoy: hoy(), finDia: finDia(), compras: compras(), misiones: juego.misiones || {}, areas: areasDef() });
+}
+
+// Misiones: se generan una vez por semana (el primer día que abras la app) y
+// se guardan para que no cambien si corriges días pasados.
+let misionGenerada = null;
+function asegurarMisiones() {
+  if (!juegoCargado || !res) return;
+  const lunes = HE.lunesDe(res.hoy);
+  const sem = HE.semanaId(lunes);
+  if ((juego.misiones || {})[sem] || misionGenerada === sem) return;
+  if (!activos().some(h => h.tipo !== "evitar")) return;
+  misionGenerada = sem;
+  const nuevas = HE.generarMisiones(res, lunes);
+  juego = Object.assign({}, juego, { misiones: Object.assign({}, juego.misiones, { [sem]: nuevas }) });
+  metaJuego().set({ misiones: { [sem]: nuevas } }, { merge: true }).catch(errorGuardar);
+  recalcular();
 }
 
 // Hábitos visibles (sin archivar), en su orden.
@@ -210,7 +237,7 @@ function pintarPersonaje(f) {
   const p = progresoHoy(f);
   const n = res.nivel;
   const racha = mejorRachaActiva();
-  const monedas = res.monedasGanadas; // las compras llegan con la tienda (fase 2)
+  const monedas = res.monedas.saldo;
   el.querySelector(".hb-pj").innerHTML = `
     <div class="hb-anillo" role="img" aria-label="${p.hechos} de ${p.total} hábitos de hoy">
       ${anilloSVG(p.hechos, p.total)}<span class="hb-anillo-num">${p.hechos}<small>/${p.total}</small></span>
@@ -291,6 +318,7 @@ function filaHtml(h, f, encadenado) {
         <span class="hb-sub">${crono ? `<span class="hb-crono-fila"><span class="hb-crono" data-inicio="${crono}">${textoCrono(crono)}</span> en curso</span>` : ""}${sub.texto ? `<span>${sub.texto}</span>` : ""}${sub.racha ? `<span class="hb-racha"><span class="hb-ico" data-icon="flame"></span>${escapeHtml(sub.racha)}</span>` : ""}</span>
       </span>
     </button>
+    ${insigniaFila(x.rh)}
     ${x.toca ? botonCheck(h, x) : ""}
   </li>`;
 }
@@ -372,6 +400,7 @@ function errorGuardar(err) {
 
 // registro null = borrar el día. Conserva la nota si ya había una.
 function guardarDia(id, f, registro) {
+  anotarToque();
   const h = normal[id];
   const crudo = docs[id] && docs[id].registros && docs[id].registros[f];
   if (registro && crudo && crudo.n && registro.n == null) registro.n = crudo.n;
@@ -385,6 +414,7 @@ function guardarDia(id, f, registro) {
 
 // Suma (o resta) al valor del día sin leerlo antes: increment es atómico.
 function sumarValor(id, f, delta) {
+  anotarToque();
   const actual = (normal[id].registros[f] && normal[id].registros[f].v) || 0;
   if (actual + delta < 0) return;
   coleccion().doc(id).update(
@@ -399,6 +429,7 @@ function fijarValor(id, f, v) {
 }
 
 function marcar(id) {
+  sonar("toque");
   const h = normal[id];
   const f = hoy();
   const x = filaHoy(h, f);
@@ -499,8 +530,7 @@ function hojaDetalle(id, fecha) {
     pausaAbierta = false;
   }
   if (fecha) diaSel = fecha;
-  const area = HC.AREAS.find(a => a.id === h.area);
-  const arriba = [area ? area.nombre : null, HC.DIFICULTADES[h.dificultad].nombre, freqTexto(h)].filter(Boolean).join(" · ");
+  const arriba = [nombreArea(h.area), HC.DIFICULTADES[h.dificultad].nombre, freqTexto(h)].filter(Boolean).join(" · ");
   const c30 = HE.cumplimiento(rh, HE.addDias(f, -29), f);
   const cTotal = HE.cumplimiento(rh, h.inicio || f, f);
   const semanal = h.freqType === "semana";
@@ -516,6 +546,7 @@ function hojaDetalle(id, fecha) {
       <div class="hb-stat"><span class="hb-num">${pct(c30)}</span><span>${semanal ? "últimas semanas" : "últimos 30 días"}</span></div>
       <div class="hb-stat"><span class="hb-num">${pct(cTotal)}</span><span>${plural(totalHechos, "vez", "veces")} en total</span></div>
     </div>
+    ${rangoHtml(rh)}
     ${calendarioHtml(h, rh)}
     ${editorDia(h, rh, diaSel)}
     ${h.tipo === "tiempo" && diaSel === f ? cronometroHtml(h) : ""}
@@ -747,7 +778,7 @@ function hojaForm(id) {
       ${chips("dificultad", Object.keys(HC.DIFICULTADES).map(k => [k, `${HC.DIFICULTADES[k].nombre} · ${HC.DIFICULTADES[k].xp} XP`]), f.dificultad)}
 
       <span class="hb-label">Área de vida</span>
-      ${chips("area", HC.AREAS.map(a => [a.id, a.nombre]).concat([["", "Sin área"]]), f.area || "")}
+      ${chips("area", areasDef().map(a => [a.id, a.nombre]).concat([["", "Sin área"]]), f.area || "")}
 
       <label class="hb-campo"><span>Después de <span class="hb-opcional">(opcional)</span></span>
         <select name="despuesDe">${opcionesCadena(f)}</select>
@@ -914,11 +945,24 @@ function hojaAjustes() {
     <div class="hb-chips">${Array.from({ length: HC.CONST.FIN_DIA_MAX + 1 }, (_, n) =>
       `<button type="button" class="hb-chip${n === fin ? " is-on" : ""}" data-fin-dia="${n}" aria-pressed="${n === fin}">${hora(n)}</button>`).join("")}</div>
     <p class="hb-texto">Si te acuestas tarde, lo que marques antes de esa hora cuenta para el día anterior. Ahora es ${fechaCorta(hoy())} para tus hábitos.</p>
+    <h4 class="hb-sub-t">Sonidos</h4>
+    <div class="hb-chips">
+      <button type="button" class="hb-chip${conSonido() ? "" : " is-on"}" data-sonidos="0" aria-pressed="${!conSonido()}">Apagados</button>
+      <button type="button" class="hb-chip${conSonido() ? " is-on" : ""}" data-sonidos="1" aria-pressed="${conSonido()}">Encendidos</button>
+    </div>
+    <p class="hb-texto">Un toque suave al marcar y una melodía corta en los logros. Respetan el modo silencio del iPhone.</p>
+    <h4 class="hb-sub-t">Tus áreas de vida</h4>
+    <div class="hb-areas-nombres">${areasDef().map(a =>
+      `<label class="hb-campo"><span class="hb-sr">${escapeHtml(a.nombre)}</span><input type="text" maxlength="20" data-area-nombre="${a.id}" value="${escapeHtml(a.nombre)}" aria-label="Nombre del área ${escapeHtml(a.nombre)}"></label>`).join("")}</div>
     <h4 class="hb-sub-t">Archivados</h4>
     ${archivados.length ? `<ul class="hb-pausas">${archivados.map(h => `<li><span>${escapeHtml(h.emoji)} ${escapeHtml(h.name)}${h.archivadoEn ? ` · desde el ${fechaCorta(h.archivadoEn)}` : ""}</span>
       <span class="hb-chips"><button type="button" class="hb-btn-sec" data-restaurar="${h.id}">Restaurar</button>
       <button type="button" class="hb-btn-sec is-peligro" data-eliminar="${h.id}" aria-label="Eliminar ${escapeHtml(h.name)}"><span data-icon="trash"></span></button></span></li>`).join("")}</ul>`
       : `<p class="hb-texto">No tienes hábitos archivados. Archivar guarda el historial sin mostrarlo en Hoy.</p>`}`, { tipo: "ajustes" });
+}
+function guardarPref(campos) {
+  juego = Object.assign({}, juego, { prefs: Object.assign({}, juego.prefs, campos) });
+  metaJuego().set({ prefs: campos }, { merge: true }).catch(errorGuardar);
 }
 function guardarFinDia(n) {
   juego = Object.assign({}, juego, { prefs: Object.assign({}, juego.prefs, { finDia: n }) });
@@ -984,6 +1028,326 @@ function autoMarcar(modulo, fecha) {
 document.addEventListener("entreno:guardado", e => autoMarcar("gimnasio", e.detail && e.detail.fecha));
 document.addEventListener("habito:auto", e => { const d = e.detail || {}; if (d.modulo) autoMarcar(d.modulo, d.fecha); });
 
+// ---------- Rangos por hábito ----------
+const nivelHab = idx => (idx == null ? null : HE.NIVELES[idx]);
+function insigniaFila(rh) {
+  if (!rh || !rh.rango || !rh.rango.tieneRango) return "";
+  const n = nivelHab(rh.rango.nivel);
+  return `<span class="hb-insignia" title="${escapeHtml(n.nombre)}">${RangosInsignias.svg(n, { tam: 28 })}</span>`;
+}
+function rangoHtml(rh) {
+  const r = rh.rango;
+  if (!r.tieneRango) {
+    return `<div class="hb-rango">${RangosInsignias.svg(null, { tam: 56 })}<div class="hb-rango-txt"><b>Sin rango todavía</b>
+      <span>Cumple este hábito los días que toca y en una semana tendrás tu primer rango.</span></div></div>`;
+  }
+  const n = nivelHab(r.nivel), sig = r.siguiente;
+  const tendencia = r.tendencia == null ? "" : r.tendencia > 0.5 ? " · subiendo" : r.tendencia < -0.5 ? " · bajando" : " · estable";
+  return `<div class="hb-rango">
+    ${RangosInsignias.svg(n, { tam: 64 })}
+    <div class="hb-rango-txt">
+      <b>${escapeHtml(n.nombre)}</b>
+      <span>Fuerza ${Math.round(r.fuerza)} de 100${tendencia}</span>
+      <div class="hb-xp hb-rango-barra" role="progressbar" aria-label="Avance hacia la siguiente división" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(r.avance * 100)}"><span style="width:${(r.avance * 100).toFixed(1)}%"></span></div>
+      <span class="hb-rango-sig">${!sig ? "Estás en la cima." : r.faltaHistoria ? `Para ${escapeHtml(sig.nombre)} necesitas casi un año de constancia.` : `Siguiente: ${escapeHtml(sig.nombre)}`}</span>
+      ${r.escudo > 0 ? `<span class="hb-rango-escudo">Protegido: ${plural(r.escudo, "día más", "días más")} sin bajar de división.</span>` : ""}
+    </div>
+  </div>`;
+}
+
+// ---------- Pestaña Logros: misiones, logros, tienda y áreas ----------
+const panelLogros = document.getElementById("panel-hab-logros");
+let logrosTab = "misiones";
+
+function renderLogros() {
+  if (!cargado || !res || !panelLogros || panelLogros.hidden) return;
+  const el = document.getElementById("hb-logros");
+  const n = res.nivel;
+  const hechos = res.logros.filter(l => l.desbloqueado).length;
+  const tabs = [["misiones", "Misiones"], ["logros", "Logros"], ["tienda", "Tienda"], ["areas", "Áreas"]];
+  el.innerHTML = `
+    <div class="hb-resumen">
+      <div class="hb-pj-nivel"><span class="hb-num">${n.nivel}</span><span><span class="hb-pj-t">Nivel</span><span class="hb-pj-titulo">${escapeHtml(n.titulo)}</span></span></div>
+      <div class="hb-xp" role="progressbar" aria-label="Experiencia hacia el nivel ${n.nivel + 1}" aria-valuemin="0" aria-valuemax="${n.hasta - n.desde}" aria-valuenow="${n.xp - n.desde}"><span style="width:${(n.progreso * 100).toFixed(1)}%"></span></div>
+      <div class="hb-pj-datos">
+        <span>${fmtNum(n.xp - n.desde)} / ${fmtNum(n.hasta - n.desde)} XP</span>
+        <span class="hb-dato"><span class="hb-ico" data-icon="coin"></span>${fmtNum(res.monedas.saldo)}</span>
+        <span class="hb-dato">${plural(res.comodines.guardados, "comodín", "comodines")}</span>
+        <span class="hb-dato"><span class="hb-ico" data-icon="trophy"></span>${hechos}/${res.logros.length}</span>
+      </div>
+    </div>
+    <div class="fin-tabs hb-tabs" role="tablist">${tabs.map(([id, t]) =>
+      `<button type="button" class="fin-tab${logrosTab === id ? " active" : ""}" role="tab" aria-selected="${logrosTab === id}" data-hb-tab="${id}">${t}</button>`).join("")}</div>
+    <div class="hb-tab-cuerpo">${{ misiones: misionesHtml, logros: logrosHtml, tienda: tiendaHtml, areas: areasHtml }[logrosTab]()}</div>`;
+  renderIcons(el);
+}
+
+function barra(fr, etiqueta) {
+  return `<div class="hb-xp" role="progressbar" aria-label="${escapeHtml(etiqueta)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(fr * 100)}"><span style="width:${(Math.min(1, fr) * 100).toFixed(1)}%"></span></div>`;
+}
+
+function misionesHtml() {
+  const sem = HE.semanaId(HE.lunesDe(res.hoy));
+  const actuales = res.misiones.filter(m => m.semana === sem);
+  const quedan = 6 - HE.diaSemana(res.hoy);
+  const anteriores = {};
+  res.misiones.filter(m => m.semana < sem).forEach(m => {
+    const a = anteriores[m.semana] || (anteriores[m.semana] = { lunes: m.lunes, total: 0, hechas: 0 });
+    a.total++;
+    if (m.estado === "completada") a.hechas++;
+  });
+  const filas = actuales.length ? actuales.map(m => `
+    <li class="hb-mision${m.estado === "completada" ? " is-hecha" : ""}">
+      <div class="hb-mision-top"><b>${escapeHtml(m.titulo)}</b>${m.estado === "completada" ? `<span class="hb-tag">Cumplida</span>` : ""}</div>
+      ${barra(m.actual / m.metaProgreso, m.titulo)}
+      <div class="hb-mision-pie"><span>${m.tipo === "rango" ? (m.actual ? "Lo lograste" : "Todavía no") : `${m.actual} de ${m.metaProgreso}`}</span><span>+${m.xp} XP · +${m.monedas} monedas</span></div>
+    </li>`).join("")
+    : `<li class="empty-state">Crea un hábito para recibir tus misiones de la semana.</li>`;
+  const previas = Object.keys(anteriores).sort().reverse().slice(0, 4);
+  return `<p class="hb-texto">Se renuevan cada lunes con tus propios datos, un poco por encima de tu promedio. ${quedan ? `Te ${quedan === 1 ? "queda 1 día" : `quedan ${quedan} días`}.` : "Hoy es el último día."}</p>
+    <ul class="hb-misiones">${filas}</ul>
+    ${previas.length ? `<h3 class="hb-sub-t">Semanas anteriores</h3><ul class="hb-pausas">${previas.map(k =>
+      `<li><span>Semana del ${fechaCorta(anteriores[k].lunes)}</span><span>${anteriores[k].hechas} de ${anteriores[k].total}</span></li>`).join("")}</ul>` : ""}`;
+}
+
+function logrosHtml() {
+  const lista = res.logros.slice().sort((a, b) => b.desbloqueado - a.desbloqueado || b.progreso - a.progreso);
+  return `<ul class="hb-logros">${lista.map(l => {
+    const oculto = l.secreto && !l.desbloqueado;
+    return `<li class="hb-logro${l.desbloqueado ? " is-on" : ""}">
+      <span class="hb-logro-ico" aria-hidden="true"><span data-icon="${oculto ? "star" : "trophy"}"></span></span>
+      <span class="hb-logro-txt"><b>${oculto ? "Logro secreto" : escapeHtml(l.nombre)}</b>
+        <span>${oculto ? "Sigue usando la app para descubrirlo." : escapeHtml(l.desc)}</span>
+        ${l.desbloqueado ? `<span class="hb-tag">Conseguido</span>` : oculto ? "" : `${barra(l.progreso, l.nombre)}<span class="hb-logro-prog">${l.tipo === "rango" ? `Tu mejor: ${escapeHtml(mejorRangoNombre())}` : `${fmtNum(l.actual)} de ${fmtNum(l.metaProgreso)}`}</span>`}
+      </span></li>`;
+  }).join("")}</ul>`;
+}
+function mejorRangoNombre() {
+  const mejor = Object.keys(res.habitos).map(id => res.habitos[id].rango).filter(r => r.tieneRango).reduce((m, r) => Math.max(m, r.nivel), -1);
+  return mejor >= 0 ? HE.NIVELES[mejor].nombre : "sin rango";
+}
+
+function tiendaHtml() {
+  const saldo = res.monedas.saldo;
+  const precio = HC.TIENDA.COMODIN;
+  const guardados = res.comodines.guardados;
+  const recompensas = Object.keys(juego.recompensas || {}).map(id => Object.assign({ id }, juego.recompensas[id])).filter(r => r.nombre)
+    .sort((a, b) => a.precio - b.precio);
+  const canjes = compras().filter(c => c.que === "recompensa").reverse().slice(0, 8);
+  return `
+    <div class="hb-saldo"><span class="hb-ico" data-icon="coin"></span><span class="hb-num">${fmtNum(saldo)}</span><span>monedas</span></div>
+    <p class="hb-texto">Ganas 1 moneda por cada 10 XP, y más con las misiones.</p>
+    <section class="hb-tienda-bloque">
+      <h3 class="hb-sub-t">Comodines de racha</h3>
+      <p class="hb-texto">Si fallas un día que tocaba, se usa uno solo y tus rachas siguen. Puedes guardar hasta ${HC.CONST.COMODINES_MAX}.
+        ${res.comodines.protegidos.length ? `Ya te salvaron ${plural(res.comodines.protegidos.length, "día", "días")}.` : ""}</p>
+      <div class="hb-tienda-fila"><span>Guardados: <b>${guardados} de ${HC.CONST.COMODINES_MAX}</b></span>
+        <button type="button" class="hb-btn" data-comprar-comodin ${guardados >= HC.CONST.COMODINES_MAX ? "disabled" : ""}>Comprar · ${precio}</button></div>
+    </section>
+    <section class="hb-tienda-bloque">
+      <h3 class="hb-sub-t">Tus recompensas</h3>
+      ${recompensas.length ? `<ul class="hb-pausas">${recompensas.map(r => `<li><span>${escapeHtml(r.nombre)} · <b>${fmtNum(r.precio)}</b></span>
+        <span class="hb-chips"><button type="button" class="hb-btn-sec" data-canjear="${r.id}" ${saldo < r.precio ? "disabled" : ""}>Canjear</button>
+        <button type="button" class="hb-btn-sec is-peligro" data-borrar-recompensa="${r.id}" aria-label="Borrar ${escapeHtml(r.nombre)}"><span data-icon="trash"></span></button></span></li>`).join("")}</ul>`
+        : `<p class="hb-texto">Crea premios reales para ti, como «Noche de pelis» por 150 monedas.</p>`}
+      <form class="hb-recompensa-form" data-nueva-recompensa>
+        <label class="hb-campo"><span>Recompensa</span><input type="text" name="nombre" maxlength="40" placeholder="Noche de pelis" required></label>
+        <label class="hb-campo hb-precio"><span>Precio</span><input type="number" name="precio" min="1" step="1" inputmode="numeric" placeholder="150" required></label>
+        <button type="submit" class="hb-btn">Agregar</button>
+      </form>
+    </section>
+    ${canjes.length ? `<section class="hb-tienda-bloque"><h3 class="hb-sub-t">Canjes recientes</h3><ul class="hb-pausas">${canjes.map(c =>
+      `<li><span>${escapeHtml(c.nombre || "Recompensa")}</span><span>${fechaCorta(HE.fechaLogica(c.t, finDia()))} · ${fmtNum(c.precio)}</span></li>`).join("")}</ul></section>` : ""}`;
+}
+
+function areasHtml() {
+  return `<p class="hb-texto">Cada hábito suma XP a su área. Cambia los nombres de las áreas en Ajustes.</p>
+    <ul class="hb-areas">${res.areas.map(a => `<li class="hb-area">
+      <div class="hb-area-top"><b>${escapeHtml(a.nombre)}</b><span><span class="hb-num">${a.nivel.nivel}</span> nivel</span></div>
+      ${barra(a.nivel.progreso, a.nombre)}
+      <span class="hb-area-pie">${plural(a.habitos, "hábito", "hábitos")} · ${fmtNum(a.xp)} XP</span></li>`).join("")}</ul>`;
+}
+
+// ---------- Tienda: acciones ----------
+function nuevaCompra(datos, mensaje) {
+  const id = "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  metaJuego().set({ compras: { [id]: Object.assign({ t: Date.now() }, datos) } }, { merge: true }).catch(errorGuardar);
+  sonar("moneda");
+  toast(mensaje, () => metaJuego().set({ compras: { [id]: FV().delete() } }, { merge: true }).catch(errorGuardar));
+}
+function comprarComodin() {
+  const precio = HC.TIENDA.COMODIN;
+  if (res.comodines.guardados >= HC.CONST.COMODINES_MAX) { toast(`Ya tienes ${HC.CONST.COMODINES_MAX} comodines guardados.`); return; }
+  if (res.monedas.saldo < precio) { toast(`Te faltan ${precio - res.monedas.saldo} monedas.`); return; }
+  nuevaCompra({ que: "comodin", precio }, "Compraste un comodín de racha.");
+}
+function canjear(id) {
+  const r = (juego.recompensas || {})[id];
+  if (!r) return;
+  if (res.monedas.saldo < r.precio) { toast(`Te faltan ${r.precio - res.monedas.saldo} monedas.`); return; }
+  nuevaCompra({ que: "recompensa", ref: id, nombre: r.nombre, precio: r.precio }, `¡Disfruta «${r.nombre}»! Te lo ganaste.`);
+}
+function agregarRecompensa(form) {
+  const nombre = form.nombre.value.trim();
+  const precio = Math.round(Number(form.precio.value));
+  if (!nombre || !(precio > 0)) { toast("Ponle nombre y un precio mayor que cero."); return; }
+  const id = "r" + Date.now().toString(36);
+  metaJuego().set({ recompensas: { [id]: { nombre, precio } } }, { merge: true }).catch(errorGuardar);
+  form.reset();
+}
+function borrarRecompensa(id) {
+  const r = (juego.recompensas || {})[id];
+  metaJuego().set({ recompensas: { [id]: FV().delete() } }, { merge: true }).catch(errorGuardar);
+  if (r) toast(`Borraste «${r.nombre}».`, () => metaJuego().set({ recompensas: { [id]: r } }, { merge: true }).catch(errorGuardar));
+}
+
+if (panelLogros) {
+  panelLogros.addEventListener("click", e => {
+    const t = e.target.closest("[data-hb-tab]");
+    if (t) { logrosTab = t.dataset.hbTab; renderLogros(); return; }
+    if (e.target.closest("[data-comprar-comodin]")) { comprarComodin(); return; }
+    const c = e.target.closest("[data-canjear]");
+    if (c) { canjear(c.dataset.canjear); return; }
+    const b = e.target.closest("[data-borrar-recompensa]");
+    if (b) borrarRecompensa(b.dataset.borrarRecompensa);
+  });
+  panelLogros.addEventListener("submit", e => {
+    if (!e.target.matches("[data-nueva-recompensa]")) return;
+    e.preventDefault();
+    agregarRecompensa(e.target);
+  });
+  new MutationObserver(() => { if (!panelLogros.hidden) { renderLogros(); revisarCelebraciones(); } })
+    .observe(panelLogros, { attributes: true, attributeFilter: ["hidden"] });
+}
+
+// ---------- Celebraciones (solo en hitos) ----------
+// Se compara con un snapshot guardado en meta/habitos_juego, igual que los
+// rangos de Ejercicio: la primera vez se guarda sin aviso.
+let celebrando = false;
+let juegoExiste = false;
+// Registrar primero: mientras marcas no se interrumpe; la celebración espera
+// a que dejes de tocar un momento y junta todo en una sola ventana.
+const ESPERA_CELEBRAR_MS = 2500;
+let ultimoToque = 0, timerCelebrar = null;
+function anotarToque() {
+  ultimoToque = Date.now();
+  clearTimeout(timerCelebrar);
+  timerCelebrar = setTimeout(revisarCelebraciones, ESPERA_CELEBRAR_MS + 50);
+}
+function canon(snap) {
+  const r = {};
+  Object.keys(snap.rangos || {}).sort().forEach(k => { r[k] = snap.rangos[k]; });
+  return JSON.stringify([snap.nivel, r, (snap.logros || []).slice().sort(), (snap.misiones || []).slice().sort(), (snap.perfectos || []).slice().sort()]);
+}
+function guardarSnapshot(snap) {
+  juego = Object.assign({}, juego, { snapshot: snap });
+  const ref = metaJuego();
+  (juegoExiste ? ref.update({ snapshot: snap }) : ref.set({ snapshot: snap }, { merge: true })).catch(errorGuardar);
+}
+function revisarCelebraciones() {
+  if (!juegoCargado || !res || celebrando) return;
+  const snap = HE.snapshot(res);
+  const anterior = juego.snapshot;
+  if (!anterior) { guardarSnapshot(snap); return; }
+  const ups = HE.novedades(anterior, snap);
+  const visible = !document.hidden && [panelHoy, panelStats, panelLogros].some(p => p && !p.hidden);
+  if (ups.length && visible) {
+    const espera = ultimoToque + ESPERA_CELEBRAR_MS - Date.now();
+    if (espera > 0) { clearTimeout(timerCelebrar); timerCelebrar = setTimeout(revisarCelebraciones, espera + 50); return; }
+    if (hoja && !hoja.hidden && hojaActual && hojaActual.tipo === "form") return; // no interrumpe un formulario
+    mostrarCelebracion(ups, snap);
+    return;
+  }
+  if (!ups.length && canon(anterior) !== canon(snap)) guardarSnapshot(snap);
+}
+
+function itemCelebracion(u, i) {
+  const fila = (badge, tipo, nombre, cambio) => `<li style="--i:${i}"><span class="rk-sube-badge">${badge}</span>
+    <span class="rk-fila-txt"><span class="r">${tipo}</span><span class="n">${nombre}</span>${cambio ? `<span class="c">${cambio}</span>` : ""}</span></li>`;
+  const icono = (ic, extra) => `<span class="hb-cel-ico${extra ? " " + extra : ""}"><span data-icon="${ic}"></span></span>`;
+  if (u.tipo === "nivel") {
+    const t = HE.titulo(u.despues), antes = HE.titulo(u.antes || 1);
+    return fila(`<span class="hb-cel-nivel hb-num">${u.despues}</span>`, "Nivel", `Nivel ${u.despues}`, t !== antes ? `Ahora eres ${escapeHtml(t)}` : `Antes: nivel ${u.antes}`);
+  }
+  if (u.tipo === "rango") {
+    const h = normal[u.id];
+    return fila(RangosInsignias.svg(nivelHab(u.despues), { tam: 56 }), "Rango", `${h ? escapeHtml(h.emoji + " " + h.name) : "Hábito"}`,
+      u.antes == null ? `Nuevo: ${nivelHab(u.despues).nombre}` : `${nivelHab(u.antes).nombre} → ${nivelHab(u.despues).nombre}`);
+  }
+  if (u.tipo === "logro") {
+    const l = res.logros.find(x => x.id === u.id);
+    return fila(icono("trophy"), "Logro", escapeHtml(l ? l.nombre : u.id), l ? escapeHtml(l.desc) : "");
+  }
+  if (u.tipo === "mision") {
+    const m = res.misiones.find(x => x.id === u.id);
+    return fila(icono("check"), "Misión cumplida", escapeHtml(m ? m.titulo : ""), m ? `+${m.xp} XP · +${m.monedas} monedas` : "");
+  }
+  return fila(icono("star"), "Día perfecto", u.fecha === res.hoy ? "Cumpliste todo lo de hoy" : `El ${fechaCorta(u.fecha)}`, `+${HC.XP.DIA_PERFECTO} XP`);
+}
+
+function mostrarCelebracion(ups, snap) {
+  celebrando = true;
+  const orden = { nivel: 0, perfecto: 1, rango: 2, mision: 3, logro: 4 };
+  ups.sort((a, b) => orden[a.tipo] - orden[b.tipo] || (b.despues || 0) - (a.despues || 0));
+  const titulo = { nivel: "¡Subiste de nivel!", perfecto: "¡Día perfecto!", rango: "Nuevo rango", mision: "Misión cumplida", logro: "Logro desbloqueado" }[ups[0].tipo];
+  const modal = document.createElement("div");
+  modal.className = "rk-aviso-modal hb-celebra";
+  modal.setAttribute("role", "dialog");
+  modal.setAttribute("aria-modal", "true");
+  modal.setAttribute("aria-labelledby", "hb-cel-t");
+  modal.innerHTML = `<div class="rk-aviso-panel">
+      <span class="hb-eyebrow">¡Buen trabajo!</span>
+      <h2 id="hb-cel-t">${titulo}</h2>
+      <ul class="rk-sube">${ups.slice(0, 8).map(itemCelebracion).join("")}</ul>
+      ${ups.length > 8 ? `<p class="hb-texto">Y ${ups.length - 8} más.</p>` : ""}
+      <button type="button" class="rk-btn" data-continuar>Continuar</button>
+    </div>`;
+  document.body.appendChild(modal);
+  renderIcons(modal);
+  document.body.classList.add("sheet-open");
+  sonar("fanfarria");
+  const cerrar = () => {
+    guardarSnapshot(snap);
+    modal.classList.add("closing");
+    if (!hoja || hoja.hidden) document.body.classList.remove("sheet-open");
+    setTimeout(() => { modal.remove(); celebrando = false; }, 220);
+  };
+  modal.querySelector("[data-continuar]").addEventListener("click", cerrar);
+  modal.querySelector("[data-continuar]").focus();
+}
+
+// ---------- Sonidos (opcionales, apagados por defecto) ----------
+let audio = null;
+const conSonido = () => !!(juego.prefs && juego.prefs.sonidos);
+function contextoAudio() {
+  if (!audio) { const A = window.AudioContext || window.webkitAudioContext; if (!A) return null; audio = new A(); }
+  if (audio.state === "suspended") audio.resume();
+  return audio;
+}
+// Safari solo deja sonar después de un toque: se "despierta" con el primero.
+document.addEventListener("pointerdown", () => { if (conSonido()) try { contextoAudio(); } catch (e) { /* sin audio */ } }, { passive: true });
+function sonar(tipo) {
+  if (!conSonido()) return;
+  try {
+    const ctx = contextoAudio();
+    if (!ctx) return;
+    const notas = { toque: [880], moneda: [988, 1319], fanfarria: [523.25, 659.25, 783.99, 1046.5] }[tipo] || [880];
+    const t0 = ctx.currentTime;
+    notas.forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      const t = t0 + i * 0.09;
+      o.type = "sine";
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(tipo === "toque" ? 0.06 : 0.12, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + (tipo === "toque" ? 0.12 : 0.35));
+      o.connect(g).connect(ctx.destination);
+      o.start(t);
+      o.stop(t + 0.4);
+    });
+  } catch (e) { /* sin audio: no pasa nada */ }
+}
+
 // ---------- Eventos ----------
 function onClickHoja(e) {
   const t = e.target;
@@ -1029,6 +1393,7 @@ function onClickHoja(e) {
   }
   if (q("[data-guardar-orden]")) { guardarOrden(); return; }
   if ((b = q("[data-fin-dia]"))) { guardarFinDia(Number(b.dataset.finDia)); return; }
+  if ((b = q("[data-sonidos]"))) { guardarPref({ sonidos: b.dataset.sonidos === "1" }); if (b.dataset.sonidos === "1") sonar("moneda"); hojaAjustes(); return; }
   if ((b = q("[data-animo]"))) { guardarDiaMeta({ animo: Number(b.dataset.animo) }); hojaCierre(); return; }
   // Formulario: botones que cambian un campo y redibujan.
   if ((b = q("[data-campo]"))) {
@@ -1072,7 +1437,12 @@ function onCambioHoja(e) {
     if (isFinite(v)) fijarValor(t.dataset.valor, f, v);
     return;
   }
-  if (t.hasAttribute("data-nota-dia")) guardarDiaMeta({ nota: t.value.trim().slice(0, 200) });
+  if (t.hasAttribute("data-nota-dia")) { guardarDiaMeta({ nota: t.value.trim().slice(0, 200) }); return; }
+  if (t.dataset.areaNombre) {
+    const nombres = Object.assign({}, juego.prefs && juego.prefs.areas, { [t.dataset.areaNombre]: t.value.trim().slice(0, 20) });
+    guardarPref({ areas: nombres });
+    actualizar();
+  }
 }
 
 function onSubmitHoja(e) {
@@ -1184,8 +1554,10 @@ if (panelHoy) {
 function actualizar() {
   if (!cargado) return;
   recalcular();
+  asegurarMisiones();
   renderHoy();
   renderStats();
+  renderLogros();
   if (hojaActual && hojaActual.tipo === "detalle") hojaDetalle(hojaActual.id);
   else if (hojaActual && hojaActual.tipo === "cierre") hojaCierre();
   if (pendienteXP) {
@@ -1193,6 +1565,7 @@ function actualizar() {
     if (ganado > 0 && !reducirMovimiento()) mostrarXP(pendienteXP.id, ganado);
     pendienteXP = null;
   }
+  revisarCelebraciones();
 }
 
 // Si cambia el día (o el momento del día) con la app abierta, se redibuja.
@@ -1225,6 +1598,8 @@ onAuthReady(() => {
 
   metaJuego().onSnapshot(doc => {
     juego = doc.exists ? doc.data() || {} : {};
+    juegoExiste = doc.exists;
+    juegoCargado = true;
     actualizar();
   }, err => console.error("No se pudo leer meta/habitos_juego", err));
 });
