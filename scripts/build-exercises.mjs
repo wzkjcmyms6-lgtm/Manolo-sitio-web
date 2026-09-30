@@ -560,7 +560,7 @@ const AJUSTES = {
   "Bent Over Barbell Row": { destacado: true, alias: ["remo con barra"] },
   "One-Arm Dumbbell Row": { destacado: true, alias: ["remo con mancuerna"] },
   "T-Bar Row with Handle": { nombre: "Remo en T (Barra)", destacado: true },
-  "Pullups": { destacado: true },
+  "Pullups": { destacado: true, secundarios: ["biceps", "espalda_media", "trapecio"] },
   "Chin-Up": { destacado: true },
   "Standing Military Press": { nombre: "Press militar (Barra)", destacado: true },
   "Dumbbell Shoulder Press": { destacado: true },
@@ -721,7 +721,11 @@ const AJUSTES = {
   "Ball Leg Curl": { nombre: "Curl femoral (Fitball)" },
   "Seated Band Hamstring Curl": { nombre: "Curl femoral sentado (Banda)" },
   "Glute Ham Raise": { nombre: "Glute ham raise (Máquina)" },
-  "Butt Lift (Bridge)": { nombre: "Puente de glúteo" },
+  "Butt Lift (Bridge)": { nombre: "Puente de glúteo", destacado: true, alias: ["puente de glúteos", "puente de gluteos"] },
+  "Bodyweight Squat": {
+    nombre: "Sentadilla al aire", destacado: true, primarios: ["cuadriceps", "gluteos"], secundarios: ["isquiotibiales"],
+    alias: ["sentadilla libre", "sentadilla asistida", "sentadilla (asistida o al aire)", "sentadilla sin peso", "air squat"]
+  },
   "Single Leg Glute Bridge": { nombre: "Puente de glúteo a una pierna" },
   "Physioball Hip Bridge": { nombre: "Puente de glúteo (Fitball)" },
   "Hip Lift with Band": { nombre: "Puente de glúteo (Banda)" },
@@ -784,7 +788,10 @@ const AJUSTES = {
   "Suspended Push-Up": { nombre: "Flexiones en suspensión (TRX)" },
   "Isometric Chest Squeezes": { tipo: "isometrico" },
   // Cuello
-  "Isometric Neck Exercise - Front And Back": { nombre: "Cuello isométrico adelante y atrás", tipo: "isometrico", alias: ["cuello isometrico", "neck isometric"], destacado: true },
+  "Isometric Neck Exercise - Front And Back": {
+    nombre: "Cuello isométrico adelante y atrás", tipo: "isometrico", destacado: true,
+    alias: ["cuello isometrico", "neck isometric", "isométrico frontal", "isométrico frontal / lateral", "isometrico de cuello"]
+  },
   "Isometric Neck Exercise - Sides": { nombre: "Cuello isométrico lateral", tipo: "isometrico", alias: ["cuello lateral", "neck side isometric"] },
   "Lying Face Down Plate Neck Resistance": { nombre: "Extensión de cuello con disco", tipo: "carga", equipo: "otro", alias: ["extensión de cuello", "neck extension"], secundarios: ["trapecio"], destacado: true },
   "Lying Face Up Plate Neck Resistance": { nombre: "Flexión de cuello con disco", tipo: "carga", equipo: "otro", alias: ["flexión de cuello", "neck curl", "neck flexion"], destacado: true },
@@ -993,7 +1000,10 @@ const AJUSTES = {
   "Weighted Ball Side Bend": { nombre: "Flexión lateral (Fitball)" },
   "Pallof Press": { nombre: "Press Pallof (Polea)", primarios: ["oblicuos", "abdominales"] },
   "Pallof Press With Rotation": { nombre: "Press Pallof con rotación (Polea)", primarios: ["oblicuos", "abdominales"] },
-  "Dead Bug": { nombre: "Dead bug" },
+  "Dead Bug": {
+    nombre: "Dead bug", destacado: true, secundarios: ["lumbares"],
+    alias: ["dead bug asistido", "dead bug completo", "dead bug (asistido o completo)", "bicho muerto"]
+  },
   "Press Sit-Up": { nombre: "Abdominal con press (Barra)" },
   "Landmine 180's": { nombre: "Landmine 180 (Barra)" },
   "One-Arm Medicine Ball Slam": { nombre: "Slam con balón a una mano (Balón medicinal)" },
@@ -1077,7 +1087,33 @@ const EXTRA = [
   { id: "manolo-remo-pendlay", nombre: "Remo Pendlay (Barra)", alias: ["pendlay row"], tipo: "carga", equipo: "barra", primarios: ["espalda_media", "dorsales"], secundarios: ["biceps", "deltoide_posterior", "lumbares"] },
   { id: "manolo-puente-luchador", nombre: "Puente de luchador", alias: ["wrestler bridge", "puente de cuello", "neck bridge"], tipo: "peso_corporal", equipo: "peso_corporal", primarios: ["cuello"], secundarios: ["trapecio", "gluteos", "lumbares"], factorPesoCorporal: 0.4 },
   { id: "manolo-extension-cuello-maquina", nombre: "Extensión de cuello (Máquina)", alias: ["máquina de cuello", "neck machine", "cuello en máquina"], tipo: "carga", equipo: "maquina", primarios: ["cuello"], secundarios: ["trapecio"] },
-  { id: "manolo-l-sit", nombre: "L-sit", alias: ["l sit", "escuadra"], tipo: "isometrico", equipo: "peso_corporal", primarios: ["abdominales"], secundarios: ["cuadriceps", "triceps"] }
+  { id: "manolo-l-sit", nombre: "L-sit", alias: ["l sit", "escuadra"], tipo: "isometrico", equipo: "peso_corporal", primarios: ["abdominales"], secundarios: ["cuadriceps", "triceps"] },
+  // Rutina de Juan (30 sept 2026). Primario = lo que mueve el ejercicio;
+  // secundario = lo que ayuda o estabiliza. movilidad: true = estiramientos y
+  // movilidad: solo secundarios, así el mapa los pinta suave.
+  // Push
+  { id: "manolo-flexion-normal", nombre: "Flexión normal", alias: ["flexiones normales", "flexion clasica", "push up normal"], tipo: "peso_corporal", equipo: "peso_corporal", primarios: ["pecho_superior", "pecho_medio", "pecho_inferior"], secundarios: ["triceps", "deltoide_anterior", "abdominales"], factorPesoCorporal: 0.64 },
+  { id: "manolo-flexion-rodillas", nombre: "Flexión de rodillas", alias: ["flexiones de rodillas", "flexion apoyando rodillas", "knee push up"], tipo: "peso_corporal", equipo: "peso_corporal", primarios: ["pecho_superior", "pecho_medio", "pecho_inferior"], secundarios: ["triceps", "deltoide_anterior"], factorPesoCorporal: 0.49 },
+  { id: "manolo-plancha-alta", nombre: "Plancha alta", alias: ["high plank", "plancha con brazos extendidos", "plancha de manos"], tipo: "isometrico", equipo: "peso_corporal", primarios: ["abdominales", "lumbares"], secundarios: ["deltoide_anterior", "gluteos"] },
+  { id: "manolo-flexion-pausa", nombre: "Flexión con pausa abajo", alias: ["flexion con pausa", "flexiones con pausa", "pause push up"], tipo: "peso_corporal", equipo: "peso_corporal", primarios: ["pecho_superior", "pecho_medio", "pecho_inferior"], secundarios: ["triceps", "deltoide_anterior"], factorPesoCorporal: 0.64 },
+  // Barra (tracción)
+  { id: "manolo-colgado-activo", nombre: "Colgado activo", alias: ["active hang", "colgado activo en barra", "colgado escapular"], tipo: "isometrico", equipo: "peso_corporal", primarios: ["dorsales", "antebrazos"], secundarios: ["trapecio", "espalda_media"] },
+  { id: "manolo-negativa-controlada", nombre: "Negativa controlada", alias: ["negativas", "dominada negativa", "negativa de dominada", "negative pull up"], tipo: "peso_corporal", equipo: "peso_corporal", primarios: ["dorsales"], secundarios: ["biceps"], factorPesoCorporal: 1 },
+  // Piernas
+  { id: "manolo-zancada-asistida", nombre: "Zancada asistida", alias: ["zancada con apoyo", "estocada asistida", "zancadas asistidas"], tipo: "peso_corporal", equipo: "peso_corporal", primarios: ["cuadriceps", "gluteos"], secundarios: ["isquiotibiales"], factorPesoCorporal: 0.6 },
+  { id: "manolo-elevacion-talones", destacado: true, nombre: "Elevación de talones", alias: ["elevacion de talon", "elevación de talón (sentado o de pie)", "elevacion de talones sin peso", "calf raise sin peso"], tipo: "peso_corporal", equipo: "peso_corporal", primarios: ["pantorrillas"], secundarios: [], factorPesoCorporal: 1 },
+  // Core
+  { id: "manolo-plancha-rodillas", nombre: "Plancha en rodillas", alias: ["plancha de rodillas", "plancha en rodillas / plancha alta", "knee plank"], tipo: "isometrico", equipo: "peso_corporal", primarios: ["abdominales"], secundarios: ["lumbares"] },
+  { id: "manolo-puente-gluteo-isometrico", nombre: "Puente de glúteos isométrico", alias: ["puente de gluteos con marcha", "puente con marcha", "puente de glúteos isométrico/con marcha", "glute bridge hold", "glute bridge march"], tipo: "isometrico", equipo: "peso_corporal", primarios: ["gluteos"], secundarios: ["abdominales", "lumbares"] },
+  // Tobillos
+  { id: "manolo-circulos-tobillo", nombre: "Círculos de tobillo", alias: ["circulos de tobillos", "rotacion de tobillo", "ankle circles"], tipo: "isometrico", equipo: "peso_corporal", primarios: [], secundarios: ["pantorrillas"], movilidad: true },
+  { id: "manolo-movilidad-rodilla-adelante", nombre: "Movilidad de rodilla adelante", alias: ["rodilla a la pared", "knee to wall", "dorsiflexion de tobillo"], tipo: "isometrico", equipo: "peso_corporal", primarios: [], secundarios: ["pantorrillas"], movilidad: true },
+  { id: "manolo-balance-una-pierna", nombre: "Balance a una pierna", alias: ["equilibrio a una pierna", "balance en una pierna", "single leg balance"], tipo: "isometrico", equipo: "peso_corporal", primarios: ["abductores"], secundarios: ["pantorrillas", "gluteos"] },
+  // Flexibilidad
+  { id: "manolo-estiramiento-isquios", nombre: "Estiramiento de isquios", alias: ["estiramiento de isquiotibiales", "hamstring stretch", "estirar isquios"], tipo: "isometrico", equipo: "peso_corporal", primarios: [], secundarios: ["isquiotibiales"], movilidad: true },
+  { id: "manolo-estocada-baja", nombre: "Estocada baja (mantenida)", alias: ["estocada baja", "estocada baja mantenida", "low lunge", "estiramiento de flexor de cadera"], tipo: "isometrico", equipo: "peso_corporal", primarios: [], secundarios: ["cuadriceps"], movilidad: true },
+  // Cuello
+  { id: "manolo-flexion-extension-cervical", nombre: "Flexión / extensión cervical", alias: ["flexion cervical", "extension cervical", "flexion y extension de cuello", "flexión/extensión cervical"], tipo: "carga", equipo: "otro", primarios: ["cuello"], secundarios: [] }
 ];
 
 // ---------------------------------------------------------------------------
@@ -1297,7 +1333,7 @@ async function cargarDataset() {
 function validar(f) {
   const err = [];
   if (!TIPOS.includes(f.tipo)) err.push("tipo " + f.tipo);
-  if (!f.primarios.length) err.push("sin primarios");
+  if (!f.primarios.length && !(f.movilidad && f.secundarios.length)) err.push("sin primarios");
   [...f.primarios, ...f.secundarios].forEach(m => { if (!MUSCULO_POR_ID[m]) err.push("músculo " + m); });
   if (!EQUIPO_LABEL[f.equipo]) err.push("equipo " + f.equipo);
   return err;

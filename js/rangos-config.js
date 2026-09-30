@@ -102,7 +102,7 @@ const STANDARDS = {
     fondos: E("Fondos en paralelas", "corporal", { pectoral: 1, triceps: 1, deltoide_anterior: 0.5 }, [90, 105, 125, 145, 168, 188],
       ["parallel-bar-dip", "dips-chest-version", "dips-triceps-version"], ["fondos", "fondos en paralelas", "paralelas", "dips"]),
     flexiones: E("Flexiones", "reps", { pectoral: 1, triceps: 0.5, deltoide_anterior: 0.5 }, [8, 17, 30, 45, 60, 75],
-      ["pushups"], ["flexiones", "lagartijas", "push ups", "pushups"]),
+      ["pushups", "manolo-flexion-normal"], ["flexiones", "flexion normal", "lagartijas", "push ups", "pushups"]),
     dominadas: E("Dominadas", "corporal", { dorsales: 1, biceps: 0.5, espalda_alta: 0.5 }, [68, 94, 108, 125, 145, 166],
       ["pullups", "weighted-pull-ups"], ["dominadas", "pull ups", "pullups"]),
     muscle_up: E("Muscle-up", "corporal", { dorsales: 1, triceps: 0.5, pectoral: 0.5 }, [85, 91, 99, 108, 119, 130],
@@ -152,7 +152,7 @@ const STANDARDS = {
     rueda_abdominal: E("Rueda abdominal", "reps", { abdominales: 1, oblicuos: 0.5 }, [3, 6, 10, 16, 24, 32],
       ["ab-roller"], ["rueda abdominal", "ab wheel", "ab roller"]),
     plancha: E("Plancha", "tiempo", { abdominales: 1, oblicuos: 0.5 }, [30, 60, 100, 150, 210, 300],
-      ["plank"], ["plancha", "plank"])
+      ["plank", "manolo-plancha-alta"], ["plancha", "plancha alta", "plank"])
   }
 };
 

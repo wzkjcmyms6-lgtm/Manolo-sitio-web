@@ -294,3 +294,19 @@ cuenta). "Valores por defecto" las restablece (tu peso se mantiene).
   solo le pasa `gimnasio` a `desdeRegistros()`. Para volver a sumarlos, pasarle
   también `running` y `bicicleta` desde `estado.registros`.
 - **Tests**: `npm test` (Node 18+ sin instalar nada).
+
+## Ejercicios de la rutina (30 sept 2026)
+
+Agregados en `EXTRA` / `AJUSTES` del script con los músculos que indicó Juan
+(primario = lo que mueve el ejercicio; secundario = lo que ayuda o estabiliza):
+Flexión normal, de rodillas y con pausa (pecho; tríceps, deltoide anterior),
+Plancha alta, Plancha en rodillas, Colgado activo, Negativa controlada,
+Sentadilla al aire (antes "Sentadilla libre"; alias "asistida"), Zancada
+asistida, Elevación de talones (sin peso), Puente de glúteos isométrico/con
+marcha, Balance a una pierna, Flexión / extensión cervical; y se ajustaron
+Dominadas (+ trapecio), Dead bug (+ lumbares), Puente de glúteo y los
+isométricos de cuello (alias).
+
+**Movilidad y estiramientos** (`movilidad: true`: Círculos de tobillo,
+Movilidad de rodilla adelante, Estiramiento de isquios, Estocada baja): solo
+tienen músculos secundarios, así que el mapa los pinta en tono suave.

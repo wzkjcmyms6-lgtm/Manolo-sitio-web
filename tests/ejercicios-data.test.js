@@ -23,7 +23,8 @@ test("cada ficha tiene todos los campos y valores válidos", () => {
     assert.ok(Array.isArray(e.alias), e.nombre);
     assert.ok(E.TIPOS.includes(e.tipo), e.nombre + " tipo " + e.tipo);
     assert.ok(EQUIPOS[e.equipo], e.nombre + " equipo " + e.equipo);
-    assert.ok(e.primarios.length > 0, e.nombre + " sin primarios");
+    // Movilidad y estiramientos: solo secundarios (el mapa los pinta suave).
+    assert.ok(e.primarios.length > 0 || (e.movilidad && e.secundarios.length > 0), e.nombre + " sin primarios");
     [...e.primarios, ...e.secundarios].forEach(m => assert.ok(E.MUSCULO_POR_ID[m], e.nombre + " músculo " + m));
     assert.ok(!e.secundarios.some(m => e.primarios.includes(m)), e.nombre + " músculo repetido");
     assert.equal(typeof e.factorPesoCorporal, "number");
