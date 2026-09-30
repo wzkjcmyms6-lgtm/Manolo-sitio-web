@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=202609300200">
+  <link rel="stylesheet" href="css/style.css?v=202609300300">
 </head>
 <body>
   <!-- Degradado marfil y brillo del maniquí (mapa corporal y creador de ejercicios) -->
@@ -207,23 +207,13 @@
           <!-- ===== Ejercicio (hub) ===== -->
           <section id="panel-ejercicio" hidden>
             <h1 class="page-title">Ejercicio</h1>
-            <p class="panel-sub">Elige una disciplina para registrar tu progreso.</p>
+            <p class="panel-sub">Registra tus entrenamientos y mira qué músculos trabajaste.</p>
 
-            <div class="card-grid card-grid-3">
+            <div class="card-grid card-grid-1">
               <a class="card" href="#gimnasio">
                 <span class="icon" data-icon="exercise"></span>
                 <h3>Gimnasio</h3>
                 <p>Rutinas, series, peso y volumen.</p>
-              </a>
-              <a class="card" href="#running">
-                <span class="icon" data-icon="running"></span>
-                <h3>Running</h3>
-                <p>Tus salidas a correr y tu ritmo.</p>
-              </a>
-              <a class="card" href="#bicicleta">
-                <span class="icon" data-icon="cycling"></span>
-                <h3>Bicicleta</h3>
-                <p>Tus rodadas y tu velocidad.</p>
               </a>
             </div>
 
@@ -257,8 +247,19 @@
               <ul class="ej-revisar-lista" id="ej-revisar-lista"></ul>
             </section>
 
-            <details class="ej-ajustes" id="ej-ajustes">
-              <summary>Ajustes del mapa muscular</summary>
+          </section>
+
+          <!-- ===== Ejercicio: Rangos ===== -->
+          <section id="panel-ej-rangos" hidden>
+            <h1 class="page-title">Rangos</h1>
+            <p class="empty-state">Aquí verás tus rangos. Próximamente.</p>
+          </section>
+
+          <!-- ===== Ejercicio: Perfil ===== -->
+          <section id="panel-ej-perfil" hidden>
+            <h1 class="page-title">Perfil</h1>
+            <div class="ej-ajustes" id="ej-ajustes">
+              <h2>Ajustes del mapa muscular</h2>
               <form id="ej-ajustes-form" class="ej-ajustes-form" novalidate>
                 <label class="ex-field">Tu peso corporal (kg)
                   <input type="number" id="aj-peso" step="0.1" min="20" max="300" inputmode="decimal">
@@ -279,7 +280,7 @@
               <h3 class="radar-subtitle">Respaldo</h3>
               <p class="ej-texto" id="aj-respaldo-info"></p>
               <button type="button" class="ej-chip" id="aj-descargar"><span class="icon-sm" data-icon="download"></span> Descargar respaldo (JSON)</button>
-            </details>
+            </div>
           </section>
 
           <!-- ===== Gimnasio ===== -->
@@ -341,7 +342,7 @@
 
           <!-- ===== Running ===== -->
           <section id="panel-running" hidden>
-            <a class="back-link" href="#ejercicio"><span class="icon-sm" data-icon="chevronLeft"></span>Ejercicio</a>
+            <a class="back-link" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
             <h1 class="page-title">Running</h1>
 
             <div class="stat-row" id="running-stats"></div>
@@ -366,7 +367,7 @@
 
           <!-- ===== Bicicleta ===== -->
           <section id="panel-bicicleta" hidden>
-            <a class="back-link" href="#ejercicio"><span class="icon-sm" data-icon="chevronLeft"></span>Ejercicio</a>
+            <a class="back-link" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
             <h1 class="page-title">Bicicleta</h1>
 
             <div class="stat-row" id="cycling-stats"></div>
@@ -893,8 +894,8 @@
   <script src="js/firebase-init.js?v=202609293"></script>
   <script src="js/auth.js?v=202609232200"></script>
   <script src="js/verses.js?v=202609232200"></script>
-  <script src="js/icons.js?v=202609291900"></script>
-  <script src="js/modules.js?v=202609291900"></script>
+  <script src="js/icons.js?v=202609300300"></script>
+  <script src="js/modules.js?v=202609300400"></script>
   <script src="js/main.js?v=202609232200"></script>
   <script src="js/habitos.js?v=202609280200"></script>
   <script src="js/muscle-engine.js?v=202609292"></script>

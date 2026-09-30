@@ -474,7 +474,8 @@ body.sheet-open { overflow: hidden; }
 }
 .ej-chip .icon-sm { width: 15px; height: 15px; display: inline-flex; }
 .ej-ajustes > summary, .ej-avanzado > summary { cursor: pointer; font-weight: 700; list-style: none; display: flex; align-items: center; justify-content: space-between; }
-.ej-ajustes > summary { font-size: 1.05rem; }
+.ej-ajustes > summary, .ej-ajustes > h2 { font-size: 1.05rem; }
+.ej-ajustes > h2 { margin: 0; }
 .ej-ajustes > summary::-webkit-details-marker, .ej-avanzado > summary::-webkit-details-marker { display: none; }
 .ej-ajustes > summary::after, .ej-avanzado > summary::after { content: "+"; color: var(--accent-2); font-size: 1.2rem; font-weight: 500; }
 .ej-ajustes[open] > summary::after, .ej-avanzado[open] > summary::after { content: "–"; }
@@ -676,6 +677,7 @@ h1.page-title { margin-top: 0; font-size: 1.9rem; }
 .panel-sub { color: var(--muted); }
 
 .card-grid.card-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.card-grid.card-grid-1 { grid-template-columns: 1fr; }
 /* Inicio tiene 6 tarjetas: 3 + 3 en escritorio; en el celular vale la grilla de 2 columnas. */
 @media (min-width: 769px) { .card-grid.card-grid-home { grid-template-columns: repeat(3, 1fr); } }
 
@@ -2005,9 +2007,9 @@ button.diaria-days-pick-btn.on { background: var(--accent-grad); border-color: t
     background: var(--accent-1);
   }
 
-  /* Barra inferior de Finanzas: barra de vidrio esmerilado con un indicador
-     que se desliza entre pestañas (ver moveFinGlass en modules.js). */
-  #bottom-nav-links.fin-mode {
+  /* Barra inferior con pestañas propias (Finanzas, Ejercicio): vidrio esmerilado
+     con un indicador que se desliza entre pestañas (ver moveGlass en modules.js). */
+  #bottom-nav-links.tab-mode {
     --pad: 6px;
     padding: var(--pad);
     border-radius: 999px;
@@ -2017,7 +2019,7 @@ button.diaria-days-pick-btn.on { background: var(--accent-grad); border-color: t
     border: 1px solid rgba(150, 215, 215, 0.22);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 14px 32px rgba(0, 0, 0, 0.5);
   }
-  #bottom-nav-links.fin-mode a {
+  #bottom-nav-links.tab-mode a {
     z-index: 1;
     color: #ececec;
     font-weight: 600;
@@ -2025,18 +2027,18 @@ button.diaria-days-pick-btn.on { background: var(--accent-grad); border-color: t
     padding: 0.55rem 0.25rem 0.5rem;
     -webkit-tap-highlight-color: transparent;
   }
-  #bottom-nav-links.fin-mode a.active::before { display: none; }
-  #bottom-nav-links.fin-mode a .icon { color: #8e8e93; transition: color 0.3s ease; }
-  #bottom-nav-links.fin-mode a.active .icon {
+  #bottom-nav-links.tab-mode a.active::before { display: none; }
+  #bottom-nav-links.tab-mode a .icon { color: #8e8e93; transition: color 0.3s ease; }
+  #bottom-nav-links.tab-mode a.active .icon {
     color: var(--tab-color);
-    animation: fin-icon-pop 0.5s cubic-bezier(0.3, 0.6, 0.25, 1);
+    animation: tab-icon-pop 0.5s cubic-bezier(0.3, 0.6, 0.25, 1);
   }
-  .fin-glass {
+  .tab-glass {
     position: absolute;
     top: var(--pad);
     bottom: var(--pad);
     left: var(--pad);
-    width: calc((100% - 2 * var(--pad)) / var(--fin-tabs));
+    width: calc((100% - 2 * var(--pad)) / var(--tabs));
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.09);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -2045,7 +2047,7 @@ button.diaria-days-pick-btn.on { background: var(--accent-grad); border-color: t
     will-change: transform;
   }
   /* Mientras viaja: lupa transparente con borde brillante, por encima de los íconos. */
-  .fin-glass.lens {
+  .tab-glass.lens {
     z-index: 2;
     background: rgba(255, 255, 255, 0.03);
     -webkit-backdrop-filter: brightness(1.3) saturate(1.6);
@@ -2056,11 +2058,23 @@ button.diaria-days-pick-btn.on { background: var(--accent-grad); border-color: t
       inset 0 -4px 8px rgba(120, 200, 255, 0.18),
       0 8px 22px rgba(0, 0, 0, 0.35);
   }
-  @keyframes fin-icon-pop {
+  @keyframes tab-icon-pop {
     0% { transform: scale(0.85); }
     55% { transform: scale(1.15); }
     100% { transform: scale(1); }
   }
+
+  /* Ejercicio: como la referencia, íconos blancos y la pestaña activa en azul,
+     con un borde azulado en la base de la barra. */
+  #bottom-nav-links[data-mode="ejercicio"] {
+    border-color: rgba(110, 160, 255, 0.22);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 -1px 0 rgba(77, 163, 255, 0.35), 0 14px 32px rgba(0, 0, 0, 0.5);
+  }
+  #bottom-nav-links[data-mode="ejercicio"] a { font-size: 0.78rem; font-weight: 500; }
+  #bottom-nav-links[data-mode="ejercicio"] a .icon { color: #f2f2f2; width: 26px; height: 26px; }
+  #bottom-nav-links[data-mode="ejercicio"] a.active,
+  #bottom-nav-links[data-mode="ejercicio"] a.active .icon { color: var(--tab-color); }
+  #bottom-nav-links[data-mode="ejercicio"] .tab-glass:not(.lens) { background: rgba(255, 255, 255, 0.14); }
 
   .habit-row, .habit-days-header {
     grid-template-columns: 1fr repeat(7, 28px) 28px;
@@ -2697,16 +2711,16 @@ body.sheet-open { overflow: hidden; }
 .gasto-view { flex: 1 1 auto; font-size: 0.68rem; letter-spacing: 0.08em; padding: 0.7rem 0.4rem; }
 .gasto-views { overflow: hidden; }
 
-/* ---------- Finanzas: barra de arriba con solo la casita ---------- */
+/* ---------- Finanzas/Ejercicio: barra de arriba con solo la casita ---------- */
 .topbar-home { display: none; }
-body.in-finanzas .topbar .brand,
-body.in-finanzas .topbar .menu-toggle { display: none; }
-body.in-finanzas .topbar-home {
+body.has-home-btn .topbar .brand,
+body.has-home-btn .topbar .menu-toggle { display: none; }
+body.has-home-btn .topbar-home {
   display: flex; align-items: center; justify-content: center;
   width: 38px; height: 38px; padding: 9px; border-radius: 50%;
   background: var(--surface); border: 1px solid var(--border); color: var(--ink);
 }
-body.in-finanzas .topbar-home:active { transform: scale(0.94); }
+body.has-home-btn .topbar-home:active { transform: scale(0.94); }
 #panel-finanzas #finance-stats[hidden] { display: none; }
 
 /* ---------- Pestaña Vista General (como Buddy) ---------- */
@@ -2764,7 +2778,7 @@ body.in-finanzas .topbar-home:active { transform: scale(0.94); }
 
 /* Fecha y hora en la barra de arriba */
 .topbar-clock { margin-left: auto; margin-right: 0.8rem; font-size: 0.9rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
-body.in-finanzas .topbar-clock { margin-right: 0; }
+body.has-home-btn .topbar-clock { margin-right: 0; }
 .sidebar-clock { display: block; margin: 0.2rem 0 1rem; font-size: 0.85rem; color: var(--muted); }
 
 /* Saltar a un día desde el calendario */

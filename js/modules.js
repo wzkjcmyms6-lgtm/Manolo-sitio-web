@@ -15,13 +15,15 @@ const MODULES = [
 ];
 
 // Sub-paneles que cuelgan de un módulo pero no aparecen en el menú
-// principal (se llega a ellos con tarjetas dentro del módulo padre, ej:
-// Ejercicio → Gimnasio/Running/Bicicleta). Igual se muestran/ocultan según
-// el hash, y la nav resalta el módulo padre mientras estás en uno de ellos.
+// principal (se llega a ellos con tarjetas, ej: Ejercicio → Gimnasio, o
+// Inicio → Running/Bicicleta). Igual se muestran/ocultan según el hash, y
+// la nav resalta el módulo padre mientras estás en uno de ellos.
 const SUB_PANELS = [
   { hash: "gimnasio", parent: "ejercicio" },
-  { hash: "running", parent: "ejercicio" },
-  { hash: "bicicleta", parent: "ejercicio" },
+  { hash: "ej-rangos", parent: "ejercicio" },
+  { hash: "ej-perfil", parent: "ejercicio" },
+  { hash: "running", parent: "inicio" },
+  { hash: "bicicleta", parent: "inicio" },
   { hash: "fin-presupuesto", parent: "finanzas" },
   { hash: "fin-herramientas", parent: "finanzas" },
   { hash: "fin-herramientas-carteras", parent: "fin-herramientas" },
@@ -32,15 +34,21 @@ const SUB_PANELS = [
   { hash: "fin-herramientas-exportar", parent: "fin-herramientas" }
 ];
 
-// Mientras estás dentro de Finanzas, la barra inferior (solo en móvil, que
-// es donde hace falta el espacio) deja de mostrar los módulos generales y
-// muestra estas 3 pestañas en su lugar. Para volver a Inicio/Hábitos/etc
-// queda el menú de la barra superior (el ☰).
+// Mientras estás dentro de Finanzas o Ejercicio, la barra inferior (solo en
+// móvil, que es donde hace falta el espacio) deja de mostrar los módulos
+// generales y muestra las pestañas propias del módulo. Para volver a Inicio
+// la barra de arriba muestra una casita.
 const FIN_TABS = [
   { hash: "finanzas", label: "Vista general", icon: "finEye", color: "#ff6b7a" },
   { hash: "fin-presupuesto", label: "Presupuesto", icon: "finBudget", color: "#3d8bff" },
   { hash: "fin-herramientas", label: "Herramientas", icon: "finTools", color: "#ff6b7a" }
 ];
+const EJ_TABS = [
+  { hash: "ej-rangos", label: "Rangos", icon: "trophy", color: "#4da3ff" },
+  { hash: "ejercicio", label: "Entrenamiento", icon: "exercise", color: "#4da3ff" },
+  { hash: "ej-perfil", label: "Perfil", icon: "user", color: "#4da3ff" }
+];
+const TAB_BARS = { finanzas: FIN_TABS, ejercicio: EJ_TABS };
 
 const ALL_HASHES = MODULES.map(m => m.hash).concat(SUB_PANELS.map(s => s.hash));
 
@@ -64,13 +72,13 @@ function activeModuleHash(hash) {
 }
 
 // Igual que activeModuleHash, pero se detiene en el primer nivel que sea
-// una pestaña de Finanzas (Vista general/Presupuesto/Herramientas), para
-// resaltar la barra inferior aunque estés más adentro (ej: en Carteras
-// sigue resaltando "Herramientas").
-function finTabHash(hash) {
+// una de las pestañas dadas, para resaltar la barra inferior aunque estés
+// más adentro (ej: en Carteras sigue resaltando "Herramientas", en
+// Gimnasio sigue resaltando "Entrenamiento").
+function tabHash(hash, tabs) {
   let h = hash;
-  while (h && !FIN_TABS.some(t => t.hash === h)) h = parentOf(h);
-  return h || "finanzas";
+  while (h && !tabs.some(t => t.hash === h)) h = parentOf(h);
+  return h || tabs[0].hash;
 }
 
 function showPanel(hash) {
@@ -83,18 +91,20 @@ function showPanel(hash) {
     a.classList.toggle("active", a.dataset.hash === activeModule);
   });
 
-  // En Ejercicio (y sus sub-paneles) el banner de versículos se reemplaza
-  // por la silueta de cuerpo humano. En Finanzas se oculta sin reemplazo,
-  // para que el resumen quede más arriba.
+  // En Ejercicio no hay banner de versículos: en Entrenamiento (y Gimnasio)
+  // va la silueta de cuerpo humano, y en Rangos/Perfil nada. En Finanzas se
+  // oculta sin reemplazo, para que el resumen quede más arriba.
   const isExercise = activeModule === "ejercicio";
-  // En Finanzas la barra de arriba solo muestra una casita para volver al inicio.
+  const showBody = isExercise && tabHash(hash, EJ_TABS) === "ejercicio";
   document.body.classList.toggle("in-finanzas", activeModule === "finanzas");
+  // Con barra inferior propia, la de arriba solo muestra una casita para volver al inicio.
+  document.body.classList.toggle("has-home-btn", !!TAB_BARS[activeModule]);
   document.getElementById("verse-banner").hidden = isExercise || activeModule === "finanzas" || activeModule === "habitos";
-  document.getElementById("body-banner").hidden = !isExercise;
+  document.getElementById("body-banner").hidden = !showBody;
 
   // Pestañas propias de Finanzas (Vista general/Presupuesto/Herramientas),
   // visibles como pills dentro del panel en escritorio.
-  const finTab = finTabHash(hash);
+  const finTab = tabHash(hash, FIN_TABS);
   document.querySelectorAll("[data-hash-link]").forEach(a => {
     a.classList.toggle("active", a.dataset.hash === finTab);
   });
@@ -103,7 +113,6 @@ function showPanel(hash) {
 function renderNav() {
   const hash = currentHash();
   const current = activeModuleHash(hash);
-  const inFinanzas = current === "finanzas";
 
   const linkHTML = (m, iconClass, activeHash) => {
     const isActive = m.hash === activeHash;
@@ -120,11 +129,13 @@ function renderNav() {
 
   const bottomNav = document.getElementById("bottom-nav-links");
   if (bottomNav) {
-    if (inFinanzas) {
-      renderFinBottomNav(bottomNav, finTabHash(hash));
+    const tabs = TAB_BARS[current];
+    if (tabs) {
+      renderTabBar(bottomNav, current, tabs, tabHash(hash, tabs));
     } else {
-      finGlassIndex = null;
-      bottomNav.classList.remove("fin-mode");
+      glassIndex = null;
+      bottomNav.classList.remove("tab-mode");
+      delete bottomNav.dataset.mode;
       bottomNav.innerHTML = MODULES.map(m => linkHTML(m, "icon", current)).join("");
     }
   }
@@ -132,28 +143,30 @@ function renderNav() {
   renderIcons();
 }
 
-// En Finanzas la barra no se reconstruye al cambiar de pestaña: se reutiliza
-// para que el indicador de vidrio pueda deslizarse desde la pestaña anterior.
-let finGlassIndex = null;
+// La barra con pestañas propias no se reconstruye al cambiar de pestaña: se
+// reutiliza para que el indicador de vidrio pueda deslizarse desde la anterior.
+let glassIndex = null;
 
-function renderFinBottomNav(nav, activeHash) {
-  if (!nav.classList.contains("fin-mode")) {
-    nav.classList.add("fin-mode");
-    nav.style.setProperty("--fin-tabs", FIN_TABS.length);
-    nav.innerHTML = `<span class="fin-glass" aria-hidden="true"></span>` + FIN_TABS.map(m =>
+function renderTabBar(nav, mode, tabs, activeHash) {
+  if (nav.dataset.mode !== mode) {
+    glassIndex = null;
+    nav.dataset.mode = mode;
+    nav.classList.add("tab-mode");
+    nav.style.setProperty("--tabs", tabs.length);
+    nav.innerHTML = `<span class="tab-glass" aria-hidden="true"></span>` + tabs.map(m =>
       `<a href="#${m.hash}" data-nav-link data-hash="${m.hash}" style="--tab-color:${m.color}">` +
       `<span class="icon" data-icon="${m.icon}"></span>${m.label}</a>`).join("");
   }
   nav.querySelectorAll("a[data-hash]").forEach(a => a.classList.toggle("active", a.dataset.hash === activeHash));
-  moveFinGlass(nav, FIN_TABS.findIndex(t => t.hash === activeHash));
+  moveGlass(nav, tabs.findIndex(t => t.hash === activeHash));
 }
 
 // Al cambiar de pestaña el indicador se "levanta" como una lupa de vidrio
 // (crece y se vuelve transparente), viaja hasta la nueva pestaña y se asienta.
-function moveFinGlass(nav, to) {
-  const glass = nav.querySelector(".fin-glass");
-  const from = finGlassIndex;
-  finGlassIndex = to;
+function moveGlass(nav, to) {
+  const glass = nav.querySelector(".tab-glass");
+  const from = glassIndex;
+  glassIndex = to;
   glass.style.transform = `translateX(${to * 100}%)`;
   if (from === null || from === to || !glass.animate) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;

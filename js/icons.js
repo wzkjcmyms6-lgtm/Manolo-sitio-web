@@ -34,7 +34,8 @@ const ICONS = {
 
   tools: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M14.5 6.5a4 4 0 0 0-5 5L4 17l3 3 5.5-5.5a4 4 0 0 0 5-5l-2.7 2.7-2-2Z"/></svg>`,
 
-  budgetFilled: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="9"/></svg>`,
+  user: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg>`,
+  budgetFilled:`<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="9"/></svg>`,
 
   // Glifos sólidos de la barra inferior de Finanzas (gris inactivo, color al activarse).
   finEye: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M12 5C6.5 5 2.6 9.3 1.3 11.3a1.3 1.3 0 0 0 0 1.4C2.6 14.7 6.5 19 12 19s9.4-4.3 10.7-6.3a1.3 1.3 0 0 0 0-1.4C21.4 9.3 17.5 5 12 5Zm0 3.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z"/><circle cx="12" cy="12" r="2"/></svg>`,
