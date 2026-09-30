@@ -1721,13 +1721,6 @@ button.an-item:focus-visible { outline: 2px solid var(--accent-2); border-radius
 .res-vacio { font-size: 0.92rem; color: var(--muted); margin: 0.3rem 0 0.6rem; }
 .res-link { display: inline-flex; align-items: center; gap: 0.2rem; min-height: 44px; margin-top: 0.4rem; color: var(--accent-2); font-weight: 600; font-size: 0.92rem; text-decoration: none; }
 .res-link [data-icon] { width: 18px; height: 18px; }
-.res-proy { font-size: 0.9rem; color: var(--muted); margin: 0.35rem 0 0.2rem; line-height: 1.45; }
-.res-proy:empty { display: none; }
-.res-proy strong { color: var(--ink); }
-.res-mal { color: #ff7a66; font-weight: 700; }
-.res-bien { color: #5fcf8a; font-weight: 700; }
-.vg-pres-label { position: absolute; right: 0; transform: translateY(-120%); font-size: 0.7rem; color: var(--muted); background: var(--surface); padding: 0 0.25rem; border-radius: 4px; pointer-events: none; }
-.vg-legend i.vg-leg-proy { background: none; border: 2px dashed #ffb84d; width: 12px; height: 12px; box-sizing: border-box; }
 .res-items { display: flex; flex-direction: column; gap: 0.5rem; }
 .res-item { display: flex; align-items: center; gap: 0.7rem; width: 100%; min-height: 48px; padding: 0.65rem 0.8rem; border-radius: 14px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border); color: var(--ink); font: inherit; font-size: 0.92rem; line-height: 1.4; text-align: left; text-decoration: none; cursor: pointer; }
 .res-item.aviso { background: rgba(240, 168, 71, 0.1); border-color: rgba(240, 168, 71, 0.35); }

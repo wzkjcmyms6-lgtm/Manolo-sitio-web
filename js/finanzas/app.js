@@ -599,7 +599,7 @@ function smoothPath(pts) {
   return d;
 }
 
-function vgChartHTML(period, proy) {
+function vgChartHTML(period) {
   const days = periodDays(period);
   const n = days.length;
   const today = isoDate(new Date());
@@ -618,10 +618,8 @@ function vgChartHTML(period, proy) {
   financeCache.filter(m => m.type === "gasto" && !m.excluded && isInPeriod(m.date, period))
     .forEach(m => { byDay[m.date] = (byDay[m.date] || 0) + m.amount; });
 
-  const final = proy && proy.final != null ? proy.final : null;
-  const pres = proy && proy.presupuesto > 0 ? proy.presupuesto : 0;
   const W = 320, H = 170, padX = 6, top = 14, bottom = 150;
-  const maxY = Math.max(current[current.length - 1] || 0, media ? media[n - 1] : 0, final || 0, pres, 1) * 1.08;
+  const maxY = Math.max(current[current.length - 1] || 0, media ? media[n - 1] : 0, 1) * 1.08;
   const x = i => padX + (n > 1 ? (i / (n - 1)) * (W - padX * 2) : 0);
   const y = v => bottom - (v / maxY) * (bottom - top);
   const curPts = current.map((v, i) => [x(i), y(v)]);
@@ -651,9 +649,8 @@ function vgChartHTML(period, proy) {
           <stop offset="100%" stop-color="#ffb84d"/>
         </linearGradient>
       </defs>
-      ${pres ? `<line x1="${padX}" x2="${W - padX}" y1="${y(pres).toFixed(1)}" y2="${y(pres).toFixed(1)}" style="stroke:#9a978f" stroke-width="1" stroke-dasharray="2 4" vector-effect="non-scaling-stroke"/>` : ""}
       ${media ? `<path d="${mediaPath}" fill="none" style="stroke:#77756f" stroke-width="2" stroke-dasharray="6 6" vector-effect="non-scaling-stroke"/>` : ""}
-      ${final != null ? `<path d="M ${last[0].toFixed(1)} ${last[1].toFixed(1)} L ${x(n - 1).toFixed(1)} ${y(final).toFixed(1)}" fill="none" style="stroke:${pres && final > pres ? "#ff7a66" : "#ffb84d"}" stroke-width="2" stroke-dasharray="3 5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>` : ""}
+
       <path d="${area}" fill="url(#vg-area)"/>
       <path d="${linePath}" fill="none" stroke="url(#vg-line)" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
     </svg>
@@ -662,10 +659,9 @@ function vgChartHTML(period, proy) {
     <span class="vg-scrub-dot" hidden></span>
     <span class="vg-scrub-dot media" hidden></span>
     <button type="button" class="vg-tooltip" hidden></button>
-    ${pres ? `<span class="vg-pres-label" style="top:${(y(pres) / (H + 18) * 100).toFixed(2)}%">Presupuesto ${formatBsShort(Math.round(pres))}</span>` : ""}
     </div>
     <div class="vg-chart-ticks">${ticks.map(t => `<span style="left:${(x(t.i) / W * 100).toFixed(2)}%">${t.label}</span>`).join("")}</div>
-    <div class="vg-legend"><span><i style="background:#ff7a30"></i>Este periodo</span>${final != null ? `<span><i class="vg-leg-proy"></i>Proyección</span>` : ""}${media ? `<span><i style="background:#77756f"></i>Media</span>` : ""}</div>`;
+    <div class="vg-legend"><span><i style="background:#ff7a30"></i>Este periodo</span>${media ? `<span><i style="background:#77756f"></i>Media</span>` : ""}</div>`;
 }
 
 // ---- Deslizar por el gráfico: línea vertical + recuadro con el día ----
@@ -783,7 +779,7 @@ function vgCalendarHTML(period) {
 }
 
 // ================= Resumen: 6 bloques =================
-// 1 cuánto puedes gastar por día · 2 ritmo con proyección · 3 atención
+// 1 cuánto puedes gastar por día · 2 gasto del periodo · 3 atención
 // · 4 ahorro · 5 en qué se va · 6 RE-IVA del mes. Lo profundo está en Análisis.
 
 // 1. Puedes gastar por día
@@ -814,32 +810,6 @@ function resHeroHTML(period) {
     <p class="res-sub">Te quedan <strong class="an-num">${formatBsShort(Math.round(result))}</strong> para los próximos ${days} ${days === 1 ? "día" : "días"}, después de fijos y ahorro.</p>
     ${barra}
     <a class="res-link" href="#fin-presupuesto">Ver presupuesto<span data-icon="chevronRight"></span></a>`;
-}
-
-// 2. Proyección: lo gastado + tu ritmo diario de gastos variables por los
-// días que quedan + lo que falta pagar de fijos y ahorro.
-function proyeccionGasto(period) {
-  const days = periodDays(period);
-  const n = days.length;
-  const today = isoDate(new Date());
-  const pasados = days.filter(d => d <= today).length;
-  const presupuesto = gastoCategoriesCache.filter(c => isPlanned(c.id)).reduce((s, c) => s + disponible(c.id), 0);
-  if (pasados < 3 || pasados >= n) return { final: null, presupuesto, pasados, n };
-  const info = computeBudgetInfo(period);
-  const gastado = cumulativeSpend(period)[pasados - 1];
-  if (!(gastado > 0)) return { final: null, presupuesto, pasados, n };
-  const variable = Math.max(gastado - info.fijo.used - info.ahorro.used, 0);
-  const pendiente = Math.max(info.fijo.planned - info.fijo.used, 0) + Math.max(info.ahorro.planned - info.ahorro.used, 0);
-  return { final: gastado + variable / pasados * (n - pasados) + pendiente, presupuesto, pasados, n, gastado };
-}
-function resProyeccionTexto(p) {
-  if (p.final == null) return "";
-  const fin = formatBsShort(Math.round(p.final));
-  if (!(p.presupuesto > 0)) return `A este ritmo terminarías el periodo en <strong class="an-num">${fin}</strong>.`;
-  const dif = Math.round(p.final - p.presupuesto);
-  return dif > 0
-    ? `A este ritmo terminarías en <strong class="an-num">${fin}</strong>: <span class="res-mal">${formatBsShort(dif)} más</span> que tu presupuesto de ${formatBsShort(Math.round(p.presupuesto))}.`
-    : `A este ritmo terminarías en <strong class="an-num">${fin}</strong>: <span class="res-bien">${formatBsShort(-dif)} menos</span> que tu presupuesto de ${formatBsShort(Math.round(p.presupuesto))}.`;
 }
 
 // 3. Atención: hasta 3 cosas para mirar hoy.
@@ -930,13 +900,11 @@ function resReivaHTML(period) {
 function renderVistaGeneral() {
   const period = currentBudgetPeriod();
   const gastado = FD.sumaBs(financeCache.filter(m => m.type === "gasto" && !m.excluded && isInPeriod(m.date, period)), m => m.amount);
-  const proy = proyeccionGasto(period);
   const poner = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
   poner("res-hero", resHeroHTML(period));
   document.getElementById("vg-spent-label").textContent = `Gastado: ${periodLabel(period)}`;
   document.getElementById("vg-spent-value").textContent = formatBsShort(gastado);
-  poner("res-proy", resProyeccionTexto(proy));
-  document.getElementById("vg-chart").innerHTML = vgChartHTML(period, proy);
+  document.getElementById("vg-chart").innerHTML = vgChartHTML(period);
   poner("res-atencion", resAtencionHTML(period));
   poner("res-ahorro", resAhorroHTML(period));
   poner("res-categorias", resCategoriasHTML(period));
