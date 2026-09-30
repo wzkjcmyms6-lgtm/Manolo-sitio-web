@@ -18,7 +18,7 @@
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
   <link rel="stylesheet" href="css/style.css?v=202610011000">
-  <link rel="stylesheet" href="css/finanzas.css?v=202610011500">
+  <link rel="stylesheet" href="css/finanzas.css?v=202610011600">
   <link rel="stylesheet" href="css/habitos.css?v=202610010600">
 </head>
 <body>
@@ -472,6 +472,7 @@
             </div>
 
             <section id="budget-tab-planificacion" class="fin-panel">
+              <div class="pres-herr" id="pres-herr"></div>
               <div class="budget-summary-card">
                 <div class="budget-summary-ring" id="budget-summary-ring"></div>
                 <div class="budget-summary-info">
@@ -890,6 +891,14 @@
           <button type="button" data-tipo="ahorro">Ahorro</button>
         </div>
       </div>
+      <div class="budget-sheet-extra" id="budget-sheet-extra">
+        <button type="button" class="budget-sheet-sug" id="budget-sheet-sug" hidden></button>
+        <label class="budget-sheet-arrastre" id="budget-sheet-arrastre-fila">
+          <span><strong>Pasar lo que sobre</strong><small>Lo que no gastes (o lo que te pases) se suma al periodo siguiente</small></span>
+          <input type="checkbox" id="budget-sheet-arrastre" role="switch">
+        </label>
+        <p class="budget-sheet-alcance" id="budget-sheet-alcance"></p>
+      </div>
       <div class="budget-sheet-actions">
         <button type="button" class="budget-sheet-choose" id="budget-sheet-choose">Elegir la categoría</button>
         <button type="button" class="budget-sheet-delete" id="budget-sheet-delete" hidden>Eliminar</button>
@@ -964,7 +973,7 @@
   <script defer src="js/firebase-init.js?v=202609293"></script>
   <script defer src="js/auth.js?v=202609232200"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
-  <script defer src="js/icons.js?v=202610011400"></script>
+  <script defer src="js/icons.js?v=202610011600"></script>
   <script defer src="js/modules.js?v=202610011400"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
@@ -988,10 +997,11 @@
   <script defer src="js/offline.js?v=202610010700"></script>
   <script defer src="js/running.js?v=202609293"></script>
   <script defer src="js/bicicleta.js?v=202609293"></script>
-  <script defer src="js/finanzas/datos.js?v=202610011300"></script>
+  <script defer src="js/finanzas/datos.js?v=202610011600"></script>
   <script defer src="js/finanzas/demo.js?v=202610011300"></script>
   <script defer src="js/finanzas/analisis.js?v=202610011500"></script>
-  <script defer src="js/finanzas/app.js?v=202610011500"></script>
+  <script defer src="js/finanzas/presupuesto.js?v=202610011600"></script>
+  <script defer src="js/finanzas/app.js?v=202610011600"></script>
   <script defer src="js/inversiones.js?v=202609232200"></script>
 </body>
 </html>

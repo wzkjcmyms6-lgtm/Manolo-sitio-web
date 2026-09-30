@@ -786,7 +786,7 @@ function vgBudgetHTML(period) {
   const rows = [];
   (CATEGORIES.ingreso || []).forEach(c => { if (isPlanned(c.id)) rows.push({ cat: c, planned: budgetsCache[c.id] || 0, used: received[c.id] || 0, type: "ingreso" }); });
   categoryGroupsCache.forEach(g => groupCategories(g).forEach(c => {
-    if (isPlanned(c.id)) rows.push({ cat: c, planned: budgetsCache[c.id] || 0, used: spent[c.id] || 0, type: "gasto" });
+    if (isPlanned(c.id)) rows.push({ cat: c, planned: disponible(c.id), used: spent[c.id] || 0, type: "gasto" });
   }));
   if (!rows.length) {
     return `<h3 class="budget-section-title">Presupuesto</h3>
@@ -802,7 +802,8 @@ function vgBudgetHTML(period) {
   const popular = rows.slice().sort((a, b) => b.planned - a.planned).slice(0, 8);
   const alerts = rows
     .map(r => Object.assign({ state: budgetState(r.planned, r.used, r.type) }, r))
-    .filter(r => r.state !== "ok")
+    // Un gasto fijo casi pagado (alquiler al 97 %) no es una alerta.
+    .filter(r => r.state !== "ok" && !(r.state === "warn" && (r.cat.tipo === "fijo" || r.cat.tipo === "ahorro")))
     .sort((a, b) => (b.used / (b.planned || 1)) - (a.used / (a.planned || 1)));
   // Gastos en categorías sin presupuesto: igual restan, se resumen en una línea.
   const unplanned = Object.keys(spent)
@@ -910,7 +911,7 @@ function gastoRows() {
     }).sort((a, b) => b.amount - a.amount);
   }
   const totals = {};
-  list.filter(m => m.type === gastoMode).forEach(m => { totals[m.category] = (totals[m.category] || 0) + m.amount; });
+  list.filter(m => m.type === gastoMode && !m.excluded).forEach(m => { totals[m.category] = (totals[m.category] || 0) + m.amount; });
   return Object.keys(totals).map(id => {
     const cat = findCategory(gastoMode, id);
     let group = { id: "__ingresos", label: "Ingresos", color: INGRESO_COLOR };
@@ -1754,6 +1755,8 @@ function saveTxn(yOtro) {
     return;
   }
   const data = FD.conCentavos({ date: t.date, type: t.type, category: t.category, payment: t.payment, desc: t.desc.trim(), amount, excluded: t.excluded, factura: t.type === "gasto" && !!t.factura });
+  let alerta = null;
+  try { alerta = avisoPresupuesto(t, amount); } catch (err) { console.error("Manolo: no se pudo revisar el presupuesto", err); }
   recordarCartera(t.type, t.payment);
   let guardado;
   if (t.id) guardado = financeCollection().doc(t.id).update(data);
@@ -1773,6 +1776,10 @@ function saveTxn(yOtro) {
   }
   guardado.catch(err => console.error("Manolo: no se pudo guardar el movimiento", err));
   trasGuardar(yOtro, `${t.type === "ingreso" ? "Ingreso" : "Gasto"} de ${formatBsShort(amount)} guardado · ${findCategory(t.type, t.category).label}`);
+  if (alerta) {
+    avisoFin(alerta);
+    try { if (navigator.vibrate) navigator.vibrate([20, 60, 20]); } catch (e) { /* sin vibración */ }
+  }
 }
 // Después de guardar: vibración corta (donde se pueda) y, con "Guardar y
 // otro", la hoja queda lista para el siguiente con el mismo tipo, fecha y
@@ -2275,12 +2282,14 @@ function renderBudgets() {
     .map(c => ({ cat: c, planned: budgetsCache[c.id] || 0, used: received[c.id] || 0 }))
     .filter(r => relevant(r.cat, r.used));
 
+  // Solo las categorías con presupuesto; lo gastado fuera de presupuesto
+  // va aparte, en "Gasto sin presupuesto".
   const groupSections = categoryGroupsCache
     .map(g => ({
       title: g.nombre,
       rows: groupCategories(g)
-        .map(c => ({ cat: c, planned: budgetsCache[c.id] || 0, used: spent[c.id] || 0 }))
-        .filter(r => relevant(r.cat, r.used))
+        .filter(c => isPlanned(c.id))
+        .map(c => ({ cat: c, planned: disponible(c.id), used: spent[c.id] || 0 }))
         .sort(byUrgency)
     }))
     .filter(sec => sec.rows.length)
@@ -2309,13 +2318,210 @@ function renderBudgets() {
 
   const list = document.getElementById("budget-grid");
   const sectionsHTML = (ingresoRows.length ? [remainingSectionHTML("Ingresos", ingresoRows, "ingreso")] : [])
-    .concat(groupSections.map(sec => remainingSectionHTML(sec.title, sec.rows, "gasto")));
-  list.innerHTML = sectionsHTML.length
+    .concat(presSeccionHTML("Gastos", groupSections.flatMap(sec => sec.rows).sort(presOrden(period)), period))
+    .concat(sinPresupuestoHTML(spent));
+  list.innerHTML = sectionsHTML.filter(Boolean).length
     ? sectionsHTML.join("")
     : `<p class="remain-empty">Todavía no hay presupuesto para este mes. Agrégalo en Planificación.</p>`;
 
   renderIcons(document.getElementById("budget-tab-restante"));
   if (catDetail) renderCategoryDetail();
+}
+
+// ---- Tarjetas por categoría: barra con marca de ritmo y estado ----
+const bsCent = c => formatBsShort(FD.aBs(c));
+// Nombre de la sección, solo si aporta (si es distinto del de la categoría).
+function grupoDe(cat) {
+  const g = categoryGroupsCache.find(gr => (gr.items || []).some(i => i.id === cat.id));
+  return g && g.nombre !== cat.label && (g.items || []).length > 1 ? g.nombre : "";
+}
+// Fijos y ahorro (alquiler, suscripciones, apartar plata) se pagan de una
+// vez: no tienen ritmo; solo importa si ya se pagó o si te pasaste.
+function presInfo(r, period) {
+  const trans = periodElapsed(period);
+  const pc = FD.aCentavos(r.planned), uc = FD.aCentavos(r.used);
+  const fijo = r.cat.tipo === "fijo" || r.cat.tipo === "ahorro";
+  const e = FP.estado(pc, uc, fijo ? 1 : trans, daysLeftInPeriod(period));
+  if (fijo && e.estado !== "pasado" && e.estado !== "vacio" && e.estado !== "sin") e.estado = "bien";
+  return { trans, enCurso: trans > 0 && trans < 1, pc, uc, fijo, e };
+}
+const PRES_URGENCIA = { pasado: 3, alerta: 2, rapido: 1, bien: 0, sin: 0, vacio: -1 };
+function presOrden(period) {
+  return (a, b) => {
+    const x = presInfo(a, period), y = presInfo(b, period);
+    return PRES_URGENCIA[y.e.estado] - PRES_URGENCIA[x.e.estado] || (x.fijo - y.fijo) || y.e.pct - x.e.pct;
+  };
+}
+function presCardHTML(r, period) {
+  const { trans, enCurso, pc, uc, fijo, e } = presInfo(r, period);
+  const pct = Math.round(e.pct * 100);
+  const etiqueta = fijo && e.estado === "bien"
+    ? (uc >= pc ? (r.cat.tipo === "ahorro" ? "Apartado" : "Pagado") : uc > 0 ? `${pct} % pagado` : "Pendiente")
+    : { bien: "Vas bien", rapido: "Vas rápido", alerta: `Usaste el ${pct} %`, pasado: `Te pasaste ${bsCent(-e.queda)}`, vacio: "Sin monto", sin: "Sin monto" }[e.estado];
+  const esperado = Math.round(trans * 100);
+  const arr = arrastreCache[r.cat.id];
+  const nota = arr ? `<span class="pres-nota">${arr > 0 ? `Incluye ${bsCent(arr)} que sobró antes` : `Descuenta ${bsCent(-arr)} que te pasaste antes`}</span>` : "";
+  const porDia = enCurso && !fijo && e.queda > 0 && e.porDia >= 100 ? ` · ${formatBsShort(Math.floor(e.porDia / 100))}/día` : "";
+  return `
+    <button type="button" class="pres-card is-${e.estado}" data-cat-detail="${escapeHtml(r.cat.id)}" data-cat-type="gasto">
+      <span class="pres-card-top">
+        ${txnIconHTML(r.cat)}
+        <span class="pres-card-nom"><span>${escapeHtml(r.cat.label)}</span><small class="pres-card-estado">${etiqueta}${grupoDe(r.cat) ? ` · ${escapeHtml(grupoDe(r.cat))}` : ""}</small></span>
+        <span class="pres-card-queda an-num">${e.queda >= 0 ? bsCent(e.queda) : `−${bsCent(-e.queda)}`}<small>${e.queda >= 0 ? "quedan" : "de más"}</small></span>
+      </span>
+      <span class="pres-bar" role="img" aria-label="Usaste ${pct} % de ${bsCent(pc)}${enCurso && !fijo ? `; a esta altura lo esperado es ${esperado} %` : ""}">
+        <span class="pres-bar-fill" style="width:${Math.min(e.pct, 1) * 100}%"></span>
+        ${enCurso && !fijo ? `<i class="pres-ritmo" style="left:${esperado}%"></i>` : ""}
+      </span>
+      <span class="pres-card-pie an-num">${bsCent(uc)} de ${bsCent(pc)}${porDia}</span>
+      ${nota}
+    </button>`;
+}
+function presSeccionHTML(title, rows, period) {
+  if (!rows.length) return "";
+  const queda = rows.reduce((s, r) => s + FD.aCentavos(r.planned) - FD.aCentavos(r.used), 0);
+  return `
+    <div class="budget-section remain-section pres-seccion">
+      <div class="remain-section-head">
+        <h3 class="budget-section-title">${escapeHtml(title)}</h3>
+        <span class="remain-section-amount${queda < 0 ? " over" : ""}">${queda < 0 ? `${bsCent(-queda)} sobrepasado` : `${bsCent(queda)} restante`}</span>
+      </div>
+      <div class="pres-lista">${rows.map(r => presCardHTML(r, period)).join("")}</div>
+    </div>`;
+}
+function sinPresupuestoHTML(spent) {
+  const ids = Object.keys(spent).filter(id => spent[id] > 0 && !isPlanned(id)).sort((a, b) => spent[b] - spent[a]);
+  if (!ids.length) return "";
+  const total = ids.reduce((s, id) => s + FD.aCentavos(spent[id]), 0);
+  return `
+    <div class="budget-section remain-section pres-seccion pres-sin">
+      <div class="remain-section-head">
+        <h3 class="budget-section-title">Gasto sin presupuesto</h3>
+        <span class="remain-section-amount">${bsCent(total)}</span>
+      </div>
+      <p class="pres-sin-txt">Esto también sale de tu plata, pero no está en ninguna categoría del presupuesto.</p>
+      <div class="pres-lista">${ids.map(id => {
+        const cat = findCategory("gasto", id);
+        const sug = sugerenciaCent(id);
+        const enLista = gastoCategoriesCache.some(c => c.id === id);
+        return `<div class="pres-sin-fila">
+          ${txnIconHTML(cat)}
+          <span class="pres-sin-nom"><span>${escapeHtml(cat.label)}</span>${sug ? `<small>Sugerido: ${bsCent(sug)}</small>` : ""}</span>
+          <span class="an-num pres-sin-monto">${formatBsShort(spent[id])}</span>
+          ${enLista ? `<button type="button" class="pres-sin-btn" data-pres-agregar="${escapeHtml(id)}" aria-label="Agregar presupuesto para ${escapeHtml(cat.label)}"><span data-icon="plus"></span></button>` : ""}
+        </div>`;
+      }).join("")}</div>
+    </div>`;
+}
+document.getElementById("budget-grid").addEventListener("click", e => {
+  const b = e.target.closest("[data-pres-agregar]");
+  if (!b) return;
+  e.stopPropagation();
+  const id = b.dataset.presAgregar;
+  const cat = findBudgetCategory("gasto", id);
+  if (!cat) return;
+  openBudgetSheet({ type: "gasto", groupId: cat.groupId, nuevoCat: id });
+}, true);
+
+// ---- Planificación: de dónde viene el presupuesto, copiar y sugerir ----
+function mismosMontos(a, b) {
+  const ka = Object.keys(a), kb = Object.keys(b);
+  return ka.length === kb.length && ka.every(k => k in b && FD.aCentavos(a[k] || 0) === FD.aCentavos(b[k] || 0));
+}
+function catsEnBs(cats) {
+  const out = {};
+  Object.keys(cats).forEach(id => { out[id] = FD.aBs(cats[id]); });
+  return out;
+}
+function sugerenciasTodas() {
+  const out = {};
+  gastoCategoriesCache.forEach(c => { const v = sugerenciaCent(c.id); if (v > 0) out[c.id] = v; });
+  return out;
+}
+function renderPresHerramientas() {
+  const el = document.getElementById("pres-herr");
+  if (!el) return;
+  const period = currentBudgetPeriod();
+  const k = claveDe(period);
+  const { origen } = FP.delPeriodo(presupuestoDoc, presupuestoBase, k);
+  const kPrev = FP.claveMas(k, -1);
+  const previo = catsEnBs(FP.delPeriodo(presupuestoDoc, presupuestoBase, kPrev).cats);
+  const igual = mismosMontos(previo, budgetsCache);
+  const nombrePrev = periodLabel(periodoDeClave(kPrev));
+  const sug = sugerenciasTodas();
+  const nSug = Object.keys(sug).length;
+  const origenTxt = origen === k
+    ? `Presupuesto propio de ${periodLabel(period)}.`
+    : origen
+      ? `Sigue el presupuesto de ${periodLabel(periodoDeClave(origen))}.`
+      : "Es tu presupuesto de siempre.";
+  el.innerHTML = `
+    <p class="pres-origen">${escapeHtml(origenTxt)} ${monthOffset < 0 ? "Si lo cambias, solo cambia este periodo." : "Si lo cambias, vale desde este periodo en adelante; los anteriores no cambian."}</p>
+    <div class="pres-herr-btns">
+      <button type="button" class="pres-herr-btn" aria-label="${igual ? `Igual a ${escapeHtml(nombrePrev)}` : `Copiar el presupuesto de ${escapeHtml(nombrePrev)}`}" data-pres-copiar${igual || !Object.keys(previo).length ? " disabled" : ""}>
+        <span data-icon="copy"></span>${igual ? "Igual al anterior" : "Copiar el anterior"}</button>
+      <button type="button" class="pres-herr-btn" data-pres-sugerir${nSug ? "" : " disabled"}>
+        <span data-icon="sparkle"></span>Sugerir con 3 meses</button>
+    </div>`;
+  renderIcons(el);
+}
+function aplicarPresupuesto(nuevo, texto) {
+  const antes = Object.assign({}, budgetsCache);
+  budgetsCache = nuevo;
+  saveBudgets();
+  pedirRender();
+  showUndoToast(texto, () => { budgetsCache = antes; saveBudgets(); pedirRender(); });
+}
+document.getElementById("pres-herr").addEventListener("click", e => {
+  const period = currentBudgetPeriod();
+  const k = claveDe(period);
+  if (e.target.closest("[data-pres-copiar]:not([disabled])")) {
+    const kPrev = FP.claveMas(k, -1);
+    aplicarPresupuesto(catsEnBs(FP.delPeriodo(presupuestoDoc, presupuestoBase, kPrev).cats), `Presupuesto copiado de ${periodLabel(periodoDeClave(kPrev))}`);
+    return;
+  }
+  if (e.target.closest("[data-pres-sugerir]:not([disabled])")) {
+    const sug = sugerenciasTodas();
+    const ids = Object.keys(sug);
+    const total = ids.reduce((s, id) => s + sug[id], 0);
+    appDialog({
+      title: "Sugerir presupuesto",
+      message: `Según lo que gastaste en tus últimos 3 meses: ${ids.length} ${ids.length === 1 ? "categoría" : "categorías"}, ${bsCent(total)} en total (redondeado a Bs 10). Se reemplazan los montos de esas categorías en ${periodLabel(period)}; las demás no cambian. Puedes deshacerlo.`,
+      confirmLabel: "Usar sugerencia"
+    }).then(ok => {
+      if (!ok) return;
+      const nuevo = Object.assign({}, budgetsCache);
+      ids.forEach(id => {
+        nuevo[id] = FD.aBs(sug[id]);
+        const g = categoryGroupsCache.find(gr => (gr.items || []).some(i => i.id === id));
+        if (g) visibleBudgetSections.add(g.id);
+      });
+      aplicarPresupuesto(nuevo, `Sugerencia aplicada a ${ids.length} ${ids.length === 1 ? "categoría" : "categorías"}`);
+    });
+  }
+});
+
+// ---- Avisos al 80 % y al 100 % ----
+// Antes de guardar un gasto: ¿con este monto cruza el 80 % o el 100 % de su
+// presupuesto (con arrastre) en el periodo de su fecha?
+function avisoPresupuesto(t, amount) {
+  if (t.type !== "gasto" || t.excluded || !t.category || !t.date) return null;
+  const k = claveDeFecha(t.date);
+  const cats = FP.delPeriodo(presupuestoDoc, presupuestoBase, k).cats;
+  if (!(t.category in cats)) return null;
+  const arr = arrastreActivo(t.category) ? FP.arrastreHasta(presupuestoDoc, presupuestoBase, t.category, k, c => gastadoCent(c, t.category)) : 0;
+  const pres = (cats[t.category] || 0) + arr;
+  let antes = gastadoCent(k, t.category);
+  const viejo = t.id ? financeCache.find(m => m.id === t.id) : null;
+  if (viejo && viejo.type === "gasto" && !viejo.excluded && viejo.category === t.category && claveDeFecha(viejo.date) === k) antes -= viejo.montoCent || 0;
+  const despues = antes + FD.aCentavos(amount);
+  const cruce = FP.cruce(pres, antes, despues);
+  const cat = findBudgetCategory("gasto", t.category);
+  if (!cruce || (cruce === 80 && cat && (cat.tipo === "fijo" || cat.tipo === "ahorro"))) return null;
+  const nombre = findCategory("gasto", t.category).label;
+  return cruce === 100
+    ? `${nombre}: te pasaste del presupuesto por ${bsCent(despues - pres)} (${bsCent(despues)} de ${bsCent(pres)}).`
+    : `${nombre}: ya usaste el ${Math.round(despues / pres * 100)} % del presupuesto (${bsCent(despues)} de ${bsCent(pres)}).`;
 }
 
 // ---- Detalle de una categoría: sus movimientos del mes ----
@@ -2340,7 +2546,7 @@ function renderCategoryDetail() {
     .filter(m => m.type === type && m.category === catId && !m.excluded && isInPeriod(m.date, period))
     .sort(byNewest);
 
-  const planned = budgetsCache[catId] || 0;
+  const planned = type === "gasto" ? disponible(catId) : budgetsCache[catId] || 0;
   const used = FD.sumaBs(movements, m => m.amount);
   const remaining = planned - used;
   const isIncome = type === "ingreso";
@@ -2420,6 +2626,80 @@ document.getElementById("cat-detail-sheet").addEventListener("click", e => {
 // el monto sea 0). Una sección de gasto se muestra si tiene alguna categoría
 // planificada o si el usuario la acaba de añadir.
 const visibleBudgetSections = new Set();
+
+// ---- Presupuesto por periodo (ver js/finanzas/presupuesto.js) ----
+// budgetsCache es el presupuesto del periodo que estás mirando (en Bs, como
+// lo usa el resto de la pantalla). Se arma con el presupuesto de siempre
+// (meta/presupuestos) y los cambios guardados por periodo.
+const FP = FinanzasPresupuesto;
+let presupuestoBase = {};  // meta/presupuestos: el de siempre, ya no se escribe
+let presupuestoDoc = null; // meta/presupuestos_periodos
+let arrastreCache = {};    // id → centavos que pasan de periodos anteriores
+
+function presupuestosPeriodosRef() {
+  return metaDocRef("presupuestos_periodos");
+}
+function claveDe(period) {
+  return FP.clave(period.startISO);
+}
+function claveActual() {
+  return claveDe(budgetPeriodAt(0));
+}
+function periodoDeClave(k) {
+  const [y, m] = k.split("-").map(Number);
+  const [ya, ma] = claveActual().split("-").map(Number);
+  return budgetPeriodAt((y * 12 + m) - (ya * 12 + ma));
+}
+// Clave del periodo al que pertenece una fecha (según el día de inicio).
+function claveDeFecha(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return d >= periodStartIn(y, m - 1).getDate() ? iso.slice(0, 7) : FP.claveMas(iso.slice(0, 7), -1);
+}
+// Gasto por periodo y categoría, en centavos (se recalcula solo si cambian
+// los movimientos o el día de inicio).
+let gastoClaveMemo = null;
+function gastoPorClave() {
+  if (gastoClaveMemo && gastoClaveMemo.lista === financeCache && gastoClaveMemo.dia === budgetStartDay) return gastoClaveMemo.mapa;
+  const mapa = {};
+  financeCache.forEach(m => {
+    if (m.type !== "gasto" || m.excluded || !m.date) return;
+    const k = claveDeFecha(m.date);
+    const fila = mapa[k] || (mapa[k] = {});
+    fila[m.category] = (fila[m.category] || 0) + (m.montoCent || 0);
+  });
+  gastoClaveMemo = { lista: financeCache, dia: budgetStartDay, mapa };
+  return mapa;
+}
+function gastadoCent(k, id) {
+  const fila = gastoPorClave()[k];
+  return (fila && fila[id]) || 0;
+}
+function sincronizarPresupuesto() {
+  const k = claveDe(currentBudgetPeriod());
+  const { cats } = FP.delPeriodo(presupuestoDoc, presupuestoBase, k);
+  const nuevo = {};
+  Object.keys(cats).forEach(id => { nuevo[id] = FD.aBs(cats[id]); });
+  budgetsCache = nuevo;
+  arrastreCache = {};
+  const arr = (presupuestoDoc && presupuestoDoc.arrastre) || {};
+  Object.keys(arr).forEach(id => {
+    if (!(id in nuevo)) return;
+    const v = FP.arrastreHasta(presupuestoDoc, presupuestoBase, id, k, c => gastadoCent(c, id));
+    if (v) arrastreCache[id] = v;
+  });
+}
+// Lo disponible en una categoría de gasto: su presupuesto más el arrastre.
+function disponible(id) {
+  return FD.aBs(FD.aCentavos(budgetsCache[id] || 0) + (arrastreCache[id] || 0));
+}
+function arrastreActivo(id) {
+  return !!(presupuestoDoc && presupuestoDoc.arrastre && presupuestoDoc.arrastre[id]);
+}
+// Sugerencia con los últimos 3 periodos (antes del que miras), en centavos.
+function sugerenciaCent(id) {
+  const k = claveDe(currentBudgetPeriod());
+  return FP.sugerencia([1, 2, 3].map(n => gastadoCent(FP.claveMas(k, -n), id)));
+}
 
 function isPlanned(catId) {
   return Object.prototype.hasOwnProperty.call(budgetsCache, catId);
@@ -2669,8 +2949,17 @@ document.getElementById("budget-info").addEventListener("click", e => {
   renderBudgetInfo();
 });
 
-function saveBudgets() {
-  return budgetDocRef().set(Object.assign({}, budgetsCache));
+// Guarda el presupuesto del periodo que estás mirando (en centavos). Vale
+// desde ese periodo en adelante; los anteriores no cambian.
+function saveBudgets(arrastre) {
+  const cats = {};
+  Object.keys(budgetsCache).forEach(id => { cats[id] = FD.aCentavos(budgetsCache[id] || 0); });
+  const doc = FP.guardar(presupuestoDoc, presupuestoBase, claveDe(currentBudgetPeriod()), cats, claveActual());
+  if (arrastre) doc.arrastre = arrastre;
+  presupuestoDoc = doc;
+  metaCrudo.presupuestos_periodos = doc;
+  sincronizarPresupuesto();
+  return presupuestosPeriodosRef().set(doc);
 }
 
 function uniqueId(base, taken) {
@@ -2742,11 +3031,11 @@ function formatSheetAmount(str) {
   return dec === undefined ? grouped : `${grouped},${dec}`;
 }
 
-function openBudgetSheet({ type, groupId = null, catId = null }) {
+function openBudgetSheet({ type, groupId = null, catId = null, nuevoCat = null }) {
   const amount = catId && budgetsCache[catId] ? String(budgetsCache[catId]).replace(".", ",") : "0";
-  budgetSheet = { type, groupId, catId, originalCatId: catId, amount, tipo: null };
+  budgetSheet = { type, groupId, catId, originalCatId: catId, amount, tipo: null, arrastre: null };
   if (!catId) {
-    const first = sheetCandidates()[0];
+    const first = nuevoCat ? { id: nuevoCat } : sheetCandidates()[0];
     budgetSheet.catId = first ? first.id : null;
   }
   renderBudgetSheet();
@@ -2779,6 +3068,18 @@ function renderBudgetSheet() {
   document.querySelectorAll("#budget-sheet [data-tipo]").forEach(b => b.classList.toggle("active", b.dataset.tipo === tipo));
   document.getElementById("budget-sheet-delete").hidden = !s.originalCatId;
   document.getElementById("budget-sheet-ok").disabled = !cat;
+  // Sugerencia de 3 meses, arrastre y a qué periodos se aplica.
+  const esGasto = s.type === "gasto" && !!cat;
+  const sug = esGasto ? sugerenciaCent(cat.id) : 0;
+  const sugBtn = document.getElementById("budget-sheet-sug");
+  sugBtn.hidden = !sug;
+  if (sug) sugBtn.innerHTML = `Usar <strong>${bsCent(sug)}</strong> · tu promedio de los últimos 3 meses`;
+  document.getElementById("budget-sheet-arrastre-fila").hidden = !esGasto;
+  document.getElementById("budget-sheet-arrastre").checked = s.arrastre != null ? s.arrastre : !!(cat && arrastreActivo(cat.id));
+  const period = currentBudgetPeriod();
+  document.getElementById("budget-sheet-alcance").textContent = monthOffset < 0
+    ? `Cambia solo ${periodLabel(period)}; los demás periodos quedan como están.`
+    : `Se aplica desde ${periodLabel(period)} en adelante. Los periodos anteriores no cambian.`;
   renderIcons(document.getElementById("budget-sheet"));
 }
 
@@ -2834,6 +3135,13 @@ function confirmBudgetSheet() {
   const amount = parseFloat(s.amount.replace(",", ".")) || 0;
   if (s.originalCatId && s.originalCatId !== cat.id) delete budgetsCache[s.originalCatId];
   budgetsCache[cat.id] = amount;
+  // Arrastre: se activa desde el periodo que miras.
+  let arrastre = null;
+  if (s.type === "gasto" && s.arrastre != null && s.arrastre !== arrastreActivo(cat.id)) {
+    arrastre = Object.assign({}, (presupuestoDoc && presupuestoDoc.arrastre) || {});
+    if (s.arrastre) arrastre[cat.id] = claveDe(currentBudgetPeriod());
+    else delete arrastre[cat.id];
+  }
   if (cat.groupId) {
     visibleBudgetSections.add(cat.groupId);
     const tipo = sheetTipo(cat);
@@ -2848,7 +3156,8 @@ function confirmBudgetSheet() {
   closeBudgetSheet();
   renderBudgetInputs();
   renderBudgetSummary();
-  saveBudgets();
+  saveBudgets(arrastre);
+  pedirRender();
 }
 
 // Al quitar la última categoría de una sección, la sección sale del presupuesto.
@@ -2869,14 +3178,23 @@ async function deleteBudgetFromSheet() {
   renderBudgetInputs();
   renderBudgetSummary();
   saveBudgets();
+  pedirRender();
 }
 
+document.getElementById("budget-sheet-arrastre").addEventListener("change", e => {
+  if (budgetSheet) budgetSheet.arrastre = e.target.checked;
+});
 document.getElementById("budget-sheet").addEventListener("click", e => {
   if (!budgetSheet) return;
   const key = e.target.closest("[data-key]");
   if (key) { pressSheetKey(key.dataset.key); return; }
   const tipoBtn = e.target.closest("[data-tipo]");
   if (tipoBtn) { budgetSheet.tipo = tipoBtn.dataset.tipo; renderBudgetSheet(); return; }
+  if (e.target.closest("#budget-sheet-sug")) {
+    const cent = sugerenciaCent(budgetSheet.catId);
+    if (cent) { budgetSheet.amount = String(FD.aBs(cent)).replace(".", ","); renderBudgetSheet(); }
+    return;
+  }
   const typeBtn = e.target.closest("[data-sheet-type]");
   if (typeBtn) {
     if (typeBtn.dataset.sheetType !== budgetSheet.type) {
@@ -4144,7 +4462,7 @@ function importarJson(archivo) {
       if (r.movimientos) partes.push(`${r.movimientos} movimiento${r.movimientos === 1 ? "" : "s"}`);
       if (r.ahorros) partes.push(`${r.ahorros} de Ahorro`);
       if (r.carteras) partes.push(`${r.carteras} de tus carteras`);
-      const NOMBRES_META = { categorias_gasto: "categorías de gasto", categorias_ingreso: "categorías de ingreso", carteras_custom: "carteras", presupuestos: "montos de presupuesto", config_presupuesto: "el periodo del presupuesto", finanzas_ajustes: "tus ajustes" };
+      const NOMBRES_META = { categorias_gasto: "categorías de gasto", categorias_ingreso: "categorías de ingreso", carteras_custom: "carteras", presupuestos: "montos de presupuesto", presupuestos_periodos: "presupuestos por periodo", config_presupuesto: "el periodo del presupuesto", finanzas_ajustes: "tus ajustes" };
       if (r.meta.length) partes.push(r.meta.map(n => NOMBRES_META[n] || n).join(", ") + " que faltaban");
       const msg = `Respaldo del ${fecha}. Se agregará: ${partes.join(", ")}. No se borra ni se cambia nada de lo que ya tienes.${r.descartados ? ` ${r.descartados} registro${r.descartados === 1 ? "" : "s"} dañado${r.descartados === 1 ? "" : "s"} se omitirá${r.descartados === 1 ? "" : "n"}.` : ""}`;
       return appDialog({ title: "Importar respaldo", message: msg, confirmLabel: "Importar" }).then(ok => {
@@ -4538,7 +4856,7 @@ document.querySelectorAll("[data-budget-tab]").forEach(btn => {
 const RENDERERS = [
   renderStats, updateMonthLabel, renderMovements, renderGasto, renderAnalisis, renderVistaGeneral,
   updateBudgetMonthLabel, renderBudgets, renderBudgetInputs, renderBudgetSummary, renderBudgetInfo,
-  renderCategoryGroups, renderPeriodSettings, renderWallets, updateExportSummary, renderReiva, renderEstadoDatos,
+  renderPresHerramientas, renderCategoryGroups, renderPeriodSettings, renderWallets, updateExportSummary, renderReiva, renderEstadoDatos,
   renderAjustes, renderRecordatorio, renderDemoBanner, renderPerfil, renderPendientes, renderRecurrentes
 ];
 // Finanzas solo se dibuja cuando se ve: si estás en otra sección, los
@@ -4553,6 +4871,7 @@ function finanzasVisible() {
 function renderAll() {
   if (!finanzasVisible()) { renderPendiente = true; return; }
   renderPendiente = false;
+  try { sincronizarPresupuesto(); } catch (err) { console.error("Manolo: falló el presupuesto del periodo", err); }
   RENDERERS.forEach(fn => {
     try { fn(); } catch (err) { console.error("Manolo: falló " + fn.name, err); }
   });
@@ -4715,7 +5034,14 @@ onAuthReady(() => {
   });
   budgetDocRef().onSnapshot(doc => {
     metaCrudo.presupuestos = doc.exists ? doc.data() : null;
-    budgetsCache = doc.exists ? doc.data() : {};
+    presupuestoBase = doc.exists ? doc.data() : {};
+    sincronizarPresupuesto();
+    pedirRender();
+  });
+  presupuestosPeriodosRef().onSnapshot(doc => {
+    presupuestoDoc = doc.exists ? doc.data() : null;
+    metaCrudo.presupuestos_periodos = presupuestoDoc;
+    sincronizarPresupuesto();
     pedirRender();
   });
   let groupsLoaded = false;

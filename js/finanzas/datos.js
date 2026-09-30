@@ -217,7 +217,7 @@ function unirRespaldo(partes) {
 const FORMATO = "manolo-finanzas";
 const COLECCIONES = ["finanzas", "ahorros", "carteras_movimientos"];
 // Documentos de meta/ que forman parte de Finanzas y viajan en la copia.
-const META_COPIA = ["config_presupuesto", "presupuestos", "categorias_gasto", "categorias_ingreso", "carteras_custom", "finanzas_ajustes", "finanzas_recurrentes"];
+const META_COPIA = ["config_presupuesto", "presupuestos", "presupuestos_periodos", "categorias_gasto", "categorias_ingreso", "carteras_custom", "finanzas_ajustes", "finanzas_recurrentes"];
 
 function copiaCompleta(datos, ahora) {
   const t = ahora || Date.now();
@@ -309,6 +309,28 @@ function planImportacion(copia, actual) {
     const faltan = {};
     Object.keys(mc.presupuestos).forEach(k => { if (idOk(k) && !(esObj(ma.presupuestos) && k in ma.presupuestos) && montoValido(mc.presupuestos[k])) faltan[k] = Number(mc.presupuestos[k]); });
     if (Object.keys(faltan).length) meta.presupuestos = faltan;
+  }
+  // Presupuesto por periodo: solo los periodos y arrastres que faltan.
+  if (esObj(mc.presupuestos_periodos)) {
+    const cp = mc.presupuestos_periodos, lp = esObj(ma.presupuestos_periodos) ? ma.presupuestos_periodos : {};
+    const lper = esObj(lp.periodos) ? lp.periodos : {}, larr = esObj(lp.arrastre) ? lp.arrastre : {};
+    const out = {};
+    if (esObj(cp.periodos)) {
+      const per = {};
+      Object.keys(cp.periodos).forEach(k => {
+        if (!/^\d{4}-\d{2}$/.test(k) || k in lper || !esObj(cp.periodos[k])) return;
+        const cats = {};
+        Object.keys(cp.periodos[k]).forEach(id => { const v = cp.periodos[k][id]; if (idOk(id) && Number.isInteger(v) && v >= 0) cats[id] = v; });
+        per[k] = cats;
+      });
+      if (Object.keys(per).length) out.periodos = per;
+    }
+    if (esObj(cp.arrastre)) {
+      const arr = {};
+      Object.keys(cp.arrastre).forEach(id => { if (idOk(id) && !(id in larr) && /^\d{4}-\d{2}$/.test(cp.arrastre[id])) arr[id] = cp.arrastre[id]; });
+      if (Object.keys(arr).length) out.arrastre = arr;
+    }
+    if (Object.keys(out).length) meta.presupuestos_periodos = Object.assign({ v: 1 }, out);
   }
   ["config_presupuesto", "finanzas_ajustes"].forEach(n => { if (esObj(mc[n]) && !esObj(ma[n])) meta[n] = mc[n]; });
   const resumen = { movimientos: nuevos.finanzas.length, ahorros: nuevos.ahorros.length, carteras: nuevos.carteras_movimientos.length, meta: Object.keys(meta), descartados };
