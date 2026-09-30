@@ -447,3 +447,89 @@ test("novedades: detecta subidas de nivel, rangos nuevos, logros y días perfect
   assert.deepEqual(E.novedades(ahora, ahora), []);
   assert.deepEqual(E.novedades(null, ahora), []); // primera vez: sin aviso
 });
+
+// ---------- Fase 3: estadísticas ----------
+test("periodos y cumplimiento global (los semanales cuentan por semana)", () => {
+  const p = E.periodo("7d", "2026-09-30");
+  assert.deepEqual([p.desde, p.hasta, p.previo.desde, p.previo.hasta], ["2026-09-24", "2026-09-30", "2026-09-17", "2026-09-23"]);
+  assert.equal(E.periodo("todo", "2026-09-30", "2026-01-01").previo, null);
+  // Diario: cumple 5 de 6 días cerrados; hoy pendiente no cuenta.
+  const diario = hab("d", { inicio: "2026-09-24", registros: Object.assign(dias("2026-09-24", 3), dias("2026-09-28", 2)) });
+  // Semanal 3×: semana del 21 al 27 con 2 de 3 (fallo).
+  const semanal = hab("s", { inicio: "2026-09-21", freqType: "semana", timesPerWeek: 3, registros: { "2026-09-22": hecho(), "2026-09-25": hecho() } });
+  const r = E.evaluar([diario, semanal], { hoy: "2026-09-30" });
+  const c = E.cumplimientoGlobal(r, "2026-09-24", "2026-09-30");
+  assert.equal(c.esperados, 6 + 3);
+  assert.equal(c.hechos, 5 + 2);
+});
+
+test("kpis: comparación contra el periodo anterior", () => {
+  const regs = Object.assign(dias("2026-09-10", 7, i => (i % 2 ? hecho() : undefined)), dias("2026-09-17", 7));
+  const r = E.evaluar([hab("a", { inicio: "2026-09-10", registros: regs })], { hoy: "2026-09-23" });
+  const k = E.kpis(r, E.periodo("7d", "2026-09-23"));
+  assert.equal(k.actual.pct, 1);
+  assert.ok(Math.abs(k.previo.pct - 3 / 7) < 1e-9);
+  assert.ok(k.actual.xp > k.previo.xp);
+  assert.equal(k.mejorRacha.racha, 7);
+});
+
+test("serie semanal con media móvil", () => {
+  const regs = dias("2026-08-31", 28, i => (i < 14 ? (i % 2 ? hecho() : undefined) : hecho()));
+  const r = E.evaluar([hab("a", { inicio: "2026-08-31", registros: regs })], { hoy: "2026-09-27" });
+  const s = E.serieSemanal(r, 4, 2);
+  assert.deepEqual(s.map(x => Math.round(x.pct * 100)), [43, 57, 100, 100]); // días alternos: 3 y 4 de 7
+  assert.ok(s[2].media > s[1].media && s[2].media < 1);
+});
+
+test("por día de la semana y por momento del día", () => {
+  const regs = {};
+  for (let w = 0; w < 4; w++) for (let d = 1; d < 7; d++) regs[E.addDias("2026-08-31", w * 7 + d)] = hecho(); // nunca los lunes
+  const r = E.evaluar([hab("a", { inicio: "2026-08-31", timeOfDay: "manana", registros: regs })], { hoy: "2026-09-27" });
+  const b = E.porDiaSemana(r, "2026-08-31", "2026-09-27");
+  assert.equal(b[0].pct, 0);
+  assert.equal(b[3].pct, 1);
+  assert.equal(E.porMomento(r, "2026-08-31", "2026-09-27").manana.esperados, 28);
+  const ins = E.insights(r, E.periodo("30d", "2026-09-27"));
+  assert.ok(ins.some(t => t.startsWith("Tu peor día es el lunes (0 %)")), ins.join(" | "));
+});
+
+test("en riesgo: nunca dos veces, racha en juego y semana que no alcanza", () => {
+  const r = E.evaluar([
+    hab("ayer", { registros: dias("2026-09-01", 5) }),                       // falló el 6, hoy es 7
+    hab("racha", { registros: dias("2026-09-01", 6) }),                      // 6 días, hoy pendiente
+    hab("sem", { inicio: "2026-09-01", freqType: "semana", timesPerWeek: 3, registros: {} }) // lunes 7: 3 de 7 días, justo
+  ], { hoy: "2026-09-07" });
+  const tipos = E.enRiesgo(r).map(x => `${x.id}:${x.tipo}`);
+  assert.ok(tipos.includes("ayer:nuncaDos"));
+  assert.ok(tipos.includes("racha:racha"));
+  assert.ok(!tipos.some(t => t.startsWith("sem")));
+  const tarde = E.evaluar([hab("sem", { inicio: "2026-09-01", freqType: "semana", timesPerWeek: 3, registros: {} })], { hoy: "2026-09-12" });
+  assert.equal(E.enRiesgo(tarde)[0].tipo, "semana");
+});
+
+test("correlaciones: ánimo con y sin cada hábito, y hábitos que van juntos (solo con 14 días o más)", () => {
+  const regsA = {}, regsB = {}, animo = {};
+  for (let i = 0; i < 20; i++) {
+    const f = E.addDias("2026-09-01", i);
+    const ok = i % 3 !== 0;
+    if (ok) { regsA[f] = hecho(); regsB[f] = hecho(); }
+    animo[f] = { animo: ok ? 4 : 2 };
+  }
+  const r = E.evaluar([hab("a", { registros: regsA }), hab("b", { registros: regsB })], { hoy: "2026-09-21" });
+  const c = E.correlaciones(r, animo);
+  assert.ok(c.suficiente);
+  assert.equal(c.animo[0].diferencia, 2);
+  assert.ok(c.juntos.some(x => x.a === "a" && x.b === "b"));
+  const poco = E.correlaciones(r, { "2026-09-01": { animo: 3 } });
+  assert.equal(poco.suficiente, false);
+  assert.equal(poco.animo.length, 0);
+});
+
+test("resumen de la semana pasada", () => {
+  const r = E.evaluar([hab("a", { inicio: "2026-09-21", registros: dias("2026-09-21", 5) }), hab("b", { inicio: "2026-09-21", registros: dias("2026-09-21", 2) })], { hoy: "2026-09-28" });
+  const s = E.resumenSemana(r, "2026-09-21");
+  assert.equal(s.mejor.id, "a");
+  assert.equal(s.peor.id, "b");
+  assert.ok(Math.abs(s.pct - 7 / 14) < 1e-9);
+  assert.ok(s.xp > 0);
+});

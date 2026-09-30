@@ -729,6 +729,316 @@ function novedades(anterior, actual) {
   return out;
 }
 
+// ---------- Estadísticas ----------
+// Índice día a día (se arma una vez por cálculo): hechos y esperados de todos
+// los hábitos, con sumas acumuladas para responder cualquier periodo al
+// instante. Los semanales cuentan por semana (meta y veces hechas) el domingo.
+const PERIODOS = { "7d": 7, "30d": 30, "90d": 90, anio: 365 };
+
+function indice(res) {
+  if (res._indice) return res._indice;
+  const lista = Object.keys(res.habitos).map(id => res.habitos[id]);
+  const inicios = lista.map(rh => rh.habito.inicio).filter(f => f && f <= res.hoy).sort();
+  const desde = inicios[0] || res.hoy;
+  const n = diasEntre(desde, res.hoy) + 1;
+  const fechas = new Array(n), pos = {};
+  for (let i = 0, f = desde; i < n; i++, f = addDias(f, 1)) { fechas[i] = f; pos[f] = i; }
+  const hechos = new Float64Array(n), esperados = new Float64Array(n), xp = new Float64Array(n);
+  lista.forEach(rh => {
+    const semanal = porSemana(rh.habito);
+    Object.keys(rh.dias).forEach(f => {
+      const i = pos[f];
+      if (i == null) return;
+      const d = rh.dias[f];
+      xp[i] += d.xp || 0;
+      if (semanal) return;
+      if (d.clase === "cumple") { hechos[i]++; esperados[i]++; }
+      else if (d.clase === "fallo") esperados[i]++;
+    });
+    if (semanal) rh.semanas.forEach(sm => {
+      if (sm.estado !== "cumple" && sm.estado !== "fallo") return;
+      const i = pos[sm.domingo <= res.hoy ? sm.domingo : res.hoy];
+      if (i == null) return;
+      hechos[i] += Math.min(sm.hechas, sm.meta);
+      esperados[i] += sm.meta;
+    });
+  });
+  res.diasPerfectos.forEach(p => { const i = pos[p.fecha]; if (i != null) xp[i] += p.xp; });
+  (res.misiones || []).forEach(m => {
+    if (m.estado !== "completada") return;
+    const dom = addDias(m.lunes, 6);
+    const i = pos[dom <= res.hoy ? dom : res.hoy];
+    if (i != null) xp[i] += m.xp;
+  });
+  const acum = arr => { const a = new Float64Array(n + 1); for (let i = 0; i < n; i++) a[i + 1] = a[i] + arr[i]; return a; };
+  res._indice = { desde, fechas, pos, dow0: diaSemana(desde), hechos, esperados, xp, H: acum(hechos), E: acum(esperados), X: acum(xp) };
+  return res._indice;
+}
+// Fechas del periodo (sin convertir fechas: salen del índice).
+function fechasRango(ix, desde, hasta) {
+  const a = desde < ix.desde ? 0 : ix.pos[desde];
+  const b = hasta > ix.fechas[ix.fechas.length - 1] ? ix.fechas.length - 1 : ix.pos[hasta];
+  if (a == null || b == null || b < a) return { lista: [], a: 0 };
+  return { lista: ix.fechas.slice(a, b + 1), a };
+}
+// Suma de un periodo [desde, hasta] con las sumas acumuladas.
+function sumaRango(ix, A, desde, hasta) {
+  const a = desde < ix.desde ? 0 : ix.pos[desde];
+  const b = hasta > ix.fechas[ix.fechas.length - 1] ? ix.fechas.length - 1 : ix.pos[hasta];
+  if (a == null || b == null || b < a) return 0;
+  return A[b + 1] - A[a];
+}
+
+function periodo(clave, hoy, inicio) {
+  const n = PERIODOS[clave];
+  if (!n) return { clave, desde: inicio || hoy, hasta: hoy, previo: null };
+  const desde = addDias(hoy, -(n - 1));
+  return { clave, desde, hasta: hoy, previo: { desde: addDias(desde, -n), hasta: addDias(desde, -1) } };
+}
+
+function cumplimientoGlobal(res, desde, hasta) {
+  const ix = indice(res);
+  const hechos = sumaRango(ix, ix.H, desde, hasta), esperados = sumaRango(ix, ix.E, desde, hasta);
+  return { hechos, esperados, pct: esperados ? hechos / esperados : null };
+}
+
+function kpis(res, per) {
+  const ix = indice(res);
+  const calc = (desde, hasta) => {
+    const c = cumplimientoGlobal(res, desde, hasta);
+    return {
+      pct: c.pct, hechos: c.hechos, esperados: c.esperados,
+      perfectos: res.diasPerfectos.filter(p => p.fecha >= desde && p.fecha <= hasta).length,
+      xp: Math.round(sumaRango(ix, ix.X, desde, hasta))
+    };
+  };
+  const actual = calc(per.desde, per.hasta);
+  const previo = per.previo ? calc(per.previo.desde, per.previo.hasta) : null;
+  let mejor = null;
+  Object.keys(res.habitos).forEach(id => {
+    const rh = res.habitos[id];
+    if (rh.habito.archivado || rh.racha.unidad !== "dias") return;
+    if (!mejor || rh.racha.actual > mejor.racha) mejor = { id, racha: rh.racha.actual };
+  });
+  const activos = Object.keys(res.habitos).filter(id => !res.habitos[id].habito.archivado && res.habitos[id].habito.inicio && res.habitos[id].habito.inicio <= per.hasta).length;
+  return { actual, previo, mejorRacha: mejor, activos };
+}
+
+// Cumplimiento por semana (lunes a domingo) con media móvil de `ventana` semanas.
+function serieSemanal(res, semanas, ventana) {
+  const ix = indice(res);
+  const out = [];
+  let lunes = addDias(lunesDe(res.hoy), -7 * (semanas - 1));
+  for (let i = 0; i < semanas; i++, lunes = addDias(lunes, 7)) {
+    const domingo = addDias(lunes, 6);
+    if (domingo < ix.desde) continue;
+    const h = sumaRango(ix, ix.H, lunes, domingo), e = sumaRango(ix, ix.E, lunes, domingo);
+    out.push({ lunes, domingo, hechos: h, esperados: e, pct: e ? h / e : null, actual: domingo >= res.hoy });
+  }
+  const v = ventana || 4;
+  out.forEach((s, i) => {
+    const tramo = out.slice(Math.max(0, i - v + 1), i + 1);
+    const e = tramo.reduce((a, x) => a + x.esperados, 0);
+    s.media = e ? tramo.reduce((a, x) => a + x.hechos, 0) / e : null;
+  });
+  return out;
+}
+
+// Días evaluados (cumple/fallo) de los hábitos que se evalúan por día.
+function recorrerDias(res, desde, hasta, filtro, fn) {
+  const ix = indice(res);
+  const { lista, a } = fechasRango(ix, desde, hasta);
+  Object.keys(res.habitos).forEach(id => {
+    const rh = res.habitos[id];
+    if (porSemana(rh.habito) || (filtro && !filtro(rh))) return;
+    for (let k = 0; k < lista.length; k++) {
+      const d = rh.dias[lista[k]];
+      if (d && (d.clase === "cumple" || d.clase === "fallo")) fn(rh, lista[k], d.clase === "cumple", (ix.dow0 + a + k) % 7);
+    }
+  });
+}
+function porDiaSemana(res, desde, hasta, filtro) {
+  const b = Array.from({ length: 7 }, () => ({ hechos: 0, esperados: 0 }));
+  recorrerDias(res, desde, hasta, filtro, (rh, f, ok, wd) => { const x = b[wd]; x.esperados++; if (ok) x.hechos++; });
+  b.forEach(x => { x.pct = x.esperados ? x.hechos / x.esperados : null; });
+  return b;
+}
+function porMomento(res, desde, hasta) {
+  const b = {};
+  CFG.MOMENTOS.forEach(m => { b[m.id] = { hechos: 0, esperados: 0 }; });
+  recorrerDias(res, desde, hasta, null, (rh, f, ok) => { const x = b[rh.habito.timeOfDay]; x.esperados++; if (ok) x.hechos++; });
+  Object.keys(b).forEach(k => { b[k].pct = b[k].esperados ? b[k].hechos / b[k].esperados : null; });
+  return b;
+}
+// % de cada área en el periodo (hábitos diarios por día; semanales por semana).
+function areasPeriodo(res, desde, hasta, defs) {
+  return (defs || CFG.AREAS).map(a => {
+    let h = 0, e = 0;
+    Object.keys(res.habitos).forEach(id => {
+      const rh = res.habitos[id];
+      if (rh.habito.area !== a.id) return;
+      if (porSemana(rh.habito)) rh.semanas.forEach(s => {
+        if (s.domingo < desde || s.domingo > hasta || (s.estado !== "cumple" && s.estado !== "fallo")) return;
+        h += Math.min(s.hechas, s.meta); e += s.meta;
+      });
+      else Object.keys(rh.dias).forEach(f => {
+        if (f < desde || f > hasta) return;
+        const c = rh.dias[f].clase;
+        if (c === "cumple") { h++; e++; } else if (c === "fallo") e++;
+      });
+    });
+    return { id: a.id, nombre: a.nombre, hechos: h, esperados: e, pct: e ? h / e : null };
+  });
+}
+
+function ranking(res) {
+  return Object.keys(res.habitos).map(id => res.habitos[id]).filter(rh => !rh.habito.archivado)
+    .map(rh => ({ id: rh.habito.id, fuerza: rh.rango.fuerza, nivel: rh.rango.nivel, tieneRango: rh.rango.tieneRango, tendencia: rh.rango.tendencia }))
+    .sort((a, b) => b.fuerza - a.fuerza);
+}
+
+// Hábitos en riesgo: racha en juego hoy, "nunca dos veces", semana que no
+// alcanza o fuerza bajando. Ordenados por urgencia.
+function enRiesgo(res) {
+  const out = [];
+  const ayer = addDias(res.hoy, -1);
+  Object.keys(res.habitos).forEach(id => {
+    const rh = res.habitos[id], h = rh.habito;
+    if (h.archivado) return;
+    if (porSemana(h)) {
+      const s = rh.semanaActual;
+      if (s && s.estado === "pendiente") {
+        const quedan = 6 - diaSemana(res.hoy) + 1, faltan = s.meta - s.hechas;
+        if (faltan >= quedan) out.push({ id, tipo: "semana", urgencia: faltan > quedan ? 2 : 3, faltan, quedan });
+      }
+    } else if (h.tipo !== "evitar") {
+      const hoyD = rh.dias[res.hoy], ayerD = rh.dias[ayer];
+      if (hoyD && hoyD.clase === "pendiente" && ayerD && ayerD.clase === "fallo") out.push({ id, tipo: "nuncaDos", urgencia: 4 });
+      else if (hoyD && hoyD.clase === "pendiente" && rh.racha.actual >= 3) out.push({ id, tipo: "racha", urgencia: 2 + Math.min(1, rh.racha.actual / 30), racha: rh.racha.actual });
+    }
+    const t = rh.rango.tendencia;
+    if (t != null && t <= -3 && !out.some(x => x.id === id)) out.push({ id, tipo: "fuerza", urgencia: 1 + Math.min(1, -t / 10), caida: -t });
+  });
+  return out.sort((a, b) => b.urgencia - a.urgencia);
+}
+
+// ---------- Correlaciones (solo con suficientes datos; son coincidencias) ----------
+function media(a) { return a.length ? a.reduce((s, x) => s + x, 0) / a.length : null; }
+function correlaciones(res, dias, opciones) {
+  const o = Object.assign({ minDias: 14, minMuestras: 3, ventana: 90 }, opciones);
+  const animos = {};
+  Object.keys(dias || {}).forEach(f => { const a = Number(dias[f] && dias[f].animo); if (a >= 1 && a <= 5 && f <= res.hoy) animos[f] = a; });
+  const nAnimo = Object.keys(animos).length;
+  const out = { diasConAnimo: nAnimo, animo: [], juntos: [], suficiente: nAnimo >= o.minDias };
+  const desde = addDias(res.hoy, -(o.ventana - 1));
+  const lista = Object.keys(res.habitos).map(id => res.habitos[id]).filter(rh => !rh.habito.archivado && !porSemana(rh.habito) && rh.habito.tipo !== "evitar");
+  if (out.suficiente) {
+    lista.forEach(rh => {
+      const con = [], sin = [];
+      Object.keys(animos).forEach(f => { const d = rh.dias[f]; if (!d) return; if (d.clase === "cumple") con.push(animos[f]); else if (d.clase === "fallo") sin.push(animos[f]); });
+      if (con.length >= o.minMuestras && sin.length >= o.minMuestras) out.animo.push({ id: rh.habito.id, con: media(con), sin: media(sin), diferencia: media(con) - media(sin), n: con.length + sin.length });
+    });
+    out.animo.sort((a, b) => Math.abs(b.diferencia) - Math.abs(a.diferencia));
+  }
+  // Hábitos que suelen ir juntos: P(B | A) contra P(B), en los días que tocaban ambos.
+  const ventana = fechasRango(indice(res), desde, res.hoy).lista;
+  for (let i = 0; i < lista.length; i++) for (let j = 0; j < lista.length; j++) {
+    if (i === j) continue;
+    const A = lista[i], B = lista[j];
+    let n = 0, nA = 0, nB = 0, nAB = 0;
+    ventana.forEach(f => {
+      const a = A.dias[f], b = B.dias[f];
+      if (!a) return;
+      if (!b || (a.clase !== "cumple" && a.clase !== "fallo") || (b.clase !== "cumple" && b.clase !== "fallo")) return;
+      n++;
+      if (a.clase === "cumple") nA++;
+      if (b.clase === "cumple") nB++;
+      if (a.clase === "cumple" && b.clase === "cumple") nAB++;
+    });
+    if (n < o.minDias || nA < 5 || nB === 0) continue;
+    const pBA = nAB / nA, pB = nB / n;
+    if (pBA >= 0.6 && pBA / pB >= 1.15) out.juntos.push({ a: A.habito.id, b: B.habito.id, pBA, pB, n });
+  }
+  out.juntos.sort((x, y) => y.pBA / y.pB - x.pBA / x.pB);
+  return out;
+}
+
+// ---------- Frases con lo que dicen tus datos ----------
+const DIAS_LARGOS = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"];
+const pctTxt = v => `${Math.round(v * 100)} %`;
+function insights(res, per, extra) {
+  const e = extra || {};
+  const nombre = id => res.habitos[id] ? `«${res.habitos[id].habito.name}»` : "";
+  const out = [];
+  const k = kpis(res, per);
+  const dias = diasEntre(per.desde, per.hasta) + 1;
+  // Peor y mejor día de la semana
+  const sem = porDiaSemana(res, per.desde, per.hasta).map((x, i) => Object.assign({ i }, x)).filter(x => x.esperados >= 3);
+  if (sem.length >= 5 && dias >= 14) {
+    const orden = sem.slice().sort((a, b) => a.pct - b.pct);
+    const peor = orden[0], mejor = orden[orden.length - 1];
+    if (mejor.pct - peor.pct >= 0.1) out.push({ peso: 3 + (mejor.pct - peor.pct) * 5, texto: `Tu peor día es el ${DIAS_LARGOS[peor.i]} (${pctTxt(peor.pct)}); el mejor, el ${DIAS_LARGOS[mejor.i]} (${pctTxt(mejor.pct)}).` });
+  }
+  // Momento del día
+  const mom = porMomento(res, per.desde, per.hasta);
+  const ms = CFG.MOMENTOS.filter(m => m.id !== "cualquiera" && mom[m.id].esperados >= 5).map(m => Object.assign({ nombre: m.nombre.toLowerCase() }, mom[m.id]));
+  if (ms.length >= 2) {
+    ms.sort((a, b) => b.pct - a.pct);
+    const a = ms[0], b = ms[ms.length - 1];
+    if (a.pct - b.pct >= 0.15) out.push({ peso: 2 + (a.pct - b.pct) * 4, texto: `Cumples más por la ${a.nombre} (${pctTxt(a.pct)}) que por la ${b.nombre} (${pctTxt(b.pct)}).` });
+  }
+  // Contra el periodo anterior
+  if (k.previo && k.actual.pct != null && k.previo.pct != null) {
+    const d = Math.round((k.actual.pct - k.previo.pct) * 100);
+    if (Math.abs(d) >= 5) out.push({ peso: 2.5 + Math.abs(d) / 10, texto: d > 0 ? `Vas ${d} puntos mejor que en el periodo anterior (${pctTxt(k.actual.pct)} contra ${pctTxt(k.previo.pct)}).` : `Bajaste ${-d} puntos respecto al periodo anterior (${pctTxt(k.actual.pct)} contra ${pctTxt(k.previo.pct)}).` });
+  }
+  // Hábitos que suben o caen varias semanas seguidas
+  Object.keys(res.habitos).forEach(id => {
+    const rh = res.habitos[id];
+    if (rh.habito.archivado || !rh.rango.tieneRango) return;
+    const pts = [21, 14, 7, 0].map(d => { const lim = addDias(res.hoy, -d); let v = null; for (const x of rh.rango.serie) { if (x.fecha > lim) break; v = x.fuerza; } return v; });
+    if (pts.some(v => v == null)) return;
+    const sube = pts[1] > pts[0] && pts[2] > pts[1] && pts[3] > pts[2], baja = pts[1] < pts[0] && pts[2] < pts[1] && pts[3] < pts[2];
+    const delta = pts[3] - pts[0];
+    if (sube && delta >= 3) out.push({ peso: 2 + delta / 10, texto: `${nombre(id)} lleva 3 semanas subiendo (+${Math.round(delta)} de fuerza).` });
+    if (baja && delta <= -3) out.push({ peso: 2.2 + -delta / 10, texto: `${nombre(id)} lleva 3 semanas cayendo (${Math.round(delta)} de fuerza).` });
+  });
+  // Récords de racha
+  Object.keys(res.habitos).forEach(id => {
+    const rh = res.habitos[id], r = rh.racha;
+    if (rh.habito.archivado || r.unidad !== "dias" || r.actual < 5) return;
+    if (r.actual === r.mejor && r.actual >= 7) out.push({ peso: 1.8 + Math.min(1, r.actual / 60), texto: `Estás en tu mejor racha de ${nombre(id)}: ${r.actual} días.` });
+    else if (r.mejor - r.actual > 0 && r.mejor - r.actual <= 3) out.push({ peso: 2.4, texto: `Estás a ${r.mejor - r.actual === 1 ? "1 día" : `${r.mejor - r.actual} días`} de tu récord en ${nombre(id)}.` });
+  });
+  // Ánimo (coincidencia, no causa)
+  const c = e.correlaciones;
+  if (c && c.suficiente && c.animo.length && Math.abs(c.animo[0].diferencia) >= 0.5) {
+    const x = c.animo[0], d = Math.abs(x.diferencia).toFixed(1).replace(".", ",");
+    out.push({ peso: 2.6, texto: x.diferencia > 0 ? `Los días que cumples ${nombre(x.id)}, tu ánimo suele ser ${d} puntos más alto (es una coincidencia, no necesariamente la causa).` : `Los días que cumples ${nombre(x.id)}, tu ánimo suele ser ${d} puntos más bajo (coincidencia, no causa).` });
+  }
+  if (k.actual.perfectos >= 3) out.push({ peso: 1.2, texto: `Lograste ${k.actual.perfectos} días perfectos en este periodo.` });
+  return out.sort((a, b) => b.peso - a.peso).slice(0, 5).map(x => x.texto);
+}
+
+// Resumen de la semana pasada (para el lunes).
+function resumenSemana(res, lunes) {
+  const domingo = addDias(lunes, 6);
+  const ix = indice(res);
+  const act = cumplimientoGlobal(res, lunes, domingo), prev = cumplimientoGlobal(res, addDias(lunes, -7), addDias(lunes, -1));
+  const habs = Object.keys(res.habitos).map(id => res.habitos[id]).filter(rh => !rh.habito.archivado && rh.habito.tipo !== "evitar")
+    .map(rh => {
+      if (porSemana(rh.habito)) { const s = rh.semanas.find(x => x.lunes === lunes); return { id: rh.habito.id, pct: s && s.meta ? Math.min(1, s.hechas / s.meta) : null }; }
+      return { id: rh.habito.id, pct: cumplimiento(rh, lunes, domingo) };
+    }).filter(x => x.pct != null).sort((a, b) => b.pct - a.pct);
+  return {
+    lunes, domingo, pct: act.pct, pctPrevio: prev.pct,
+    xp: Math.round(sumaRango(ix, ix.X, lunes, domingo)),
+    perfectos: res.diasPerfectos.filter(p => p.fecha >= lunes && p.fecha <= domingo).length,
+    mejor: habs[0] || null,
+    peor: habs.length > 1 ? habs[habs.length - 1] : null
+  };
+}
+
 // ---------- Resúmenes para las pantallas ----------
 // % de cumplimiento de un hábito entre dos fechas: cumplidos / (cumplidos +
 // fallados), por día o por semana. null si no hubo nada que evaluar.
@@ -813,6 +1123,8 @@ function mesCalendario(anio, mes) {
 }
 
 return {
+  PERIODOS, indice, periodo, cumplimientoGlobal, kpis, serieSemanal, porDiaSemana, porMomento, areasPeriodo,
+  ranking, enRiesgo, correlaciones, insights, resumenSemana,
   NIVELES, percentilFuerza, intervalo, fuerzaHabito, rangoEn, subiriaConSemanaPerfecta, calcularAreas,
   generarMisiones, evaluarMisiones, calcularLogros, snapshot, novedades,
   cumplimiento, resumenDia, xpDelDiaTotal, formaCiclo, ordenarConCadenas, mesCalendario,
