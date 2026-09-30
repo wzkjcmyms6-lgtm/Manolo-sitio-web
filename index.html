@@ -17,7 +17,7 @@
   <!-- Fuentes guardadas en el repo: la app no depende de internet para verse bien -->
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
-  <link rel="stylesheet" href="css/style.css?v=202610020400">
+  <link rel="stylesheet" href="css/style.css?v=202610020500">
   <link rel="stylesheet" href="css/finanzas.css?v=202610011900">
   <link rel="stylesheet" href="css/habitos.css?v=202610010600">
 </head>
@@ -306,7 +306,10 @@
 
               <div class="gym-section-header">
                 <h2>Rutinas</h2>
-                <button type="button" class="link-btn" id="rut-nueva">+ Nueva rutina</button>
+                <div class="rut-botones">
+                  <button type="button" class="link-btn" id="rut-importar">Importar</button>
+                  <button type="button" class="link-btn" id="rut-nueva">+ Nueva rutina</button>
+                </div>
               </div>
 
               <div id="gym-routines" class="rut-lista"></div>
@@ -926,6 +929,23 @@
     </div>
   </div>
 
+  <!-- Ejercicio: importar rutinas desde Excel o CSV -->
+  <div id="imp-hoja" class="js-sheet budget-sheet imp-hoja" hidden>
+    <div class="budget-sheet-overlay"></div>
+    <div class="budget-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="imp-titulo">
+      <div class="budget-sheet-header">
+        <button type="button" class="budget-sheet-close" id="imp-cerrar" aria-label="Cerrar"><span data-icon="close"></span></button>
+        <h3 id="imp-titulo">Importar rutinas</h3>
+      </div>
+      <div class="imp-cuerpo" id="imp-cuerpo"></div>
+      <div class="imp-pie" id="imp-pie" hidden>
+        <button type="button" class="ejs-btn" id="imp-cancelar">Cancelar</button>
+        <button type="button" class="ejs-btn rut-guardar" id="imp-guardar">Guardar</button>
+      </div>
+      <input type="file" id="imp-archivo" accept=".xlsx,.csv,.txt,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+    </div>
+  </div>
+
   <!-- Ejercicio: opciones de una rutina -->
   <div id="rut-menu" class="js-sheet budget-sheet rut-menu" hidden>
     <div class="budget-sheet-overlay"></div>
@@ -1077,7 +1097,7 @@
   <script defer src="js/rutinas.js?v=202610020300"></script>
   <script defer src="js/progresion.js?v=202610020400"></script>
   <script defer src="js/gimnasio.js?v=202610020400"></script>
-  <script defer src="js/rutinas-ui.js?v=202610020300"></script>
+  <script defer src="js/rutinas-ui.js?v=202610020600"></script>
   <script defer src="js/ej-sesiones.js?v=202610020200"></script>
   <script defer src="js/ej-vistas.js?v=202610020200"></script>
   <script defer src="js/ej-social.js?v=202610020200"></script>

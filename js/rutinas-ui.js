@@ -242,6 +242,27 @@ $("rut-editor-cerrar").addEventListener("click", cerrarEditor);
 $("rut-editor").querySelector(".budget-sheet-overlay").addEventListener("click", cerrarEditor);
 $("rut-nueva").addEventListener("click", () => abrirEditor(null));
 
+// El importador de Excel/CSV se carga solo cuando se usa (así la app abre
+// más rápido). El service worker lo guarda igual para usarlo sin conexión.
+let importador = null;
+function cargarScript(src) {
+  return new Promise((ok, mal) => {
+    const s = document.createElement("script");
+    s.src = src;
+    s.onload = ok;
+    s.onerror = () => mal(new Error("No se pudo cargar " + src));
+    document.head.appendChild(s);
+  });
+}
+$("rut-importar").addEventListener("click", () => {
+  importador = importador || cargarScript("js/importar-rutinas.js").then(() => cargarScript("js/importar-ui.js"));
+  importador.then(() => window.EjImportarUI.abrir()).catch(err => {
+    importador = null;
+    console.error("Manolo:", err);
+    alert("No se pudo abrir el importador. Revisa tu conexión e inténtalo de nuevo.");
+  });
+});
+
 // ---- Menú de una rutina ----
 function abrirMenu(id) {
   const r = rutinas.find(x => x.id === id);
