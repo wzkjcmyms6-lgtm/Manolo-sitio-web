@@ -17,8 +17,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=202609301500">
-  <link rel="stylesheet" href="css/habitos.css?v=202610010300">
+  <link rel="stylesheet" href="css/style.css?v=202610010400">
+  <link rel="stylesheet" href="css/habitos.css?v=202610010400">
 </head>
 <body>
   <!-- Degradado marfil y brillo del maniquí (mapa corporal y creador de ejercicios) -->
@@ -110,7 +110,7 @@
               <a class="card" href="#habitos">
                 <span class="icon" data-icon="habits"></span>
                 <h3>Hábitos</h3>
-                <p>Registra y sigue tus hábitos diarios.</p>
+                <p id="hb-inicio">Registra y sigue tus hábitos diarios.</p>
               </a>
               <a class="card" href="#ejercicio">
                 <span class="icon" data-icon="exercise"></span>
@@ -153,17 +153,7 @@
           <!-- ===== Hábitos: Estadísticas ===== -->
           <section id="panel-hab-stats" hidden>
             <h1 class="page-title">Estadísticas</h1>
-            <div class="stats-card">
-              <div class="stats-card-head">
-                <span class="stats-card-title"><span data-icon="calendar"></span>Cumplimiento por día</span>
-              </div>
-              <div class="heat-cal" id="heat-cal"></div>
-              <div class="heat-legend"><span>Menos</span><i class="heat-swatch l0"></i><i class="heat-swatch l1"></i><i class="heat-swatch l2"></i><i class="heat-swatch l3"></i><i class="heat-swatch l4"></i><span>Más</span></div>
-            </div>
-            <div class="stat-row" id="habit-stats-row"></div>
-            <h3 class="budget-section-title">Tus hábitos</h3>
-            <div id="habito-breakdown"></div>
-            <p class="empty-state" id="habito-breakdown-empty" hidden>Crea un hábito en Hoy para ver sus estadísticas.</p>
+            <div id="hb-stats"></div>
           </section>
 
           <!-- ===== Hábitos: Logros ===== -->
@@ -896,8 +886,9 @@
   <script src="js/rangos-engine.js?v=202609301"></script>
   <script src="js/rangos-insignias.js?v=202609301500"></script>
   <script src="js/habitos-config.js?v=202610010300"></script>
-  <script src="js/habitos-engine.js?v=202610010300"></script>
-  <script src="js/habitos.js?v=202610010300"></script>
+  <script src="js/habitos-engine.js?v=202610010500"></script>
+  <script src="js/habitos-graficos.js?v=202610010400"></script>
+  <script src="js/habitos.js?v=202610010500"></script>
   <script src="js/rangos.js?v=202609301500"></script>
   <script src="js/perfil-ejercicio.js?v=202609301"></script>
   <script src="js/offline.js?v=202609293"></script>

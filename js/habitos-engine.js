@@ -729,6 +729,24 @@ function novedades(anterior, actual) {
   return out;
 }
 
+// Snapshot que se guarda: recuerda lo ya celebrado aunque hoy no aparezca
+// (hábito borrado o archivado, logro que dejó de cumplirse, nivel que bajó al
+// desmarcar). Así, restaurar o volver a marcar no repite la celebración.
+function fusionarSnapshot(anterior, actual, hoy) {
+  if (!anterior) return actual;
+  const rangos = Object.assign({}, anterior.rangos || {});
+  Object.keys(actual.rangos).forEach(id => { rangos[id] = Math.max(rangos[id] == null ? 0 : rangos[id], actual.rangos[id]); });
+  const union = (a, b) => Array.from(new Set((a || []).concat(b || []))).sort();
+  const semana = semanaId(hoy);
+  return {
+    nivel: Math.max(anterior.nivel || 0, actual.nivel),
+    rangos,
+    logros: union(anterior.logros, actual.logros),
+    misiones: union(anterior.misiones, actual.misiones).filter(id => id.indexOf(semana) === 0),
+    perfectos: union(anterior.perfectos, actual.perfectos).filter(f => f >= addDias(hoy, -1))
+  };
+}
+
 // ---------- Estadísticas ----------
 // Índice día a día (se arma una vez por cálculo): hechos y esperados de todos
 // los hábitos, con sumas acumuladas para responder cualquier periodo al
@@ -1126,7 +1144,7 @@ return {
   PERIODOS, indice, periodo, cumplimientoGlobal, kpis, serieSemanal, porDiaSemana, porMomento, areasPeriodo,
   ranking, enRiesgo, correlaciones, insights, resumenSemana,
   NIVELES, percentilFuerza, intervalo, fuerzaHabito, rangoEn, subiriaConSemanaPerfecta, calcularAreas,
-  generarMisiones, evaluarMisiones, calcularLogros, snapshot, novedades,
+  generarMisiones, evaluarMisiones, calcularLogros, snapshot, novedades, fusionarSnapshot,
   cumplimiento, resumenDia, xpDelDiaTotal, formaCiclo, ordenarConCadenas, mesCalendario,
   CFG, isoDate, addDias, diasEntre, diaSemana, lunesDe, semanaId, fechaLogica, finDelDiaMs,
   dentroDeVentana, normalizar, activoEn, enPausa, tocaDia, estadoDia, cumple, claseDia,

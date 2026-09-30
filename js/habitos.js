@@ -369,6 +369,10 @@ function renderHoy() {
       <button type="button" class="hb-btn-sec" data-ordenar><span data-icon="grip"></span>Ordenar</button>
       <button type="button" class="hb-btn-sec" data-ajustes><span data-icon="tools"></span>Ajustes</button>
     </div></div>`;
+  const semanaPasada = HE.semanaId(HE.addDias(HE.lunesDe(f), -7));
+  let visto = null;
+  try { visto = localStorage.getItem("hb-resumen-visto"); } catch (e) { /* sin almacenamiento */ }
+  if (HE.diaSemana(f) === 0 && visto !== semanaPasada) html = resumenSemanaHtml(true) + html;
   const abierto = lista.querySelector(".hb-notoca") && lista.querySelector(".hb-notoca").open;
   lista.innerHTML = html;
   if (abierto) lista.querySelector(".hb-notoca").open = true;
@@ -449,6 +453,7 @@ function marcar(id) {
 
 // ---------- Aviso con Deshacer ----------
 let toastEl = null, toastTimer = null;
+let deshacerPendiente = false; // mientras se puede deshacer, no se celebra ni se guarda el snapshot
 function toast(msg, deshacer) {
   if (!toastEl) {
     toastEl = document.createElement("div");
@@ -461,6 +466,7 @@ function toast(msg, deshacer) {
   toastEl.innerHTML = `<span>${escapeHtml(msg)}</span>${deshacer ? `<button type="button" class="hb-toast-btn">Deshacer</button>` : ""}`;
   toastEl.hidden = false;
   toastEl.classList.add("is-on");
+  deshacerPendiente = !!deshacer;
   const btn = toastEl.querySelector(".hb-toast-btn");
   if (btn) btn.addEventListener("click", () => { deshacer(); ocultarToast(); }, { once: true });
   toastTimer = setTimeout(ocultarToast, TOAST_MS);
@@ -468,6 +474,7 @@ function toast(msg, deshacer) {
 function ocultarToast() {
   if (!toastEl) return;
   toastEl.classList.remove("is-on");
+  if (deshacerPendiente) { deshacerPendiente = false; anotarToque(); }
   setTimeout(() => { if (!toastEl.classList.contains("is-on")) toastEl.hidden = true; }, 250);
 }
 
@@ -524,12 +531,13 @@ function hojaDetalle(id, fecha) {
   const rh = res && res.habitos[id];
   if (!h || !rh) { cerrarHoja(); return; }
   const f = res.hoy;
-  if (!hojaActual || hojaActual.tipo !== "detalle" || hojaActual.id !== id) {
+  const nuevo = !hojaActual || hojaActual.tipo !== "detalle" || hojaActual.id !== id;
+  if (nuevo) {
     diaSel = f;
     mesSel = f.slice(0, 7);
     pausaAbierta = false;
   }
-  if (fecha) diaSel = fecha;
+  if (fecha) { diaSel = fecha; if (nuevo) mesSel = fecha.slice(0, 7); }
   const arriba = [nombreArea(h.area), HC.DIFICULTADES[h.dificultad].nombre, freqTexto(h)].filter(Boolean).join(" · ");
   const c30 = HE.cumplimiento(rh, HE.addDias(f, -29), f);
   const cTotal = HE.cumplimiento(rh, h.inicio || f, f);
@@ -543,13 +551,17 @@ function hojaDetalle(id, fecha) {
     <div class="hb-stats">
       <div class="hb-stat"><span class="hb-num">${r.actual}</span><span>${h.tipo === "evitar" ? (r.actual === 1 ? "día limpio" : "días limpios") : `${unidad} de racha`}</span></div>
       <div class="hb-stat"><span class="hb-num">${r.mejor}</span><span>${h.tipo === "evitar" ? "mejor marca" : "mejor racha"}</span></div>
-      <div class="hb-stat"><span class="hb-num">${pct(c30)}</span><span>${semanal ? "últimas semanas" : "últimos 30 días"}</span></div>
-      <div class="hb-stat"><span class="hb-num">${pct(cTotal)}</span><span>${plural(totalHechos, "vez", "veces")} en total</span></div>
+      <div class="hb-stat"><span class="hb-num">${pct(c30)}</span><span>${semanal ? "últimas 4 semanas" : "últimos 30 días"}</span></div>
+      <div class="hb-stat"><span class="hb-num">${pct(HE.cumplimiento(rh, HE.addDias(f, -89), f))}</span><span>últimos 90 días</span></div>
+      <div class="hb-stat"><span class="hb-num">${pct(cTotal)}</span><span>desde que empezaste</span></div>
+      <div class="hb-stat"><span class="hb-num">${fmtNum(totalHechos)}</span><span>${totalHechos === 1 ? "vez en total" : "veces en total"}</span></div>
     </div>
     ${rangoHtml(rh)}
     ${calendarioHtml(h, rh)}
     ${editorDia(h, rh, diaSel)}
     ${h.tipo === "tiempo" && diaSel === f ? cronometroHtml(h) : ""}
+    ${graficosDetalle(h, rh)}
+    ${notasHtml(h)}
     ${pausasHtml(h)}
     <div class="hb-acciones">
       <button type="button" class="hb-btn-sec" data-editar="${id}"><span data-icon="edit"></span>Editar</button>
@@ -1245,10 +1257,10 @@ function guardarSnapshot(snap) {
   (juegoExiste ? ref.update({ snapshot: snap }) : ref.set({ snapshot: snap }, { merge: true })).catch(errorGuardar);
 }
 function revisarCelebraciones() {
-  if (!juegoCargado || !res || celebrando) return;
-  const snap = HE.snapshot(res);
+  if (!juegoCargado || !res || celebrando || deshacerPendiente) return;
   const anterior = juego.snapshot;
-  if (!anterior) { guardarSnapshot(snap); return; }
+  if (!anterior) { guardarSnapshot(HE.snapshot(res)); return; }
+  const snap = HE.fusionarSnapshot(anterior, HE.snapshot(res), res.hoy);
   const ups = HE.novedades(anterior, snap);
   const visible = !document.hidden && [panelHoy, panelStats, panelLogros].some(p => p && !p.hidden);
   if (ups.length && visible) {
@@ -1357,6 +1369,7 @@ function onClickHoja(e) {
   let b;
   if ((b = q("[data-marcar]"))) { marcar(b.dataset.marcar); return; }
   if ((b = q("[data-detalle]"))) { hojaDetalle(b.dataset.detalle); return; }
+  if ((b = q("[data-detalle-dia]"))) { hojaActual = null; hojaDetalle(b.dataset.detalleDia, b.dataset.fecha); return; }
   if ((b = q("[data-editar]"))) { hojaForm(b.dataset.editar); return; }
   if ((b = q("[data-archivar]"))) { archivar(b.dataset.archivar); return; }
   if ((b = q("[data-eliminar]"))) { confirmarEliminar(b.dataset.eliminar); return; }
@@ -1369,7 +1382,7 @@ function onClickHoja(e) {
   }
   if ((b = q("[data-sumar]"))) { sumarValor(b.dataset.id, fechaDe(b), Number(b.dataset.sumar)); return; }
   // Detalle: calendario, pausas y cronómetro
-  if ((b = q("[data-dia-cal]"))) { hojaDetalle(hojaActual.id, b.dataset.diaCal); return; }
+  if ((b = q("[data-dia-cal]"))) { mesSel = b.dataset.diaCal.slice(0, 7); hojaDetalle(hojaActual.id, b.dataset.diaCal); return; }
   if ((b = q("[data-mes]"))) {
     const [y, m] = mesSel.split("-").map(Number);
     const d = new Date(y, m - 1 + Number(b.dataset.mes), 1);
@@ -1457,92 +1470,397 @@ document.getElementById("hb-lista").addEventListener("click", e => {
   if (d) { hojaDetalle(d.dataset.detalle); return; }
   if (e.target.closest("[data-nuevo]")) { hojaForm(null); return; }
   if (e.target.closest("[data-cerrar-dia]")) { hojaCierre(); return; }
+  if (e.target.closest("[data-resumen-visto]")) {
+    try { localStorage.setItem("hb-resumen-visto", HE.semanaId(HE.addDias(HE.lunesDe(res.hoy), -7))); } catch (err) { /* sin almacenamiento */ }
+    renderHoy();
+    return;
+  }
   if (e.target.closest("[data-ordenar]")) { hojaOrdenar(); return; }
   if (e.target.closest("[data-ajustes]")) hojaAjustes();
 });
 document.getElementById("hb-nuevo").addEventListener("click", () => hojaForm(null));
 
-// ---------- Estadísticas (versión inicial; los paneles completos llegan en la fase 3) ----------
-function sparkline(rh, f) {
-  const fechas = Array.from({ length: 14 }, (_, i) => HE.addDias(f, i - 13));
-  let acum = 0;
-  const vals = fechas.map(x => { const d = rh.dias[x]; if (d && (d.clase === "cumple" || d.clase === "extra")) acum++; return acum; });
-  const W = 280, H = 60, arriba = 6, abajo = 54;
-  const max = Math.max(vals[vals.length - 1], 1);
-  const X = i => (i / (fechas.length - 1)) * W;
-  const Y = v => abajo - (v / max) * (abajo - arriba);
-  const linea = "M" + vals.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" L");
-  return `<svg viewBox="0 0 ${W} ${H}" class="habito-spark" preserveAspectRatio="none" aria-hidden="true">
-    <path d="${linea} L${W},${abajo} L0,${abajo} Z" class="habito-spark-area"/><path d="${linea}" class="habito-spark-line" fill="none"/></svg>`;
+// ---------- Detalle: gráficos, distribución y notas ----------
+function graficosDetalle(h, rh) {
+  const f = res.hoy;
+  let html = "";
+  // Fuerza en el tiempo (últimos 6 meses o desde el inicio)
+  const serie = rh.rango.serie;
+  if (serie.length >= 2) {
+    const desde = serie[0].fecha > HE.addDias(f, -180) ? serie[0].fecha : HE.addDias(f, -180);
+    const tramo = serie.filter(x => x.fecha >= desde);
+    const total = Math.max(1, HE.diasEntre(desde, f));
+    // Como mucho ~60 puntos: el último de cada tramo
+    const paso = Math.max(1, Math.ceil(tramo.length / 60));
+    const pts = tramo.filter((x, i) => i % paso === 0 || i === tramo.length - 1).map(x => ({
+      x: HE.diasEntre(desde, x.fecha) / total, y: x.fuerza,
+      tip: `${fechaCorta(x.fecha)}: fuerza ${Math.round(x.fuerza)} · ${HE.NIVELES[x.nivel].nombre}`
+    }));
+    const r = rh.rango;
+    const guias = [];
+    if (r.tieneRango && r.siguiente) guias.push({ y: fuerzaPara(r.siguiente.min), texto: r.siguiente.nombre });
+    html += `<h4 class="hb-sub-t">Fuerza en el tiempo</h4><div class="hb-chart">${HG.linea(pts, { guias, inicio: fechaCorta(desde), titulo: "Fuerza del hábito" })}</div>`;
+  }
+  // Valores contra la meta (medibles y tiempo): últimos 30 días
+  if (h.tipo === "medible" || h.tipo === "tiempo") {
+    const items = [];
+    let max = h.meta;
+    for (let i = 29; i >= 0; i--) {
+      const d = HE.addDias(f, -i), dd = rh.dias[d];
+      const v = dd && dd.valor != null ? dd.valor : dd && (dd.estado === "hecho") ? h.meta : dd && dd.clase !== "fuera" ? 0 : null;
+      if (v != null) max = Math.max(max, v);
+      items.push({ valor: v, marcar: v != null && v < h.meta * HC.CONST.PARCIAL_MANTIENE_RACHA, tip: `${fechaCorta(d)}: ${v == null ? "sin datos" : `${fmtNum(v)} de ${fmtNum(h.meta)} ${h.unidad}`}`, etiqueta: i === 29 ? fechaCorta(d) : i === 0 ? "Hoy" : "" });
+    }
+    const tope = Math.ceil(max * 1.1);
+    html += `<h4 class="hb-sub-t">Valores contra la meta</h4><div class="hb-chart">${HG.columnas(items, { max: tope, meta: h.meta, ejeY: [0, h.meta], fmt: v => fmtNum(v), titulo: "Valores de los últimos 30 días" })}</div>`;
+  }
+  // ¿Qué día de la semana lo cumples menos?
+  if (h.freqType !== "semana" && h.tipo !== "evitar") {
+    const b = HE.porDiaSemana(res, h.inicio || f, f, x => x.habito.id === h.id);
+    if (b.filter(x => x.esperados).length >= 2) {
+      const items = b.map((x, i) => ({ etiqueta: DIAS_CORTOS[i], valor: x.pct, tip: `${DIAS_LARGOS[i].replace(/^./, c => c.toUpperCase())}: ${x.pct == null ? "no toca" : `${pctTexto(x.pct)} (${x.hechos} de ${x.esperados})`}` }));
+      html += `<h4 class="hb-sub-t">Por día de la semana</h4><div class="hb-chart">${HG.columnas(items, { alto: 120, titulo: "Cumplimiento por día de la semana" })}</div>`;
+    }
+  }
+  return html;
+}
+// Fuerza necesaria para un percentil (inversa de la curva), para dibujar la guía.
+function fuerzaPara(P) {
+  const c = HC.FUERZA.CURVA;
+  for (let i = 1; i < c.length; i++) {
+    const [x0, y0] = c[i - 1], [x1, y1] = c[i];
+    if (P <= y1) return x0 + (x1 - x0) * (P - y0) / (y1 - y0);
+  }
+  return 100;
+}
+function notasHtml(h) {
+  const regs = (docs[h.id] && docs[h.id].registros) || {};
+  const notas = Object.keys(regs).filter(f => regs[f] && regs[f].n).sort().reverse().slice(0, 10);
+  if (!notas.length) return "";
+  return `<h4 class="hb-sub-t">Tus notas</h4><ul class="hb-notas">${notas.map(f =>
+    `<li><button type="button" class="hb-nota" data-dia-cal="${f}"><span>${fechaCorta(f)}</span>${escapeHtml(regs[f].n)}</button></li>`).join("")}</ul>`;
+}
+
+// ---------- Tarjeta de Hábitos en Inicio ----------
+function renderInicio() {
+  const el = document.getElementById("hb-inicio");
+  if (!el || !res) return;
+  const p = progresoHoy(res.hoy);
+  const racha = mejorRachaActiva();
+  el.innerHTML = `${p.total ? `Hoy: ${p.hechos} de ${p.total}` : "Nada pendiente hoy"} · Nivel ${res.nivel.nivel}${racha ? ` · ${escapeHtml(textoRacha(racha))} de racha` : ""}
+    <span class="hb-inicio-barra" aria-hidden="true"><span style="width:${p.total ? (p.hechos / p.total * 100).toFixed(1) : 0}%"></span></span>`;
+}
+
+// ---------- Estadísticas ----------
+const HG = HabitosGraficos;
+const PERIODOS_UI = [["7d", "7 d"], ["30d", "30 d"], ["90d", "90 d"], ["anio", "Año"], ["todo", "Todo"]];
+const NOMBRE_PERIODO = { "7d": "los 7 días anteriores", "30d": "los 30 días anteriores", "90d": "los 90 días anteriores", anio: "el año anterior" };
+const DIAS_LARGOS = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"];
+let periodoStats = "30d";
+let periodoPrevio = null; // para animar lo que cambió al cambiar de periodo
+const pctTexto = v => (v == null ? "—" : `${Math.round(v * 100)} %`);
+
+function tarjeta(titulo, cuerpo, sub) {
+  return `<section class="hb-card"><h2 class="hb-card-t">${titulo}</h2>${sub ? `<p class="hb-card-sub">${sub}</p>` : ""}${cuerpo}</section>`;
+}
+function delta(actual, previo, unidad, invertir) {
+  if (actual == null || previo == null) return "";
+  const d = actual - previo;
+  const txt = unidad === "pts" ? `${Math.abs(Math.round(d * 100))} puntos` : fmtNum(Math.abs(d));
+  if (Math.round(unidad === "pts" ? d * 100 : d) === 0) return `<span class="hb-delta">= igual</span>`;
+  const sube = d > 0;
+  return `<span class="hb-delta ${sube !== !!invertir ? "is-bien" : "is-mal"}"><span aria-hidden="true">${sube ? "▲" : "▼"}</span> <span class="hb-sr">${sube ? "subió" : "bajó"}</span>${txt}</span>`;
+}
+
+function kpisHtml(k, per) {
+  const a = k.actual, p = k.previo;
+  const vs = per.previo ? `contra ${NOMBRE_PERIODO[per.clave]}` : "";
+  const racha = k.mejorRacha && k.mejorRacha.racha ? `${k.mejorRacha.racha} ${k.mejorRacha.racha === 1 ? "día" : "días"}` : "—";
+  const rachaDe = k.mejorRacha && k.mejorRacha.racha && normal[k.mejorRacha.id] ? escapeHtml(normal[k.mejorRacha.id].name) : "Sin racha activa";
+  return `<section class="hb-kpis" aria-label="Resumen del periodo">
+    <div class="hb-kpi-hero">
+      <span class="hb-kpi-label">Cumplimiento</span>
+      <span class="hb-num hb-kpi-grande" data-contar="${a.pct == null ? "" : Math.round(a.pct * 100)}">${pctTexto(a.pct)}</span>
+      <span class="hb-kpi-pie">${p ? `${delta(a.pct, p.pct, "pts")} ${vs}` : `${fmtNum(a.hechos)} de ${fmtNum(a.esperados)} veces`}</span>
+    </div>
+    <div class="hb-kpi"><span class="hb-kpi-label">Días perfectos</span><span class="hb-num">${a.perfectos}</span>${p ? delta(a.perfectos, p.perfectos) : ""}</div>
+    <div class="hb-kpi"><span class="hb-kpi-label">XP ganado</span><span class="hb-num">${fmtNum(a.xp)}</span>${p ? delta(a.xp, p.xp) : ""}</div>
+    <div class="hb-kpi"><span class="hb-kpi-label">Mejor racha activa</span><span class="hb-num">${racha}</span><span class="hb-kpi-pie">${rachaDe}</span></div>
+    <div class="hb-kpi"><span class="hb-kpi-label">Hábitos activos</span><span class="hb-num">${k.activos}</span></div>
+  </section>`;
+}
+
+function heatmapHtml() {
+  const f = res.hoy;
+  const inicio = HE.addDias(HE.lunesDe(f), -52 * 7);
+  const dias = [], meses = [];
+  let mesPrevio = null;
+  for (let i = 0, d = inicio; d <= f; i++, d = HE.addDias(d, 1)) {
+    if (i % 7 === 0) {
+      const m = Number(d.slice(5, 7));
+      if (m !== mesPrevio) { meses.push({ col: i / 7, texto: MESES[m - 1] }); mesPrevio = m; }
+    }
+    const r = HE.resumenDia(res, d);
+    const ratio = r.esperados ? r.hechos / r.esperados : null;
+    const nivel = ratio == null ? null : ratio >= 1 ? 4 : ratio > 0.67 ? 3 : ratio > 0.34 ? 2 : ratio > 0 ? 1 : 0;
+    dias.push({ fecha: d, nivel, tip: `${fechaCorta(d)}: ${r.esperados ? `${r.hechos} de ${r.esperados} (${pctTexto(ratio)})` : "nada que tocara"}` });
+  }
+  if (meses.length && meses[0].col === 0 && meses[1] && meses[1].col < 3) meses.shift();
+  return tarjeta("Últimos 12 meses", `<div class="hb-heat-scroll">${HG.heatmap(dias, meses)}</div>
+    <div class="hb-leyenda-heat"><span>Menos</span><i class="n0"></i><i class="n1"></i><i class="n2"></i><i class="n3"></i><i class="n4"></i><span>Más</span></div>
+    <p class="hb-card-sub">Toca un día para ver y corregir lo que hiciste.</p>`);
+}
+
+function tendenciaHtml(per) {
+  const semanas = { "7d": 12, "30d": 12, "90d": 13, anio: 52, todo: 104 }[per.clave];
+  const serie = HE.serieSemanal(res, semanas, 4).filter(s => s.esperados > 0 || s.actual);
+  if (serie.length < 2) return tarjeta("Tendencia semanal", `<p class="empty-state">Con dos semanas de datos verás aquí tu tendencia.</p>`);
+  const items = serie.map(s => ({
+    valor: s.pct, etiqueta: "", suave: s.actual,
+    tip: `Semana del ${fechaCorta(s.lunes)}${s.actual ? " (en curso)" : ""}: ${pctTexto(s.pct)} (${fmtNum(s.hechos)} de ${fmtNum(s.esperados)}) · media ${pctTexto(s.media)}`
+  }));
+  // Etiquetas solo al inicio y al final
+  items[0].etiqueta = fechaCorta(serie[0].lunes);
+  items[items.length - 1].etiqueta = "Esta semana";
+  const tabla = `<details class="hb-tabla"><summary>Ver como tabla</summary><table><thead><tr><th>Semana</th><th>Cumplimiento</th><th>Media 4 sem.</th></tr></thead><tbody>${serie.slice().reverse().map(s =>
+    `<tr><td>${fechaCorta(s.lunes)}</td><td>${pctTexto(s.pct)}</td><td>${pctTexto(s.media)}</td></tr>`).join("")}</tbody></table></details>`;
+  return tarjeta("Tendencia semanal", `<div class="hb-chart">${HG.columnas(items, { linea: serie.map(s => s.media), titulo: "Cumplimiento por semana" })}</div>
+    <div class="hb-leyenda"><span><i class="k-col"></i>Cada semana</span><span><i class="k-linea"></i>Media de 4 semanas</span></div>${tabla}`);
+}
+
+function diaSemanaHtml(per) {
+  const b = HE.porDiaSemana(res, per.desde, per.hasta);
+  const con = b.map((x, i) => Object.assign({ i }, x)).filter(x => x.pct != null);
+  if (!con.length) return "";
+  const mejor = con.reduce((a, x) => (x.pct > a.pct ? x : a)), peor = con.reduce((a, x) => (x.pct < a.pct ? x : a));
+  const items = b.map((x, i) => ({
+    etiqueta: DIAS_CORTOS[i], valor: x.pct, marcar: i === peor.i && con.length > 1,
+    valorTexto: (i === mejor.i || i === peor.i) && x.pct != null ? pctTexto(x.pct) : "",
+    tip: `${DIAS_LARGOS[i].charAt(0).toUpperCase() + DIAS_LARGOS[i].slice(1)}: ${x.pct == null ? "sin datos" : `${pctTexto(x.pct)} (${x.hechos} de ${x.esperados})`}`
+  }));
+  return tarjeta("¿Qué día fallas más?", `<div class="hb-chart">${HG.columnas(items, { titulo: "Cumplimiento por día de la semana" })}</div>`,
+    con.length > 1 ? `El más difícil: ${DIAS_LARGOS[peor.i]}.` : "");
+}
+
+function momentoHtml(per) {
+  const b = HE.porMomento(res, per.desde, per.hasta);
+  const items = HC.MOMENTOS.filter(m => b[m.id].esperados > 0).map(m => ({
+    etiqueta: m.nombre, valor: b[m.id].pct, texto: pctTexto(b[m.id].pct),
+    tip: `${m.nombre}: ${pctTexto(b[m.id].pct)} (${b[m.id].hechos} de ${b[m.id].esperados})`
+  }));
+  if (!items.length) return "";
+  return tarjeta("Por momento del día", HG.barrasH(items));
+}
+
+function radarHtml(per) {
+  const defs = areasDef();
+  const act = HE.areasPeriodo(res, per.desde, per.hasta, defs);
+  if (!act.some(a => a.esperados > 0)) return tarjeta("Áreas de vida", `<p class="empty-state">Asigna un área a tus hábitos (al editarlos) para ver tu equilibrio.</p>`);
+  const prev = per.previo ? HE.areasPeriodo(res, per.previo.desde, per.previo.hasta, defs) : null;
+  const ejes = act.map((a, i) => ({ nombre: a.nombre, tip: `${a.nombre}: ${a.esperados ? pctTexto(a.pct) : "sin hábitos"}${prev && prev[i].esperados ? ` (antes ${pctTexto(prev[i].pct)})` : ""}` }));
+  return tarjeta("Áreas de vida", `<div class="hb-chart">${HG.radar(ejes, act.map(a => a.pct), prev ? prev.map(a => a.pct) : null)}</div>
+    <div class="hb-leyenda"><span><i class="k-area"></i>Este periodo</span>${prev ? `<span><i class="k-prev"></i>Periodo anterior</span>` : ""}</div>`);
+}
+
+function rankingHtml() {
+  const lista = HE.ranking(res).filter(x => x.tieneRango);
+  if (!lista.length) return "";
+  return tarjeta("Ranking por fuerza", `<ul class="hb-ranking">${lista.map((x, i) => {
+    const h = normal[x.id], t = x.tendencia;
+    const flecha = t == null ? "" : t > 0.5 ? `<span class="hb-tend is-bien" aria-label="subiendo">▲</span>` : t < -0.5 ? `<span class="hb-tend is-mal" aria-label="bajando">▼</span>` : "";
+    return `<li><button type="button" class="hb-ranking-fila" data-detalle="${x.id}">
+      <span class="hb-ranking-pos">${i + 1}</span>${RangosInsignias.svg(HE.NIVELES[x.nivel], { tam: 28 })}
+      <span class="hb-ranking-txt"><span class="hb-nombre">${escapeHtml(h.emoji)} ${escapeHtml(h.name)}</span>
+        <span class="hbg-barras-pista"><span class="hbg-barras-valor" style="width:${Math.max(2, x.fuerza).toFixed(1)}%"></span></span></span>
+      <span class="hb-ranking-num">${Math.round(x.fuerza)}${flecha}</span></button></li>`;
+  }).join("")}</ul>`, "Fuerza de 0 a 100: sube cuando cumples y baja despacio cuando fallas.");
+}
+
+function riesgoHtml() {
+  const lista = HE.enRiesgo(res).slice(0, 5);
+  const txt = x => {
+    const h = normal[x.id];
+    if (x.tipo === "nuncaDos") return `Ayer se te pasó. Hoy es el día: nunca dos veces.`;
+    if (x.tipo === "racha") return `Hoy toca: tu racha de ${x.racha} días está en juego.`;
+    if (x.tipo === "semana") return x.faltan > x.quedan ? `Esta semana ya no alcanza: faltan ${x.faltan} y quedan ${x.quedan} días.` : `Te ${x.faltan === 1 ? "falta 1 vez" : `faltan ${x.faltan} veces`} y quedan justo ${x.quedan} días.`;
+    return `Su fuerza bajó ${Math.round(x.caida)} puntos en 2 semanas.`;
+  };
+  return tarjeta("En riesgo", lista.length ? `<ul class="hb-riesgo">${lista.map(x => `<li><button type="button" class="hb-ranking-fila" data-detalle="${x.id}">
+      <span class="hb-emoji" aria-hidden="true">${escapeHtml(normal[x.id].emoji)}</span>
+      <span class="hb-ranking-txt"><span class="hb-nombre">${escapeHtml(normal[x.id].name)}</span><span class="hb-sub">${txt(x)}</span></span>
+      <span class="rk-chev" data-icon="chevronRight"></span></button></li>`).join("")}</ul>`
+    : `<p class="hb-texto">Nada en riesgo ahora mismo. Así se hace.</p>`);
+}
+
+function correlacionesHtml(c) {
+  if (!c.suficiente) {
+    return tarjeta("Tu ánimo y tus hábitos", `<p class="hb-texto">Anota tu ánimo al cerrar el día. Con 14 días verás aquí qué hábitos coinciden con tus mejores días. Llevas ${plural(c.diasConAnimo, "día", "días")}.</p>`);
+  }
+  const fmt1 = v => v.toFixed(1).replace(".", ",");
+  const animo = c.animo.slice(0, 5).map(x => ({
+    etiqueta: `${normal[x.id].emoji} ${normal[x.id].name}`, con: x.con, sin: x.sin,
+    texto: `${x.diferencia > 0 ? "+" : "−"}${fmt1(Math.abs(x.diferencia))}`,
+    tip: `${normal[x.id].name}: ánimo ${fmt1(x.con)} los días que lo cumples y ${fmt1(x.sin)} los que no (${x.n} días).`
+  }));
+  const juntos = c.juntos.slice(0, 3).map(x => `<li>Cuando cumples <b>${escapeHtml(normal[x.a].name)}</b>, también cumples <b>${escapeHtml(normal[x.b].name)}</b> el ${pctTexto(x.pBA)} de las veces (en general, ${pctTexto(x.pB)}).</li>`).join("");
+  return tarjeta("Tu ánimo y tus hábitos", `
+    ${animo.length ? `${HG.pesas(animo)}<div class="hb-leyenda"><span><i class="k-prev k-punto"></i>Ánimo los días que no lo cumples</span><span><i class="k-area k-punto"></i>Los días que sí</span></div>` : `<p class="hb-texto">Todavía no hay suficientes días con y sin cada hábito para comparar.</p>`}
+    ${juntos ? `<h3 class="hb-sub-t">Suelen ir juntos</h3><ul class="hb-lista-texto">${juntos}</ul>` : ""}
+    <p class="hb-card-sub">Son coincidencias en tus datos, no causas.</p>`, "Ánimo del 1 al 5, según lo que anotas al cerrar el día.");
+}
+
+function resumenSemanaHtml(conCerrar) {
+  const lunes = HE.addDias(HE.lunesDe(res.hoy), -7);
+  const r = HE.resumenSemana(res, lunes);
+  if (r.pct == null) return "";
+  const nom = x => (x && normal[x.id] ? `${escapeHtml(normal[x.id].emoji)} ${escapeHtml(normal[x.id].name)} (${pctTexto(x.pct)})` : "—");
+  return `<section class="hb-card hb-resumen-semana" aria-label="Tu semana pasada">
+    <div class="hb-resumen-top"><h2 class="hb-card-t">Tu semana pasada</h2>${conCerrar ? `<button type="button" class="muscle-sheet-close" data-resumen-visto aria-label="Cerrar el resumen"><span data-icon="close"></span></button>` : ""}</div>
+    <div class="hb-resumen-datos">
+      <div><span class="hb-num">${pctTexto(r.pct)}</span><span>${r.pctPrevio != null ? delta(r.pct, r.pctPrevio, "pts") : "cumplimiento"}</span></div>
+      <div><span class="hb-num">+${fmtNum(r.xp)}</span><span>XP</span></div>
+      <div><span class="hb-num">${r.perfectos}</span><span>${r.perfectos === 1 ? "día perfecto" : "días perfectos"}</span></div>
+    </div>
+    <p class="hb-texto">Mejor: ${nom(r.mejor)}${r.peor && r.peor.pct < 1 ? ` · A cuidar: ${nom(r.peor)}` : ""}</p>
+  </section>`;
 }
 
 function renderStats() {
   if (!cargado || !res || !panelStats || panelStats.hidden) return;
-  const f = res.hoy;
-  const hs = activos();
+  const el = document.getElementById("hb-stats");
+  if (!activos().length) { el.innerHTML = `<p class="empty-state">Crea un hábito en Hoy y aquí verás tus estadísticas.</p>`; return; }
+  const inicio = activos().map(h => h.inicio).filter(Boolean).sort()[0];
+  const per = HE.periodo(periodoStats, res.hoy, inicio);
+  const k = HE.kpis(res, per);
+  const corr = HE.correlaciones(res, diasMeta);
+  const frases = HE.insights(res, per, { correlaciones: corr });
+  const cambio = periodoPrevio && periodoPrevio !== periodoStats;
+  const scroll = el.querySelector(".hb-heat-scroll");
+  const scrollHeat = scroll ? scroll.scrollLeft : null;
+  el.innerHTML = `
+    ${heatmapHtml()}
+    ${resumenSemanaHtml(false)}
+    <div class="fin-tabs hb-periodos" role="tablist" aria-label="Periodo">${PERIODOS_UI.map(([id, t]) =>
+      `<button type="button" class="fin-tab${periodoStats === id ? " active" : ""}" role="tab" aria-selected="${periodoStats === id}" data-periodo="${id}">${t}</button>`).join("")}</div>
+    <div class="hb-stats-cuerpo${cambio ? " is-cambio" : ""}">
+      ${kpisHtml(k, per)}
+      ${frases.length ? tarjeta("Lo que dicen tus datos", `<ul class="hb-lista-texto">${frases.map(t => `<li>${escapeHtml(t)}</li>`).join("")}</ul>`) : ""}
+      ${tendenciaHtml(per)}
+      ${diaSemanaHtml(per)}
+      ${momentoHtml(per)}
+      ${radarHtml(per)}
+      ${riesgoHtml()}
+      ${rankingHtml()}
+      ${correlacionesHtml(corr)}
+    </div>`;
+  const s = el.querySelector(".hb-heat-scroll");
+  if (s) s.scrollLeft = scrollHeat != null ? scrollHeat : s.scrollWidth;
+  renderIcons(el);
+  if (cambio && !reducirMovimiento()) contar(el.querySelector("[data-contar]"));
+  periodoPrevio = periodoStats;
+}
 
-  // Mapa de calor (10 semanas)
-  const cal = document.getElementById("heat-cal");
-  const inicio = HE.addDias(HE.lunesDe(f), -(HEAT_SEMANAS - 1) * 7);
-  let html = DIAS_CORTOS.map((l, i) => `<span class="heat-wd" style="grid-column:1;grid-row:${i + 2}">${l}</span>`).join("");
-  let mesPrevio = null;
-  for (let w = 0; w < HEAT_SEMANAS; w++) {
-    const lunes = HE.addDias(inicio, w * 7);
-    const mes = Number(lunes.slice(5, 7)) - 1;
-    if (mes !== mesPrevio) { html += `<span class="heat-month" style="grid-column:${w + 2};grid-row:1">${MESES[mes]}</span>`; mesPrevio = mes; }
-    for (let d = 0; d < 7; d++) {
-      const dia = HE.addDias(lunes, d);
-      if (dia > f) continue;
-      const r = HE.resumenDia(res, dia);
-      const ratio = r.esperados ? r.hechos / r.esperados : 0;
-      const nivel = r.esperados && ratio >= 1 ? 4 : ratio > 0.67 ? 3 : ratio > 0.34 ? 2 : ratio > 0 ? 1 : 0;
-      html += `<span class="heat-day l${nivel}" style="grid-column:${w + 2};grid-row:${d + 2}" title="${fechaCorta(dia)}: ${r.hechos}/${r.esperados}">${Number(dia.slice(8))}</span>`;
-    }
-  }
-  cal.style.gridTemplateColumns = `18px repeat(${HEAT_SEMANAS}, 24px)`;
-  cal.innerHTML = html;
-  cal.scrollLeft = cal.scrollWidth;
+// El número principal cuenta hasta su valor al cambiar de periodo.
+function contar(el) {
+  if (!el || el.dataset.contar === "") return;
+  const fin = Number(el.dataset.contar), t0 = performance.now();
+  const paso = t => {
+    const k = Math.min(1, (t - t0) / 450);
+    el.textContent = `${Math.round(fin * (1 - Math.pow(1 - k, 3)))} %`;
+    if (k < 1) requestAnimationFrame(paso);
+  };
+  requestAnimationFrame(paso);
+}
 
-  // Tarjetas
-  const p = progresoHoy(f);
-  const mejor = hs.reduce((m, h) => {
-    const r = res.habitos[h.id] && res.habitos[h.id].racha;
-    return r && r.unidad === "dias" ? Math.max(m, r.mejor) : m;
-  }, 0);
-  const perfectosMes = res.diasPerfectos.filter(x => x.fecha.slice(0, 7) === f.slice(0, 7)).length;
-  document.getElementById("habit-stats-row").innerHTML = [
-    ["habits", "hábitos activos", hs.length],
-    ["trophy", "mejor racha", plural(mejor, "día", "días")],
-    ["check", "hoy", `${p.hechos}/${p.total}`],
-    ["star", "días perfectos este mes", perfectosMes]
-  ].map(([icono, label, valor]) => `<div class="stat-box habit-stat-box">
-      <div class="habit-stat-icon" data-icon="${icono}"></div><div class="label">${label}</div><div class="value">${valor}</div></div>`).join("");
+function cambiarPeriodo(paso) {
+  const i = PERIODOS_UI.findIndex(p => p[0] === periodoStats);
+  const j = Math.min(PERIODOS_UI.length - 1, Math.max(0, i + paso));
+  if (j === i) return;
+  periodoStats = PERIODOS_UI[j][0];
+  renderStats();
+}
 
-  // Desglose por hábito
-  document.getElementById("habito-breakdown-empty").hidden = hs.length > 0;
-  document.getElementById("habito-breakdown").innerHTML = hs.map(h => {
-    const rh = res.habitos[h.id];
-    if (!rh) return "";
-    const total = Object.values(rh.dias).filter(d => d.clase === "cumple" || d.clase === "extra").length;
-    const u = rh.racha.unidad === "semanas" ? ["semana", "semanas"] : ["día", "días"];
-    return `<button type="button" class="habito-breakdown-card hb-desglose" data-detalle="${h.id}">
-      <div class="habito-breakdown-head"><span class="habito-emoji-badge">${escapeHtml(h.emoji)}</span>
-        <div class="habito-name"><div>${escapeHtml(h.name)}</div><div class="habito-freq">${escapeHtml(freqTexto(h))}</div></div></div>
-      <div class="habito-breakdown-stats">
-        <div><span>${h.tipo === "evitar" ? "mejor marca" : "mejor racha"}</span><strong>${plural(rh.racha.mejor, u[0], u[1])}</strong></div>
-        <div><span>total</span><strong>${total}</strong></div>
-        <div><span>desde el</span><strong>${h.inicio ? fechaCorta(h.inicio) : "—"}</strong></div>
-      </div>${sparkline(rh, f)}</button>`;
-  }).join("");
-  renderIcons(panelStats);
+// ---------- Globo con el valor al tocar un gráfico ----------
+let tipEl = null;
+function mostrarTip(el) {
+  const cont = el.closest(".hb-card, .hb-sheet-body");
+  if (!cont) return;
+  if (!tipEl) { tipEl = document.createElement("div"); tipEl.className = "hb-tip"; tipEl.setAttribute("role", "status"); }
+  cont.style.position = "relative";
+  cont.appendChild(tipEl);
+  tipEl.textContent = el.dataset.tip;
+  const r = el.getBoundingClientRect(), c = cont.getBoundingClientRect();
+  const x = (el.dataset.x && el.ownerSVGElement ? (() => { const s = el.ownerSVGElement.getBoundingClientRect(); return s.left + (Number(el.dataset.x) / el.ownerSVGElement.viewBox.baseVal.width) * s.width; })() : r.left + r.width / 2) - c.left;
+  tipEl.style.left = `${Math.max(8, Math.min(c.width - 8, x))}px`;
+  tipEl.style.top = `${Math.max(4, r.top - c.top)}px`;
+  tipEl.hidden = false;
+  document.querySelectorAll(".is-tip").forEach(x => x.classList.remove("is-tip"));
+  el.classList.add("is-tip");
+}
+function ocultarTip() {
+  if (tipEl) tipEl.hidden = true;
+  document.querySelectorAll(".is-tip").forEach(x => x.classList.remove("is-tip"));
+}
+document.addEventListener("click", e => {
+  const t = e.target.closest && e.target.closest("[data-tip]");
+  if (t && (t.closest("#panel-hab-stats") || t.closest(".hb-sheet"))) { if (!t.dataset.dia) { mostrarTip(t); return; } }
+  if (!e.target.closest || !e.target.closest(".hb-tip")) ocultarTip();
+}, true);
+document.addEventListener("focusin", e => { const t = e.target.closest && e.target.closest("[data-tip]"); if (t && t.closest("#panel-hab-stats")) mostrarTip(t); });
+
+// ---------- Hoja de un día (desde el mapa de calor) ----------
+function hojaDia(fecha) {
+  const lista = activos().concat(Object.keys(normal).map(id => normal[id]).filter(h => h.archivado))
+    .filter(h => res.habitos[h.id] && res.habitos[h.id].dias[fecha] && res.habitos[h.id].dias[fecha].clase !== "fuera");
+  const r = HE.resumenDia(res, fecha);
+  const [y, m, d] = fecha.split("-").map(Number);
+  const estadoTxt = (h, dd) => {
+    if (dd.protegido) return "Cubierto por un comodín";
+    if (dd.clase === "noToca") return "No tocaba";
+    if (dd.clase === "neutral") return dd.estado === "saltado" ? "Saltado" : "En pausa";
+    if (dd.clase === "fallo") return h.tipo === "evitar" ? "Recaída" : "No hecho";
+    if (dd.clase === "pendiente") return "Pendiente";
+    return dd.estado ? HC.ESTADOS[dd.estado].nombre : "Hecho";
+  };
+  abrirHoja(cabecera(NOMBRES_DIA[HE.diaSemana(fecha)].replace(/^./, c => c.toUpperCase()), `${d} de ${MESES_LARGOS[m - 1]} de ${y}`,
+    r.esperados ? `${r.hechos} de ${r.esperados} hábitos (${pctTexto(r.hechos / r.esperados)})` : "Nada que tocara") + `
+    ${lista.length ? `<ul class="hb-riesgo">${lista.map(h => {
+      const dd = res.habitos[h.id].dias[fecha];
+      return `<li><button type="button" class="hb-ranking-fila" data-detalle-dia="${h.id}" data-fecha="${fecha}">
+        <span class="hb-emoji" aria-hidden="true">${escapeHtml(h.emoji)}</span>
+        <span class="hb-ranking-txt"><span class="hb-nombre">${escapeHtml(h.name)}</span><span class="hb-sub">${estadoTxt(h, dd)}</span></span>
+        <span class="rk-chev" data-icon="chevronRight"></span></button></li>`;
+    }).join("")}</ul>` : `<p class="hb-texto">No tenías hábitos ese día.</p>`}
+    ${diasMeta[fecha] && (diasMeta[fecha].animo || diasMeta[fecha].nota) ? `<p class="hb-texto">Ánimo: ${diasMeta[fecha].animo ? ANIMOS[diasMeta[fecha].animo - 1][2].toLowerCase() : "—"}${diasMeta[fecha].nota ? ` · «${escapeHtml(diasMeta[fecha].nota)}»` : ""}</p>` : ""}
+    <p class="hb-card-sub">Toca un hábito para corregir ese día.</p>`, { tipo: "dia", id: fecha });
 }
 
 if (panelStats) {
   panelStats.addEventListener("click", e => {
+    const p = e.target.closest("[data-periodo]");
+    if (p) { periodoStats = p.dataset.periodo; renderStats(); return; }
+    const dia = e.target.closest("[data-dia]");
+    if (dia) { hojaDia(dia.dataset.dia); return; }
     const d = e.target.closest("[data-detalle]");
     if (d) hojaDetalle(d.dataset.detalle);
   });
-  new MutationObserver(() => { if (!panelStats.hidden) renderStats(); })
+  panelStats.addEventListener("keydown", e => {
+    const dia = e.target.closest && e.target.closest("[data-dia]");
+    if (dia && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); hojaDia(dia.dataset.dia); }
+  });
+  // Deslizar a los lados cambia el periodo (fuera del mapa de calor, que se desplaza).
+  let toque = null;
+  panelStats.addEventListener("touchstart", e => {
+    if (e.target.closest(".hb-heat-scroll")) { toque = null; return; }
+    toque = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }, { passive: true });
+  panelStats.addEventListener("touchend", e => {
+    if (!toque) return;
+    const dx = e.changedTouches[0].clientX - toque.x, dy = e.changedTouches[0].clientY - toque.y;
+    toque = null;
+    if (Math.abs(dx) > 70 && Math.abs(dy) < 40) cambiarPeriodo(dx < 0 ? 1 : -1);
+  }, { passive: true });
+  new MutationObserver(() => { if (!panelStats.hidden) renderStats(); else ocultarTip(); })
     .observe(panelStats, { attributes: true, attributeFilter: ["hidden"] });
 }
 if (panelHoy) {
@@ -1558,8 +1876,10 @@ function actualizar() {
   renderHoy();
   renderStats();
   renderLogros();
+  renderInicio();
   if (hojaActual && hojaActual.tipo === "detalle") hojaDetalle(hojaActual.id);
   else if (hojaActual && hojaActual.tipo === "cierre") hojaCierre();
+  else if (hojaActual && hojaActual.tipo === "dia") hojaDia(hojaActual.id);
   if (pendienteXP) {
     const ganado = res.xp - pendienteXP.xp;
     if (ganado > 0 && !reducirMovimiento()) mostrarXP(pendienteXP.id, ganado);

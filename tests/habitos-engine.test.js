@@ -448,6 +448,24 @@ test("novedades: detecta subidas de nivel, rangos nuevos, logros y días perfect
   assert.deepEqual(E.novedades(null, ahora), []); // primera vez: sin aviso
 });
 
+test("fusionarSnapshot: borrar y restaurar un hábito no repite la celebración", () => {
+  const hoy = "2026-09-30";
+  const con = E.snapshot(E.evaluar([hab("a", { registros: dias("2026-09-01", 30) }), hab("b", { registros: dias("2026-09-20", 11) })], { hoy }));
+  const sinA = E.snapshot(E.evaluar([hab("b", { registros: dias("2026-09-20", 11) })], { hoy }));
+  assert.ok(con.rangos.a != null);
+  const guardado = E.fusionarSnapshot(con, sinA, hoy);
+  assert.equal(guardado.rangos.a, con.rangos.a); // lo recuerda aunque ya no esté
+  assert.deepEqual(E.novedades(guardado, con), []); // al restaurarlo no hay aviso
+  // Nivel que baja al desmarcar y vuelve a subir: sin segunda celebración.
+  const menos = Object.assign({}, con, { nivel: con.nivel - 1 });
+  assert.deepEqual(E.novedades(E.fusionarSnapshot(con, menos, hoy), con), []);
+  // Misiones de otras semanas y días perfectos viejos no se acumulan.
+  const f = E.fusionarSnapshot({ nivel: 1, rangos: {}, logros: [], misiones: ["2026-W30-total"], perfectos: ["2026-01-01"] }, con, hoy);
+  assert.ok(!f.misiones.includes("2026-W30-total"));
+  assert.ok(!f.perfectos.includes("2026-01-01"));
+  assert.equal(E.fusionarSnapshot(null, con, hoy), con);
+});
+
 // ---------- Fase 3: estadísticas ----------
 test("periodos y cumplimiento global (los semanales cuentan por semana)", () => {
   const p = E.periodo("7d", "2026-09-30");
