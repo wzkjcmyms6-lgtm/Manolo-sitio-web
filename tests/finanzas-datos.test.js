@@ -311,3 +311,33 @@ test("filtros: tipo, categoría, cartera, RE-IVA y fechas", () => {
   assert.equal(ids({ desde: "2026-09-02", hasta: "2026-09-10" }), "bcd");
   assert.equal(ids({ tipo: "gasto", cartera: "efectivo", factura: "si" }), "a");
 });
+
+// ---------- 2c: pagos recurrentes ----------
+test("recurrentes: fechas mensuales, semanales y anuales (meses cortos y cambio de año)", () => {
+  assert.deepEqual(D.ocurrencias({ frecuencia: "mensual", inicio: "2026-01-31" }, "2026-01-01", "2026-04-30"), ["2026-01-31", "2026-02-28", "2026-03-31", "2026-04-30"]);
+  assert.deepEqual(D.ocurrencias({ frecuencia: "mensual", inicio: "2026-11-05" }, "2026-12-01", "2027-02-10"), ["2026-12-05", "2027-01-05", "2027-02-05"]);
+  assert.deepEqual(D.ocurrencias({ frecuencia: "semanal", inicio: "2026-09-07" }, "2026-09-10", "2026-09-30"), ["2026-09-14", "2026-09-21", "2026-09-28"]);
+  assert.deepEqual(D.ocurrencias({ frecuencia: "anual", inicio: "2024-02-29" }, "2025-01-01", "2028-12-31"), ["2025-02-28", "2026-02-28", "2027-02-28", "2028-02-29"]);
+  assert.deepEqual(D.ocurrencias({ frecuencia: "mensual", inicio: "2026-10-01" }, "2026-09-01", "2026-09-30"), []); // antes de empezar
+  assert.deepEqual(D.ocurrencias({ frecuencia: "mensual", inicio: "mal" }, "2026-09-01", "2026-09-30"), []);
+});
+
+test("recurrentes: pendientes de confirmar y próximos pagos", () => {
+  const recs = [
+    { id: "alq", nombre: "Alquiler", frecuencia: "mensual", inicio: "2026-07-05", montoCent: 280000 },
+    { id: "net", nombre: "Streaming", frecuencia: "mensual", inicio: "2026-08-15", omitidos: ["2026-09-15"] },
+    { id: "gym", nombre: "Gimnasio", frecuencia: "mensual", inicio: "2026-10-03" },
+    { id: "off", nombre: "Pausado", frecuencia: "mensual", inicio: "2026-07-01", activo: false }
+  ];
+  const movs = [{ recurrenteId: "alq", recurrenteFecha: "2026-09-05" }];
+  const pend = D.pendientesRecurrentes(recs, movs, "2026-09-30", 45);
+  // Solo los últimos 45 días: el 5 de agosto ya quedó fuera; el 15 de septiembre se omitió.
+  assert.equal(pend.length, 0);
+  const pend2 = D.pendientesRecurrentes(recs, [], "2026-09-30", 45);
+  assert.deepEqual(pend2.map(p => `${p.rec.id}@${p.fecha}`), ["alq@2026-09-05"]);
+  assert.equal(pend2[0].atraso, 25);
+  const prox = D.proximosRecurrentes(recs, movs, "2026-09-30", 7);
+  assert.deepEqual(prox.map(p => `${p.rec.id}@${p.fecha}`), ["gym@2026-10-03", "alq@2026-10-05"]);
+  assert.equal(D.siguienteFecha(recs[0], "2026-09-06"), "2026-10-05");
+  assert.equal(D.siguienteFecha(recs[0], "2026-09-05"), "2026-09-05");
+});

@@ -1519,3 +1519,57 @@ button.remain-cat:active .remain-ring { transform: scale(0.95); }
 .txn-swipe:has(.txn-row.is-abierto) .txn-swipe-acciones,
 .txn-swipe:has(.txn-row.is-arrastrando) .txn-swipe-acciones,
 .txn-swipe.is-borrando .txn-swipe-acciones { visibility: visible; }
+
+/* ---------- Carteras con saldo (Fase 2c) ---------- */
+#panel-finanzas #finance-stats { display: block; }
+.fin-carteras { display: flex; gap: 0.6rem; overflow-x: auto; padding-bottom: 0.2rem; scrollbar-width: none; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
+.fin-carteras::-webkit-scrollbar { display: none; }
+.fin-cartera { position: relative; flex: 0 0 auto; min-width: 9.5rem; scroll-snap-align: start; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); }
+.fin-cartera.is-total { min-width: 11rem; border-color: rgba(255, 184, 77, 0.35); }
+.fin-cartera-btn { display: flex; flex-direction: column; gap: 0.3rem; width: 100%; min-height: 96px; padding: 0.8rem 0.9rem; border: 0; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.fin-cartera-top { display: flex; align-items: center; gap: 0.45rem; }
+.fin-cartera-ico { display: flex; width: 26px; height: 26px; padding: 5px; border-radius: 50%; color: #fff; flex-shrink: 0; }
+.fin-cartera-nombre { font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
+.fin-cartera-valor { font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fin-cartera-valor.neg { color: #f1a193; }
+.fin-cartera-sub { font-size: 0.74rem; color: var(--muted); white-space: nowrap; }
+.fin-cartera.is-tarjeta .fin-cartera-btn { padding-bottom: 3rem; }
+.fin-cartera-pagar { position: absolute; left: 0.9rem; bottom: 0.7rem; min-height: 36px; padding: 0 1rem; border-radius: 999px; border: 0; background: var(--accent-grad); color: #0a0a0a; font: inherit; font-weight: 700; font-size: 0.82rem; cursor: pointer; }
+.category-selector-item-sub { font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* ---------- Pendientes de confirmar y pagos recurrentes ---------- */
+.fin-pendientes { margin-bottom: 1rem; padding: 0.9rem 1rem; border-radius: 18px; background: var(--surface); border: 1px solid rgba(255, 184, 77, 0.35); }
+.fin-pendientes[hidden] { display: none; }
+.fin-pend-t { display: flex; align-items: center; gap: 0.5rem; margin: 0 0 0.4rem; font-size: 1rem; }
+.fin-pend-n { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--accent-grad); color: #0a0a0a; font-size: 0.75rem; line-height: 22px; text-align: center; }
+.fin-pend-lista { list-style: none; margin: 0; padding: 0; }
+.fin-pend-fila { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0; border-top: 1px solid var(--border); }
+.fin-pend-fila:first-child { border-top: 0; }
+.fin-pend-info { flex: 1; min-width: 0; display: flex; align-items: center; gap: 0.7rem; min-height: 48px; padding: 0; border: 0; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.fin-pend-txt { display: flex; flex-direction: column; min-width: 0; }
+.fin-pend-nombre { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fin-pend-sub { font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.fin-pend-sub.is-atrasado { color: #f0a847; }
+.fin-pend-acciones { display: flex; gap: 0.3rem; flex-shrink: 0; }
+.fin-pend-omitir, .fin-pend-ok { min-height: 44px; padding: 0 0.75rem; border-radius: 999px; font: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+.fin-pend-omitir { border: 1px solid var(--border); background: none; color: var(--muted); }
+.fin-pend-ok { display: inline-flex; align-items: center; gap: 0.3rem; border: 0; background: var(--accent-grad); color: #0a0a0a; }
+.fin-pend-ok [data-icon] { width: 15px; height: 15px; display: flex; }
+.fin-pend-mas { display: inline-block; margin-top: 0.4rem; font-size: 0.85rem; color: var(--accent-2); }
+.fin-rec-lista { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+.fin-rec-fila { display: flex; align-items: center; gap: 0.8rem; min-height: 64px; padding: 0.6rem 0.9rem; border-radius: 16px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.fin-rec-fila.is-pausado { opacity: 0.6; }
+.fin-rec-fila .fin-pend-txt { flex: 1; }
+.fin-rec-monto { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fin-rec-nuevo { margin-bottom: 6rem; }
+.rec-form { display: flex; flex-direction: column; gap: 0.2rem; }
+.rec-campo { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.7rem; font-size: 0.85rem; color: var(--muted); }
+.rec-campo input { min-height: 44px; padding: 0 0.8rem; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-soft); color: var(--ink); font: inherit; }
+.rec-activo { margin-top: 0.6rem; }
+.txn-repetir { min-height: 40px; padding: 0 0.6rem; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-soft); color: var(--ink); font: inherit; }
+#txn-sheet-repetir-row[hidden] { display: none !important; }
+/* Pendientes: nombre completo arriba y botones debajo */
+.fin-pend-fila { flex-wrap: wrap; row-gap: 0.1rem; padding: 0.55rem 0; }
+.fin-pend-info { flex: 1 1 100%; }
+.fin-pend-acciones { margin-left: calc(40px + 0.7rem); }
+.fin-pend-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

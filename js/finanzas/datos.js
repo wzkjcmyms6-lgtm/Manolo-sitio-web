@@ -217,7 +217,7 @@ function unirRespaldo(partes) {
 const FORMATO = "manolo-finanzas";
 const COLECCIONES = ["finanzas", "ahorros", "carteras_movimientos"];
 // Documentos de meta/ que forman parte de Finanzas y viajan en la copia.
-const META_COPIA = ["config_presupuesto", "presupuestos", "categorias_gasto", "categorias_ingreso", "carteras_custom", "finanzas_ajustes"];
+const META_COPIA = ["config_presupuesto", "presupuestos", "categorias_gasto", "categorias_ingreso", "carteras_custom", "finanzas_ajustes", "finanzas_recurrentes"];
 
 function copiaCompleta(datos, ahora) {
   const t = ahora || Date.now();
@@ -304,6 +304,7 @@ function planImportacion(copia, actual) {
   };
   listaQueFalta("categorias_ingreso", "list");
   listaQueFalta("carteras_custom", "list");
+  listaQueFalta("finanzas_recurrentes", "list");
   if (esObj(mc.presupuestos)) {
     const faltan = {};
     Object.keys(mc.presupuestos).forEach(k => { if (idOk(k) && !(esObj(ma.presupuestos) && k in ma.presupuestos) && montoValido(mc.presupuestos[k])) faltan[k] = Number(mc.presupuestos[k]); });
@@ -401,7 +402,80 @@ function filtrarMovimientos(lista, f) {
   });
 }
 
+// ---------- Pagos recurrentes (alquiler, servicios, suscripciones) ----------
+// rec: { id, nombre, type: "gasto"|"ingreso", category, payment, montoCent,
+//        frecuencia: "mensual"|"semanal"|"anual", inicio: "AAAA-MM-DD",
+//        activo, omitidos: ["AAAA-MM-DD"] }
+// El día de cada ocurrencia sale de "inicio" (día del mes, día de la semana o
+// día y mes). Si el mes es más corto (31 en febrero), cae el último día.
+// Un movimiento confirmado lleva recurrenteId y recurrenteFecha.
+function desdeIso(f) {
+  const [y, m, d] = f.split("-").map(Number);
+  return new Date(y, m - 1, d, 12);
+}
+function ocurrencias(rec, desde, hasta) {
+  if (!rec || !/^\d{4}-\d{2}-\d{2}$/.test(rec.inicio || "")) return [];
+  const ini = desdeIso(rec.inicio);
+  const a = desde > rec.inicio ? desde : rec.inicio;
+  const out = [];
+  if (hasta < a) return out;
+  if (rec.frecuencia === "semanal") {
+    const d = desdeIso(a);
+    while (d.getDay() !== ini.getDay()) d.setDate(d.getDate() + 1);
+    for (; isoLocal(d) <= hasta; d.setDate(d.getDate() + 7)) out.push(isoLocal(d));
+    return out;
+  }
+  const dia = ini.getDate();
+  const enMes = (y, m) => new Date(y, m, Math.min(dia, new Date(y, m + 1, 0).getDate()), 12);
+  const da = desdeIso(a);
+  let y = da.getFullYear(), m = rec.frecuencia === "anual" ? ini.getMonth() : da.getMonth();
+  if (rec.frecuencia === "anual" && enMes(y, m) < da && isoLocal(enMes(y, m)) < a) y++;
+  for (let i = 0; i < 1000; i++) {
+    const f = isoLocal(enMes(y, m));
+    if (f > hasta) break;
+    if (f >= a) out.push(f);
+    if (rec.frecuencia === "anual") y++;
+    else { m++; if (m > 11) { m = 0; y++; } }
+  }
+  return out;
+}
+function confirmadas(recId, movs) {
+  const s = new Set();
+  for (const m of movs) if (m.recurrenteId === recId && m.recurrenteFecha) s.add(m.recurrenteFecha);
+  return s;
+}
+// Pendientes de confirmar: ocurrencias hasta hoy (de los últimos "dias") que
+// no tienen su movimiento ni se omitieron.
+function pendientesRecurrentes(recs, movs, hoy, dias) {
+  const desde = isoLocal(new Date(desdeIso(hoy).getTime() - (dias || 45) * 86400000));
+  const out = [];
+  (recs || []).filter(r => r && r.activo !== false).forEach(r => {
+    const hechas = confirmadas(r.id, movs);
+    const omit = new Set(r.omitidos || []);
+    ocurrencias(r, desde, hoy).forEach(f => {
+      if (!hechas.has(f) && !omit.has(f)) out.push({ rec: r, fecha: f, atraso: Math.round((desdeIso(hoy) - desdeIso(f)) / 86400000) });
+    });
+  });
+  return out.sort((a, b) => a.fecha.localeCompare(b.fecha) || String(a.rec.nombre).localeCompare(String(b.rec.nombre)));
+}
+// Próximos pagos (de mañana a "dias" días): para el resumen.
+function proximosRecurrentes(recs, movs, hoy, dias) {
+  const man = isoLocal(new Date(desdeIso(hoy).getTime() + 86400000));
+  const hasta = isoLocal(new Date(desdeIso(hoy).getTime() + (dias || 7) * 86400000));
+  const out = [];
+  (recs || []).filter(r => r && r.activo !== false).forEach(r => {
+    const hechas = confirmadas(r.id, movs);
+    ocurrencias(r, man, hasta).forEach(f => { if (!hechas.has(f)) out.push({ rec: r, fecha: f }); });
+  });
+  return out.sort((a, b) => a.fecha.localeCompare(b.fecha));
+}
+function siguienteFecha(rec, hoy) {
+  const hasta = isoLocal(new Date(desdeIso(hoy).getTime() + 400 * 86400000));
+  return ocurrencias(rec, hoy, hasta)[0] || null;
+}
+
 return {
+  ocurrencias, pendientesRecurrentes, proximosRecurrentes, siguienteFecha,
   carterasDe, hayFiltros, filtrarMovimientos,
   teclaMonto, evaluarMonto, tieneOperacion,
   FORMATO, COLECCIONES, META_COPIA, copiaCompleta, validarCopia, planImportacion, celdaCsv, aCsv, montoCsv,

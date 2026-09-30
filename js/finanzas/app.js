@@ -257,60 +257,51 @@ function computeTotals(list) {
 
 // ================= Resumen =================
 
+// Carteras con su saldo, arriba de la lista. La tarjeta de crédito se
+// muestra en negativo (lo que debes) y pagarla es una transferencia.
 function renderStats() {
   const { saldo, deuda, efectivo, debito } = computeTotals(financeCache);
-
-  const stats = document.getElementById("finance-stats");
-  stats.innerHTML = `
-    <div class="stat-box">
-      <div class="value${saldo < 0 ? " value-neg" : ""}">${saldo < 0 ? "−" : ""}${formatMoney(Math.abs(saldo))}</div>
-      <div class="label">Saldo disponible</div>
-      <div class="cash-split">
-        <span><i style="background:${PAYMENT_COLORS.efectivo}"></i>Efectivo ${efectivo < 0 ? "−" : ""}${formatBsShort(Math.abs(efectivo))}</span>
-        <span><i style="background:${PAYMENT_COLORS.debito}"></i>Débito ${debito < 0 ? "−" : ""}${formatBsShort(Math.abs(debito))}</span>
+  const signo = n => `${n < 0 ? "−" : ""}${formatMoney(Math.abs(n))}`;
+  const ahorro = FD.sumaBs(ahorrosCache, a => a.amount);
+  const tco = tcoData && tcoData.ultimo && tcoData.ultimo.tco;
+  const { date: pago, days: faltan } = nextCardPayDate();
+  const cuando = pago.toLocaleDateString("es-ES", { day: "numeric", month: "short" }).replace(".", "");
+  const tarjeta = (id, nombre, valor, extra, clase) => `
+    <div class="fin-cartera${clase ? " " + clase : ""}" role="listitem">
+      <button type="button" class="fin-cartera-btn" data-abrir-cartera="${id}">
+        <span class="fin-cartera-top"><span class="fin-cartera-ico" style="background:${walletVisual(id).color}" data-icon="${walletVisual(id).icon}"></span><span class="fin-cartera-nombre">${escapeHtml(nombre)}</span></span>
+        <span class="fin-cartera-valor${valor.startsWith("−") ? " neg" : ""}">${valor}</span>
+        ${extra ? `<span class="fin-cartera-sub">${extra}</span>` : ""}
+      </button>
+    </div>`;
+  document.getElementById("finance-stats").innerHTML = `
+    <div class="fin-carteras" role="list" aria-label="Tus carteras">
+      ${tarjeta("gastos", "Disponible", signo(saldo), "Efectivo + Débito", "is-total")}
+      ${tarjeta("efectivo", "Efectivo", signo(efectivo))}
+      ${tarjeta("debito", "Débito", signo(debito))}
+      <div class="fin-cartera is-tarjeta" role="listitem">
+        <button type="button" class="fin-cartera-btn" data-abrir-cartera="tarjeta">
+          <span class="fin-cartera-top"><span class="fin-cartera-ico" style="background:${walletVisual("tarjeta").color}" data-icon="finance"></span><span class="fin-cartera-nombre">Tarjeta de crédito</span></span>
+          <span class="fin-cartera-valor${deuda > 0 ? " neg" : ""}">${deuda > 0 ? "−" : ""}${formatMoney(Math.abs(deuda))}</span>
+          <span class="fin-cartera-sub">${faltan === 0 ? "Hoy toca pagar" : `Pago: ${cuando} · ${faltan === 1 ? "falta 1 día" : `faltan ${faltan} días`}`}</span>
+        </button>
+        ${deuda > 0 ? `<button type="button" class="fin-cartera-pagar" data-pagar-tarjeta>Pagar</button>` : ""}
       </div>
-    </div>
-    <div class="stat-box">
-      <div class="value${deuda > 0 ? " value-debt" : ""}">${formatMoney(deuda)}</div>
-      <div class="label">Deuda de tarjeta</div>
-      ${cardScheduleHTML(deuda)}
-      ${deuda > 0 ? `
-        <button type="button" class="link-btn pay-card-link" id="pay-card-toggle">Pagar tarjeta</button>
-        <form id="pay-card-form" class="pay-card-form" hidden>
-          <input type="number" id="pay-card-amount" placeholder="Monto" min="0.01" step="0.01" max="${deuda.toFixed(2)}" value="${deuda.toFixed(2)}" inputmode="decimal" required>
-          <select id="pay-card-source">
-            <option value="debito">Débito</option>
-            <option value="efectivo">Efectivo</option>
-          </select>
-          <button type="submit">Confirmar</button>
-        </form>
-      ` : ""}
-    </div>
-  `;
-
-  const toggle = document.getElementById("pay-card-toggle");
-  if (toggle) {
-    toggle.addEventListener("click", () => {
-      const form = document.getElementById("pay-card-form");
-      form.hidden = !form.hidden;
-    });
-    document.getElementById("pay-card-form").addEventListener("submit", e => {
-      e.preventDefault();
-      const amount = parseFloat(document.getElementById("pay-card-amount").value);
-      const source = document.getElementById("pay-card-source").value;
-      if (!amount || amount <= 0) return;
-      financeCollection().add(FD.conCentavos({
-        createdAt: Date.now(),
-        date: isoDate(new Date()),
-        type: "pago_tarjeta",
-        category: "pago_tarjeta",
-        payment: source,
-        desc: "Pago de tarjeta de crédito",
-        amount
-      }));
-    });
-  }
+      ${tarjeta("ahorro", "Ahorro", formatUSD(ahorro), tco ? `≈ ${formatBsShort(Math.round(ahorro * tco))}` : "")}
+      ${carterasCustomCache.map(w => tarjeta(w.id, w.nombre, w.moneda === "US$" ? formatUSD(customWalletBalance(w.id)) : signo(customWalletBalance(w.id)))).join("")}
+    </div>`;
+  renderIcons(document.getElementById("finance-stats"));
 }
+document.getElementById("finance-stats").addEventListener("click", e => {
+  if (e.target.closest("[data-pagar-tarjeta]")) {
+    // Pagar la tarjeta es una transferencia de Débito a la tarjeta.
+    const { deuda } = computeTotals(financeCache);
+    openTxnSheet(null, { type: "transferencia", from: "debito", to: "tarjeta", amount: String(Math.round(deuda * 100) / 100).replace(".", ","), desc: "Pago de tarjeta" });
+    return;
+  }
+  const b = e.target.closest("[data-abrir-cartera]");
+  if (b) openWalletDetail(b.dataset.abrirCartera);
+});
 
 function updateMonthLabel() {
   document.getElementById("month-label-text").textContent = periodLabel(currentBudgetPeriod());
@@ -442,7 +433,7 @@ function renderMovements() {
           const cat = findCategory(m.type, m.category);
           const pay = findPayment(m.payment);
           let title = m.desc || cat.label;
-          let sub = [m.desc ? cat.label : "", m.payment === "credito" ? (pay ? pay.label : "") : "", m.type === "gasto" && m.factura ? "Con factura" : "", m.excluded ? "Excluido del presupuesto" : ""].filter(Boolean).join(" · ");
+          let sub = [m.desc ? cat.label : "", m.payment === "credito" ? (pay ? pay.label : "") : "", m.type === "gasto" && m.factura ? "Con factura" : "", m.recurrenteId ? "Recurrente" : "", m.excluded ? "Excluido del presupuesto" : ""].filter(Boolean).join(" · ");
           if (m.type === "transferencia") {
             const route = `${walletLabel(m.from)} → ${walletLabel(m.to)}`;
             title = m.desc || route;
@@ -1086,7 +1077,7 @@ function defaultCategory(type) {
   return (otros || gastoCategoriesCache[0] || {}).id;
 }
 
-function openTxnSheet(movement) {
+function openTxnSheet(movement, inicial) {
   const toStr = n => String(n).replace(".", ",");
   txnSheet = movement
     ? {
@@ -1099,6 +1090,7 @@ function openTxnSheet(movement) {
         readonly: movement.type === "transferencia", movement
       }
     : { id: null, type: "gasto", category: null, payment: ultimaCartera("gasto"), amount: "0", desc: "", date: isoDate(new Date()), excluded: false, factura: false, keypad: true, from: "debito", to: "ahorro", amountTo: "", rate: "", rateTouched: false, readonly: false };
+  if (inicial && !movement) Object.assign(txnSheet, inicial, { keypad: inicial.keypad !== undefined ? inicial.keypad : true });
   txnError(null);
   renderTxnSheet();
   showSheet(document.getElementById("txn-sheet"));
@@ -1181,7 +1173,7 @@ function renderTxnSheet() {
   const walletRow = (key, id) => {
     const v = walletVisual(id);
     document.getElementById(`txn-sheet-${key}-badge`).outerHTML = `<span id="txn-sheet-${key}-badge" class="txn-icon txn-icon-solid" style="background:${v.color}" data-icon="${v.icon}"></span>`;
-    document.getElementById(`txn-sheet-${key}-label`).textContent = walletLabel(id);
+    document.getElementById(`txn-sheet-${key}-label`).textContent = `${walletLabel(id)} · ${walletBalanceText(id)}`;
     document.getElementById(`txn-sheet-${key}`).disabled = !!t.readonly;
   };
   walletRow("from", t.from);
@@ -1218,7 +1210,7 @@ function renderTxnSheet() {
 
   const pay = findPayment(t.payment) || PAYMENTS[0];
   document.getElementById("txn-sheet-pay-badge").outerHTML = `<span id="txn-sheet-pay-badge" class="txn-icon txn-icon-solid" style="background:${PAYMENT_COLORS[pay.id]}" data-icon="${PAYMENT_ICONS[pay.id]}"></span>`;
-  document.getElementById("txn-sheet-pay-label").textContent = pay.label;
+  document.getElementById("txn-sheet-pay-label").textContent = `${pay.label} · ${walletBalanceText(pay.id === "credito" ? "tarjeta" : pay.id)}`;
   document.getElementById("txn-sheet-pay-prefix").textContent = t.type === "ingreso" ? "Hacia:" : "Desde:";
 
   const note = document.getElementById("txn-sheet-note");
@@ -1238,6 +1230,8 @@ function renderTxnSheet() {
 
   document.getElementById("txn-sheet-delete").hidden = !t.id;
   document.getElementById("txn-sheet-save-otro").hidden = !!t.id || !!t.readonly;
+  document.getElementById("txn-sheet-repetir-row").hidden = !!t.id || !!t.recurrenteId || isTransfer || !editable;
+  document.getElementById("txn-sheet-repetir").value = t.repetir || "";
   document.getElementById("txn-sheet").classList.toggle("keypad-open", t.keypad && !t.readonly);
   renderIcons(document.getElementById("txn-sheet"));
 }
@@ -1442,7 +1436,7 @@ function chooseTxnPayment() {
   const options = t.type === "ingreso" ? PAYMENTS.filter(p => p.id !== "credito") : PAYMENTS;
   openPicker({
     title: t.type === "ingreso" ? "¿A dónde entra?" : "¿Con qué pagaste?",
-    items: options.map(p => ({ id: p.id, label: p.label, icon: PAYMENT_ICONS[p.id], color: PAYMENT_COLORS[p.id] })),
+    items: options.map(p => ({ id: p.id, label: p.label, sub: walletBalanceText(p.id === "credito" ? "tarjeta" : p.id), icon: PAYMENT_ICONS[p.id], color: PAYMENT_COLORS[p.id] })),
     onPick: id => { closePicker(); t.payment = id; renderTxnSheet(); }
   });
 }
@@ -1450,12 +1444,13 @@ function chooseTxnPayment() {
 function chooseTxnWallet(side) {
   const t = txnSheet;
   const other = side === "from" ? t.to : t.from;
-  const wallets = ledgerWallets().filter(w => w.id !== "tarjeta" && w.id !== other);
+  // La tarjeta solo puede recibir (pagarla); nunca es origen.
+  const wallets = ledgerWallets().filter(w => (side === "to" || w.id !== "tarjeta") && w.id !== other);
   openPicker({
     title: side === "from" ? "¿Desde qué cartera?" : "¿A qué cartera?",
     items: wallets.map(w => {
       const v = walletVisual(w.id);
-      return { id: w.id, label: `${walletLabel(w.id)} (${w.moneda})`, icon: v.icon, color: v.color };
+      return { id: w.id, label: `${walletLabel(w.id)} (${w.moneda})`, sub: walletBalanceText(w.id), icon: v.icon, color: v.color };
     }),
     onPick: id => {
       closePicker();
@@ -1503,7 +1498,22 @@ function saveTxn(yOtro) {
   }
   const data = FD.conCentavos({ date: t.date, type: t.type, category: t.category, payment: t.payment, desc: t.desc.trim(), amount, excluded: t.excluded, factura: t.type === "gasto" && !!t.factura });
   recordarCartera(t.type, t.payment);
-  const guardado = t.id ? financeCollection().doc(t.id).update(data) : financeCollection().add(Object.assign({ createdAt: Date.now() }, data));
+  let guardado;
+  if (t.id) guardado = financeCollection().doc(t.id).update(data);
+  else {
+    const lote = nuevoLote();
+    const nuevo = Object.assign({ createdAt: Date.now() }, data);
+    // Confirmar un pago recurrente pendiente, o crear uno nuevo con "Repetir".
+    if (t.recurrenteId) Object.assign(nuevo, { recurrenteId: t.recurrenteId, recurrenteFecha: t.recurrenteFecha });
+    else if (t.repetir) {
+      const rec = { id: "rec_" + Date.now().toString(36), nombre: t.desc.trim() || findCategory(t.type, t.category).label, type: t.type, category: t.category, payment: t.payment,
+        amount, montoCent: FD.aCentavos(amount), frecuencia: t.repetir, inicio: t.date, activo: true, omitidos: [], creado: Date.now() };
+      Object.assign(nuevo, { recurrenteId: rec.id, recurrenteFecha: t.date });
+      lote.set(recDocRef(), { list: recurrentes.concat([rec]) }, { merge: true });
+    }
+    lote.set(financeCollection().doc(), nuevo);
+    guardado = lote.commit();
+  }
   guardado.catch(err => console.error("Manolo: no se pudo guardar el movimiento", err));
   trasGuardar(yOtro, `${t.type === "ingreso" ? "Ingreso" : "Gasto"} de ${formatBsShort(amount)} guardado · ${findCategory(t.type, t.category).label}`);
 }
@@ -1514,7 +1524,7 @@ function trasGuardar(yOtro, texto) {
   try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) { /* sin vibración */ }
   if (!yOtro) { closeTxnSheet(); return; }
   const t = txnSheet;
-  Object.assign(t, { id: null, amount: "0", desc: "", category: null, factura: false, excluded: false, amountTo: "", keypad: true });
+  Object.assign(t, { id: null, amount: "0", desc: "", category: null, factura: false, excluded: false, amountTo: "", keypad: true, repetir: null, recurrenteId: null, recurrenteFecha: null });
   txnError(null);
   renderTxnSheet();
   avisoFin(texto);
@@ -1796,6 +1806,9 @@ document.getElementById("txn-sheet-amount-to").addEventListener("focus", () => {
 });
 document.getElementById("txn-sheet-excluded").addEventListener("change", e => {
   if (txnSheet) txnSheet.excluded = e.target.checked;
+});
+document.getElementById("txn-sheet-repetir").addEventListener("change", e => {
+  if (txnSheet) txnSheet.repetir = e.target.value || null;
 });
 document.getElementById("txn-sheet-factura").addEventListener("change", e => {
   if (txnSheet) txnSheet.factura = e.target.checked;
@@ -2426,6 +2439,7 @@ function openPicker({ title, items, createLabel, onPick, onCreate }) {
             ? `<div class="category-selector-item-icon category-selector-item-emoji" style="background:${it.color}">${it.emoji}</div>`
             : `<div class="category-selector-item-icon" style="color:${it.color}" data-icon="${it.icon}"></div>`}
           <div class="category-selector-item-label">${escapeHtml(it.label)}</div>
+          ${it.sub ? `<div class="category-selector-item-sub">${escapeHtml(it.sub)}</div>` : ""}
         </button>
       `).join("")
     : `<p class="category-selector-empty">No hay opciones disponibles. Crea una nueva.</p>`;
@@ -3765,6 +3779,7 @@ function renderAjustes() {
       <h2>Presupuesto</h2>
       <a class="fin-aj-fila" href="#fin-herramientas-periodo"><span><span class="fin-aj-t">Periodo</span><span class="fin-aj-sub">Empieza el día ${budgetStartDay} de cada mes</span></span><span class="fin-aj-chev" data-icon="chevronRight"></span></a>
       <a class="fin-aj-fila" href="#fin-herramientas-categorias"><span><span class="fin-aj-t">Categorías</span><span class="fin-aj-sub">${gastoCategoriesCache.length} de gasto · ${(CATEGORIES.ingreso || []).length} de ingreso</span></span><span class="fin-aj-chev" data-icon="chevronRight"></span></a>
+      <a class="fin-aj-fila" href="#fin-recurrentes"><span><span class="fin-aj-t">Pagos recurrentes</span><span class="fin-aj-sub">${recurrentes.length ? `${recurrentes.length} configurado${recurrentes.length === 1 ? "" : "s"}` : "Alquiler, servicios, suscripciones…"}</span></span><span class="fin-aj-chev" data-icon="chevronRight"></span></a>
       <a class="fin-aj-fila" href="#fin-herramientas-carteras"><span><span class="fin-aj-t">Carteras</span><span class="fin-aj-sub">Efectivo, Débito, Tarjeta, Ahorro${carterasCustomCache.length ? ` y ${carterasCustomCache.length} más` : ""}</span></span><span class="fin-aj-chev" data-icon="chevronRight"></span></a>
     </section>
     <section class="fin-aj-bloque">
@@ -4013,6 +4028,203 @@ document.getElementById("fin-ajustes").addEventListener("change", e => {
   }
 });
 
+// ================= Pagos recurrentes =================
+// Se guardan en meta/finanzas_recurrentes. En su fecha aparecen como
+// «pendientes de confirmar»: Confirmar crea el movimiento (con recurrenteId
+// y recurrenteFecha), Omitir lo salta, y tocar el nombre abre la hoja para
+// ajustar el monto antes de guardar.
+let recurrentes = [];
+function recDocRef() {
+  return raiz().collection("meta").doc("finanzas_recurrentes");
+}
+function guardarRecurrentes(lista) {
+  recurrentes = lista;
+  recDocRef().set({ list: lista }, { merge: true }).catch(err => console.error("Manolo: no se pudieron guardar los recurrentes", err));
+  renderAll();
+}
+const DIAS_SEMANA = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+function textoFrecuencia(r) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(r.inicio || "")) return "";
+  const d = new Date(r.inicio + "T12:00:00");
+  if (r.frecuencia === "semanal") return `Cada ${DIAS_SEMANA[d.getDay()]}`;
+  if (r.frecuencia === "anual") return `Cada año, el ${d.getDate()} de ${d.toLocaleDateString("es-ES", { month: "long" })}`;
+  return `Cada mes, el día ${d.getDate()}`;
+}
+function textoAtraso(fecha) {
+  const hoy = isoDate(new Date());
+  const dias = Math.round((new Date(hoy + "T12:00:00") - new Date(fecha + "T12:00:00")) / 86400000);
+  if (dias <= 0) return fecha === hoy ? "Vence hoy" : `Vence ${dayLabel(fecha).toLowerCase()}`;
+  if (dias === 1) return "Venció ayer";
+  return `Venció hace ${dias} días`;
+}
+function renderPendientes() {
+  const el = document.getElementById("fin-pendientes");
+  if (!el) return;
+  const pend = FD.pendientesRecurrentes(recurrentes, financeCache, isoDate(new Date()), 45);
+  el.hidden = !pend.length;
+  if (!pend.length) { el.innerHTML = ""; return; }
+  const visibles = pend.slice(0, 4);
+  el.innerHTML = `
+    <h2 id="fin-pendientes-t" class="fin-pend-t">Pendientes de confirmar <span class="fin-pend-n">${pend.length}</span></h2>
+    <ul class="fin-pend-lista">${visibles.map(p => {
+      const cat = findCategory(p.rec.type, p.rec.category);
+      return `<li class="fin-pend-fila">
+        <button type="button" class="fin-pend-info" data-pend-abrir="${escapeHtml(p.rec.id)}" data-fecha="${p.fecha}" aria-label="Revisar ${escapeHtml(p.rec.nombre)} antes de confirmar">
+          ${txnIconHTML(cat)}
+          <span class="fin-pend-txt"><span class="fin-pend-nombre">${escapeHtml(p.rec.nombre)}</span><span class="fin-pend-sub${p.atraso > 0 ? " is-atrasado" : ""}">${textoAtraso(p.fecha)} · ${p.rec.type === "ingreso" ? "+" : ""}${formatBsShort(FD.aBs(p.rec.montoCent || 0))}</span></span>
+        </button>
+        <span class="fin-pend-acciones">
+          <button type="button" class="fin-pend-omitir" data-pend-omitir="${escapeHtml(p.rec.id)}" data-fecha="${p.fecha}" aria-label="Omitir ${escapeHtml(p.rec.nombre)} del ${fechaCorta(p.fecha)}">Omitir</button>
+          <button type="button" class="fin-pend-ok" data-pend-confirmar="${escapeHtml(p.rec.id)}" data-fecha="${p.fecha}" aria-label="Confirmar ${escapeHtml(p.rec.nombre)} del ${fechaCorta(p.fecha)}"><span data-icon="check"></span>Confirmar</button>
+        </span>
+      </li>`;
+    }).join("")}</ul>
+    ${pend.length > visibles.length ? `<a class="fin-pend-mas" href="#fin-recurrentes">Y ${pend.length - visibles.length} más</a>` : ""}`;
+  renderIcons(el);
+}
+function fechaCorta(f) {
+  return new Date(f + "T12:00:00").toLocaleDateString("es-ES", { day: "numeric", month: "short" }).replace(".", "");
+}
+function confirmarPendiente(recId, fecha) {
+  const r = recurrentes.find(x => x.id === recId);
+  if (!r) return;
+  const ref = financeCollection().doc();
+  const datos = FD.conCentavos({ date: fecha, type: r.type, category: r.category, payment: r.payment, desc: r.nombre, amount: FD.aBs(r.montoCent || 0), excluded: false, factura: false, recurrenteId: r.id, recurrenteFecha: fecha, createdAt: Date.now() });
+  ref.set(datos).catch(err => console.error("Manolo: no se pudo confirmar", err));
+  try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) { /* sin vibración */ }
+  showUndoToast(`${r.nombre} confirmado`, () => ref.delete());
+}
+function omitirPendiente(recId, fecha) {
+  const r = recurrentes.find(x => x.id === recId);
+  if (!r) return;
+  const cambiar = omitidos => guardarRecurrentes(recurrentes.map(x => x.id === recId ? Object.assign({}, x, { omitidos }) : x));
+  const antes = (r.omitidos || []).slice();
+  cambiar(antes.concat([fecha]));
+  showUndoToast(`${r.nombre} del ${fechaCorta(fecha)} omitido`, () => cambiar(antes));
+}
+document.getElementById("fin-pendientes").addEventListener("click", e => {
+  const ok = e.target.closest("[data-pend-confirmar]");
+  if (ok) { confirmarPendiente(ok.dataset.pendConfirmar, ok.dataset.fecha); return; }
+  const om = e.target.closest("[data-pend-omitir]");
+  if (om) { omitirPendiente(om.dataset.pendOmitir, om.dataset.fecha); return; }
+  const ab = e.target.closest("[data-pend-abrir]");
+  if (ab) {
+    const r = recurrentes.find(x => x.id === ab.dataset.pendAbrir);
+    if (!r) return;
+    openTxnSheet(null, { type: r.type, category: r.category, payment: r.payment, desc: r.nombre, date: ab.dataset.fecha,
+      amount: String(FD.aBs(r.montoCent || 0)).replace(".", ","), recurrenteId: r.id, recurrenteFecha: ab.dataset.fecha });
+  }
+});
+
+// ---- Lista de recurrentes y hoja para crear o editar ----
+function renderRecurrentes() {
+  const el = document.getElementById("fin-recurrentes-lista");
+  if (!el) return;
+  const hoy = isoDate(new Date());
+  el.innerHTML = recurrentes.length ? recurrentes.slice().sort((a, b) => String(a.nombre).localeCompare(String(b.nombre))).map(r => {
+    const cat = findCategory(r.type, r.category);
+    const sig = r.activo === false ? null : FD.siguienteFecha(r, hoy);
+    return `<button type="button" class="fin-rec-fila${r.activo === false ? " is-pausado" : ""}" data-rec-editar="${escapeHtml(r.id)}">
+      ${txnIconHTML(cat)}
+      <span class="fin-pend-txt"><span class="fin-pend-nombre">${escapeHtml(r.nombre)}</span>
+        <span class="fin-pend-sub">${textoFrecuencia(r)}${r.activo === false ? " · En pausa" : sig ? ` · Próximo: ${fechaCorta(sig)}` : ""}</span></span>
+      <span class="fin-rec-monto">${r.type === "ingreso" ? "+" : ""}${formatBsShort(FD.aBs(r.montoCent || 0))}</span>
+    </button>`;
+  }).join("") : `<p class="empty-state">Todavía no tienes pagos recurrentes. Crea uno aquí, o marca «Repetir» al registrar un gasto.</p>`;
+  renderIcons(el);
+}
+let recEditando = null;
+function abrirRec(id) {
+  const r = id ? recurrentes.find(x => x.id === id) : null;
+  recEditando = r ? Object.assign({}, r) : { id: null, nombre: "", type: "gasto", category: null, payment: ultimaCartera("gasto"), montoCent: 0, frecuencia: "mensual", inicio: isoDate(new Date()), activo: true, omitidos: [] };
+  renderRecForm();
+  document.getElementById("rec-sheet-title").textContent = r ? "Editar pago recurrente" : "Nuevo pago recurrente";
+  document.getElementById("rec-borrar").hidden = !r;
+  showSheet(document.getElementById("rec-sheet"));
+}
+function renderRecForm() {
+  const r = recEditando;
+  const secciones = r.type === "ingreso" ? [{ title: "Ingresos", items: CATEGORIES.ingreso || [] }] : catSheetSections("gasto");
+  const pagos = r.type === "ingreso" ? PAYMENTS.filter(p => p.id !== "credito") : PAYMENTS;
+  document.getElementById("rec-form").innerHTML = `
+    <label class="rec-campo">Nombre<input type="text" name="nombre" maxlength="40" value="${escapeHtml(r.nombre)}" placeholder="Alquiler" autocomplete="off"></label>
+    <label class="rec-campo">Monto (Bs)<input type="text" name="monto" inputmode="decimal" value="${escapeHtml(r.montoTexto != null ? r.montoTexto : r.montoCent ? String(FD.aBs(r.montoCent)).replace(".", ",") : "")}" placeholder="0" autocomplete="off"></label>
+    <h4>Tipo</h4>
+    <div class="txn-filtro-chips" role="radiogroup">
+      <button type="button" class="fin-tab${r.type === "gasto" ? " active" : ""}" role="radio" aria-checked="${r.type === "gasto"}" data-rec-tipo="gasto">Gasto</button>
+      <button type="button" class="fin-tab${r.type === "ingreso" ? " active" : ""}" role="radio" aria-checked="${r.type === "ingreso"}" data-rec-tipo="ingreso">Ingreso</button>
+    </div>
+    <label class="rec-campo">Categoría<select name="category" class="txn-filtro-select">
+      <option value="">Elige una</option>
+      ${secciones.map(sec => `<optgroup label="${escapeHtml(sec.title)}">${sec.items.map(c => `<option value="${escapeHtml(c.id)}"${r.category === c.id ? " selected" : ""}>${escapeHtml(c.label)}</option>`).join("")}</optgroup>`).join("")}
+    </select></label>
+    <label class="rec-campo">${r.type === "ingreso" ? "Entra a" : "Se paga con"}<select name="payment" class="txn-filtro-select">
+      ${pagos.map(p => `<option value="${p.id}"${r.payment === p.id ? " selected" : ""}>${p.label}</option>`).join("")}
+    </select></label>
+    <label class="rec-campo">Se repite<select name="frecuencia" class="txn-filtro-select">
+      <option value="mensual"${r.frecuencia === "mensual" ? " selected" : ""}>Cada mes</option>
+      <option value="semanal"${r.frecuencia === "semanal" ? " selected" : ""}>Cada semana</option>
+      <option value="anual"${r.frecuencia === "anual" ? " selected" : ""}>Cada año</option>
+    </select></label>
+    <label class="rec-campo">Primera fecha<input type="date" name="inicio" value="${r.inicio}"></label>
+    <p class="fin-aj-texto">${textoFrecuencia(r)}.</p>
+    ${r.id ? `<label class="budget-sheet-row txn-toggle-row rec-activo"><span class="txn-toggle-label">Activo</span><input type="checkbox" name="activo" class="switch"${r.activo !== false ? " checked" : ""}></label>` : ""}
+    <p class="txn-sheet-error" id="rec-error" role="alert" hidden></p>`;
+}
+function leerRecForm() {
+  const f = document.getElementById("rec-form");
+  const r = recEditando;
+  r.nombre = f.nombre.value.trim();
+  r.montoTexto = f.monto.value;
+  r.category = f.category.value || null;
+  r.payment = f.payment.value;
+  r.frecuencia = f.frecuencia.value;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(f.inicio.value)) r.inicio = f.inicio.value;
+  if (f.activo) r.activo = f.activo.checked;
+}
+function guardarRec() {
+  leerRecForm();
+  const r = recEditando;
+  const cent = FD.evaluarMonto(String(r.montoTexto || "").replace(/\./g, ","));
+  const err = !r.nombre ? "Ponle un nombre." : !(cent > 0) ? "Escribe un monto mayor que cero." : !r.category ? "Elige una categoría." : null;
+  const el = document.getElementById("rec-error");
+  if (err) { el.hidden = false; el.textContent = err; return; }
+  const limpio = { id: r.id || "rec_" + Date.now().toString(36), nombre: r.nombre, type: r.type, category: r.category, payment: r.payment,
+    montoCent: cent, amount: FD.aBs(cent), frecuencia: r.frecuencia, inicio: r.inicio, activo: r.activo !== false, omitidos: r.omitidos || [], creado: r.creado || Date.now() };
+  guardarRecurrentes(r.id ? recurrentes.map(x => x.id === r.id ? limpio : x) : recurrentes.concat([limpio]));
+  hideSheet(document.getElementById("rec-sheet"));
+  avisoFin(`«${limpio.nombre}» guardado: ${textoFrecuencia(limpio).toLowerCase()}.`);
+}
+function borrarRec() {
+  const r = recurrentes.find(x => x.id === recEditando.id);
+  if (!r) return;
+  const antes = recurrentes.slice();
+  guardarRecurrentes(recurrentes.filter(x => x.id !== r.id));
+  hideSheet(document.getElementById("rec-sheet"));
+  // Los movimientos ya confirmados no se borran.
+  showUndoToast(`«${r.nombre}» eliminado`, () => guardarRecurrentes(antes));
+}
+document.getElementById("panel-fin-recurrentes").addEventListener("click", e => {
+  const ed = e.target.closest("[data-rec-editar]");
+  if (ed) { abrirRec(ed.dataset.recEditar); return; }
+  if (e.target.closest("[data-rec-nuevo]")) abrirRec(null);
+});
+document.getElementById("rec-sheet").addEventListener("click", e => {
+  const t = e.target.closest("[data-rec-tipo]");
+  if (t) {
+    leerRecForm();
+    if (recEditando.type !== t.dataset.recTipo) { recEditando.type = t.dataset.recTipo; recEditando.category = null; if (recEditando.type === "ingreso" && recEditando.payment === "credito") recEditando.payment = "debito"; }
+    renderRecForm();
+    return;
+  }
+  if (e.target.closest("#rec-guardar")) { guardarRec(); return; }
+  if (e.target.closest("#rec-borrar")) { borrarRec(); return; }
+  if (e.target.closest(".budget-sheet-close") || e.target.classList.contains("budget-sheet-overlay")) hideSheet(document.getElementById("rec-sheet"));
+});
+document.getElementById("rec-sheet").addEventListener("change", e => {
+  if (e.target.name === "frecuencia" || e.target.name === "inicio") { leerRecForm(); renderRecForm(); }
+});
+
 // ================= Tabs =================
 
 // Pestañas internas de Presupuesto (Planificación/Restante/Información).
@@ -4034,7 +4246,7 @@ const RENDERERS = [
   renderStats, updateMonthLabel, renderMovements, renderGasto, renderVistaGeneral,
   updateBudgetMonthLabel, renderBudgets, renderBudgetInputs, renderBudgetSummary, renderBudgetInfo,
   renderCategoryGroups, renderPeriodSettings, renderWallets, updateExportSummary, renderReiva, renderEstadoDatos,
-  renderAjustes, renderRecordatorio, renderDemoBanner, renderPerfil
+  renderAjustes, renderRecordatorio, renderDemoBanner, renderPerfil, renderPendientes, renderRecurrentes
 ];
 // Finanzas solo se dibuja cuando se ve: si estás en otra sección, los
 // cambios quedan marcados y se dibujan al entrar (así no frena el resto de
@@ -4123,7 +4335,7 @@ function intentarRespaldo() {
   if (respaldando || !esquemaCargado || (esquema && esquema.respaldo)) return;
   if (!delServidor.finanzas || !delServidor.ahorros || !delServidor.carteras) return;
   respaldando = true;
-  const nombres = ["config_presupuesto", "presupuestos", "categorias_gasto", "categorias_ingreso", "categorias_personalizadas", "carteras_custom"];
+  const nombres = ["config_presupuesto", "presupuestos", "categorias_gasto", "categorias_ingreso", "categorias_personalizadas", "carteras_custom", "finanzas_ajustes", "finanzas_recurrentes"];
   Promise.all(nombres.map(n => metaDocRef(n).get({ source: "server" }).then(d => [n, d.exists ? d.data() : null])))
     .then(pares => {
       const meta = {};
@@ -4183,6 +4395,11 @@ onAuthReady(() => {
       pedirRender();
     }
     intentarRespaldo();
+  });
+  recDocRef().onSnapshot(doc => {
+    metaCrudo.finanzas_recurrentes = doc.exists ? doc.data() : null;
+    recurrentes = (doc.exists && Array.isArray(doc.data().list)) ? doc.data().list.filter(r => r && r.id) : [];
+    pedirRender();
   });
   ajustesDocRef().onSnapshot(doc => {
     metaCrudo.finanzas_ajustes = doc.exists ? doc.data() : null;

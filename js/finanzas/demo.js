@@ -17,6 +17,13 @@ function azar(semilla) {
   return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
 }
 
+// Próxima fecha (desde mañana) con ese día del mes.
+function proximoDia(hoy, dia) {
+  const d = new Date(hoy.getFullYear(), hoy.getMonth(), dia);
+  if (d <= hoy) d.setMonth(d.getMonth() + 1);
+  return iso(d);
+}
+
 // Datos demo: del día 1 de hace 5 meses hasta hoy. Todo inventado.
 function generarDemo(hoy) {
   const fin = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
@@ -103,7 +110,14 @@ function generarDemo(hoy) {
     ] },
     categorias_ingreso: { list: [{ id: "salario", label: "Salario", icon: "salary", color: "#5cc98a" }] },
     carteras_custom: { list: [{ id: "viajes", nombre: "Viajes", moneda: "Bs" }] },
-    finanzas_ajustes: { reivaPct: 5, diaPagoTarjeta: 28 }
+    finanzas_ajustes: { reivaPct: 5, diaPagoTarjeta: 28 },
+    // Empiezan en su próxima fecha: no aparecen pendientes viejos en la demo.
+    finanzas_recurrentes: { list: [
+      { id: "demo-rec-alquiler", nombre: "Alquiler", type: "gasto", category: "vivienda", payment: "debito", amount: 2800, montoCent: 280000, frecuencia: "mensual", inicio: proximoDia(fin, 5), activo: true, omitidos: [] },
+      { id: "demo-rec-internet", nombre: "Internet", type: "gasto", category: "suscripciones", payment: "debito", amount: 249, montoCent: 24900, frecuencia: "mensual", inicio: proximoDia(fin, 10), activo: true, omitidos: [] },
+      { id: "demo-rec-streaming", nombre: "Streaming", type: "gasto", category: "suscripciones", payment: "credito", amount: 62, montoCent: 6200, frecuencia: "mensual", inicio: proximoDia(fin, 15), activo: true, omitidos: [] },
+      { id: "demo-rec-sueldo", nombre: "Sueldo", type: "ingreso", category: "salario", payment: "debito", amount: 9200, montoCent: 920000, frecuencia: "mensual", inicio: proximoDia(fin, 1), activo: true, omitidos: [] }
+    ] }
   };
   return { finanzas, ahorros, carteras_movimientos: carteras, meta };
 }

@@ -34,7 +34,8 @@ const SUB_PANELS = [
   { hash: "fin-herramientas-periodo", parent: "fin-herramientas" },
   { hash: "fin-herramientas-reiva", parent: "fin-herramientas" },
   { hash: "fin-herramientas-exportar", parent: "fin-herramientas" },
-  { hash: "fin-ajustes", parent: "fin-herramientas" }
+  { hash: "fin-ajustes", parent: "fin-herramientas" },
+  { hash: "fin-recurrentes", parent: "fin-herramientas" }
 ];
 
 // Mientras estás dentro de Hábitos, Finanzas o Ejercicio, la barra inferior (solo en

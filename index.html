@@ -18,7 +18,7 @@
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
   <link rel="stylesheet" href="css/style.css?v=202610011000">
-  <link rel="stylesheet" href="css/finanzas.css?v=202610011200">
+  <link rel="stylesheet" href="css/finanzas.css?v=202610011300">
   <link rel="stylesheet" href="css/habitos.css?v=202610010600">
 </head>
 <body>
@@ -382,6 +382,7 @@
             </div>
 
             <div class="fin-recordatorio" id="fin-recordatorio" role="status" hidden></div>
+            <section class="fin-pendientes" id="fin-pendientes" aria-labelledby="fin-pendientes-t" hidden></section>
 
             <div class="fin-tabs fin-inner-tabs" id="fin-inner-tabs">
               <button type="button" class="fin-tab" data-fin-tab="vg">Vista General</button>
@@ -509,6 +510,16 @@
                     <span class="txn-toggle-label">Excluir del presupuesto</span>
                     <input type="checkbox" id="txn-sheet-excluded" class="switch">
                   </label>
+                  <label class="budget-sheet-row txn-toggle-row txn-extra txn-no-transfer" id="txn-sheet-repetir-row">
+                    <span class="txn-row-icon" data-icon="calendar"></span>
+                    <span class="txn-toggle-label">Repetir <small class="txn-toggle-hint">pago recurrente</small></span>
+                    <select id="txn-sheet-repetir" class="txn-repetir" aria-label="Repetir este movimiento">
+                      <option value="">No</option>
+                      <option value="mensual">Cada mes</option>
+                      <option value="semanal">Cada semana</option>
+                      <option value="anual">Cada año</option>
+                    </select>
+                  </label>
                   <label class="budget-sheet-row txn-toggle-row txn-extra" id="txn-sheet-factura-row">
                     <span class="txn-row-icon" data-icon="receipt"></span>
                     <span class="txn-toggle-label">Compra con factura <small class="txn-toggle-hint">RE-IVA</small></span>
@@ -614,6 +625,11 @@
                 <span class="icon" data-icon="gear"></span>
                 <h3>Ajustes y respaldo</h3>
                 <p>Tarjeta, RE-IVA, copias de seguridad y modo demo.</p>
+              </a>
+              <a class="tool-card" href="#fin-recurrentes">
+                <span class="icon" data-icon="calendar"></span>
+                <h3>Pagos recurrentes</h3>
+                <p>Alquiler, servicios y suscripciones que se repiten.</p>
               </a>
               <a class="tool-card" href="#fin-herramientas-carteras">
                 <span class="icon" data-icon="wallet"></span>
@@ -755,6 +771,15 @@
             <div id="fin-estado-datos" class="fin-estado-datos" aria-live="polite"></div>
           </section>
 
+          <!-- ===== Finanzas: Pagos recurrentes ===== -->
+          <section id="panel-fin-recurrentes" hidden>
+            <a class="back-link" href="#fin-herramientas"><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</a>
+            <h1 class="page-title">Pagos recurrentes</h1>
+            <p class="panel-sub">Alquiler, servicios, suscripciones o tu sueldo: en su fecha aparecen en Vista general como «pendientes de confirmar».</p>
+            <div id="fin-recurrentes-lista" class="fin-rec-lista"></div>
+            <button type="button" class="fin-aj-btn is-principal fin-rec-nuevo" data-rec-nuevo><span data-icon="plus"></span>Nuevo pago recurrente</button>
+          </section>
+
           <!-- ===== Finanzas: Ajustes (engranaje) ===== -->
           <section id="panel-fin-ajustes" hidden>
             <a class="back-link" href="#fin-herramientas"><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</a>
@@ -786,6 +811,22 @@
     </div>
 
     <nav class="bottom-nav" id="bottom-nav-links"></nav>
+  </div>
+
+<!-- Crear o editar un pago recurrente -->
+  <div id="rec-sheet" class="js-sheet budget-sheet" hidden>
+    <div class="budget-sheet-overlay"></div>
+    <div class="budget-sheet-panel txn-filtros-panel" role="dialog" aria-modal="true" aria-labelledby="rec-sheet-title">
+      <div class="budget-sheet-header">
+        <button type="button" class="budget-sheet-close" aria-label="Cerrar"><span data-icon="close"></span></button>
+        <h3 id="rec-sheet-title">Pago recurrente</h3>
+      </div>
+      <form class="txn-filtros-cuerpo rec-form" id="rec-form" novalidate></form>
+      <div class="txn-sheet-actions">
+        <button type="button" class="txn-save txn-save-otro" id="rec-borrar">Eliminar</button>
+        <button type="button" class="txn-save" id="rec-guardar">Guardar</button>
+      </div>
+    </div>
   </div>
 
 <!-- Filtros de la lista de movimientos -->
@@ -921,7 +962,7 @@
   <script defer src="js/auth.js?v=202609232200"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
   <script defer src="js/icons.js?v=202610011200"></script>
-  <script defer src="js/modules.js?v=202610011000"></script>
+  <script defer src="js/modules.js?v=202610011300"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
   <script defer src="js/exercise-search.js?v=202609291"></script>
@@ -944,9 +985,9 @@
   <script defer src="js/offline.js?v=202610010700"></script>
   <script defer src="js/running.js?v=202609293"></script>
   <script defer src="js/bicicleta.js?v=202609293"></script>
-  <script defer src="js/finanzas/datos.js?v=202610011200"></script>
-  <script defer src="js/finanzas/demo.js?v=202610011000"></script>
-  <script defer src="js/finanzas/app.js?v=202610011200"></script>
+  <script defer src="js/finanzas/datos.js?v=202610011300"></script>
+  <script defer src="js/finanzas/demo.js?v=202610011300"></script>
+  <script defer src="js/finanzas/app.js?v=202610011300"></script>
   <script defer src="js/inversiones.js?v=202609232200"></script>
 </body>
 </html>
