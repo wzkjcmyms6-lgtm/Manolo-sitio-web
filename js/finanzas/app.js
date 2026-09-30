@@ -576,7 +576,7 @@ function periodDays(period) {
 // Gasto acumulado por día del periodo: [g1, g1+g2, ...].
 function cumulativeSpend(period) {
   const byDay = {};
-  financeCache.filter(m => m.type === "gasto" && isInPeriod(m.date, period))
+  financeCache.filter(m => m.type === "gasto" && !m.excluded && isInPeriod(m.date, period))
     .forEach(m => { byDay[m.date] = (byDay[m.date] || 0) + m.amount; });
   let acc = 0;
   return periodDays(period).map(d => (acc += byDay[d] || 0));
@@ -599,7 +599,7 @@ function smoothPath(pts) {
   return d;
 }
 
-function vgChartHTML(period) {
+function vgChartHTML(period, proy) {
   const days = periodDays(period);
   const n = days.length;
   const today = isoDate(new Date());
@@ -615,11 +615,13 @@ function vgChartHTML(period) {
     : null;
 
   const byDay = {};
-  financeCache.filter(m => m.type === "gasto" && isInPeriod(m.date, period))
+  financeCache.filter(m => m.type === "gasto" && !m.excluded && isInPeriod(m.date, period))
     .forEach(m => { byDay[m.date] = (byDay[m.date] || 0) + m.amount; });
 
+  const final = proy && proy.final != null ? proy.final : null;
+  const pres = proy && proy.presupuesto > 0 ? proy.presupuesto : 0;
   const W = 320, H = 170, padX = 6, top = 14, bottom = 150;
-  const maxY = Math.max(current[current.length - 1] || 0, media ? media[n - 1] : 0, 1) * 1.08;
+  const maxY = Math.max(current[current.length - 1] || 0, media ? media[n - 1] : 0, final || 0, pres, 1) * 1.08;
   const x = i => padX + (n > 1 ? (i / (n - 1)) * (W - padX * 2) : 0);
   const y = v => bottom - (v / maxY) * (bottom - top);
   const curPts = current.map((v, i) => [x(i), y(v)]);
@@ -649,7 +651,9 @@ function vgChartHTML(period) {
           <stop offset="100%" stop-color="#ffb84d"/>
         </linearGradient>
       </defs>
+      ${pres ? `<line x1="${padX}" x2="${W - padX}" y1="${y(pres).toFixed(1)}" y2="${y(pres).toFixed(1)}" style="stroke:#9a978f" stroke-width="1" stroke-dasharray="2 4" vector-effect="non-scaling-stroke"/>` : ""}
       ${media ? `<path d="${mediaPath}" fill="none" style="stroke:#77756f" stroke-width="2" stroke-dasharray="6 6" vector-effect="non-scaling-stroke"/>` : ""}
+      ${final != null ? `<path d="M ${last[0].toFixed(1)} ${last[1].toFixed(1)} L ${x(n - 1).toFixed(1)} ${y(final).toFixed(1)}" fill="none" style="stroke:${pres && final > pres ? "#ff7a66" : "#ffb84d"}" stroke-width="2" stroke-dasharray="3 5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>` : ""}
       <path d="${area}" fill="url(#vg-area)"/>
       <path d="${linePath}" fill="none" stroke="url(#vg-line)" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
     </svg>
@@ -658,9 +662,10 @@ function vgChartHTML(period) {
     <span class="vg-scrub-dot" hidden></span>
     <span class="vg-scrub-dot media" hidden></span>
     <button type="button" class="vg-tooltip" hidden></button>
+    ${pres ? `<span class="vg-pres-label" style="top:${(y(pres) / (H + 18) * 100).toFixed(2)}%">Presupuesto ${formatBsShort(Math.round(pres))}</span>` : ""}
     </div>
     <div class="vg-chart-ticks">${ticks.map(t => `<span style="left:${(x(t.i) / W * 100).toFixed(2)}%">${t.label}</span>`).join("")}</div>
-    <div class="vg-legend"><span><i style="background:#ff7a30"></i>Este periodo</span>${media ? `<span><i style="background:#77756f"></i>Media</span>` : ""}</div>`;
+    <div class="vg-legend"><span><i style="background:#ff7a30"></i>Este periodo</span>${final != null ? `<span><i class="vg-leg-proy"></i>Proyección</span>` : ""}${media ? `<span><i style="background:#77756f"></i>Media</span>` : ""}</div>`;
 }
 
 // ---- Deslizar por el gráfico: línea vertical + recuadro con el día ----
@@ -771,102 +776,175 @@ function vgCalendarHTML(period) {
     </button>`;
   }));
   return `
-    <div class="vg-cal-head">
-      <button type="button" class="vg-cal-arrow" data-vg-period="-1" aria-label="Periodo anterior"><span data-icon="chevronLeft"></span></button>
-      <span class="vg-cal-title">${periodLabel(period)}</span>
-      <button type="button" class="vg-cal-arrow" data-vg-period="1" aria-label="Periodo siguiente"${monthOffset >= 0 ? " disabled" : ""}><span data-icon="chevronRight"></span></button>
-    </div>
+    <h2 class="an-titulo" id="an-calendario-t">Calendario de gastos</h2>
+    <p class="an-sub">Más oscuro, más gasto. Toca un día para ver sus movimientos.</p>
     <div class="vg-weekdays">${["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map(w => `<span>${w}</span>`).join("")}</div>
     <div class="vg-grid">${cells.join("")}</div>`;
 }
 
-function vgBudgetHTML(period) {
-  const spent = computeSpentByCategory(period);
-  const received = computeReceivedByCategory(period);
-  const rows = [];
-  (CATEGORIES.ingreso || []).forEach(c => { if (isPlanned(c.id)) rows.push({ cat: c, planned: budgetsCache[c.id] || 0, used: received[c.id] || 0, type: "ingreso" }); });
-  categoryGroupsCache.forEach(g => groupCategories(g).forEach(c => {
-    if (isPlanned(c.id)) rows.push({ cat: c, planned: disponible(c.id), used: spent[c.id] || 0, type: "gasto" });
-  }));
-  if (!rows.length) {
-    return `<h3 class="budget-section-title">Presupuesto</h3>
-      <p class="info-sub">Todavía no tienes presupuesto para este periodo.</p>
-      <a class="vg-link" href="#fin-presupuesto">Crear presupuesto</a>`;
+// ================= Resumen: 6 bloques =================
+// 1 cuánto puedes gastar por día · 2 ritmo con proyección · 3 atención
+// · 4 ahorro · 5 en qué se va · 6 RE-IVA del mes. Lo profundo está en Análisis.
+
+// 1. Puedes gastar por día
+function resHeroHTML(period) {
+  const { days, daily, result } = budgetProjection(period);
+  const base = incomeBase(period);
+  const gastado = FD.sumaBs(financeCache.filter(m => m.type === "gasto" && !m.excluded && isInPeriod(m.date, period)), m => m.amount);
+  const barra = base > 0 ? `<div class="vg-bar" role="img" aria-label="Gastaste ${Math.round(Math.min(gastado / base, 1) * 100)} % de lo que entra"><span style="width:${(Math.min(gastado / base, 1) * 100).toFixed(1)}%"></span></div>` : "";
+  if (base <= 0) {
+    return `<div class="vg-label">Puedes gastar por día</div>
+      <p class="res-vacio">Registra tu ingreso o arma tu presupuesto y aquí verás cuánto puedes gastar cada día.</p>
+      <a class="res-link" href="#fin-presupuesto">Armar presupuesto<span data-icon="chevronRight"></span></a>`;
   }
-  const totalIncome = incomeBase(period);
-  const totalBudget = rows.filter(r => r.type === "gasto").reduce((s, r) => s + r.planned, 0);
-  const totalSpent = Object.values(spent).reduce((s, v) => s + v, 0);
-  const base = totalIncome > 0 ? totalIncome : totalBudget;
-  const left = base - totalSpent;
-  const pct = base > 0 ? Math.min(totalSpent / base, 1) : 0;
-  const popular = rows.slice().sort((a, b) => b.planned - a.planned).slice(0, 8);
-  const alerts = rows
-    .map(r => Object.assign({ state: budgetState(r.planned, r.used, r.type) }, r))
-    // Un gasto fijo casi pagado (alquiler al 97 %) no es una alerta.
-    .filter(r => r.state !== "ok" && !(r.state === "warn" && (r.cat.tipo === "fijo" || r.cat.tipo === "ahorro")))
-    .sort((a, b) => (b.used / (b.planned || 1)) - (a.used / (a.planned || 1)));
-  // Gastos en categorías sin presupuesto: igual restan, se resumen en una línea.
-  const unplanned = Object.keys(spent)
-    .filter(id => spent[id] > 0 && !isPlanned(id))
-    .sort((a, b) => spent[b] - spent[a]);
-  const unplannedTotal = unplanned.reduce((s, id) => s + spent[id], 0);
-  const unplannedHTML = unplanned.length ? `
-    <div class="vg-alert info">
-      <span class="vg-alert-dot"></span>
-      <span class="vg-alert-text"><strong>Sin presupuesto:</strong> ${formatBsShort(unplannedTotal)} en ${unplanned
-        .map(id => escapeHtml((findCategory("gasto", id) || { label: id }).label)).join(", ")}</span>
-    </div>` : "";
-  const alertsHTML = alerts.length || unplanned.length ? `
-    <div class="vg-alerts">
-      ${alerts.map(r => `
-        <button type="button" class="vg-alert ${r.state}" data-cat-detail="${r.cat.id}" data-cat-type="${r.type}">
-          <span class="vg-alert-dot"></span>
-          <span class="vg-alert-text"><strong>${escapeHtml(r.cat.label)}:</strong> ${r.state === "over"
-            ? `te pasaste ${formatBsShort(r.used - r.planned)}`
-            : r.used / r.planned < BUDGET_WARN
-              ? `vas rápido, ${Math.round(r.used / r.planned * 100)} % usado y pasó el ${Math.round(periodElapsed(period) * 100)} % del periodo`
-              : `te quedan ${formatBsShort(r.planned - r.used)} (${Math.round(r.used / r.planned * 100)} % usado)`}</span>
-        </button>`).join("")}
-      ${unplannedHTML}
-    </div>` : "";
-  return `
-    <a class="vg-budget-head" href="#fin-presupuesto"><h3 class="budget-section-title">Presupuesto</h3><span data-icon="chevronRight"></span></a>
-    <div class="vg-label">${left < 0 ? "Sobrepasado" : "Restante para gastar"}</div>
-    <div class="vg-big${left < 0 ? " over" : ""}">${formatBsShort(Math.abs(left))}</div>
-    <div class="vg-bar"><span style="width:${(pct * 100).toFixed(1)}%"></span></div>
-    ${dailyAllowanceHTML(period)}
-    ${alertsHTML}
-    <div class="vg-label vg-popular-label">Categorías populares</div>
-    <div class="vg-popular">${popular.map(r => remainingCatHTML(r.cat, r.planned, r.used, r.type)).join("")}</div>`;
+  if (days <= 0) {
+    return `<div class="vg-label">Periodo cerrado</div>
+      <div class="vg-big an-num${result < 0 ? " over" : ""}">${result < 0 ? "−" : ""}${formatBsShort(Math.round(Math.abs(result)))}</div>
+      <p class="res-sub">${result < 0 ? "Gastaste más de lo que entró." : "Es lo que te sobró en este periodo."}</p>${barra}`;
+  }
+  const quedan = `quedan ${days} ${days === 1 ? "día" : "días"}`;
+  if (result <= 0) {
+    return `<div class="vg-label">Puedes gastar por día</div>
+      <div class="vg-big over">Sin margen</div>
+      <p class="res-sub">Ya usaste todo lo que entra este periodo (${quedan}). Revisa el presupuesto.</p>${barra}
+      <a class="res-link" href="#fin-presupuesto">Ver presupuesto<span data-icon="chevronRight"></span></a>`;
+  }
+  return `<div class="vg-label">Puedes gastar por día</div>
+    <div class="vg-big an-num">${formatBsShort(Math.floor(daily))}</div>
+    <p class="res-sub">Te quedan <strong class="an-num">${formatBsShort(Math.round(result))}</strong> para los próximos ${days} ${days === 1 ? "día" : "días"}, después de fijos y ahorro.</p>
+    ${barra}
+    <a class="res-link" href="#fin-presupuesto">Ver presupuesto<span data-icon="chevronRight"></span></a>`;
+}
+
+// 2. Proyección: lo gastado + tu ritmo diario de gastos variables por los
+// días que quedan + lo que falta pagar de fijos y ahorro.
+function proyeccionGasto(period) {
+  const days = periodDays(period);
+  const n = days.length;
+  const today = isoDate(new Date());
+  const pasados = days.filter(d => d <= today).length;
+  const presupuesto = gastoCategoriesCache.filter(c => isPlanned(c.id)).reduce((s, c) => s + disponible(c.id), 0);
+  if (pasados < 3 || pasados >= n) return { final: null, presupuesto, pasados, n };
+  const info = computeBudgetInfo(period);
+  const gastado = cumulativeSpend(period)[pasados - 1];
+  if (!(gastado > 0)) return { final: null, presupuesto, pasados, n };
+  const variable = Math.max(gastado - info.fijo.used - info.ahorro.used, 0);
+  const pendiente = Math.max(info.fijo.planned - info.fijo.used, 0) + Math.max(info.ahorro.planned - info.ahorro.used, 0);
+  return { final: gastado + variable / pasados * (n - pasados) + pendiente, presupuesto, pasados, n, gastado };
+}
+function resProyeccionTexto(p) {
+  if (p.final == null) return "";
+  const fin = formatBsShort(Math.round(p.final));
+  if (!(p.presupuesto > 0)) return `A este ritmo terminarías el periodo en <strong class="an-num">${fin}</strong>.`;
+  const dif = Math.round(p.final - p.presupuesto);
+  return dif > 0
+    ? `A este ritmo terminarías en <strong class="an-num">${fin}</strong>: <span class="res-mal">${formatBsShort(dif)} más</span> que tu presupuesto de ${formatBsShort(Math.round(p.presupuesto))}.`
+    : `A este ritmo terminarías en <strong class="an-num">${fin}</strong>: <span class="res-bien">${formatBsShort(-dif)} menos</span> que tu presupuesto de ${formatBsShort(Math.round(p.presupuesto))}.`;
+}
+
+// 3. Atención: hasta 3 cosas para mirar hoy.
+function resAtencionHTML(period) {
+  const items = [];
+  const spent = computeSpentByCategory(period);
+  categoryGroupsCache.forEach(g => groupCategories(g).forEach(c => {
+    if (!isPlanned(c.id)) return;
+    const { e, fijo } = presInfo({ cat: c, planned: disponible(c.id), used: spent[c.id] || 0 }, period);
+    if (e.estado === "pasado") items.push({ peso: 3 + e.pct, html: `<button type="button" class="res-item mal" data-cat-detail="${escapeHtml(c.id)}" data-cat-type="gasto"><span class="res-item-ic" aria-hidden="true">!</span><span><strong>${escapeHtml(c.label)}:</strong> te pasaste ${bsCent(-e.queda)}.</span></button>` });
+    else if (!fijo && (e.estado === "alerta" || e.estado === "rapido")) items.push({ peso: 1 + e.pct, html: `<button type="button" class="res-item aviso" data-cat-detail="${escapeHtml(c.id)}" data-cat-type="gasto"><span class="res-item-ic" aria-hidden="true">!</span><span><strong>${escapeHtml(c.label)}:</strong> ${e.estado === "alerta" ? `usaste el ${Math.round(e.pct * 100)} %, quedan ${bsCent(e.queda)}` : `vas rápido: ${Math.round(e.pct * 100)} % usado y pasó el ${Math.round(periodElapsed(period) * 100)} % del periodo`}.</span></button>` });
+  }));
+  if (monthOffset === 0) {
+    const hoy = isoDate(new Date());
+    FD.proximosRecurrentes(recurrentes, financeCache, hoy, 3).forEach(p => {
+      items.push({ peso: 2, html: `<a class="res-item" href="#fin-analisis"><span class="res-item-ic" aria-hidden="true"><span data-icon="calendar"></span></span><span><strong>${enDias(p.fecha)}:</strong> ${escapeHtml(p.rec.nombre)} · ${p.rec.type === "ingreso" ? "+" : ""}${bsCent(p.rec.montoCent || 0)}</span></a>` });
+    });
+    const t = FD.saldos(financeCache);
+    const { days } = nextCardPayDate();
+    if (t.deuda > 0 && days <= 3) items.push({ peso: 2.5, html: `<a class="res-item aviso" href="#fin-movimientos"><span class="res-item-ic" aria-hidden="true"><span data-icon="calendar"></span></span><span><strong>${days === 0 ? "Hoy" : days === 1 ? "Mañana" : `En ${days} días`}:</strong> pago de la tarjeta · ${bsCent(t.deuda)}</span></a>` });
+  }
+  items.sort((a, b) => b.peso - a.peso);
+  const head = `<h2 class="an-titulo" id="res-atencion-t">Atención</h2>`;
+  if (!items.length) return `${head}<p class="res-ok"><span class="res-item-ic bien" aria-hidden="true"><span data-icon="check"></span></span>Todo en orden: ninguna categoría pasada ni pagos en los próximos 3 días.</p>`;
+  return `${head}<div class="res-items">${items.slice(0, 3).map(i => i.html).join("")}</div>
+    ${items.length > 3 ? `<a class="res-link" href="#fin-presupuesto">Y ${items.length - 3} más en Presupuesto<span data-icon="chevronRight"></span></a>` : ""}`;
+}
+
+// 4. Ahorro del periodo.
+const META_AHORRO = 0.2;
+function resAhorroHTML(period) {
+  const list = financeCache.filter(m => isInPeriod(m.date, period) && !m.excluded);
+  const ing = FD.sumaCent(list.filter(m => m.type === "ingreso"), m => m.amount);
+  const gas = FD.sumaCent(list.filter(m => m.type === "gasto"), m => m.amount);
+  const apartado = FD.aCentavos(FD.sumaBs(Object.values(savingsByWallet(list)), v => v));
+  const head = `<h2 class="an-titulo" id="res-ahorro-t">Tu ahorro</h2>`;
+  if (ing <= 0) return `${head}<p class="res-vacio">Todavía no registraste ingresos en este periodo.</p>`;
+  const tasa = (ing - gas) / ing;
+  const ancho = Math.max(0, Math.min(tasa, 1)) * 100;
+  return `${head}
+    <div class="an-fila-big"><span class="vg-big an-num${tasa < 0 ? " over" : ""}">${tasa < 0 ? "−" : ""}${Math.round(Math.abs(tasa) * 100)} %</span><span class="an-kpi-sub">de lo que entró no se gastó</span></div>
+    <div class="an-meta" role="img" aria-label="${Math.round(tasa * 100)} % ahorrado; la meta recomendada es ${META_AHORRO * 100} %"><span style="width:${ancho}%"></span><i style="left:${META_AHORRO * 100}%"></i></div>
+    <div class="an-meta-ejes" aria-hidden="true"><span>0 %</span><span style="margin-left:${META_AHORRO * 100 - 8}%">meta ${META_AHORRO * 100} %</span><span>100 %</span></div>
+    <p class="an-detalle">Entraron ${bsCent(ing)}, gastaste ${bsCent(gas)} y ${ing - gas >= 0 ? `quedan <strong class="an-num">${bsCent(ing - gas)}</strong>` : `faltaron <strong class="an-num">${bsCent(gas - ing)}</strong>`}.${apartado > 0 ? ` Ya apartaste ${bsCent(apartado)} a tus carteras de ahorro.` : ""}</p>`;
+}
+
+// 5. En qué se va (compacto; el detalle está en Análisis).
+function resCategoriasHTML(period) {
+  const spent = computeSpentByCategory(period);
+  const ids = Object.keys(spent).filter(id => spent[id] > 0).sort((a, b) => spent[b] - spent[a]);
+  const head = `<h2 class="an-titulo" id="res-categorias-t">¿En qué se va?</h2>`;
+  if (!ids.length) return `${head}<p class="res-vacio">Sin gastos en este periodo.</p>`;
+  const total = ids.reduce((s, id) => s + spent[id], 0);
+  const top = ids.slice(0, 4).map(id => ({ cat: findCategory("gasto", id), v: spent[id] }));
+  const resto = total - top.reduce((s, x) => s + x.v, 0);
+  const filas = top.concat(resto > 0 ? [{ cat: { id: "__otras", label: "Las demás", color: "#77756f", icon: "otherCategory" }, v: resto }] : []);
+  return `${head}
+    <div class="res-apilada" role="img" aria-label="${filas.map(f => `${escapeHtml(f.cat.label)} ${Math.round(f.v / total * 100)} %`).join(", ")}">${filas.map(f => `<span style="width:${(f.v / total * 100).toFixed(2)}%;background:${f.cat.color}"></span>`).join("")}</div>
+    <div class="res-cats">${filas.map(f => `
+      <${f.cat.id === "__otras" ? "div" : `button type="button" data-cat-detail="${escapeHtml(f.cat.id)}" data-cat-type="gasto"`} class="res-cat">
+        <i style="background:${f.cat.color}"></i><span class="res-cat-nom">${escapeHtml(f.cat.label)}</span>
+        <span class="res-cat-pct an-num">${Math.round(f.v / total * 100)} %</span><span class="res-cat-v an-num">${formatBsShort(Math.round(f.v))}</span>
+      </${f.cat.id === "__otras" ? "div" : "button"}>`).join("")}</div>
+    <a class="res-link" href="#fin-analisis">Ver análisis completo<span data-icon="chevronRight"></span></a>`;
+}
+
+// 6. RE-IVA del mes calendario.
+function resReivaHTML(period) {
+  const mes = (monthOffset === 0 ? isoDate(new Date()) : period.startISO).slice(0, 7);
+  const del = k => financeCache.filter(m => m.type === "gasto" && m.factura && m.date && m.date.slice(0, 7) === k);
+  const items = del(mes);
+  const [y, mo] = mes.split("-").map(Number);
+  const nombre = `${MONTH_NAMES[mo - 1]}${y !== new Date().getFullYear() ? " " + y : ""}`;
+  const head = `<h2 class="an-titulo" id="res-reiva-t">RE-IVA de ${nombre.toLowerCase()}</h2>`;
+  if (!items.length) {
+    return `${head}<p class="res-vacio">Aún no marcaste compras con factura este mes. Al registrar un gasto, activa «Compra con factura».</p>
+      <a class="res-link" href="#fin-herramientas-reiva">Ver RE-IVA<span data-icon="chevronRight"></span></a>`;
+  }
+  const total = FD.sumaCent(items, m => m.amount);
+  const reintegro = Math.round(total * reivaTasa());
+  const ant = FD.sumaCent(del(FP.claveMas(mes, -1)), m => m.amount);
+  return `${head}
+    <div class="an-fila-big"><span class="vg-big an-num">${bsCent(reintegro)}</span><span class="an-kpi-sub">reintegro estimado (${(reivaTasa() * 100).toLocaleString("es-BO", { maximumFractionDigits: 2 })} %)</span></div>
+    <p class="an-detalle">${items.length} ${items.length === 1 ? "factura" : "facturas"} por ${bsCent(total)} en compras.${ant > 0 ? ` El mes anterior: ${bsCent(Math.round(ant * reivaTasa()))}.` : ""}</p>
+    <a class="res-link" href="#fin-herramientas-reiva">Ver facturas<span data-icon="chevronRight"></span></a>`;
 }
 
 function renderVistaGeneral() {
   const period = currentBudgetPeriod();
-  const gastado = FD.sumaBs(financeCache.filter(m => m.type === "gasto" && isInPeriod(m.date, period)), m => m.amount);
+  const gastado = FD.sumaBs(financeCache.filter(m => m.type === "gasto" && !m.excluded && isInPeriod(m.date, period)), m => m.amount);
+  const proy = proyeccionGasto(period);
+  const poner = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  poner("res-hero", resHeroHTML(period));
   document.getElementById("vg-spent-label").textContent = `Gastado: ${periodLabel(period)}`;
   document.getElementById("vg-spent-value").textContent = formatBsShort(gastado);
-  document.getElementById("vg-chart").innerHTML = vgChartHTML(period);
-  document.getElementById("vg-calendar").innerHTML = vgCalendarHTML(period);
-  document.getElementById("vg-budget").innerHTML = vgBudgetHTML(period);
+  poner("res-proy", resProyeccionTexto(proy));
+  document.getElementById("vg-chart").innerHTML = vgChartHTML(period, proy);
+  poner("res-atencion", resAtencionHTML(period));
+  poner("res-ahorro", resAhorroHTML(period));
+  poner("res-categorias", resCategoriasHTML(period));
+  poner("res-reiva", resReivaHTML(period));
   renderIcons(document.getElementById("fin-tab-vg"));
 }
 
 document.getElementById("fin-tab-vg").addEventListener("click", e => {
-  const arrow = e.target.closest("[data-vg-period]");
-  if (arrow) {
-    const step = Number(arrow.dataset.vgPeriod);
-    if (step > 0 && monthOffset >= 0) return;
-    monthOffset += step;
-    renderAll();
-    return;
-  }
-  const day = e.target.closest("[data-vg-day].has");
-  if (day) {
-    showFinTab("lista");
-    const dia = day.dataset.vgDay;
-    setTimeout(() => jumpToDay(dia), 80);
-    return;
-  }
   const cat = e.target.closest("[data-cat-detail]");
   if (cat) openCategoryDetail(cat.dataset.catType, cat.dataset.catDetail);
 });
@@ -1256,6 +1334,7 @@ function renderAnalisis() {
   poner("an-tendencia", anTendenciaHTML(a));
   poner("an-cambios", anCambiosHTML(a));
   poner("an-semana", anSemanaHTML(a));
+  poner("vg-calendar", vgCalendarHTML(period));
   poner("an-hormiga", anHormigaHTML(a));
   poner("an-mayores", anMayoresHTML(a));
   poner("an-proximos", anProximosHTML());
@@ -1271,7 +1350,13 @@ document.getElementById("fin-tab-gasto").addEventListener("click", e => {
   const cat = e.target.closest(".an-cambio[data-cat-detail]");
   if (cat) { openCategoryDetail("gasto", cat.dataset.catDetail); return; }
   const txn = e.target.closest("[data-an-txn]");
-  if (txn) { const m = financeCache.find(x => x.id === txn.dataset.anTxn); if (m) openTxnSheet(m); }
+  if (txn) { const m = financeCache.find(x => x.id === txn.dataset.anTxn); if (m) openTxnSheet(m); return; }
+  const day = e.target.closest("[data-vg-day].has");
+  if (day) {
+    showFinTab("lista");
+    const dia = day.dataset.vgDay;
+    setTimeout(() => jumpToDay(dia), 80);
+  }
 });
 
 (function wireTxnSearch() {

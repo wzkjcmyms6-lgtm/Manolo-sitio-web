@@ -1177,7 +1177,7 @@ button.remain-cat:active .remain-ring { transform: scale(0.95); }
 #finance-stats[hidden] { display: none; }
 #fin-month-nav[hidden] { display: none; }
 .vg-card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 1.3rem 1.2rem; margin-bottom: 1rem; }
-#vg-budget { margin-bottom: 6rem; }
+
 .vg-label { font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 .vg-big { font-family: var(--font-display); font-size: 2.3rem; font-weight: 600; line-height: 1.15; margin-top: 0.15rem; }
 .vg-big.over { color: var(--danger); }
@@ -1713,3 +1713,40 @@ button.an-item:focus-visible { outline: 2px solid var(--accent-2); border-radius
   .pres-bar-fill, .pres-herr-btn, .budget-sheet-arrastre input, .budget-sheet-arrastre input::after { transition: none; }
 }
 #budget-tab-restante, #budget-tab-planificacion, #budget-tab-informacion { padding-bottom: 7.5rem; }
+
+/* ===== Resumen (6 bloques) ===== */
+.res-panel { padding-bottom: 6rem; }
+.res-sub { font-size: 0.92rem; color: var(--muted); margin: 0.3rem 0 0.9rem; line-height: 1.45; }
+.res-sub strong { color: var(--ink); }
+.res-vacio { font-size: 0.92rem; color: var(--muted); margin: 0.3rem 0 0.6rem; }
+.res-link { display: inline-flex; align-items: center; gap: 0.2rem; min-height: 44px; margin-top: 0.4rem; color: var(--accent-2); font-weight: 600; font-size: 0.92rem; text-decoration: none; }
+.res-link [data-icon] { width: 18px; height: 18px; }
+.res-proy { font-size: 0.9rem; color: var(--muted); margin: 0.35rem 0 0.2rem; line-height: 1.45; }
+.res-proy:empty { display: none; }
+.res-proy strong { color: var(--ink); }
+.res-mal { color: #ff7a66; font-weight: 700; }
+.res-bien { color: #5fcf8a; font-weight: 700; }
+.vg-pres-label { position: absolute; right: 0; transform: translateY(-120%); font-size: 0.7rem; color: var(--muted); background: var(--surface); padding: 0 0.25rem; border-radius: 4px; pointer-events: none; }
+.vg-legend i.vg-leg-proy { background: none; border: 2px dashed #ffb84d; width: 12px; height: 12px; box-sizing: border-box; }
+.res-items { display: flex; flex-direction: column; gap: 0.5rem; }
+.res-item { display: flex; align-items: center; gap: 0.7rem; width: 100%; min-height: 48px; padding: 0.65rem 0.8rem; border-radius: 14px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border); color: var(--ink); font: inherit; font-size: 0.92rem; line-height: 1.4; text-align: left; text-decoration: none; cursor: pointer; }
+.res-item.aviso { background: rgba(240, 168, 71, 0.1); border-color: rgba(240, 168, 71, 0.35); }
+.res-item.mal { background: rgba(226, 89, 63, 0.1); border-color: rgba(226, 89, 63, 0.4); }
+.res-item:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.res-item-ic { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 0.8rem; background: var(--border); color: var(--ink); }
+.res-item-ic [data-icon] { width: 15px; height: 15px; }
+.res-item.aviso .res-item-ic { background: rgba(240, 168, 71, 0.25); color: #f0a847; }
+.res-item.mal .res-item-ic { background: rgba(226, 89, 63, 0.25); color: #ff7a66; }
+.res-item-ic.bien { background: rgba(95, 207, 138, 0.2); color: #5fcf8a; }
+.res-ok { display: flex; align-items: center; gap: 0.7rem; font-size: 0.92rem; margin: 0; }
+.res-apilada { display: flex; gap: 2px; height: 14px; border-radius: 999px; overflow: hidden; margin: 0.3rem 0 0.8rem; }
+.res-apilada span { display: block; height: 100%; min-width: 3px; }
+.res-cats { display: flex; flex-direction: column; }
+.res-cat { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto auto; align-items: center; gap: 0.6rem; min-height: 44px; width: 100%; padding: 0 0.1rem; border: 0; border-top: 1px solid var(--border); background: none; color: var(--ink); font: inherit; font-size: 0.93rem; text-align: left; }
+.res-cat:first-child { border-top: 0; }
+button.res-cat { cursor: pointer; }
+.res-cat i { width: 12px; height: 12px; border-radius: 50%; }
+.res-cat-nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.res-cat-pct { color: var(--muted); font-size: 0.85rem; }
+.res-cat-v { font-weight: 600; min-width: 4.5rem; text-align: right; }
+.res-hero .vg-bar { margin: 0.4rem 0 0.2rem; }
