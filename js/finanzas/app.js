@@ -942,15 +942,6 @@ function gastoRingSVG(rows, selectedId) {
 }
 
 function renderGasto() {
-  const list = periodMovements();
-  const { ingresos, gastos, saldo } = periodSummary(list);
-  const signed = n => `${n < 0 ? "−" : ""}${formatBsShort(Math.abs(n))}`;
-  document.getElementById("gasto-summary").innerHTML = `
-    <div><strong>${formatBsShort(ingresos)}</strong><span>Ingresos</span></div>
-    <div><strong>${formatBsShort(gastos)}</strong><span>Gastos</span></div>
-    <div><strong class="${saldo < 0 ? "neg" : ""}">${signed(saldo)}</strong><span>Restante</span></div>
-  `;
-
   const mode = GASTO_MODES[gastoMode];
   document.getElementById("gasto-mode-label").textContent = mode.label;
   const rows = gastoRows();
@@ -1021,6 +1012,265 @@ document.getElementById("fin-tab-gasto").addEventListener("click", e => {
     renderGasto();
     if (gastoMode !== "ahorro") openCategoryDetail(gastoMode, gastoSelected);
   }
+});
+
+// ================= Análisis =================
+// Todo lo que no se ve en Resumen ni en Movimientos: comparaciones con tus
+// meses anteriores, qué cambió, patrones y tu colchón. Los cálculos están en
+// js/finanzas/analisis.js (en centavos).
+const FA = FinanzasAnalisis;
+let analisisCol = null; // mes elegido en el gráfico de 6 meses
+let analisisDia = null; // día elegido en el gráfico de la semana
+// En Análisis los promedios y comparaciones van en Bs enteros (más fáciles
+// de leer); los movimientos puntuales, con sus centavos.
+const bsC = c => formatBsShort(Math.round(c / 100));
+const bsExacto = c => formatBsShort(FD.aBs(Math.round(c)));
+const nombreCatGasto = id => findCategory("gasto", id).label;
+function umbralHormigaCent() {
+  const v = Number(ajustes.umbralHormiga);
+  return FD.aCentavos(v > 0 ? v : AJUSTES_DEFECTO.umbralHormiga);
+}
+function horasMes() {
+  const v = Number(ajustes.horasMes);
+  return v > 0 ? Math.min(v, 744) : AJUSTES_DEFECTO.horasMes;
+}
+function mesCorto(iso) {
+  return new Date(iso + "T00:00:00").toLocaleDateString("es-ES", { month: "short" }).replace(".", "");
+}
+function pctTxt(r) {
+  return `${Math.round(Math.abs(r) * 100)} %`;
+}
+// ▲/▼ con texto: el color nunca va solo. En gastos, bajar es bueno.
+function deltaHTML(r, bajarEsBueno = true) {
+  if (r == null || !Number.isFinite(r)) return "";
+  if (Math.abs(r) < 0.05) return `<span class="an-delta igual">≈ igual</span>`;
+  const sube = r > 0;
+  return `<span class="an-delta ${sube === bajarEsBueno ? "mal" : "bien"}">${sube ? "▲" : "▼"} ${pctTxt(r)} ${sube ? "más" : "menos"}</span>`;
+}
+
+function anDiagnosticoHTML(a, period) {
+  const altura = a.parcial ? " a esta altura" : "";
+  const comp = a.prom.n && a.prom.gastosCorte > 0
+    ? `<p class="an-comp">${deltaHTML((a.actual.gastos - a.prom.gastosCorte) / a.prom.gastosCorte)} que tu promedio${altura} (${bsC(a.prom.gastosCorte)}, últimos ${a.prom.n} ${a.prom.n === 1 ? "mes" : "meses"})</p>`
+    : `<p class="an-comp">Cuando tengas un mes anterior con movimientos, aquí verás si gastas más o menos que antes.</p>`;
+  const tasa = a.tasaAhorro;
+  const tasaTxt = tasa == null ? "—" : `${tasa < 0 ? "−" : ""}${pctTxt(tasa)}`;
+  const tasaSub = tasa == null ? "sin ingresos en este periodo"
+    : tasa < 0 ? "gastaste más de lo que entró" : "de lo que entró";
+  const tasaProm = a.prom.tasaAhorro != null ? `<span class="an-kpi-prom">Promedio: ${a.prom.tasaAhorro < 0 ? "−" : ""}${pctTxt(a.prom.tasaAhorro)}</span>` : "";
+  const diaProm = a.prom.n ? `<span class="an-kpi-prom">Promedio: ${bsC(a.prom.porDia)}</span>` : "";
+  const racha = a.racha >= 2 ? `<span class="an-kpi-prom">Racha actual: ${a.racha} días</span>` : "";
+  return `
+    <div class="vg-label">Gastado · ${periodLabel(period)}</div>
+    <div class="vg-big an-num">${bsC(a.actual.gastos)}</div>
+    ${comp}
+    <div class="an-kpis">
+      <div class="an-kpi"><span class="an-kpi-t">Ahorro</span><strong class="an-num${tasa != null && tasa < 0 ? " neg" : ""}">${tasaTxt}</strong><span class="an-kpi-sub">${tasaSub}</span>${tasaProm}</div>
+      <div class="an-kpi"><span class="an-kpi-t">Por día</span><strong class="an-num">${bsC(a.porDia)}</strong><span class="an-kpi-sub">en ${a.corte} ${a.corte === 1 ? "día" : "días"}</span>${diaProm}</div>
+      <div class="an-kpi"><span class="an-kpi-t">Días sin gastar</span><strong class="an-num">${a.sinGastar}</strong><span class="an-kpi-sub">de ${a.corte} ${a.corte === 1 ? "día" : "días"}</span>${racha}</div>
+    </div>`;
+}
+
+const HALLAZGO_ICONO = { sube: "▲", baja: "▼", hormiga: "•", info: "i" };
+function anHallazgosHTML(a) {
+  const lista = FA.hallazgos(a, nombreCatGasto, bsC, umbralHormigaCent());
+  return `<h2 class="an-titulo" id="an-hallazgos-t">Lo que encontramos</h2>
+    ${lista.length ? `<ul class="an-hallazgos">${lista.map(h => `
+      <li class="an-hallazgo ${h.tipo}"><span class="an-hallazgo-ic" aria-hidden="true">${HALLAZGO_ICONO[h.tipo] || "i"}</span><span>${escapeHtml(h.texto)}</span></li>`).join("")}</ul>`
+      : `<p class="an-vacio">Por ahora nada fuera de lo normal. Con más movimientos aparecerán comparaciones aquí.</p>`}`;
+}
+
+function anTendenciaHTML(a) {
+  const t = a.tendencia;
+  const max = Math.max(1, ...t.map(p => Math.max(p.ingresos, p.gastos)));
+  const sel = analisisCol != null && analisisCol < t.length ? analisisCol : t.length - 1;
+  const alto = v => (v > 0 ? Math.max(2, v / max * 100) : 0).toFixed(1);
+  const p = t[sel];
+  const neto = p.ingresos - p.gastos;
+  const nombre = capitalize(new Date(p.desde + "T00:00:00").toLocaleDateString("es-ES", { month: "long", year: "numeric" }));
+  const conIngreso = t.slice(0, -1).filter(x => x.ingresos > 0 || x.gastos > 0);
+  const promNeto = conIngreso.length ? conIngreso.reduce((s, x) => s + x.ingresos - x.gastos, 0) / conIngreso.length : null;
+  return `<h2 class="an-titulo" id="an-tendencia-t">Últimos 6 meses</h2>
+    <div class="vg-legend an-leyenda"><span><i class="an-ing"></i>Ingresos</span><span><i class="an-gas"></i>Gastos</span></div>
+    <p class="an-detalle" aria-live="polite"><strong>${nombre}${sel === t.length - 1 && a.parcial ? " (en curso)" : ""}:</strong>
+      entró ${bsC(p.ingresos)}, salió ${bsC(p.gastos)} · ${neto >= 0 ? `quedó ${bsC(neto)}` : `faltaron ${bsC(-neto)}`}</p>
+    <div class="an-barras">${t.map((x, i) => `
+      <button type="button" class="an-col${i === sel ? " sel" : ""}" data-an-col="${i}" aria-pressed="${i === sel}"
+        aria-label="${escapeHtml(mesCorto(x.desde))}: ingresos ${bsC(x.ingresos)}, gastos ${bsC(x.gastos)}">
+        <span class="an-par"><span class="an-bar an-ing" style="height:${alto(x.ingresos)}%"></span><span class="an-bar an-gas" style="height:${alto(x.gastos)}%"></span></span>
+        <span class="an-col-mes">${escapeHtml(mesCorto(x.desde))}</span>
+      </button>`).join("")}</div>
+    ${promNeto != null ? `<p class="an-pie">En los meses anteriores te quedó en promedio <strong class="an-num">${promNeto < 0 ? "−" : ""}${bsC(Math.abs(promNeto))}</strong> al mes.</p>` : ""}`;
+}
+
+function anCambiosHTML(a) {
+  const head = `<h2 class="an-titulo" id="an-cambios-t">Qué cambió</h2>`;
+  if (!a.prom.n) return `${head}<p class="an-vacio">Necesitas al menos un mes anterior con movimientos para comparar.</p>`;
+  const filas = a.cambios.filter(c => Math.abs(c.dif) >= 100).slice(0, 6);
+  const sub = `<p class="an-sub">Por categoría, contra tu promedio de ${a.prom.n === 1 ? "el mes anterior" : `los últimos ${a.prom.n} meses`}${a.parcial ? " a esta altura" : ""}.</p>`;
+  if (!filas.length) return `${head}${sub}<p class="an-vacio">Gastas casi igual que siempre en cada categoría.</p>`;
+  const max = Math.max(...filas.map(c => Math.abs(c.dif)));
+  return `${head}${sub}<div class="an-cambios">${filas.map(c => {
+    const cat = findCategory("gasto", c.id);
+    const w = (Math.abs(c.dif) / max * 100).toFixed(1);
+    const sube = c.dif > 0;
+    return `<button type="button" class="an-cambio" data-cat-detail="${escapeHtml(c.id)}" data-cat-type="gasto"
+        aria-label="${escapeHtml(cat.label)}: ${sube ? "subió" : "bajó"} ${bsC(Math.abs(c.dif))}, ahora ${bsC(c.ahora)}, antes ${bsC(c.antes)}">
+      <span class="an-cambio-nom">${txnIconHTML(cat)}<span>${escapeHtml(cat.label)}</span></span>
+      <span class="an-div" aria-hidden="true"><span class="an-div-lado neg">${!sube ? `<i style="width:${w}%"></i>` : ""}</span><span class="an-div-lado pos">${sube ? `<i style="width:${w}%"></i>` : ""}</span></span>
+      <span class="an-cambio-val ${sube ? "mal" : "bien"}">${sube ? "+" : "−"}${bsC(Math.abs(c.dif))}</span>
+    </button>`;
+  }).join("")}</div>
+  <div class="an-div-ejes" aria-hidden="true"><span>▼ Gastaste menos</span><span>Gastaste más ▲</span></div>`;
+}
+
+const DIAS_LUNES = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábados", "domingos"];
+function anSemanaHTML(a) {
+  const head = `<h2 class="an-titulo" id="an-semana-t">Tu semana</h2>`;
+  const max = Math.max(...a.semana);
+  if (!(max > 0)) return `${head}<p class="an-vacio">Todavía no hay gastos para ver en qué días gastas más.</p>`;
+  const top = a.semana.indexOf(max);
+  const sel = analisisDia != null ? analisisDia : top;
+  return `${head}
+    <p class="an-detalle" aria-live="polite">${sel === top ? "Gastas más los" : "Los"} <strong>${DIAS_LUNES[sel]}</strong>: ${bsC(a.semana[sel])} en promedio.</p>
+    <div class="an-barras an-semana">${a.semana.map((v, i) => `
+      <button type="button" class="an-col${i === sel ? " sel" : ""}${i === top ? " top" : ""}" data-an-dia="${i}" aria-pressed="${i === sel}" aria-label="${capitalize(DIAS_LUNES[i])}: ${bsC(v)} en promedio">
+        <span class="an-par"><span class="an-bar an-gas" style="height:${(v > 0 ? Math.max(2, v / max * 100) : 0).toFixed(1)}%"></span></span>
+        <span class="an-col-mes">${DIAS_LUNES[i].slice(0, 2)}</span>
+      </button>`).join("")}</div>
+    <p class="an-pie">Promedio por día, con este periodo y los meses anteriores.</p>`;
+}
+
+function anHormigaHTML(a) {
+  const h = a.hormiga;
+  const head = `<h2 class="an-titulo" id="an-hormiga-t">Gastos hormiga</h2>
+    <p class="an-sub">Gastos de hasta ${bsC(umbralHormigaCent())}. Puedes cambiar el límite en <a href="#fin-ajustes">Ajustes</a>.</p>`;
+  if (!h.n) return `${head}<p class="an-vacio">Ningún gasto pequeño en este periodo.</p>`;
+  const pct = a.actual.gastos > 0 ? h.total / a.actual.gastos : 0;
+  return `${head}
+    <div class="an-fila-big"><span class="vg-big an-num">${bsC(h.total)}</span><span class="an-kpi-sub">${h.n} ${h.n === 1 ? "gasto" : "gastos"} · ${pctTxt(pct)} de lo gastado</span></div>
+    <p class="an-detalle">A este ritmo serían <strong class="an-num">${bsC(h.anual)}</strong> en un año.</p>
+    <div class="an-chips">${h.cats.slice(0, 4).map(c => `<span class="an-chip">${escapeHtml(nombreCatGasto(c.id))} · ${bsC(c.total)}</span>`).join("")}</div>`;
+}
+
+function anMayoresHTML(a) {
+  const head = `<h2 class="an-titulo" id="an-mayores-t">Tus gastos más grandes</h2>`;
+  if (!a.mayores.length) return `${head}<p class="an-vacio">Sin gastos en este periodo.</p>`;
+  return `${head}<div class="an-lista">${a.mayores.map(m => {
+    const cat = findCategory("gasto", m.category);
+    const pct = a.actual.gastos > 0 ? m.montoCent / a.actual.gastos : 0;
+    return `<button type="button" class="an-item" data-an-txn="${escapeHtml(m.id)}">
+      ${txnIconHTML(cat)}
+      <span class="an-item-txt"><span class="an-item-nom">${escapeHtml(m.desc || cat.label)}</span><span class="an-item-sub">${escapeHtml(cat.label)} · ${fechaCorta(m.date)}</span></span>
+      <span class="an-item-val"><span class="an-num">${bsExacto(m.montoCent)}</span><span class="an-item-sub">${pctTxt(pct)}</span></span>
+    </button>`;
+  }).join("")}</div>`;
+}
+
+function enDias(fecha) {
+  const n = Math.round((new Date(fecha + "T12:00:00") - new Date(isoDate(new Date()) + "T12:00:00")) / 86400000);
+  return n <= 0 ? "Hoy" : n === 1 ? "Mañana" : `En ${n} días`;
+}
+function anProximosHTML() {
+  const hoy = isoDate(new Date());
+  const lista = FD.proximosRecurrentes(recurrentes, financeCache, hoy, 30)
+    .map(p => ({ fecha: p.fecha, nombre: p.rec.nombre, cent: p.rec.montoCent || 0, ingreso: p.rec.type === "ingreso" }));
+  const t = FD.saldos(financeCache);
+  if (t.deuda > 0) {
+    const { date } = nextCardPayDate();
+    const f = isoDate(date);
+    if (f > hoy) lista.push({ fecha: f, nombre: "Pago de la tarjeta", cent: t.deuda, ingreso: false, tarjeta: true });
+  }
+  lista.sort((x, y) => x.fecha.localeCompare(y.fecha));
+  const head = `<h2 class="an-titulo" id="an-proximos-t">Próximos 30 días</h2>`;
+  if (!lista.length) return `${head}<p class="an-vacio">No hay pagos programados. <a href="#fin-recurrentes">Configura tus pagos recurrentes</a> (alquiler, servicios, suscripciones) para verlos venir.</p>`;
+  const salen = lista.filter(x => !x.ingreso).reduce((s, x) => s + x.cent, 0);
+  const entran = lista.filter(x => x.ingreso).reduce((s, x) => s + x.cent, 0);
+  const libre = t.saldo + entran - salen;
+  return `${head}
+    <div class="an-fila-big"><span class="vg-big an-num">${bsC(salen)}</span><span class="an-kpi-sub">por pagar${entran ? ` · entran ${bsC(entran)}` : ""}</span></div>
+    <p class="an-detalle">${libre >= 0
+      ? `Con Efectivo y Débito (${bsC(t.saldo)})${entran ? " y lo que entra" : ""} te alcanza: sobrarían ${bsC(libre)}.`
+      : `Con Efectivo y Débito (${bsC(t.saldo)})${entran ? " y lo que entra" : ""} te faltarían <strong class="an-num">${bsC(-libre)}</strong>.`}</p>
+    <div class="an-lista">${lista.slice(0, 6).map(x => `
+      <div class="an-item">
+        <span class="an-fecha"><strong>${Number(x.fecha.slice(8))}</strong>${escapeHtml(mesCorto(x.fecha))}</span>
+        <span class="an-item-txt"><span class="an-item-nom">${escapeHtml(x.nombre)}</span><span class="an-item-sub">${x.tarjeta ? "Deuda actual de la tarjeta" : enDias(x.fecha)}</span></span>
+        <span class="an-item-val an-num${x.ingreso ? " bien" : ""}">${x.ingreso ? "+" : ""}${bsExacto(x.cent)}</span>
+      </div>`).join("")}</div>
+    ${lista.length > 6 ? `<p class="an-pie">Y ${lista.length - 6} más.</p>` : ""}`;
+}
+
+function anSaludHTML(a) {
+  const head = `<h2 class="an-titulo" id="an-salud-t">Tu colchón</h2>`;
+  const t = FD.saldos(financeCache);
+  const tco = tcoData && tcoData.ultimo && tcoData.ultimo.tco;
+  let colchon = t.saldo - t.deuda;
+  let sinTco = false;
+  const usd = FD.sumaCent(ahorrosCache, x => x.amount);
+  if (usd) { if (tco) colchon += Math.round(usd * tco); else sinTco = true; }
+  carterasCustomCache.forEach(w => {
+    const cent = FD.aCentavos(customWalletBalance(w.id));
+    if (w.moneda === "US$") { if (tco) colchon += Math.round(cent * tco); else sinTco = true; } else colchon += cent;
+  });
+  const gastoMes = a.prom.n ? a.prom.gastos : 0;
+  const meses = FA.mesesCubiertos(colchon, gastoMes);
+  let bloqueMeses;
+  if (meses == null) {
+    bloqueMeses = `<p class="an-vacio">Con un mes completo de gastos podrás ver cuántos meses te cubren tus ahorros.</p>`;
+  } else {
+    const estado = meses < 1 ? "Muy justo" : meses < 3 ? "Vas armando tu colchón" : meses < 6 ? "Buen colchón" : "Colchón sólido";
+    const fmt = meses.toLocaleString("es-BO", { maximumFractionDigits: 1 });
+    bloqueMeses = `
+      <div class="an-fila-big"><span class="vg-big an-num">${fmt} ${meses >= 0.95 && meses < 1.05 ? "mes" : "meses"}</span><span class="an-kpi-sub">${estado}</span></div>
+      <div class="an-meta" role="img" aria-label="${fmt} de 6 meses recomendados"><span style="width:${Math.min(meses / 6, 1) * 100}%"></span><i style="left:50%"></i></div>
+      <div class="an-meta-ejes" aria-hidden="true"><span>0</span><span>3 meses</span><span>6 meses</span></div>
+      <p class="an-detalle">Podrías vivir ${fmt} ${meses >= 0.95 && meses < 1.05 ? "mes" : "meses"} con lo que tienes (${bsC(colchon)} entre carteras y ahorro, menos la tarjeta), gastando tu promedio de ${bsC(gastoMes)} al mes. Lo recomendado: de 3 a 6 meses.${sinTco ? " Sin tipo de cambio todavía, lo que tienes en US$ no se suma." : ""}</p>`;
+  }
+  const ingresoMes = a.prom.ingresos || a.actual.ingresos;
+  const horas = FA.horasDeTrabajo(a.actual.gastos, ingresoMes, horasMes());
+  let bloqueHoras = "";
+  if (horas != null && a.actual.gastos > 0) {
+    const porHora = ingresoMes / horasMes();
+    const topCat = Object.keys(a.actual.porCat).sort((x, y) => a.actual.porCat[y] - a.actual.porCat[x])[0];
+    const hTop = topCat ? a.actual.porCat[topCat] / porHora : 0;
+    const hTxt = n => n.toLocaleString("es-BO", { maximumFractionDigits: n < 10 ? 1 : 0 });
+    bloqueHoras = `
+      <h3 class="an-subtitulo">En horas de trabajo</h3>
+      <div class="an-fila-big"><span class="vg-big an-num">${hTxt(horas)} h</span><span class="an-kpi-sub">≈ ${hTxt(horas / 8)} días de 8 h</span></div>
+      <p class="an-detalle">Tu hora vale unos ${bsC(porHora)} (tu ingreso de ${bsC(ingresoMes)} al mes ÷ ${horasMes()} h).${topCat ? ` Solo en ${escapeHtml(nombreCatGasto(topCat))} se fueron ${hTxt(hTop)} h.` : ""} Cambia las horas en <a href="#fin-ajustes">Ajustes</a>.</p>`;
+  }
+  return head + bloqueMeses + bloqueHoras;
+}
+
+function renderAnalisis() {
+  const cont = document.getElementById("fin-tab-gasto");
+  if (!cont) return;
+  const period = currentBudgetPeriod();
+  const periodos = [0, 1, 2, 3, 4, 5].map(k => budgetPeriodAt(monthOffset - k));
+  const a = FA.analizar(financeCache, periodos.map(p => ({ desde: p.startISO, hasta: p.endISO })), isoDate(new Date()), { umbralHormigaCent: umbralHormigaCent() });
+  const poner = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  poner("an-diagnostico", anDiagnosticoHTML(a, period));
+  poner("an-hallazgos", anHallazgosHTML(a));
+  poner("an-tendencia", anTendenciaHTML(a));
+  poner("an-cambios", anCambiosHTML(a));
+  poner("an-semana", anSemanaHTML(a));
+  poner("an-hormiga", anHormigaHTML(a));
+  poner("an-mayores", anMayoresHTML(a));
+  poner("an-proximos", anProximosHTML());
+  poner("an-salud", anSaludHTML(a));
+  renderIcons(cont);
+}
+
+document.getElementById("fin-tab-gasto").addEventListener("click", e => {
+  const col = e.target.closest("[data-an-col]");
+  if (col) { analisisCol = Number(col.dataset.anCol); renderAnalisis(); return; }
+  const dia = e.target.closest("[data-an-dia]");
+  if (dia) { analisisDia = Number(dia.dataset.anDia); renderAnalisis(); return; }
+  const cat = e.target.closest(".an-cambio[data-cat-detail]");
+  if (cat) { openCategoryDetail("gasto", cat.dataset.catDetail); return; }
+  const txn = e.target.closest("[data-an-txn]");
+  if (txn) { const m = financeCache.find(x => x.id === txn.dataset.anTxn); if (m) openTxnSheet(m); }
 });
 
 (function wireTxnSearch() {
@@ -2790,7 +3040,7 @@ function appDialog({ title, message = "", input = null, confirmLabel = "Aceptar"
 // ================= Tarjeta de crédito: se paga el total el 29 de cada mes =================
 // (en meses más cortos, el último día).
 // Ajustes editables (meta/finanzas_ajustes), con sus valores de siempre.
-const AJUSTES_DEFECTO = { diaPagoTarjeta: 29, reivaPct: 5, ultimoRespaldoArchivo: null };
+const AJUSTES_DEFECTO = { diaPagoTarjeta: 29, reivaPct: 5, horasMes: 160, umbralHormiga: 25, ultimoRespaldoArchivo: null };
 let ajustes = Object.assign({}, AJUSTES_DEFECTO);
 let ajustesCargados = false;
 const diaPagoTarjeta = () => Math.min(31, Math.max(1, Math.round(Number(ajustes.diaPagoTarjeta) || AJUSTES_DEFECTO.diaPagoTarjeta)));
@@ -3797,6 +4047,13 @@ function renderAjustes() {
         <span class="fin-aj-pct"><input type="number" id="fin-aj-reiva" inputmode="decimal" min="0" max="100" step="0.5" value="${(reivaTasa() * 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}" aria-label="Porcentaje de reintegro RE-IVA"><span>%</span></span></label>
     </section>
     <section class="fin-aj-bloque">
+      <h2>Análisis</h2>
+      <label class="fin-aj-fila fin-aj-campo"><span><span class="fin-aj-t">Horas de trabajo al mes</span><span class="fin-aj-sub">Para ver tus gastos en horas de trabajo</span></span>
+        <span class="fin-aj-pct"><input type="number" id="fin-aj-horas" inputmode="numeric" min="1" max="744" step="1" value="${horasMes()}" aria-label="Horas de trabajo al mes"><span>h</span></span></label>
+      <label class="fin-aj-fila fin-aj-campo"><span><span class="fin-aj-t">Gasto hormiga</span><span class="fin-aj-sub">Gastos pequeños de hasta este monto</span></span>
+        <span class="fin-aj-pct"><span>Bs</span><input type="number" id="fin-aj-hormiga" inputmode="decimal" min="1" step="1" value="${FD.aBs(umbralHormigaCent()).toLocaleString("en-US", { maximumFractionDigits: 2 })}" aria-label="Límite de gasto hormiga en bolivianos"></span></label>
+    </section>
+    <section class="fin-aj-bloque">
       <h2>Copias de seguridad</h2>
       <p class="fin-aj-texto">${ult ? `Último respaldo en archivo: <strong>${hace(ult)}</strong> (${fechaLarga(ult)}).` : "Todavía no guardaste un respaldo en archivo."} Guarda todos tus movimientos, carteras, categorías, presupuesto y ajustes. Al importar solo se agrega lo que falta: nunca se borra ni se cambia nada.</p>
       <div class="fin-aj-botones">
@@ -4028,6 +4285,16 @@ document.addEventListener("click", e => {
 document.getElementById("fin-importar-archivo").addEventListener("change", e => importarJson(e.target.files && e.target.files[0]));
 document.getElementById("fin-ajustes").addEventListener("change", e => {
   if (e.target.id === "fin-aj-dia-pago") guardarAjustes({ diaPagoTarjeta: Number(e.target.value) });
+  if (e.target.id === "fin-aj-horas") {
+    const v = Math.round(Number(e.target.value));
+    if (v >= 1 && v <= 744) guardarAjustes({ horasMes: v });
+    else { e.target.value = String(horasMes()); avisoFin("Escribe un número de horas entre 1 y 744."); }
+  }
+  if (e.target.id === "fin-aj-hormiga") {
+    const v = Number(String(e.target.value).replace(",", "."));
+    if (Number.isFinite(v) && v > 0) guardarAjustes({ umbralHormiga: FD.aBs(FD.aCentavos(v)) });
+    else { e.target.value = String(FD.aBs(umbralHormigaCent())); avisoFin("Escribe un monto mayor que cero."); }
+  }
   if (e.target.id === "fin-aj-reiva") {
     const v = Number(String(e.target.value).replace(",", "."));
     if (Number.isFinite(v) && v >= 0 && v <= 100) guardarAjustes({ reivaPct: v });
@@ -4037,7 +4304,7 @@ document.getElementById("fin-ajustes").addEventListener("change", e => {
 
 // ---- Cambiar de periodo deslizando a los lados ----
 (function deslizarPeriodo() {
-  const IGNORAR = ".txn-swipe, .fin-carteras, .vg-chart-wrap, .txn-chips, .txn-filtros-activos, input, select, textarea, .fin-pendientes, .gasto-ring";
+  const IGNORAR = ".txn-swipe, .fin-carteras, .vg-chart-wrap, .txn-chips, .txn-filtros-activos, input, select, textarea, .fin-pendientes, .gasto-ring, .an-barras";
   ["panel-fin-movimientos", "panel-fin-analisis", "panel-fin-presupuesto"].forEach(id => {
     const panel = document.getElementById(id);
     if (!panel) return;
@@ -4269,7 +4536,7 @@ document.querySelectorAll("[data-budget-tab]").forEach(btn => {
 // Cada parte se dibuja por separado: si una falla (por ejemplo, por un dato
 // viejo con un formato raro), las demás siguen apareciendo.
 const RENDERERS = [
-  renderStats, updateMonthLabel, renderMovements, renderGasto, renderVistaGeneral,
+  renderStats, updateMonthLabel, renderMovements, renderGasto, renderAnalisis, renderVistaGeneral,
   updateBudgetMonthLabel, renderBudgets, renderBudgetInputs, renderBudgetSummary, renderBudgetInfo,
   renderCategoryGroups, renderPeriodSettings, renderWallets, updateExportSummary, renderReiva, renderEstadoDatos,
   renderAjustes, renderRecordatorio, renderDemoBanner, renderPerfil, renderPendientes, renderRecurrentes
