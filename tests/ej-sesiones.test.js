@@ -46,3 +46,22 @@ test("por semana: de lunes a domingo, semanas vacías incluidas", () => {
   assert.equal(todo[0].desde, "2026-09-14");
   assert.equal(S.porMes(todo).length, 1); // cada semana cuenta en el mes de su lunes
 });
+
+test("récords: mejor peso por ejercicio, mayor volumen, más reps y sesión más larga", () => {
+  const posts = [
+    { fecha: "2026-09-29", rutina: "Pierna", duracionMin: 70, volumen: 9000, ejercicios: [{ nombre: "Hip thrust", sets: [{ kg: 100, reps: 6 }, { kg: 120, reps: 3, calentamiento: true }] }] },
+    { fecha: "2026-10-02", rutina: "Glúteos", duracionMin: 55, volumen: 6400, ejercicios: [
+      { nombre: "Hip thrust", sets: [{ kg: 100, reps: 8 }, { kg: 90, reps: 10 }] },
+      { nombre: "Dominadas", sets: [{ reps: 12 }] }
+    ] }
+  ];
+  const r = S.records(posts);
+  assert.equal(r.sesiones, 2);
+  assert.equal(r.volumenTotal, 15400);
+  assert.deepEqual(r.mayorVolumen, { valor: 9000, fecha: "2026-09-29", rutina: "Pierna" });
+  assert.equal(r.masReps.valor, 30);
+  assert.equal(r.masLarga.valor, 70);
+  const ht = r.ejercicios.find(x => x.nombre === "Hip thrust");
+  assert.deepEqual([ht.kg, ht.reps, ht.fecha, ht.veces], [100, 8, "2026-10-02", 2]); // el calentamiento no cuenta
+  assert.equal(r.ejercicios[r.ejercicios.length - 1].nombre, "Dominadas");
+});

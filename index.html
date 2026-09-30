@@ -17,7 +17,7 @@
   <!-- Fuentes guardadas en el repo: la app no depende de internet para verse bien -->
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
-  <link rel="stylesheet" href="css/style.css?v=202610020100">
+  <link rel="stylesheet" href="css/style.css?v=202610020200">
   <link rel="stylesheet" href="css/finanzas.css?v=202610011900">
   <link rel="stylesheet" href="css/habitos.css?v=202610010600">
 </head>
@@ -220,7 +220,7 @@
           <!-- ===== Ejercicio: Feed ===== -->
           <section id="panel-ej-feed" hidden>
             <h1 class="page-title">Feed</h1>
-            <p class="ejf-aviso">Por ahora ves tus sesiones. Pronto también las de los demás.</p>
+            <p class="ejf-aviso" id="ejf-aviso" role="status" hidden></p>
             <div class="ejf-lista" id="ejf-lista"></div>
             <p class="empty-state" id="ejf-vacio" hidden>Cuando termines un entrenamiento, aparecerá aquí.</p>
           </section>
@@ -239,6 +239,7 @@
               <div class="ejf-lista" id="ejp-historial"></div>
               <p class="empty-state" id="ejp-historial-vacio" hidden>Aún no registras entrenamientos.</p>
             </section>
+            <section class="ejp-compartir" id="ejp-compartir" aria-label="Compartir en el Feed"></section>
             <details class="ejp-ajustes">
               <summary>Ajustes y datos <small>Tu cuerpo, pesajes, mapa muscular y respaldo</small></summary>
             <div class="ej-ajustes pf-perfil">
@@ -898,10 +899,23 @@
         <h3 id="ejs-titulo">Entrenamiento</h3>
       </div>
       <div class="ejs-cuerpo" id="ejs-cuerpo"></div>
-      <div class="ejs-acciones">
+      <section class="ejs-social" id="ejs-social" aria-label="Me gusta y comentarios" hidden></section>
+      <div class="ejs-acciones" id="ejs-acciones">
         <button type="button" class="ejs-btn" id="ejs-editar"><span data-icon="edit"></span>Editar</button>
         <button type="button" class="ejs-btn is-peligro" id="ejs-borrar"><span data-icon="trash"></span>Eliminar</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Ejercicio: récords de un usuario -->
+  <div id="eju-hoja" class="js-sheet budget-sheet eju-hoja" hidden>
+    <div class="budget-sheet-overlay"></div>
+    <div class="budget-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="eju-titulo">
+      <div class="budget-sheet-header">
+        <button type="button" class="budget-sheet-close" id="eju-cerrar" aria-label="Cerrar"><span data-icon="close"></span></button>
+        <h3 id="eju-titulo">Récords</h3>
+      </div>
+      <div class="eju-cuerpo" id="eju-cuerpo"></div>
     </div>
   </div>
 
@@ -1015,7 +1029,7 @@
   <script defer src="js/auth.js?v=202609232200"></script>
   <script defer src="js/saludo.js?v=202610012000"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
-  <script defer src="js/icons.js?v=202610020100"></script>
+  <script defer src="js/icons.js?v=202610020200"></script>
   <script defer src="js/modules.js?v=202610020100"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
@@ -1023,9 +1037,10 @@
   <script defer src="js/body-figures.js?v=202609301200"></script>
   <script defer src="js/ejercicio-datos.js?v=202609301400"></script>
   <script defer src="js/exercise-picker.js?v=202609294"></script>
-  <script defer src="js/gimnasio.js?v=202610020100"></script>
-  <script defer src="js/ej-sesiones.js?v=202610020100"></script>
-  <script defer src="js/ej-vistas.js?v=202610020100"></script>
+  <script defer src="js/gimnasio.js?v=202610020200"></script>
+  <script defer src="js/ej-sesiones.js?v=202610020200"></script>
+  <script defer src="js/ej-vistas.js?v=202610020200"></script>
+  <script defer src="js/ej-social.js?v=202610020200"></script>
   <script defer src="js/body-map.js?v=202609301300"></script>
   <script defer src="js/muscle-radar.js?v=202609292"></script>
   <script defer src="js/ejercicio-ajustes.js?v=202609293"></script>

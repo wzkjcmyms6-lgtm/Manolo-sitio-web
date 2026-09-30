@@ -186,9 +186,12 @@ const oyentesHistorial = [];
 function avisarHistorial() {
   oyentesHistorial.forEach(cb => { try { cb(historyCache); } catch (e) { console.error(e); } });
 }
+const oyentesBorrado = [];
 function borrarEntrenamiento(w) {
   if (!confirm("¿Eliminar este entrenamiento? El mapa y el radar se recalculan al instante.")) return false;
   entrenamientosCollection().doc(w.id).delete();
+  // El Feed quita también su publicación (js/ej-social.js).
+  oyentesBorrado.forEach(cb => { try { cb(w); } catch (e) { console.error(e); } });
   return true;
 }
 
@@ -490,7 +493,11 @@ document.getElementById("gym-active-finish").addEventListener("click", () => {
 
   if (activeWorkout.editingId) {
     if (!exercises.length) {
-      if (confirm("El entrenamiento quedó vacío. ¿Eliminarlo?")) entrenamientosCollection().doc(activeWorkout.editingId).delete();
+      if (confirm("El entrenamiento quedó vacío. ¿Eliminarlo?")) {
+        const id = activeWorkout.editingId;
+        entrenamientosCollection().doc(id).delete();
+        oyentesBorrado.forEach(cb => { try { cb({ id }); } catch (e) { console.error(e); } });
+      }
       else return;
     } else {
       entrenamientosCollection().doc(activeWorkout.editingId).update({
@@ -564,6 +571,7 @@ window.Gimnasio = {
     if (location.hash !== "#gimnasio") location.hash = "#gimnasio";
     editWorkout(w);
   },
-  borrar: borrarEntrenamiento
+  borrar: borrarEntrenamiento,
+  alBorrar(cb) { oyentesBorrado.push(cb); }
 };
 })();

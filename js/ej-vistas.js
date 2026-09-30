@@ -1,22 +1,26 @@
-// Ejercicio → Feed y Perfil.
-// - Feed: una tarjeta por sesión terminada (usuario, fecha, rutina, tiempo,
-//   volumen, series, reps y ejercicios con su mejor serie). Por ahora con tus
-//   sesiones; en la fase 2 se suman las de los demás.
+// Ejercicio → tarjetas de sesión, detalle y Perfil.
+// - Tarjeta de sesión (Feed y Perfil): usuario, fecha, rutina, tiempo,
+//   volumen, series, reps y ejercicios con su mejor serie; en el Feed
+//   compartido, también likes y comentarios (ver js/ej-social.js).
+// - Detalle al tocar una sesión: todas las series; Editar y Eliminar solo en
+//   las tuyas.
 // - Perfil: gráfico semanal de duración, volumen o reps (4 semanas,
-//   12 semanas o todo) y tu historial. Tocar una sesión abre su detalle,
-//   con Editar y Eliminar.
+//   12 semanas o todo) y tu historial.
 // Los entrenamientos llegan desde gimnasio.js (window.Gimnasio). Solo se
 // dibuja la pantalla que se está viendo.
 (function () {
 const ES = EjSesiones;
 let historial = [];
-let resumenes = new Map(); // id → resumen (se recalcula al cambiar el historial)
-let sucio = { feed: true, perfil: true };
+let resumenes = new Map(); // id de entreno → resumen
+let sucioPerfil = true;
 let rango = "4";        // "4" | "12" | "todo"
 let metrica = "volumen"; // "duracion" | "volumen" | "reps"
 let barraElegida = null;
 let historialVisibles = 10;
-let detalleId = null;
+let detalle = null;      // sesión abierta en la hoja
+const registro = new Map(); // clave → sesión dibujada (para abrirla al tocar)
+const oyentesDetalle = [];
+const oyentesHistorial = [];
 
 const $ = id => document.getElementById(id);
 function escapeHtml(str) {
@@ -45,7 +49,7 @@ function duracionTxt(min) {
 function volTxt(v) {
   return `${numero(v, v >= 1000 ? 0 : 1)} kg`;
 }
-function resumenDe(w) {
+function resumenEntreno(w) {
   let r = resumenes.get(w.id);
   if (!r) { r = ES.resumen(w, Gimnasio.volumen(w)); resumenes.set(w.id, r); }
   return r;
@@ -53,6 +57,15 @@ function resumenDe(w) {
 function ordenadas() {
   return historial.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.startedAt || 0) - (a.startedAt || 0));
 }
+
+// Una sesión para dibujar, venga de tu historial o del Feed compartido.
+function sesionDeEntreno(w) {
+  return {
+    clave: "e:" + w.id, entrenoId: w.id, propio: true, uid: currentUser && currentUser.uid, usuario: nombreUsuario(),
+    fecha: w.date, rutina: w.name || "Entrenamiento", ejercicios: w.exercises || [], r: resumenEntreno(w)
+  };
+}
+
 function mejorSerieTxt(e) {
   if (e.minutos && !e.series) return `${numero(e.minutos, 0)} min`;
   const m = e.mejor;
@@ -66,42 +79,45 @@ function lineaEjercicio(e) {
   return `<li class="ejf-ej"><span class="ejf-ej-ic" aria-hidden="true"><span data-icon="exercise"></span></span>
     <span class="ejf-ej-txt"><span>${escapeHtml(que)} · ${escapeHtml(e.nombre)}</span>${mejor && e.series ? `<small>Mejor: ${escapeHtml(mejor)}</small>` : ""}</span></li>`;
 }
-
-// ---- Tarjeta de sesión (Feed y Perfil) ----
-function tarjetaHTML(w, opciones) {
-  const r = resumenDe(w);
-  const conUsuario = opciones && opciones.usuario;
-  const primeros = r.ejercicios.slice(0, 3);
-  const resto = r.ejercicios.length - primeros.length;
-  return `
-    <article class="ejf-card">
-      <button type="button" class="ejf-abrir" data-ej-ses="${escapeHtml(w.id)}" aria-label="Ver ${escapeHtml(w.name || "entrenamiento")} del ${escapeHtml(ES.fechaRelativa(w.date, hoy()).toLowerCase())}"></button>
-      ${conUsuario ? `<header class="ejf-head">
-        <span class="ejf-avatar" aria-hidden="true">${escapeHtml(conUsuario.charAt(0))}</span>
-        <span class="ejf-quien"><strong>${escapeHtml(conUsuario)}</strong><span>${escapeHtml(ES.fechaRelativa(w.date, hoy()))}</span></span>
-      </header>` : ""}
-      <h3 class="ejf-titulo">${escapeHtml(w.name || "Entrenamiento")}${conUsuario ? "" : `<span class="ejf-fecha">${escapeHtml(ES.fechaRelativa(w.date, hoy()))}</span>`}</h3>
-      <div class="ejf-stats">
-        <div><span>Tiempo</span><strong>${duracionTxt(r.duracionMin)}</strong></div>
-        <div><span>Volumen</span><strong>${volTxt(r.volumen)}</strong></div>
-        <div><span>Series</span><strong>${r.series}</strong></div>
-        <div><span>Reps</span><strong>${numero(r.reps, 0)}</strong></div>
-      </div>
-      <ul class="ejf-ejs">${primeros.map(lineaEjercicio).join("")}</ul>
-      ${resto > 0 ? `<p class="ejf-mas">Ver ${resto} ${resto === 1 ? "ejercicio" : "ejercicios"} más</p>` : ""}
-    </article>`;
+function statsHTML(r) {
+  return `<div class="ejf-stats">
+    <div><span>Tiempo</span><strong>${duracionTxt(r.duracionMin)}</strong></div>
+    <div><span>Volumen</span><strong>${volTxt(r.volumen)}</strong></div>
+    <div><span>Series</span><strong>${r.series}</strong></div>
+    <div><span>Reps</span><strong>${numero(r.reps, 0)}</strong></div>
+  </div>`;
 }
 
-// ---- Feed ----
-function renderFeed() {
-  const cont = $("ejf-lista");
-  if (!cont) return;
-  const lista = ordenadas();
-  $("ejf-vacio").hidden = lista.length > 0;
-  const nombre = nombreUsuario();
-  cont.innerHTML = lista.slice(0, 30).map(w => tarjetaHTML(w, { usuario: nombre })).join("");
-  renderIcons(cont);
-  sucio.feed = false;
+// ---- Tarjeta de sesión ----
+// opciones.usuario: mostrar quién (Feed). ses.social: likes y comentarios.
+function tarjetaHTML(ses, opciones) {
+  registro.set(ses.clave, ses);
+  const r = ses.r;
+  const conUsuario = opciones && opciones.usuario;
+  const cuando = ES.fechaRelativa(ses.fecha, hoy());
+  const primeros = r.ejercicios.slice(0, 3);
+  const resto = r.ejercicios.length - primeros.length;
+  const s = ses.social;
+  return `
+    <article class="ejf-card">
+      <button type="button" class="ejf-abrir" data-ej-abrir="${escapeHtml(ses.clave)}" aria-label="Ver ${escapeHtml(ses.rutina)}${conUsuario ? ` de ${escapeHtml(ses.usuario)}` : ""}, ${escapeHtml(cuando.toLowerCase())}"></button>
+      ${conUsuario ? `<header class="ejf-head">
+        <button type="button" class="ejf-quien-btn" data-ej-usuario="${escapeHtml(ses.uid || "")}" data-nombre="${escapeHtml(ses.usuario)}" aria-label="Ver récords de ${escapeHtml(ses.usuario)}">
+          <span class="ejf-avatar" aria-hidden="true">${escapeHtml((ses.usuario || "?").charAt(0))}</span>
+          <span class="ejf-quien"><strong>${escapeHtml(ses.usuario)}</strong><span>${escapeHtml(cuando)}</span></span>
+        </button>
+      </header>` : ""}
+      <h3 class="ejf-titulo">${escapeHtml(ses.rutina)}${conUsuario ? "" : `<span class="ejf-fecha">${escapeHtml(cuando)}</span>`}</h3>
+      ${statsHTML(r)}
+      <ul class="ejf-ejs">${primeros.map(lineaEjercicio).join("")}</ul>
+      ${resto > 0 ? `<p class="ejf-mas">Ver ${resto} ${resto === 1 ? "ejercicio" : "ejercicios"} más</p>` : ""}
+      ${s ? `<footer class="ejf-social">
+        <button type="button" class="ejf-accion${s.yoLike ? " is-on" : ""}" data-ej-like="${escapeHtml(s.postId)}" aria-pressed="${s.yoLike}" aria-label="${s.yoLike ? "Quitar me gusta" : "Me gusta"}${s.likes ? `, ${s.likes}` : ""}">
+          <span data-icon="${s.yoLike ? "likeOn" : "like"}"></span><span>${s.likes || ""}</span></button>
+        <button type="button" class="ejf-accion" data-ej-comentar="${escapeHtml(ses.clave)}" aria-label="Comentar${s.comentarios ? `, ${s.comentarios} comentarios` : ""}">
+          <span data-icon="comment"></span><span>${s.comentarios || ""}</span></button>
+      </footer>` : ""}
+    </article>`;
 }
 
 // ---- Perfil: gráfico semanal ----
@@ -113,7 +129,7 @@ const METRICAS = {
 function renderDashboard() {
   const el = $("ejd-dash");
   if (!el) return;
-  const semanas = ES.porSemana(historial, hoy(), rango === "todo" ? null : Number(rango), resumenDe);
+  const semanas = ES.porSemana(historial, hoy(), rango === "todo" ? null : Number(rango), resumenEntreno);
   const porMes = semanas.length > 26;
   const barras = porMes ? ES.porMes(semanas) : semanas;
   const tot = barras.reduce((a, b) => ({ duracion: a.duracion + b.duracion, volumen: a.volumen + b.volumen, reps: a.reps + b.reps, sesiones: a.sesiones + b.sesiones }), { duracion: 0, volumen: 0, reps: 0, sesiones: 0 });
@@ -149,14 +165,14 @@ function renderHistorialPerfil() {
   if (!cont) return;
   const lista = ordenadas();
   $("ejp-historial-vacio").hidden = lista.length > 0;
-  cont.innerHTML = lista.slice(0, historialVisibles).map(w => tarjetaHTML(w)).join("")
+  cont.innerHTML = lista.slice(0, historialVisibles).map(w => tarjetaHTML(sesionDeEntreno(w))).join("")
     + (lista.length > historialVisibles ? `<button type="button" class="ejp-ver-mas" data-ejp-mas>Ver ${Math.min(10, lista.length - historialVisibles)} más</button>` : "");
   renderIcons(cont);
 }
 function renderPerfil() {
   renderDashboard();
   renderHistorialPerfil();
-  sucio.perfil = false;
+  sucioPerfil = false;
 }
 
 // ---- Detalle de una sesión ----
@@ -169,37 +185,38 @@ function serieTxt(s, i) {
   if (seg > 0) partes.push(`${seg} s`);
   return `<li><span class="ejs-n">${s.calentamiento ? "C" : i}</span><span>${partes.join(" × ") || "—"}</span></li>`;
 }
-function abrirDetalle(id) {
-  const w = historial.find(x => x.id === id);
-  if (!w) return;
-  detalleId = id;
-  const r = resumenDe(w);
-  const f = new Date(w.date + "T00:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+function abrirDetalle(ses, opciones) {
+  detalle = ses;
+  const r = ses.r;
+  const f = new Date(ses.fecha + "T00:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const fecha = f.charAt(0).toUpperCase() + f.slice(1);
-  $("ejs-titulo").textContent = w.name || "Entrenamiento";
+  $("ejs-titulo").textContent = ses.rutina;
   $("ejs-cuerpo").innerHTML = `
-    <p class="ejs-fecha">${escapeHtml(fecha)}</p>
-    <div class="ejf-stats">
-      <div><span>Tiempo</span><strong>${duracionTxt(r.duracionMin)}</strong></div>
-      <div><span>Volumen</span><strong>${volTxt(r.volumen)}</strong></div>
-      <div><span>Series</span><strong>${r.series}</strong></div>
-      <div><span>Reps</span><strong>${numero(r.reps, 0)}</strong></div>
-    </div>
-    ${(w.exercises || []).map(ex => {
+    <p class="ejs-fecha">${ses.propio ? "" : `${escapeHtml(ses.usuario)} · `}${escapeHtml(fecha)}</p>
+    ${statsHTML(r)}
+    ${ses.ejercicios.map(ex => {
       let n = 0;
+      const sets = ex.sets || [];
       return `<section class="ejs-ej">
-        <h4>${escapeHtml(ex.name || "Ejercicio")}</h4>
-        ${ex.minutos && !(ex.sets || []).length ? `<p class="ejs-nota">${numero(ex.minutos, 0)} min</p>` : ""}
-        <ol class="ejs-series">${(ex.sets || []).map(s => serieTxt(s, s.calentamiento ? 0 : ++n)).join("")}</ol>
+        <h4>${escapeHtml(ex.name || ex.nombre || "Ejercicio")}</h4>
+        ${ex.minutos && !sets.length ? `<p class="ejs-nota">${numero(ex.minutos, 0)} min</p>` : ""}
+        <ol class="ejs-series">${sets.map(s => serieTxt(s, s.calentamiento ? 0 : ++n)).join("")}</ol>
         ${ex.rpe ? `<p class="ejs-nota">RPE ${escapeHtml(ex.rpe)}</p>` : ""}
         ${ex.notas ? `<p class="ejs-nota">${escapeHtml(ex.notas)}</p>` : ""}
       </section>`;
     }).join("")}`;
+  const editable = ses.propio && historial.some(w => w.id === ses.entrenoId);
+  $("ejs-acciones").hidden = !editable;
+  const social = $("ejs-social");
+  social.hidden = !ses.social;
+  social.innerHTML = "";
+  oyentesDetalle.forEach(cb => { try { cb(ses, social, opciones || {}); } catch (e) { console.error(e); } });
   const hoja = $("ejs-hoja");
   hoja.hidden = false;
   hoja.classList.remove("is-closing");
   document.body.classList.add("sheet-open");
-  $("ejs-cerrar").focus();
+  renderIcons(hoja);
+  if (!(opciones && opciones.comentar)) $("ejs-cerrar").focus();
 }
 function cerrarDetalle() {
   const hoja = $("ejs-hoja");
@@ -210,13 +227,16 @@ function cerrarDetalle() {
     hoja.classList.remove("is-closing");
     document.body.classList.toggle("sheet-open", !!document.querySelector(".js-sheet:not([hidden])"));
   }, 200);
-  detalleId = null;
+  detalle = null;
+  oyentesDetalle.forEach(cb => { try { cb(null); } catch (e) { console.error(e); } });
 }
 
 // ---- Eventos ----
 document.addEventListener("click", e => {
-  const ses = e.target.closest("[data-ej-ses]");
-  if (ses) { abrirDetalle(ses.dataset.ejSes); return; }
+  const ab = e.target.closest("[data-ej-abrir]");
+  if (ab) { const ses = registro.get(ab.dataset.ejAbrir); if (ses) abrirDetalle(ses); return; }
+  const com = e.target.closest("[data-ej-comentar]");
+  if (com) { const ses = registro.get(com.dataset.ejComentar); if (ses) abrirDetalle(ses, { comentar: true }); return; }
   const r = e.target.closest("[data-ejd-rango]");
   if (r) { rango = r.dataset.ejdRango; barraElegida = null; renderDashboard(); return; }
   const m = e.target.closest("[data-ejd-metrica]");
@@ -229,23 +249,21 @@ $("ejs-cerrar").addEventListener("click", cerrarDetalle);
 $("ejs-hoja").querySelector(".budget-sheet-overlay").addEventListener("click", cerrarDetalle);
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("ejs-hoja").hidden) cerrarDetalle(); });
 $("ejs-editar").addEventListener("click", () => {
-  const w = historial.find(x => x.id === detalleId);
+  const w = detalle && historial.find(x => x.id === detalle.entrenoId);
   cerrarDetalle();
   if (w) Gimnasio.editar(w);
 });
 $("ejs-borrar").addEventListener("click", () => {
-  const w = historial.find(x => x.id === detalleId);
+  const w = detalle && historial.find(x => x.id === detalle.entrenoId);
   if (w && Gimnasio.borrar(w)) cerrarDetalle();
 });
 
-// Solo se dibuja lo que se ve; lo demás queda marcado para cuando entres.
 function visible(id) {
   const p = $(id);
   return p && !p.hidden;
 }
 function dibujarVisibles() {
-  if (sucio.feed && visible("panel-ej-feed")) renderFeed();
-  if (sucio.perfil && visible("panel-ej-perfil")) renderPerfil();
+  if (sucioPerfil && visible("panel-ej-perfil")) renderPerfil();
 }
 window.addEventListener("hashchange", () => setTimeout(dibujarVisibles, 0));
 document.addEventListener("DOMContentLoaded", () => setTimeout(dibujarVisibles, 0));
@@ -253,8 +271,19 @@ document.addEventListener("DOMContentLoaded", () => setTimeout(dibujarVisibles, 
 Gimnasio.alCambiarHistorial(lista => {
   historial = lista || [];
   resumenes = new Map();
-  sucio = { feed: true, perfil: true };
+  sucioPerfil = true;
   dibujarVisibles();
-  if (detalleId && !historial.some(x => x.id === detalleId)) cerrarDetalle();
+  oyentesHistorial.forEach(cb => { try { cb(historial); } catch (e) { console.error(e); } });
+  if (detalle && detalle.propio && !historial.some(x => x.id === detalle.entrenoId)) cerrarDetalle();
 });
+
+// Para el Feed (js/ej-social.js).
+window.EjVistas = {
+  tarjetaHTML, abrirDetalle, cerrarDetalle, sesionDeEntreno, escapeHtml, numero, volTxt, duracionTxt, hoy, nombreUsuario, visible,
+  historial: () => historial,
+  ordenadas,
+  detalleAbierto: () => detalle,
+  alAbrirDetalle(cb) { oyentesDetalle.push(cb); },
+  alCambiarHistorial(cb) { oyentesHistorial.push(cb); cb(historial); }
+};
 })();

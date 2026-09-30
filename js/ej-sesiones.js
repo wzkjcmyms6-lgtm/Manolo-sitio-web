@@ -121,5 +121,47 @@ function etiquetaMes(mes) {
   return `${MESES[m - 1]} ${String(y).slice(2)}`;
 }
 
-return { resumen, fechaRelativa, lunesDe, porSemana, porMes, etiquetaSemana, etiquetaMes, seriesEfectivas };
+// ---- Feed compartido ----
+// Una publicación guarda: { fecha, rutina, duracionMin, volumen, series,
+// reps, ejercicios: [{ nombre, minutos, sets: [{kg, reps, seg, calentamiento}] }] }.
+function comoEntreno(p) {
+  return {
+    date: p.fecha, name: p.rutina, durationMin: p.duracionMin,
+    exercises: (p.ejercicios || []).map(e => ({ name: e.nombre, sets: e.sets || [], minutos: e.minutos }))
+  };
+}
+function resumenPost(p) {
+  return resumen(comoEntreno(p), p.volumen);
+}
+
+// Récords personales a partir de sus sesiones publicadas: mejor peso por
+// ejercicio (con más reps si empata), mayor volumen, más reps y la sesión
+// más larga.
+function records(posts) {
+  const porEj = {};
+  let mayorVolumen = null, masReps = null, masLarga = null, volumenTotal = 0;
+  const gana = (actual, valor, p) => (!actual || valor > actual.valor ? { valor, fecha: p.fecha, rutina: p.rutina } : actual);
+  (posts || []).forEach(p => {
+    const r = resumenPost(p);
+    volumenTotal += r.volumen;
+    if (r.volumen > 0) mayorVolumen = gana(mayorVolumen, r.volumen, p);
+    if (r.reps > 0) masReps = gana(masReps, r.reps, p);
+    if (r.duracionMin > 0) masLarga = gana(masLarga, r.duracionMin, p);
+    (p.ejercicios || []).forEach(e => {
+      const k = String(e.nombre || "").trim().toLowerCase();
+      if (!k) return;
+      const x = porEj[k] || (porEj[k] = { nombre: e.nombre, kg: 0, reps: 0, fecha: null, veces: 0 });
+      x.veces++;
+      (e.sets || []).forEach(s => {
+        if (s.calentamiento || !(num(s.reps) > 0)) return;
+        const kg = num(s.kg), reps = num(s.reps);
+        if (!x.fecha || kg > x.kg || (kg === x.kg && reps > x.reps)) Object.assign(x, { kg, reps, fecha: p.fecha });
+      });
+    });
+  });
+  const ejercicios = Object.values(porEj).filter(x => x.fecha).sort((a, b) => b.kg - a.kg || b.reps - a.reps || a.nombre.localeCompare(b.nombre));
+  return { sesiones: (posts || []).length, volumenTotal, mayorVolumen, masReps, masLarga, ejercicios };
+}
+
+return { resumen, resumenPost, comoEntreno, records, fechaRelativa, lunesDe, porSemana, porMes, etiquetaSemana, etiquetaMes, seriesEfectivas };
 });
