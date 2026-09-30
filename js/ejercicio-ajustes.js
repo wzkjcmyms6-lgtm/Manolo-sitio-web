@@ -205,7 +205,10 @@ function renderRespaldo(st) {
 }
 
 document.getElementById("aj-descargar").addEventListener("click", () => {
-  const blob = new Blob([JSON.stringify(respaldo(EjercicioDatos.estado), null, 2)], { type: "application/json" });
+  // El archivo también lleva tus rutinas y tu plan semanal.
+  const datos = respaldo(EjercicioDatos.estado);
+  if (window.RutinasUI) { datos.rutinas = RutinasUI.crudas(); datos.planSemanal = RutinasUI.plan(); }
+  const blob = new Blob([JSON.stringify(datos, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = `manolo-entrenos-${isoHoy()}.json`;

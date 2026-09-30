@@ -5,7 +5,6 @@
 // columnas cambian según el tipo: carga (KG × REPS), peso corporal
 // (+KG de lastre × REPS), isométrico (SEG) o cardio (minutos).
 
-let routinesCache = [];
 let historyCache = [];
 // { name, startedAt, date, editingId, durationMin,
 //   exercises: [{ name, exerciseId, tipo, sets: [{kg, reps, seg}], rpe, notas, minutos }] }
@@ -100,77 +99,8 @@ function computePRs(exercises, excluirId) {
 }
 
 /* ---------- Rutinas ---------- */
-
-function renderRoutines() {
-  const container = document.getElementById("gym-routines");
-  const empty = document.getElementById("gym-routines-empty");
-  container.innerHTML = "";
-  empty.hidden = routinesCache.length > 0;
-
-  routinesCache.forEach(r => {
-    const card = document.createElement("div");
-    card.className = "routine-card";
-    card.innerHTML = `
-      <div class="routine-card-head">
-        <h3>${escapeHtml(r.name)}</h3>
-        <button type="button" class="delete" aria-label="Eliminar rutina">${ICONS.trash}</button>
-      </div>
-      <p class="routine-exercises-preview">${r.exercises.map(escapeHtml).join(", ")}</p>
-      <button type="button" class="start-routine-btn">Empezar rutina</button>
-    `;
-    card.querySelector(".delete").addEventListener("click", () => rutinasCollection().doc(r.id).delete());
-    card.querySelector(".start-routine-btn").addEventListener("click", () => startWorkout(r.name, r.exercises));
-    container.appendChild(card);
-  });
-}
-
-function addRoutineExerciseRow(value = "") {
-  const rows = document.getElementById("gym-routine-exercise-rows");
-  const row = document.createElement("div");
-  row.className = "routine-exercise-row";
-  row.innerHTML = `
-    <input type="text" class="routine-exercise-input" placeholder="Ejercicio" value="${escapeHtml(value)}">
-    <button type="button" class="delete-row" aria-label="Quitar">${ICONS.close}</button>
-  `;
-  row.querySelector(".delete-row").addEventListener("click", () => row.remove());
-  const input = row.querySelector("input");
-  ExercisePicker.adjuntar(input, {
-    alElegir: f => { input.value = f.nombre; },
-    alCrear: nombre => ExerciseCreator.abrir({ nombre, alGuardar: f => { input.value = f.nombre; } })
-  });
-  rows.appendChild(row);
-}
-
-function resetRoutineForm() {
-  const form = document.getElementById("gym-routine-form");
-  form.reset();
-  document.getElementById("gym-routine-exercise-rows").innerHTML = "";
-  form.hidden = true;
-}
-
-document.getElementById("gym-routine-new-toggle").addEventListener("click", () => {
-  const form = document.getElementById("gym-routine-form");
-  form.hidden = !form.hidden;
-  if (!form.hidden && !document.getElementById("gym-routine-exercise-rows").children.length) {
-    addRoutineExerciseRow();
-    addRoutineExerciseRow();
-  }
-});
-
-document.getElementById("gym-routine-add-row").addEventListener("click", () => addRoutineExerciseRow());
-document.getElementById("gym-routine-cancel").addEventListener("click", () => resetRoutineForm());
-
-document.getElementById("gym-routine-form").addEventListener("submit", e => {
-  e.preventDefault();
-  const name = document.getElementById("gym-routine-name").value.trim();
-  const exercises = Array.from(document.querySelectorAll(".routine-exercise-input"))
-    .map(i => i.value.trim())
-    .filter(Boolean);
-  if (!name || !exercises.length) return;
-
-  rutinasCollection().add({ name, exercises });
-  resetRoutineForm();
-});
+// Las rutinas (crear, editar, duplicar, ordenar, plan semanal) están en
+// js/rutinas-ui.js; aquí solo se empieza un entrenamiento a partir de una.
 
 /* ---------- Historial ---------- */
 
@@ -210,6 +140,8 @@ function abrirEditor() {
   document.getElementById("gym-active").hidden = false;
   renderActiveExercises();
   if (editando) stopTimer(); else startTimer();
+  guardarBorrador();
+  pintarEnCurso();
 }
 
 function startWorkout(name, exerciseNames) {
@@ -221,6 +153,31 @@ function startWorkout(name, exerciseNames) {
     exercises: (exerciseNames || []).map(n => nuevoEjercicio(EjercicioDatos.resolver(n), n))
   };
   abrirEditor();
+}
+
+// Empieza una rutina: cada ejercicio con sus series listas y su objetivo
+// (reps, peso, descanso y notas de la rutina) a la vista.
+function empezarRutina(r) {
+  activeWorkout = {
+    name: r.name || "Entrenamiento",
+    rutinaId: r.id || null,
+    startedAt: Date.now(),
+    date: isoHoy(),
+    editingId: null,
+    exercises: (r.items || []).map(it => {
+      const ficha = EjercicioDatos.resolver(it.nombre, it.exerciseId);
+      const ex = nuevoEjercicio(ficha, it.nombre);
+      if (ex.tipo !== "cardio") {
+        // "pre": serie precargada con el peso objetivo; si no la tocas, no se guarda.
+        const vacia = ex.tipo === "isometrico" ? { seg: "" } : { kg: it.peso != null ? it.peso : "", reps: "", pre: true };
+        ex.sets = Array.from({ length: it.series }, () => Object.assign({}, vacia));
+      }
+      ex.objetivo = { series: it.series, repsMin: it.repsMin, repsMax: it.repsMax, peso: it.peso, descansoSeg: it.descansoSeg, notas: it.notas, incremento: it.incremento };
+      return ex;
+    })
+  };
+  abrirEditor();
+  if (location.hash !== "#gimnasio") location.hash = "#gimnasio";
 }
 
 function editWorkout(w) {
@@ -252,9 +209,46 @@ function editWorkout(w) {
   window.scrollTo({ top: document.getElementById("panel-gimnasio").offsetTop - 60, behavior: "smooth" });
 }
 
+// ---- Borrador: el entrenamiento en curso se guarda en el teléfono ----
+// Si cierras la app (o se recarga) a mitad de un entreno, al volver sigue
+// donde estaba, con el cronómetro corriendo desde que empezaste.
+const BORRADOR_MAX_MS = 36 * 3600000;
+let borradorTimer = null;
+function claveBorrador() {
+  return "manolo.entreno.borrador." + (currentUser ? currentUser.uid : "");
+}
+function guardarBorrador() {
+  if (!activeWorkout || !currentUser) return;
+  clearTimeout(borradorTimer);
+  borradorTimer = setTimeout(() => {
+    if (!activeWorkout) return;
+    try { localStorage.setItem(claveBorrador(), JSON.stringify({ guardado: Date.now(), entreno: activeWorkout })); } catch (e) { /* sin espacio */ }
+  }, 300);
+}
+function borrarBorrador() {
+  clearTimeout(borradorTimer);
+  try { localStorage.removeItem(claveBorrador()); } catch (e) { /* sin almacenamiento */ }
+}
+function recuperarBorrador() {
+  let b = null;
+  try { b = JSON.parse(localStorage.getItem(claveBorrador()) || "null"); } catch (e) { b = null; }
+  if (!b || !b.entreno || Date.now() - (b.guardado || 0) > BORRADOR_MAX_MS) { borrarBorrador(); return; }
+  if (activeWorkout) return;
+  activeWorkout = b.entreno;
+  abrirEditor();
+}
+function pintarEnCurso() {
+  document.querySelectorAll("[data-gym-en-curso]").forEach(el => {
+    el.hidden = !activeWorkout || !!activeWorkout.editingId;
+    if (activeWorkout) el.querySelector("[data-gym-en-curso-nombre]").textContent = activeWorkout.name || "Entrenamiento";
+  });
+}
+
 function endWorkout() {
   stopTimer();
+  borrarBorrador();
   activeWorkout = null;
+  pintarEnCurso();
   document.getElementById("gym-active").hidden = true;
   document.getElementById("gym-home").hidden = false;
 }
@@ -296,6 +290,21 @@ function titulosColumnas(ex) {
   return col.titulos;
 }
 
+// Lo que se ve gris en la casilla vacía: el objetivo de la rutina.
+function pista(ex, campo) {
+  const o = ex.objetivo;
+  if (!o) return "0";
+  if (campo === "reps") return o.repsMin === o.repsMax ? String(o.repsMin) : `${o.repsMin}-${o.repsMax}`;
+  if (campo === "kg" && o.peso != null) return String(o.peso);
+  return "0";
+}
+function objetivoHTML(ex) {
+  const o = ex.objetivo;
+  if (!o) return "";
+  return `<p class="ex-objetivo"><span>Objetivo:</span> ${escapeHtml(EjRutinas.resumenItem(o))}</p>
+    ${o.notas ? `<p class="ex-objetivo-nota">${escapeHtml(o.notas)}</p>` : ""}`;
+}
+
 function tablaSeries(ex) {
   const col = COLUMNAS[ex.tipo] || COLUMNAS.carga;
   const una = col.campos.length === 1 ? " cols-1" : "";
@@ -308,7 +317,7 @@ function tablaSeries(ex) {
   const filas = ex.sets.map((set, setIndex) => `
     <div class="set-row${una}${set.calentamiento ? " is-warm" : ""}" data-set-index="${setIndex}">
       <button type="button" class="set-num${set.calentamiento ? " warm" : ""}" aria-label="Serie ${setIndex + 1}${set.calentamiento ? ", calentamiento" : ""}. Tocar para marcar o quitar calentamiento">${set.calentamiento ? "C" : ++n}</button>
-      ${col.campos.map(([campo, modo, paso]) => `<input type="number" class="set-${campo}" inputmode="${modo}" min="0" step="${paso}" placeholder="0" value="${escapeHtml(set[campo] != null ? set[campo] : "")}" aria-label="${campo} serie ${setIndex + 1}">`).join("")}
+      ${col.campos.map(([campo, modo, paso]) => `<input type="number" class="set-${campo}" inputmode="${modo}" min="0" step="${paso}" placeholder="${escapeHtml(pista(ex, campo))}" value="${escapeHtml(set[campo] != null ? set[campo] : "")}" aria-label="${campo} serie ${setIndex + 1}">`).join("")}
       <button type="button" class="delete-set" aria-label="Eliminar serie">${ICONS.close}</button>
     </div>`).join("");
   return `${modo}
@@ -343,6 +352,7 @@ function renderActiveExercises() {
         <div class="exercise-card-title">
           <h3>${escapeHtml(ex.name)}</h3>
           ${musculos}
+          ${objetivoHTML(ex)}
         </div>
         <button type="button" class="delete" aria-label="Eliminar ejercicio">${ICONS.trash}</button>
       </div>
@@ -359,6 +369,7 @@ function renderActiveExercises() {
     `;
     container.appendChild(card);
   });
+  guardarBorrador();
 }
 
 document.getElementById("gym-active-exercises").addEventListener("click", e => {
@@ -410,15 +421,17 @@ function onCampo(e) {
   if (!exCard) return;
   const ex = activeWorkout.exercises[Number(exCard.dataset.exIndex)];
   const t = e.target;
-  if (t.classList.contains("ex-rpe")) { ex.rpe = t.value ? Number(t.value) : ""; return; }
-  if (t.classList.contains("ex-notas")) { ex.notas = t.value; return; }
-  if (t.classList.contains("ex-min")) { ex.minutos = parseFloat(t.value) || ""; return; }
+  if (t.classList.contains("ex-rpe")) { ex.rpe = t.value ? Number(t.value) : ""; guardarBorrador(); return; }
+  if (t.classList.contains("ex-notas")) { ex.notas = t.value; guardarBorrador(); return; }
+  if (t.classList.contains("ex-min")) { ex.minutos = parseFloat(t.value) || ""; guardarBorrador(); return; }
   const setRow = t.closest(".set-row");
   if (!setRow || setRow.classList.contains("set-row-header")) return;
   const set = ex.sets[Number(setRow.dataset.setIndex)];
+  delete set.pre;
   if (t.classList.contains("set-kg")) set.kg = parseFloat(t.value) || 0;
   if (t.classList.contains("set-reps")) set.reps = parseInt(t.value, 10) || 0;
   if (t.classList.contains("set-seg")) set.seg = parseInt(t.value, 10) || 0;
+  guardarBorrador();
 }
 document.getElementById("gym-active-exercises").addEventListener("input", onCampo);
 document.getElementById("gym-active-exercises").addEventListener("change", onCampo);
@@ -441,12 +454,15 @@ document.getElementById("gym-active-add-exercise-form").addEventListener("submit
 
 document.getElementById("gym-active-name").addEventListener("input", e => {
   if (activeWorkout) activeWorkout.name = e.target.value;
+  guardarBorrador();
 });
 document.getElementById("gym-active-date").addEventListener("change", e => {
   if (activeWorkout && e.target.value) activeWorkout.date = e.target.value;
+  guardarBorrador();
 });
 document.getElementById("gym-active-duration").addEventListener("input", e => {
   if (activeWorkout) activeWorkout.durationMin = parseInt(e.target.value, 10) || "";
+  guardarBorrador();
 });
 
 document.getElementById("gym-start-empty").addEventListener("click", () => startWorkout("Entrenamiento", []));
@@ -471,7 +487,7 @@ function limpiarEjercicio(ex) {
   } else {
     const asistida = ex.tipo === "peso_corporal" && ex.asistencia;
     out.sets = ex.sets
-      .filter(s => (Number(s.reps) || 0) > 0 || (Number(s.kg) || 0) > 0)
+      .filter(s => (Number(s.reps) || 0) > 0 || (!s.pre && (Number(s.kg) || 0) > 0))
       .map(s => {
         const kg = Number(s.kg) || 0, reps = Number(s.reps) || 0;
         const serie = asistida ? { asistencia: kg, reps } : { kg, reps };
@@ -516,14 +532,14 @@ document.getElementById("gym-active-finish").addEventListener("click", () => {
     return;
   }
 
-  entrenamientosCollection().add({
+  entrenamientosCollection().add(Object.assign({
     date,
     name,
     startedAt: activeWorkout.startedAt,
     durationMin: Math.max(1, Math.round((Date.now() - activeWorkout.startedAt) / 60000)),
     exercises,
     prs: computePRs(exercises)
-  });
+  }, activeWorkout.rutinaId ? { rutinaId: activeWorkout.rutinaId } : {}));
   avisarGuardado(date);
 
   endWorkout();
@@ -537,10 +553,7 @@ document.getElementById("gym-active-discard").addEventListener("click", () => {
 /* ---------- Init ---------- */
 
 onAuthReady(() => {
-  rutinasCollection().onSnapshot(snap => {
-    routinesCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderRoutines();
-  });
+  recuperarBorrador();
   entrenamientosCollection().onSnapshot(snap => {
     historyCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     avisarHistorial();
@@ -572,6 +585,8 @@ window.Gimnasio = {
     editWorkout(w);
   },
   borrar: borrarEntrenamiento,
+  empezarRutina,
+  historial: () => historyCache,
   alBorrar(cb) { oyentesBorrado.push(cb); }
 };
 })();

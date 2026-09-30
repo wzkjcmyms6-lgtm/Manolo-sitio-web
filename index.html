@@ -17,7 +17,7 @@
   <!-- Fuentes guardadas en el repo: la app no depende de internet para verse bien -->
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
-  <link rel="stylesheet" href="css/style.css?v=202610020200">
+  <link rel="stylesheet" href="css/style.css?v=202610020300">
   <link rel="stylesheet" href="css/finanzas.css?v=202610011900">
   <link rel="stylesheet" href="css/habitos.css?v=202610010600">
 </head>
@@ -177,6 +177,7 @@
 
           <!-- ===== Ejercicio (hub) ===== -->
           <section id="panel-ejercicio" hidden>
+            <a class="gym-en-curso" href="#gimnasio" data-gym-en-curso hidden><span class="gym-en-curso-punto" aria-hidden="true"></span><span>Entrenamiento en curso: <strong data-gym-en-curso-nombre></strong></span><span class="gym-en-curso-ir">Continuar</span></a>
             <div class="card-grid card-grid-1">
               <a class="card card-centered" href="#gimnasio">
                 <span class="icon" data-icon="exercise"></span>
@@ -220,6 +221,7 @@
           <!-- ===== Ejercicio: Feed ===== -->
           <section id="panel-ej-feed" hidden>
             <h1 class="page-title">Feed</h1>
+            <a class="gym-en-curso" href="#gimnasio" data-gym-en-curso hidden><span class="gym-en-curso-punto" aria-hidden="true"></span><span>Entrenamiento en curso: <strong data-gym-en-curso-nombre></strong></span><span class="gym-en-curso-ir">Continuar</span></a>
             <p class="ejf-aviso" id="ejf-aviso" role="status" hidden></p>
             <div class="ejf-lista" id="ejf-lista"></div>
             <p class="empty-state" id="ejf-vacio" hidden>Cuando termines un entrenamiento, aparecerá aquí.</p>
@@ -300,23 +302,17 @@
                 <span class="icon-sm" data-icon="plus"></span> Empezar entrenamiento vacío
               </button>
 
+              <div class="rut-hoy" id="rut-hoy" hidden></div>
+
               <div class="gym-section-header">
                 <h2>Rutinas</h2>
-                <button type="button" class="link-btn" id="gym-routine-new-toggle">+ Nueva rutina</button>
+                <button type="button" class="link-btn" id="rut-nueva">+ Nueva rutina</button>
               </div>
 
-              <form id="gym-routine-form" class="routine-form" hidden>
-                <input type="text" id="gym-routine-name" placeholder="Nombre de la rutina (ej: Push)" required>
-                <div id="gym-routine-exercise-rows"></div>
-                <button type="button" class="link-btn" id="gym-routine-add-row">+ Agregar ejercicio</button>
-                <div class="routine-form-actions">
-                  <button type="submit">Guardar rutina</button>
-                  <button type="button" class="link-btn" id="gym-routine-cancel">Cancelar</button>
-                </div>
-              </form>
+              <div id="gym-routines" class="rut-lista"></div>
+              <p class="empty-state" id="gym-routines-empty" hidden>Aún no tienes rutinas. Crea una con «+ Nueva rutina».</p>
 
-              <div id="gym-routines"></div>
-              <p class="empty-state" id="gym-routines-empty" hidden>Aún no tienes rutinas guardadas.</p>
+              <section class="rut-plan" id="rut-plan" aria-labelledby="rut-plan-t"></section>
 
             </div>
 
@@ -907,6 +903,47 @@
     </div>
   </div>
 
+  <!-- Ejercicio: editor de rutina -->
+  <div id="rut-editor" class="js-sheet budget-sheet rut-editor" hidden>
+    <div class="budget-sheet-overlay"></div>
+    <div class="budget-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="rut-editor-t">
+      <div class="budget-sheet-header">
+        <button type="button" class="budget-sheet-close" id="rut-editor-cerrar" aria-label="Cerrar sin guardar"><span data-icon="close"></span></button>
+        <h3 id="rut-editor-t">Nueva rutina</h3>
+      </div>
+      <form class="rut-form" id="rut-form" novalidate>
+        <label class="rut-campo rut-nombre">Nombre de la rutina
+          <input type="text" id="rut-nombre" maxlength="80" placeholder="Ej: Push, Pierna, Full body" autocomplete="off">
+        </label>
+        <div id="rut-items" class="rut-items"></div>
+        <button type="button" class="rut-agregar" id="rut-agregar"><span data-icon="plus"></span>Agregar ejercicio</button>
+        <p class="rut-error" id="rut-error" role="alert" hidden></p>
+        <div class="rut-form-acciones">
+          <button type="button" class="ejs-btn" id="rut-cancelar">Cancelar</button>
+          <button type="submit" class="ejs-btn rut-guardar" id="rut-guardar">Guardar rutina</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Ejercicio: opciones de una rutina -->
+  <div id="rut-menu" class="js-sheet budget-sheet rut-menu" hidden>
+    <div class="budget-sheet-overlay"></div>
+    <div class="budget-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="rut-menu-t">
+      <div class="budget-sheet-header">
+        <button type="button" class="budget-sheet-close" id="rut-menu-cerrar" aria-label="Cerrar"><span data-icon="close"></span></button>
+        <h3 id="rut-menu-t">Rutina</h3>
+      </div>
+      <div class="rut-menu-lista">
+        <button type="button" data-rut-accion="editar"><span data-icon="edit"></span>Editar</button>
+        <button type="button" data-rut-accion="duplicar"><span data-icon="copy"></span>Duplicar</button>
+        <button type="button" data-rut-accion="subir"><span data-icon="chevronUp"></span>Mover arriba</button>
+        <button type="button" data-rut-accion="bajar"><span data-icon="chevronDown"></span>Mover abajo</button>
+        <button type="button" data-rut-accion="eliminar" class="is-peligro"><span data-icon="trash"></span>Eliminar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Ejercicio: récords de un usuario -->
   <div id="eju-hoja" class="js-sheet budget-sheet eju-hoja" hidden>
     <div class="budget-sheet-overlay"></div>
@@ -1029,7 +1066,7 @@
   <script defer src="js/auth.js?v=202609232200"></script>
   <script defer src="js/saludo.js?v=202610012000"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
-  <script defer src="js/icons.js?v=202610020200"></script>
+  <script defer src="js/icons.js?v=202610020300"></script>
   <script defer src="js/modules.js?v=202610020100"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
@@ -1037,13 +1074,15 @@
   <script defer src="js/body-figures.js?v=202609301200"></script>
   <script defer src="js/ejercicio-datos.js?v=202609301400"></script>
   <script defer src="js/exercise-picker.js?v=202609294"></script>
-  <script defer src="js/gimnasio.js?v=202610020200"></script>
+  <script defer src="js/rutinas.js?v=202610020300"></script>
+  <script defer src="js/gimnasio.js?v=202610020300"></script>
+  <script defer src="js/rutinas-ui.js?v=202610020300"></script>
   <script defer src="js/ej-sesiones.js?v=202610020200"></script>
   <script defer src="js/ej-vistas.js?v=202610020200"></script>
   <script defer src="js/ej-social.js?v=202610020200"></script>
   <script defer src="js/body-map.js?v=202609301300"></script>
   <script defer src="js/muscle-radar.js?v=202609292"></script>
-  <script defer src="js/ejercicio-ajustes.js?v=202609293"></script>
+  <script defer src="js/ejercicio-ajustes.js?v=202610020300"></script>
   <script defer src="js/rangos-config.js?v=202609301"></script>
   <script defer src="js/rangos-engine.js?v=202609301"></script>
   <script defer src="js/rangos-insignias.js?v=202609301500"></script>
