@@ -180,41 +180,16 @@ function resumenEjercicio(ex) {
   return `${n} ${n === 1 ? "serie" : "series"} ${ex.name}`;
 }
 
-function renderHistory() {
-  const list = historyCache.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.startedAt || 0) - (a.startedAt || 0));
-  const container = document.getElementById("gym-history");
-  const empty = document.getElementById("gym-history-empty");
-  container.innerHTML = "";
-  empty.hidden = list.length > 0;
-
-  list.forEach(w => {
-    const exSummary = (w.exercises || []).map(resumenEjercicio).join(" · ");
-    const card = document.createElement("div");
-    card.className = "workout-history-card";
-    card.innerHTML = `
-      <div class="workout-history-head">
-        <div>
-          <h3>${escapeHtml(w.name)}</h3>
-          <span class="meta">${formatDateEs(w.date)}</span>
-        </div>
-        <div class="workout-history-actions">
-          <button type="button" class="edit" aria-label="Editar entrenamiento">${ICONS.edit}</button>
-          <button type="button" class="delete" aria-label="Eliminar entrenamiento">${ICONS.trash}</button>
-        </div>
-      </div>
-      <div class="stat-row-mini">
-        <div><span class="v">${w.durationMin}min</span><span class="l">Tiempo</span></div>
-        <div><span class="v">${fmtKg(volumenEntreno(w))} kg</span><span class="l">Volumen</span></div>
-        <div><span class="v">${w.prs || 0} 🏅</span><span class="l">Récords</span></div>
-      </div>
-      <p class="workout-history-exercises">${escapeHtml(exSummary)}</p>
-    `;
-    card.querySelector(".delete").addEventListener("click", () => {
-      if (confirm("¿Eliminar este entrenamiento? El mapa y el radar se recalculan al instante.")) entrenamientosCollection().doc(w.id).delete();
-    });
-    card.querySelector(".edit").addEventListener("click", () => editWorkout(w));
-    container.appendChild(card);
-  });
+// El historial ya no se dibuja aquí: lo muestran Perfil (tus sesiones) y
+// Feed (ver js/ej-perfil.js y js/ej-feed.js). Se les avisa cada vez que cambia.
+const oyentesHistorial = [];
+function avisarHistorial() {
+  oyentesHistorial.forEach(cb => { try { cb(historyCache); } catch (e) { console.error(e); } });
+}
+function borrarEntrenamiento(w) {
+  if (!confirm("¿Eliminar este entrenamiento? El mapa y el radar se recalculan al instante.")) return false;
+  entrenamientosCollection().doc(w.id).delete();
+  return true;
 }
 
 /* ---------- Entrenamiento activo / edición ---------- */
@@ -561,14 +536,14 @@ onAuthReady(() => {
   });
   entrenamientosCollection().onSnapshot(snap => {
     historyCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderHistory();
+    avisarHistorial();
   });
 });
 
 // Cuando carga la base de ejercicios (o cambian los propios/asignaciones)
 // se recalculan los volúmenes del historial y los músculos del editor.
 EjercicioDatos.onCambio(() => {
-  renderHistory();
+  avisarHistorial();
   if (activeWorkout) {
     activeWorkout.exercises.forEach(ex => {
       if (ex.exerciseId) return;
@@ -579,4 +554,16 @@ EjercicioDatos.onCambio(() => {
     if (!enfocado) renderActiveExercises();
   }
 });
+
+// Lo que Perfil y Feed necesitan de aquí.
+window.Gimnasio = {
+  alCambiarHistorial(cb) { oyentesHistorial.push(cb); cb(historyCache); },
+  volumen: volumenEntreno,
+  resumenEjercicio,
+  editar(w) {
+    if (location.hash !== "#gimnasio") location.hash = "#gimnasio";
+    editWorkout(w);
+  },
+  borrar: borrarEntrenamiento
+};
 })();

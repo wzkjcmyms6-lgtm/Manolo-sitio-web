@@ -1491,3 +1491,80 @@ body.in-finanzas .topbar-ajustes span { width: 20px; height: 20px; display: flex
 .saludo-botones { display: flex; gap: 0.5rem; }
 .saludo-botones button { min-height: 44px; padding: 0.4rem 1rem; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-raised); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
 .saludo-botones button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+
+/* ===== Ejercicio: Feed y Perfil ===== */
+.ejf-aviso { color: var(--muted); font-size: 0.88rem; margin: -0.4rem 0 1rem; }
+.ejf-lista { display: flex; flex-direction: column; gap: 0.8rem; }
+.ejf-card { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 1rem 1.05rem 0.9rem; }
+.ejf-abrir { position: absolute; inset: 0; z-index: 1; width: 100%; border: 0; border-radius: inherit; background: transparent; cursor: pointer; }
+.ejf-abrir:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.ejf-abrir:active + * { opacity: 0.9; }
+.ejf-head { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.7rem; }
+.ejf-avatar { width: 42px; height: 42px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; color: #0a0a0a; background: var(--accent-grad); }
+.ejf-quien { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.ejf-quien strong { font-size: 0.98rem; }
+.ejf-quien span { color: var(--muted); font-size: 0.82rem; }
+.ejf-titulo { font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; margin: 0 0 0.6rem; display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
+.ejf-fecha { font-family: var(--font-body); font-size: 0.8rem; font-weight: 400; color: var(--muted); white-space: nowrap; }
+.ejf-stats { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 0.75fr) minmax(0, 0.75fr); gap: 0.4rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
+.ejf-stats div { display: flex; flex-direction: column; min-width: 0; }
+.ejf-stats span { color: var(--muted); font-size: 0.74rem; }
+.ejf-stats strong { font-size: 0.98rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ejf-ejs { list-style: none; margin: 0.6rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.ejf-ej { display: flex; align-items: center; gap: 0.7rem; }
+.ejf-ej-ic { width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 122, 48, 0.12); color: var(--accent-1); }
+.ejf-ej-ic [data-icon] { width: 18px; height: 18px; }
+.ejf-ej-txt { display: flex; flex-direction: column; min-width: 0; font-size: 0.92rem; line-height: 1.3; }
+.ejf-ej-txt small { color: var(--muted); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.ejf-mas { margin: 0.6rem 0 0; text-align: center; color: var(--muted); font-size: 0.86rem; }
+
+.ejd-dash { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 1rem 1rem 0.9rem; margin-bottom: 1.4rem; }
+.ejd-top { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+.ejd-titulo { font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; margin: 0; }
+.ejd-rango { margin: 0; }
+.ejd-rango .fin-tab { min-height: 36px; padding: 0.35rem 0.75rem; font-size: 0.82rem; }
+.ejd-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.45rem; margin-bottom: 0.7rem; }
+.ejd-kpi { display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem; min-width: 0; min-height: 56px; padding: 0.55rem 0.6rem; border-radius: 14px; border: 1px solid var(--border); background: var(--surface-raised); color: var(--ink); font: inherit; text-align: left; cursor: pointer; transition: border-color 180ms ease, background-color 180ms ease; }
+.ejd-kpi span { color: var(--muted); font-size: 0.74rem; }
+.ejd-kpi strong { font-size: 0.98rem; line-height: 1.2; font-variant-numeric: tabular-nums; max-width: 100%; }
+.ejd-kpi.sel { border-color: var(--accent-1); background: rgba(255, 122, 48, 0.1); }
+.ejd-kpi:focus-visible, .ejd-col:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.ejd-detalle { font-size: 0.88rem; margin: 0 0 0.5rem; min-height: 1.3em; }
+.ejd-barras { display: flex; align-items: stretch; gap: 3px; height: 150px; }
+.ejd-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; padding: 0.25rem 0 0; border: 0; border-radius: 8px; background: none; color: var(--muted); font: inherit; cursor: pointer; transition: background-color 180ms ease; }
+.ejd-col.sel { background: rgba(255, 255, 255, 0.06); color: var(--ink); }
+.ejd-par { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.ejd-bar { width: 70%; max-width: 26px; border-radius: 4px 4px 0 0; background: #77756f; transition: height 220ms ease; }
+.ejd-col.sel .ejd-bar { background: var(--accent-1); }
+.ejd-lbl { font-size: 0.66rem; white-space: nowrap; height: 1em; overflow: visible; }
+.ejd-pie { color: var(--muted); font-size: 0.8rem; margin: 0.6rem 0 0; }
+
+.ejp-hist { margin-bottom: 1.4rem; }
+.ejp-hist-t { font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; margin: 0 0 0.7rem; }
+.ejp-ver-mas { min-height: 44px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
+.ejp-ajustes { margin-bottom: 6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--surface); }
+.ejp-ajustes > summary { list-style: none; cursor: pointer; padding: 1rem 1.1rem; min-height: 44px; font-weight: 700; display: flex; flex-direction: column; gap: 0.15rem; }
+.ejp-ajustes > summary::-webkit-details-marker { display: none; }
+.ejp-ajustes > summary small { font-weight: 400; color: var(--muted); font-size: 0.8rem; }
+.ejp-ajustes > summary::after { content: "Mostrar ▾"; font-size: 0.8rem; font-weight: 600; color: var(--accent-2); }
+.ejp-ajustes[open] > summary::after { content: "Ocultar ▴"; }
+.ejp-ajustes > .ej-ajustes { margin: 0 0.6rem 0.8rem; }
+
+.ejs-cuerpo { padding: 0 1.1rem; }
+.ejs-fecha { color: var(--muted); font-size: 0.88rem; margin: -0.4rem 0 0.8rem; text-align: center; }
+.ejs-ej { padding: 0.8rem 0; border-bottom: 1px solid var(--border); }
+.ejs-ej h4 { margin: 0 0 0.4rem; font-size: 0.98rem; }
+.ejs-series { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.25rem; font-variant-numeric: tabular-nums; font-size: 0.9rem; }
+.ejs-series li { display: flex; gap: 0.7rem; align-items: center; }
+.ejs-n { width: 24px; height: 24px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; font-size: 0.75rem; font-weight: 700; background: var(--surface-raised); color: var(--muted); }
+.ejs-nota { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.85rem; }
+.ejs-acciones { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; padding: 1rem 1.1rem 0.4rem; }
+.ejs-btn { display: flex; align-items: center; justify-content: center; gap: 0.45rem; min-height: 48px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
+.ejs-btn [data-icon] { width: 18px; height: 18px; }
+.ejs-btn.is-peligro { color: var(--danger); }
+@media (max-width: 360px) {
+  .ejf-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 0.5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ejd-kpi, .ejd-col, .ejd-bar { transition: none; }
+}

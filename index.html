@@ -17,7 +17,7 @@
   <!-- Fuentes guardadas en el repo: la app no depende de internet para verse bien -->
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
-  <link rel="stylesheet" href="css/style.css?v=202610012000">
+  <link rel="stylesheet" href="css/style.css?v=202610020100">
   <link rel="stylesheet" href="css/finanzas.css?v=202610011900">
   <link rel="stylesheet" href="css/habitos.css?v=202610010600">
 </head>
@@ -125,7 +125,7 @@
                 <h3>Hábitos</h3>
                 <p id="hb-inicio">Registra y sigue tus hábitos diarios.</p>
               </a>
-              <a class="card" href="#ejercicio">
+              <a class="card" href="#ej-feed">
                 <span class="icon" data-icon="exercise"></span>
                 <h3>Ejercicio</h3>
                 <p>Lleva el control de tus entrenamientos.</p>
@@ -217,6 +217,14 @@
 
           </section>
 
+          <!-- ===== Ejercicio: Feed ===== -->
+          <section id="panel-ej-feed" hidden>
+            <h1 class="page-title">Feed</h1>
+            <p class="ejf-aviso">Por ahora ves tus sesiones. Pronto también las de los demás.</p>
+            <div class="ejf-lista" id="ejf-lista"></div>
+            <p class="empty-state" id="ejf-vacio" hidden>Cuando termines un entrenamiento, aparecerá aquí.</p>
+          </section>
+
           <!-- ===== Ejercicio: Rangos ===== -->
           <section id="panel-ej-rangos" hidden>
             <div id="rk-app" class="rk"></div>
@@ -225,6 +233,14 @@
           <!-- ===== Ejercicio: Perfil ===== -->
           <section id="panel-ej-perfil" hidden>
             <h1 class="page-title">Perfil</h1>
+            <section class="ejd-dash" id="ejd-dash" aria-labelledby="ejd-titulo"></section>
+            <section class="ejp-hist" aria-labelledby="ejp-hist-t">
+              <h2 class="ejp-hist-t" id="ejp-hist-t">Tus sesiones</h2>
+              <div class="ejf-lista" id="ejp-historial"></div>
+              <p class="empty-state" id="ejp-historial-vacio" hidden>Aún no registras entrenamientos.</p>
+            </section>
+            <details class="ejp-ajustes">
+              <summary>Ajustes y datos <small>Tu cuerpo, pesajes, mapa muscular y respaldo</small></summary>
             <div class="ej-ajustes pf-perfil">
               <h2>Tu cuerpo</h2>
               <p class="ej-texto">Tus rangos se ajustan a tu peso: para cada entreno se usa tu último pesaje de ese día o anterior. La altura se guarda, pero no cambia el cálculo.</p>
@@ -270,6 +286,7 @@
               <p class="ej-texto" id="aj-respaldo-info"></p>
               <button type="button" class="ej-chip" id="aj-descargar"><span class="icon-sm" data-icon="download"></span> Descargar respaldo (JSON)</button>
             </div>
+            </details>
           </section>
 
           <!-- ===== Gimnasio ===== -->
@@ -300,9 +317,6 @@
               <div id="gym-routines"></div>
               <p class="empty-state" id="gym-routines-empty" hidden>Aún no tienes rutinas guardadas.</p>
 
-              <h2 class="gym-history-title">Historial</h2>
-              <div id="gym-history"></div>
-              <p class="empty-state" id="gym-history-empty" hidden>Aún no registras entrenamientos.</p>
             </div>
 
             <div id="gym-active" hidden>
@@ -875,7 +889,23 @@
     </div>
   </div>
 
-<!-- Hoja para cargar un monto del presupuesto (como Buddy) -->
+<!-- Ejercicio: detalle de una sesión -->
+  <div id="ejs-hoja" class="js-sheet budget-sheet ejs-hoja" hidden>
+    <div class="budget-sheet-overlay"></div>
+    <div class="budget-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="ejs-titulo">
+      <div class="budget-sheet-header">
+        <button type="button" class="budget-sheet-close" id="ejs-cerrar" aria-label="Cerrar"><span data-icon="close"></span></button>
+        <h3 id="ejs-titulo">Entrenamiento</h3>
+      </div>
+      <div class="ejs-cuerpo" id="ejs-cuerpo"></div>
+      <div class="ejs-acciones">
+        <button type="button" class="ejs-btn" id="ejs-editar"><span data-icon="edit"></span>Editar</button>
+        <button type="button" class="ejs-btn is-peligro" id="ejs-borrar"><span data-icon="trash"></span>Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hoja para cargar un monto del presupuesto (como Buddy) -->
   <div id="budget-sheet" class="js-sheet budget-sheet" hidden>
     <div class="budget-sheet-overlay"></div>
     <div class="budget-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="budget-sheet-title">
@@ -985,15 +1015,17 @@
   <script defer src="js/auth.js?v=202609232200"></script>
   <script defer src="js/saludo.js?v=202610012000"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
-  <script defer src="js/icons.js?v=202610011600"></script>
-  <script defer src="js/modules.js?v=202610011400"></script>
+  <script defer src="js/icons.js?v=202610020100"></script>
+  <script defer src="js/modules.js?v=202610020100"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
   <script defer src="js/exercise-search.js?v=202609291"></script>
   <script defer src="js/body-figures.js?v=202609301200"></script>
   <script defer src="js/ejercicio-datos.js?v=202609301400"></script>
   <script defer src="js/exercise-picker.js?v=202609294"></script>
-  <script defer src="js/gimnasio.js?v=202610010200"></script>
+  <script defer src="js/gimnasio.js?v=202610020100"></script>
+  <script defer src="js/ej-sesiones.js?v=202610020100"></script>
+  <script defer src="js/ej-vistas.js?v=202610020100"></script>
   <script defer src="js/body-map.js?v=202609301300"></script>
   <script defer src="js/muscle-radar.js?v=202609292"></script>
   <script defer src="js/ejercicio-ajustes.js?v=202609293"></script>

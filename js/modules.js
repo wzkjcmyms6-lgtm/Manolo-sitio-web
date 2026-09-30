@@ -9,7 +9,7 @@
 const MODULES = [
   { hash: "inicio", label: "Inicio", icon: "home" },
   { hash: "habitos", label: "Hábitos", icon: "habits" },
-  { hash: "ejercicio", label: "Ejercicio", icon: "exercise" },
+  { hash: "ejercicio", label: "Ejercicio", icon: "exercise", entrada: "ej-feed" },
   { hash: "finanzas", label: "Finanzas", icon: "finance" },
   { hash: "inversiones", label: "Inversiones", icon: "investing" }
 ];
@@ -22,6 +22,7 @@ const SUB_PANELS = [
   { hash: "hab-stats", parent: "habitos" },
   { hash: "hab-logros", parent: "habitos" },
   { hash: "gimnasio", parent: "ejercicio" },
+  { hash: "ej-feed", parent: "ejercicio" },
   { hash: "ej-rangos", parent: "ejercicio" },
   { hash: "ej-perfil", parent: "ejercicio" },
   { hash: "running", parent: "inicio" },
@@ -51,8 +52,9 @@ const FIN_TABS = [
   { hash: "fin-analisis", label: "Análisis", icon: "chart", color: "#5cc98a" }
 ];
 const EJ_TABS = [
-  { hash: "ej-rangos", label: "Rangos", icon: "trophy", color: "#4da3ff" },
+  { hash: "ej-feed", label: "Feed", icon: "feed", color: "#4da3ff" },
   { hash: "ejercicio", label: "Entrenamiento", icon: "exercise", color: "#4da3ff" },
+  { hash: "ej-rangos", label: "Rangos", icon: "trophy", color: "#4da3ff" },
   { hash: "ej-perfil", label: "Perfil", icon: "user", color: "#4da3ff" }
 ];
 const HAB_TABS = [
@@ -151,7 +153,8 @@ function renderNav() {
 
   const linkHTML = (m, iconClass, activeHash) => {
     const isActive = m.hash === activeHash;
-    return `<a href="#${m.hash}" data-nav-link data-hash="${m.hash}"${isActive ? ' class="active"' : ""}>` +
+    // Algunos módulos abren en otra pestaña (Ejercicio abre en Feed).
+    return `<a href="#${m.entrada || m.hash}" data-nav-link data-hash="${m.hash}"${isActive ? ' class="active"' : ""}>` +
       `<span class="${iconClass}" data-icon="${m.icon}"></span>${m.label}</a>`;
   };
 
