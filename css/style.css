@@ -678,6 +678,7 @@ h1.page-title { margin-top: 0; font-size: 1.9rem; }
 
 .card-grid.card-grid-3 { grid-template-columns: repeat(3, 1fr); }
 .card-grid.card-grid-1 { grid-template-columns: 1fr; }
+.card.card-centered { text-align: center; }
 /* Inicio tiene 6 tarjetas: 3 + 3 en escritorio; en el celular vale la grilla de 2 columnas. */
 @media (min-width: 769px) { .card-grid.card-grid-home { grid-template-columns: repeat(3, 1fr); } }
 
