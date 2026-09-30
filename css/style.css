@@ -676,6 +676,8 @@ h1.page-title { margin-top: 0; font-size: 1.9rem; }
 .panel-sub { color: var(--muted); }
 
 .card-grid.card-grid-3 { grid-template-columns: repeat(3, 1fr); }
+/* Inicio tiene 6 tarjetas: 3 + 3 en escritorio; en el celular vale la grilla de 2 columnas. */
+@media (min-width: 769px) { .card-grid.card-grid-home { grid-template-columns: repeat(3, 1fr); } }
 
 /* ---------- Back link (sub-paneles de Ejercicio) ---------- */
 .back-link {
