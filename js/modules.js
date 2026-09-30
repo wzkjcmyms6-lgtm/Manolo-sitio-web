@@ -27,15 +27,17 @@ const SUB_PANELS = [
   { hash: "running", parent: "inicio" },
   { hash: "bicicleta", parent: "inicio" },
   { hash: "fin-presupuesto", parent: "finanzas" },
-  { hash: "fin-herramientas", parent: "finanzas" },
-  { hash: "fin-herramientas-carteras", parent: "fin-herramientas" },
+  { hash: "fin-movimientos", parent: "finanzas" },
+  { hash: "fin-analisis", parent: "finanzas" },
+  { hash: "fin-ajustes", parent: "finanzas" },
+  { hash: "fin-herramientas", parent: "fin-ajustes" },
+  { hash: "fin-herramientas-carteras", parent: "fin-ajustes" },
   { hash: "fin-herramientas-carteras-detalle", parent: "fin-herramientas-carteras" },
-  { hash: "fin-herramientas-categorias", parent: "fin-herramientas" },
-  { hash: "fin-herramientas-periodo", parent: "fin-herramientas" },
-  { hash: "fin-herramientas-reiva", parent: "fin-herramientas" },
-  { hash: "fin-herramientas-exportar", parent: "fin-herramientas" },
-  { hash: "fin-ajustes", parent: "fin-herramientas" },
-  { hash: "fin-recurrentes", parent: "fin-herramientas" }
+  { hash: "fin-herramientas-categorias", parent: "fin-ajustes" },
+  { hash: "fin-herramientas-periodo", parent: "fin-ajustes" },
+  { hash: "fin-herramientas-reiva", parent: "fin-ajustes" },
+  { hash: "fin-herramientas-exportar", parent: "fin-ajustes" },
+  { hash: "fin-recurrentes", parent: "fin-ajustes" }
 ];
 
 // Mientras estás dentro de Hábitos, Finanzas o Ejercicio, la barra inferior (solo en
@@ -43,9 +45,10 @@ const SUB_PANELS = [
 // generales y muestra las pestañas propias del módulo. Para volver a Inicio
 // la barra de arriba muestra una casita.
 const FIN_TABS = [
-  { hash: "finanzas", label: "Vista general", icon: "finEye", color: "#ff6b7a" },
+  { hash: "finanzas", label: "Resumen", icon: "finEye", color: "#ff6b7a" },
+  { hash: "fin-movimientos", label: "Movimientos", icon: "finList", color: "#ffb84d" },
   { hash: "fin-presupuesto", label: "Presupuesto", icon: "finBudget", color: "#3d8bff" },
-  { hash: "fin-herramientas", label: "Herramientas", icon: "finTools", color: "#ff6b7a" }
+  { hash: "fin-analisis", label: "Análisis", icon: "chart", color: "#5cc98a" }
 ];
 const EJ_TABS = [
   { hash: "ej-rangos", label: "Rangos", icon: "trophy", color: "#4da3ff" },
@@ -124,7 +127,7 @@ function showPanel(hash) {
 // En escritorio no hay barra inferior: Hábitos y Ejercicio muestran sus
 // pestañas como pills arriba de cada una de sus secciones (Finanzas ya las
 // tiene en index.html). En móvil se ocultan (.fin-outer-tabs).
-const PILLS_ESCRITORIO = { habitos: "Secciones de Hábitos", ejercicio: "Secciones de Ejercicio" };
+const PILLS_ESCRITORIO = { habitos: "Secciones de Hábitos", ejercicio: "Secciones de Ejercicio", finanzas: "Secciones de Finanzas" };
 function crearPillsEscritorio() {
   Object.keys(PILLS_ESCRITORIO).forEach(grupo => {
     TAB_BARS[grupo].forEach(tab => {
@@ -134,8 +137,10 @@ function crearPillsEscritorio() {
       nav.className = "fin-tabs fin-outer-tabs";
       nav.setAttribute("aria-label", PILLS_ESCRITORIO[grupo]);
       nav.innerHTML = TAB_BARS[grupo].map(t =>
-        `<a href="#${t.hash}" class="fin-tab" data-hash-link data-grupo="${grupo}" data-hash="${t.hash}">${t.label}</a>`).join("");
+        `<a href="#${t.hash}" class="fin-tab" data-hash-link data-grupo="${grupo}" data-hash="${t.hash}">${t.label}</a>`).join("")
+        + (grupo === "finanzas" ? `<a href="#fin-ajustes" class="fin-tab fin-tab-ajustes" aria-label="Ajustes de Finanzas"><span data-icon="gear"></span></a>` : "");
       panel.prepend(nav);
+      if (typeof renderIcons === "function") renderIcons(nav);
     });
   });
 }

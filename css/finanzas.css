@@ -1018,9 +1018,6 @@ button.remain-cat:active .remain-ring { transform: scale(0.95); }
 .txn-amount-btn { display: block; width: 100%; }
 .txn-sheet.keypad-open .txn-extra { display: none; }
 .txn-sheet .txn-keypad-wrap { padding-top: 0.6rem; }
-#panel-finanzas #finance-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
-#panel-finanzas #finance-stats .stat-box { padding: 0.9rem 1rem; }
-#panel-finanzas #finance-stats .value { font-size: 1.25rem; }
 .budget-sheet-panel, .cat-sheet-panel, .budget-sheet-panel *, .cat-sheet-body { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 .budget-sheet-overlay, .category-selector-overlay, .app-dialog-overlay { animation: sheet-fade-in 0.22s ease-out; }
 .budget-sheet-panel { animation: sheet-slide-up 0.3s cubic-bezier(0.22, 1, 0.36, 1); will-change: transform; }
@@ -1177,7 +1174,7 @@ button.remain-cat:active .remain-ring { transform: scale(0.95); }
 .gasto-cat-row.selected .gasto-cat-name { font-weight: 700; }
 .gasto-view { flex: 1 1 auto; font-size: 0.68rem; letter-spacing: 0.08em; padding: 0.7rem 0.4rem; }
 .gasto-views { overflow: hidden; }
-#panel-finanzas #finance-stats[hidden] { display: none; }
+#finance-stats[hidden] { display: none; }
 #fin-month-nav[hidden] { display: none; }
 .vg-card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 1.3rem 1.2rem; margin-bottom: 1rem; }
 #vg-budget { margin-bottom: 6rem; }
@@ -1521,7 +1518,7 @@ button.remain-cat:active .remain-ring { transform: scale(0.95); }
 .txn-swipe.is-borrando .txn-swipe-acciones { visibility: visible; }
 
 /* ---------- Carteras con saldo (Fase 2c) ---------- */
-#panel-finanzas #finance-stats { display: block; }
+#finance-stats { display: block; margin-bottom: 1rem; }
 .fin-carteras { display: flex; gap: 0.6rem; overflow-x: auto; padding-bottom: 0.2rem; scrollbar-width: none; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
 .fin-carteras::-webkit-scrollbar { display: none; }
 .fin-cartera { position: relative; flex: 0 0 auto; min-width: 9.5rem; scroll-snap-align: start; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); }
@@ -1573,3 +1570,8 @@ button.remain-cat:active .remain-ring { transform: scale(0.95); }
 .fin-pend-info { flex: 1 1 100%; }
 .fin-pend-acciones { margin-left: calc(40px + 0.7rem); }
 .fin-pend-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- 4 pantallas de Finanzas (Fase 2d) ---------- */
+.fin-fab { display: none; }
+body.in-finanzas .fin-fab { display: block; }
+.fin-titulo { margin-bottom: 1rem; }

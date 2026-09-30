@@ -18,7 +18,7 @@
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
   <link rel="stylesheet" href="css/style.css?v=202610011000">
-  <link rel="stylesheet" href="css/finanzas.css?v=202610011300">
+  <link rel="stylesheet" href="css/finanzas.css?v=202610011400">
   <link rel="stylesheet" href="css/habitos.css?v=202610010600">
 </head>
 <body>
@@ -374,34 +374,11 @@
 
           <!-- ===== Finanzas: Vista general ===== -->
           <section id="panel-finanzas" hidden>
-            <div class="fin-tabs fin-outer-tabs">
-              <a href="#finanzas" class="fin-tab" data-hash-link data-hash="finanzas">Vista general</a>
-              <a href="#fin-presupuesto" class="fin-tab" data-hash-link data-hash="fin-presupuesto">Presupuesto</a>
-              <a href="#fin-herramientas" class="fin-tab" data-hash-link data-hash="fin-herramientas">Herramientas</a>
-              <a href="#fin-ajustes" class="fin-tab fin-tab-ajustes" aria-label="Ajustes de Finanzas"><span data-icon="gear"></span></a>
-            </div>
-
+            <h1 class="page-title fin-titulo">Resumen</h1>
             <div class="fin-recordatorio" id="fin-recordatorio" role="status" hidden></div>
             <section class="fin-pendientes" id="fin-pendientes" aria-labelledby="fin-pendientes-t" hidden></section>
 
-            <div class="fin-tabs fin-inner-tabs" id="fin-inner-tabs">
-              <button type="button" class="fin-tab" data-fin-tab="vg">Vista General</button>
-              <button type="button" class="fin-tab" data-fin-tab="gasto">Gasto</button>
-              <button type="button" class="fin-tab active" data-fin-tab="lista">Lista</button>
-            </div>
-
-            <div class="stat-row" id="finance-stats"></div>
-
-            <div class="month-nav" id="fin-month-nav">
-              <button type="button" id="month-prev" aria-label="Periodo anterior"><span data-icon="chevronLeft"></span></button>
-              <div class="month-label">
-                <span id="month-label-text"></span>
-                <span class="month-count" id="month-count"></span>
-              </div>
-              <button type="button" id="month-next" aria-label="Periodo siguiente"><span data-icon="chevronRight"></span></button>
-            </div>
-
-            <section id="fin-tab-vg" class="fin-panel" hidden>
+            <section id="fin-tab-vg" class="fin-panel">
               <div class="vg-card vg-spent">
                 <div class="vg-label" id="vg-spent-label">Gastado</div>
                 <div class="vg-big" id="vg-spent-value">Bs 0</div>
@@ -411,18 +388,21 @@
               <div class="vg-card" id="vg-budget"></div>
             </section>
 
-            <section id="fin-tab-gasto" class="fin-panel" hidden>
-              <div class="txn-summary gasto-summary" id="gasto-summary"></div>
-              <div class="gasto-card">
-                <button type="button" class="gasto-mode" id="gasto-mode"><span id="gasto-mode-label">Gastos</span> ▾</button>
-                <div class="gasto-ring" id="gasto-ring"></div>
-                <div class="gasto-views">
-                  <button type="button" class="gasto-view" data-gasto-view="principales">Categorías principales</button>
-                  <button type="button" class="gasto-view active" data-gasto-view="categorias">Categorías</button>
-                </div>
-                <div id="gasto-list" class="gasto-list"></div>
+          </section>
+
+          <!-- ===== Finanzas: Movimientos ===== -->
+          <section id="panel-fin-movimientos" hidden>
+            <h1 class="page-title fin-titulo">Movimientos</h1>
+            <div class="stat-row" id="finance-stats"></div>
+
+            <div class="month-nav" id="fin-month-nav">
+              <button type="button" id="month-prev" data-mes-paso="-1" aria-label="Periodo anterior"><span data-icon="chevronLeft"></span></button>
+              <div class="month-label">
+                <span id="month-label-text" data-mes-label></span>
+                <span class="month-count" id="month-count"></span>
               </div>
-            </section>
+              <button type="button" id="month-next" data-mes-paso="1" aria-label="Periodo siguiente"><span data-icon="chevronRight"></span></button>
+            </div>
 
             <section id="fin-tab-lista" class="fin-panel">
               <div class="txn-search" id="txn-search">
@@ -439,9 +419,290 @@
               </div>
             </section>
 
-            <button type="button" class="txn-fab" id="txn-add" aria-label="Nueva transacción"><span data-icon="plus"></span></button>
+          </section>
+
+          <!-- ===== Finanzas: Análisis ===== -->
+          <section id="panel-fin-analisis" hidden>
+            <h1 class="page-title fin-titulo">Análisis</h1>
+            <div class="month-nav" id="fin-month-nav-analisis">
+              <button type="button" data-mes-paso="-1" aria-label="Periodo anterior"><span data-icon="chevronLeft"></span></button>
+              <div class="month-label"><span data-mes-label></span></div>
+              <button type="button" data-mes-paso="1" aria-label="Periodo siguiente"><span data-icon="chevronRight"></span></button>
+            </div>
+
+            <section id="fin-tab-gasto" class="fin-panel">
+              <div class="txn-summary gasto-summary" id="gasto-summary"></div>
+              <div class="gasto-card">
+                <button type="button" class="gasto-mode" id="gasto-mode"><span id="gasto-mode-label">Gastos</span> ▾</button>
+                <div class="gasto-ring" id="gasto-ring"></div>
+                <div class="gasto-views">
+                  <button type="button" class="gasto-view" data-gasto-view="principales">Categorías principales</button>
+                  <button type="button" class="gasto-view active" data-gasto-view="categorias">Categorías</button>
+                </div>
+                <div id="gasto-list" class="gasto-list"></div>
+              </div>
+            </section>
+
+          </section>
+
+          <!-- ===== Finanzas: Presupuesto ===== -->
+          <section id="panel-fin-presupuesto" hidden>
+            <div class="fin-tabs" id="budget-inner-tabs">
+              <button type="button" class="fin-tab active" data-budget-tab="planificacion">Planificación</button>
+              <button type="button" class="fin-tab" data-budget-tab="restante">Restante</button>
+              <button type="button" class="fin-tab" data-budget-tab="informacion">Información</button>
+            </div>
+
+            <div class="month-nav">
+              <button type="button" id="budget-month-prev" aria-label="Mes anterior"><span data-icon="chevronLeft"></span></button>
+              <div class="month-label">
+                <span id="budget-month-label"></span>
+              </div>
+              <button type="button" id="budget-month-next" aria-label="Mes siguiente"><span data-icon="chevronRight"></span></button>
+            </div>
+
+            <section id="budget-tab-planificacion" class="fin-panel">
+              <div class="budget-summary-card">
+                <div class="budget-summary-ring" id="budget-summary-ring"></div>
+                <div class="budget-summary-info">
+                  <span class="budget-summary-label">Gastos totales planeados</span>
+                  <span class="budget-summary-value" id="budget-summary-value"></span>
+                  <span class="budget-summary-sub" id="budget-summary-sub"></span>
+                </div>
+                <div class="budget-breakdown" id="budget-breakdown"></div>
+              </div>
+
+              <form id="budget-form" class="budget-form">
+                <div id="budget-inputs" class="budget-grouped-list"></div>
+              </form>
+
+            </section>
+
+            <section id="budget-tab-restante" class="fin-panel" hidden>
+              <div id="budget-remaining-hero" class="remain-hero"></div>
+              <div id="budget-grid" class="budget-grouped-list"></div>
+            </section>
+
+            <section id="budget-tab-informacion" class="fin-panel" hidden>
+              <div id="budget-info" class="budget-grouped-list"></div>
+            </section>
+
+              
+
+              
+
+
+
+          </section>
+
+          <!-- ===== Finanzas: Herramientas ===== -->
+          <section id="panel-fin-herramientas" hidden>
+            <div class="profile-card">
+              <span class="profile-avatar" id="fin-perfil-inicial" aria-hidden="true"></span>
+              <div>
+                <div class="profile-name" id="fin-perfil-nombre">Tu cuenta</div>
+                <div class="profile-sub">Cuenta personal</div>
+              </div>
+            </div>
+
+            <div class="tool-grid">
+              <a class="tool-card" href="#fin-ajustes">
+                <span class="icon" data-icon="gear"></span>
+                <h3>Ajustes y respaldo</h3>
+                <p>Tarjeta, RE-IVA, copias de seguridad y modo demo.</p>
+              </a>
+              <a class="tool-card" href="#fin-recurrentes">
+                <span class="icon" data-icon="calendar"></span>
+                <h3>Pagos recurrentes</h3>
+                <p>Alquiler, servicios y suscripciones que se repiten.</p>
+              </a>
+              <a class="tool-card" href="#fin-herramientas-carteras">
+                <span class="icon" data-icon="wallet"></span>
+                <h3>Carteras</h3>
+                <p>Tus saldos de gastos, ahorros e inversión.</p>
+              </a>
+              <a class="tool-card" href="#fin-herramientas-categorias">
+                <span class="icon" data-icon="tag"></span>
+                <h3>Categorías</h3>
+                <p>Crea o elimina categorías de ingreso y de gasto.</p>
+              </a>
+              <a class="tool-card" href="#fin-herramientas-periodo">
+                <span class="icon" data-icon="calendar"></span>
+                <h3>Periodo del presupuesto</h3>
+                <p>Elige el día en que empieza tu mes de presupuesto.</p>
+              </a>
+              <a class="tool-card" href="#fin-herramientas-reiva">
+                <span class="icon" data-icon="receipt"></span>
+                <h3>RE-IVA</h3>
+                <p>El reintegro de tus compras con factura, mes a mes.</p>
+              </a>
+              <a class="tool-card" href="#fin-herramientas-exportar">
+                <span class="icon" data-icon="download"></span>
+                <h3>Exportar datos</h3>
+                <p>Descarga tus movimientos en CSV.</p>
+              </a>
+            </div>
+          </section>
+
+          <!-- ---- Herramientas: Carteras ---- -->
+          <section id="panel-fin-herramientas-carteras" hidden>
+            <div class="panel-header-row">
+              <a class="back-link" href="#fin-ajustes"><span class="icon-sm" data-icon="chevronLeft"></span>Ajustes</a>
+              <div class="wallet-menu">
+                <button type="button" class="wallet-menu-btn" id="wallet-menu-btn" aria-label="Más opciones" data-icon="otherCategory"></button>
+                <div class="wallet-menu-dropdown" id="wallet-menu-dropdown" hidden>
+                  <button type="button" class="wallet-menu-item" id="wallet-menu-new"><span class="icon-sm" data-icon="plus"></span>Nueva cartera</button>
+                </div>
+              </div>
+            </div>
+            <h1 class="page-title">Carteras</h1>
+
+            <form id="new-wallet-form" class="tracker-form" hidden>
+              <input type="text" id="new-wallet-name" placeholder="Nombre (ej: Vacaciones)" required>
+              <select id="new-wallet-currency">
+                <option value="Bs">Bolivianos (Bs)</option>
+                <option value="US$">Dólares (US$)</option>
+              </select>
+              <p class="form-error" id="new-wallet-error" hidden></p>
+              <button type="submit">Crear cartera</button>
+              <button type="button" class="link-btn" id="new-wallet-cancel">Cancelar</button>
+            </form>
+
+            <div class="wallet-hero">
+              <div class="wallet-hero-track" id="wallet-hero-track"></div>
+              <div class="wallet-hero-dots" id="wallet-hero-dots"></div>
+            </div>
+
+            <div id="wallet-list"></div>
+          </section>
+
+          <!-- ---- Herramientas: Carteras > detalle de una cartera ---- -->
+          <section id="panel-fin-herramientas-carteras-detalle" class="wallet-sheet" hidden>
+            <div class="wallet-sheet-grip"></div>
+            <a class="back-link" href="#fin-herramientas-carteras"><span class="icon-sm" data-icon="chevronLeft"></span>Carteras</a>
+
+            <div class="wallet-detail-hero">
+              <span class="wallet-detail-icon" id="wallet-detail-icon"></span>
+              <h1 class="wallet-detail-name" id="wallet-detail-title"></h1>
+            </div>
+
+            <div class="wallet-detail-section">
+              <div class="wallet-detail-label">Saldo</div>
+              <div class="wallet-detail-balance" id="wallet-detail-balance"></div>
+            </div>
+
+            <div class="wallet-detail-section">
+              <div class="wallet-detail-label">Últimos movimientos</div>
+              <div id="wallet-detail-list"></div>
+            </div>
+          </section>
+
+          <!-- ---- Herramientas: Categorías ---- -->
+          <section id="panel-fin-herramientas-categorias" hidden>
+            <a class="back-link" href="#fin-ajustes"><span class="icon-sm" data-icon="chevronLeft"></span>Ajustes</a>
+            <h1 class="page-title">Categorías</h1>
+
+            <button type="button" class="row-btn" id="new-group-toggle">
+              <span>Crear nueva categoría</span>
+              <span class="icon-sm" data-icon="plus"></span>
+            </button>
+            <form id="new-group-form" class="tracker-form" hidden>
+              <input type="text" id="new-group-name" placeholder="Nombre (ej: Comida)" required>
+              <div class="form-section">
+                <label style="font-size: 0.85rem; color: #999; display: block; margin-bottom: 0.5rem;">Color</label>
+                <div class="color-picker" id="new-group-color-picker"></div>
+              </div>
+              <button type="submit">Crear</button>
+              <button type="button" class="link-btn" id="new-group-cancel">Cancelar</button>
+            </form>
+
+            <div id="category-groups"></div>
+          </section>
+
+          <!-- ---- Herramientas: Exportar ---- -->
+          <!-- ---- Herramientas: Periodo del presupuesto ---- -->
+          <section id="panel-fin-herramientas-periodo" hidden>
+            <a class="back-link" href="#fin-ajustes"><span class="icon-sm" data-icon="chevronLeft"></span>Ajustes</a>
+            <h1 class="page-title">Periodo del presupuesto</h1>
+            <p class="panel-sub">Elige el día del mes en que empieza tu presupuesto (por ejemplo, el día que cobras). El periodo va desde ese día hasta el día anterior del mes siguiente.</p>
+
+            <div class="period-preview" id="period-preview"></div>
+
+            <h3 class="period-heading">Empieza el día</h3>
+            <div class="period-days" id="period-days" role="radiogroup" aria-label="Día de inicio del periodo"></div>
+          </section>
+
+          <section id="panel-fin-herramientas-reiva" hidden>
+            <a class="back-link" href="#fin-ajustes"><span class="icon-sm" data-icon="chevronLeft"></span>Ajustes</a>
+            <h1 class="page-title">RE-IVA</h1>
+            <p class="panel-sub">Cada compra que marques <strong>con factura</strong> suma el <span id="reiva-pct-texto">5 %</span> de su monto al mes calendario en que la hiciste (del 1 al 30 o 31).</p>
+            <div id="reiva-list"></div>
+          </section>
+
+          <section id="panel-fin-herramientas-exportar" hidden>
+            <a class="back-link" href="#fin-ajustes"><span class="icon-sm" data-icon="chevronLeft"></span>Ajustes</a>
+            <h1 class="page-title">Exportar datos</h1>
+            <p class="panel-sub">Elige un rango de fechas y descarga tus movimientos en un archivo CSV, listo para abrir en Excel o Google Sheets.</p>
+
+            <form id="export-form" class="tracker-form">
+              <input type="date" id="export-from" required>
+              <input type="date" id="export-to" required>
+              <button type="submit">Exportar CSV</button>
+            </form>
+
+            <p class="empty-state" id="export-summary"></p>
+
+            <h2 class="fin-estado-titulo">Tus datos</h2>
+            <div id="fin-estado-datos" class="fin-estado-datos" aria-live="polite"></div>
+          </section>
+
+          <!-- ===== Finanzas: Pagos recurrentes ===== -->
+          <section id="panel-fin-recurrentes" hidden>
+            <a class="back-link" href="#fin-ajustes"><span class="icon-sm" data-icon="chevronLeft"></span>Ajustes</a>
+            <h1 class="page-title">Pagos recurrentes</h1>
+            <p class="panel-sub">Alquiler, servicios, suscripciones o tu sueldo: en su fecha aparecen en Vista general como «pendientes de confirmar».</p>
+            <div id="fin-recurrentes-lista" class="fin-rec-lista"></div>
+            <button type="button" class="fin-aj-btn is-principal fin-rec-nuevo" data-rec-nuevo><span data-icon="plus"></span>Nuevo pago recurrente</button>
+          </section>
+
+          <!-- ===== Finanzas: Ajustes (engranaje) ===== -->
+          <section id="panel-fin-ajustes" hidden>
+            <a class="back-link" href="#finanzas"><span class="icon-sm" data-icon="chevronLeft"></span>Resumen</a>
+            <h1 class="page-title">Ajustes de Finanzas</h1>
+            <div id="fin-ajustes" class="fin-ajustes"></div>
+            <input type="file" id="fin-importar-archivo" accept="application/json,.json" hidden>
+          </section>
+
+            <button type="button" class="txn-fab fin-fab" id="txn-add" aria-label="Nueva transacción"><span data-icon="plus"></span></button>
 
             <!-- Hoja "Nueva transacción" (como Buddy) -->
+
+          <!-- ===== Inversiones ===== -->
+          <section id="panel-inversiones" hidden>
+            <h1 class="page-title">Inversiones</h1>
+
+            <div class="stat-row" id="investing-stats"></div>
+
+            <form class="tracker-form" id="investing-form">
+              <input type="date" id="investing-date" required>
+              <input type="text" id="investing-name" placeholder="Activo (ej: AAPL, Fondo indexado)" required>
+              <input type="number" id="investing-amount" placeholder="Monto invertido" min="0.01" step="0.01" required>
+              <input type="text" id="investing-notes" placeholder="Notas (opcional)">
+              <button type="submit">Registrar</button>
+            </form>
+
+            <div id="investing-list"></div>
+            <p class="empty-state" id="investing-empty" style="display:none;">Aún no registras aportes.</p>
+          </section>
+
+        </div>
+      </div>
+    </div>
+
+    <nav class="bottom-nav" id="bottom-nav-links"></nav>
+  </div>
+
+<!-- Hoja de nuevo movimiento (se abre desde el + en cualquier pantalla de Finanzas) -->
             <div id="txn-sheet" class="js-sheet budget-sheet txn-sheet" hidden>
               <div class="budget-sheet-overlay"></div>
               <div class="budget-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="txn-sheet-title">
@@ -544,274 +805,6 @@
                 </div>
               </div>
             </div>
-          </section>
-
-          <!-- ===== Finanzas: Presupuesto ===== -->
-          <section id="panel-fin-presupuesto" hidden>
-            <div class="fin-tabs fin-outer-tabs">
-              <a href="#finanzas" class="fin-tab" data-hash-link data-hash="finanzas">Vista general</a>
-              <a href="#fin-presupuesto" class="fin-tab" data-hash-link data-hash="fin-presupuesto">Presupuesto</a>
-              <a href="#fin-herramientas" class="fin-tab" data-hash-link data-hash="fin-herramientas">Herramientas</a>
-              <a href="#fin-ajustes" class="fin-tab fin-tab-ajustes" aria-label="Ajustes de Finanzas"><span data-icon="gear"></span></a>
-            </div>
-
-            <div class="fin-tabs" id="budget-inner-tabs">
-              <button type="button" class="fin-tab active" data-budget-tab="planificacion">Planificación</button>
-              <button type="button" class="fin-tab" data-budget-tab="restante">Restante</button>
-              <button type="button" class="fin-tab" data-budget-tab="informacion">Información</button>
-            </div>
-
-            <div class="month-nav">
-              <button type="button" id="budget-month-prev" aria-label="Mes anterior"><span data-icon="chevronLeft"></span></button>
-              <div class="month-label">
-                <span id="budget-month-label"></span>
-              </div>
-              <button type="button" id="budget-month-next" aria-label="Mes siguiente"><span data-icon="chevronRight"></span></button>
-            </div>
-
-            <section id="budget-tab-planificacion" class="fin-panel">
-              <div class="budget-summary-card">
-                <div class="budget-summary-ring" id="budget-summary-ring"></div>
-                <div class="budget-summary-info">
-                  <span class="budget-summary-label">Gastos totales planeados</span>
-                  <span class="budget-summary-value" id="budget-summary-value"></span>
-                  <span class="budget-summary-sub" id="budget-summary-sub"></span>
-                </div>
-                <div class="budget-breakdown" id="budget-breakdown"></div>
-              </div>
-
-              <form id="budget-form" class="budget-form">
-                <div id="budget-inputs" class="budget-grouped-list"></div>
-              </form>
-
-            </section>
-
-            <section id="budget-tab-restante" class="fin-panel" hidden>
-              <div id="budget-remaining-hero" class="remain-hero"></div>
-              <div id="budget-grid" class="budget-grouped-list"></div>
-            </section>
-
-            <section id="budget-tab-informacion" class="fin-panel" hidden>
-              <div id="budget-info" class="budget-grouped-list"></div>
-            </section>
-
-              
-
-              
-
-
-
-          </section>
-
-          <!-- ===== Finanzas: Herramientas ===== -->
-          <section id="panel-fin-herramientas" hidden>
-            <div class="fin-tabs fin-outer-tabs">
-              <a href="#finanzas" class="fin-tab" data-hash-link data-hash="finanzas">Vista general</a>
-              <a href="#fin-presupuesto" class="fin-tab" data-hash-link data-hash="fin-presupuesto">Presupuesto</a>
-              <a href="#fin-herramientas" class="fin-tab" data-hash-link data-hash="fin-herramientas">Herramientas</a>
-              <a href="#fin-ajustes" class="fin-tab fin-tab-ajustes" aria-label="Ajustes de Finanzas"><span data-icon="gear"></span></a>
-            </div>
-
-            <div class="profile-card">
-              <span class="profile-avatar" id="fin-perfil-inicial" aria-hidden="true"></span>
-              <div>
-                <div class="profile-name" id="fin-perfil-nombre">Tu cuenta</div>
-                <div class="profile-sub">Cuenta personal</div>
-              </div>
-            </div>
-
-            <div class="tool-grid">
-              <a class="tool-card" href="#fin-ajustes">
-                <span class="icon" data-icon="gear"></span>
-                <h3>Ajustes y respaldo</h3>
-                <p>Tarjeta, RE-IVA, copias de seguridad y modo demo.</p>
-              </a>
-              <a class="tool-card" href="#fin-recurrentes">
-                <span class="icon" data-icon="calendar"></span>
-                <h3>Pagos recurrentes</h3>
-                <p>Alquiler, servicios y suscripciones que se repiten.</p>
-              </a>
-              <a class="tool-card" href="#fin-herramientas-carteras">
-                <span class="icon" data-icon="wallet"></span>
-                <h3>Carteras</h3>
-                <p>Tus saldos de gastos, ahorros e inversión.</p>
-              </a>
-              <a class="tool-card" href="#fin-herramientas-categorias">
-                <span class="icon" data-icon="tag"></span>
-                <h3>Categorías</h3>
-                <p>Crea o elimina categorías de ingreso y de gasto.</p>
-              </a>
-              <a class="tool-card" href="#fin-herramientas-periodo">
-                <span class="icon" data-icon="calendar"></span>
-                <h3>Periodo del presupuesto</h3>
-                <p>Elige el día en que empieza tu mes de presupuesto.</p>
-              </a>
-              <a class="tool-card" href="#fin-herramientas-reiva">
-                <span class="icon" data-icon="receipt"></span>
-                <h3>RE-IVA</h3>
-                <p>El reintegro de tus compras con factura, mes a mes.</p>
-              </a>
-              <a class="tool-card" href="#fin-herramientas-exportar">
-                <span class="icon" data-icon="download"></span>
-                <h3>Exportar datos</h3>
-                <p>Descarga tus movimientos en CSV.</p>
-              </a>
-            </div>
-          </section>
-
-          <!-- ---- Herramientas: Carteras ---- -->
-          <section id="panel-fin-herramientas-carteras" hidden>
-            <div class="panel-header-row">
-              <a class="back-link" href="#fin-herramientas"><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</a>
-              <div class="wallet-menu">
-                <button type="button" class="wallet-menu-btn" id="wallet-menu-btn" aria-label="Más opciones" data-icon="otherCategory"></button>
-                <div class="wallet-menu-dropdown" id="wallet-menu-dropdown" hidden>
-                  <button type="button" class="wallet-menu-item" id="wallet-menu-new"><span class="icon-sm" data-icon="plus"></span>Nueva cartera</button>
-                </div>
-              </div>
-            </div>
-            <h1 class="page-title">Carteras</h1>
-
-            <form id="new-wallet-form" class="tracker-form" hidden>
-              <input type="text" id="new-wallet-name" placeholder="Nombre (ej: Vacaciones)" required>
-              <select id="new-wallet-currency">
-                <option value="Bs">Bolivianos (Bs)</option>
-                <option value="US$">Dólares (US$)</option>
-              </select>
-              <p class="form-error" id="new-wallet-error" hidden></p>
-              <button type="submit">Crear cartera</button>
-              <button type="button" class="link-btn" id="new-wallet-cancel">Cancelar</button>
-            </form>
-
-            <div class="wallet-hero">
-              <div class="wallet-hero-track" id="wallet-hero-track"></div>
-              <div class="wallet-hero-dots" id="wallet-hero-dots"></div>
-            </div>
-
-            <div id="wallet-list"></div>
-          </section>
-
-          <!-- ---- Herramientas: Carteras > detalle de una cartera ---- -->
-          <section id="panel-fin-herramientas-carteras-detalle" class="wallet-sheet" hidden>
-            <div class="wallet-sheet-grip"></div>
-            <a class="back-link" href="#fin-herramientas-carteras"><span class="icon-sm" data-icon="chevronLeft"></span>Carteras</a>
-
-            <div class="wallet-detail-hero">
-              <span class="wallet-detail-icon" id="wallet-detail-icon"></span>
-              <h1 class="wallet-detail-name" id="wallet-detail-title"></h1>
-            </div>
-
-            <div class="wallet-detail-section">
-              <div class="wallet-detail-label">Saldo</div>
-              <div class="wallet-detail-balance" id="wallet-detail-balance"></div>
-            </div>
-
-            <div class="wallet-detail-section">
-              <div class="wallet-detail-label">Últimos movimientos</div>
-              <div id="wallet-detail-list"></div>
-            </div>
-          </section>
-
-          <!-- ---- Herramientas: Categorías ---- -->
-          <section id="panel-fin-herramientas-categorias" hidden>
-            <a class="back-link" href="#fin-herramientas"><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</a>
-            <h1 class="page-title">Categorías</h1>
-
-            <button type="button" class="row-btn" id="new-group-toggle">
-              <span>Crear nueva categoría</span>
-              <span class="icon-sm" data-icon="plus"></span>
-            </button>
-            <form id="new-group-form" class="tracker-form" hidden>
-              <input type="text" id="new-group-name" placeholder="Nombre (ej: Comida)" required>
-              <div class="form-section">
-                <label style="font-size: 0.85rem; color: #999; display: block; margin-bottom: 0.5rem;">Color</label>
-                <div class="color-picker" id="new-group-color-picker"></div>
-              </div>
-              <button type="submit">Crear</button>
-              <button type="button" class="link-btn" id="new-group-cancel">Cancelar</button>
-            </form>
-
-            <div id="category-groups"></div>
-          </section>
-
-          <!-- ---- Herramientas: Exportar ---- -->
-          <!-- ---- Herramientas: Periodo del presupuesto ---- -->
-          <section id="panel-fin-herramientas-periodo" hidden>
-            <a class="back-link" href="#fin-herramientas"><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</a>
-            <h1 class="page-title">Periodo del presupuesto</h1>
-            <p class="panel-sub">Elige el día del mes en que empieza tu presupuesto (por ejemplo, el día que cobras). El periodo va desde ese día hasta el día anterior del mes siguiente.</p>
-
-            <div class="period-preview" id="period-preview"></div>
-
-            <h3 class="period-heading">Empieza el día</h3>
-            <div class="period-days" id="period-days" role="radiogroup" aria-label="Día de inicio del periodo"></div>
-          </section>
-
-          <section id="panel-fin-herramientas-reiva" hidden>
-            <a class="back-link" href="#fin-herramientas"><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</a>
-            <h1 class="page-title">RE-IVA</h1>
-            <p class="panel-sub">Cada compra que marques <strong>con factura</strong> suma el <span id="reiva-pct-texto">5 %</span> de su monto al mes calendario en que la hiciste (del 1 al 30 o 31).</p>
-            <div id="reiva-list"></div>
-          </section>
-
-          <section id="panel-fin-herramientas-exportar" hidden>
-            <a class="back-link" href="#fin-herramientas"><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</a>
-            <h1 class="page-title">Exportar datos</h1>
-            <p class="panel-sub">Elige un rango de fechas y descarga tus movimientos en un archivo CSV, listo para abrir en Excel o Google Sheets.</p>
-
-            <form id="export-form" class="tracker-form">
-              <input type="date" id="export-from" required>
-              <input type="date" id="export-to" required>
-              <button type="submit">Exportar CSV</button>
-            </form>
-
-            <p class="empty-state" id="export-summary"></p>
-
-            <h2 class="fin-estado-titulo">Tus datos</h2>
-            <div id="fin-estado-datos" class="fin-estado-datos" aria-live="polite"></div>
-          </section>
-
-          <!-- ===== Finanzas: Pagos recurrentes ===== -->
-          <section id="panel-fin-recurrentes" hidden>
-            <a class="back-link" href="#fin-herramientas"><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</a>
-            <h1 class="page-title">Pagos recurrentes</h1>
-            <p class="panel-sub">Alquiler, servicios, suscripciones o tu sueldo: en su fecha aparecen en Vista general como «pendientes de confirmar».</p>
-            <div id="fin-recurrentes-lista" class="fin-rec-lista"></div>
-            <button type="button" class="fin-aj-btn is-principal fin-rec-nuevo" data-rec-nuevo><span data-icon="plus"></span>Nuevo pago recurrente</button>
-          </section>
-
-          <!-- ===== Finanzas: Ajustes (engranaje) ===== -->
-          <section id="panel-fin-ajustes" hidden>
-            <a class="back-link" href="#fin-herramientas"><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</a>
-            <h1 class="page-title">Ajustes de Finanzas</h1>
-            <div id="fin-ajustes" class="fin-ajustes"></div>
-            <input type="file" id="fin-importar-archivo" accept="application/json,.json" hidden>
-          </section>
-
-          <!-- ===== Inversiones ===== -->
-          <section id="panel-inversiones" hidden>
-            <h1 class="page-title">Inversiones</h1>
-
-            <div class="stat-row" id="investing-stats"></div>
-
-            <form class="tracker-form" id="investing-form">
-              <input type="date" id="investing-date" required>
-              <input type="text" id="investing-name" placeholder="Activo (ej: AAPL, Fondo indexado)" required>
-              <input type="number" id="investing-amount" placeholder="Monto invertido" min="0.01" step="0.01" required>
-              <input type="text" id="investing-notes" placeholder="Notas (opcional)">
-              <button type="submit">Registrar</button>
-            </form>
-
-            <div id="investing-list"></div>
-            <p class="empty-state" id="investing-empty" style="display:none;">Aún no registras aportes.</p>
-          </section>
-
-        </div>
-      </div>
-    </div>
-
-    <nav class="bottom-nav" id="bottom-nav-links"></nav>
-  </div>
 
 <!-- Crear o editar un pago recurrente -->
   <div id="rec-sheet" class="js-sheet budget-sheet" hidden>
@@ -961,8 +954,8 @@
   <script defer src="js/firebase-init.js?v=202609293"></script>
   <script defer src="js/auth.js?v=202609232200"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
-  <script defer src="js/icons.js?v=202610011200"></script>
-  <script defer src="js/modules.js?v=202610011300"></script>
+  <script defer src="js/icons.js?v=202610011400"></script>
+  <script defer src="js/modules.js?v=202610011400"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
   <script defer src="js/exercise-search.js?v=202609291"></script>
@@ -987,7 +980,7 @@
   <script defer src="js/bicicleta.js?v=202609293"></script>
   <script defer src="js/finanzas/datos.js?v=202610011300"></script>
   <script defer src="js/finanzas/demo.js?v=202610011300"></script>
-  <script defer src="js/finanzas/app.js?v=202610011300"></script>
+  <script defer src="js/finanzas/app.js?v=202610011400"></script>
   <script defer src="js/inversiones.js?v=202609232200"></script>
 </body>
 </html>

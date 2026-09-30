@@ -303,10 +303,22 @@ document.getElementById("finance-stats").addEventListener("click", e => {
   if (b) openWalletDetail(b.dataset.abrirCartera);
 });
 
+// Todas las barras de periodo (Movimientos y Análisis) muestran el mismo.
 function updateMonthLabel() {
-  document.getElementById("month-label-text").textContent = periodLabel(currentBudgetPeriod());
-  document.getElementById("month-next").disabled = monthOffset >= 0;
+  const texto = periodLabel(currentBudgetPeriod());
+  document.querySelectorAll("[data-mes-label]").forEach(el => { el.textContent = texto; });
+  document.querySelectorAll('[data-mes-paso="1"]').forEach(b => { b.disabled = monthOffset >= 0; });
 }
+function cambiarPeriodo(paso) {
+  if (paso > 0 && monthOffset >= 0) return;
+  monthOffset += paso;
+  cerrarDeslizada();
+  renderAll();
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("[data-mes-paso]");
+  if (b && !b.disabled) cambiarPeriodo(Number(b.dataset.mesPaso));
+});
 
 // ---- Vista general: lista de transacciones del periodo (como Buddy) ----
 function dayLabel(dateStr) {
@@ -413,7 +425,7 @@ function renderMovements() {
     : "Aún no hay movimientos en este periodo. Toca + para agregar uno.";
   empty.style.display = list.length ? "none" : "block";
   document.getElementById("fin-tab-lista").classList.toggle("is-searching", searching);
-  if (currentFinTab() === "lista") document.getElementById("fin-month-nav").hidden = searching;
+  document.getElementById("fin-month-nav").hidden = searching;
 
   const groups = [];
   list.forEach(m => {
@@ -541,24 +553,18 @@ function deleteMovement(id) {
     [{ ref: financeCollection().doc(id), data: withoutId(m) }]);
 }
 
-// ---- Pestañas internas de Vista general: Vista General / Gasto / Lista ----
-const FIN_TAB_KEY = "manolo.finTab";
+// ---- Pantallas de Finanzas: Resumen · Movimientos · Presupuesto · Análisis ----
+// (antes eran pestañas internas de Vista general; se conservan los nombres
+// "vg", "lista" y "gasto" para no tocar el resto del código)
+const PANTALLA_DE = { vg: "finanzas", lista: "fin-movimientos", gasto: "fin-analisis" };
 function currentFinTab() {
-  try { return localStorage.getItem(FIN_TAB_KEY) || "lista"; } catch (e) { return "lista"; }
+  const h = location.hash.replace("#", "");
+  return h === "fin-movimientos" ? "lista" : h === "fin-analisis" ? "gasto" : "vg";
 }
 function showFinTab(tab) {
-  try { localStorage.setItem(FIN_TAB_KEY, tab); } catch (e) { /* sin almacenamiento */ }
-  document.querySelectorAll("[data-fin-tab]").forEach(b => b.classList.toggle("active", b.dataset.finTab === tab));
-  ["vg", "gasto", "lista"].forEach(t => { document.getElementById(`fin-tab-${t}`).hidden = t !== tab; });
-  document.getElementById("fin-tab-lista").classList.remove("day-jump");
-  document.getElementById("finance-stats").hidden = tab !== "lista";
-  document.getElementById("fin-month-nav").hidden = tab === "vg" || (tab === "lista" && busquedaActiva());
+  const destino = "#" + (PANTALLA_DE[tab] || "finanzas");
+  if (location.hash !== destino) location.hash = destino;
 }
-document.getElementById("fin-inner-tabs").addEventListener("click", e => {
-  const btn = e.target.closest("[data-fin-tab]");
-  if (btn) showFinTab(btn.dataset.finTab);
-});
-showFinTab(currentFinTab());
 
 // ---- Pestaña Vista General (como Buddy): gráfico, calendario y presupuesto ----
 function periodDays(period) {
@@ -733,7 +739,7 @@ function hideVgScrub() {
       const date = vgScrubDay;
       if (!financeCache.some(m => m.date === date)) return;
       showFinTab("lista");
-      jumpToDay(date);
+      setTimeout(() => jumpToDay(date), 80);
     }
   });
   // Tocar fuera del gráfico cierra el recuadro.
@@ -856,7 +862,8 @@ document.getElementById("fin-tab-vg").addEventListener("click", e => {
   const day = e.target.closest("[data-vg-day].has");
   if (day) {
     showFinTab("lista");
-    jumpToDay(day.dataset.vgDay);
+    const dia = day.dataset.vgDay;
+    setTimeout(() => jumpToDay(dia), 80);
     return;
   }
   const cat = e.target.closest("[data-cat-detail]");
@@ -1814,10 +1821,8 @@ document.getElementById("txn-sheet-factura").addEventListener("change", e => {
   if (txnSheet) txnSheet.factura = e.target.checked;
 });
 
-document.getElementById("month-prev").addEventListener("click", () => { monthOffset--; renderAll(); });
-document.getElementById("month-next").addEventListener("click", () => { monthOffset++; renderAll(); });
-document.getElementById("budget-month-prev").addEventListener("click", () => { monthOffset--; renderAll(); });
-document.getElementById("budget-month-next").addEventListener("click", () => { monthOffset++; renderAll(); });
+document.getElementById("budget-month-prev").addEventListener("click", () => cambiarPeriodo(-1));
+document.getElementById("budget-month-next").addEventListener("click", () => cambiarPeriodo(1));
 
 // ================= Presupuesto =================
 
@@ -3780,6 +3785,8 @@ function renderAjustes() {
       <a class="fin-aj-fila" href="#fin-herramientas-periodo"><span><span class="fin-aj-t">Periodo</span><span class="fin-aj-sub">Empieza el día ${budgetStartDay} de cada mes</span></span><span class="fin-aj-chev" data-icon="chevronRight"></span></a>
       <a class="fin-aj-fila" href="#fin-herramientas-categorias"><span><span class="fin-aj-t">Categorías</span><span class="fin-aj-sub">${gastoCategoriesCache.length} de gasto · ${(CATEGORIES.ingreso || []).length} de ingreso</span></span><span class="fin-aj-chev" data-icon="chevronRight"></span></a>
       <a class="fin-aj-fila" href="#fin-recurrentes"><span><span class="fin-aj-t">Pagos recurrentes</span><span class="fin-aj-sub">${recurrentes.length ? `${recurrentes.length} configurado${recurrentes.length === 1 ? "" : "s"}` : "Alquiler, servicios, suscripciones…"}</span></span><span class="fin-aj-chev" data-icon="chevronRight"></span></a>
+      <a class="fin-aj-fila" href="#fin-herramientas-reiva"><span><span class="fin-aj-t">RE-IVA</span><span class="fin-aj-sub">Tus compras con factura, mes a mes</span></span><span class="fin-aj-chev" data-icon="chevronRight"></span></a>
+      <a class="fin-aj-fila" href="#fin-herramientas-exportar"><span><span class="fin-aj-t">Exportar por fechas</span><span class="fin-aj-sub">CSV de un rango y estado de tus datos</span></span><span class="fin-aj-chev" data-icon="chevronRight"></span></a>
       <a class="fin-aj-fila" href="#fin-herramientas-carteras"><span><span class="fin-aj-t">Carteras</span><span class="fin-aj-sub">Efectivo, Débito, Tarjeta, Ahorro${carterasCustomCache.length ? ` y ${carterasCustomCache.length} más` : ""}</span></span><span class="fin-aj-chev" data-icon="chevronRight"></span></a>
     </section>
     <section class="fin-aj-bloque">
@@ -4027,6 +4034,25 @@ document.getElementById("fin-ajustes").addEventListener("change", e => {
     else { e.target.value = String(reivaTasa() * 100); avisoFin("Escribe un porcentaje entre 0 y 100."); }
   }
 });
+
+// ---- Cambiar de periodo deslizando a los lados ----
+(function deslizarPeriodo() {
+  const IGNORAR = ".txn-swipe, .fin-carteras, .vg-chart-wrap, .txn-chips, .txn-filtros-activos, input, select, textarea, .fin-pendientes, .gasto-ring";
+  ["panel-fin-movimientos", "panel-fin-analisis", "panel-fin-presupuesto"].forEach(id => {
+    const panel = document.getElementById(id);
+    if (!panel) return;
+    let t0 = null;
+    panel.addEventListener("touchstart", e => {
+      t0 = e.touches.length === 1 && !e.target.closest(IGNORAR) ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+    }, { passive: true });
+    panel.addEventListener("touchend", e => {
+      if (!t0) return;
+      const dx = e.changedTouches[0].clientX - t0.x, dy = e.changedTouches[0].clientY - t0.y;
+      t0 = null;
+      if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 2) cambiarPeriodo(dx < 0 ? 1 : -1);
+    }, { passive: true });
+  });
+})();
 
 // ================= Pagos recurrentes =================
 // Se guardan en meta/finanzas_recurrentes. En su fecha aparecen como
