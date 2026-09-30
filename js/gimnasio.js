@@ -155,6 +155,21 @@ function startWorkout(name, exerciseNames) {
   abrirEditor();
 }
 
+// Sugerencia de hoy según la última vez que hiciste ese ejercicio
+// (js/progresion.js). Solo se muestra: tú decides si la usas.
+function sugerenciaPara(it, ficha, tipo) {
+  const clave = ExerciseSearch.clave(it.nombre);
+  const id = it.exerciseId || (ficha && ficha.id);
+  const mismo = e => (id && e.exerciseId === id) || ExerciseSearch.clave(e.name || "") === clave;
+  const historial = historyCache.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.startedAt || 0) - (a.startedAt || 0));
+  try {
+    return EjProgresion.sugerir(it, historial, mismo, { ficha, tipo });
+  } catch (e) {
+    console.error("Manolo: no se pudo calcular la sugerencia", e);
+    return null;
+  }
+}
+
 // Empieza una rutina: cada ejercicio con sus series listas y su objetivo
 // (reps, peso, descanso y notas de la rutina) a la vista.
 function empezarRutina(r) {
@@ -173,6 +188,7 @@ function empezarRutina(r) {
         ex.sets = Array.from({ length: it.series }, () => Object.assign({}, vacia));
       }
       ex.objetivo = { series: it.series, repsMin: it.repsMin, repsMax: it.repsMax, peso: it.peso, descansoSeg: it.descansoSeg, notas: it.notas, incremento: it.incremento };
+      ex.sugerencia = sugerenciaPara(it, ficha, ex.tipo);
       return ex;
     })
   };
@@ -291,9 +307,10 @@ function titulosColumnas(ex) {
 }
 
 // Lo que se ve gris en la casilla vacía: el objetivo de la rutina.
-function pista(ex, campo) {
+function pista(ex, campo, set) {
   const o = ex.objetivo;
   if (!o) return "0";
+  if (campo === "reps" && set && set.meta) return String(set.meta);
   if (campo === "reps") return o.repsMin === o.repsMax ? String(o.repsMin) : `${o.repsMin}-${o.repsMax}`;
   if (campo === "kg" && o.peso != null) return String(o.peso);
   return "0";
@@ -303,6 +320,43 @@ function objetivoHTML(ex) {
   if (!o) return "";
   return `<p class="ex-objetivo"><span>Objetivo:</span> ${escapeHtml(EjRutinas.resumenItem(o))}</p>
     ${o.notas ? `<p class="ex-objetivo-nota">${escapeHtml(o.notas)}</p>` : ""}`;
+}
+const SUG_ICONO = { subir: "chevronUp", bajar: "chevronDown", repetir: "check" };
+function sugerenciaHTML(ex) {
+  const g = ex.sugerencia;
+  if (!g) return "";
+  if (g.tipo === "nuevo") return `<p class="ex-sug-nuevo">${escapeHtml(g.texto)}</p>`;
+  const reps = g.reps.join(" · ");
+  return `
+    <div class="ex-sugerencia is-${g.tipo}">
+      <span class="ex-sug-ic" aria-hidden="true"><span data-icon="${SUG_ICONO[g.tipo]}"></span></span>
+      <div class="ex-sug-txt">
+        <strong>Hoy: ${escapeHtml(g.texto)}</strong>
+        <span>${g.kg > 0 ? `${escapeHtml(String(g.kg).replace(".", ","))} kg × ` : ""}${escapeHtml(reps)} reps</span>
+        <small>${escapeHtml(g.motivo)}</small>
+      </div>
+      ${g.aplicada
+        ? `<span class="ex-sug-ok">Aplicada</span>`
+        : `<button type="button" class="ex-sug-usar">Usar</button>`}
+    </div>`;
+}
+// Pone el peso sugerido en las series (sin tocar las de calentamiento) y el
+// objetivo de reps de cada una como guía gris. Las reps las anotas tú.
+function usarSugerencia(ex) {
+  const g = ex.sugerencia;
+  if (!g || g.tipo === "nuevo") return;
+  let i = 0;
+  ex.sets.forEach(set => {
+    if (set.calentamiento) return;
+    if (g.kg > 0 || ex.tipo === "carga") set.kg = g.kg;
+    set.meta = g.reps[Math.min(i, g.reps.length - 1)];
+    i++;
+  });
+  while (i < g.reps.length) {
+    ex.sets.push({ kg: g.kg, reps: "", meta: g.reps[i], pre: true });
+    i++;
+  }
+  g.aplicada = true;
 }
 
 function tablaSeries(ex) {
@@ -317,7 +371,7 @@ function tablaSeries(ex) {
   const filas = ex.sets.map((set, setIndex) => `
     <div class="set-row${una}${set.calentamiento ? " is-warm" : ""}" data-set-index="${setIndex}">
       <button type="button" class="set-num${set.calentamiento ? " warm" : ""}" aria-label="Serie ${setIndex + 1}${set.calentamiento ? ", calentamiento" : ""}. Tocar para marcar o quitar calentamiento">${set.calentamiento ? "C" : ++n}</button>
-      ${col.campos.map(([campo, modo, paso]) => `<input type="number" class="set-${campo}" inputmode="${modo}" min="0" step="${paso}" placeholder="${escapeHtml(pista(ex, campo))}" value="${escapeHtml(set[campo] != null ? set[campo] : "")}" aria-label="${campo} serie ${setIndex + 1}">`).join("")}
+      ${col.campos.map(([campo, modo, paso]) => `<input type="number" class="set-${campo}" inputmode="${modo}" min="0" step="${paso}" placeholder="${escapeHtml(pista(ex, campo, set))}" value="${escapeHtml(set[campo] != null ? set[campo] : "")}" aria-label="${campo} serie ${setIndex + 1}">`).join("")}
       <button type="button" class="delete-set" aria-label="Eliminar serie">${ICONS.close}</button>
     </div>`).join("");
   return `${modo}
@@ -356,6 +410,7 @@ function renderActiveExercises() {
         </div>
         <button type="button" class="delete" aria-label="Eliminar ejercicio">${ICONS.trash}</button>
       </div>
+      ${sugerenciaHTML(ex)}
       ${cuerpo}
       <div class="exercise-extra">
         <label class="ex-inline-field">RPE
@@ -369,6 +424,7 @@ function renderActiveExercises() {
     `;
     container.appendChild(card);
   });
+  if (typeof renderIcons === "function") renderIcons(container);
   guardarBorrador();
 }
 
@@ -378,6 +434,11 @@ document.getElementById("gym-active-exercises").addEventListener("click", e => {
   const exIndex = Number(exCard.dataset.exIndex);
   const ex = activeWorkout.exercises[exIndex];
 
+  if (e.target.closest(".ex-sug-usar")) {
+    usarSugerencia(ex);
+    renderActiveExercises();
+    return;
+  }
   if (e.target.closest(".delete-set")) {
     const setIndex = Number(e.target.closest(".set-row").dataset.setIndex);
     ex.sets.splice(setIndex, 1);
