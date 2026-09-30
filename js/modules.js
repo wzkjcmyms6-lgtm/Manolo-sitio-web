@@ -95,7 +95,8 @@ function showPanel(hash) {
   // va la silueta de cuerpo humano, y en Rangos/Perfil nada. En Finanzas se
   // oculta sin reemplazo, para que el resumen quede más arriba.
   const isExercise = activeModule === "ejercicio";
-  const showBody = isExercise && tabHash(hash, EJ_TABS) === "ejercicio";
+  // El mapa muscular solo va en la portada de Entrenamiento, no dentro del registro.
+  const showBody = isExercise && hash === "ejercicio";
   document.body.classList.toggle("in-finanzas", activeModule === "finanzas");
   // Con barra inferior propia, la de arriba solo muestra una casita para volver al inicio.
   document.body.classList.toggle("has-home-btn", !!TAB_BARS[activeModule]);
