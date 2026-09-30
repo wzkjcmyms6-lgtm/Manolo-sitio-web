@@ -14,10 +14,10 @@
   <meta name="apple-mobile-web-app-title" content="Manolo">
   <meta name="theme-color" content="#0a0a0a">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=202610010400">
+  <!-- Fuentes guardadas en el repo: la app no depende de internet para verse bien -->
+  <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
+  <link rel="stylesheet" href="css/style.css?v=202610010700">
   <link rel="stylesheet" href="css/habitos.css?v=202610010600">
 </head>
 <body>
@@ -51,6 +51,7 @@
     <div class="topbar">
       <a href="#inicio" class="topbar-home" aria-label="Ir al inicio"><span data-icon="home"></span></a>
       <span class="brand">Manolo</span>
+      <span class="net-status" data-net-status role="status" hidden>Sin conexión</span>
       <span class="topbar-clock" data-clock></span>
       <button class="menu-toggle" id="menu-toggle" data-icon="menu" aria-expanded="false" aria-label="Abrir menú"></button>
     </div>
@@ -60,6 +61,7 @@
       <aside class="sidebar" id="sidebar">
         <span class="brand">Manolo</span>
         <span class="sidebar-clock" data-clock></span>
+        <span class="net-status" data-net-status role="status" hidden>Sin conexión</span>
         <nav id="nav-links"></nav>
       </aside>
 
@@ -864,37 +866,38 @@
     </div>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-init.js?v=202609293"></script>
-  <script src="js/auth.js?v=202609232200"></script>
-  <script src="js/verses.js?v=202609232200"></script>
-  <script src="js/icons.js?v=202610010100"></script>
-  <script src="js/modules.js?v=202610010600"></script>
-  <script src="js/main.js?v=202609232200"></script>
-  <script src="js/muscle-engine.js?v=202609301400"></script>
-  <script src="js/exercise-search.js?v=202609291"></script>
-  <script src="js/body-figures.js?v=202609301200"></script>
-  <script src="js/ejercicio-datos.js?v=202609301400"></script>
-  <script src="js/exercise-picker.js?v=202609294"></script>
-  <script src="js/gimnasio.js?v=202610010200"></script>
-  <script src="js/body-map.js?v=202609301300"></script>
-  <script src="js/muscle-radar.js?v=202609292"></script>
-  <script src="js/ejercicio-ajustes.js?v=202609293"></script>
-  <script src="js/rangos-config.js?v=202609301"></script>
-  <script src="js/rangos-engine.js?v=202609301"></script>
-  <script src="js/rangos-insignias.js?v=202609301500"></script>
-  <script src="js/habitos-config.js?v=202610010600"></script>
-  <script src="js/habitos-engine.js?v=202610010600"></script>
-  <script src="js/habitos-graficos.js?v=202610010400"></script>
-  <script src="js/habitos.js?v=202610010600"></script>
-  <script src="js/rangos.js?v=202609301500"></script>
-  <script src="js/perfil-ejercicio.js?v=202609301"></script>
-  <script src="js/offline.js?v=202609293"></script>
-  <script src="js/running.js?v=202609293"></script>
-  <script src="js/bicicleta.js?v=202609293"></script>
-  <script src="js/finanzas.js?v=202609251700"></script>
-  <script src="js/inversiones.js?v=202609232200"></script>
+  <!-- Firebase 10.7.1 guardado en el repo (el mismo archivo que antes venía de gstatic.com) -->
+  <script defer src="vendor/firebase-10.7.1/firebase-app-compat.js"></script>
+  <script defer src="vendor/firebase-10.7.1/firebase-auth-compat.js"></script>
+  <script defer src="vendor/firebase-10.7.1/firebase-firestore-compat.js"></script>
+  <script defer src="js/firebase-init.js?v=202609293"></script>
+  <script defer src="js/auth.js?v=202609232200"></script>
+  <script defer src="js/verses.js?v=202609232200"></script>
+  <script defer src="js/icons.js?v=202610010100"></script>
+  <script defer src="js/modules.js?v=202610010600"></script>
+  <script defer src="js/main.js?v=202609232200"></script>
+  <script defer src="js/muscle-engine.js?v=202609301400"></script>
+  <script defer src="js/exercise-search.js?v=202609291"></script>
+  <script defer src="js/body-figures.js?v=202609301200"></script>
+  <script defer src="js/ejercicio-datos.js?v=202609301400"></script>
+  <script defer src="js/exercise-picker.js?v=202609294"></script>
+  <script defer src="js/gimnasio.js?v=202610010200"></script>
+  <script defer src="js/body-map.js?v=202609301300"></script>
+  <script defer src="js/muscle-radar.js?v=202609292"></script>
+  <script defer src="js/ejercicio-ajustes.js?v=202609293"></script>
+  <script defer src="js/rangos-config.js?v=202609301"></script>
+  <script defer src="js/rangos-engine.js?v=202609301"></script>
+  <script defer src="js/rangos-insignias.js?v=202609301500"></script>
+  <script defer src="js/habitos-config.js?v=202610010600"></script>
+  <script defer src="js/habitos-engine.js?v=202610010600"></script>
+  <script defer src="js/habitos-graficos.js?v=202610010400"></script>
+  <script defer src="js/habitos.js?v=202610010600"></script>
+  <script defer src="js/rangos.js?v=202609301500"></script>
+  <script defer src="js/perfil-ejercicio.js?v=202609301"></script>
+  <script defer src="js/offline.js?v=202610010700"></script>
+  <script defer src="js/running.js?v=202609293"></script>
+  <script defer src="js/bicicleta.js?v=202609293"></script>
+  <script defer src="js/finanzas.js?v=202609251700"></script>
+  <script defer src="js/inversiones.js?v=202609232200"></script>
 </body>
 </html>

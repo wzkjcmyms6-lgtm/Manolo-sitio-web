@@ -2773,6 +2773,36 @@ body.has-home-btn .topbar-home:active { transform: scale(0.94); }
 body.has-home-btn .topbar-clock { margin-right: 0; }
 .sidebar-clock { display: block; margin: 0.2rem 0 1rem; font-size: 0.85rem; color: var(--muted); }
 
+/* "Sin conexión": discreto, con texto (el punto no es la única señal) */
+.net-status {
+  display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.2rem 0.65rem;
+  border-radius: 999px; border: 1px solid var(--border); background: var(--surface-raised);
+  font-size: 0.75rem; font-weight: 600; color: var(--ink); white-space: nowrap;
+}
+.net-status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.net-status[hidden] { display: none; }
+.topbar .net-status { margin-left: auto; }
+.topbar .net-status:not([hidden]) + .topbar-clock { margin-left: 0.6rem; }
+.sidebar .net-status { align-self: flex-start; margin: -0.6rem 0 1rem; }
+
+/* "Nueva versión disponible · Actualizar" */
+.app-aviso {
+  position: fixed; left: 50%; top: calc(env(safe-area-inset-top) + 68px); z-index: 1150;
+  display: flex; align-items: center; gap: 0.8rem; max-width: calc(100vw - 32px);
+  padding: 0.35rem 0.35rem 0.35rem 1rem; border-radius: 999px;
+  background: var(--surface-raised); border: 1px solid var(--border); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  color: var(--ink); font-size: 0.88rem; font-weight: 600; white-space: nowrap;
+  transform: translateX(-50%); animation: app-aviso-entra 0.25s ease-out;
+}
+.app-aviso-btn {
+  min-height: 44px; padding: 0 1.1rem; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--accent-grad); color: #0a0a0a; font: inherit; font-weight: 700;
+}
+.app-aviso-btn:disabled { opacity: 0.6; }
+@keyframes app-aviso-entra { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@media (min-width: 769px) { .app-aviso { top: 84px; } }
+@media (prefers-reduced-motion: reduce) { .app-aviso { animation: none; } }
+
 /* Saltar a un día desde el calendario */
 #fin-tab-lista.day-jump { padding-bottom: 75vh; }
 @keyframes day-flash { 0%, 60% { background: rgba(255, 122, 48, 0.18); } 100% { background: transparent; } }

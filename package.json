@@ -4,6 +4,7 @@
   "description": "Manolo — panel personal (sitio estático, sin dependencias)",
   "scripts": {
     "test": "node --test",
-    "ejercicios": "node scripts/build-exercises.mjs"
+    "ejercicios": "node scripts/build-exercises.mjs",
+    "sw": "node scripts/version-sw.js"
   }
 }
