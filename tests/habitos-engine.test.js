@@ -265,6 +265,15 @@ test("bonus por racha con tope y día perfecto", () => {
   assert.equal(soloUno.diasPerfectos.length, 0);
 });
 
+test("cumplimiento de un periodo y resumen de un día", () => {
+  const registros = dias("2026-09-01", 3); // cumple 1, 2 y 3; falla el 4
+  const r = E.evaluar([hab("a", { registros }), hab("b", { registros: dias("2026-09-04", 1) })], { hoy: "2026-09-05" });
+  assert.equal(E.cumplimiento(r.habitos.a, "2026-09-01", "2026-09-04"), 0.75);
+  assert.equal(E.cumplimiento(r.habitos.a, "2026-09-05", "2026-09-05"), null); // hoy pendiente no cuenta
+  assert.deepEqual(E.resumenDia(r, "2026-09-04"), { hechos: 1, esperados: 2 });
+  assert.deepEqual(E.resumenDia(r, "2026-09-05"), { hechos: 0, esperados: 2 });
+});
+
 test("curva de niveles y títulos", () => {
   assert.equal(E.nivelDeXP(0).nivel, 1);
   assert.equal(E.nivelDeXP(E.xpParaNivel(10)).nivel, 10);

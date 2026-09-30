@@ -413,7 +413,31 @@ function evaluar(docs, opciones) {
   };
 }
 
+// ---------- Resúmenes para las pantallas ----------
+// % de cumplimiento de un hábito entre dos fechas: cumplidos / (cumplidos +
+// fallados), por día o por semana. null si no hubo nada que evaluar.
+function cumplimiento(rh, desde, hasta) {
+  let ok = 0, total = 0;
+  const contar = clase => { if (clase === "cumple") { ok++; total++; } else if (clase === "fallo") total++; };
+  if (porSemana(rh.habito)) rh.semanas.forEach(s => { if (s.domingo >= desde && s.lunes <= hasta) contar(s.estado); });
+  else Object.keys(rh.dias).forEach(f => { if (f >= desde && f <= hasta) contar(rh.dias[f].clase); });
+  return total ? ok / total : null;
+}
+
+// Un día de todos los hábitos: cuántos se cumplieron de los que tocaban.
+function resumenDia(res, f) {
+  let hechos = 0, esperados = 0;
+  Object.keys(res.habitos).forEach(id => {
+    const d = res.habitos[id].dias[f];
+    if (!d) return;
+    if (d.clase === "cumple") { hechos++; esperados++; }
+    else if (d.clase === "fallo" || d.clase === "pendiente") esperados++;
+  });
+  return { hechos, esperados };
+}
+
 return {
+  cumplimiento, resumenDia,
   CFG, isoDate, addDias, diasEntre, diaSemana, lunesDe, semanaId, fechaLogica, finDelDiaMs,
   dentroDeVentana, normalizar, activoEn, enPausa, tocaDia, estadoDia, cumple, claseDia,
   asignarComodines, xpParaNivel, nivelDeXP, titulo, evaluar

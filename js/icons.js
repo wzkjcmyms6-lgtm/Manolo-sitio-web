@@ -34,6 +34,8 @@ const ICONS = {
 
   tools: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M14.5 6.5a4 4 0 0 0-5 5L4 17l3 3 5.5-5.5a4 4 0 0 0 5-5l-2.7 2.7-2-2Z"/></svg>`,
 
+  chart: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M3.5 20h17"/><rect x="5" y="11" width="3.2" height="6.5" rx="1"/><rect x="10.4" y="5.5" width="3.2" height="12" rx="1"/><rect x="15.8" y="8.5" width="3.2" height="9" rx="1"/></svg>`,
+  flame: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12.6 2.3c.3 3-1.5 4.6-3 6.2C8 10.1 6.5 11.8 6.5 14.6 6.5 18.2 9 21 12 21s5.5-2.6 5.5-6.1c0-2.4-1.1-4-2.1-5.2-.3 1.2-.9 2.1-1.9 2.6.4-3.5-.2-6.9-.9-9Z"/></svg>`,
   user: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg>`,
   budgetFilled:`<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="9"/></svg>`,
 

@@ -19,6 +19,8 @@ const MODULES = [
 // Inicio → Running/Bicicleta). Igual se muestran/ocultan según el hash, y
 // la nav resalta el módulo padre mientras estás en uno de ellos.
 const SUB_PANELS = [
+  { hash: "hab-stats", parent: "habitos" },
+  { hash: "hab-logros", parent: "habitos" },
   { hash: "gimnasio", parent: "ejercicio" },
   { hash: "ej-rangos", parent: "ejercicio" },
   { hash: "ej-perfil", parent: "ejercicio" },
@@ -34,7 +36,7 @@ const SUB_PANELS = [
   { hash: "fin-herramientas-exportar", parent: "fin-herramientas" }
 ];
 
-// Mientras estás dentro de Finanzas o Ejercicio, la barra inferior (solo en
+// Mientras estás dentro de Hábitos, Finanzas o Ejercicio, la barra inferior (solo en
 // móvil, que es donde hace falta el espacio) deja de mostrar los módulos
 // generales y muestra las pestañas propias del módulo. Para volver a Inicio
 // la barra de arriba muestra una casita.
@@ -48,7 +50,12 @@ const EJ_TABS = [
   { hash: "ejercicio", label: "Entrenamiento", icon: "exercise", color: "#4da3ff" },
   { hash: "ej-perfil", label: "Perfil", icon: "user", color: "#4da3ff" }
 ];
-const TAB_BARS = { finanzas: FIN_TABS, ejercicio: EJ_TABS };
+const HAB_TABS = [
+  { hash: "habitos", label: "Hoy", icon: "habits", color: "#ffb84d" },
+  { hash: "hab-stats", label: "Estadísticas", icon: "chart", color: "#ffb84d" },
+  { hash: "hab-logros", label: "Logros", icon: "trophy", color: "#ffb84d" }
+];
+const TAB_BARS = { habitos: HAB_TABS, finanzas: FIN_TABS, ejercicio: EJ_TABS };
 
 const ALL_HASHES = MODULES.map(m => m.hash).concat(SUB_PANELS.map(s => s.hash));
 
