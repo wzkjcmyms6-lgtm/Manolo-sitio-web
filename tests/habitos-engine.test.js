@@ -333,3 +333,117 @@ test("rinde con 20 hábitos y 3 años de historial", () => {
   assert.ok(r.xp > 0);
   assert.ok(t < 1500, `tardó ${t} ms`);
 });
+
+// ---------- Fase 2: rango, áreas, monedas, misiones, logros y novedades ----------
+const RC = require("../js/rangos-config.js");
+const nivelNombre = r => (r.tieneRango ? E.NIVELES[r.nivel].nombre : "Sin rango");
+const perfectoN = (n, extra) => uno(hab("a", Object.assign({ inicio: "2025-01-01", registros: dias("2025-01-01", n) }, extra)), E.addDias("2025-01-01", n));
+
+test("rango: 25 divisiones con nombre propio en Hábitos (Ejercicio no cambia)", () => {
+  assert.equal(E.NIVELES.length, 25);
+  assert.equal(E.NIVELES[24].nombre, "Inquebrantable");
+  assert.equal(RC.RANGOS[RC.RANGOS.length - 1].nombre, "Simétrico");
+});
+
+test("rango calibrado: semana ≈ Bronce, mes ≈ Oro, 3 meses ≈ Diamante, 1 año al 95 % ≈ máximo", () => {
+  assert.match(nivelNombre(perfectoN(7).rango), /^Bronce/);
+  assert.match(nivelNombre(perfectoN(30).rango), /^Oro/);
+  assert.match(nivelNombre(perfectoN(90).rango), /^Diamante/);
+  // 5 meses perfectos no bastan: el máximo pide casi un año de historia.
+  assert.notEqual(nivelNombre(perfectoN(160).rango), "Inquebrantable");
+  const anio = uno(hab("a", { inicio: "2025-01-01", registros: dias("2025-01-01", 365, i => (i % 20 === 19 ? undefined : hecho())) }), "2026-01-01");
+  assert.equal(nivelNombre(anio.rango), "Inquebrantable");
+});
+
+test("rango: un fallo aislado nunca baja de división", () => {
+  for (let n = 5; n <= 240; n += 5) {
+    const antes = perfectoN(n).rango.nivel;
+    const regs = dias("2025-01-01", n + 2, i => (i === n ? undefined : hecho()));
+    const r = uno(hab("a", { inicio: "2025-01-01", registros: regs }), E.addDias("2025-01-01", n + 2)).rango;
+    const tras = r.serie.find(x => x.fecha === E.addDias("2025-01-01", n)).nivel;
+    assert.ok(tras >= antes, `tras ${n} días: ${E.NIVELES[antes].nombre} → ${E.NIVELES[tras].nombre}`);
+  }
+});
+
+test("rango: saltados y días que no tocan no mueven la fuerza; semanales se miden por semana", () => {
+  const con = perfectoN(20).rango.fuerza;
+  const regs = dias("2025-01-01", 20);
+  for (let i = 20; i < 25; i++) regs[E.addDias("2025-01-01", i)] = { e: "saltado", m: "viaje" };
+  const r = uno(hab("a", { inicio: "2025-01-01", registros: regs }), "2025-01-26").rango;
+  assert.ok(Math.abs(r.fuerza - con) < 1e-9);
+  // Semanal 3×: 4 semanas cumplidas ≈ lo mismo que 28 días perfectos de uno diario.
+  const semanal = {};
+  for (let w = 0; w < 4; w++) [0, 2, 4].forEach(d => { semanal[E.addDias("2025-01-06", w * 7 + d)] = hecho(); });
+  const rs = uno(hab("s", { inicio: "2025-01-06", freqType: "semana", timesPerWeek: 3, registros: semanal }), "2025-02-03").rango;
+  const rd = uno(hab("d", { inicio: "2025-01-06", registros: dias("2025-01-06", 28) }), "2025-02-03").rango;
+  assert.ok(Math.abs(rs.fuerza - rd.fuerza) < 0.5, `${rs.fuerza} vs ${rd.fuerza}`);
+});
+
+test("áreas: suman el XP de sus hábitos", () => {
+  const r = E.evaluar([hab("a", { area: "mente", registros: dias("2026-09-01", 5) }), hab("b", { area: "cuerpo", registros: dias("2026-09-01", 2) })], { hoy: "2026-09-06" });
+  const mente = r.areas.find(a => a.id === "mente");
+  assert.equal(mente.xp, r.habitos.a.xp);
+  assert.equal(mente.habitos, 1);
+  assert.ok(mente.nivel.nivel >= 1);
+});
+
+test("monedas: ganadas − gastadas; un comodín comprado protege la racha", () => {
+  const regs = Object.assign(dias("2026-09-01", 4), dias("2026-09-06", 3));
+  const compras = [{ que: "comodin", precio: 80, t: ms(2026, 9, 2, 10) }, { que: "recompensa", ref: "peli", precio: 150, t: ms(2026, 9, 3, 10) }];
+  const r = E.evaluar([hab("a", { registros: regs })], { hoy: "2026-09-09", compras });
+  assert.equal(r.monedas.gastadas, 230);
+  assert.equal(r.monedas.saldo, r.monedas.ganadas - 230);
+  assert.equal(r.habitos.a.racha.actual, 7);
+  assert.ok(r.logros.find(l => l.id === "primer_canje").desbloqueado);
+});
+
+test("misiones: se generan con tus datos, su progreso se recalcula y dan XP y monedas", () => {
+  // 4 semanas leyendo 4 veces por semana; la misión pide un poco más.
+  const regs = {};
+  for (let w = 0; w < 4; w++) [0, 1, 2, 3].forEach(d => { regs[E.addDias("2026-08-31", w * 7 + d)] = hecho(); });
+  const docs = [hab("leer", { inicio: "2026-08-31", name: "Leer", registros: regs })];
+  const antes = E.evaluar(docs, { hoy: "2026-09-28" });
+  const mis = E.generarMisiones(antes, "2026-09-28");
+  assert.equal(mis.length, 3);
+  assert.deepEqual(mis, E.generarMisiones(antes, "2026-09-28")); // siempre igual con los mismos datos
+  const veces = mis.find(m => m.tipo === "veces");
+  assert.equal(veces.meta, 5); // promedio 4 × 1,2 → 5
+  assert.ok(mis.some(m => m.tipo === "perfectos"));
+  // Cumplir 5 veces esa semana completa la misión.
+  for (let d = 0; d < 5; d++) regs[E.addDias("2026-09-28", d)] = hecho();
+  const r = E.evaluar(docs, { hoy: "2026-10-02", misiones: { [mis[0].semana]: mis } });
+  const m = r.misiones.find(x => x.tipo === "veces");
+  assert.equal(m.estado, "completada");
+  assert.equal(r.xpDesglose.misiones >= CFG.MISIONES.XP, true);
+  const sinMision = E.evaluar(docs, { hoy: "2026-10-02" });
+  assert.equal(r.xp - sinMision.xp, r.xpDesglose.misiones);
+  assert.ok(r.monedas.ganadas > sinMision.monedas.ganadas);
+});
+
+test("logros: se desbloquean desde el historial y los bloqueados muestran progreso", () => {
+  const regs = dias("2026-09-07", 7, i => ({ e: "hecho", t: ms(2026, 9, 7 + i, 6, 30) })); // lunes a domingo, a las 6:30
+  const r = E.evaluar([hab("a", { inicio: "2026-09-07", registros: regs })], { hoy: "2026-09-14" });
+  const L = id => r.logros.find(l => l.id === id);
+  assert.ok(L("primer_paso").desbloqueado);
+  assert.ok(L("racha_7").desbloqueado);
+  assert.ok(L("semana_perfecta").desbloqueado);
+  assert.equal(L("madrugador").actual, 7);
+  assert.ok(!L("madrugador").desbloqueado);
+  assert.equal(L("racha_30").actual, 7);
+  assert.ok(L("noctambulo").secreto);
+  // Nunca dos veces: cumplir justo después de un fallo
+  const nd = E.evaluar([hab("b", { registros: { "2026-09-01": hecho(), "2026-09-03": hecho() } })], { hoy: "2026-09-04" });
+  assert.equal(nd.logros.find(l => l.id === "nunca_dos").actual, 1);
+});
+
+test("novedades: detecta subidas de nivel, rangos nuevos, logros y días perfectos", () => {
+  const docs = [hab("a", { registros: dias("2026-09-01", 7) })];
+  const antes = E.snapshot(E.evaluar([hab("a", { registros: dias("2026-09-01", 1) })], { hoy: "2026-09-01" }));
+  const ahora = E.snapshot(E.evaluar(docs, { hoy: "2026-09-07" }));
+  const tipos = E.novedades(antes, ahora).map(n => n.tipo);
+  assert.ok(tipos.includes("nivel"));
+  assert.ok(tipos.includes("logro"));
+  assert.ok(tipos.includes("perfecto"));
+  assert.deepEqual(E.novedades(ahora, ahora), []);
+  assert.deepEqual(E.novedades(null, ahora), []); // primera vez: sin aviso
+});

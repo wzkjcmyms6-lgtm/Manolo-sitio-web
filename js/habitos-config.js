@@ -91,5 +91,73 @@ const AREAS = [
   { id: "social", nombre: "Social" }
 ];
 
-return { CONST, TIPOS, FRECUENCIAS, MOMENTOS, ESTADOS, MOTIVOS_SALTO, DIFICULTADES, XP, NIVEL, AREAS };
+// ---------- Rango por hábito (fuerza de 0 a 100, estilo Loop) ----------
+// Cada día que toca, la fuerza se acerca a 100 si cumples (ALFA_SUBE) y a 0 si
+// fallas (ALFA_BAJA, más lento: un fallo pesa poco). Los hábitos que no son
+// diarios usan un alfa proporcional a los días entre una vez y la siguiente,
+// así el tiempo pesa igual. La fuerza pasa a un "percentil" con CURVA y de ahí
+// a las 25 divisiones de RANGOS (js/rangos-config.js).
+// Calibrado (ver tests): 1 semana perfecta ≈ Bronce, 1 mes ≈ Oro, 3 meses ≈
+// Diamante, 1 año al 95 % ≈ el máximo. Un fallo aislado no baja de división.
+const FUERZA = {
+  ALFA_SUBE: 0.021,
+  ALFA_BAJA: 0.0126,
+  MINIMA: 0.7,                // la versión mínima cuenta como un 70 %
+  CURVA: [[0, 0], [85, 85], [96.5, 99], [100, 99.9]], // fuerza → percentil
+  MIN_DIAS_MAXIMO: 300,       // días de historia para llegar al último rango
+  HISTERESIS: 2,              // puntos bajo el mínimo antes de bajar de división
+  ESCUDO: 3                   // días evaluados protegidos tras subir de división
+};
+// Nombres propios de Hábitos (Ejercicio no cambia).
+const RANGO_NOMBRES = { simetrico: "Inquebrantable" };
+
+// ---------- Áreas, monedas, tienda y misiones ----------
+const AREA_NIVEL = { A: 8, B: 2 };   // XP del área para su nivel n = A × (n − 1)^B
+const TIENDA = { COMODIN: 80 };      // precio de un comodín de racha
+const MISIONES = {
+  POR_SEMANA: 3,
+  XP: 60,
+  MONEDAS: 40,
+  EXIGENCIA: 1.2,             // un poco por encima de tu promedio reciente
+  SEMANAS_BASE: 4             // semanas que se miran para el promedio
+};
+
+// ---------- Logros ----------
+// tipo + meta: el motor calcula el progreso de cada uno desde el historial.
+const L = (id, nombre, desc, tipo, meta, secreto) => ({ id, nombre, desc, tipo, meta, secreto: !!secreto });
+const LOGROS = [
+  L("primer_paso", "Primeros pasos", "Marca tu primer hábito.", "registros", 1),
+  L("registros_100", "Cien veces", "Suma 100 registros.", "registros", 100),
+  L("registros_500", "Quinientas", "Suma 500 registros.", "registros", 500),
+  L("registros_1000", "Mil", "Suma 1000 registros.", "registros", 1000),
+  L("racha_7", "Una semana", "Llega a 7 días de racha en un hábito.", "racha", 7),
+  L("racha_30", "Un mes", "Llega a 30 días de racha.", "racha", 30),
+  L("racha_100", "Cien días", "Llega a 100 días de racha.", "racha", 100),
+  L("racha_365", "Un año entero", "Llega a 365 días de racha.", "racha", 365),
+  L("perfecto_1", "Día perfecto", "Cumple todo lo que tocaba en un día.", "perfectos", 1),
+  L("perfecto_10", "Diez perfectos", "Suma 10 días perfectos.", "perfectos", 10),
+  L("perfecto_50", "Cincuenta perfectos", "Suma 50 días perfectos.", "perfectos", 50),
+  L("semana_perfecta", "Semana perfecta", "7 días perfectos de lunes a domingo.", "semanaPerfecta", 1),
+  L("mes_perfecto", "Mes perfecto", "Todos los días de un mes, perfectos.", "mesPerfecto", 1),
+  L("nunca_dos", "Nunca dos veces", "Cumple justo al día siguiente de un fallo, 5 veces.", "nuncaDos", 5),
+  L("madrugador", "Madrugador", "Marca 10 hábitos antes de las 7:00.", "madrugador", 10),
+  L("coleccion", "Coleccionista", "Ten 5 hábitos activos.", "habitos", 5),
+  L("equilibrio", "Equilibrio", "Cumple hábitos de 4 áreas distintas en una semana.", "equilibrio", 4),
+  L("nivel_5", "Nivel 5", "Llega al nivel 5.", "nivel", 5),
+  L("nivel_10", "Nivel 10", "Llega al nivel 10.", "nivel", 10),
+  L("nivel_25", "Nivel 25", "Llega al nivel 25.", "nivel", 25),
+  L("rango_oro", "De oro", "Lleva un hábito a Oro.", "rango", "oro"),
+  L("rango_diamante", "Diamante", "Lleva un hábito a Diamante.", "rango", "diamante"),
+  L("rango_max", "Inquebrantable", "Lleva un hábito al rango máximo.", "rango", "simetrico"),
+  L("misiones_10", "Misionero", "Completa 10 misiones semanales.", "misiones", 10),
+  L("ahorro_500", "Ahorrador", "Junta 500 monedas.", "ahorro", 500),
+  L("primer_canje", "Te lo ganaste", "Canjea tu primera recompensa.", "canje", 1),
+  L("limpio_30", "Treinta limpios", "30 días limpios en un hábito de Evitar.", "limpios", 30),
+  L("semanal_4", "Mes constante", "4 semanas seguidas cumpliendo un hábito semanal.", "semanal", 4),
+  L("noctambulo", "Noctámbulo", "Marca 10 hábitos entre las 0:00 y las 4:00.", "noctambulo", 10, true),
+  L("regreso", "De vuelta", "Cumple un hábito el día después de una pausa.", "regreso", 1, true)
+];
+
+return { CONST, TIPOS, FRECUENCIAS, MOMENTOS, ESTADOS, MOTIVOS_SALTO, DIFICULTADES, XP, NIVEL, AREAS,
+  FUERZA, RANGO_NOMBRES, AREA_NIVEL, TIENDA, MISIONES, LOGROS };
 });
