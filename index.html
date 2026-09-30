@@ -18,7 +18,7 @@
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
   <link rel="stylesheet" href="css/style.css?v=202610010800">
-  <link rel="stylesheet" href="css/finanzas.css?v=202610010800">
+  <link rel="stylesheet" href="css/finanzas.css?v=202610010900">
   <link rel="stylesheet" href="css/habitos.css?v=202610010600">
 </head>
 <body>
@@ -731,6 +731,9 @@
             </form>
 
             <p class="empty-state" id="export-summary"></p>
+
+            <h2 class="fin-estado-titulo">Tus datos</h2>
+            <div id="fin-estado-datos" class="fin-estado-datos" aria-live="polite"></div>
           </section>
 
           <!-- ===== Inversiones ===== -->
@@ -898,7 +901,8 @@
   <script defer src="js/offline.js?v=202610010700"></script>
   <script defer src="js/running.js?v=202609293"></script>
   <script defer src="js/bicicleta.js?v=202609293"></script>
-  <script defer src="js/finanzas/app.js?v=202610010800"></script>
+  <script defer src="js/finanzas/datos.js?v=202610010900"></script>
+  <script defer src="js/finanzas/app.js?v=202610010900"></script>
   <script defer src="js/inversiones.js?v=202609232200"></script>
 </body>
 </html>

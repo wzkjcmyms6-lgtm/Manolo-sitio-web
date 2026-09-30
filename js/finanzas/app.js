@@ -1,4 +1,6 @@
 (function () {
+// Lectura y escritura de datos (centavos, saldos, respaldo): js/finanzas/datos.js
+const FD = FinanzasDatos;
 const CATEGORIES = {
   ingreso: [
     { id: "salario", label: "Salario", icon: "salary", color: "#5cc98a" },
@@ -47,6 +49,7 @@ let gastoCategoriesCache = flattenCategoryGroups(DEFAULT_CATEGORY_GROUPS); // ve
 let ahorrosCache = [];
 let carterasCustomCache = []; // carteras que el usuario crea a mano, con su propio saldo
 let carterasMovCache = []; // movimientos (aportes, retiros, transferencias) de esas carteras
+let categoriasArchivadas = []; // categorías borradas: se guardan para seguir mostrando su nombre
 
 function financeCollection() {
   return db.collection("users").doc(currentUser.uid).collection("finanzas");
@@ -96,10 +99,15 @@ function findCategory(type, id) {
   if (type === "ingreso") {
     return CATEGORIES.ingreso.find(c => c.id === id)
       || DEFAULT_INGRESO_CATEGORIES.find(c => c.id === id)
-      || { id, label: "Ingreso", icon: "salary", color: INGRESO_COLOR };
+      || categoriasArchivadas.find(c => c.id === id)
+      || { id, label: id ? FD.etiquetaDesdeId(id) : "Ingreso", icon: "salary", color: INGRESO_COLOR };
   }
   const list = type === "gasto" ? gastoCategoriesCache : (CATEGORIES[type] || []);
-  return list.find(c => c.id === id) || gastoCategoriesCache.find(c => c.id === "otros") || { id, label: "Otros", icon: "otherCategory", color: "#9a978f" };
+  // Una categoría borrada sigue mostrando su nombre en los movimientos viejos.
+  return list.find(c => c.id === id)
+    || categoriasArchivadas.find(c => c.id === id)
+    || (id ? { id, label: FD.etiquetaDesdeId(id), icon: "otherCategory", color: "#9a978f" } : gastoCategoriesCache.find(c => c.id === "otros"))
+    || { id, label: "Otros", icon: "otherCategory", color: "#9a978f" };
 }
 // ---- Abrir/cerrar hojas y ventanas con animación ----
 function showSheet(el) {
@@ -231,33 +239,10 @@ function paymentWallet(payment) {
   return payment === "efectivo" ? "efectivo" : "debito";
 }
 
+// Saldos acumulados (no se reinician por mes), sumados en centavos.
 function computeTotals(list) {
-  const cash = { efectivo: 0, debito: 0 };
-  let deuda = 0;
-  list.forEach(m => {
-    if (m.type === "ingreso") {
-      cash[paymentWallet(m.payment)] += m.amount;
-    } else if (m.type === "gasto") {
-      if (m.payment === "credito") deuda += m.amount;
-      else cash[paymentWallet(m.payment)] -= m.amount;
-    } else if (m.type === "pago_tarjeta") {
-      cash[paymentWallet(m.payment)] -= m.amount;
-      deuda -= m.amount;
-    } else if (m.type === "transferencia") {
-      // Una transferencia solo mueve plata entre carteras: nunca cuenta como
-      // gasto ni ingreso. Acá solo importa si toca Efectivo, Débito o la
-      // tarjeta; el lado de Ahorro o de una cartera propia se guarda aparte.
-      const received = m.amountTo != null ? m.amountTo : m.amount;
-      if (isCash(m.from)) cash[cashWallet(m.from)] -= m.amount;
-      if (isCash(m.to)) cash[cashWallet(m.to)] += received;
-      if (m.to === "tarjeta") deuda -= received;
-    } else if (m.type === "ajuste_tarjeta") {
-      // Pago de la tarjeta hecho con plata de otra cartera (Ahorro, etc.):
-      // solo baja la deuda.
-      deuda -= m.amount;
-    }
-  });
-  return { saldo: cash.efectivo + cash.debito, efectivo: cash.efectivo, debito: cash.debito, deuda };
+  const t = FD.saldos(list);
+  return { saldo: FD.aBs(t.saldo), efectivo: FD.aBs(t.efectivo), debito: FD.aBs(t.debito), deuda: FD.aBs(t.deuda) };
 }
 
 // ================= Resumen =================
@@ -304,7 +289,7 @@ function renderStats() {
       const amount = parseFloat(document.getElementById("pay-card-amount").value);
       const source = document.getElementById("pay-card-source").value;
       if (!amount || amount <= 0) return;
-      financeCollection().add({
+      financeCollection().add(FD.conCentavos({
         createdAt: Date.now(),
         date: isoDate(new Date()),
         type: "pago_tarjeta",
@@ -312,7 +297,7 @@ function renderStats() {
         payment: source,
         desc: "Pago de tarjeta de crédito",
         amount
-      });
+      }));
     });
   }
 }
@@ -375,20 +360,21 @@ function periodMovements() {
 function savingsByWallet(list) {
   const byWallet = {};
   list.filter(m => m.type === "transferencia").forEach(m => {
-    if (isCash(m.from) && !isCash(m.to) && m.to !== "tarjeta") byWallet[m.to] = (byWallet[m.to] || 0) + m.amount;
-    if (isCash(m.to) && !isCash(m.from) && m.from !== "tarjeta") byWallet[m.from] = (byWallet[m.from] || 0) - (m.amountTo != null ? m.amountTo : m.amount);
+    if (isCash(m.from) && !isCash(m.to) && m.to !== "tarjeta") byWallet[m.to] = (byWallet[m.to] || 0) + FD.aCentavos(m.amount);
+    if (isCash(m.to) && !isCash(m.from) && m.from !== "tarjeta") byWallet[m.from] = (byWallet[m.from] || 0) - FD.aCentavos(m.amountTo != null ? m.amountTo : m.amount);
   });
+  Object.keys(byWallet).forEach(k => { byWallet[k] = FD.aBs(byWallet[k]); });
   return byWallet;
 }
 
 function periodSummary(list) {
-  const ingresos = list.filter(m => m.type === "ingreso").reduce((s, m) => s + m.amount, 0);
-  const gastos = list.filter(m => m.type === "gasto").reduce((s, m) => s + m.amount, 0);
+  const ingresos = FD.sumaBs(list.filter(m => m.type === "ingreso"), m => m.amount);
+  const gastos = FD.sumaBs(list.filter(m => m.type === "gasto"), m => m.amount);
   // El saldo es lo real: lo que se apartó a Ahorro u otras carteras ya no se
   // puede gastar, aunque no sea un gasto. Pagar la tarjeta no se resta: esos
   // gastos ya están en "Gastos".
-  const ahorro = Object.values(savingsByWallet(list)).reduce((s, v) => s + v, 0);
-  return { ingresos, gastos, ahorro, saldo: ingresos - gastos - ahorro };
+  const ahorro = FD.sumaBs(Object.values(savingsByWallet(list)), v => v);
+  return { ingresos, gastos, ahorro, saldo: FD.aBs(FD.aCentavos(ingresos) - FD.aCentavos(gastos) - FD.aCentavos(ahorro)) };
 }
 
 function renderMovements() {
@@ -430,7 +416,7 @@ function renderMovements() {
 
   const container = document.getElementById("finance-list");
   container.innerHTML = groups.map(g => {
-    const total = g.items.reduce((s, m) => s + movementDelta(m), 0);
+    const total = FD.sumaBs(g.items, movementDelta);
     const totalText = total === 0 ? formatBsShort(0) : `${total > 0 ? "+" : "−"}${formatBsShort(Math.abs(total))}`;
     return `
       <div class="txn-day" data-day="${g.date}">
@@ -480,9 +466,19 @@ function withoutId(obj) {
   return data;
 }
 
-function removeWithUndo(message, entries) {
-  entries.forEach(e => e.ref.delete());
-  showUndoToast(message, () => Promise.all(entries.map(e => e.ref.set(e.data))));
+// Borrar y restaurar van en un solo lote: se aplican juntos, también sin
+// conexión (nunca queda una transferencia con un solo lado).
+function removeWithUndo(message, entries, extra) {
+  const lote = db.batch();
+  entries.forEach(e => lote.delete(e.ref));
+  if (extra && extra.borrar) extra.borrar(lote);
+  lote.commit().catch(err => console.error("Manolo: no se pudo borrar", err));
+  showUndoToast(message, () => {
+    const vuelta = db.batch();
+    entries.forEach(e => vuelta.set(e.ref, e.data));
+    if (extra && extra.restaurar) extra.restaurar(vuelta);
+    return vuelta.commit().catch(err => console.error("Manolo: no se pudo restaurar", err));
+  });
 }
 
 function undoToastEl() {
@@ -823,7 +819,7 @@ function vgBudgetHTML(period) {
 
 function renderVistaGeneral() {
   const period = currentBudgetPeriod();
-  const gastado = financeCache.filter(m => m.type === "gasto" && isInPeriod(m.date, period)).reduce((s, m) => s + m.amount, 0);
+  const gastado = FD.sumaBs(financeCache.filter(m => m.type === "gasto" && isInPeriod(m.date, period)), m => m.amount);
   document.getElementById("vg-spent-label").textContent = `Gastado: ${periodLabel(period)}`;
   document.getElementById("vg-spent-value").textContent = formatBsShort(gastado);
   document.getElementById("vg-chart").innerHTML = vgChartHTML(period);
@@ -1398,10 +1394,10 @@ async function saveTxn() {
     const payload = { from: t.from, to: t.to, amount, amountTo, desc: t.desc.trim(), date: t.date };
     if (walletCurrency(t.from) !== walletCurrency(t.to) && rate > 0) payload.tipoCambio = rate;
     closeTxnSheet();
-    await createTransfer(payload);
+    createTransfer(payload).catch(err => console.error("Manolo: no se pudo guardar la transferencia", err));
     return;
   }
-  const data = { date: t.date, type: t.type, category: t.category, payment: t.payment, desc: t.desc.trim(), amount, excluded: t.excluded, factura: t.type === "gasto" && !!t.factura };
+  const data = FD.conCentavos({ date: t.date, type: t.type, category: t.category, payment: t.payment, desc: t.desc.trim(), amount, excluded: t.excluded, factura: t.type === "gasto" && !!t.factura });
   closeTxnSheet();
   if (t.id) await financeCollection().doc(t.id).update(data);
   else await financeCollection().add(Object.assign({ createdAt: Date.now() }, data));
@@ -1513,7 +1509,8 @@ function computeSpentByCategory(period) {
   gastoCategoriesCache.forEach(c => { spent[c.id] = 0; });
   financeCache
     .filter(m => m.type === "gasto" && !m.excluded && isInPeriod(m.date, period))
-    .forEach(m => { spent[m.category] = (spent[m.category] || 0) + m.amount; });
+    .forEach(m => { spent[m.category] = (spent[m.category] || 0) + m.montoCent; });
+  Object.keys(spent).forEach(k => { spent[k] = FD.aBs(spent[k]); });
   return spent;
 }
 
@@ -1580,7 +1577,8 @@ function computeReceivedByCategory(period) {
   const received = {};
   financeCache
     .filter(m => m.type === "ingreso" && !m.excluded && isInPeriod(m.date, period))
-    .forEach(m => { received[m.category] = (received[m.category] || 0) + m.amount; });
+    .forEach(m => { received[m.category] = (received[m.category] || 0) + m.montoCent; });
+  Object.keys(received).forEach(k => { received[k] = FD.aBs(received[k]); });
   return received;
 }
 
@@ -1771,7 +1769,7 @@ function renderCategoryDetail() {
     .sort(byNewest);
 
   const planned = budgetsCache[catId] || 0;
-  const used = movements.reduce((s, m) => s + m.amount, 0);
+  const used = FD.sumaBs(movements, m => m.amount);
   const remaining = planned - used;
   const isIncome = type === "ingreso";
   const over = !isIncome && planned > 0 && remaining < 0;
@@ -2509,7 +2507,7 @@ function renderReiva() {
   }
   el.innerHTML = months.map(key => {
     const items = byMonth[key].slice().sort(byNewest);
-    const total = items.reduce((s, m) => s + m.amount, 0);
+    const total = FD.sumaBs(items, m => m.amount);
     const [y, mo] = key.split("-");
     const name = `${MONTH_NAMES[Number(mo) - 1]}${y !== thisYear ? " " + y : ""}`;
     return `
@@ -2561,8 +2559,18 @@ document.getElementById("period-days").addEventListener("click", e => {
 
 // ================= Herramientas: Categorías =================
 
+// Se guarda con merge: así no se pierden otros campos del documento (como
+// las categorías archivadas).
 function saveCategoryGroups(groups) {
-  return categoriasDocRef().set({ groups });
+  return categoriasDocRef().set({ groups }, { merge: true });
+}
+// Al borrar una categoría se guarda su nombre, ícono y color para que los
+// movimientos viejos la sigan mostrando bien.
+function archivarCategoria(cat, extra) {
+  if (!cat || categoriasArchivadas.some(c => c.id === cat.id)) return;
+  const item = Object.assign({ id: cat.id, label: cat.label, icon: cat.icon || "otherCategory", color: cat.color || "#9a978f" }, cat.emoji ? { emoji: cat.emoji } : {}, extra || {});
+  categoriasArchivadas = categoriasArchivadas.concat([item]);
+  categoriasDocRef().set({ archivadas: categoriasArchivadas }, { merge: true }).catch(err => console.error("Manolo: no se pudo archivar la categoría", err));
 }
 
 const EMOJI_CHOICES = [
@@ -2765,6 +2773,7 @@ async function deleteCategoryItem(groupId, itemId) {
     if (!ok) return;
     delete budgetsCache[itemId];
     saveBudgets();
+    archivarCategoria(Object.assign({ color: INGRESO_COLOR }, item), { tipo: "ingreso" });
     saveIngresoCategories(CATEGORIES.ingreso.filter(i => i.id !== itemId));
     return;
   }
@@ -2777,6 +2786,7 @@ async function deleteCategoryItem(groupId, itemId) {
     delete budgetsCache[itemId];
     saveBudgets();
   }
+  archivarCategoria(gastoCategoriesCache.find(c => c.id === itemId) || item);
 
   const next = categoryGroupsCache
     .map(g => g.id === groupId ? Object.assign({}, g, { items: g.items.filter(i => i.id !== itemId) }) : g)
@@ -2913,7 +2923,7 @@ document.getElementById("new-group-form").addEventListener("submit", e => {
 // puede crear sus propias carteras (con su propio saldo y moneda) y
 // transferir plata entre Ahorro y esas carteras personalizadas.
 function customWalletBalance(id) {
-  return carterasMovCache.filter(m => m.carteraId === id).reduce((s, m) => s + m.monto, 0);
+  return FD.sumaBs(carterasMovCache.filter(m => m.carteraId === id), m => m.monto);
 }
 
 // Todas las carteras que se pueden usar en una transferencia. Gastos y
@@ -2949,24 +2959,32 @@ function formatWalletAmount(id, n) {
 // en la lista y mueva el saldo de "Yo" o la deuda de la tarjeta) más, si hace
 // falta, el movimiento en Ahorro o en la cartera propia. Guardamos esos ids en
 // "links" para poder borrar todo junto.
-async function createTransfer({ from, to, amount, amountTo, desc, date, tipoCambio }) {
+// Todo en un solo lote con ids creados en el teléfono: sin conexión se
+// guarda completo al instante (antes esperaba al servidor entre un paso y
+// otro y, si cerrabas la app, quedaba a medias).
+function createTransfer({ from, to, amount, amountTo, desc, date, tipoCambio }) {
   const suffix = desc ? " · " + desc : "";
   const links = [];
-  const side = async (walletId, monto, nota) => {
+  const lote = db.batch();
+  const creado = Date.now();
+  const side = (walletId, monto, nota) => {
     if (isCash(walletId) || walletId === "tarjeta") return;
     if (walletId === "ahorro") {
-      const ref = await ahorrosCollection().add({ date, amount: monto, notes: nota, createdAt: Date.now() });
+      const ref = ahorrosCollection().doc();
+      lote.set(ref, FD.conCentavos({ date, amount: monto, notes: nota, createdAt: creado }));
       links.push({ kind: "ahorro", id: ref.id });
     } else {
-      const ref = await carterasMovimientosCollection().add({ carteraId: walletId, fecha: date, monto, nota, createdAt: Date.now() });
+      const ref = carterasMovimientosCollection().doc();
+      lote.set(ref, FD.conCentavos({ carteraId: walletId, fecha: date, monto, nota, createdAt: creado }));
       links.push({ kind: "cartera", id: ref.id });
     }
   };
-  await side(from, -amount, `Transferencia a ${walletLabel(to)}${suffix}`);
-  await side(to, amountTo, `Transferencia desde ${walletLabel(from)}${suffix}`);
-  const record = { date, type: "transferencia", category: "transferencia", from, to, amount, amountTo, desc: desc || "", links, createdAt: Date.now() };
+  side(from, -amount, `Transferencia a ${walletLabel(to)}${suffix}`);
+  side(to, amountTo, `Transferencia desde ${walletLabel(from)}${suffix}`);
+  const record = FD.conCentavos({ date, type: "transferencia", category: "transferencia", from, to, amount, amountTo, desc: desc || "", links, createdAt: creado });
   if (tipoCambio) record.tipoCambio = tipoCambio;
-  return financeCollection().add(record);
+  lote.set(financeCollection().doc(), record);
+  return lote.commit();
 }
 
 function deleteTransfer(m) {
@@ -2994,14 +3012,23 @@ function showFormError(id, err) {
 function clearFormError(id) {
   document.getElementById(id).hidden = true;
 }
+// Borrar una cartera propia se puede deshacer (antes se perdían sus
+// movimientos sin aviso).
 function deleteCustomWallet(id) {
-  carterasCustomDocRef().set({ list: carterasCustomCache.filter(w => w.id !== id) });
-  carterasMovCache.filter(m => m.carteraId === id).forEach(m => carterasMovimientosCollection().doc(m.id).delete());
+  const w = carterasCustomCache.find(x => x.id === id);
+  if (!w) return;
+  const movs = carterasMovCache.filter(m => m.carteraId === id);
+  removeWithUndo(`Cartera «${w.nombre}» eliminada`,
+    movs.map(m => ({ ref: carterasMovimientosCollection().doc(m.id), data: FD.sinId(m) })),
+    {
+      borrar: lote => lote.set(carterasCustomDocRef(), { list: carterasCustomCache.filter(x => x.id !== id) }),
+      restaurar: lote => lote.set(carterasCustomDocRef(), { list: carterasCustomCache.filter(x => x.id !== id).concat([w]) })
+    });
 }
 
 function renderWallets() {
   const { saldo, deuda, efectivo, debito } = computeTotals(financeCache);
-  const totalAhorros = ahorrosCache.reduce((s, a) => s + a.amount, 0);
+  const totalAhorros = FD.sumaBs(ahorrosCache, a => a.amount);
   let netoBs = saldo - deuda;
   let netoUsd = totalAhorros;
   carterasCustomCache.forEach(w => {
@@ -3233,7 +3260,7 @@ function walletBalanceText(walletId) {
   if (walletId === "efectivo") return formatMoney(efectivo);
   if (walletId === "debito") return formatMoney(debito);
   if (walletId === "tarjeta") return deuda > 0 ? "−" + formatMoney(deuda) : formatMoney(0);
-  if (walletId === "ahorro") return formatUSD(ahorrosCache.reduce((s, a) => s + a.amount, 0));
+  if (walletId === "ahorro") return formatUSD(FD.sumaBs(ahorrosCache, a => a.amount));
   const w = carterasCustomCache.find(x => x.id === walletId);
   if (!w) return "";
   return w.moneda === "US$" ? formatUSD(customWalletBalance(walletId)) : formatMoney(customWalletBalance(walletId));
@@ -3396,8 +3423,9 @@ document.getElementById("export-form").addEventListener("submit", e => {
 (function initExportDates() {
   const today = new Date();
   const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  document.getElementById("export-from").valueAsDate = firstOfMonth;
-  document.getElementById("export-to").valueAsDate = today;
+  // valueAsDate usa UTC: en Bolivia, después de las 20:00 marcaba mañana.
+  document.getElementById("export-from").value = isoDate(firstOfMonth);
+  document.getElementById("export-to").value = isoDate(today);
 })();
 
 // ================= Tabs =================
@@ -3420,7 +3448,7 @@ document.querySelectorAll("[data-budget-tab]").forEach(btn => {
 const RENDERERS = [
   renderStats, updateMonthLabel, renderMovements, renderGasto, renderVistaGeneral,
   updateBudgetMonthLabel, renderBudgets, renderBudgetInputs, renderBudgetSummary, renderBudgetInfo,
-  renderCategoryGroups, renderPeriodSettings, renderWallets, updateExportSummary, renderReiva
+  renderCategoryGroups, renderPeriodSettings, renderWallets, updateExportSummary, renderReiva, renderEstadoDatos
 ];
 // Finanzas solo se dibuja cuando se ve: si estás en otra sección, los
 // cambios quedan marcados y se dibujan al entrar (así no frena el resto de
@@ -3450,9 +3478,91 @@ new MutationObserver(() => { if (renderPendiente && finanzasVisible()) renderAll
   .observe(document.querySelector(".main") || document.body, { attributes: true, attributeFilter: ["hidden"], subtree: true });
 
 
+// ================= Respaldo automático y verificación =================
+// La primera vez que llegan tus datos desde el servidor (completos, no solo
+// la copia del teléfono) se guarda un respaldo de TODO Finanzas en
+// users/{tu usuario}/finanzas_respaldos, antes de escribir nada con el
+// formato nuevo. Los documentos originales nunca se reescriben.
+function metaDocRef(nombre) {
+  return db.collection("users").doc(currentUser.uid).collection("meta").doc(nombre);
+}
+function respaldosCollection() {
+  return db.collection("users").doc(currentUser.uid).collection("finanzas_respaldos");
+}
+const crudos = { finanzas: [], ahorros: [], carteras: [] };      // tal como están en Firestore
+const delServidor = { finanzas: false, ahorros: false, carteras: false };
+let esquema = null, esquemaCargado = false, respaldando = false, respaldoError = null;
+
+function verificacionActual() {
+  return FD.verificar(crudos.finanzas, financeCache);
+}
+function intentarRespaldo() {
+  if (respaldando || !esquemaCargado || (esquema && esquema.respaldo)) return;
+  if (!delServidor.finanzas || !delServidor.ahorros || !delServidor.carteras) return;
+  respaldando = true;
+  const nombres = ["config_presupuesto", "presupuestos", "categorias_gasto", "categorias_ingreso", "categorias_personalizadas", "carteras_custom"];
+  Promise.all(nombres.map(n => metaDocRef(n).get({ source: "server" }).then(d => [n, d.exists ? d.data() : null])))
+    .then(pares => {
+      const meta = {};
+      pares.forEach(([n, v]) => { if (v) meta[n] = v; });
+      const r = FD.crearRespaldo({ finanzas: crudos.finanzas, ahorros: crudos.ahorros, carteras_movimientos: crudos.carteras, meta }, Date.now());
+      const id = `${FD.isoLocal(new Date())}-${Date.now().toString(36)}`;
+      const v = verificacionActual();
+      const lote = db.batch();
+      r.partes.forEach((parte, i) => lote.set(respaldosCollection().doc(`${id}-${String(i).padStart(3, "0")}`),
+        { respaldo: id, parte: i, partes: r.partes.length, coleccion: parte.coleccion, desde: parte.desde, docs: parte.docs }));
+      lote.set(metaDocRef("finanzas_esquema"), {
+        version: FD.ESQUEMA,
+        respaldo: Object.assign({ id }, r.resumen),
+        verificacion: { ok: v.ok, total: v.total, conDecimalesExtra: v.conDecimalesExtra, porTipo: v.porTipo, fecha: Date.now() }
+      }, { merge: true });
+      return lote.commit();
+    })
+    .then(() => { respaldoError = null; })
+    .catch(err => { respaldoError = (err && err.message) || String(err); console.error("Manolo: no se pudo guardar el respaldo", err); })
+    .finally(() => { respaldando = false; pedirRender(); });
+}
+
+// Estado de tus datos (en Herramientas → Exportar).
+function renderEstadoDatos() {
+  const el = document.getElementById("fin-estado-datos");
+  if (!el) return;
+  const v = verificacionActual();
+  const fmtFecha = t => new Date(t).toLocaleString("es-BO", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const tipos = { gasto: "Gastos", ingreso: "Ingresos", transferencia: "Transferencias", pago_tarjeta: "Pagos de tarjeta", ajuste_tarjeta: "Ajustes de tarjeta" };
+  const r = esquema && esquema.respaldo;
+  const respaldo = r
+    ? `Respaldo automático del ${fmtFecha(r.creado)}: ${r.conteos.finanzas} movimientos, ${r.conteos.ahorros} de Ahorro y ${r.conteos.carteras_movimientos} de tus carteras.`
+    : respaldoError ? `No se pudo guardar el respaldo automático: ${escapeHtml(respaldoError)}. Se vuelve a intentar al abrir la app.`
+      : "El respaldo automático se guarda la primera vez que abras Finanzas con internet.";
+  el.innerHTML = `
+    <div class="fin-estado-fila ${v.ok ? "ok" : "mal"}">
+      <span class="fin-estado-ico" data-icon="${v.ok ? "check" : "close"}"></span>
+      <span><strong>${v.ok ? "Datos verificados" : "Revisar datos"}</strong>: ${v.total} movimientos, totales ${v.ok ? "iguales" : "distintos"} al guardarse en centavos.</span>
+    </div>
+    <ul class="fin-estado-lista">${v.porTipo.map(f => `<li><span>${tipos[f.tipo] || escapeHtml(f.tipo)} (${f.n})</span><span>${formatMoney(FD.aBs(f.centAdaptado))}</span></li>`).join("")}</ul>
+    ${v.conDecimalesExtra ? `<p class="fin-estado-nota">${v.conDecimalesExtra} monto${v.conDecimalesExtra === 1 ? " tenía" : "s tenían"} más de 2 decimales y se ${v.conDecimalesExtra === 1 ? "muestra" : "muestran"} redondeado${v.conDecimalesExtra === 1 ? "" : "s"} al centavo (el original no cambia).</p>` : ""}
+    <p class="fin-estado-nota">${respaldo}</p>`;
+  renderIcons(el);
+}
+
 onAuthReady(() => {
-  financeCollection().onSnapshot(snap => {
-    financeCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // includeMetadataChanges: para saber cuándo los datos ya vienen del
+  // servidor (completos) y recién ahí hacer el respaldo.
+  financeCollection().onSnapshot({ includeMetadataChanges: true }, snap => {
+    if (!snap.metadata || !snap.metadata.fromCache) delServidor.finanzas = true;
+    const cambios = typeof snap.docChanges === "function" ? snap.docChanges().length : 1;
+    if (cambios || !crudos.finanzas.length) {
+      crudos.finanzas = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+      financeCache = crudos.finanzas.map(d => FD.adaptarMovimiento(d.id, d));
+      pedirRender();
+    }
+    intentarRespaldo();
+  });
+  metaDocRef("finanzas_esquema").onSnapshot({ includeMetadataChanges: true }, doc => {
+    esquema = doc.exists ? doc.data() : null;
+    esquemaCargado = doc.exists || !(doc.metadata && doc.metadata.fromCache);
+    intentarRespaldo();
     pedirRender();
   });
   budgetConfigDocRef().onSnapshot(doc => {
@@ -3489,19 +3599,26 @@ onAuthReady(() => {
 
   categoriasDocRef().onSnapshot(doc => {
     const data = doc.exists ? doc.data() : null;
+    categoriasArchivadas = (data && Array.isArray(data.archivadas)) ? data.archivadas : [];
+    // Sin conexión y sin copia local, "no existe" solo significa "no lo sé":
+    // se usan las de siempre en pantalla, pero NO se escriben (al volver la
+    // red habrían reemplazado tus categorías reales).
+    const soloCache = doc.metadata && doc.metadata.fromCache;
     if (data && Array.isArray(data.groups) && data.groups.length) {
       categoryGroupsCache = data.groups;
+    } else if (soloCache) {
+      categoryGroupsCache = DEFAULT_CATEGORY_GROUPS;
     } else if (data && Array.isArray(data.list) && data.list.length) {
       // Formato viejo (lista plana, sin subcategorías): cada categoría pasa
       // a ser su propio grupo con un solo ítem, para no perder nada.
       categoryGroupsCache = data.list.map(c => ({ id: c.id, nombre: c.label, items: [{ id: c.id, label: c.label, icon: c.icon }] }));
-      categoriasDocRef().set({ groups: categoryGroupsCache });
+      categoriasDocRef().set({ groups: categoryGroupsCache }, { merge: true });
     } else {
       categoryGroupsCache = DEFAULT_CATEGORY_GROUPS;
-      categoriasDocRef().set({ groups: DEFAULT_CATEGORY_GROUPS });
+      categoriasDocRef().set({ groups: DEFAULT_CATEGORY_GROUPS }, { merge: true });
     }
     updateGastoCategoriesCache();
-    groupsLoaded = true;
+    groupsLoaded = !soloCache || groupsLoaded;
     migrateLegacyCustom();
     pedirRender();
   });
@@ -3521,17 +3638,23 @@ onAuthReady(() => {
     legacyCustom = (data && Array.isArray(data.categories)) ? data.categories : [];
     migrateLegacyCustom();
   }).catch(() => {});
-  ahorrosCollection().onSnapshot(snap => {
-    ahorrosCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  ahorrosCollection().onSnapshot({ includeMetadataChanges: true }, snap => {
+    if (!snap.metadata || !snap.metadata.fromCache) delServidor.ahorros = true;
+    crudos.ahorros = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    ahorrosCache = crudos.ahorros.map(d => FD.adaptarAhorro(d.id, d));
     pedirRender();
+    intentarRespaldo();
   });
   carterasCustomDocRef().onSnapshot(doc => {
     carterasCustomCache = (doc.exists && Array.isArray(doc.data().list)) ? doc.data().list : [];
     pedirRender();
   });
-  carterasMovimientosCollection().onSnapshot(snap => {
-    carterasMovCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  carterasMovimientosCollection().onSnapshot({ includeMetadataChanges: true }, snap => {
+    if (!snap.metadata || !snap.metadata.fromCache) delServidor.carteras = true;
+    crudos.carteras = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    carterasMovCache = crudos.carteras.map(d => FD.adaptarMovCartera(d.id, d));
     pedirRender();
+    intentarRespaldo();
   });
 });
 })();
