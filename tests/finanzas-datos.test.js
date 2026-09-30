@@ -154,3 +154,113 @@ test("respaldo: partes de hasta 800 documentos y se puede reconstruir igual", ()
   assert.deepEqual(unido.meta, datos.meta);
   assert.equal(r.resumen.totalesCent.gasto, D.sumaCent(finanzas.filter(f => f.type === "gasto"), f => f.amount));
 });
+
+// ---------- 1d: copia en archivo, importación, CSV y modo demo ----------
+const Demo = require("../js/finanzas/demo.js");
+
+test("copia en archivo: se valida y se detectan archivos que no son copias", () => {
+  const datos = { finanzas: [{ id: "m1", date: "2026-09-01", type: "gasto", amount: 10 }], ahorros: [], carteras_movimientos: [], meta: { presupuestos: { comida: 100 }, finanzas_esquema: { x: 1 } } };
+  const c = D.copiaCompleta(datos, new Date(2026, 8, 30, 23, 30).getTime());
+  assert.equal(c.app, "manolo-finanzas");
+  assert.equal(c.fecha, "2026-09-30"); // hora local, no UTC
+  assert.deepEqual(c.conteos, { finanzas: 1, ahorros: 0, carteras_movimientos: 0 });
+  assert.ok(!("finanzas_esquema" in c.datos.meta)); // lo interno no viaja
+  const json = JSON.parse(JSON.stringify(c));
+  assert.ok(D.validarCopia(json).ok);
+  assert.equal(D.validarCopia({ hola: 1 }).ok, false);
+  assert.equal(D.validarCopia(null).ok, false);
+  assert.equal(D.validarCopia({ app: "manolo-finanzas", version: 99, datos: {} }).ok, false);
+  assert.equal(D.validarCopia({ app: "manolo-finanzas", version: 2, datos: { finanzas: "roto" } }).ok, false);
+});
+
+test("importar: solo agrega lo que falta, nunca cambia lo que ya tienes", () => {
+  const actual = {
+    finanzas: [{ id: "m1", date: "2026-09-01", type: "gasto", amount: 10 }], ahorros: [], carteras_movimientos: [],
+    meta: {
+      presupuestos: { comida: 100 },
+      categorias_gasto: { groups: [{ id: "comida", nombre: "Comida", items: [{ id: "comida", label: "Comida" }] }] },
+      carteras_custom: { list: [{ id: "viajes", nombre: "Viajes", moneda: "Bs" }] },
+      finanzas_ajustes: { reivaPct: 5 }
+    }
+  };
+  const copia = D.copiaCompleta({
+    finanzas: [{ id: "m1", date: "2026-09-01", type: "gasto", amount: 999 }, { id: "m2", date: "2026-09-02", type: "ingreso", amount: 50 }, { id: "malo", date: "ayer", amount: 1 }],
+    ahorros: [{ id: "a1", amount: 5 }], carteras_movimientos: [],
+    meta: {
+      presupuestos: { comida: 555, transporte: 200 },
+      categorias_gasto: { groups: [{ id: "comida", nombre: "Comida", items: [{ id: "comida", label: "Comida" }, { id: "cafe", label: "Café" }] }, { id: "mascotas", nombre: "Mascotas", items: [{ id: "mascotas", label: "Mascotas" }] }], archivadas: [{ id: "gym", label: "Gym" }] },
+      carteras_custom: { list: [{ id: "viajes", nombre: "Otro nombre", moneda: "Bs" }, { id: "casa", nombre: "Casa", moneda: "US$" }] },
+      finanzas_ajustes: { reivaPct: 13 }
+    }
+  }, 1);
+  const p = D.planImportacion(JSON.parse(JSON.stringify(copia)), actual);
+  assert.ok(p.ok);
+  assert.deepEqual(p.nuevos.finanzas.map(x => x.id), ["m2"]); // m1 no se pisa
+  assert.equal(p.resumen.descartados, 1);
+  assert.deepEqual(p.meta.presupuestos, { transporte: 200 }); // comida conserva 100
+  assert.deepEqual(p.meta.categorias_gasto.groups.map(g => [g.id, g.items.map(i => i.id)]), [["comida", ["comida", "cafe"]], ["mascotas", ["mascotas"]]]);
+  assert.deepEqual(p.meta.categorias_gasto.archivadas.map(x => x.id), ["gym"]);
+  assert.deepEqual(p.meta.carteras_custom.list.map(w => w.nombre), ["Viajes", "Casa"]);
+  assert.ok(!("finanzas_ajustes" in p.meta)); // ya tenías ajustes
+  // Importar lo mismo dos veces no agrega nada
+  const actual2 = { finanzas: actual.finanzas.concat(p.nuevos.finanzas), ahorros: p.nuevos.ahorros, carteras_movimientos: [],
+    meta: Object.assign({}, actual.meta, { presupuestos: { comida: 100, transporte: 200 }, categorias_gasto: p.meta.categorias_gasto, carteras_custom: p.meta.carteras_custom }) };
+  assert.ok(D.planImportacion(JSON.parse(JSON.stringify(copia)), actual2).vacio);
+});
+
+test("CSV: escapa comas, comillas y saltos; montos con punto decimal", () => {
+  const csv = D.aCsv(["Fecha", "Nota", "Monto"], [["2026-09-30", 'Pan, leche y "queso"', D.montoCsv(123456)], ["2026-09-30", "línea\nnueva", D.montoCsv(5)]]);
+  assert.ok(csv.startsWith("﻿Fecha,Nota,Monto\r\n"));
+  assert.ok(csv.includes('"Pan, leche y ""queso""",1234.56'));
+  assert.ok(csv.includes('"línea\nnueva",0.05'));
+});
+
+test("modo demo: 6 meses de datos ficticios coherentes, sin NaN", () => {
+  const d = Demo.generarDemo(new Date(2026, 8, 30));
+  assert.ok(d.finanzas.length > 300);
+  const fechas = d.finanzas.map(m => m.date).sort();
+  assert.equal(fechas[0], "2026-04-01");
+  assert.equal(fechas[fechas.length - 1], "2026-09-30");
+  assert.ok(d.finanzas.every(m => Number.isFinite(m.amount) && m.amount > 0 && m.montoCent === Math.round(m.amount * 100)));
+  assert.equal(new Set(d.finanzas.map(m => m.id)).size, d.finanzas.length);
+  // Los enlaces de las transferencias existen
+  const ids = new Set(d.ahorros.map(a => a.id).concat(d.carteras_movimientos.map(c => c.id)));
+  d.finanzas.filter(m => m.type === "transferencia").forEach(m => (m.links || []).forEach(l => assert.ok(ids.has(l.id))));
+  // Nada de datos personales: solo textos genéricos
+  const textos = d.finanzas.map(m => m.desc).join(" ");
+  assert.ok(!/@|\d{7,}/.test(textos));
+  // Siempre es el mismo (misma semilla)
+  assert.deepEqual(Demo.generarDemo(new Date(2026, 8, 30)).finanzas.slice(0, 20), d.finanzas.slice(0, 20));
+  // Los saldos se pueden calcular sin problemas
+  const s = D.saldos(d.finanzas.map(m => D.adaptarMovimiento(m.id, m)));
+  assert.ok(Object.values(s).every(Number.isInteger));
+});
+
+test("modo demo: almacén aparte con la forma de Firestore", async () => {
+  const memoria = (() => { const m = {}; return { getItem: k => (k in m ? m[k] : null), setItem: (k, v) => { m[k] = String(v); }, removeItem: k => { delete m[k]; }, _m: m }; })();
+  Demo.activar(memoria);
+  assert.ok(Demo.activo(memoria));
+  const alm = Demo.crearAlmacen(Demo.generarDemo(new Date(2026, 8, 30)), memoria);
+  const col = alm.raiz.collection("finanzas");
+  const primero = await col.get();
+  const ref = await col.add({ type: "gasto", amount: 12.5, date: "2026-09-30" });
+  let visto = null;
+  col.onSnapshot({ includeMetadataChanges: true }, snap => { visto = snap.docs.length; });
+  await new Promise(r => setTimeout(r, 5));
+  assert.equal(visto, primero.docs.length + 1);
+  const lote = alm.batch();
+  lote.delete(col.doc(ref.id));
+  lote.set(alm.raiz.collection("meta").doc("presupuestos"), { comida: 1 }, { merge: true });
+  await lote.commit();
+  assert.equal((await col.get()).docs.length, primero.docs.length);
+  const pres = (await alm.raiz.collection("meta").doc("presupuestos").get()).data();
+  assert.equal(pres.comida, 1);
+  assert.equal(pres.vivienda, 3100); // merge conserva lo demás
+  // Persiste: otro almacén con el mismo espacio ve los cambios
+  const otra = Demo.crearAlmacen({}, memoria);
+  assert.equal((await otra.raiz.collection("finanzas").get()).docs.length, primero.docs.length);
+  // Salir borra todo
+  Demo.salir(memoria);
+  assert.ok(!Demo.activo(memoria));
+  assert.deepEqual(Object.keys(memoria._m), []);
+});

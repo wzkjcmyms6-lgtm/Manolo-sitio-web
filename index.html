@@ -17,8 +17,8 @@
   <!-- Fuentes guardadas en el repo: la app no depende de internet para verse bien -->
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
-  <link rel="stylesheet" href="css/style.css?v=202610010800">
-  <link rel="stylesheet" href="css/finanzas.css?v=202610010900">
+  <link rel="stylesheet" href="css/style.css?v=202610011000">
+  <link rel="stylesheet" href="css/finanzas.css?v=202610011000">
   <link rel="stylesheet" href="css/habitos.css?v=202610010600">
 </head>
 <body>
@@ -54,6 +54,7 @@
       <span class="brand">Manolo</span>
       <span class="net-status" data-net-status role="status" hidden>Sin conexión</span>
       <span class="topbar-clock" data-clock></span>
+      <a href="#fin-ajustes" class="topbar-ajustes" aria-label="Ajustes de Finanzas"><span data-icon="gear"></span></a>
       <button class="menu-toggle" id="menu-toggle" data-icon="menu" aria-expanded="false" aria-label="Abrir menú"></button>
     </div>
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
@@ -71,6 +72,8 @@
           <span class="verse-text"></span>
           <span class="verse-ref"></span>
         </div>
+
+        <div class="fin-demo-banner" id="fin-demo-banner" role="status" hidden></div>
 
         <div class="body-banner" id="body-banner" hidden>
 
@@ -375,7 +378,10 @@
               <a href="#finanzas" class="fin-tab" data-hash-link data-hash="finanzas">Vista general</a>
               <a href="#fin-presupuesto" class="fin-tab" data-hash-link data-hash="fin-presupuesto">Presupuesto</a>
               <a href="#fin-herramientas" class="fin-tab" data-hash-link data-hash="fin-herramientas">Herramientas</a>
+              <a href="#fin-ajustes" class="fin-tab fin-tab-ajustes" aria-label="Ajustes de Finanzas"><span data-icon="gear"></span></a>
             </div>
+
+            <div class="fin-recordatorio" id="fin-recordatorio" role="status" hidden></div>
 
             <div class="fin-tabs fin-inner-tabs" id="fin-inner-tabs">
               <button type="button" class="fin-tab" data-fin-tab="vg">Vista General</button>
@@ -529,6 +535,7 @@
               <a href="#finanzas" class="fin-tab" data-hash-link data-hash="finanzas">Vista general</a>
               <a href="#fin-presupuesto" class="fin-tab" data-hash-link data-hash="fin-presupuesto">Presupuesto</a>
               <a href="#fin-herramientas" class="fin-tab" data-hash-link data-hash="fin-herramientas">Herramientas</a>
+              <a href="#fin-ajustes" class="fin-tab fin-tab-ajustes" aria-label="Ajustes de Finanzas"><span data-icon="gear"></span></a>
             </div>
 
             <div class="fin-tabs" id="budget-inner-tabs">
@@ -585,17 +592,23 @@
               <a href="#finanzas" class="fin-tab" data-hash-link data-hash="finanzas">Vista general</a>
               <a href="#fin-presupuesto" class="fin-tab" data-hash-link data-hash="fin-presupuesto">Presupuesto</a>
               <a href="#fin-herramientas" class="fin-tab" data-hash-link data-hash="fin-herramientas">Herramientas</a>
+              <a href="#fin-ajustes" class="fin-tab fin-tab-ajustes" aria-label="Ajustes de Finanzas"><span data-icon="gear"></span></a>
             </div>
 
             <div class="profile-card">
-              <span class="profile-avatar">JML</span>
+              <span class="profile-avatar" id="fin-perfil-inicial" aria-hidden="true"></span>
               <div>
-                <div class="profile-name">Juan Manuel Llorenti</div>
+                <div class="profile-name" id="fin-perfil-nombre">Tu cuenta</div>
                 <div class="profile-sub">Cuenta personal</div>
               </div>
             </div>
 
             <div class="tool-grid">
+              <a class="tool-card" href="#fin-ajustes">
+                <span class="icon" data-icon="gear"></span>
+                <h3>Ajustes y respaldo</h3>
+                <p>Tarjeta, RE-IVA, copias de seguridad y modo demo.</p>
+              </a>
               <a class="tool-card" href="#fin-herramientas-carteras">
                 <span class="icon" data-icon="wallet"></span>
                 <h3>Carteras</h3>
@@ -614,7 +627,7 @@
               <a class="tool-card" href="#fin-herramientas-reiva">
                 <span class="icon" data-icon="receipt"></span>
                 <h3>RE-IVA</h3>
-                <p>El 5 % de tus compras con factura, mes a mes.</p>
+                <p>El reintegro de tus compras con factura, mes a mes.</p>
               </a>
               <a class="tool-card" href="#fin-herramientas-exportar">
                 <span class="icon" data-icon="download"></span>
@@ -734,6 +747,14 @@
 
             <h2 class="fin-estado-titulo">Tus datos</h2>
             <div id="fin-estado-datos" class="fin-estado-datos" aria-live="polite"></div>
+          </section>
+
+          <!-- ===== Finanzas: Ajustes (engranaje) ===== -->
+          <section id="panel-fin-ajustes" hidden>
+            <a class="back-link" href="#fin-herramientas"><span class="icon-sm" data-icon="chevronLeft"></span>Herramientas</a>
+            <h1 class="page-title">Ajustes de Finanzas</h1>
+            <div id="fin-ajustes" class="fin-ajustes"></div>
+            <input type="file" id="fin-importar-archivo" accept="application/json,.json" hidden>
           </section>
 
           <!-- ===== Inversiones ===== -->
@@ -877,8 +898,8 @@
   <script defer src="js/firebase-init.js?v=202609293"></script>
   <script defer src="js/auth.js?v=202609232200"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
-  <script defer src="js/icons.js?v=202610010100"></script>
-  <script defer src="js/modules.js?v=202610010600"></script>
+  <script defer src="js/icons.js?v=202610011000"></script>
+  <script defer src="js/modules.js?v=202610011000"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
   <script defer src="js/exercise-search.js?v=202609291"></script>
@@ -901,8 +922,9 @@
   <script defer src="js/offline.js?v=202610010700"></script>
   <script defer src="js/running.js?v=202609293"></script>
   <script defer src="js/bicicleta.js?v=202609293"></script>
-  <script defer src="js/finanzas/datos.js?v=202610010900"></script>
-  <script defer src="js/finanzas/app.js?v=202610010900"></script>
+  <script defer src="js/finanzas/datos.js?v=202610011000"></script>
+  <script defer src="js/finanzas/demo.js?v=202610011000"></script>
+  <script defer src="js/finanzas/app.js?v=202610011000"></script>
   <script defer src="js/inversiones.js?v=202609232200"></script>
 </body>
 </html>

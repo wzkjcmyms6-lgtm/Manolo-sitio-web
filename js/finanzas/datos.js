@@ -213,7 +213,120 @@ function unirRespaldo(partes) {
   return out;
 }
 
+// ---------- Copia de seguridad en archivo (JSON) ----------
+const FORMATO = "manolo-finanzas";
+const COLECCIONES = ["finanzas", "ahorros", "carteras_movimientos"];
+// Documentos de meta/ que forman parte de Finanzas y viajan en la copia.
+const META_COPIA = ["config_presupuesto", "presupuestos", "categorias_gasto", "categorias_ingreso", "carteras_custom", "finanzas_ajustes"];
+
+function copiaCompleta(datos, ahora) {
+  const t = ahora || Date.now();
+  const out = { app: FORMATO, version: ESQUEMA, exportado: t, fecha: isoLocal(new Date(t)), datos: { meta: {} } };
+  COLECCIONES.forEach(c => { out.datos[c] = (datos[c] || []).map(x => Object.assign({}, x)); });
+  META_COPIA.forEach(n => { if (datos.meta && datos.meta[n]) out.datos.meta[n] = datos.meta[n]; });
+  out.conteos = {};
+  COLECCIONES.forEach(c => { out.conteos[c] = out.datos[c].length; });
+  return out;
+}
+
+const esObj = v => !!v && typeof v === "object" && !Array.isArray(v);
+const idOk = id => typeof id === "string" && id.length > 0 && id.length <= 120 && id.indexOf("/") < 0 && id !== "." && id !== "..";
+
+// Revisa que el archivo sea una copia de Finanzas de Manolo y que cada
+// movimiento tenga lo mínimo (id, fecha y monto válidos).
+function validarCopia(obj) {
+  if (!esObj(obj) || obj.app !== FORMATO || !esObj(obj.datos)) {
+    return { ok: false, error: "Este archivo no es una copia de Finanzas de Manolo." };
+  }
+  if (Number(obj.version) > ESQUEMA) {
+    return { ok: false, error: "Esta copia es de una versión más nueva de Manolo. Actualiza la app y vuelve a intentar." };
+  }
+  const malos = [];
+  const conteos = {};
+  COLECCIONES.forEach(c => {
+    const lista = obj.datos[c];
+    if (lista != null && !Array.isArray(lista)) malos.push(c);
+    conteos[c] = Array.isArray(lista) ? lista.length : 0;
+  });
+  if (malos.length) return { ok: false, error: "La copia está dañada: no se puede leer " + malos.join(", ") + "." };
+  let invalidos = 0;
+  (obj.datos.finanzas || []).forEach(m => {
+    if (!esObj(m) || !idOk(m.id) || !/^\d{4}-\d{2}-\d{2}$/.test(m.date || "") || !(montoValido(m.amount) || Number.isInteger(m.montoCent))) invalidos++;
+  });
+  return { ok: true, conteos, invalidos, exportado: Number(obj.exportado) || null, fecha: typeof obj.fecha === "string" ? obj.fecha : null };
+}
+
+// Qué agregar al importar. Nunca borra ni cambia lo que ya tienes: se suman
+// los movimientos con un id que no tienes, y en categorías, carteras y
+// presupuesto solo lo que falta.
+function planImportacion(copia, actual) {
+  const v = validarCopia(copia);
+  if (!v.ok) return { ok: false, error: v.error };
+  const a = actual || {};
+  const nuevos = {};
+  let descartados = 0;
+  COLECCIONES.forEach(c => {
+    const tengo = new Set((a[c] || []).map(x => x.id));
+    nuevos[c] = [];
+    (copia.datos[c] || []).forEach(x => {
+      if (!esObj(x) || !idOk(x.id)) { descartados++; return; }
+      if (c === "finanzas" && (!/^\d{4}-\d{2}-\d{2}$/.test(x.date || "") || !(montoValido(x.amount) || Number.isInteger(x.montoCent)))) { descartados++; return; }
+      if (!tengo.has(x.id)) nuevos[c].push(x);
+    });
+  });
+  const mc = copia.datos.meta || {}, ma = a.meta || {};
+  const meta = {};
+  // Categorías de gasto: secciones y subcategorías que faltan, y archivadas.
+  if (esObj(mc.categorias_gasto) && Array.isArray(mc.categorias_gasto.groups)) {
+    const locales = esObj(ma.categorias_gasto) && Array.isArray(ma.categorias_gasto.groups) ? ma.categorias_gasto.groups : [];
+    let cambio = false;
+    const grupos = locales.map(g => Object.assign({}, g, { items: (g.items || []).slice() }));
+    const todos = new Set();
+    grupos.forEach(g => g.items.forEach(i => todos.add(i.id)));
+    mc.categorias_gasto.groups.forEach(g => {
+      if (!esObj(g) || !idOk(g.id)) return;
+      let destino = grupos.find(x => x.id === g.id);
+      if (!destino) { destino = Object.assign({}, g, { items: [] }); grupos.push(destino); cambio = true; }
+      (g.items || []).forEach(i => { if (esObj(i) && idOk(i.id) && !todos.has(i.id)) { destino.items.push(i); todos.add(i.id); cambio = true; } });
+    });
+    const archLocal = (esObj(ma.categorias_gasto) && Array.isArray(ma.categorias_gasto.archivadas)) ? ma.categorias_gasto.archivadas : [];
+    const archNuevas = (Array.isArray(mc.categorias_gasto.archivadas) ? mc.categorias_gasto.archivadas : []).filter(x => esObj(x) && idOk(x.id) && !archLocal.some(y => y.id === x.id) && !todos.has(x.id));
+    const out = {};
+    if (cambio) out.groups = grupos.filter(g => g.items.length);
+    if (archNuevas.length) out.archivadas = archLocal.concat(archNuevas);
+    if (Object.keys(out).length) meta.categorias_gasto = out;
+  }
+  const listaQueFalta = (nombre, campo) => {
+    if (!esObj(mc[nombre]) || !Array.isArray(mc[nombre][campo])) return;
+    const locales = esObj(ma[nombre]) && Array.isArray(ma[nombre][campo]) ? ma[nombre][campo] : [];
+    const faltan = mc[nombre][campo].filter(x => esObj(x) && idOk(x.id) && !locales.some(y => y.id === x.id));
+    if (faltan.length) meta[nombre] = { [campo]: locales.concat(faltan) };
+  };
+  listaQueFalta("categorias_ingreso", "list");
+  listaQueFalta("carteras_custom", "list");
+  if (esObj(mc.presupuestos)) {
+    const faltan = {};
+    Object.keys(mc.presupuestos).forEach(k => { if (idOk(k) && !(esObj(ma.presupuestos) && k in ma.presupuestos) && montoValido(mc.presupuestos[k])) faltan[k] = Number(mc.presupuestos[k]); });
+    if (Object.keys(faltan).length) meta.presupuestos = faltan;
+  }
+  ["config_presupuesto", "finanzas_ajustes"].forEach(n => { if (esObj(mc[n]) && !esObj(ma[n])) meta[n] = mc[n]; });
+  const resumen = { movimientos: nuevos.finanzas.length, ahorros: nuevos.ahorros.length, carteras: nuevos.carteras_movimientos.length, meta: Object.keys(meta), descartados };
+  return { ok: true, nuevos, meta, resumen, vacio: !resumen.movimientos && !resumen.ahorros && !resumen.carteras && !resumen.meta.length };
+}
+
+// ---------- CSV (una fila por movimiento; Excel y Power BI) ----------
+function celdaCsv(v) {
+  const s = String(v == null ? "" : v);
+  return /[",\n\r;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+function aCsv(encabezados, filas) {
+  // BOM para que Excel lea bien las tildes; separador coma y punto decimal.
+  return "\ufeff" + [encabezados].concat(filas).map(f => f.map(celdaCsv).join(",")).join("\r\n") + "\r\n";
+}
+const montoCsv = cent => (cent / 100).toFixed(2);
+
 return {
+  FORMATO, COLECCIONES, META_COPIA, copiaCompleta, validarCopia, planImportacion, celdaCsv, aCsv, montoCsv,
   ESQUEMA, DOCS_POR_PARTE,
   aCentavos, aBs, montoValido, decimalesExtra, sumaCent, sumaBs,
   adaptarMovimiento, adaptarAhorro, adaptarMovCartera, conCentavos, sinId,

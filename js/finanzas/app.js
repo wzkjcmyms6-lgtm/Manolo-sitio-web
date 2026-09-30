@@ -1,6 +1,16 @@
 (function () {
 // Lectura y escritura de datos (centavos, saldos, respaldo): js/finanzas/datos.js
 const FD = FinanzasDatos;
+// Modo demo: datos ficticios guardados aparte, solo en este teléfono. Con el
+// modo demo activo, TODO Finanzas lee y escribe en ese almacén local y nunca
+// en tu nube (ver js/finanzas/demo.js).
+const DEMO = FinanzasDemo.activo() ? FinanzasDemo.crearAlmacen(FinanzasDemo.generarDemo(new Date())) : null;
+function raiz() {
+  return DEMO ? DEMO.raiz : db.collection("users").doc(currentUser.uid);
+}
+function nuevoLote() {
+  return DEMO ? DEMO.batch() : db.batch();
+}
 const CATEGORIES = {
   ingreso: [
     { id: "salario", label: "Salario", icon: "salary", color: "#5cc98a" },
@@ -52,31 +62,31 @@ let carterasMovCache = []; // movimientos (aportes, retiros, transferencias) de 
 let categoriasArchivadas = []; // categorías borradas: se guardan para seguir mostrando su nombre
 
 function financeCollection() {
-  return db.collection("users").doc(currentUser.uid).collection("finanzas");
+  return raiz().collection("finanzas");
 }
 function budgetConfigDocRef() {
-  return db.collection("users").doc(currentUser.uid).collection("meta").doc("config_presupuesto");
+  return raiz().collection("meta").doc("config_presupuesto");
 }
 function budgetDocRef() {
-  return db.collection("users").doc(currentUser.uid).collection("meta").doc("presupuestos");
+  return raiz().collection("meta").doc("presupuestos");
 }
 function categoriasDocRef() {
-  return db.collection("users").doc(currentUser.uid).collection("meta").doc("categorias_gasto");
+  return raiz().collection("meta").doc("categorias_gasto");
 }
 function ingresoCategoriesDocRef() {
-  return db.collection("users").doc(currentUser.uid).collection("meta").doc("categorias_ingreso");
+  return raiz().collection("meta").doc("categorias_ingreso");
 }
 function customCategoriesDocRef() {
-  return db.collection("users").doc(currentUser.uid).collection("meta").doc("categorias_personalizadas");
+  return raiz().collection("meta").doc("categorias_personalizadas");
 }
 function ahorrosCollection() {
-  return db.collection("users").doc(currentUser.uid).collection("ahorros");
+  return raiz().collection("ahorros");
 }
 function carterasCustomDocRef() {
-  return db.collection("users").doc(currentUser.uid).collection("meta").doc("carteras_custom");
+  return raiz().collection("meta").doc("carteras_custom");
 }
 function carterasMovimientosCollection() {
-  return db.collection("users").doc(currentUser.uid).collection("carteras_movimientos");
+  return raiz().collection("carteras_movimientos");
 }
 
 // Convierte los grupos con subcategorías a la lista plana {id,label,icon,color}
@@ -469,12 +479,12 @@ function withoutId(obj) {
 // Borrar y restaurar van en un solo lote: se aplican juntos, también sin
 // conexión (nunca queda una transferencia con un solo lado).
 function removeWithUndo(message, entries, extra) {
-  const lote = db.batch();
+  const lote = nuevoLote();
   entries.forEach(e => lote.delete(e.ref));
   if (extra && extra.borrar) extra.borrar(lote);
   lote.commit().catch(err => console.error("Manolo: no se pudo borrar", err));
   showUndoToast(message, () => {
-    const vuelta = db.batch();
+    const vuelta = nuevoLote();
     entries.forEach(e => vuelta.set(e.ref, e.data));
     if (extra && extra.restaurar) extra.restaurar(vuelta);
     return vuelta.commit().catch(err => console.error("Manolo: no se pudo restaurar", err));
@@ -503,6 +513,7 @@ function showUndoToast(message, restore) {
   const el = undoToastEl();
   clearTimeout(undoTimer);
   undoRestore = restore;
+  el.querySelector(".undo-toast-btn").hidden = false;
   el.querySelector(".undo-toast-msg").textContent = message;
   el.hidden = false;
   el.classList.remove("show");
@@ -2462,11 +2473,16 @@ function appDialog({ title, message = "", input = null, confirmLabel = "Aceptar"
 
 // ================= Tarjeta de crédito: se paga el total el 29 de cada mes =================
 // (en meses más cortos, el último día).
-const CARD_PAY_DAY = 29;
+// Ajustes editables (meta/finanzas_ajustes), con sus valores de siempre.
+const AJUSTES_DEFECTO = { diaPagoTarjeta: 29, reivaPct: 5, ultimoRespaldoArchivo: null };
+let ajustes = Object.assign({}, AJUSTES_DEFECTO);
+let ajustesCargados = false;
+const diaPagoTarjeta = () => Math.min(31, Math.max(1, Math.round(Number(ajustes.diaPagoTarjeta) || AJUSTES_DEFECTO.diaPagoTarjeta)));
+const reivaTasa = () => Math.min(100, Math.max(0, Number(ajustes.reivaPct) >= 0 ? Number(ajustes.reivaPct) : AJUSTES_DEFECTO.reivaPct)) / 100;
 
 function nextCardPayDate() {
   const today = new Date(); today.setHours(0, 0, 0, 0);
-  const inMonth = (y, m) => new Date(y, m, Math.min(CARD_PAY_DAY, new Date(y, m + 1, 0).getDate()));
+  const inMonth = (y, m) => new Date(y, m, Math.min(diaPagoTarjeta(), new Date(y, m + 1, 0).getDate()));
   let d = inMonth(today.getFullYear(), today.getMonth());
   if (d < today) d = inMonth(today.getFullYear(), today.getMonth() + 1);
   return { date: d, days: Math.round((d - today) / 86400000) };
@@ -2489,7 +2505,6 @@ function cardScheduleHTML(deuda) {
 // Cada compra marcada "con factura" suma el 5 % de su monto al mes
 // calendario (1 al 30/31) en que se hizo, sin importar el periodo del
 // presupuesto.
-const REIVA_RATE = 0.05;
 const MONTH_NAMES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
 function renderReiva() {
@@ -2517,14 +2532,14 @@ function renderReiva() {
             <span class="reiva-month-name">${name}${key === thisMonth ? `<span class="reiva-badge">En curso</span>` : ""}</span>
             <span class="reiva-month-sub">${items.length} factura${items.length === 1 ? "" : "s"} · ${formatMoney(total)} en compras</span>
           </div>
-          <span class="reiva-month-amount">${formatMoney(total * REIVA_RATE)}</span>
+          <span class="reiva-month-amount">${formatMoney(total * reivaTasa())}</span>
         </summary>
         <div class="reiva-items">
           ${items.map(m => `
             <div class="reiva-item">
               <span class="reiva-item-date">${Number(m.date.slice(8, 10))}</span>
               <span class="reiva-item-desc">${escapeHtml(m.desc || findCategory("gasto", m.category).label)}</span>
-              <span class="reiva-item-amount">${formatMoney(m.amount)}<small>${formatMoney(m.amount * REIVA_RATE)}</small></span>
+              <span class="reiva-item-amount">${formatMoney(m.amount)}<small>${formatMoney(m.amount * reivaTasa())}</small></span>
             </div>`).join("")}
         </div>
       </details>`;
@@ -2965,7 +2980,7 @@ function formatWalletAmount(id, n) {
 function createTransfer({ from, to, amount, amountTo, desc, date, tipoCambio }) {
   const suffix = desc ? " · " + desc : "";
   const links = [];
-  const lote = db.batch();
+  const lote = nuevoLote();
   const creado = Date.now();
   const side = (walletId, monto, nota) => {
     if (isCash(walletId) || walletId === "tarjeta") return;
@@ -3395,29 +3410,7 @@ document.getElementById("export-form").addEventListener("submit", e => {
   const from = document.getElementById("export-from").value;
   const to = document.getElementById("export-to").value;
   if (!from || !to) return;
-
-  const rows = financeCache
-    .filter(m => m.date >= from && m.date <= to)
-    .sort((a, b) => a.date.localeCompare(b.date));
-
-  const header = ["Fecha", "Tipo", "Categoría", "Medio de pago", "Descripción", "Monto (Bs)", "Factura"];
-  const lines = [header.map(csvEscape).join(",")];
-  rows.forEach(m => {
-    const cat = findCategory(m.type, m.category);
-    const pay = findPayment(m.payment);
-    lines.push([m.date, m.type, cat.label, pay ? pay.label : "", m.desc || "", m.amount.toFixed(2), m.factura ? "Sí" : ""]
-      .map(csvEscape).join(","));
-  });
-
-  const blob = new Blob(["﻿" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `manolo-finanzas_${from}_a_${to}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  exportarCsv(from, to);
 });
 
 (function initExportDates() {
@@ -3427,6 +3420,299 @@ document.getElementById("export-form").addEventListener("submit", e => {
   document.getElementById("export-from").value = isoDate(firstOfMonth);
   document.getElementById("export-to").value = isoDate(today);
 })();
+
+// ================= Ajustes de Finanzas =================
+// Todo lo editable de Finanzas en un solo lugar (engranaje): periodo,
+// categorías, carteras, tarjeta, RE-IVA, copias de seguridad y modo demo.
+function ajustesDocRef() {
+  return raiz().collection("meta").doc("finanzas_ajustes");
+}
+function guardarAjustes(campos) {
+  ajustes = Object.assign({}, ajustes, campos);
+  ajustesDocRef().set(campos, { merge: true }).catch(err => console.error("Manolo: no se pudieron guardar los ajustes", err));
+  renderAll();
+}
+
+// Aviso breve (usa el mismo cartel de "Deshacer", sin botón).
+function avisoFin(texto) {
+  const el = undoToastEl();
+  clearTimeout(undoTimer);
+  undoRestore = null;
+  el.querySelector(".undo-toast-msg").textContent = texto;
+  el.querySelector(".undo-toast-btn").hidden = true;
+  el.hidden = false;
+  el.classList.remove("show");
+  void el.offsetWidth;
+  el.classList.add("show");
+  undoTimer = setTimeout(() => { hideUndoToast(); el.querySelector(".undo-toast-btn").hidden = false; }, 4000);
+}
+
+const hace = t => {
+  const dias = Math.floor((Date.now() - t) / 86400000);
+  return dias <= 0 ? "hoy" : dias === 1 ? "ayer" : `hace ${dias} días`;
+};
+const fechaLarga = t => new Date(t).toLocaleDateString("es-BO", { day: "numeric", month: "long", year: "numeric" });
+
+function renderAjustes() {
+  const el = document.getElementById("fin-ajustes");
+  if (!el) return;
+  const ult = ajustes.ultimoRespaldoArchivo;
+  const persistente = window.ManoloOffline && window.ManoloOffline.persistente;
+  const version = window.ManoloOffline && window.ManoloOffline.version;
+  const dias = Array.from({ length: 31 }, (_, i) => i + 1);
+  el.innerHTML = `
+    ${DEMO ? `<div class="fin-aj-demo-aviso"><strong>Modo demo activo.</strong> Estás viendo datos inventados; tus datos reales no se tocan.</div>` : ""}
+    <section class="fin-aj-bloque">
+      <h2>Presupuesto</h2>
+      <a class="fin-aj-fila" href="#fin-herramientas-periodo"><span><span class="fin-aj-t">Periodo</span><span class="fin-aj-sub">Empieza el día ${budgetStartDay} de cada mes</span></span><span class="fin-aj-chev" data-icon="chevronRight"></span></a>
+      <a class="fin-aj-fila" href="#fin-herramientas-categorias"><span><span class="fin-aj-t">Categorías</span><span class="fin-aj-sub">${gastoCategoriesCache.length} de gasto · ${(CATEGORIES.ingreso || []).length} de ingreso</span></span><span class="fin-aj-chev" data-icon="chevronRight"></span></a>
+      <a class="fin-aj-fila" href="#fin-herramientas-carteras"><span><span class="fin-aj-t">Carteras</span><span class="fin-aj-sub">Efectivo, Débito, Tarjeta, Ahorro${carterasCustomCache.length ? ` y ${carterasCustomCache.length} más` : ""}</span></span><span class="fin-aj-chev" data-icon="chevronRight"></span></a>
+    </section>
+    <section class="fin-aj-bloque">
+      <h2>Tarjeta y RE-IVA</h2>
+      <label class="fin-aj-fila fin-aj-campo"><span><span class="fin-aj-t">Día de pago de la tarjeta</span><span class="fin-aj-sub">En meses más cortos, el último día</span></span>
+        <select id="fin-aj-dia-pago" aria-label="Día de pago de la tarjeta">${dias.map(d => `<option value="${d}"${d === diaPagoTarjeta() ? " selected" : ""}>${d}</option>`).join("")}</select></label>
+      <label class="fin-aj-fila fin-aj-campo"><span><span class="fin-aj-t">Reintegro RE-IVA</span><span class="fin-aj-sub">Porcentaje estimado de tus compras con factura</span></span>
+        <span class="fin-aj-pct"><input type="number" id="fin-aj-reiva" inputmode="decimal" min="0" max="100" step="0.5" value="${(reivaTasa() * 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}" aria-label="Porcentaje de reintegro RE-IVA"><span>%</span></span></label>
+    </section>
+    <section class="fin-aj-bloque">
+      <h2>Copias de seguridad</h2>
+      <p class="fin-aj-texto">${ult ? `Último respaldo en archivo: <strong>${hace(ult)}</strong> (${fechaLarga(ult)}).` : "Todavía no guardaste un respaldo en archivo."} Guarda todos tus movimientos, carteras, categorías, presupuesto y ajustes. Al importar solo se agrega lo que falta: nunca se borra ni se cambia nada.</p>
+      <div class="fin-aj-botones">
+        <button type="button" class="fin-aj-btn is-principal" data-fin-exportar-json><span data-icon="download"></span>Guardar respaldo</button>
+        <button type="button" class="fin-aj-btn" data-fin-importar-json>Importar respaldo</button>
+        <button type="button" class="fin-aj-btn" data-fin-exportar-csv>Exportar CSV</button>
+      </div>
+      <p class="fin-aj-texto fin-aj-nota">El CSV trae una fila por movimiento, listo para Excel o Power BI. Para un rango de fechas, usa <a href="#fin-herramientas-exportar">Exportar datos</a>.</p>
+    </section>
+    <section class="fin-aj-bloque">
+      <h2>Tus datos</h2>
+      <div id="fin-estado-datos-aj" class="fin-estado-datos" aria-live="polite"></div>
+      <p class="fin-aj-texto fin-aj-nota">Almacenamiento del teléfono: ${persistente === true ? "protegido (el sistema no lo borra solo)" : persistente === false ? "sin protección especial (el sistema podría liberarlo si falta espacio; guarda respaldos)" : "revisando…"}.${version ? ` Versión de la app: ${escapeHtml(version)}.` : ""}</p>
+    </section>
+    <section class="fin-aj-bloque">
+      <h2>Modo demo</h2>
+      ${DEMO
+        ? `<p class="fin-aj-texto">Estás usando 6 meses de datos inventados, guardados solo en este teléfono. Salir los borra y vuelve a tus datos reales.</p>
+           <div class="fin-aj-botones"><button type="button" class="fin-aj-btn is-peligro" data-fin-demo-salir>Salir y borrar la demo</button></div>`
+        : `<p class="fin-aj-texto">Prueba Finanzas con 6 meses de datos inventados en bolivianos. Se guardan aparte, solo en este teléfono, nunca se mezclan con tus datos y se borran con un toque.</p>
+           <div class="fin-aj-botones"><button type="button" class="fin-aj-btn" data-fin-demo-entrar>Probar el modo demo</button></div>`}
+    </section>`;
+  renderIcons(el);
+  renderEstadoDatos();
+}
+
+// ---- Copia de seguridad en archivo (JSON) ----
+// Copia tal cual de los documentos de meta/ que escuchamos (para armar el
+// respaldo al instante: en el iPhone "Compartir" debe abrirse enseguida
+// después del toque, sin esperar a la red).
+const metaCrudo = {};
+function leerMeta() {
+  const meta = {};
+  FD.META_COPIA.forEach(n => { if (metaCrudo[n]) meta[n] = metaCrudo[n]; });
+  return meta;
+}
+const aJSON = (k, v) => (v && typeof v === "object" && typeof v.toMillis === "function" ? v.toMillis() : v);
+
+// En el iPhone, compartir abre la hoja con "Guardar en Archivos".
+function entregarArchivo(nombre, contenido, tipo) {
+  const blob = new Blob([contenido], { type: tipo });
+  try {
+    const archivo = new File([blob], nombre, { type: tipo });
+    if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+      return navigator.share({ files: [archivo], title: nombre }).then(() => true).catch(() => false);
+    }
+  } catch (e) { /* sin compartir: se descarga */ }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nombre;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  return Promise.resolve(true);
+}
+
+function exportarJson() {
+  return Promise.resolve(leerMeta()).then(meta => {
+    const copia = FD.copiaCompleta({ finanzas: crudos.finanzas, ahorros: crudos.ahorros, carteras_movimientos: crudos.carteras, meta }, Date.now());
+    const nombre = `manolo-finanzas${DEMO ? "-DEMO" : ""}-${isoDate(new Date())}.json`;
+    return entregarArchivo(nombre, JSON.stringify(copia, aJSON, 1), "application/json").then(ok => {
+      if (!ok) return;
+      guardarAjustes({ ultimoRespaldoArchivo: Date.now() });
+      avisoFin(`Respaldo listo: ${copia.conteos.finanzas} movimientos.`);
+    });
+  }).catch(err => { console.error("Manolo: no se pudo exportar", err); avisoFin("No se pudo preparar el respaldo."); });
+}
+
+const MAX_COPIA_BYTES = 20 * 1024 * 1024;
+function importarJson(archivo) {
+  if (!archivo) return;
+  if (archivo.size > MAX_COPIA_BYTES) { avisoFin("Ese archivo es demasiado grande para ser un respaldo de Finanzas."); return; }
+  archivo.text().then(texto => {
+    let copia;
+    try { copia = JSON.parse(texto); } catch (e) { avisoFin("No se pudo leer el archivo. Elige un respaldo guardado desde Manolo."); return; }
+    return Promise.resolve(leerMeta()).then(meta => {
+      const plan = FD.planImportacion(copia, { finanzas: crudos.finanzas, ahorros: crudos.ahorros, carteras_movimientos: crudos.carteras, meta });
+      if (!plan.ok) { avisoFin(plan.error); return; }
+      const r = plan.resumen;
+      const fecha = copia.exportado ? fechaLarga(copia.exportado) : "fecha desconocida";
+      if (plan.vacio) {
+        appDialog({ title: "Nada que importar", message: `El respaldo del ${fecha} no trae nada que no tengas ya.`, confirmLabel: "Entendido" });
+        return;
+      }
+      const partes = [];
+      if (r.movimientos) partes.push(`${r.movimientos} movimiento${r.movimientos === 1 ? "" : "s"}`);
+      if (r.ahorros) partes.push(`${r.ahorros} de Ahorro`);
+      if (r.carteras) partes.push(`${r.carteras} de tus carteras`);
+      const NOMBRES_META = { categorias_gasto: "categorías de gasto", categorias_ingreso: "categorías de ingreso", carteras_custom: "carteras", presupuestos: "montos de presupuesto", config_presupuesto: "el periodo del presupuesto", finanzas_ajustes: "tus ajustes" };
+      if (r.meta.length) partes.push(r.meta.map(n => NOMBRES_META[n] || n).join(", ") + " que faltaban");
+      const msg = `Respaldo del ${fecha}. Se agregará: ${partes.join(", ")}. No se borra ni se cambia nada de lo que ya tienes.${r.descartados ? ` ${r.descartados} registro${r.descartados === 1 ? "" : "s"} dañado${r.descartados === 1 ? "" : "s"} se omitirá${r.descartados === 1 ? "" : "n"}.` : ""}`;
+      return appDialog({ title: "Importar respaldo", message: msg, confirmLabel: "Importar" }).then(ok => {
+        if (!ok) return;
+        aplicarImportacion(plan);
+        avisoFin(`Importado: ${partes.join(", ")}.`);
+      });
+    });
+  }).catch(err => { console.error("Manolo: no se pudo importar", err); avisoFin("No se pudo importar el respaldo."); });
+}
+function aplicarImportacion(plan) {
+  const ops = [];
+  const ref = { finanzas: id => financeCollection().doc(id), ahorros: id => ahorrosCollection().doc(id), carteras_movimientos: id => carterasMovimientosCollection().doc(id) };
+  FD.COLECCIONES.forEach(c => plan.nuevos[c].forEach(x => ops.push(l => l.set(ref[c](x.id), FD.sinId(x)))));
+  Object.keys(plan.meta).forEach(n => ops.push(l => l.set(raiz().collection("meta").doc(n), plan.meta[n], { merge: true })));
+  // Firestore acepta hasta 500 escrituras por lote.
+  for (let i = 0; i < ops.length; i += 400) {
+    const lote = nuevoLote();
+    ops.slice(i, i + 400).forEach(op => op(lote));
+    lote.commit().catch(err => console.error("Manolo: no se pudo importar un lote", err));
+  }
+}
+
+// ---- CSV limpio: una fila por movimiento ----
+const TIPO_CSV = { gasto: "Gasto", ingreso: "Ingreso", transferencia: "Transferencia", pago_tarjeta: "Pago de tarjeta", ajuste_tarjeta: "Ajuste de tarjeta" };
+const ENCABEZADOS_CSV = ["Fecha", "Tipo", "Categoría", "Sección", "Cartera", "Cartera destino", "Monto", "Moneda", "Monto destino", "Moneda destino", "Nota", "Con factura", "Excluido del presupuesto", "Id"];
+function filasCsv(desde, hasta) {
+  const dentro = f => f >= desde && f <= hasta;
+  const enlazados = new Set();
+  financeCache.forEach(m => (m.links || []).forEach(l => enlazados.add(l.id)));
+  const pago = id => { const p = findPayment(id); return p ? p.label : ""; };
+  const filas = [];
+  financeCache.filter(m => dentro(m.date)).forEach(m => {
+    const esMovimiento = m.type === "gasto" || m.type === "ingreso";
+    const cat = esMovimiento ? findCategory(m.type, m.category).label : "";
+    const grupo = m.type === "gasto" ? ((categoryGroupsCache.find(g => (g.items || []).some(i => i.id === m.category)) || {}).nombre || "") : "";
+    let cartera = "", destino = "", moneda = "Bs", montoDest = "", monedaDest = "";
+    if (esMovimiento) cartera = pago(m.payment);
+    else if (m.type === "pago_tarjeta") { cartera = pago(m.payment); destino = "Tarjeta de Crédito"; }
+    else if (m.type === "ajuste_tarjeta") destino = "Tarjeta de Crédito";
+    else if (m.type === "transferencia") {
+      cartera = walletLabel(m.from); destino = walletLabel(m.to);
+      moneda = walletCurrency(m.from); monedaDest = walletCurrency(m.to);
+      montoDest = FD.montoCsv(m.montoDestinoCent != null ? m.montoDestinoCent : m.montoCent);
+    }
+    filas.push({ f: m.date, t: m.createdAt || 0, v: [m.date, TIPO_CSV[m.type] || m.type, cat, grupo, cartera, destino, FD.montoCsv(m.montoCent), moneda, montoDest, monedaDest, m.desc || "", m.factura ? "Sí" : "No", m.excluded ? "Sí" : "No", m.id] });
+  });
+  // Movimientos de Ahorro y de tus carteras que no vienen de una transferencia.
+  const suelto = (fecha, cent, carteraId, nota, id, creado) => {
+    if (!dentro(fecha || "") || enlazados.has(id)) return;
+    filas.push({ f: fecha, t: creado || 0, v: [fecha, cent >= 0 ? "Entrada a cartera" : "Salida de cartera", "", "", walletLabel(carteraId), "", FD.montoCsv(Math.abs(cent)), walletCurrency(carteraId), "", "", nota || "", "No", "No", id] });
+  };
+  ahorrosCache.forEach(a => suelto(a.date, a.montoCent, "ahorro", a.notes, a.id, a.createdAt));
+  carterasMovCache.forEach(c => suelto(c.fecha, c.montoCent, c.carteraId, c.nota, c.id, c.createdAt));
+  return filas.sort((a, b) => a.f.localeCompare(b.f) || a.t - b.t).map(x => x.v);
+}
+function exportarCsv(desde, hasta) {
+  const filas = filasCsv(desde, hasta);
+  const nombre = `manolo-finanzas${DEMO ? "-DEMO" : ""}_${desde}_a_${hasta}.csv`;
+  entregarArchivo(nombre, FD.aCsv(ENCABEZADOS_CSV, filas), "text/csv;charset=utf-8");
+}
+function rangoCompleto() {
+  const fechas = financeCache.map(m => m.date).concat(ahorrosCache.map(a => a.date), carterasMovCache.map(c => c.fecha)).filter(Boolean).sort();
+  return [fechas[0] || isoDate(new Date()), isoDate(new Date()) > (fechas[fechas.length - 1] || "") ? isoDate(new Date()) : fechas[fechas.length - 1]];
+}
+
+// ---- Recordatorio de respaldo (más de 14 días) ----
+const DIAS_RECORDATORIO = 14;
+const CLAVE_POSPUESTO = "manolo.finanzas.recordatorioHasta";
+function renderRecordatorio() {
+  const el = document.getElementById("fin-recordatorio");
+  if (!el) return;
+  let pospuesto = 0;
+  try { pospuesto = Number(localStorage.getItem(CLAVE_POSPUESTO)) || 0; } catch (e) { /* sin almacenamiento */ }
+  const ult = ajustes.ultimoRespaldoArchivo;
+  const vencido = !ult || Date.now() - ult > DIAS_RECORDATORIO * 86400000;
+  const mostrar = !DEMO && ajustesCargados && financeCache.length > 0 && vencido && Date.now() > pospuesto;
+  el.hidden = !mostrar;
+  if (!mostrar) { el.innerHTML = ""; return; }
+  el.innerHTML = `
+    <span class="fin-rec-ico" data-icon="download"></span>
+    <div class="fin-rec-txt"><strong>${ult ? `Tu último respaldo fue ${hace(ult)}` : "Guarda tu primer respaldo"}</strong><span>Un archivo con todas tus finanzas, por si pierdes el teléfono.</span></div>
+    <div class="fin-rec-acciones">
+      <button type="button" class="fin-aj-btn is-principal" data-fin-exportar-json>Respaldar</button>
+      <button type="button" class="fin-aj-btn is-texto" data-fin-rec-posponer aria-label="Recordármelo en 3 días">Más tarde</button>
+    </div>`;
+  renderIcons(el);
+}
+
+// ---- Aviso de modo demo y tarjeta de perfil ----
+function renderDemoBanner() {
+  const el = document.getElementById("fin-demo-banner");
+  if (!el) return;
+  el.hidden = !DEMO;
+  if (!DEMO || el.dataset.listo) return;
+  el.dataset.listo = "1";
+  el.innerHTML = `<span><strong>Modo demo</strong> · datos inventados</span><button type="button" class="fin-demo-salir" data-fin-demo-salir>Salir</button>`;
+}
+function renderPerfil() {
+  const nombre = document.getElementById("fin-perfil-nombre");
+  const inicial = document.getElementById("fin-perfil-inicial");
+  if (!nombre || !inicial) return;
+  // El nombre sale del usuario con el que entraste (no se guarda en el código).
+  const usuario = DEMO ? "Modo demo" : (currentUser && currentUser.email ? currentUser.email.split("@")[0] : "Tu cuenta");
+  const limpio = usuario.charAt(0).toUpperCase() + usuario.slice(1);
+  nombre.textContent = limpio;
+  inicial.textContent = limpio.charAt(0);
+}
+
+function entrarDemo() {
+  appDialog({ title: "Probar el modo demo", message: "Vas a ver 6 meses de datos inventados. Tus datos reales quedan intactos en la nube. Para volver, toca «Salir» arriba o en Ajustes.", confirmLabel: "Probar" })
+    .then(ok => {
+      if (!ok) return;
+      FinanzasDemo.activar();
+      location.hash = "#finanzas";
+      location.reload();
+    });
+}
+function salirDemo() {
+  FinanzasDemo.salir();
+  location.reload();
+}
+
+// Botones de Ajustes, recordatorio y aviso demo (delegados).
+document.addEventListener("click", e => {
+  const t = e.target.closest && e.target.closest("[data-fin-exportar-json], [data-fin-importar-json], [data-fin-exportar-csv], [data-fin-demo-entrar], [data-fin-demo-salir], [data-fin-rec-posponer]");
+  if (!t) return;
+  if (t.hasAttribute("data-fin-exportar-json")) exportarJson();
+  else if (t.hasAttribute("data-fin-importar-json")) { const inp = document.getElementById("fin-importar-archivo"); inp.value = ""; inp.click(); }
+  else if (t.hasAttribute("data-fin-exportar-csv")) { const [a, b] = rangoCompleto(); exportarCsv(a, b); }
+  else if (t.hasAttribute("data-fin-demo-entrar")) entrarDemo();
+  else if (t.hasAttribute("data-fin-demo-salir")) salirDemo();
+  else if (t.hasAttribute("data-fin-rec-posponer")) {
+    try { localStorage.setItem(CLAVE_POSPUESTO, String(Date.now() + 3 * 86400000)); } catch (err) { /* sin almacenamiento */ }
+    renderRecordatorio();
+  }
+});
+document.getElementById("fin-importar-archivo").addEventListener("change", e => importarJson(e.target.files && e.target.files[0]));
+document.getElementById("fin-ajustes").addEventListener("change", e => {
+  if (e.target.id === "fin-aj-dia-pago") guardarAjustes({ diaPagoTarjeta: Number(e.target.value) });
+  if (e.target.id === "fin-aj-reiva") {
+    const v = Number(String(e.target.value).replace(",", "."));
+    if (Number.isFinite(v) && v >= 0 && v <= 100) guardarAjustes({ reivaPct: v });
+    else { e.target.value = String(reivaTasa() * 100); avisoFin("Escribe un porcentaje entre 0 y 100."); }
+  }
+});
 
 // ================= Tabs =================
 
@@ -3448,7 +3734,8 @@ document.querySelectorAll("[data-budget-tab]").forEach(btn => {
 const RENDERERS = [
   renderStats, updateMonthLabel, renderMovements, renderGasto, renderVistaGeneral,
   updateBudgetMonthLabel, renderBudgets, renderBudgetInputs, renderBudgetSummary, renderBudgetInfo,
-  renderCategoryGroups, renderPeriodSettings, renderWallets, updateExportSummary, renderReiva, renderEstadoDatos
+  renderCategoryGroups, renderPeriodSettings, renderWallets, updateExportSummary, renderReiva, renderEstadoDatos,
+  renderAjustes, renderRecordatorio, renderDemoBanner, renderPerfil
 ];
 // Finanzas solo se dibuja cuando se ve: si estás en otra sección, los
 // cambios quedan marcados y se dibujan al entrar (así no frena el resto de
@@ -3484,10 +3771,10 @@ new MutationObserver(() => { if (renderPendiente && finanzasVisible()) renderAll
 // users/{tu usuario}/finanzas_respaldos, antes de escribir nada con el
 // formato nuevo. Los documentos originales nunca se reescriben.
 function metaDocRef(nombre) {
-  return db.collection("users").doc(currentUser.uid).collection("meta").doc(nombre);
+  return raiz().collection("meta").doc(nombre);
 }
 function respaldosCollection() {
-  return db.collection("users").doc(currentUser.uid).collection("finanzas_respaldos");
+  return raiz().collection("finanzas_respaldos");
 }
 const crudos = { finanzas: [], ahorros: [], carteras: [] };      // tal como están en Firestore
 const delServidor = { finanzas: false, ahorros: false, carteras: false };
@@ -3497,6 +3784,7 @@ function verificacionActual() {
   return FD.verificar(crudos.finanzas, financeCache);
 }
 function intentarRespaldo() {
+  if (DEMO) return;
   if (respaldando || !esquemaCargado || (esquema && esquema.respaldo)) return;
   if (!delServidor.finanzas || !delServidor.ahorros || !delServidor.carteras) return;
   respaldando = true;
@@ -3508,7 +3796,7 @@ function intentarRespaldo() {
       const r = FD.crearRespaldo({ finanzas: crudos.finanzas, ahorros: crudos.ahorros, carteras_movimientos: crudos.carteras, meta }, Date.now());
       const id = `${FD.isoLocal(new Date())}-${Date.now().toString(36)}`;
       const v = verificacionActual();
-      const lote = db.batch();
+      const lote = nuevoLote();
       r.partes.forEach((parte, i) => lote.set(respaldosCollection().doc(`${id}-${String(i).padStart(3, "0")}`),
         { respaldo: id, parte: i, partes: r.partes.length, coleccion: parte.coleccion, desde: parte.desde, docs: parte.docs }));
       lote.set(metaDocRef("finanzas_esquema"), {
@@ -3525,13 +3813,15 @@ function intentarRespaldo() {
 
 // Estado de tus datos (en Herramientas → Exportar).
 function renderEstadoDatos() {
-  const el = document.getElementById("fin-estado-datos");
-  if (!el) return;
+  ["fin-estado-datos", "fin-estado-datos-aj"].forEach(id => { const el = document.getElementById(id); if (el) pintarEstadoDatos(el); });
+}
+function pintarEstadoDatos(el) {
   const v = verificacionActual();
   const fmtFecha = t => new Date(t).toLocaleString("es-BO", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
   const tipos = { gasto: "Gastos", ingreso: "Ingresos", transferencia: "Transferencias", pago_tarjeta: "Pagos de tarjeta", ajuste_tarjeta: "Ajustes de tarjeta" };
   const r = esquema && esquema.respaldo;
-  const respaldo = r
+  const respaldo = DEMO ? "Modo demo: estos datos son inventados y viven solo en este teléfono (no se respaldan en la nube)."
+    : r
     ? `Respaldo automático del ${fmtFecha(r.creado)}: ${r.conteos.finanzas} movimientos, ${r.conteos.ahorros} de Ahorro y ${r.conteos.carteras_movimientos} de tus carteras.`
     : respaldoError ? `No se pudo guardar el respaldo automático: ${escapeHtml(respaldoError)}. Se vuelve a intentar al abrir la app.`
       : "El respaldo automático se guarda la primera vez que abras Finanzas con internet.";
@@ -3559,6 +3849,12 @@ onAuthReady(() => {
     }
     intentarRespaldo();
   });
+  ajustesDocRef().onSnapshot(doc => {
+    metaCrudo.finanzas_ajustes = doc.exists ? doc.data() : null;
+    ajustes = Object.assign({}, AJUSTES_DEFECTO, doc.exists ? doc.data() : {});
+    ajustesCargados = true;
+    pedirRender();
+  });
   metaDocRef("finanzas_esquema").onSnapshot({ includeMetadataChanges: true }, doc => {
     esquema = doc.exists ? doc.data() : null;
     esquemaCargado = doc.exists || !(doc.metadata && doc.metadata.fromCache);
@@ -3566,11 +3862,13 @@ onAuthReady(() => {
     pedirRender();
   });
   budgetConfigDocRef().onSnapshot(doc => {
+    metaCrudo.config_presupuesto = doc.exists ? doc.data() : null;
     const day = doc.exists ? Number(doc.data().startDay) : 1;
     budgetStartDay = day >= 1 && day <= 30 ? day : 1;
     pedirRender();
   });
   budgetDocRef().onSnapshot(doc => {
+    metaCrudo.presupuestos = doc.exists ? doc.data() : null;
     budgetsCache = doc.exists ? doc.data() : {};
     pedirRender();
   });
@@ -3599,6 +3897,7 @@ onAuthReady(() => {
 
   categoriasDocRef().onSnapshot(doc => {
     const data = doc.exists ? doc.data() : null;
+    metaCrudo.categorias_gasto = data;
     categoriasArchivadas = (data && Array.isArray(data.archivadas)) ? data.archivadas : [];
     // Sin conexión y sin copia local, "no existe" solo significa "no lo sé":
     // se usan las de siempre en pantalla, pero NO se escriben (al volver la
@@ -3624,6 +3923,7 @@ onAuthReady(() => {
   });
   ingresoCategoriesDocRef().onSnapshot(doc => {
     const data = doc.exists ? doc.data() : null;
+    metaCrudo.categorias_ingreso = data;
     if (data && Array.isArray(data.list) && data.list.length) {
       CATEGORIES.ingreso = data.list;
     } else {
@@ -3646,6 +3946,7 @@ onAuthReady(() => {
     intentarRespaldo();
   });
   carterasCustomDocRef().onSnapshot(doc => {
+    metaCrudo.carteras_custom = doc.exists ? doc.data() : null;
     carterasCustomCache = (doc.exists && Array.isArray(doc.data().list)) ? doc.data().list : [];
     pedirRender();
   });

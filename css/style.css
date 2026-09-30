@@ -1475,3 +1475,12 @@ body.has-home-btn .topbar-clock { margin-right: 0; }
 /* ---------- Herramientas: RE-IVA ---------- */
 /* Herramientas → Categorías: mover arrastrando desde ⋮⋮ */
 /* Mover secciones: solo se ven los títulos mientras se arrastra */
+
+/* Engranaje de Ajustes de Finanzas en la barra de arriba (solo en Finanzas) */
+.topbar-ajustes { display: none; }
+body.in-finanzas .topbar-ajustes {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 44px; height: 44px; margin-left: 0.4rem; border-radius: 50%; color: var(--ink);
+  border: 1px solid var(--border); background: rgba(255, 255, 255, 0.04);
+}
+body.in-finanzas .topbar-ajustes span { width: 20px; height: 20px; display: flex; }

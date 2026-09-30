@@ -1366,3 +1366,60 @@ button.remain-cat:active .remain-ring { transform: scale(0.95); }
 .fin-estado-lista li { display: flex; justify-content: space-between; gap: 1rem; font-variant-numeric: tabular-nums; }
 .fin-estado-lista li span:last-child { color: var(--ink); }
 .fin-estado-nota { margin: 0.8rem 0 0; font-size: 0.82rem; line-height: 1.45; color: var(--muted); }
+
+/* ---------- Ajustes de Finanzas ---------- */
+.fin-tab-ajustes { display: inline-flex !important; align-items: center; justify-content: center; min-width: 44px; }
+.fin-tab-ajustes span { width: 18px; height: 18px; display: flex; }
+.fin-ajustes { display: flex; flex-direction: column; gap: 1rem; padding-bottom: 6rem; }
+.fin-aj-bloque { padding: 1rem 1.1rem; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); }
+.fin-aj-bloque h2 { margin: 0 0 0.6rem; font-size: 1.05rem; }
+.fin-aj-fila {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 56px; padding: 0.5rem 0;
+  border-top: 1px solid var(--border); color: var(--ink); text-decoration: none;
+}
+.fin-aj-bloque h2 + .fin-aj-fila { border-top: 0; }
+.fin-aj-fila > span:first-child { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.fin-aj-t { font-size: 0.95rem; font-weight: 600; }
+.fin-aj-sub { font-size: 0.8rem; color: var(--muted); }
+.fin-aj-chev { width: 18px; height: 18px; color: var(--muted); flex-shrink: 0; }
+.fin-aj-campo select, .fin-aj-pct input {
+  min-height: 44px; padding: 0 0.7rem; border-radius: 12px; border: 1px solid var(--border);
+  background: var(--bg-soft); color: var(--ink); font: inherit; font-variant-numeric: tabular-nums;
+}
+.fin-aj-pct { display: inline-flex; align-items: center; gap: 0.35rem; flex-shrink: 0; }
+.fin-aj-pct input { width: 5.2rem; text-align: right; }
+.fin-aj-texto { margin: 0.2rem 0 0.8rem; font-size: 0.88rem; line-height: 1.5; color: var(--muted); }
+.fin-aj-texto strong { color: var(--ink); }
+.fin-aj-texto a { color: var(--accent-2); }
+.fin-aj-nota { margin: 0.8rem 0 0; font-size: 0.8rem; }
+.fin-aj-botones { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.fin-aj-btn {
+  display: inline-flex; align-items: center; gap: 0.45rem; min-height: 44px; padding: 0 1rem; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface-raised); color: var(--ink); font: inherit; font-weight: 600; font-size: 0.9rem;
+}
+.fin-aj-btn [data-icon] { width: 17px; height: 17px; display: flex; }
+.fin-aj-btn.is-principal { border-color: transparent; background: var(--accent-grad); color: #0a0a0a; }
+.fin-aj-btn.is-peligro { color: #f1a193; border-color: rgba(226, 89, 63, 0.45); }
+.fin-aj-btn.is-texto { background: transparent; border-color: transparent; color: var(--muted); }
+.fin-aj-demo-aviso { padding: 0.8rem 1rem; border-radius: 14px; border: 1px solid rgba(255, 184, 77, 0.4); background: rgba(255, 184, 77, 0.08); font-size: 0.88rem; line-height: 1.45; }
+.fin-ajustes .fin-estado-datos { padding: 0; border: 0; background: none; }
+
+/* Recordatorio de respaldo (Vista general) */
+.fin-recordatorio {
+  display: grid; grid-template-columns: auto 1fr; gap: 0.4rem 0.8rem; align-items: center; margin-bottom: 1rem;
+  padding: 0.9rem 1rem; border-radius: 18px; border: 1px solid rgba(255, 184, 77, 0.35); background: var(--surface);
+}
+.fin-recordatorio[hidden] { display: none; }
+.fin-rec-ico { width: 36px; height: 36px; padding: 8px; border-radius: 50%; background: rgba(255, 184, 77, 0.14); color: var(--accent-2); }
+.fin-rec-txt { display: flex; flex-direction: column; gap: 0.15rem; font-size: 0.85rem; color: var(--muted); line-height: 1.35; }
+.fin-rec-txt strong { color: var(--ink); font-size: 0.95rem; }
+.fin-rec-acciones { grid-column: 1 / -1; display: flex; gap: 0.4rem; justify-content: flex-end; }
+
+/* Aviso de modo demo (solo dentro de Finanzas) */
+.fin-demo-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; margin-bottom: 1rem;
+  padding: 0.35rem 0.4rem 0.35rem 1rem; border-radius: 999px; font-size: 0.88rem;
+  background: rgba(255, 184, 77, 0.12); border: 1px solid rgba(255, 184, 77, 0.45); color: var(--ink);
+}
+.fin-demo-banner[hidden], body:not(.in-finanzas) .fin-demo-banner { display: none; }
+.fin-demo-salir { min-height: 36px; padding: 0 0.9rem; border-radius: 999px; border: 0; background: var(--accent-grad); color: #0a0a0a; font: inherit; font-weight: 700; cursor: pointer; }
