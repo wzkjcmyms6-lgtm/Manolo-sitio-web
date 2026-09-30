@@ -10,18 +10,20 @@ const MODULES = [
   { hash: "inicio", label: "Inicio", icon: "home" },
   { hash: "habitos", label: "Hábitos", icon: "habits" },
   { hash: "ejercicio", label: "Ejercicio", icon: "exercise" },
+  // En la barra inferior del celular no caben 7 botones: estos dos solo van
+  // en el menú de arriba y ahí abajo resaltan "Ejercicio".
+  { hash: "running", label: "Running", icon: "running", mobileBar: "ejercicio" },
+  { hash: "bicicleta", label: "Bicicleta", icon: "cycling", mobileBar: "ejercicio" },
   { hash: "finanzas", label: "Finanzas", icon: "finance" },
   { hash: "inversiones", label: "Inversiones", icon: "investing" }
 ];
 
 // Sub-paneles que cuelgan de un módulo pero no aparecen en el menú
 // principal (se llega a ellos con tarjetas dentro del módulo padre, ej:
-// Ejercicio → Gimnasio/Running/Bicicleta). Igual se muestran/ocultan según
-// el hash, y la nav resalta el módulo padre mientras estás en uno de ellos.
+// Ejercicio → Gimnasio). Igual se muestran/ocultan según el hash, y la nav
+// resalta el módulo padre mientras estás en uno de ellos.
 const SUB_PANELS = [
   { hash: "gimnasio", parent: "ejercicio" },
-  { hash: "running", parent: "ejercicio" },
-  { hash: "bicicleta", parent: "ejercicio" },
   { hash: "fin-presupuesto", parent: "finanzas" },
   { hash: "fin-herramientas", parent: "finanzas" },
   { hash: "fin-herramientas-carteras", parent: "fin-herramientas" },
@@ -86,7 +88,7 @@ function showPanel(hash) {
   // En Ejercicio (y sus sub-paneles) el banner de versículos se reemplaza
   // por la silueta de cuerpo humano. En Finanzas se oculta sin reemplazo,
   // para que el resumen quede más arriba.
-  const isExercise = activeModule === "ejercicio";
+  const isExercise = ["ejercicio", "running", "bicicleta"].includes(activeModule);
   // En Finanzas la barra de arriba solo muestra una casita para volver al inicio.
   document.body.classList.toggle("in-finanzas", activeModule === "finanzas");
   document.getElementById("verse-banner").hidden = isExercise || activeModule === "finanzas" || activeModule === "habitos";
@@ -125,7 +127,8 @@ function renderNav() {
     } else {
       finGlassIndex = null;
       bottomNav.classList.remove("fin-mode");
-      bottomNav.innerHTML = MODULES.map(m => linkHTML(m, "icon", current)).join("");
+      const barActive = (MODULES.find(m => m.hash === current) || {}).mobileBar || current;
+      bottomNav.innerHTML = MODULES.filter(m => !m.mobileBar).map(m => linkHTML(m, "icon", barActive)).join("");
     }
   }
 
