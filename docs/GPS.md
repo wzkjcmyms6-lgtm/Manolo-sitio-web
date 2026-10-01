@@ -15,7 +15,7 @@ instalada en la pantalla de inicio. Esto define lo que se puede prometer.
 | Notificaciones locales programadas | No | No se usan para avisos de intervalos |
 | Precisión / altitud | `coords.accuracy` siempre; `altitude` y `speed` a veces `null` | Desnivel y velocidad del sensor solo si existen; si no, "no disponible" |
 
-## Estrategia de registro (fase 2/3)
+## Estrategia de registro (motor hecho en fase 2; GPS real en fase 3)
 
 - `watchPosition({ enableHighAccuracy: true, maximumAge: 0, timeout: 20000 })`.
 - **Filtros** (en el motor, probados): descartar `accuracy > 30 m` (aviso
@@ -31,6 +31,12 @@ instalada en la pantalla de inicio. Esto define lo que se puede prometer.
   sin GPS (tiempo) o volver al formulario manual existente.
 - **Consumo**: puntos en memoria + copia en `localStorage` cada ~10 s
   (recuperación); **una sola escritura** a Firestore al finalizar.
+- **Valores exactos** de los filtros: tabla de perfiles en `docs/SPORTS.md`
+  (constantes en `js/actividad-motor.js`, cubiertas por pruebas).
+- **Pantalla encendida**: `navigator.wakeLock.request("screen")` al iniciar;
+  se vuelve a pedir al volver a primer plano; se libera al pausar o terminar.
+- **Segundo plano**: al ocultarse la app se guarda el estado; al volver, los
+  tiempos se recalculan con el reloj y el GPS reanuda en un tramo nuevo.
 
 ## Evolución posible (solo si hiciera falta)
 

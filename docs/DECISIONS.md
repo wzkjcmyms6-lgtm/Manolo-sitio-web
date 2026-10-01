@@ -34,7 +34,7 @@ letras). Consecuencia: ninguna cuenta queda sin poder entrar.
 Motivo: compatibilidad total con listas, mapa muscular y respaldo; listas
 livianas. Alternativa: colección `actividades` nueva (exigiría migrar).
 
-**D-007 (propuesta F2) · Motores puros UMD (`actividad-motor.js`,
+**D-007 (implementada F2) · Motores puros UMD (`actividad-motor.js`,
 `intervalos-motor.js`) basados en marcas de tiempo.** Motivo: probables en
 Node y correctos tras suspensión de iOS. Consecuencia: la UI solo dibuja.
 
@@ -42,8 +42,13 @@ Node y correctos tras suspensión de iOS. Consecuencia: la UI solo dibuja.
 Audio.** Motivo: sin costo ni red. Consecuencia: depende de las voces del
 sistema; se prueba en el iPhone.
 
-**D-009 (a decidir F2) · Mapa: ruta SVG local siempre + fondo de teselas
-opcional bajo demanda.** Motivo: offline y sin costo; el fondo da contexto.
+**D-009 (decidida F2) · Mapa.** Durante la actividad: trazo **SVG local**
+(sin red, gasta menos batería). En resumen e historial: **Leaflet
+vendorizado y cargado solo al abrir el mapa**, con teselas gratuitas con
+atribución; sin conexión o si fallan, vuelve al trazo SVG. Proveedor de
+teselas y sus condiciones de uso se verifican al integrarlo (fase 3); el
+service worker no guarda teselas en masa. Alternativas: solo SVG (sin
+contexto de calles), mapa con teselas también en vivo (más batería y datos).
 
 **D-010 (propuesta F4) · CSV con `EjImportar.leerCsv` existente.** Motivo:
 ya maneja `,`/`;`, comillas y BOM; está probado.
@@ -66,3 +71,16 @@ Limitación: no prueban las reglas reales; eso se verifica al publicarlas.
 
 **D-014 (F1) · Campos del login a 16 px.** Motivo: con menos, el iPhone
 hace zoom al tocar el campo.
+
+**D-015 (F2) · Huecos de señal: se suma la recta, marcada como estimada
+(`huecoM`) y el trazo se corta.** Motivo: no inventar puntos ni ocultar
+distancia recorrida; el resumen puede decir "incluye X m estimados".
+
+**D-016 (F2) · Calorías.** Running: estimación ~1 kcal por kg por km con el
+último pesaje (Ejercicio › Perfil), siempre rotulada "estimado"; si no hay
+peso, no se muestra. Bicicleta: no se muestran (sin potencia ni pulso no hay
+método razonable). Se implementa en fase 3.
+
+**D-017 (F2) · Avisos de voz solo en cambios de intervalo y al terminar;
+la cuenta 3-2-1 va con pitidos y en pantalla.** Motivo: no saturar ni tapar
+la música.

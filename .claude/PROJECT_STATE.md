@@ -1,19 +1,17 @@
 # Estado del proyecto
 
-Actualizado: 2026-10-01 (fin de fase 1).
+Actualizado: 2026-10-01 (fin de fase 2).
 
 - **App**: PWA estática + Firebase (Auth + Firestore), una sola página,
   JS puro sin build. Ver `docs/ARCHITECTURE.md`.
-- **Funciona y se preserva**: Hábitos, Ejercicio (Feed, Entrenamiento,
-  Rangos, Perfil), Finanzas, Inversiones, offline.
-- **Fase 1 hecha**: contraseña con teclado numérico (+ letras y ver/ocultar),
-  nota de hábitos (`descripcion`), accesos + campana del admin
-  (`js/accesos*.js`), `firestore.rules` en el repo, `scripts/e2e/`.
-- **Pendiente del dueño**: crear `admins/{su uid}` y publicar
-  `firestore.rules` (pasos en `docs/ADMIN.md`). Sin eso la campana no aparece
-  y el registro de accesos falla en silencio (la app sigue igual).
-- **No existe aún**: GPS, voz, motor deportivo, rutinas de Running.
-- **Running/Bicicleta**: registro manual simple (`running.js`,
-  `bicicleta.js`).
-- **Tests**: 181/181 (`npm test`); E2E `node scripts/e2e/fase1.js` y
-  `node scripts/e2e/regresion.js` en verde.
+- **Funciona y se preserva**: Hábitos, Ejercicio, Finanzas, Inversiones,
+  offline.
+- **Fase 1**: contraseña numérica, nota de hábitos, accesos + campana admin,
+  `firestore.rules`, `scripts/e2e/`. Pendiente del dueño: `admins/{uid}` y
+  publicar reglas (`docs/ADMIN.md`).
+- **Fase 2**: `js/actividad-motor.js` e `js/intervalos-motor.js` hechos y
+  probados; **todavía no se cargan en `index.html`** (eso es la fase 3).
+  Diseño en `docs/SPORTS.md`, `docs/GPS.md`, `docs/DATABASE.md`.
+- **Running/Bicicleta** en la app: aún el registro manual simple.
+- **Tests**: 201/201 (`npm test`); E2E `scripts/e2e/fase1.js` y
+  `regresion.js` en verde.

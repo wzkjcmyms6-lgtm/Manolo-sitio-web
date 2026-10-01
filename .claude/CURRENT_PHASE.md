@@ -1,13 +1,16 @@
 # Fase actual
 
-**Fase 1 — Login + Hábitos + Auditoría de acceso: COMPLETADA** (2026-10-01).
-Falta solo la parte del dueño en Firebase (`docs/ADMIN.md`) y probar en su
-iPhone (teclado numérico, nota de hábitos, campana).
+**Fase 2 — Arquitectura deportiva: COMPLETADA** (2026-10-01).
 
-## Fase 2 — Arquitectura deportiva (siguiente, espera OK)
-Diseño (sin pantallas nuevas todavía): `actividad-motor.js` e
-`intervalos-motor.js` (UMD, timestamps, con pruebas), estrategia GPS y
-filtros (`docs/GPS.md`), modelo de datos (`docs/DATABASE.md`: campos nuevos en
-`running`/`bicicleta` + `users/{uid}/rutas`), decisión del mapa (D-009),
-recuperación de actividad, consumo. Entregable: motores probados + docs
-cerrados para empezar la fase 3.
+## Fase 3 — Running básico (siguiente, espera OK)
+1. Quitar el versículo de Running (`showPanel()` en `modules.js`).
+2. `js/actividad-gps.js`: permisos, `watchPosition`, wake lock,
+   `visibilitychange`, guardado local cada ~10 s y recuperación.
+3. Pantallas: previa (Carrera libre, estado del GPS), activa (DISTANCIA,
+   tiempo, ritmo, trazo SVG; Pausar/Reanudar/Finalizar grandes), resumen
+   (distancia, tiempos, ritmo/vel. media, desnivel, parciales, mapa) → guardar
+   con `ActividadMotor.resumen()` en `running` + `rutas` (un lote).
+4. Mantener el registro manual. Lista: mostrar actividades GPS con su ritmo.
+5. Leaflet + teselas (D-009) solo en el resumen: verificar condiciones.
+6. Calorías estimadas (D-016). Pruebas E2E con GPS simulado; prueba real en
+   el iPhone del dueño (pantalla encendida, permisos).

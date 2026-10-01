@@ -1,5 +1,14 @@
 # Cambios
 
+## 2026-10-01 · Fase 2 (arquitectura deportiva)
+- `js/actividad-motor.js`: estados, filtros GPS, distancia (Haversine),
+  tiempos total/activo/en movimiento, ritmo y velocidad, desnivel,
+  parciales, huecos estimados, resumen para Firestore y ruta codificada.
+- `js/intervalos-motor.js`: rutina por intervalos con reloj por marcas de
+  tiempo, cuenta atrás, cambios, fin y textos de voz.
+- +20 pruebas (201). Diseño cerrado en `SPORTS.md`, `GPS.md`, `DATABASE.md`
+  y decisiones D-009, D-015 a D-017. Sin cambios visibles en la app.
+
 ## 2026-10-01 · Fase 1 (login, hábitos, accesos)
 - Login: contraseña con teclado numérico, botón "Usar teclado de letras"
   (se recuerda), botón ver/ocultar; campos a 16 px.
