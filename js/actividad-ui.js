@@ -16,6 +16,9 @@
 const AM = ActividadMotor;
 const V = ActividadVista;
 const GPS = ActividadGps;
+const IM = IntervalosMotor;
+const NOMBRE_TIPO = { caminar: "Caminar", trotar: "Trotar", correr: "Correr", descanso: "Descanso" };
+const mmss = s => `${Math.floor(s / 60)}:${String(Math.max(0, Math.round(s)) % 60).padStart(2, "0")}`;
 const GUARDAR_CADA_MS = 10000;
 const RECUPERAR_MAX_MS = 12 * 3600000;
 const AJUSTES_IOS = "En el iPhone: Ajustes › Privacidad y seguridad › Localización › Sitios web de Safari › «Al usar la app».";
@@ -104,15 +107,20 @@ function crear(o) {
   let pantallaOk = true;
   let ultimoGuardadoLocal = 0;
   let estadoPintado = null;
-  let aviso = "";
+  let aviso = "";             // mensaje del inicio ("Carrera guardada.")
+  let avisoHasta = 0;         // se muestra unos segundos aunque se redibuje
   let reloj = null;
+  let rut = null;             // rutina por intervalos (IntervalosMotor) o null
+  let antesRut = null;
+  let ultimoAvisoT = null;    // hasta dónde se procesaron los avisos de la rutina
+  let cuentaTimer = null;
 
   const Nombre = o.nombre.charAt(0).toUpperCase() + o.nombre.slice(1);
 
   function guardarLocal() {
     if (!st || !currentUser) return;
     ultimoGuardadoLocal = Date.now();
-    try { localStorage.setItem(claveLocal(), JSON.stringify({ deporte: o.deporte, guardado: ultimoGuardadoLocal, st })); } catch (e) { /* sin espacio */ }
+    try { localStorage.setItem(claveLocal(), JSON.stringify({ deporte: o.deporte, guardado: ultimoGuardadoLocal, st, rut })); } catch (e) { /* sin espacio */ }
   }
   function borrarLocal() {
     try { localStorage.removeItem(claveLocal()); } catch (e) { /* sin almacenamiento */ }
@@ -156,10 +164,41 @@ function crear(o) {
 
   function tic() {
     if (vista !== "actividad" || !st) return;
+    if (rut && rut.estado === "activo") procesarAvisos(Date.now());
     pintarVivo();
     if (st.estado === "activo" && Date.now() - ultimoGuardadoLocal >= GUARDAR_CADA_MS) guardarLocal();
   }
-  function relojOn() { if (!reloj) reloj = setInterval(tic, 1000); }
+  // Con rutina se mira 4 veces por segundo para que la cuenta 3-2-1 caiga a tiempo.
+  function relojOn() { if (!reloj) reloj = setInterval(tic, rut ? 250 : 1000); }
+
+  // ---- Avisos de la rutina: cuenta 3-2-1, cambio de intervalo y fin ----
+  function mostrarCuenta(texto, largo) {
+    const el = raiz.querySelector("[data-act-cuenta]");
+    if (!el) return;
+    el.textContent = texto;
+    el.classList.toggle("is-palabra", !!largo);
+    el.classList.remove("is-on");
+    void el.offsetWidth;
+    el.classList.add("is-on");
+    clearTimeout(cuentaTimer);
+    cuentaTimer = setTimeout(() => el.classList.remove("is-on"), largo ? 1700 : 850);
+  }
+  function procesarAvisos(t) {
+    const lista = IM.avisos(rut, ultimoAvisoT, t);
+    ultimoAvisoT = t;
+    lista.forEach(av => {
+      if (av.tipo === "cuenta") { Avisos.pitido("cuenta"); mostrarCuenta(String(av.n)); return; }
+      Avisos.pitido(av.tipo === "fin" ? "fin" : "cambio");
+      Avisos.hablar(IM.textoAviso(rut, av));
+      const x = av.tipo === "fin" ? null : rut.plan.intervalos[av.indice];
+      mostrarCuenta(x ? NOMBRE_TIPO[x.tipo].toUpperCase() : "¡LISTO!", true);
+    });
+  }
+  function rutinaResumen() {
+    if (!rut) return null;
+    const i = IM.info(rut, rut.fin != null ? rut.fin : Date.now());
+    return Object.assign({ nombre: rut.plan.nombre, completados: i.completados, total: rut.plan.intervalos.length }, rut.id ? { id: rut.id } : {});
+  }
   function relojOff() { clearInterval(reloj); reloj = null; }
 
   // ---- Vistas ----
@@ -183,9 +222,9 @@ function crear(o) {
         </button>
         <p class="act-permiso" data-act-permiso>${otra ? "Tienes otra actividad sin terminar: termínala primero." : ""}</p>
         <p class="act-ayuda">Durante la ${o.nombre} mantén la pantalla encendida y Manolo abierto: con el teléfono bloqueado el iPhone no registra el GPS.</p>
-        ${aviso ? `<p class="act-ok" role="status">${escapeHtml(aviso)}</p>` : ""}
+        ${aviso && Date.now() < avisoHasta ? `<p class="act-ok" role="status">${escapeHtml(aviso)}</p>` : ""}
+        ${o.rutinas ? htmlRutinas(otra) : ""}
       </div>`;
-    aviso = "";
     if (otra) return;
     if (!GPS.disponible()) { raiz.querySelector("[data-act-permiso]").textContent = "Este navegador no tiene GPS: puedes registrar a mano."; return; }
     GPS.permiso().then(estado => {
@@ -200,14 +239,35 @@ function crear(o) {
     });
   }
 
+  function htmlRutinas(otra) {
+    const lista = RutinasRunning.lista();
+    return `
+      <div class="act-rutinas">
+        <div class="act-rutinas-cab">
+          <h3>Con rutina de intervalos</h3>
+          <button type="button" class="link-btn" data-act="importar-rutina">Importar CSV</button>
+        </div>
+        ${lista.length ? `<ul class="act-rutinas-lista">${lista.map(r => `
+          <li>
+            <button type="button" class="act-rutina" data-act="rutina" data-id="${escapeHtml(r.id)}"${otra ? " disabled" : ""}>
+              <strong>${escapeHtml(r.nombre)}</strong><span>${escapeHtml(RutinaRunning.resumen(r))}</span>
+            </button>
+            <button type="button" class="act-rutina-borrar" data-act="borrar-rutina" data-id="${escapeHtml(r.id)}" aria-label="Eliminar la rutina ${escapeHtml(r.nombre)}"><span data-icon="trash"></span></button>
+          </li>`).join("")}</ul>` : `
+          <p class="act-rutinas-vacio">Importa una rutina desde un archivo CSV (por ejemplo: 3 min caminar, 2 min correr…) y Manolo te avisa cada cambio con pitidos y voz.
+            <button type="button" class="link-btn" data-act="plantilla">Descargar plantilla</button></p>`}
+      </div>`;
+  }
+
   function htmlVivo() {
     const medio = esRitmo ? "Ritmo medio" : "Vel. media";
     return `
-      <div class="act-vivo">
+      <div class="act-vivo${rut ? " con-rutina" : ""}">
         <div class="act-top">
           <span class="act-dep">${escapeHtml(o.titulo)}</span>
           <span class="act-gps" data-act-gps></span>
         </div>
+        ${rut ? htmlRutinaVivo() : ""}
         <div class="act-principal">
           <span class="act-lbl">Distancia</span>
           <strong class="act-grande" data-act-dist>0,00</strong><span class="act-unidad">km</span>
@@ -221,6 +281,39 @@ function crear(o) {
         <p class="act-nota" data-act-nota role="status"></p>
         <div class="act-botones" data-act-botones></div>
       </div>`;
+  }
+
+  function htmlRutinaVivo() {
+    const p = Avisos.prefs();
+    return `
+      <div class="act-rut" data-act-rut>
+        <div class="act-rut-cab">
+          <span data-act-rut-cab></span>
+          <span class="act-rut-ctl">
+            <button type="button" data-act="sonido" aria-pressed="${p.sonido}">Sonido</button>
+            <button type="button" data-act="voz" aria-pressed="${p.voz}"${Avisos.vozDisponible() ? "" : " hidden"}>Voz</button>
+          </span>
+        </div>
+        <div class="act-rut-main"><strong class="act-rut-tipo" data-act-rut-tipo></strong><strong class="act-rut-resta" data-act-rut-resta></strong></div>
+        <p class="act-rut-texto" data-act-rut-texto></p>
+        <div class="act-rut-barra" aria-hidden="true"><i data-act-rut-barra></i></div>
+        <p class="act-rut-sig" data-act-rut-sig></p>
+      </div>
+      <div class="act-cuenta" data-act-cuenta aria-hidden="true"></div>`;
+  }
+  function pintarRutina(ahora) {
+    const caja = raiz.querySelector("[data-act-rut]");
+    if (!rut || !caja) return;
+    const i = IM.info(rut, ahora);
+    const n = rut.plan.intervalos.length;
+    const txt = (sel, t) => { const el = caja.querySelector(sel); if (el.textContent !== t) el.textContent = t; };
+    caja.className = "act-rut is-" + (i.terminado ? "fin" : i.actual.tipo);
+    txt("[data-act-rut-cab]", i.terminado ? `${rut.plan.nombre} · completada` : `${rut.plan.nombre} · ${i.indice + 1} de ${n}`);
+    txt("[data-act-rut-tipo]", i.terminado ? "¡Rutina completada!" : NOMBRE_TIPO[i.actual.tipo]);
+    txt("[data-act-rut-resta]", i.terminado ? "" : mmss(i.restanteS));
+    txt("[data-act-rut-texto]", i.terminado ? "Puedes seguir corriendo o finalizar." : i.actual.texto || "");
+    txt("[data-act-rut-sig]", i.terminado ? "" : i.siguiente ? `Siguiente: ${NOMBRE_TIPO[i.siguiente.tipo]} · ${mmss(i.siguiente.seg)}` : "Último intervalo");
+    caja.querySelector("[data-act-rut-barra]").style.width = `${(i.pct * 100).toFixed(1)}%`;
   }
 
   function pintarBotones() {
@@ -239,6 +332,7 @@ function crear(o) {
   function pintarVivo() {
     if (!st || !raiz.querySelector(".act-vivo")) return;
     const ahora = Date.now();
+    pintarRutina(ahora);
     if (estadoPintado !== st.estado) pintarBotones();
     const m = AM.metricas(st, ahora);
     const txt = (sel, t) => { const el = raiz.querySelector(sel); if (el && el.textContent !== t) el.textContent = t; };
@@ -276,7 +370,7 @@ function crear(o) {
 
   function datosResumen() {
     if (guardada) return { doc: guardada.doc, tramos: guardada.tramos };
-    const { documento } = AM.resumen(st);
+    const { documento } = AM.resumen(st, rut ? { rutina: rutinaResumen() } : null);
     return { doc: documento, tramos: tramosDeMotor(st) };
   }
 
@@ -312,6 +406,7 @@ function crear(o) {
         <p class="act-fecha">${escapeHtml(fechaHora(d.inicio || Date.now()))}</p>
         <div class="act-mapa" data-act-mapa></div>
         <div class="act-tiles">${tiles}</div>
+        ${d.rutina ? `<p class="act-rut-res">Rutina «${escapeHtml(d.rutina.nombre)}»: ${d.rutina.completados} de ${d.rutina.total} intervalos${d.rutina.completados >= d.rutina.total ? " ✓" : ""}</p>` : ""}
         ${d.huecoM ? `<p class="act-aviso">Incluye ${Math.round(d.huecoM)} m estimados en línea recta por pérdida de señal del GPS.</p>` : ""}
         ${filasP ? `<h3 class="act-sub">Parciales</h3><ol class="act-parciales">${filasP}</ol>` : ""}
         ${nuevo ? `
@@ -339,8 +434,15 @@ function crear(o) {
   }
 
   // ---- Acciones ----
-  function preparar() {
+  function preparar(rutinaId) {
     if (otraEnCurso()) return;
+    rut = null;
+    if (rutinaId) {
+      const r = RutinasRunning.obtener(rutinaId);
+      if (!r) return;
+      rut = IM.crear({ nombre: r.nombre, intervalos: r.intervalos });
+      rut.id = r.id;
+    }
     st = AM.crear(o.deporte);
     recuperada = false;
     vista = "actividad";
@@ -353,19 +455,30 @@ function crear(o) {
     // La última posición buena (si es reciente) marca el punto de partida.
     if (ultimaPos && t - ultimaPos.t < 5000) AM.punto(st, Object.assign({}, ultimaPos, { t }));
     GPS.pedirPantalla().then(ok => { pantallaOk = ok; });
+    if (rut) {
+      // El toque de Iniciar habilita sonido y voz en el iPhone.
+      Avisos.desbloquear();
+      IM.iniciar(rut, t);
+      ultimoAvisoT = null;
+      procesarAvisos(t);
+    }
     guardarLocal();
     pintarVivo();
     pintarEnCurso();
   }
   function pausar() {
-    AM.pausar(st, Date.now());
+    const t = Date.now();
+    AM.pausar(st, t);
+    if (rut) IM.pausar(rut, t);
     GPS.soltarPantalla();
     guardarLocal();
     pintarVivo();
   }
   function reanudar() {
     recuperada = false;
-    AM.reanudar(st, Date.now());
+    const t = Date.now();
+    AM.reanudar(st, t);
+    if (rut) { Avisos.desbloquear(); IM.reanudar(rut, t); ultimoAvisoT = t; }
     arrancarGps();
     GPS.pedirPantalla().then(ok => { pantallaOk = ok; });
     guardarLocal();
@@ -373,7 +486,10 @@ function crear(o) {
   }
   function finalizar() {
     antesDeFinalizar = JSON.parse(JSON.stringify(st));
-    AM.finalizar(st, Date.now());
+    antesRut = rut ? JSON.parse(JSON.stringify(rut)) : null;
+    const t = Date.now();
+    AM.finalizar(st, t);
+    if (rut) IM.finalizar(rut, t);
     detenerGps();
     GPS.soltarPantalla();
     guardarLocal();
@@ -384,6 +500,8 @@ function crear(o) {
     if (!antesDeFinalizar) return;
     st = antesDeFinalizar;
     antesDeFinalizar = null;
+    rut = antesRut;
+    antesRut = null;
     vista = "actividad";
     guardarLocal();
     render();
@@ -395,15 +513,18 @@ function crear(o) {
     borrarLocal();
     st = null;
     antesDeFinalizar = null;
+    rut = null;
+    antesRut = null;
     guardada = null;
     vista = "inicio";
     aviso = mensaje || "";
+    avisoHasta = Date.now() + 8000;
     render();
   }
   function guardar() {
     const rpe = Number(raiz.querySelector("[data-act-rpe]").value) || 0;
     const notas = raiz.querySelector("[data-act-notas]").value.trim();
-    const { documento, ruta } = AM.resumen(st, Object.assign({}, rpe ? { rpe } : {}, notas ? { notes: notas } : {}));
+    const { documento, ruta } = AM.resumen(st, Object.assign({}, rpe ? { rpe } : {}, notas ? { notes: notas } : {}, rut ? { rutina: rutinaResumen() } : {}));
     const usuario = db.collection("users").doc(currentUser.uid);
     const ref = usuario.collection(o.coleccion).doc();
     const lote = db.batch();
@@ -435,7 +556,16 @@ function crear(o) {
     if (!b || b.disabled) return;
     const a = b.dataset.act;
     if (a === "preparar") preparar();
-    else if (a === "cancelar") { detenerGps(); st = null; vista = "inicio"; render(); }
+    else if (a === "rutina") preparar(b.dataset.id);
+    else if (a === "importar-rutina") RutinasRunning.importar();
+    else if (a === "plantilla") RutinasRunning.plantilla();
+    else if (a === "borrar-rutina") RutinasRunning.borrar(b.dataset.id);
+    else if (a === "sonido" || a === "voz") {
+      const nuevo = !Avisos.prefs()[a];
+      Avisos.cambiar(a, nuevo);
+      b.setAttribute("aria-pressed", String(nuevo));
+    }
+    else if (a === "cancelar") { detenerGps(); st = null; rut = null; vista = "inicio"; render(); }
     else if (a === "iniciar") iniciar();
     else if (a === "pausar") pausar();
     else if (a === "reanudar") reanudar();
@@ -459,13 +589,17 @@ function crear(o) {
     const l = leerLocal();
     if (l && l.deporte === o.deporte) {
       st = l.st;
+      rut = l.rut || null;
       if (st.estado === "activo") { AM.pausar(st, l.guardado); recuperada = true; }
-      if (st.estado === "listo") { st = null; borrarLocal(); }
+      if (rut && rut.estado === "activo") IM.pausar(rut, l.guardado);
+      if (st.estado === "listo") { st = null; rut = null; borrarLocal(); }
       else vista = st.estado === "finalizado" ? "resumen" : "actividad";
       if (st && st.estado !== "finalizado") guardarLocal();
     }
     render();
   });
+  // La lista de rutinas llega de Firestore: se redibuja el inicio.
+  if (o.rutinas) RutinasRunning.alCambiar(() => { if (vista === "inicio" && currentUser) render(); });
 
   return {
     // Abre el resumen de una actividad ya guardada (desde la lista).

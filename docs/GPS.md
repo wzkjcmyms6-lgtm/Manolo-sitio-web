@@ -9,8 +9,8 @@ instalada en la pantalla de inicio. Esto define lo que se puede prometer.
 | GPS con pantalla bloqueada / app en segundo plano | **No** (WebKit suspende el JS) | Habrá huecos en la ruta; se marcan como "sin señal", **no se inventan puntos** |
 | Wake Lock (pantalla encendida) | Safari 16.4+; en apps de pantalla de inicio funciona de forma fiable desde iOS 18.4 | Se pide al iniciar; si falla, se avisa "mantén la pantalla encendida" |
 | Temporizadores en segundo plano | Se congelan | Todo se calcula con **marcas de tiempo** (`Date.now()`), no contando ticks: al volver, el tiempo es correcto |
-| `speechSynthesis` (voz local, sin nube) | Sí, tras un toque del usuario; voces en español del sistema | Avisos de voz en primer plano; se prueba en el dispositivo en fase 4 |
-| Web Audio (pitidos) | Sí, tras un toque; respeta el interruptor de silencio | Pitidos + aviso visual; se documenta lo del modo silencio |
+| `speechSynthesis` (voz local, sin nube) | Sí, tras un toque del usuario; voces en español del sistema | Avisos de voz en primer plano (fase 4). Se habilita en el toque de Iniciar/Reanudar. Pendiente confirmar en el iPhone del dueño |
+| Web Audio (pitidos) | Sí, tras un toque; respeta el interruptor de silencio | Pitidos + aviso visual siempre (si el teléfono está en silencio, queda lo visual y la voz según iOS). `navigator.audioSession.type = "transient"` (iOS 17+) para mezclarse con la música |
 | `navigator.vibrate` | **No** en iPhone | No se depende de vibración |
 | Notificaciones locales programadas | No | No se usan para avisos de intervalos |
 | Precisión / altitud | `coords.accuracy` siempre; `altitude` y `speed` a veces `null` | Desnivel y velocidad del sensor solo si existen; si no, "no disponible" |

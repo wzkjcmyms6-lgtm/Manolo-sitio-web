@@ -86,7 +86,9 @@ js/actividad-vista.js   ✅ (UMD, sin DOM)  formatos, calorías estimadas, trazo
 js/actividad-gps.js     ✅ (DOM)           watchPosition, permisos, wake lock
 js/actividad-ui.js      ✅ (DOM)           inicio / en vivo / resumen, guardado, recuperación, mapa Leaflet
 js/running.js ✅ · js/bicicleta.js (F5)    lista, registro a mano y montaje de la UI
-js/avisos.js            (F4, DOM)          visual + Web Audio + speechSynthesis
+js/avisos.js            ✅ (DOM)           pitidos (Web Audio) + voz (speechSynthesis), preferencias
+js/rutina-running.js    ✅ (UMD, sin DOM)  lectura y validación de rutinas CSV/Excel
+js/rutinas-running-ui.js ✅ (DOM)          importar, vista previa, guardar y listar rutinas
 js/accesos.js           ✅ (DOM)           evento de login y bandeja del administrador
 vendor/leaflet-1.9.4/   ✅                  mapa, cargado solo en el resumen
 ```

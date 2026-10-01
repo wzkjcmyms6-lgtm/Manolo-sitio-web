@@ -20,6 +20,19 @@ banner de versículo (por ser sub-panel de Inicio).
 - Guardado: un lote con el resumen en `running` y la ruta en `rutas`.
   Lista "Tus carreras": las de GPS se abren (resumen + mapa) y se eliminan
   con su ruta. El registro a mano sigue en un desplegable.
-- Fase 4: rutinas por intervalos desde CSV (`docs/CSV_ROUTINES.md`) con
-  avisos visual / sonido / voz.
+## Fase 4 (hecha)
+- Inicio: sección "Con rutina de intervalos" (lista, importar CSV/Excel,
+  plantilla, eliminar). Formato en `docs/CSV_ROUTINES.md`.
+- Carrera con rutina: tarjeta con el intervalo actual (color por tipo),
+  tiempo restante grande, descripción, barra de progreso, siguiente
+  intervalo y "N de M"; botones Sonido y Voz (se recuerdan).
+- Avisos (`js/avisos.js`): cuenta 3-2-1 en pantalla con pitidos (Web Audio)
+  y, en cada cambio y al terminar, aviso grande + voz del sistema
+  (`speechSynthesis`, sin nube): "Siguiente intervalo: correr durante 2
+  minutos." Se habilitan con el toque de Iniciar/Reanudar.
+- La rutina va con su propio motor (`intervalos-motor.js`): sigue aunque se
+  pierda el GPS; con la carrera en pausa, se pausa. Si la app estuvo
+  congelada, al volver no recita avisos viejos: dice "Ahora: …".
+- Recuperación junto con la carrera; la carrera guarda
+  `rutina: {id, nombre, completados, total}` y el resumen lo muestra.
 - Fase 6: historial y detalle.

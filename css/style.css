@@ -2189,3 +2189,80 @@ body.act-en-curso #verse-banner { display: none; }
   body.act-en-curso #bottom-nav-links { display: none !important; }
   body.act-en-curso .content { padding-bottom: calc(1.25rem + env(safe-area-inset-bottom)); }
 }
+/* ---------- Running: rutinas por intervalos ---------- */
+.act-rutinas { margin-top: 0.4rem; padding-top: 0.9rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.6rem; }
+.act-rutinas-cab { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.act-rutinas-cab h3 { margin: 0; font-size: 0.98rem; }
+.act-rutinas-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.45rem; }
+.act-rutinas-lista li { display: flex; align-items: stretch; gap: 0.4rem; }
+.act-rutina {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem;
+  min-height: 56px; padding: 0.6rem 0.9rem; border-radius: 14px; border: 1px solid var(--border);
+  background: var(--surface-raised); color: var(--ink); font: inherit; text-align: left; cursor: pointer;
+}
+.act-rutina:disabled { opacity: 0.45; cursor: default; }
+.act-rutina strong { font-size: 0.98rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.act-rutina span { color: var(--muted); font-size: 0.8rem; }
+.act-rutina-borrar { width: 48px; flex-shrink: 0; display: grid; place-items: center; border: 0; border-radius: 14px; background: none; color: var(--muted); cursor: pointer; }
+.act-rutina-borrar [data-icon] { width: 18px; height: 18px; }
+.act-rutinas-vacio { margin: 0; color: var(--muted); font-size: 0.85rem; line-height: 1.45; }
+.act-rutinas-vacio .link-btn { padding: 0; margin-left: 0.2rem; }
+
+/* Tarjeta de la rutina en vivo: color según el intervalo */
+.act-rut { --rut: var(--accent-1); position: relative; padding: 0.9rem 1rem 1rem; border-radius: 20px; background: #171717; border: 1px solid var(--border); }
+@supports (background: color-mix(in srgb, red 50%, blue)) {
+  .act-rut { background: color-mix(in srgb, var(--rut) 16%, #111); border-color: color-mix(in srgb, var(--rut) 55%, transparent); }
+}
+.act-rut.is-caminar { --rut: #5fcf8a; }
+.act-rut.is-trotar { --rut: #ffb84d; }
+.act-rut.is-correr { --rut: #ff7a30; }
+.act-rut.is-descanso { --rut: #9a978f; }
+.act-rut.is-fin { --rut: #5fcf8a; }
+.act-rut-cab { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; font-size: 0.82rem; color: var(--muted); }
+.act-rut-cab > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.act-rut-ctl { display: flex; gap: 0.3rem; flex-shrink: 0; }
+.act-rut-ctl button { min-height: 32px; padding: 0 0.6rem; border-radius: 999px; border: 1px solid var(--border); background: rgba(0, 0, 0, 0.25); color: var(--muted); font: inherit; font-size: 0.75rem; font-weight: 600; cursor: pointer; text-decoration: line-through; }
+.act-rut-ctl button[aria-pressed="true"] { color: var(--ink); text-decoration: none; border-color: color-mix(in srgb, var(--rut) 60%, transparent); }
+.act-rut-ctl button[hidden] { display: none; }
+.act-rut-main { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; margin-top: 0.35rem; }
+.act-rut-tipo { font-size: clamp(1.8rem, 9vw, 2.6rem); font-weight: 800; color: var(--rut); text-transform: uppercase; letter-spacing: -0.01em; line-height: 1.05; }
+.act-rut.is-fin .act-rut-tipo { font-size: 1.4rem; text-transform: none; }
+.act-rut-resta { font-size: clamp(2.4rem, 13vw, 3.4rem); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+.act-rut-texto { margin: 0.2rem 0 0; min-height: 1.2em; font-size: 0.9rem; color: var(--ink); }
+.act-rut-barra { height: 8px; margin-top: 0.7rem; border-radius: 4px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+.act-rut-barra i { display: block; height: 100%; width: 0; border-radius: 4px; background: var(--rut); transition: width 0.25s linear; }
+.act-rut-sig { margin: 0.45rem 0 0; font-size: 0.85rem; color: var(--muted); min-height: 1.2em; }
+.act-vivo.con-rutina { gap: 0.8rem; }
+.act-vivo.con-rutina .act-grande { font-size: clamp(2.8rem, 15vw, 4rem); }
+.act-vivo.con-rutina .act-ruta-vivo { min-height: 110px; }
+/* Cuenta atrás y cambio: grande en el centro de la pantalla */
+.act-cuenta {
+  position: fixed; left: 50%; top: 42%; z-index: 60; transform: translate(-50%, -50%) scale(0.6); opacity: 0; pointer-events: none;
+  font-size: clamp(4.5rem, 30vw, 9rem); font-weight: 800; color: #fff; text-shadow: 0 6px 30px rgba(0, 0, 0, 0.7); white-space: nowrap;
+}
+.act-cuenta.is-on { animation: act-cuenta 0.85s ease-out forwards; }
+.act-cuenta.is-palabra { font-size: clamp(2.4rem, 13vw, 4.5rem); padding: 0.35em 0.6em; border-radius: 24px; background: rgba(10, 10, 10, 0.88); border: 1px solid var(--border); text-shadow: none; }
+.act-cuenta.is-palabra.is-on { animation-duration: 1.7s; }
+@keyframes act-cuenta { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); } 25% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); } 70% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1); } }
+.act-rut-res { margin: 0; padding: 0.6rem 0.8rem; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); font-size: 0.9rem; }
+
+/* Hoja de importar rutina */
+.rr-cuerpo { padding: 0 1rem 0.8rem; display: flex; flex-direction: column; gap: 0.7rem; }
+.rr-nombre { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.82rem; color: var(--muted); }
+.rr-nombre input { min-height: 46px; padding: 0 0.8rem; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-soft); color: var(--ink); font: inherit; font-size: 1rem; }
+.rr-resumen { margin: 0; color: var(--muted); font-size: 0.88rem; }
+.rr-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; max-height: 45dvh; overflow-y: auto; }
+.rr-lista li { display: grid; grid-template-columns: 6rem 3.4rem minmax(0, 1fr); align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+.rr-tipo { padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.78rem; font-weight: 700; text-align: center; background: var(--surface-raised); }
+.rr-tipo.is-caminar { color: #5fcf8a; }
+.rr-tipo.is-trotar { color: #ffb84d; }
+.rr-tipo.is-correr { color: #ff7a30; }
+.rr-tipo.is-descanso { color: var(--muted); }
+.rr-dur { font-variant-numeric: tabular-nums; font-weight: 600; }
+.rr-texto { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rr-mal { margin: 0; color: var(--danger); font-weight: 600; }
+.rr-errores { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.88rem; max-height: 40dvh; overflow-y: auto; }
+.rr-ayuda { margin: 0; color: var(--muted); font-size: 0.82rem; line-height: 1.45; }
+.rr-error-nombre { margin: 0; color: var(--danger); font-size: 0.85rem; }
+.rr-error-nombre[hidden] { display: none; }
+.rr-acciones { display: flex; flex-direction: column; gap: 0.5rem; }

@@ -25,7 +25,7 @@ por dueño).
 | `admins/{uid}` ✅ | 1 | `{}` (o `nombre`) | Lo crea el dueño **a mano en la consola**; la app no puede escribirlo |
 | `users/{uid}/running/{id}` · `bicicleta/{id}` ✅ running (F3) · bici en F5 | 3/5 | `v:1, fuente:"gps", date, distance (km), duration (min activos), inicio, fin (ms), distanciaM, tiempoTotalS, tiempoActivoS, tiempoMovS, velMaxKmh, parciales:[s], conRuta`, opcionales `huecoM, desnivelPosM, desnivelNegM, rpe, notes, rutina:{id, nombre}` | Lo arma `ActividadMotor.resumen()`. **Mismas colecciones** y con `distance`/`duration` de siempre → listas, mapa muscular y respaldo siguen funcionando. Ritmo/velocidad medios no se guardan (se calculan) |
 | `users/{uid}/rutas/{mismo id}` ✅ (F3) | 3 | `v:1, deporte, inicio, enc` (lat, lon a 1e-5 y segundos desde el inicio), `tramos:[n por tramo]`, `n`, `alt?` | Aparte del resumen: las listas no descargan rutas. Medido en pruebas: < 12 caracteres por punto → 1 h ≈ 15–30 KB (límite Firestore 1 MiB). Se escribe en el mismo lote que el resumen |
-| `users/{uid}/rutinas_running/{id}` | 4 | `nombre, intervalos:[{tipo, seg, texto?}], creado, v:1` | Desde CSV |
+| `users/{uid}/rutinas_running/{id}` ✅ (F4) | 4 | `v:1, nombre, intervalos:[{tipo, seg, texto}], totalSeg, creado` | Desde CSV o Excel (`docs/CSV_ROUTINES.md`). Las carreras guardan `rutina: {id, nombre, completados, total}` |
 
 Datos derivados (ritmo medio, velocidad media) **no se guardan**: se
 calculan de distancia y tiempos. Los parciales sí (costoso de recalcular sin

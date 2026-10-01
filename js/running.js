@@ -1,6 +1,6 @@
 (function () {
-// Running: carrera con GPS (pantallas en js/actividad-ui.js), lista de tus
-// carreras y registro a mano (cinta o sin GPS). Todo en users/{uid}/running;
+// Running: carrera con GPS, libre o con rutina de intervalos (pantallas en
+// js/actividad-ui.js), lista de tus carreras y registro a mano (cinta o sin GPS). Todo en users/{uid}/running;
 // las carreras con GPS guardan su recorrido aparte en users/{uid}/rutas.
 
 // Fecha local de hoy (valueAsDate usa UTC y de noche marcaba el día siguiente).
@@ -34,7 +34,8 @@ const actividad = ActividadUI.crear({
   inicio: document.getElementById("running-home"),
   coleccion: "running",
   nombre: "carrera",
-  titulo: "Running"
+  titulo: "Running",
+  rutinas: true          // rutinas por intervalos desde CSV (js/rutinas-running-ui.js)
 });
 
 function renderStats() {

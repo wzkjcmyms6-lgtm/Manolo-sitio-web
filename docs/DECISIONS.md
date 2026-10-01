@@ -38,7 +38,7 @@ livianas. Alternativa: colección `actividades` nueva (exigiría migrar).
 `intervalos-motor.js`) basados en marcas de tiempo.** Motivo: probables en
 Node y correctos tras suspensión de iOS. Consecuencia: la UI solo dibuja.
 
-**D-008 (propuesta F4) · Voz con `speechSynthesis` local; pitidos Web
+**D-008 (implementada F4) · Voz con `speechSynthesis` local; pitidos Web
 Audio.** Motivo: sin costo ni red. Consecuencia: depende de las voces del
 sistema; se prueba en el iPhone.
 
@@ -54,7 +54,7 @@ creciera mucho, cambiar a un proveedor con cuenta (una sola línea en
 `js/actividad-ui.js`). Alternativas: solo SVG (sin
 contexto de calles), mapa con teselas también en vivo (más batería y datos).
 
-**D-010 (propuesta F4) · CSV con `EjImportar.leerCsv` existente.** Motivo:
+**D-010 (implementada F4) · CSV con `EjImportar.leerCsv` existente.** Motivo:
 ya maneja `,`/`;`, comillas y BOM; está probado.
 
 **D-011 (implementada F1) · Versionar `firestore.rules` en el repo como
@@ -102,3 +102,18 @@ de finalizar para poder volver.
 **D-020 (F3) · Durante la actividad se ocultan las barras de la app** (en el
 teléfono). Motivo: pantalla de lectura rápida y evitar toques accidentales.
 Se sale con Finalizar o Cancelar.
+
+**D-021 (F4) · CSV v1 lineal (una fila = un intervalo), Excel también.**
+Motivo: es el formato del ejemplo del dueño y el más fácil de escribir.
+Bloques repetidos (`repetir`) quedan como mejora futura si se piden.
+
+**D-022 (F4) · Un archivo con errores no se guarda.** Motivo: el prompt
+pide rechazar datos corruptos; se muestran todos los errores por fila para
+corregirlos de una vez.
+
+**D-023 (F4) · Con rutina, el reloj de la pantalla mira 4 veces por
+segundo** (sin rutina, 1). Motivo: que la cuenta 3-2-1 caiga a tiempo; el
+costo es mínimo (solo textos).
+
+**D-024 (F4) · Sonido y Voz se pueden apagar desde la tarjeta** y la
+elección queda en el teléfono (`manolo.avisos`).

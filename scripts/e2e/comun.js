@@ -48,6 +48,14 @@ function simuladores() {
   if (navigator.permissions) navigator.permissions.query = d => (d && d.name === "geolocation" ? Promise.resolve({ state: window.__permiso || "prompt" }) : consulta(d));
 }
 
+// Voz simulada: lo que se "dice" queda en window.__dichos (sin sonido real).
+function simVoz() {
+  window.__dichos = [];
+  const ss = { speak(u) { if (u.text.trim()) window.__dichos.push(u.text); }, cancel() {}, getVoices() { return [{ lang: "es-ES", name: "Prueba" }]; }, addEventListener() {} };
+  Object.defineProperty(window, "speechSynthesis", { configurable: true, value: ss });
+  window.SpeechSynthesisUtterance = function (t) { this.text = t; };
+}
+
 function servidor() {
   return new Promise(res => {
     const srv = http.createServer((req, resp) => {
@@ -61,7 +69,7 @@ function servidor() {
 }
 
 // Abre una página nueva. estado: claves de localStorage para la primera
-// carga (__SEED__, __USERS__, __SESION__…); opciones: { gps, ancho, alto, hash }.
+// carga (__SEED__, __USERS__, __SESION__…); opciones: { gps, voz, ancho, alto, hash }.
 async function abrir(browser, base, estado, opciones) {
   const o = Object.assign({ ancho: 390, alto: 844, hash: "#inicio" }, opciones || {});
   const movil = o.ancho <= 768;
@@ -77,6 +85,7 @@ async function abrir(browser, base, estado, opciones) {
     Object.keys(e).forEach(k => localStorage.setItem(k, typeof e[k] === "string" ? e[k] : JSON.stringify(e[k])));
   }, estado || {});
   if (o.gps) await ctx.addInitScript(simuladores);
+  if (o.voz) await ctx.addInitScript(simVoz);
   const p = await ctx.newPage();
   p.errores = [];
   p.on("pageerror", err => { p.errores.push(err.message); fallos++; console.log("  error de página:", err.message); });

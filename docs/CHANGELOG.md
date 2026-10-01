@@ -1,5 +1,15 @@
 # Cambios
 
+## 2026-10-01 · Fase 4 (rutinas de Running con avisos)
+- Importar rutinas desde CSV o Excel con vista previa y errores por fila;
+  plantilla descargable; lista y eliminación en el inicio de Running.
+- Carrera con rutina: tarjeta del intervalo (restante, siguiente, progreso),
+  cuenta 3-2-1 con pitidos, aviso grande y voz local en cada cambio y al
+  terminar; Sonido/Voz apagables; sigue sin GPS; recuperación; la carrera
+  guarda la rutina usada.
+- Nuevos: `rutina-running.js`, `rutinas-running-ui.js`, `avisos.js`.
+  Pruebas: 215 unitarias; E2E `fase4.js` (32 comprobaciones).
+
 ## 2026-10-01 · Fase 3 (Running con GPS)
 - Running sin versículo; carrera con GPS: inicio con estado del permiso,
   pantalla en vivo (distancia, tiempo, ritmo, trazo, estado del GPS),
