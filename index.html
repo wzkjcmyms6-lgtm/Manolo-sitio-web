@@ -17,7 +17,7 @@
   <!-- Fuentes guardadas en el repo: la app no depende de internet para verse bien -->
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
-  <link rel="stylesheet" href="css/style.css?v=202610020500">
+  <link rel="stylesheet" href="css/style.css?v=202610030100">
   <link rel="stylesheet" href="css/finanzas.css?v=202610011900">
   <link rel="stylesheet" href="css/habitos.css?v=202610010600">
 </head>
@@ -320,26 +320,33 @@
             </div>
 
             <div id="gym-active" hidden>
-              <div class="workout-header">
-                <input type="text" id="gym-active-name" class="workout-name-input" aria-label="Nombre del entrenamiento">
-                <span class="workout-timer" id="gym-active-timer">0:00</span>
+              <div class="gx-top">
+                <button type="button" class="gx-min" id="gym-active-min" aria-label="Minimizar: el entreno sigue en curso"><span data-icon="chevronDown"></span></button>
+                <input type="text" id="gym-active-name" class="gx-nombre" aria-label="Nombre del entrenamiento">
+                <button type="button" class="gx-terminar" id="gym-active-finish">Terminar</button>
               </div>
-              <div class="workout-meta-row">
-                <label>Fecha <input type="date" id="gym-active-date"></label>
-                <label id="gym-active-duration-wrap" hidden>Duración (min) <input type="number" id="gym-active-duration" min="1" step="1" inputmode="numeric"></label>
+              <div class="gx-stats">
+                <div class="gx-stat"><span>Duración</span><strong class="is-azul" id="gym-active-timer">0:00</strong><strong class="is-azul" id="gym-active-dur-txt" hidden></strong></div>
+                <div class="gx-stat"><span>Volumen</span><strong id="gym-active-vol">0 kg</strong></div>
+                <div class="gx-stat"><span>Series</span><strong id="gym-active-series">0</strong></div>
+                <div class="gx-figs" aria-hidden="true">
+                  <svg class="figura gx-fig" id="gym-fig-frente" viewBox="0 0 140 300"></svg>
+                  <svg class="figura gx-fig" id="gym-fig-espalda" viewBox="0 0 140 300"></svg>
+                </div>
               </div>
 
               <div id="gym-active-exercises"></div>
 
-              <form id="gym-active-add-exercise-form" class="add-exercise-form">
-                <input type="text" id="gym-active-exercise-name" placeholder="Buscar ejercicio (ej: press inclinado)" required>
-                <button type="submit">Agregar</button>
+              <form id="gym-active-add-exercise-form" class="add-exercise-form gx-agregar">
+                <input type="text" id="gym-active-exercise-name" placeholder="Agregar ejercicio (ej: press inclinado)" required>
+                <button type="submit"><span class="icon-sm" data-icon="plus"></span> Agregar</button>
               </form>
 
-              <div class="workout-actions">
-                <button type="button" id="gym-active-finish">Finalizar entrenamiento</button>
-                <button type="button" class="link-btn danger" id="gym-active-discard">Descartar</button>
+              <div class="workout-meta-row gx-detalles">
+                <label>Fecha <input type="date" id="gym-active-date"></label>
+                <label id="gym-active-duration-wrap" hidden>Duración (min) <input type="number" id="gym-active-duration" min="1" step="1" inputmode="numeric"></label>
               </div>
+              <button type="button" class="gx-descartar" id="gym-active-discard">Descartar entreno</button>
             </div>
           </section>
 
@@ -964,6 +971,64 @@
     </div>
   </div>
 
+  <!-- Gimnasio: menú de un ejercicio del entreno -->
+  <div id="gx-menu" class="js-sheet budget-sheet rut-menu" hidden>
+    <div class="budget-sheet-overlay" data-gx-cerrar></div>
+    <div class="budget-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="gx-menu-t">
+      <div class="budget-sheet-header">
+        <button type="button" class="budget-sheet-close" data-gx-cerrar aria-label="Cerrar"><span data-icon="close"></span></button>
+        <h3 id="gx-menu-t">Ejercicio</h3>
+      </div>
+      <div class="rut-menu-lista">
+        <button type="button" data-gx-accion="subir"><span data-icon="chevronUp"></span>Mover arriba</button>
+        <button type="button" data-gx-accion="bajar"><span data-icon="chevronDown"></span>Mover abajo</button>
+        <button type="button" data-gx-accion="definir"><span data-icon="edit"></span>Asignar músculos</button>
+        <button type="button" data-gx-accion="eliminar" class="is-peligro"><span data-icon="trash"></span>Quitar del entreno</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gimnasio: descanso entre series de un ejercicio -->
+  <div id="gx-descanso" class="js-sheet budget-sheet rut-menu" hidden>
+    <div class="budget-sheet-overlay" data-gx-cerrar></div>
+    <div class="budget-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="gx-descanso-t">
+      <div class="budget-sheet-header">
+        <button type="button" class="budget-sheet-close" data-gx-cerrar aria-label="Cerrar"><span data-icon="close"></span></button>
+        <h3 id="gx-descanso-t">Descanso</h3>
+      </div>
+      <p class="gx-hoja-txt">Al marcar una serie con ✓ empieza la cuenta regresiva.</p>
+      <div class="rut-menu-lista gx-descanso-lista" id="gx-descanso-lista"></div>
+    </div>
+  </div>
+
+  <!-- Gimnasio: terminar con series sin marcar -->
+  <div id="gx-fin" class="js-sheet budget-sheet rut-menu" hidden>
+    <div class="budget-sheet-overlay" data-gx-cerrar></div>
+    <div class="budget-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="gx-fin-t">
+      <div class="budget-sheet-header">
+        <button type="button" class="budget-sheet-close" data-gx-cerrar aria-label="Cerrar"><span data-icon="close"></span></button>
+        <h3 id="gx-fin-t">Series sin marcar</h3>
+      </div>
+      <p class="gx-hoja-txt" id="gx-fin-txt"></p>
+      <div class="gx-hoja-botones">
+        <button type="button" class="gx-btn-azul" data-gx-fin="todas">Marcarlas y terminar</button>
+        <button type="button" class="gx-btn-sec" data-gx-fin="marcadas">Guardar solo las marcadas</button>
+        <button type="button" class="gx-btn-txt" data-gx-cerrar>Seguir entrenando</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gimnasio: cuenta regresiva del descanso -->
+  <div class="gx-barra" id="gx-barra" hidden role="timer" aria-live="off">
+    <div class="gx-barra-fill" id="gx-barra-fill"></div>
+    <div class="gx-barra-in">
+      <button type="button" data-gx-desc="-15">−15</button>
+      <div class="gx-barra-txt"><span id="gx-barra-lbl">Descanso</span><strong id="gx-barra-reloj">0:00</strong></div>
+      <button type="button" data-gx-desc="15">+15</button>
+      <button type="button" class="gx-barra-saltar" data-gx-desc="saltar">Saltar</button>
+    </div>
+  </div>
+
   <!-- Ejercicio: récords de un usuario -->
   <div id="eju-hoja" class="js-sheet budget-sheet eju-hoja" hidden>
     <div class="budget-sheet-overlay"></div>
@@ -1086,7 +1151,7 @@
   <script defer src="js/auth.js?v=202609232200"></script>
   <script defer src="js/saludo.js?v=202610012000"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
-  <script defer src="js/icons.js?v=202610020300"></script>
+  <script defer src="js/icons.js?v=202610030100"></script>
   <script defer src="js/modules.js?v=202610020100"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
@@ -1096,7 +1161,8 @@
   <script defer src="js/exercise-picker.js?v=202609294"></script>
   <script defer src="js/rutinas.js?v=202610020300"></script>
   <script defer src="js/progresion.js?v=202610020400"></script>
-  <script defer src="js/gimnasio.js?v=202610020400"></script>
+  <script defer src="js/entreno-series.js?v=202610030100"></script>
+  <script defer src="js/gimnasio.js?v=202610030100"></script>
   <script defer src="js/rutinas-ui.js?v=202610020600"></script>
   <script defer src="js/ej-sesiones.js?v=202610020200"></script>
   <script defer src="js/ej-vistas.js?v=202610020200"></script>

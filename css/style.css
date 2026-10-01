@@ -1302,7 +1302,9 @@ button.set-num.warm { color: var(--accent-2); border-color: rgba(255, 184, 77, 0
   }
 .sidebar-overlay.visible { opacity: 1; pointer-events: auto; }
 .topbar { display: flex; }
-.content { padding: 1.25rem; padding-bottom: 6rem; }
+/* Espacio abajo para que la barra de pestañas (y la zona del gesto del
+     iPhone) no tape lo último de la página: botones como Terminar o Descartar. */
+.content { padding: 1.25rem; padding-bottom: calc(7.5rem + env(safe-area-inset-bottom)); }
 .verse-banner { padding: 2.25rem 1.25rem; border-radius: 0 0 28px 28px; }
 .verse-banner .verse-text { font-size: 1.4rem; }
 .body-banner { padding: 1.25rem 1rem 1.25rem; border-radius: 0 0 28px 28px; gap: 0.75rem; }
@@ -1770,3 +1772,222 @@ body.in-finanzas .topbar-ajustes span { width: 20px; height: 20px; display: flex
 .imp-listo { display: flex; align-items: center; gap: 0.8rem; padding: 1rem; border-radius: 14px; background: rgba(95, 207, 138, 0.1); border: 1px solid rgba(95, 207, 138, 0.4); }
 .imp-listo [data-icon] { width: 28px; height: 28px; color: #5fcf8a; flex-shrink: 0; }
 .imp-listo p { margin: 0; }
+/* ---------- Gimnasio: registro del entreno (estilo apps de gimnasio) ----------
+   Arriba Terminar y el resumen; cada ejercicio con SERIE · ANTERIOR · KG ·
+   REPS · ✓. Azul de Ejercicio para lo tocable y verde para lo ya hecho. */
+#gym-active { --gx-azul: #4da3ff; --gx-ok: #5fcf8a; --gx-cols: 34px minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) 42px; }
+.gx-top {
+  position: sticky; top: 0; z-index: 15;
+  display: flex; align-items: center; gap: 0.6rem;
+  margin: -2.5rem -2rem 0; padding: 0.65rem 2rem;
+  background: rgba(10, 10, 10, 0.92);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+.gx-min {
+  width: 44px; height: 44px; flex-shrink: 0; display: grid; place-items: center;
+  border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--ink); cursor: pointer;
+}
+.gx-min[hidden] { display: none; }
+.gx-min [data-icon] { width: 22px; height: 22px; }
+.gx-nombre {
+  flex: 1; min-width: 0; background: none; border: none; border-bottom: 1px solid transparent;
+  color: var(--ink); font: inherit; font-size: 1.12rem; font-weight: 700; padding: 0.3rem 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.gx-nombre:focus { outline: none; border-bottom-color: var(--gx-azul); }
+.gx-terminar {
+  flex-shrink: 0; min-height: 44px; padding: 0 1.25rem; border: 0; border-radius: 12px;
+  background: var(--gx-azul); color: #fff; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer;
+}
+.gx-terminar:active { filter: brightness(0.9); }
+.gx-stats {
+  display: grid; grid-template-columns: 1fr 1.2fr 0.8fr auto; align-items: center; gap: 0.5rem;
+  margin: 0 -2rem 1.1rem; padding: 0.85rem 2rem; border-bottom: 1px solid var(--border);
+}
+.gx-stat { display: flex; flex-direction: column; min-width: 0; }
+.gx-stat span { font-size: 0.75rem; color: var(--muted); }
+.gx-stat strong { font-size: 1.05rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gx-stat strong[hidden] { display: none; }
+.gx-stat .is-azul { color: var(--gx-azul); }
+.gx-figs { display: flex; gap: 2px; }
+.gx-fig { width: 22px; height: 47px; }
+.gx-fig .mz { cursor: default; }
+
+.gx-ej { background: none; border: 0; border-radius: 0; padding: 0; margin: 0 0 1.9rem; }
+.gx-ej-head { display: flex; align-items: center; gap: 0.75rem; }
+.gx-thumb {
+  width: 46px; height: 46px; flex-shrink: 0; border-radius: 50%; overflow: hidden;
+  background: #f2efe9; display: grid; place-items: center;
+}
+.gx-thumb.is-vacia { background: var(--surface-raised); color: var(--muted); }
+.gx-thumb.is-vacia [data-icon] { width: 24px; height: 24px; }
+.gx-thumb-fig { width: 100%; height: 100%; display: block; }
+.gx-thumb-fig .mz-base, .gx-thumb-fig .mz-pieza { stroke-width: 1.2; }
+.gx-ej-titulo { flex: 1; min-width: 0; }
+.gx-ej-titulo h3 { margin: 0; font-size: 1.05rem; line-height: 1.25; color: var(--gx-azul); overflow-wrap: anywhere; }
+.gx-ej-titulo .exercise-muscles { margin-top: 0.1rem; }
+.gx-mas {
+  width: 40px; height: 44px; flex-shrink: 0; display: grid; place-items: center;
+  border: 0; background: none; color: var(--ink); cursor: pointer; border-radius: 10px;
+}
+.gx-mas [data-icon] { width: 22px; height: 22px; }
+.gx-ej .ex-objetivo { margin-top: 0.55rem; }
+.gx-notas {
+  display: block; width: 100%; margin: 0.45rem 0 0; padding: 0.45rem 0;
+  border: 0; border-bottom: 1px solid transparent; background: none; color: var(--ink);
+  font: inherit; font-size: 0.95rem;
+}
+.gx-notas::placeholder { color: var(--muted); }
+.gx-notas:focus { outline: none; border-bottom-color: var(--border); }
+.gx-ej-linea { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; margin: 0.2rem 0 0.5rem; }
+.gx-descanso-btn {
+  display: inline-flex; align-items: center; gap: 0.45rem; min-height: 40px; padding: 0;
+  border: 0; background: none; color: var(--gx-azul); font: inherit; font-size: 0.95rem; cursor: pointer;
+}
+.gx-descanso-btn .icon-sm { width: 20px; height: 20px; }
+.gx-rpe { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--muted); }
+.gx-rpe select {
+  min-height: 34px; padding: 0 0.4rem; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg-soft); color: var(--ink); font: inherit; font-size: 0.85rem;
+}
+.gx-minutos { margin-top: 0.4rem; }
+
+.gx-tabla { gap: 0.3rem; }
+.gx-tabla .set-row.gx-cab { grid-template-columns: var(--gx-cols); gap: 0.4rem; padding: 0 0.15rem; font-size: 0.72rem; letter-spacing: 0.04em; }
+.gx-tabla .set-row.gx-cab span:first-child { font-size: 0.72rem; letter-spacing: 0.04em; }
+.gx-tabla .set-row.gx-cab span:nth-child(2) { text-align: left; padding-left: 0.2rem; }
+.gx-cab-check { display: grid; place-items: center; }
+.gx-cab-check [data-icon] { width: 18px; height: 18px; }
+.gx-tabla .set-row.gx-cab.cols-1, .gx-fila.cols-1 .gx-fila-in { --gx-cols: 34px minmax(0, 1.3fr) minmax(0, 1.5fr) 42px; }
+.gx-fila { display: block; position: relative; overflow: hidden; border-radius: 10px; touch-action: pan-y; }
+.gx-fila-in {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: var(--gx-cols); align-items: center; gap: 0.4rem;
+  padding: 0.3rem 0.15rem; background: var(--bg); border-radius: 10px;
+  transition: transform 0.22s ease, background 0.2s ease;
+}
+.gx-fila.is-arrastrando .gx-fila-in { transition: none; }
+.gx-fila.is-abierta .gx-fila-in { transform: translateX(-88px); }
+.gx-borrar {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 88px;
+  height: auto; border: 0; border-radius: 0 10px 10px 0; background: var(--danger); color: #fff;
+  font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer;
+}
+.gx-fila .set-num {
+  min-height: 40px; min-width: 34px; border-radius: 8px; background: var(--surface-raised);
+  border: 1px solid transparent; font-size: 0.95rem;
+}
+.gx-fila .set-num.warm { background: rgba(255, 184, 77, 0.12); }
+.gx-ant {
+  min-height: 40px; padding: 0 0.2rem; border: 0; background: none; color: var(--muted);
+  font: inherit; font-size: 0.85rem; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums; cursor: pointer;
+}
+.gx-ant:disabled { cursor: default; color: #5c5a55; }
+.gx-fila input {
+  width: 100%; min-height: 40px; padding: 0 0.3rem; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg-soft); color: var(--ink); font: inherit; font-size: 1rem; font-weight: 600; text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.gx-fila input::placeholder { color: #66635d; font-weight: 500; }
+.gx-fila input:focus { outline: none; border-color: var(--gx-azul); }
+.gx-check {
+  width: 42px; height: 40px; display: grid; place-items: center; padding: 0;
+  border: 0; border-radius: 8px; background: var(--surface-raised); color: var(--muted); cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+.gx-check [data-icon] { width: 20px; height: 20px; }
+.gx-check:active { transform: scale(0.92); }
+/* Serie hecha: la fila entera en verde. */
+.gx-fila.is-hecha .gx-fila-in { background: #183323; }
+.gx-fila.is-hecha .gx-check { background: var(--gx-ok); color: #0a0a0a; }
+.gx-fila.is-hecha input { background: transparent; border-color: transparent; }
+.gx-fila.is-hecha .set-num { background: transparent; }
+.gx-fila.is-hecha .gx-ant { color: #a7c9b2; }
+.gx-fila.is-warm input { opacity: 1; }
+.gx-fila.is-warm:not(.is-hecha) input { color: #d9c8a4; }
+.gx-fila.is-error .gx-fila-in { animation: gx-sacudir 0.4s ease; }
+@keyframes gx-sacudir {
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+.gx-agregar-serie {
+  display: flex; align-items: center; justify-content: center; gap: 0.4rem; width: 100%;
+  min-height: 44px; margin-top: 0.55rem; border: 0; border-radius: 10px;
+  background: var(--surface-raised); color: var(--ink); font: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+}
+.gx-agregar-serie .icon-sm { width: 18px; height: 18px; }
+.gx-pista { margin: 0.5rem 0 0; }
+
+.gx-agregar { margin: 0.4rem 0 1.25rem; }
+.gx-agregar input { min-height: 46px; font-size: 1rem; }
+.gx-agregar button {
+  display: inline-flex; align-items: center; gap: 0.35rem; min-height: 46px;
+  background: var(--gx-azul); border-color: var(--gx-azul); color: #fff; font-weight: 700;
+}
+.gx-agregar button .icon-sm { width: 18px; height: 18px; }
+.gx-detalles { margin: 0 0 1rem; }
+.gx-descartar {
+  display: block; width: 100%; min-height: 48px; margin: 0 0 1rem; border: 0; border-radius: 12px;
+  background: rgba(226, 89, 63, 0.12); color: var(--danger); font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer;
+}
+
+/* Hojas del entreno */
+.rut-menu-lista button[hidden] { display: none; }
+.gx-hoja-txt { margin: -0.3rem 1.25rem 0.9rem; color: var(--muted); font-size: 0.92rem; text-align: center; }
+.gx-hoja-botones { display: flex; flex-direction: column; gap: 0.55rem; padding: 0 1rem 0.6rem; }
+.gx-hoja-botones button { min-height: 50px; border-radius: 14px; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; }
+.gx-hoja-botones button[hidden] { display: none; }
+.gx-btn-azul { border: 0; background: #4da3ff; color: #fff; }
+.gx-btn-sec { border: 1px solid var(--border); background: var(--surface); color: var(--ink); }
+.gx-btn-txt { border: 0; background: none; color: var(--muted); }
+.gx-descanso-lista { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; padding: 0 1rem 0.8rem; }
+.gx-descanso-lista button {
+  min-height: 48px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface);
+  color: var(--ink); font: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+}
+.gx-descanso-lista button.active { background: #4da3ff; border-color: #4da3ff; color: #fff; }
+
+/* Cuenta regresiva del descanso (abajo, solo con el entreno abierto) */
+.gx-barra {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 40;
+  bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  width: min(456px, calc(100% - 1.5rem)); overflow: hidden;
+  border-radius: 18px; background: #1d2633; border: 1px solid rgba(77, 163, 255, 0.35);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+}
+.gx-barra[hidden], body:not(.gym-en-entreno) .gx-barra { display: none; }
+.gx-barra-fill {
+  position: absolute; inset: 0; background: rgba(77, 163, 255, 0.28);
+  transform-origin: left center; transition: transform 1s linear;
+}
+.gx-barra-in { position: relative; display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; }
+.gx-barra-in button {
+  min-width: 52px; min-height: 44px; border: 0; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1); color: var(--ink); font: inherit; font-size: 0.95rem; font-weight: 700; cursor: pointer;
+}
+.gx-barra-in .gx-barra-saltar { background: #4da3ff; color: #fff; padding: 0 0.9rem; }
+.gx-barra-txt { flex: 1; display: flex; flex-direction: column; align-items: center; line-height: 1.15; }
+.gx-barra-txt span { font-size: 0.72rem; color: #b9c7d8; }
+.gx-barra-txt strong { font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+.gx-barra.is-listo { background: #183323; border-color: rgba(95, 207, 138, 0.5); }
+.gx-barra.is-listo .gx-barra-txt strong { font-size: 1rem; color: #5fcf8a; }
+.gx-barra.is-listo [data-gx-desc="-15"] { visibility: hidden; }
+
+/* Medidor oculto para recortar las miniaturas */
+.gx-medidor { position: fixed; left: -10000px; top: 0; width: 140px; height: 300px; visibility: hidden; pointer-events: none; }
+
+/* Con el entreno abierto: pantalla completa del entreno. */
+body.gym-en-entreno #panel-gimnasio > .back-link,
+body.gym-en-entreno #panel-gimnasio > .page-title { display: none; }
+body.gym-en-entreno .content { padding-bottom: calc(7rem + env(safe-area-inset-bottom)); }
+@media (max-width: 768px) {
+  .gx-top { margin: -1.25rem -1.25rem 0; padding: calc(0.55rem + env(safe-area-inset-top)) 1rem 0.55rem; }
+  .gx-stats { margin: 0 -1.25rem 1.1rem; padding: 0.8rem 1.25rem; }
+  body.gym-en-entreno .topbar,
+  body.gym-en-entreno #bottom-nav-links { display: none !important; }
+}
+.gx-fila:not(.is-abierta):not(.is-arrastrando) .gx-borrar { visibility: hidden; }
+/* En escritorio la barra de navegación de arriba también es fija. */
+@media (min-width: 769px) { .gx-top { top: 66px; } }

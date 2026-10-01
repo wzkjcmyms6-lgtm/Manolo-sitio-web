@@ -310,3 +310,34 @@ isométricos de cuello (alias).
 **Movilidad y estiramientos** (`movilidad: true`: Círculos de tobillo,
 Movilidad de rodilla adelante, Estiramiento de isquios, Estocada baja): solo
 tienen músculos secundarios, así que el mapa los pinta en tono suave.
+
+## Registro del entreno estilo apps de gimnasio (1 oct 2026)
+
+Pantalla del entreno en curso (`#gym-active`, `js/gimnasio.js`), con la
+lógica sin pantalla en `js/entreno-series.js` (tests en
+`tests/entreno-series.test.js`):
+
+- **Arriba, fijo**: ⌄ (minimizar: vuelve a Entrenamiento y el entreno sigue),
+  nombre editable y **Terminar**. Debajo: Duración, Volumen y Series (solo lo
+  marcado con ✓) y las dos figuras con los músculos de lo ya hecho.
+- **Cada ejercicio**: miniatura con sus músculos pintados (figura propia,
+  recortada), notas, **Descanso** (se elige por ejercicio; viene de la rutina
+  o del último que elegiste, guardado en el teléfono) y RPE. Tabla
+  SERIE · ANTERIOR · KG · REPS · ✓.
+- **Anterior** = la última vez que hiciste ese ejercicio, serie por serie
+  (calentamientos con calentamientos). Tocarla copia esos números.
+- **✓** marca la serie hecha (fila verde). Si las casillas están vacías usa la
+  sugerencia de hoy, lo anterior o el mínimo de la rutina; si aun así faltan
+  las reps, la fila tiembla y abre el teclado. Al marcar empieza la cuenta
+  regresiva del descanso (barra de abajo: −15, +15, Saltar).
+- **Deslizar una serie a la izquierda** muestra Eliminar. Tocar el número
+  sigue marcando calentamiento (C).
+- **Terminar**: si hay series con datos sin ✓, pregunta: marcarlas y
+  terminar, guardar solo las marcadas o seguir entrenando.
+- Con el entreno abierto en el teléfono se ocultan la barra de arriba y las
+  pestañas de abajo (`body.gym-en-entreno`).
+- **Datos**: la ✓ (`hecha`) y el descanso viven solo en el borrador del
+  teléfono; en Firestore el entreno se guarda igual que antes.
+- Arreglo general: `.content` deja espacio abajo para la barra de pestañas
+  más la zona del gesto del iPhone (`env(safe-area-inset-bottom)`), así nada
+  queda tapado al final de la página.
