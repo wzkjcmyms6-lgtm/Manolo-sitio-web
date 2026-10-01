@@ -39,9 +39,52 @@ function translateAuthError(code) {
   return map[code] || "No se pudo iniciar sesión. Intentá de nuevo.";
 }
 
+// Contraseña: por defecto pide el teclado de números (inputmode="numeric"
+// sigue siendo un campo de contraseña oculto, con autocompletado). En el
+// iPhone ese teclado no tiene letras, así que un botón cambia a teclado de
+// letras y el teléfono lo recuerda. Otro botón muestra u oculta lo escrito.
+const CLAVE_TECLADO = "manolo.login.teclado";
+function prepararCampoClave() {
+  const campo = document.getElementById("login-password");
+  const ver = document.getElementById("login-ver");
+  const teclado = document.getElementById("login-teclado");
+  let letras = false;
+  try { letras = localStorage.getItem(CLAVE_TECLADO) === "letras"; } catch (e) { /* sin almacenamiento */ }
+  function pintarTeclado() {
+    campo.setAttribute("inputmode", letras ? "text" : "numeric");
+    teclado.textContent = letras ? "Usar teclado de números" : "Usar teclado de letras";
+  }
+  pintarTeclado();
+  teclado.addEventListener("click", () => {
+    letras = !letras;
+    try { localStorage.setItem(CLAVE_TECLADO, letras ? "letras" : "numeros"); } catch (e) { /* sin almacenamiento */ }
+    pintarTeclado();
+    // El teclado nuevo aparece al volver a enfocar el campo.
+    campo.blur();
+    campo.focus();
+  });
+  ver.addEventListener("click", () => {
+    const mostrar = campo.type === "password";
+    campo.type = mostrar ? "text" : "password";
+    ver.setAttribute("aria-pressed", String(mostrar));
+    ver.setAttribute("aria-label", mostrar ? "Ocultar contraseña" : "Mostrar contraseña");
+    ver.innerHTML = ICONS[mostrar ? "eyeOff" : "eye"];
+    campo.focus();
+  });
+  // Al enviar vuelve a quedar oculta (y el gestor de contraseñas la reconoce).
+  return function ocultar() {
+    if (campo.type === "password") return;
+    campo.type = "password";
+    ver.setAttribute("aria-pressed", "false");
+    ver.setAttribute("aria-label", "Mostrar contraseña");
+    ver.innerHTML = ICONS.eye;
+  };
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("login-form");
   const errorEl = document.getElementById("login-error");
+  const ocultarClave = prepararCampoClave();
 
   form.addEventListener("submit", e => {
     e.preventDefault();
@@ -50,8 +93,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const password = document.getElementById("login-password").value;
     const submitBtn = form.querySelector("button[type=submit]");
     submitBtn.disabled = true;
+    ocultarClave();
 
     auth.signInWithEmailAndPassword(email, password)
+      .then(cred => {
+        // Firebase confirmó usuario y contraseña: recién ahora es un inicio
+        // de sesión real (js/accesos.js lo registra para el administrador).
+        document.dispatchEvent(new CustomEvent("manolo:inicio-sesion", { detail: { user: cred && cred.user } }));
+      })
       .catch(err => {
         errorEl.textContent = translateAuthError(err.code);
         errorEl.hidden = false;

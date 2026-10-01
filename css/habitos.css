@@ -173,12 +173,20 @@
 
 .hb-form .hb-label { display: block; margin: 1.1rem 0 0.45rem; font-size: 0.88rem; font-weight: 700; color: var(--ink); }
 .hb-campo { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.9rem; font-size: 0.85rem; color: var(--muted); }
-.hb-campo input {
+.hb-campo input, .hb-campo textarea {
   min-height: 44px; padding: 0.6rem 0.8rem; border-radius: 12px;
   border: 1px solid var(--border); background: var(--bg-soft); color: var(--ink);
   font-family: inherit; font-size: 1rem; /* 16 px: el iPhone no hace zoom al escribir */
 }
-.hb-campo input:focus { outline: 2px solid var(--accent-1); outline-offset: 1px; }
+.hb-campo textarea { resize: vertical; line-height: 1.4; }
+.hb-campo input:focus, .hb-campo textarea:focus { outline: 2px solid var(--accent-1); outline-offset: 1px; }
+/* Nota del hábito: una línea en la lista, completa en el detalle. */
+.hb-desc-fila { font-size: 0.8rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hb-descripcion {
+  margin: 0.2rem 0 0.9rem; padding: 0.75rem 0.9rem; border-radius: 14px;
+  background: var(--bg-soft); border-left: 3px solid var(--accent-2);
+  color: var(--ink); font-size: 0.92rem; line-height: 1.45; white-space: pre-line; overflow-wrap: anywhere;
+}
 .hb-campo.hb-inline { flex-direction: row; align-items: center; gap: 0.5rem; color: var(--ink); font-size: 0.92rem; }
 .hb-campo.hb-inline input { width: 84px; text-align: center; }
 .hb-opcional { color: var(--muted); font-weight: 400; }

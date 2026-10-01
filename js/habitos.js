@@ -334,6 +334,7 @@ function filaHtml(h, f, encadenado) {
       <span class="hb-emoji" aria-hidden="true">${escapeHtml(h.emoji)}</span>
       <span class="hb-fila-txt">
         <span class="hb-nombre">${escapeHtml(h.name)}</span>
+        ${h.descripcion ? `<span class="hb-desc-fila">${escapeHtml(h.descripcion)}</span>` : ""}
         <span class="hb-sub">${crono ? `<span class="hb-crono-fila"><span class="hb-crono" data-inicio="${crono}">${textoCrono(crono)}</span> en curso</span>` : ""}${sub.texto ? `<span>${sub.texto}</span>` : ""}${sub.racha ? `<span class="hb-racha"><span class="hb-ico" data-icon="flame"></span>${escapeHtml(sub.racha)}</span>` : ""}</span>
       </span>
     </button>
@@ -608,6 +609,7 @@ function hojaDetalle(id, fecha) {
   const pct = v => (v == null ? "—" : `${Math.round(v * 100)} %`);
 
   abrirHoja(cabecera(escapeHtml(arriba), `${escapeHtml(h.emoji)} ${escapeHtml(h.name)}`, h.inicio ? `Desde el ${fechaCorta(h.inicio)}` : "") + `
+    ${h.descripcion ? `<p class="hb-descripcion">${escapeHtml(h.descripcion)}</p>` : ""}
     <div class="hb-stats">
       <div class="hb-stat"><span class="hb-num">${r.actual}</span><span>${h.tipo === "evitar" ? (r.actual === 1 ? "día limpio" : "días limpios") : `${unidad} de racha`}</span></div>
       <div class="hb-stat"><span class="hb-num">${r.mejor}</span><span>${h.tipo === "evitar" ? "mejor marca" : "mejor racha"}</span></div>
@@ -804,6 +806,7 @@ function formDesde(h) {
     dificultad: h ? h.dificultad : "media",
     area: h ? h.area : null,
     minima: h ? h.minima : "",
+    descripcion: h ? h.descripcion || "" : "",
     despuesDe: h ? h.despuesDe || "" : "",
     vinculo: h ? h.vinculo || "" : ""
   };
@@ -824,6 +827,9 @@ function hojaForm(id) {
       <label class="hb-campo">Nombre
         <input type="text" name="name" maxlength="60" required value="${escapeHtml(f.name)}" placeholder="Ej: Tomar agua" autocomplete="off">
       </label>
+      <label class="hb-campo"><span>Nota <span class="hb-opcional">(opcional)</span></span>
+        <textarea name="descripcion" rows="3" maxlength="${HC.CONST.DESCRIPCION_MAX}" placeholder="Ej: Agradecer por mi familia, por mi salud y por mi trabajo.">${escapeHtml(f.descripcion)}</textarea>
+        <span class="hb-ayuda">Para recordar el porqué o el cómo. Se ve debajo del nombre.</span></label>
       <div class="hb-emojis" role="group" aria-label="Emoji">${EMOJIS.map(e =>
         `<button type="button" class="hb-emoji-btn${e === f.emoji ? " is-on" : ""}" data-campo="emoji" data-v="${e}" aria-pressed="${e === f.emoji}">${e}</button>`).join("")}</div>
 
@@ -881,7 +887,7 @@ function opcionesCadena(f) {
 // Pasa lo escrito en los campos de texto a `form` antes de redibujar.
 function leerCampos() {
   if (!hoja) return;
-  hoja.querySelectorAll(".hb-form input[name], .hb-form select[name]").forEach(i => { form[i.name] = i.value; });
+  hoja.querySelectorAll(".hb-form input[name], .hb-form select[name], .hb-form textarea[name]").forEach(i => { form[i.name] = i.value; });
 }
 
 function guardarForm() {
@@ -909,6 +915,10 @@ function guardarForm() {
     datos.meta = Math.max(1, Number(String(f.meta).replace(",", ".")) || HC.CONST.META_DEFECTO[f.tipo]);
     datos.unidad = f.tipo === "tiempo" ? "min" : String(f.unidad || "").trim();
   }
+  // Nota del hábito: si la vacías al editar, se quita el campo.
+  const descripcion = String(f.descripcion || "").trim().slice(0, HC.CONST.DESCRIPCION_MAX);
+  if (descripcion) datos.descripcion = descripcion;
+  else if (f.id) datos.descripcion = FV().delete();
   if (f.id) {
     coleccion().doc(f.id).update(datos).catch(errorGuardar);
     cerrarHoja();

@@ -17,9 +17,9 @@
   <!-- Fuentes guardadas en el repo: la app no depende de internet para verse bien -->
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
-  <link rel="stylesheet" href="css/style.css?v=202610030200">
+  <link rel="stylesheet" href="css/style.css?v=202610040200">
   <link rel="stylesheet" href="css/finanzas.css?v=202610011900">
-  <link rel="stylesheet" href="css/habitos.css?v=202610010600">
+  <link rel="stylesheet" href="css/habitos.css?v=202610040100">
 </head>
 <body>
   <!-- Degradado marfil y brillo del maniquí (mapa corporal y creador de ejercicios) -->
@@ -41,7 +41,11 @@
       <p class="login-sub">Ingresá para continuar</p>
       <form id="login-form">
         <input type="text" id="login-username" placeholder="Usuario" autocomplete="username" required>
-        <input type="password" id="login-password" placeholder="Contraseña" autocomplete="current-password" required>
+        <div class="login-pass">
+          <input type="password" id="login-password" placeholder="Contraseña" autocomplete="current-password" inputmode="numeric" required>
+          <button type="button" class="login-ver" id="login-ver" aria-label="Mostrar contraseña" aria-pressed="false"><span data-icon="eye"></span></button>
+        </div>
+        <button type="button" class="login-teclado" id="login-teclado">Usar teclado de letras</button>
         <button type="submit">Entrar</button>
       </form>
       <p class="login-error" id="login-error" hidden></p>
@@ -54,6 +58,7 @@
       <span class="brand">Manolo</span>
       <span class="net-status" data-net-status role="status" hidden>Sin conexión</span>
       <span class="topbar-clock" data-clock></span>
+      <button type="button" class="avisos-btn topbar-avisos" data-avisos hidden aria-label="Avisos de acceso"><span data-icon="bell"></span><span class="avisos-n" data-avisos-n hidden></span></button>
       <a href="#fin-ajustes" class="topbar-ajustes" aria-label="Ajustes de Finanzas"><span data-icon="gear"></span></a>
       <button class="menu-toggle" id="menu-toggle" data-icon="menu" aria-expanded="false" aria-label="Abrir menú"></button>
     </div>
@@ -63,6 +68,7 @@
       <aside class="sidebar" id="sidebar">
         <span class="brand">Manolo</span>
         <span class="sidebar-clock" data-clock></span>
+        <button type="button" class="avisos-btn sidebar-avisos" data-avisos hidden aria-label="Avisos de acceso"><span data-icon="bell"></span><span class="avisos-n" data-avisos-n hidden></span></button>
         <span class="net-status" data-net-status role="status" hidden>Sin conexión</span>
         <nav id="nav-links"></nav>
       </aside>
@@ -971,6 +977,27 @@
     </div>
   </div>
 
+  <!-- Administrador: avisos de inicio de sesión -->
+  <div id="avisos-hoja" class="js-sheet budget-sheet avisos-hoja" hidden>
+    <div class="budget-sheet-overlay" data-avisos-cerrar></div>
+    <div class="budget-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="avisos-t">
+      <div class="budget-sheet-header">
+        <button type="button" class="budget-sheet-close" data-avisos-cerrar aria-label="Cerrar"><span data-icon="close"></span></button>
+        <h3 id="avisos-t">Accesos</h3>
+      </div>
+      <div class="avisos-barra">
+        <span id="avisos-resumen"></span>
+        <button type="button" class="link-btn" id="avisos-todo" hidden>Marcar todo como leído</button>
+      </div>
+      <ul class="avisos-lista" id="avisos-lista"></ul>
+      <p class="avisos-vacio" id="avisos-vacio" hidden></p>
+      <button type="button" class="avisos-mas" id="avisos-mas" hidden>Ver más antiguos</button>
+    </div>
+  </div>
+
+  <!-- Administrador: aviso flotante de un acceso nuevo -->
+  <button type="button" class="avisos-toast" id="avisos-toast" hidden></button>
+
   <!-- Gimnasio: menú de un ejercicio del entreno -->
   <div id="gx-menu" class="js-sheet budget-sheet rut-menu" hidden>
     <div class="budget-sheet-overlay" data-gx-cerrar></div>
@@ -1148,10 +1175,12 @@
   <script defer src="vendor/firebase-10.7.1/firebase-auth-compat.js"></script>
   <script defer src="vendor/firebase-10.7.1/firebase-firestore-compat.js"></script>
   <script defer src="js/firebase-init.js?v=202609293"></script>
-  <script defer src="js/auth.js?v=202609232200"></script>
+  <script defer src="js/auth.js?v=202610040100"></script>
   <script defer src="js/saludo.js?v=202610012000"></script>
+  <script defer src="js/accesos-logica.js?v=202610040100"></script>
+  <script defer src="js/accesos.js?v=202610040100"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
-  <script defer src="js/icons.js?v=202610030100"></script>
+  <script defer src="js/icons.js?v=202610040100"></script>
   <script defer src="js/modules.js?v=202610020100"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
@@ -1173,10 +1202,10 @@
   <script defer src="js/rangos-config.js?v=202609302"></script>
   <script defer src="js/rangos-engine.js?v=202609301"></script>
   <script defer src="js/rangos-insignias.js?v=202609301500"></script>
-  <script defer src="js/habitos-config.js?v=202610010600"></script>
-  <script defer src="js/habitos-engine.js?v=202610010600"></script>
+  <script defer src="js/habitos-config.js?v=202610040100"></script>
+  <script defer src="js/habitos-engine.js?v=202610040100"></script>
   <script defer src="js/habitos-graficos.js?v=202610010400"></script>
-  <script defer src="js/habitos.js?v=202610010600"></script>
+  <script defer src="js/habitos.js?v=202610040100"></script>
   <script defer src="js/rangos.js?v=202609301500"></script>
   <script defer src="js/perfil-ejercicio.js?v=202609301"></script>
   <script defer src="js/offline.js?v=202610010700"></script>

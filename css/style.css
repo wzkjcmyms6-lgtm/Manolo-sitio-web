@@ -758,6 +758,20 @@ body.sheet-open { overflow: hidden; }
 .login-card button[type="submit"]:hover { filter: brightness(1.08); }
 .login-card button[type="submit"]:disabled { opacity: 0.6; cursor: default; }
 .login-error { margin: 0.9rem 0 0; color: var(--danger); font-size: 0.85rem; }
+/* Contraseña con botón de ver/ocultar y cambio de teclado */
+.login-pass { position: relative; display: flex; }
+.login-pass input { flex: 1; min-width: 0; padding-right: 3rem; font-size: 1rem; }
+.login-card #login-username { font-size: 1rem; }
+.login-ver {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 46px;
+  display: grid; place-items: center; padding: 0; border: 0; background: none; color: var(--muted); cursor: pointer;
+}
+.login-ver [data-icon], .login-ver svg { width: 20px; height: 20px; display: block; }
+.login-ver[aria-pressed="true"] { color: var(--ink); }
+.login-card .login-teclado {
+  align-self: flex-end; margin: -0.3rem 0 0; padding: 0.35rem 0.2rem; min-height: 36px;
+  border: 0; background: none; color: var(--accent-2); font: inherit; font-size: 0.82rem; cursor: pointer;
+}
 .main { flex: 1; min-width: 0; width: 100%; }
 .content { padding: 2.5rem 2rem; max-width: 960px; margin: 0 auto; }
 /* ---------- Cards grid (home) ---------- */
@@ -2020,3 +2034,50 @@ body.gym-en-entreno .content { padding-bottom: calc(7rem + env(safe-area-inset-b
 .gx-fila:not(.is-abierta):not(.is-arrastrando) .gx-borrar { visibility: hidden; }
 /* En escritorio la barra de navegación de arriba también es fija. */
 @media (min-width: 769px) { .gx-top { top: 66px; } }
+/* ---------- Administrador: campana y avisos de acceso ---------- */
+.avisos-btn {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 40px; height: 40px; padding: 0; border-radius: 50%; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface); color: var(--ink);
+}
+.avisos-btn[hidden] { display: none; }
+.avisos-btn [data-icon] { width: 20px; height: 20px; display: flex; }
+.topbar-avisos { margin-left: 0.6rem; }
+.sidebar-avisos { margin: 0 0 1rem; }
+.avisos-n {
+  position: absolute; top: -4px; right: -4px; min-width: 19px; height: 19px; padding: 0 5px;
+  border-radius: 999px; background: var(--danger); color: #fff; font-size: 0.7rem; font-weight: 700;
+  line-height: 19px; text-align: center;
+}
+.avisos-n[hidden] { display: none; }
+.avisos-barra { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0 1.1rem 0.6rem; color: var(--muted); font-size: 0.85rem; }
+.avisos-barra .link-btn[hidden] { display: none; }
+.avisos-lista { list-style: none; margin: 0; padding: 0 0.8rem; }
+.avisos-item {
+  display: flex; align-items: flex-start; gap: 0.7rem; width: 100%; padding: 0.8rem 0.4rem;
+  border: 0; border-top: 1px solid var(--border); background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer;
+}
+.avisos-lista li:first-child .avisos-item { border-top: 0; }
+.avisos-punto { width: 9px; height: 9px; margin-top: 0.4rem; flex-shrink: 0; border-radius: 50%; background: transparent; }
+.avisos-item.is-nuevo .avisos-punto { background: var(--accent-1); }
+.avisos-txt { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.avisos-txt strong { font-size: 0.95rem; }
+.avisos-item:not(.is-nuevo) .avisos-txt strong { font-weight: 500; color: var(--muted); }
+.avisos-txt span { font-size: 0.92rem; }
+.avisos-txt small { color: var(--muted); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.avisos-vacio { margin: 0.6rem 1.2rem 1rem; color: var(--muted); font-size: 0.9rem; }
+.avisos-vacio[hidden], .avisos-mas[hidden] { display: none; }
+.avisos-mas {
+  display: block; width: calc(100% - 2rem); margin: 0.4rem 1rem 0.6rem; min-height: 44px; border-radius: 12px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer;
+}
+.avisos-toast {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 1100;
+  top: calc(env(safe-area-inset-top) + 70px); max-width: calc(100% - 2rem);
+  padding: 0.7rem 1rem; border-radius: 14px; border: 1px solid rgba(255, 122, 48, 0.45);
+  background: #241509; color: var(--ink); font: inherit; font-size: 0.9rem; font-weight: 600;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.5); cursor: pointer;
+}
+.avisos-toast[hidden] { display: none; }
+@media (min-width: 769px) { .sidebar-avisos { margin: 0; } }
+@media (max-width: 768px) { .sidebar-avisos { display: none !important; } }

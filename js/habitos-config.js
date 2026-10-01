@@ -17,7 +17,8 @@ const CONST = {
   TIMES_PER_WEEK_DEFECTO: 3,
   CADA_N_DEFECTO: 2,
   CADA_N_MAX: 30,
-  META_DEFECTO: { medible: 8, tiempo: 20 }
+  META_DEFECTO: { medible: 8, tiempo: 20 },
+  DESCRIPCION_MAX: 300         // caracteres de la nota/descripción de un hábito
 };
 
 const TIPOS = {

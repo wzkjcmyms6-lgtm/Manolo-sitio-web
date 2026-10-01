@@ -649,3 +649,10 @@ test("copia de seguridad: exporta todo e importa solo lo que falta, sin pisar na
   assert.equal(raro.resumen.descartados, 2);
   assert.ok(raro.vacio);
 });
+
+test("nota del hábito: opcional, recortada y compatible con hábitos viejos", () => {
+  assert.equal(E.normalizar({ name: "Leer" }, "a").descripcion, "");
+  assert.equal(E.normalizar({ name: "Agradecer", descripcion: "  Por mi familia y mi salud.  " }, "b").descripcion, "Por mi familia y mi salud.");
+  assert.equal(E.normalizar({ name: "X", descripcion: "a".repeat(500) }, "c").descripcion.length, CFG.CONST.DESCRIPCION_MAX);
+  assert.equal(E.normalizar({ name: "X", descripcion: 42 }, "d").descripcion, "");
+});

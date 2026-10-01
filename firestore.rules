@@ -1,23 +1,6 @@
-# Reglas de Firestore para Manolo (con el Feed de Ejercicio)
-
-> **Desde la fase 1 la versión completa y vigente está en `firestore.rules`**
-> (estas + administrador y accesos). Pasos para publicarla: `docs/ADMIN.md`.
-
-Pega esto en **Firebase → Firestore Database → Reglas** y toca **Publicar**.
-
-Qué permiten:
-
-- **Tus datos privados** (`users/{tu uid}/...`): solo tú, como siempre.
-- **Feed** (`feed`): cualquier usuario con sesión iniciada puede leerlo. Cada
-  uno solo puede publicar, cambiar o borrar **sus propias** sesiones. En las
-  sesiones de otros solo puede poner o quitar **su propio** me gusta y
-  sumar/restar 1 al contador de comentarios.
-- **Comentarios**: cualquiera con sesión puede leer y comentar (máximo 500
-  caracteres, a su nombre). Borra un comentario quien lo escribió o el dueño
-  de la sesión.
-- Sin sesión iniciada no se puede leer ni escribir nada.
-
-```
+// Reglas de Firestore de Manolo (copia de referencia; las que valen son las
+// publicadas en Firebase → Firestore Database → Reglas). Cómo publicarlas:
+// docs/ADMIN.md. Cada cambio se anota en docs/DECISIONS.md.
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -26,9 +9,40 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Admin = existe admins/{su uid}. Ese documento solo se crea a mano en la
+    // consola de Firebase: desde la app nadie puede escribirlo.
+    function esAdmin() {
+      return conSesion() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
     // Datos privados de cada usuario (hábitos, finanzas, entrenamientos...).
     match /users/{uid}/{document=**} {
       allow read, write: if conSesion() && request.auth.uid == uid;
+    }
+
+    // Quién es administrador: cada uno solo puede saber si él lo es.
+    match /admins/{uid} {
+      allow read: if conSesion() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // Inicios de sesión. Cada usuario solo puede crear SU propio evento, una
+    // vez (id = uid_hora del login), con la hora del servidor y estos campos.
+    // Solo el admin los lee, los marca como leídos o los borra.
+    match /accesos/{id} {
+      allow create: if conSesion()
+        && id.matches(request.auth.uid + '_[0-9]+')
+        && request.resource.data.keys().hasOnly(['uid', 'usuario', 'tipo', 'creado', 'leido'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.tipo == 'login'
+        && request.resource.data.creado == request.time
+        && request.resource.data.leido == false
+        && request.resource.data.usuario is string
+        && request.resource.data.usuario.size() <= 60;
+      allow read, delete: if esAdmin();
+      allow update: if esAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leido'])
+        && request.resource.data.leido is bool;
     }
 
     // Feed de Ejercicio.
@@ -79,11 +93,3 @@ service cloud.firestore {
     }
   }
 }
-```
-
-## Antes de pegarlas
-
-Mira las reglas que tienes ahora. Si solo tienen el bloque de
-`/users/{...}` (cada uno lee y escribe su carpeta), puedes reemplazarlas
-completas por las de arriba. Si ves otra cosa distinta, no las reemplaces:
-avísale a quien mantiene la app para juntarlas.

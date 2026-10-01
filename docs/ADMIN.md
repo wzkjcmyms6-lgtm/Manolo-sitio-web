@@ -19,31 +19,28 @@ campana si ese documento existe, pero la protección real son las reglas.
   evento, con hora del servidor y campos fijos. Un evento 100 % de servidor
   requeriría Cloud Functions / Identity Platform (costo) — no se propone.
 
-## Reglas a agregar (se publican en la consola; borrador)
+## Estado: implementado (fase 1)
 
-```
-function esAdmin() {
-  return conSesion() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-}
-match /admins/{uid} {
-  allow read: if conSesion() && request.auth.uid == uid;
-  allow write: if false;
-}
-match /accesos/{id} {
-  allow create: if conSesion()
-    && id.matches(request.auth.uid + '_[0-9]+')
-    && request.resource.data.keys().hasOnly(['uid', 'usuario', 'tipo', 'creado', 'leido'])
-    && request.resource.data.uid == request.auth.uid
-    && request.resource.data.tipo == 'login'
-    && request.resource.data.creado == request.time
-    && request.resource.data.leido == false
-    && request.resource.data.usuario is string
-    && request.resource.data.usuario.size() <= 60;
-  allow read, delete: if esAdmin();
-  allow update: if esAdmin()
-    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leido']);
-}
-```
+- `js/auth.js` lanza `manolo:inicio-sesion` solo cuando Firebase confirma
+  usuario y contraseña; `js/accesos.js` escribe el evento y maneja la
+  campana; `js/accesos-logica.js` (probado) arma la clave y la bandeja.
+- Reglas completas en **`firestore.rules`** (incluye las de siempre y las
+  del Feed). La campana solo aparece cuando existe `admins/{tu uid}`.
 
-Un usuario normal no puede leer `accesos` ni `admins` de otros: la consulta
-falla con "permiso denegado" aunque manipule la interfaz.
+## Cómo activarlo (lo hace el dueño, una sola vez)
+
+1. **Tu UID**: Firebase → *Authentication* → *Usuarios* → tu usuario
+   (`…@manolo-panel.local`) → copia el **UID de usuario**.
+2. **Marcarte como admin**: Firebase → *Firestore Database* → *Datos* →
+   *Iniciar colección* → ID de colección `admins` → ID de documento: pega
+   tu UID → agrega un campo `nombre` (string) con tu nombre → *Guardar*.
+3. **Reglas**: Firebase → *Firestore Database* → *Reglas*. Si lo que hay
+   es igual a `docs/feed-reglas.md`, reemplázalo todo por el contenido de
+   `firestore.rules` y toca *Publicar*. Si ves algo distinto, no lo
+   reemplaces: avisa para juntarlas.
+4. **Probar**: abre MANOLO → aparece la campana. Pide a otra persona que
+   entre con su usuario → te llega "Nuevo inicio de sesión". En el
+   teléfono de esa persona no debe aparecer la campana.
+
+Mientras no se hagan estos pasos la app funciona igual que antes: el
+registro del acceso falla en silencio y la campana no aparece.

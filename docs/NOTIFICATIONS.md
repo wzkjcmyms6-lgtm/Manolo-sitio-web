@@ -1,7 +1,7 @@
-# Notificaciones (diseño, fase 1)
+# Notificaciones (implementado en fase 1)
 
-**Hoy no existe ningún sistema de notificaciones** (ni push, ni FCM, ni
-bandeja interna). Tampoco hay WebSocket/SSE propios; lo que sí hay es el
+Antes de la fase 1 no existía ningún sistema de notificaciones (ni push,
+ni FCM, ni bandeja interna). Ahora: `js/accesos.js` + `js/accesos-logica.js`. Tampoco hay WebSocket/SSE propios; lo que sí hay es el
 canal en tiempo real de Firestore (`onSnapshot`), que ya usa toda la app.
 
 ## Propuesta

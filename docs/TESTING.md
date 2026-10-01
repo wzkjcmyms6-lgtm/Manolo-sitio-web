@@ -1,15 +1,17 @@
 # Pruebas
 
 ## Estado actual
-- `npm test` → **175 pruebas, todas pasan** (1 oct 2026). Lógica pura UMD:
+- `npm test` → **181 pruebas, todas pasan** (fin de fase 1). Lógica pura UMD:
   hábitos, finanzas, mapa muscular, rangos, rutinas, importador, series,
   sesiones, versión del service worker.
 - `tests/sw-version.test.js` falla si se cambia un archivo de la app sin
   correr `npm run sw` (protege la caché offline).
-- Sin E2E en el repo. Las pruebas de pantalla se hacen con Playwright +
-  Chromium del entorno y un **doble falso de Firebase** (Firestore en
-  memoria) fuera del repo; propuesta: llevarlo a `scripts/e2e/` en fase 1
-  como herramienta opcional (no entra en `npm test`).
+- **Pantalla (E2E)** en `scripts/e2e/` (Playwright + Chromium, 390 px):
+  `node scripts/e2e/fase1.js [capturas]` (login, nota de hábitos, accesos y
+  admin) y `node scripts/e2e/regresion.js [capturas]` (15 pantallas sin
+  errores + marcar una serie en Gimnasio). Usan `fake-firebase.js`: Firestore
+  y Auth en memoria, con las reglas de `accesos`/`admins` simuladas. **No
+  prueban las reglas reales** (se verifican al publicarlas, `docs/ADMIN.md`).
 
 ## Por fase (mínimos)
 - **F1**: contraseña (teclado, ocultar/mostrar, válido/ inválido/ vacío),

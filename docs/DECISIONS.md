@@ -8,22 +8,22 @@ Motivo: funciona, es gratis y offline. Alternativas: backend propio, app
 nativa. Consecuencia: la seguridad va en reglas de Firestore; GPS solo en
 primer plano.
 
-**D-002 (propuesta F1) · Evento de login escrito por el cliente, validado
+**D-002 (implementada F1) · Evento de login escrito por el cliente, validado
 por reglas, id `uid_loginMs`.** Motivo: no hay servidor; las reglas impiden
 falsificar eventos de otros y el id evita duplicados. Alternativas: Cloud
 Functions / Identity Platform (costo, facturación). Consecuencia: un
 usuario solo podría "falsificar" sus propios accesos.
 
-**D-003 (propuesta F1) · Admin = existe `admins/{uid}` (creado en consola).**
+**D-003 (implementada F1) · Admin = existe `admins/{uid}` (creado en consola).**
 Motivo: no hay roles; no se exponen uids en el repo público. Alternativa:
 uid fijo en reglas. Consecuencia: el dueño crea el documento a mano.
 
-**D-004 (propuesta F1) · Notificaciones internas en tiempo real con
+**D-004 (implementada F1) · Notificaciones internas en tiempo real con
 `onSnapshot`, sin push.** Motivo: reutiliza Firestore; sin polling; sin
 servidor. Alternativa: FCM + Functions. Consecuencia: el admin ve los avisos
 al abrir MANOLO (o al instante si está abierta).
 
-**D-005 (propuesta F1) · Contraseña con `inputmode="numeric"` + botón para
+**D-005 (implementada F1) · Contraseña con `inputmode="numeric"` + botón para
 cambiar a teclado de letras + mostrar/ocultar.** Motivo: en iPhone el
 teclado numérico no permite letras; no se sabe si todas las contraseñas son
 numéricas. Alternativa: `pattern="[0-9]*"` (bloquearía contraseñas con
@@ -48,6 +48,21 @@ opcional bajo demanda.** Motivo: offline y sin costo; el fondo da contexto.
 **D-010 (propuesta F4) · CSV con `EjImportar.leerCsv` existente.** Motivo:
 ya maneja `,`/`;`, comillas y BOM; está probado.
 
-**D-011 (propuesta F1) · Versionar `firestore.rules` en el repo como
+**D-011 (implementada F1) · Versionar `firestore.rules` en el repo como
 referencia.** Motivo: hoy las reglas solo viven en la consola.
 Consecuencia: cada cambio se publica a mano y se anota aquí.
+
+**D-012 (F1) · El evento de acceso se dispara solo tras
+`signInWithEmailAndPassword` correcto (no al restaurar la sesión).**
+Motivo: las sesiones viejas restauradas no deben avisar como "ingresó
+ahora". Alternativa: usar solo `onAuthStateChanged` + antigüedad de
+`lastSignInTime`. Consecuencia: si el envío queda pendiente sin conexión,
+Firestore lo guarda y lo sube al volver la red.
+
+**D-013 (F1) · Pruebas de pantalla en el repo: `scripts/e2e/`** (doble de
+Firebase en memoria con reglas mínimas simuladas + scripts por fase y de
+regresión). No entran en `npm test` porque requieren Playwright.
+Limitación: no prueban las reglas reales; eso se verifica al publicarlas.
+
+**D-014 (F1) · Campos del login a 16 px.** Motivo: con menos, el iPhone
+hace zoom al tocar el campo.

@@ -24,4 +24,6 @@ todo en **iPhone, instalada en la pantalla de inicio** (modo standalone).
 | Rendimiento y costos | `docs/PERFORMANCE.md` · `docs/COST_OPTIMIZATION.md` |
 | Decisiones y cambios | `docs/DECISIONS.md` · `docs/CHANGELOG.md` |
 | Módulos ya documentados | `docs/mapa-muscular.md` (Ejercicio), `docs/rangos.md`, `docs/feed-reglas.md` (reglas Firestore actuales) |
+| Reglas de Firestore (copia de referencia) | `firestore.rules` |
+| Pruebas de pantalla | `scripts/e2e/` |
 | Estado para el agente | `.claude/PROJECT_STATE.md` · `.claude/CURRENT_PHASE.md` · `.claude/RULES.md` |

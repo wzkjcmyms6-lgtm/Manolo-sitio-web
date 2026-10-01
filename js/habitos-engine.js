@@ -127,6 +127,8 @@ function normalizar(doc, id) {
     despuesDe: texto(d.despuesDe) || null,
     vinculo: texto(d.vinculo) || null,
     minima: texto(d.minima),
+    // Nota o descripción del hábito (opcional; los hábitos viejos no la tienen).
+    descripcion: texto(d.descripcion).trim().slice(0, C.DESCRIPCION_MAX),
     createdAt: creado,
     inicio,
     registros
