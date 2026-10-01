@@ -17,7 +17,7 @@
   <!-- Fuentes guardadas en el repo: la app no depende de internet para verse bien -->
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
-  <link rel="stylesheet" href="css/style.css?v=202610050200">
+  <link rel="stylesheet" href="css/style.css?v=202610060100">
   <link rel="stylesheet" href="css/finanzas.css?v=202610011900">
   <link rel="stylesheet" href="css/habitos.css?v=202610040100">
 </head>
@@ -125,6 +125,7 @@
             </div>
             <p class="panel-sub">Tu panel de control personal. Elige una sección para empezar.</p>
 
+            <a class="gym-en-curso act-en-curso-aviso" href="#bicicleta" data-act-en-curso="bicicleta" hidden><span class="gym-en-curso-punto" aria-hidden="true"></span><span>Tienes una <strong>rodada</strong> sin terminar</span><span class="gym-en-curso-ir">Continuar</span></a>
             <a class="gym-en-curso act-en-curso-aviso" href="#running" data-act-en-curso="running" hidden><span class="gym-en-curso-punto" aria-hidden="true"></span><span>Tienes una <strong>carrera</strong> sin terminar</span><span class="gym-en-curso-ir">Continuar</span></a>
             <div class="card-grid card-grid-home">
               <a class="card" href="#habitos">
@@ -145,8 +146,7 @@
               <a class="card" href="#bicicleta">
                 <span class="icon" data-icon="cycling"></span>
                 <h3>Bicicleta</h3>
-                <p>Tus rodadas y tu velocidad.</p>
-                <span class="card-badge">En desarrollo</span>
+                <p>Rueda con GPS: recorrido, velocidad y parciales.</p>
               </a>
               <a class="card" href="#finanzas">
                 <span class="icon" data-icon="finance"></span>
@@ -394,24 +394,32 @@
             <a class="back-link" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
             <h1 class="page-title">Bicicleta</h1>
 
-            <div class="stat-row" id="cycling-stats"></div>
+            <div class="act-app" id="cycling-act"></div>
 
-            <form class="tracker-form" id="cycling-form">
-              <input type="date" id="cycling-date" required>
-              <input type="number" id="cycling-distance" placeholder="Distancia (km)" min="0.01" step="0.01" required>
-              <input type="number" id="cycling-duration" placeholder="Minutos" min="1" required>
-              <select id="cycling-rpe" aria-label="Esfuerzo percibido (RPE)">
-                <option value="">RPE (opcional)</option>
-                <option value="1">RPE 1 · muy suave</option><option value="2">RPE 2</option><option value="3">RPE 3</option>
-                <option value="4">RPE 4</option><option value="5">RPE 5 · moderado</option><option value="6">RPE 6</option>
-                <option value="7">RPE 7</option><option value="8">RPE 8 · duro</option><option value="9">RPE 9</option><option value="10">RPE 10 · máximo</option>
-              </select>
-              <input type="text" id="cycling-notes" placeholder="Notas (opcional)">
-              <button type="submit">Registrar</button>
-            </form>
+            <div id="cycling-home">
+              <div class="stat-row" id="cycling-stats"></div>
 
-            <div id="cycling-list"></div>
-            <p class="empty-state" id="cycling-empty" style="display:none;">Aún no registras rodadas.</p>
+              <h2 class="act-lista-t">Tus rodadas</h2>
+              <div id="cycling-list"></div>
+              <p class="empty-state" id="cycling-empty" style="display:none;">Aún no registras rodadas.</p>
+
+              <details class="act-manual">
+                <summary>Registrar a mano <small>Rodillo o sin GPS</small></summary>
+                <form class="tracker-form" id="cycling-form">
+                  <input type="date" id="cycling-date" required>
+                  <input type="number" id="cycling-distance" placeholder="Distancia (km)" min="0.01" step="0.01" required>
+                  <input type="number" id="cycling-duration" placeholder="Minutos" min="1" required>
+                  <select id="cycling-rpe" aria-label="Esfuerzo percibido (RPE)">
+                    <option value="">RPE (opcional)</option>
+                    <option value="1">RPE 1 · muy suave</option><option value="2">RPE 2</option><option value="3">RPE 3</option>
+                    <option value="4">RPE 4</option><option value="5">RPE 5 · moderado</option><option value="6">RPE 6</option>
+                    <option value="7">RPE 7</option><option value="8">RPE 8 · duro</option><option value="9">RPE 9</option><option value="10">RPE 10 · máximo</option>
+                  </select>
+                  <input type="text" id="cycling-notes" placeholder="Notas (opcional)">
+                  <button type="submit">Registrar</button>
+                </form>
+              </details>
+            </div>
           </section>
 
           <!-- ===== Finanzas: Vista general ===== -->
@@ -1189,7 +1197,7 @@
   <script defer src="js/accesos.js?v=202610040100"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
   <script defer src="js/icons.js?v=202610040100"></script>
-  <script defer src="js/modules.js?v=202610040300"></script>
+  <script defer src="js/modules.js?v=202610060100"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
   <script defer src="js/exercise-search.js?v=202609291"></script>
@@ -1224,9 +1232,10 @@
   <script defer src="js/avisos.js?v=202610050100"></script>
   <script defer src="js/rutina-running.js?v=202610050100"></script>
   <script defer src="js/rutinas-running-ui.js?v=202610050100"></script>
-  <script defer src="js/actividad-ui.js?v=202610050200"></script>
-  <script defer src="js/running.js?v=202610050100"></script>
-  <script defer src="js/bicicleta.js?v=202609293"></script>
+  <script defer src="js/actividad-ui.js?v=202610060100"></script>
+  <script defer src="js/actividad-registro.js?v=202610060100"></script>
+  <script defer src="js/running.js?v=202610060100"></script>
+  <script defer src="js/bicicleta.js?v=202610060100"></script>
   <script defer src="js/finanzas/datos.js?v=202610011600"></script>
   <script defer src="js/finanzas/demo.js?v=202610011300"></script>
   <script defer src="js/finanzas/analisis.js?v=202610011500"></script>

@@ -117,3 +117,12 @@ costo es mínimo (solo textos).
 
 **D-024 (F4) · Sonido y Voz se pueden apagar desde la tarjeta** y la
 elección queda en el teléfono (`manolo.avisos`).
+
+**D-025 (F5) · En bici el número grande en vivo es la velocidad.** Motivo:
+el prompt pide priorizar velocidad sobre ritmo en ciclismo; distancia,
+tiempo y velocidad media van debajo. En Running sigue siendo la distancia.
+
+**D-026 (F5) · Lista, totales y registro a mano comunes
+(`js/actividad-registro.js`).** Motivo: Running y Bici tenían el mismo código
+duplicado; ahora `running.js` y `bicicleta.js` solo configuran. Se conserva
+el comportamiento y el aspecto de antes (y ahora se escapan las notas).

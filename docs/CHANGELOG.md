@@ -1,5 +1,13 @@
 # Cambios
 
+## 2026-10-01 · Fase 5 (Bicicleta con GPS)
+- Bicicleta con las pantallas de Running: velocidad como número grande,
+  parciales de 5 km, velocidad máxima, sin calorías; sin versículo; lista
+  "Tus rodadas" (abrir/eliminar GPS) y registro a mano en desplegable; aviso
+  en Inicio de rodada sin terminar; una actividad a la vez.
+- `js/actividad-registro.js`: lista/totales/registro a mano comunes a
+  Running y Bici (antes duplicados). E2E `fase5.js` (22 comprobaciones).
+
 ## 2026-10-01 · Fase 4 (rutinas de Running con avisos)
 - Importar rutinas desde CSV o Excel con vista previa y errores por fila;
   plantilla descargable; lista y eliminación en el inicio de Running.

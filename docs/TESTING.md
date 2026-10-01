@@ -1,7 +1,7 @@
 # Pruebas
 
 ## Estado actual
-- `npm test` → **215 pruebas, todas pasan** (fin de fase 4). Lógica pura UMD:
+- `npm test` → **215 pruebas, todas pasan** (fin de fase 5). Lógica pura UMD:
   hábitos, finanzas, mapa muscular, rangos, rutinas, importador, series,
   sesiones, versión del service worker.
 - `tests/sw-version.test.js` falla si se cambia un archivo de la app sin
@@ -15,7 +15,9 @@
   marcar una serie en Gimnasio). `node scripts/e2e/fase4.js [capturas]`:
   importar CSV con errores y válido, correr con rutina (voz, 3-2-1, cambio,
   fin), pausa, recuperación, app congelada, sin GPS, guardar, voz apagada,
-  eliminar rutina. Utilidades comunes en `scripts/e2e/comun.js` (GPS, reloj
+  eliminar rutina. `node scripts/e2e/fase5.js [capturas]`: Bicicleta (velocidad
+  grande, parciales de 5 km, sin calorías, guardar, abrir, eliminar, registro
+  a mano, una actividad a la vez). Utilidades comunes en `scripts/e2e/comun.js` (GPS, reloj
   y voz simulados). Usan `fake-firebase.js`: Firestore
   y Auth en memoria, con las reglas de `accesos`/`admins` simuladas. **No
   prueban las reglas reales** (se verifican al publicarlas, `docs/ADMIN.md`).

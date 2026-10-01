@@ -85,7 +85,8 @@ js/intervalos-motor.js  ✅ (UMD, sin DOM)  rutina por intervalos basada en time
 js/actividad-vista.js   ✅ (UMD, sin DOM)  formatos, calorías estimadas, trazo SVG
 js/actividad-gps.js     ✅ (DOM)           watchPosition, permisos, wake lock
 js/actividad-ui.js      ✅ (DOM)           inicio / en vivo / resumen, guardado, recuperación, mapa Leaflet
-js/running.js ✅ · js/bicicleta.js (F5)    lista, registro a mano y montaje de la UI
+js/actividad-registro.js ✅ (DOM)          lista, totales y registro a mano (común)
+js/running.js ✅ · js/bicicleta.js ✅     solo configuración de cada deporte
 js/avisos.js            ✅ (DOM)           pitidos (Web Audio) + voz (speechSynthesis), preferencias
 js/rutina-running.js    ✅ (UMD, sin DOM)  lectura y validación de rutinas CSV/Excel
 js/rutinas-running-ui.js ✅ (DOM)          importar, vista previa, guardar y listar rutinas

@@ -114,8 +114,8 @@ function showPanel(hash) {
   document.body.classList.toggle("in-finanzas", activeModule === "finanzas");
   // Con barra inferior propia, la de arriba solo muestra una casita para volver al inicio.
   document.body.classList.toggle("has-home-btn", !!TAB_BARS[activeModule]);
-  // Running tampoco lleva versículo: la pantalla es para la carrera.
-  document.getElementById("verse-banner").hidden = isExercise || activeModule === "finanzas" || activeModule === "habitos" || hash === "running";
+  // Running y Bicicleta tampoco llevan versículo: la pantalla es para la actividad.
+  document.getElementById("verse-banner").hidden = isExercise || activeModule === "finanzas" || activeModule === "habitos" || hash === "running" || hash === "bicicleta";
   document.getElementById("body-banner").hidden = !showBody;
 
   // Pestañas propias de cada módulo (Finanzas, Hábitos, Ejercicio), visibles

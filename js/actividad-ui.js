@@ -268,15 +268,25 @@ function crear(o) {
           <span class="act-gps" data-act-gps></span>
         </div>
         ${rut ? htmlRutinaVivo() : ""}
+        ${esRitmo ? `
         <div class="act-principal">
           <span class="act-lbl">Distancia</span>
           <strong class="act-grande" data-act-dist>0,00</strong><span class="act-unidad">km</span>
         </div>
         <div class="act-fila">
           <div><span class="act-lbl">Tiempo</span><strong data-act-tiempo>0:00</strong></div>
-          <div><span class="act-lbl">${esRitmo ? "Ritmo" : "Velocidad"}</span><strong data-act-actual>--</strong><small>${esRitmo ? "/km" : "km/h"}</small></div>
-          <div><span class="act-lbl">${medio}</span><strong data-act-medio>--</strong><small>${esRitmo ? "/km" : "km/h"}</small></div>
+          <div><span class="act-lbl">Ritmo</span><strong data-act-actual>--</strong><small>/km</small></div>
+          <div><span class="act-lbl">${medio}</span><strong data-act-medio>--</strong><small>/km</small></div>
+        </div>` : `
+        <div class="act-principal">
+          <span class="act-lbl">Velocidad</span>
+          <strong class="act-grande" data-act-actual>0,0</strong><span class="act-unidad">km/h</span>
         </div>
+        <div class="act-fila">
+          <div><span class="act-lbl">Distancia</span><strong data-act-dist>0,00</strong><small>km</small></div>
+          <div><span class="act-lbl">Tiempo</span><strong data-act-tiempo>0:00</strong></div>
+          <div><span class="act-lbl">${medio}</span><strong data-act-medio>--</strong><small>km/h</small></div>
+        </div>`}
         <div class="act-ruta-vivo" data-act-ruta></div>
         <p class="act-nota" data-act-nota role="status"></p>
         <div class="act-botones" data-act-botones></div>

@@ -2182,7 +2182,9 @@ body.gym-en-entreno .content { padding-bottom: calc(7rem + env(safe-area-inset-b
 
 /* Con la actividad abierta: pantalla solo para la actividad (en el teléfono). */
 body.act-en-curso #panel-running > .back-link,
-body.act-en-curso #panel-running > .page-title { display: none; }
+body.act-en-curso #panel-running > .page-title,
+body.act-en-curso #panel-bicicleta > .back-link,
+body.act-en-curso #panel-bicicleta > .page-title { display: none; }
 body.act-en-curso #verse-banner { display: none; }
 @media (max-width: 768px) {
   body.act-en-curso .topbar,
