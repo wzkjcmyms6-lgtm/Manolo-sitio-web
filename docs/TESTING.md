@@ -16,6 +16,10 @@
     en Inicio, guardar sin km, no se mueve), voz apagada, descartar, borrar
     un día o el plan entero sin tocar el historial, borrar una carrera vieja
     con GPS y su recorrido, registro a mano, Bici, computadora.
+  - `hojas.js` — deslizar hacia abajo para cerrar (dedo simulado): la hoja
+    sigue al dedo, vuelve si se suelta a mitad, se cierra al bajarla o con un
+    tirón, de lado no se mueve, con la lista desplazada primero sube la lista;
+    en Finanzas, el selector de categorías, Hábitos y Running.
   - `regresion.js` — las 15 pantallas en teléfono (390 px) y computadora
     (1280 px): se ven, sin errores y sin scroll de lado; acciones de siempre:
     marcar un hábito, anotar un gasto, registrar Running y Bici a mano,
@@ -45,7 +49,7 @@
 ```bash
 npm test
 export NODE_PATH=/opt/node22/lib/node_modules   # donde está Playwright
-for f in fase1 running regresion; do node scripts/e2e/$f.js || break; done
+for f in fase1 running hojas regresion; do node scripts/e2e/$f.js || break; done
 ```
 Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
 
@@ -80,6 +84,11 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] Iniciar sesión con otra cuenta (o en otro equipo) → en tu cuenta la
   campana muestra el número; al abrirla se ve usuario y hora y se marca leído.
 - [ ] Con una cuenta que no es admin no aparece la campana.
+
+**Deslizar para cerrar**
+- [ ] En Finanzas toca **+**: baja la hoja con el dedo; a mitad de camino y
+  soltando vuelve; bajándola más (o con un tirón) se cierra.
+- [ ] Lo mismo en el detalle de un hábito y en el selector de categorías.
 
 **Hábitos, Ejercicio, Finanzas (como antes)**
 - [ ] Marcar y desmarcar un hábito; crear uno con nota y ver la nota.

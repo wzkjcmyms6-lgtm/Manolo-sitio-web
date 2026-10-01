@@ -18,7 +18,9 @@ Actualizado: 2026-10-01 (después del plan maestro: Running/Bici sin GPS).
   tipo Strava en Running y Bici (D-035); rutinas CSV de varios días en una
   cola, la completada pasa al final (D-034, D-036); km opcionales (D-037).
   Ver `docs/RUNNING.md`, `docs/CYCLING.md`, `docs/CSV_ROUTINES.md`.
+  Deslizar hacia abajo para cerrar todas las hojas (D-038,
+  `js/hoja-deslizar.js`).
 - **Falta la prueba real en el iPhone**: pantalla encendida, voz y pitidos
   de las rutinas guiadas, teclado numérico.
 - **Tests**: 209/209 (`npm test`); E2E `fase1` (39), `running` (64),
-  `regresion` (37) en verde.
+  `hojas` (16), `regresion` (37) en verde.

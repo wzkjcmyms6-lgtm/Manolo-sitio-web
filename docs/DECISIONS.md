@@ -188,3 +188,14 @@ completo ("Plan 5K · Día 2"); borrar rutinas nunca toca el historial.
 tiempo pero no la distancia: el resumen ofrece anotar los km (por ejemplo
 del reloj) para que cuenten en el resumen semanal; si no, se guarda con
 `distance: 0` y suma solo tiempo.
+
+**D-038 · Deslizar hacia abajo para cerrar, en todas las hojas**
+(`js/hoja-deslizar.js`). Pedido del dueño, con Buddy de referencia (solo el
+gesto; nada copiado). Un solo módulo para las tres familias de hojas
+(`budget-sheet`, `muscle-sheet`, `cat-sheet`): la hoja sigue al dedo y el
+fondo se aclara; al soltar se cierra si bajó un 30 % de su alto o con un
+tirón rápido (> 0,6 px/ms), si no vuelve. Cierra "tocando" el fondo (o la ✕),
+así cada hoja ejecuta su propio cierre; si una hoja no se deja cerrar así,
+vuelve a su lugar. Con el contenido desplazado, primero sube el contenido.
+Reemplaza el gesto propio que tenía solo la hoja del mapa muscular.
+Solo táctil (en la compu siguen la ✕, el fondo y Escape).

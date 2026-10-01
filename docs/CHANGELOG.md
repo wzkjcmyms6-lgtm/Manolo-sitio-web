@@ -1,5 +1,13 @@
 # Cambios
 
+## 2026-10-01 · Deslizar hacia abajo para cerrar las hojas
+- Todas las hojas que suben desde abajo (nueva transacción, filtros,
+  presupuesto, categorías, hábitos, gimnasio, rutinas, récords, avisos…) se
+  pueden bajar con el dedo: siguen al dedo, se cierran si se bajan lo
+  suficiente o con un tirón, y si no vuelven a su lugar (D-038).
+- Barrita arriba de las hojas en el teléfono. Nuevo `js/hoja-deslizar.js`;
+  E2E nuevo `hojas.js` (16).
+
 ## 2026-10-01 · Running y Bici sin GPS, resumen semanal y planes de varios días
 - **GPS retirado** (pedido del dueño, D-033): sin "Iniciar carrera/rodada",
   sin permiso de ubicación, sin mapas ni Leaflet. Las actividades viejas con

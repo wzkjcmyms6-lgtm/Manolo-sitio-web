@@ -212,26 +212,7 @@ function renderHoja() {
 hoja.addEventListener("click", e => { if (e.target.closest("[data-cerrar]")) cerrarHoja(); });
 document.addEventListener("keydown", e => { if (e.key === "Escape") cerrarHoja(); });
 
-// Deslizar hacia abajo para cerrar.
-(function () {
-  const panel = hoja.querySelector(".muscle-sheet-panel");
-  let y0 = null, dy = 0;
-  panel.addEventListener("touchstart", e => {
-    if (panel.scrollTop > 0) return;
-    y0 = e.touches[0].clientY; dy = 0;
-  }, { passive: true });
-  panel.addEventListener("touchmove", e => {
-    if (y0 === null) return;
-    dy = Math.max(0, e.touches[0].clientY - y0);
-    panel.style.transform = dy ? `translateY(${dy}px)` : "";
-  }, { passive: true });
-  panel.addEventListener("touchend", () => {
-    if (y0 === null) return;
-    y0 = null;
-    if (dy > 80) cerrarHoja();
-    else panel.style.transform = "";
-  });
-})();
+// Deslizar hacia abajo para cerrar: js/hoja-deslizar.js (común a todas las hojas).
 
 // ---- Eventos ----
 banner.addEventListener("click", e => {

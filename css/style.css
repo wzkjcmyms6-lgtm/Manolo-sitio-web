@@ -238,6 +238,20 @@ h1, h2, h3 { font-family: var(--font-body); font-weight: 700; letter-spacing: -0
 @keyframes muscle-sheet-up { from { transform: translateY(100%); } to { transform: none; } }
 @keyframes muscle-sheet-down { to { transform: translateY(100%); } }
 .muscle-sheet-grip { width: 40px; height: 4px; border-radius: 2px; background: var(--border); margin: 0.2rem auto 0.8rem; }
+/* Deslizar hacia abajo para cerrar (js/hoja-deslizar.js): mientras se
+   arrastra, la hoja sigue al dedo sin retraso; al cerrarse deslizando, sigue
+   bajando desde donde quedó (sin repetir su animación de cierre). */
+.hoja-arrastrando > .budget-sheet-panel, .hoja-arrastrando > .muscle-sheet-panel, .hoja-arrastrando > .cat-sheet-panel,
+.hoja-arrastrando > .budget-sheet-overlay, .hoja-arrastrando > .muscle-sheet-overlay { transition: none !important; animation: none !important; }
+.hoja-deslizada, .hoja-deslizada > .budget-sheet-panel, .hoja-deslizada > .muscle-sheet-panel, .hoja-deslizada > .cat-sheet-panel,
+.hoja-deslizada > .budget-sheet-overlay, .hoja-deslizada > .muscle-sheet-overlay { animation: none !important; }
+/* En el teléfono, una barrita arriba avisa que la hoja se puede bajar. */
+@media (hover: none) and (pointer: coarse) {
+  .budget-sheet-panel::before {
+    content: ""; position: absolute; top: 7px; left: 50%; z-index: 2; width: 36px; height: 4px; margin-left: -18px;
+    border-radius: 2px; background: rgba(255, 255, 255, 0.2); pointer-events: none;
+  }
+}
 .muscle-sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .muscle-sheet-head h3 { margin: 0.1rem 0 0.15rem; font-size: 1.35rem; }
 .muscle-sheet-group { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2); }
