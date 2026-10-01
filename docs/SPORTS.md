@@ -50,6 +50,18 @@ velocidad medios se calculan sobre el tiempo en movimiento.
 | `avisos(st, t0, t1)` | Avisos en (t0, t1]: `cambio`, `cuenta` (3-2-1, intervalos > 5 s), `fin`; tras un salto > 5 s (app congelada) solo `estado` (dónde va) |
 | `textoAviso(st, aviso)` | Frase para la voz: "Siguiente intervalo: correr durante 2 minutos." |
 
+## `ActividadAnalisis` (`js/actividad-analisis.js`, fase 6)
+
+| Función | Qué hace |
+|---|---|
+| `serieVelocidad(tramos)` | Velocidad por tramos de distancia (50 m … 5 km según el largo, ≤ 60 tramos); `null` en huecos de señal o si estabas parado |
+| `serieAltitud(tramos)` | Altitud a lo largo del recorrido (si el GPS la dio) |
+| `svgLinea(puntos, o)` | Gráfico de línea en SVG (ritmo invertido: más rápido arriba) |
+| `porSemana(acts, hoy, n)` | km, minutos, cantidad y segundos para el promedio por semana (GPS: tiempo en movimiento; a mano: minutos) |
+| `tendencia(semanas)` | Últimas 4 semanas contra las 4 anteriores |
+| `mejores(acts, deporte)` | Marcas solo con GPS (ver D-027) |
+| `htmlBarras(barras, o)` | Barras por semana con escala (clases del gráfico de Ejercicio › Perfil) |
+
 ## Recuperación (fase 3/4)
 
 El estado de ambos motores es JSON: se guarda en `localStorage`

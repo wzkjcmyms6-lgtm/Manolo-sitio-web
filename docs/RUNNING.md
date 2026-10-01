@@ -36,3 +36,14 @@ banner de versículo (por ser sub-panel de Inicio).
 - Recuperación junto con la carrera; la carrera guarda
   `rutina: {id, nombre, completados, total}` y el resumen lo muestra.
 - Fase 6: historial y detalle.
+
+## Fase 6 (hecha)
+- "Tu progreso" (arriba de la lista): distancia de las últimas 4 semanas con
+  ritmo medio y cambio frente a las 4 anteriores; barras de 12 semanas
+  (Distancia · Tiempo · Salidas); **mejores marcas solo con GPS**: mejor 1 km,
+  5 km y 10 km (mejores parciales seguidos) y carrera más larga. Tocar una
+  marca abre esa carrera.
+- Lista separada por meses.
+- Detalle: gráfico de ritmo a lo largo del recorrido (por tramos de
+  distancia; los huecos de señal quedan vacíos), altitud aproximada si hay, y
+  parciales con el mejor y el peor resaltados.

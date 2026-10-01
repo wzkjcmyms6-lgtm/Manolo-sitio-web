@@ -20,3 +20,8 @@ Mismas pantallas y motor que Running (`js/actividad-ui.js`,
   común con Running en `js/actividad-registro.js`.
 - Una sola actividad a la vez: con una carrera sin terminar no se puede
   iniciar una rodada (y al revés); Inicio avisa cuál está pendiente.
+
+## Fase 6 (hecha)
+"Tu progreso" igual que en Running (con velocidad media); marcas GPS: rodada
+más larga, mejor velocidad media (rodadas ≥ 5 km) y mejor 5 km. Detalle con
+gráfico de velocidad a lo largo de la rodada y altitud.

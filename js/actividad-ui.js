@@ -405,9 +405,12 @@ function crear(o) {
     const parciales = (d.parciales || []);
     const tamP = P.parcialM / 1000;
     const mejor = Math.min(...parciales.filter(s => s > 0));
+    const peor = Math.max(...parciales);
+    const marcar = parciales.length >= 3;
     const filasP = parciales.map((s, i) => {
       const v = P.parcialM / s;
-      return `<li><span>${(i + 1) * tamP} km</span><span class="act-p-barra"><i style="width:${(mejor / s * 100).toFixed(1)}%"></i></span><span>${esRitmo ? V.ritmo(s) : V.velocidad(v)}</span><span>${V.tiempo(s)}</span></li>`;
+      const clase = marcar && s === mejor ? ' class="is-mejor"' : marcar && s === peor ? ' class="is-peor"' : "";
+      return `<li${clase}><span>${(i + 1) * tamP} km</span><span class="act-p-barra"><i style="width:${(mejor / s * 100).toFixed(1)}%"></i></span><span>${esRitmo ? V.ritmo(s) : V.velocidad(v)}</span><span>${V.tiempo(s)}</span></li>`;
     }).join("");
     const nuevo = !guardada;
     raiz.innerHTML = `
@@ -415,6 +418,7 @@ function crear(o) {
         <h2 class="act-titulo">${nuevo ? `${Nombre} completada` : `Tu ${o.nombre}`}</h2>
         <p class="act-fecha">${escapeHtml(fechaHora(d.inicio || Date.now()))}</p>
         <div class="act-mapa" data-act-mapa></div>
+        <div class="act-graficos" data-act-graficos></div>
         <div class="act-tiles">${tiles}</div>
         ${d.rutina ? `<p class="act-rut-res">Rutina «${escapeHtml(d.rutina.nombre)}»: ${d.rutina.completados} de ${d.rutina.total} intervalos${d.rutina.completados >= d.rutina.total ? " ✓" : ""}</p>` : ""}
         ${d.huecoM ? `<p class="act-aviso">Incluye ${Math.round(d.huecoM)} m estimados en línea recta por pérdida de señal del GPS.</p>` : ""}
@@ -440,7 +444,25 @@ function crear(o) {
           </div>`}
       </div>`;
     pintarMapa(raiz.querySelector("[data-act-mapa]"), tramos || []);
+    pintarGraficos(tramos || []);
     window.scrollTo(0, 0);
+  }
+
+  // Ritmo (o velocidad) y altitud a lo largo del recorrido, desde la ruta.
+  function pintarGraficos(tramos) {
+    const el = raiz.querySelector("[data-act-graficos]");
+    if (!el) return;
+    const AA = ActividadAnalisis;
+    const km = x => `${(x / 1000).toFixed(1).replace(".", ",")} km`;
+    const serie = AA.serieVelocidad(tramos).map(b => ({ x: (b.d0 + b.d1) / 2, y: b.v == null ? null : esRitmo ? 1000 / b.v : b.v * 3.6 }));
+    const vel = AA.svgLinea(serie, esRitmo
+      ? { invertido: true, etiquetaY: y => V.ritmo(y, true), etiquetaX: km, clase: "is-ritmo" }
+      : { etiquetaY: y => `${Math.round(y)} km/h`, etiquetaX: km, clase: "is-vel" });
+    const alts = AA.serieAltitud(tramos);
+    const rango = alts.length ? Math.max(...alts.map(a => a.alt)) - Math.min(...alts.map(a => a.alt)) : 0;
+    const alt = rango >= 3 ? AA.svgLinea(alts.map(a => ({ x: a.d, y: a.alt })), { etiquetaY: y => `${Math.round(y)} m`, etiquetaX: km, clase: "is-alt" }) : "";
+    el.innerHTML = (vel ? `<h3 class="act-sub">${esRitmo ? "Ritmo" : "Velocidad"} a lo largo del recorrido</h3>${vel}` : "")
+      + (alt ? `<h3 class="act-sub">Altitud <small>aprox. (GPS)</small></h3>${alt}` : "");
   }
 
   // ---- Acciones ----
@@ -624,6 +646,7 @@ function crear(o) {
         guardada.tramos = AM.leerRuta(doc.data());
         const el = raiz.querySelector("[data-act-mapa]");
         if (el) pintarMapa(el, guardada.tramos);
+        pintarGraficos(guardada.tramos);
       }).catch(err => console.warn("Manolo: no se pudo leer la ruta", err && err.code));
     },
     vista: () => vista

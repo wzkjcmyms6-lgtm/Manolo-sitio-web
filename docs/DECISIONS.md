@@ -126,3 +126,16 @@ tiempo y velocidad media van debajo. En Running sigue siendo la distancia.
 (`js/actividad-registro.js`).** Motivo: Running y Bici tenían el mismo código
 duplicado; ahora `running.js` y `bicicleta.js` solo configuran. Se conserva
 el comportamiento y el aspecto de antes (y ahora se escapan las notas).
+
+**D-027 (F6) · Mejores marcas solo con actividades GPS.** Running: mejor
+1/5/10 km = suma mínima de parciales de 1 km seguidos (medidos, con el cruce
+de cada km interpolado) y la más larga; Bici: más larga, mejor velocidad
+media (solo rodadas ≥ 5 km, para que un tramo corto no gane) y mejor 5 km.
+Las anotadas a mano no cuentan: no se puede saber cómo se midieron.
+
+**D-028 (F6) · Barras por semana de distancia, tiempo y cantidad** (no de
+ritmo: una barra más alta "peor" confunde). El ritmo/velocidad medio va en
+el texto de tendencia.
+
+**D-029 (F6) · Gráfico de ritmo por tramos de distancia**, con los huecos de
+señal vacíos (no se dibuja una velocidad inventada).

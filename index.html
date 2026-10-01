@@ -17,7 +17,7 @@
   <!-- Fuentes guardadas en el repo: la app no depende de internet para verse bien -->
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
-  <link rel="stylesheet" href="css/style.css?v=202610060100">
+  <link rel="stylesheet" href="css/style.css?v=202610070100">
   <link rel="stylesheet" href="css/finanzas.css?v=202610011900">
   <link rel="stylesheet" href="css/habitos.css?v=202610040100">
 </head>
@@ -366,6 +366,7 @@
             <div id="running-home">
               <div class="stat-row" id="running-stats"></div>
 
+              <section class="act-progreso" id="running-progreso" aria-label="Tu progreso"></section>
               <h2 class="act-lista-t">Tus carreras</h2>
               <div id="running-list"></div>
               <p class="empty-state" id="running-empty" style="display:none;">Aún no registras salidas.</p>
@@ -399,6 +400,7 @@
             <div id="cycling-home">
               <div class="stat-row" id="cycling-stats"></div>
 
+              <section class="act-progreso" id="cycling-progreso" aria-label="Tu progreso"></section>
               <h2 class="act-lista-t">Tus rodadas</h2>
               <div id="cycling-list"></div>
               <p class="empty-state" id="cycling-empty" style="display:none;">Aún no registras rodadas.</p>
@@ -1232,8 +1234,9 @@
   <script defer src="js/avisos.js?v=202610050100"></script>
   <script defer src="js/rutina-running.js?v=202610050100"></script>
   <script defer src="js/rutinas-running-ui.js?v=202610050100"></script>
-  <script defer src="js/actividad-ui.js?v=202610060100"></script>
-  <script defer src="js/actividad-registro.js?v=202610060100"></script>
+  <script defer src="js/actividad-ui.js?v=202610070100"></script>
+  <script defer src="js/actividad-analisis.js?v=202610070100"></script>
+  <script defer src="js/actividad-registro.js?v=202610070200"></script>
   <script defer src="js/running.js?v=202610060100"></script>
   <script defer src="js/bicicleta.js?v=202610060100"></script>
   <script defer src="js/finanzas/datos.js?v=202610011600"></script>

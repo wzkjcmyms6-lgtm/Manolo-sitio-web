@@ -2268,3 +2268,30 @@ body.act-en-curso #verse-banner { display: none; }
 .rr-error-nombre { margin: 0; color: var(--danger); font-size: 0.85rem; }
 .rr-error-nombre[hidden] { display: none; }
 .rr-acciones { display: flex; flex-direction: column; gap: 0.5rem; }
+/* ---------- Running y Bici: progreso, marcas, meses y gráficos ---------- */
+.act-progreso { --ejd-azul: var(--accent-1); margin-bottom: 0.4rem; }
+.act-progreso:empty { display: none; }
+.act-progreso .ejd-pill.sel { color: #0a0a0a; }
+.act-progreso .ejd-metricas { margin-top: 0.9rem; }
+.act-tend { margin: -0.2rem 0 0.8rem; color: var(--muted); font-size: 0.88rem; line-height: 1.45; }
+.act-tend strong { color: var(--ink); }
+.act-marcas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; margin-top: 0.5rem; }
+.act-marca {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem; min-width: 0;
+  padding: 0.75rem 0.85rem; border-radius: 16px; border: 1px solid var(--border); background: var(--surface);
+  color: var(--ink); font: inherit; text-align: left; cursor: pointer;
+}
+.act-marca span { color: var(--accent-2); font-size: 0.78rem; font-weight: 600; }
+.act-marca strong { font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.act-marca small { color: var(--muted); font-size: 0.74rem; }
+.act-mes { margin: 1rem 0 0.4rem; font-size: 0.85rem; font-weight: 600; color: var(--muted); text-transform: none; }
+.act-mes:first-child { margin-top: 0.2rem; }
+.act-graficos:empty { display: none; }
+.act-graficos .act-sub small { color: var(--muted); font-weight: 400; font-size: 0.78rem; }
+.act-linea { display: block; width: 100%; height: auto; margin-top: 0.4rem; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); }
+.act-linea-eje { stroke: #2a2a28; stroke-width: 1; }
+.act-linea-txt { fill: var(--muted); font-size: 10px; font-family: var(--font-body); }
+.act-linea-trazo { fill: none; stroke: var(--accent-1); stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; }
+.act-linea.is-alt .act-linea-trazo { stroke: #8fb8a0; }
+.act-parciales li.is-mejor span:nth-child(3) { color: #5fcf8a; font-weight: 700; }
+.act-parciales li.is-peor span:nth-child(3) { color: var(--muted); }

@@ -1,5 +1,13 @@
 # Cambios
 
+## 2026-10-01 · Fase 6 (historial y análisis)
+- Running y Bici: "Tu progreso" con barras de 12 semanas (distancia,
+  tiempo, cantidad), tendencia de 4 semanas con ritmo/velocidad medio y
+  mejores marcas GPS (tocar abre la actividad); lista separada por meses.
+- Detalle: gráfico de ritmo (o velocidad) a lo largo del recorrido, altitud
+  aproximada y parciales con el mejor y el peor resaltados.
+- Nuevo `js/actividad-analisis.js`. Pruebas: 224 unitarias; E2E `fase6.js` (15).
+
 ## 2026-10-01 · Fase 5 (Bicicleta con GPS)
 - Bicicleta con las pantallas de Running: velocidad como número grande,
   parciales de 5 km, velocidad máxima, sin calorías; sin versículo; lista
