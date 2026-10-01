@@ -4,8 +4,8 @@
 //   compartido, también likes y comentarios (ver js/ej-social.js).
 // - Detalle al tocar una sesión: todas las series; Editar y Eliminar solo en
 //   las tuyas.
-// - Perfil: gráfico semanal de duración, volumen o reps (4 semanas,
-//   12 semanas o todo) y tu historial.
+// - Perfil: cabecera con tus cifras, gráfico semanal de duración, volumen o
+//   repeticiones (últimos 3 meses, último año o todo) y tu historial.
 // Los entrenamientos llegan desde gimnasio.js (window.Gimnasio). Solo se
 // dibuja la pantalla que se está viendo.
 (function () {
@@ -13,7 +13,7 @@ const ES = EjSesiones;
 let historial = [];
 let resumenes = new Map(); // id de entreno → resumen
 let sucioPerfil = true;
-let rango = "4";        // "4" | "12" | "todo"
+let rango = "3m";       // "3m" | "1a" | "todo"
 let metrica = "volumen"; // "duracion" | "volumen" | "reps"
 let barraElegida = null;
 let historialVisibles = 10;
@@ -120,43 +120,92 @@ function tarjetaHTML(ses, opciones) {
     </article>`;
 }
 
-// ---- Perfil: gráfico semanal ----
+// ---- Perfil: cabecera y gráfico semanal (estilo apps de gimnasio) ----
+// Arriba tu nombre con Entrenos, Esta semana y Récords. Debajo, el valor de
+// esta semana, el periodo (3 meses, 1 año o todo), las barras por semana con
+// su escala y las pastillas Duración · Volumen · Repeticiones.
+// Tocar una barra muestra esa semana; tocarla de nuevo vuelve a esta semana.
+const RANGOS = { "3m": { semanas: 13, texto: "Últimos 3 meses" }, "1a": { semanas: 52, texto: "Último año" }, todo: { semanas: null, texto: "Todo" } };
 const METRICAS = {
-  duracion: { label: "Duración", total: v => duracionTxt(v), barra: v => duracionTxt(v) },
-  volumen: { label: "Volumen", total: v => `${numero(v, 0)} kg`, barra: v => `${numero(v, 0)} kg` },
-  reps: { label: "Reps", total: v => numero(v, 0), barra: v => `${numero(v, 0)} reps` }
+  duracion: { label: "Duración", valor: v => duracionTxt(v) },
+  volumen: { label: "Volumen", valor: v => volTxt(v) },
+  reps: { label: "Repeticiones", valor: v => `${numero(v, 0)} reps` }
 };
+// Etiqueta corta del eje: "30k kg", "1,5 h", "600 reps".
+function etiquetaEje(v, metrica, tope) {
+  if (metrica === "volumen") return v >= 1000 ? `${numero(v / 1000, 1)}k kg` : `${numero(v, 0)} kg`;
+  if (metrica === "duracion") return tope >= 120 ? `${numero(v / 60, 1)} h` : `${numero(v, 0)} min`;
+  return `${numero(v, 0)} reps`;
+}
+function cabeceraPerfilHTML() {
+  const semana = ES.porSemana(historial, hoy(), 1, resumenEntreno)[0];
+  const records = historial.reduce((s, w) => s + (Number(w.prs) || 0), 0);
+  const nombre = nombreUsuario();
+  return `
+    <div class="ejd-perfil">
+      <span class="ejd-avatar" aria-hidden="true">${escapeHtml(nombre.charAt(0))}</span>
+      <div class="ejd-perfil-info">
+        <p class="ejd-nombre">${escapeHtml(nombre)}</p>
+        <div class="ejd-cifras">
+          <div><span>Entrenos</span><strong>${numero(historial.length, 0)}</strong></div>
+          <div><span>Esta semana</span><strong>${semana ? semana.sesiones : 0}</strong></div>
+          <div><span>Récords</span><strong>${numero(records, 0)}</strong></div>
+        </div>
+      </div>
+    </div>`;
+}
 function renderDashboard() {
   const el = $("ejd-dash");
   if (!el) return;
-  const semanas = ES.porSemana(historial, hoy(), rango === "todo" ? null : Number(rango), resumenEntreno);
-  const porMes = semanas.length > 26;
+  const semanas = ES.porSemana(historial, hoy(), RANGOS[rango].semanas, resumenEntreno);
+  const porMes = semanas.length > 60;
   const barras = porMes ? ES.porMes(semanas) : semanas;
-  const tot = barras.reduce((a, b) => ({ duracion: a.duracion + b.duracion, volumen: a.volumen + b.volumen, reps: a.reps + b.reps, sesiones: a.sesiones + b.sesiones }), { duracion: 0, volumen: 0, reps: 0, sesiones: 0 });
-  const max = Math.max(1, ...barras.map(b => b[metrica]));
-  const sel = barraElegida != null && barraElegida < barras.length ? barraElegida : barras.length - 1;
-  const b = barras[sel];
-  const cadaCuanto = Math.max(1, Math.ceil(barras.length / 6));
+  const max = Math.max(0, ...barras.map(b => b[metrica]));
+  const { paso, tope } = ES.escalaY(max, metrica);
+  const lineas = [];
+  for (let v = 0; v <= tope + 1e-9; v += paso) lineas.push(v);
+  const elegida = barraElegida != null && barraElegida < barras.length ? barraElegida : null;
+  const b = barras[elegida != null ? elegida : barras.length - 1];
   const nombreBarra = x => (porMes ? ES.etiquetaMes(x.mes) : ES.etiquetaSemana(x.desde));
+  const cuando = elegida == null
+    ? (porMes ? "este mes" : "esta semana")
+    : (porMes ? `en ${nombreBarra(b)}` : `semana del ${nombreBarra(b)}`);
+  const cadaCuanto = Math.max(1, Math.ceil(barras.length / 6));
+  const conEtiqueta = i => (barras.length - 1 - i) % cadaCuanto === 0;
+  const pct = v => (tope > 0 ? (v / tope) * 100 : 0).toFixed(2);
   el.innerHTML = `
-    <div class="ejd-top">
-      <h2 class="ejd-titulo" id="ejd-titulo">Tu progreso</h2>
-      <div class="fin-tabs ejd-rango" role="group" aria-label="Rango">
-        ${[["4", "4 sem"], ["12", "12 sem"], ["todo", "Todo"]].map(([k, t]) => `<button type="button" class="fin-tab${rango === k ? " active" : ""}" data-ejd-rango="${k}" aria-pressed="${rango === k}">${t}</button>`).join("")}
+    ${cabeceraPerfilHTML()}
+    <h2 class="visually-hidden" id="ejd-titulo">Tu progreso</h2>
+    <div class="ejd-cab">
+      <p class="ejd-valor" aria-live="polite"><strong>${escapeHtml(METRICAS[metrica].valor(b ? b[metrica] : 0))}</strong> ${escapeHtml(cuando)}</p>
+      <label class="ejd-rango-sel">
+        <span class="ejd-rango-txt">${RANGOS[rango].texto}</span>
+        <select data-ejd-rango-sel aria-label="Periodo del gráfico">
+          ${Object.keys(RANGOS).map(k => `<option value="${k}"${rango === k ? " selected" : ""}>${RANGOS[k].texto}</option>`).join("")}
+        </select>
+        <span class="ejd-rango-ic" data-icon="chevronDown" aria-hidden="true"></span>
+      </label>
+    </div>
+    <div class="ejd-graf${elegida != null ? " con-eleccion" : ""}">
+      <div class="ejd-ejey" aria-hidden="true">
+        <span class="ejd-ejey-ancho">${escapeHtml(lineas.map(v => etiquetaEje(v, metrica, tope)).reduce((a, t) => (t.length > a.length ? t : a), ""))}</span>
+        ${lineas.map(v => `<span style="bottom:${pct(v)}%">${escapeHtml(etiquetaEje(v, metrica, tope))}</span>`).join("")}
       </div>
+      <div class="ejd-area">
+        ${lineas.map(v => `<i class="ejd-linea" style="bottom:${pct(v)}%"></i>`).join("")}
+        <div class="ejd-barras" role="group" aria-label="${METRICAS[metrica].label} por ${porMes ? "mes" : "semana"}">
+          ${barras.map((x, i) => `<button type="button" class="ejd-col${i === elegida ? " sel" : ""}" data-ejd-col="${i}" aria-pressed="${i === elegida}" aria-label="${escapeHtml(nombreBarra(x))}: ${escapeHtml(METRICAS[metrica].valor(x[metrica]))}">
+            <span class="ejd-bar" style="height:${x[metrica] > 0 ? Math.max(1.5, Number(pct(x[metrica]))) : 0}%"></span>
+          </button>`).join("")}
+        </div>
+      </div>
+      <span></span>
+      <div class="ejd-ejex" aria-hidden="true">${barras.map((x, i) => `<span>${conEtiqueta(i) ? `<em>${escapeHtml(nombreBarra(x))}</em>` : ""}</span>`).join("")}</div>
     </div>
-    <div class="ejd-kpis">
-      ${Object.keys(METRICAS).map(k => `<button type="button" class="ejd-kpi${metrica === k ? " sel" : ""}" data-ejd-metrica="${k}" aria-pressed="${metrica === k}">
-        <span>${METRICAS[k].label}</span><strong>${METRICAS[k].total(tot[k])}</strong></button>`).join("")}
-    </div>
-    <p class="ejd-detalle" aria-live="polite">${b ? `<strong>${porMes ? "Mes de" : "Semana del"} ${escapeHtml(nombreBarra(b))}:</strong> ${METRICAS[metrica].barra(b[metrica])} · ${b.sesiones} ${b.sesiones === 1 ? "sesión" : "sesiones"}` : ""}</p>
-    <div class="ejd-barras" role="group" aria-label="${METRICAS[metrica].label} por ${porMes ? "mes" : "semana"}">
-      ${barras.map((x, i) => `<button type="button" class="ejd-col${i === sel ? " sel" : ""}" data-ejd-col="${i}" aria-pressed="${i === sel}" aria-label="${escapeHtml(nombreBarra(x))}: ${METRICAS[metrica].barra(x[metrica])}">
-        <span class="ejd-par"><span class="ejd-bar" style="height:${x[metrica] > 0 ? Math.max(3, x[metrica] / max * 100).toFixed(1) : 0}%"></span></span>
-        <span class="ejd-lbl">${i % cadaCuanto === 0 || i === barras.length - 1 ? escapeHtml(nombreBarra(x)) : ""}</span>
-      </button>`).join("")}
-    </div>
-    <p class="ejd-pie">${tot.sesiones} ${tot.sesiones === 1 ? "sesión" : "sesiones"} ${rango === "todo" ? "en total" : `en las últimas ${rango} semanas`}${porMes ? " · agrupado por mes" : ""}.</p>`;
+    <div class="ejd-metricas" role="group" aria-label="Qué mostrar en el gráfico">
+      ${Object.keys(METRICAS).map(k => `<button type="button" class="ejd-pill${metrica === k ? " sel" : ""}" data-ejd-metrica="${k}" aria-pressed="${metrica === k}">${METRICAS[k].label}</button>`).join("")}
+    </div>`;
+  renderIcons(el);
 }
 
 // ---- Perfil: historial (solo tus sesiones) ----
@@ -237,13 +286,23 @@ document.addEventListener("click", e => {
   if (ab) { const ses = registro.get(ab.dataset.ejAbrir); if (ses) abrirDetalle(ses); return; }
   const com = e.target.closest("[data-ej-comentar]");
   if (com) { const ses = registro.get(com.dataset.ejComentar); if (ses) abrirDetalle(ses, { comentar: true }); return; }
-  const r = e.target.closest("[data-ejd-rango]");
-  if (r) { rango = r.dataset.ejdRango; barraElegida = null; renderDashboard(); return; }
   const m = e.target.closest("[data-ejd-metrica]");
   if (m) { metrica = m.dataset.ejdMetrica; renderDashboard(); return; }
   const c = e.target.closest("[data-ejd-col]");
-  if (c) { barraElegida = Number(c.dataset.ejdCol); renderDashboard(); return; }
+  if (c) {
+    const i = Number(c.dataset.ejdCol);
+    barraElegida = barraElegida === i ? null : i;
+    renderDashboard();
+    return;
+  }
   if (e.target.closest("[data-ejp-mas]")) { historialVisibles += 10; renderHistorialPerfil(); }
+});
+document.addEventListener("change", e => {
+  const sel = e.target.closest("[data-ejd-rango-sel]");
+  if (!sel || !RANGOS[sel.value]) return;
+  rango = sel.value;
+  barraElegida = null;
+  renderDashboard();
 });
 $("ejs-cerrar").addEventListener("click", cerrarDetalle);
 $("ejs-hoja").querySelector(".budget-sheet-overlay").addEventListener("click", cerrarDetalle);

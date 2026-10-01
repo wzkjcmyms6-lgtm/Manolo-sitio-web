@@ -341,3 +341,13 @@ lógica sin pantalla en `js/entreno-series.js` (tests en
 - Arreglo general: `.content` deja espacio abajo para la barra de pestañas
   más la zona del gesto del iPhone (`env(safe-area-inset-bottom)`), así nada
   queda tapado al final de la página.
+
+## Perfil estilo apps de gimnasio (1 oct 2026)
+
+`renderDashboard()` en `js/ej-vistas.js`: cabecera con tu inicial, nombre y
+Entrenos · Esta semana · Récords (suma de `prs`); debajo el valor de esta
+semana, el periodo (Últimos 3 meses = 13 semanas, Último año = 52, Todo; con
+más de 60 semanas se agrupa por mes), barras azules por semana con su eje
+(`EjSesiones.escalaY`, probado en `tests/ej-sesiones.test.js`) y las
+pastillas Duración · Volumen · Repeticiones. Tocar una barra muestra esa
+semana arriba; tocarla otra vez vuelve a esta semana.

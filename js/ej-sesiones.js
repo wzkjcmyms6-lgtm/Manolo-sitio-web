@@ -121,6 +121,22 @@ function etiquetaMes(mes) {
   return `${MESES[m - 1]} ${String(y).slice(2)}`;
 }
 
+// Eje vertical del gráfico de Perfil: un tope "redondo" con 3 o 4 líneas
+// por encima del valor más alto. La duración (en minutos) usa pasos de
+// reloj; volumen y reps, 1 · 2 · 2,5 · 5 × 10ⁿ.
+const PASOS_MIN = [5, 10, 15, 20, 30, 60, 90, 120, 180, 240, 300, 480, 600];
+function escalaY(max, metrica) {
+  const m = max > 0 ? max : (metrica === "duracion" ? 60 : metrica === "reps" ? 30 : 1000);
+  const objetivo = m / 4;
+  let paso;
+  if (metrica === "duracion") paso = PASOS_MIN.find(p => p >= objetivo) || Math.ceil(objetivo / 600) * 600;
+  else {
+    const pot = Math.pow(10, Math.floor(Math.log10(Math.max(objetivo, 1))));
+    paso = [1, 2, 2.5, 5, 10].map(f => f * pot).find(p => p >= objetivo);
+  }
+  return { paso, tope: Math.max(paso, Math.ceil(m / paso) * paso) };
+}
+
 // ---- Feed compartido ----
 // Una publicación guarda: { fecha, rutina, duracionMin, volumen, series,
 // reps, ejercicios: [{ nombre, minutos, sets: [{kg, reps, seg, calentamiento}] }] }.
@@ -163,5 +179,5 @@ function records(posts) {
   return { sesiones: (posts || []).length, volumenTotal, mayorVolumen, masReps, masLarga, ejercicios };
 }
 
-return { resumen, resumenPost, comoEntreno, records, fechaRelativa, lunesDe, porSemana, porMes, etiquetaSemana, etiquetaMes, seriesEfectivas };
+return { resumen, resumenPost, comoEntreno, records, fechaRelativa, lunesDe, porSemana, porMes, etiquetaSemana, etiquetaMes, seriesEfectivas, escalaY };
 });

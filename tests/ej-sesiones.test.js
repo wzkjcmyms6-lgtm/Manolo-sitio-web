@@ -65,3 +65,15 @@ test("récords: mejor peso por ejercicio, mayor volumen, más reps y sesión má
   assert.deepEqual([ht.kg, ht.reps, ht.fecha, ht.veces], [100, 8, "2026-10-02", 2]); // el calentamiento no cuenta
   assert.equal(r.ejercicios[r.ejercicios.length - 1].nombre, "Dominadas");
 });
+
+test("escala del gráfico: tope redondo con 3 o 4 líneas", () => {
+  assert.deepEqual(S.escalaY(34000, "volumen"), { paso: 10000, tope: 40000 });
+  assert.deepEqual(S.escalaY(2625, "volumen"), { paso: 1000, tope: 3000 });
+  assert.deepEqual(S.escalaY(606, "reps"), { paso: 200, tope: 800 });
+  assert.deepEqual(S.escalaY(29, "duracion"), { paso: 10, tope: 30 });
+  assert.deepEqual(S.escalaY(150, "duracion"), { paso: 60, tope: 180 });
+  assert.deepEqual(S.escalaY(3, "reps"), { paso: 1, tope: 3 });
+  // Sin datos: igual hay líneas para que el gráfico no quede vacío.
+  assert.deepEqual(S.escalaY(0, "volumen"), { paso: 250, tope: 1000 });
+  assert.deepEqual(S.escalaY(0, "duracion"), { paso: 15, tope: 60 });
+});

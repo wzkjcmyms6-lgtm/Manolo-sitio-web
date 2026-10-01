@@ -1520,26 +1520,55 @@ body.in-finanzas .topbar-ajustes span { width: 20px; height: 20px; display: flex
 .ejf-ej-txt small { color: var(--muted); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
 .ejf-mas { margin: 0.6rem 0 0; text-align: center; color: var(--muted); font-size: 0.86rem; }
 
-.ejd-dash { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 1rem 1rem 0.9rem; margin-bottom: 1.4rem; }
-.ejd-top { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
-.ejd-titulo { font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; margin: 0; }
-.ejd-rango { margin: 0; }
-.ejd-rango .fin-tab { min-height: 36px; padding: 0.35rem 0.75rem; font-size: 0.82rem; }
-.ejd-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.45rem; margin-bottom: 0.7rem; }
-.ejd-kpi { display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem; min-width: 0; min-height: 56px; padding: 0.55rem 0.6rem; border-radius: 14px; border: 1px solid var(--border); background: var(--surface-raised); color: var(--ink); font: inherit; text-align: left; cursor: pointer; transition: border-color 180ms ease, background-color 180ms ease; }
-.ejd-kpi span { color: var(--muted); font-size: 0.74rem; }
-.ejd-kpi strong { font-size: 0.98rem; line-height: 1.2; font-variant-numeric: tabular-nums; max-width: 100%; }
-.ejd-kpi.sel { border-color: var(--accent-1); background: rgba(255, 122, 48, 0.1); }
-.ejd-kpi:focus-visible, .ejd-col:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
-.ejd-detalle { font-size: 0.88rem; margin: 0 0 0.5rem; min-height: 1.3em; }
-.ejd-barras { display: flex; align-items: stretch; gap: 3px; height: 150px; }
-.ejd-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; padding: 0.25rem 0 0; border: 0; border-radius: 8px; background: none; color: var(--muted); font: inherit; cursor: pointer; transition: background-color 180ms ease; }
-.ejd-col.sel { background: rgba(255, 255, 255, 0.06); color: var(--ink); }
-.ejd-par { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
-.ejd-bar { width: 70%; max-width: 26px; border-radius: 4px 4px 0 0; background: #77756f; transition: height 220ms ease; }
-.ejd-col.sel .ejd-bar { background: var(--accent-1); }
-.ejd-lbl { font-size: 0.66rem; white-space: nowrap; height: 1em; overflow: visible; }
-.ejd-pie { color: var(--muted); font-size: 0.8rem; margin: 0.6rem 0 0; }
+/* Perfil: cabecera y gráfico semanal (estilo apps de gimnasio, azul de Ejercicio) */
+.ejd-dash { --ejd-azul: #4da3ff; margin-bottom: 1.6rem; }
+.ejd-perfil { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.4rem; }
+.ejd-avatar {
+  width: 72px; height: 72px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center;
+  background: #e9e7e2; color: #8f8c86; font-size: 2rem; font-weight: 700; text-transform: uppercase;
+}
+.ejd-perfil-info { flex: 1; min-width: 0; }
+.ejd-nombre { margin: 0 0 0.35rem; font-size: 1.15rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ejd-cifras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
+.ejd-cifras div { display: flex; flex-direction: column; min-width: 0; }
+.ejd-cifras span { color: var(--muted); font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ejd-cifras strong { font-size: 1.05rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.ejd-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; margin-bottom: 0.7rem; }
+.ejd-valor { margin: 0; min-width: 0; color: var(--muted); font-size: 1rem; }
+.ejd-valor strong { color: var(--ink); font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+/* El texto visible es el del periodo elegido; el selector del teléfono va
+   encima, transparente, para abrir su lista al tocar. */
+.ejd-rango-sel { position: relative; display: inline-flex; align-items: center; gap: 0.35rem; min-height: 40px; flex-shrink: 0; color: var(--ejd-azul); font-size: 1rem; cursor: pointer; }
+.ejd-rango-sel select { position: absolute; inset: 0; width: 100%; opacity: 0; font-size: 16px; cursor: pointer; }
+.ejd-rango-sel:focus-within { outline: 2px solid var(--ejd-azul); outline-offset: 2px; border-radius: 6px; }
+.ejd-rango-ic { width: 20px; height: 20px; flex-shrink: 0; }
+.ejd-graf { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: 170px auto; column-gap: 0.45rem; }
+.ejd-ejey { position: relative; }
+.ejd-ejey span { position: absolute; right: 0; transform: translateY(50%); color: var(--muted); font-size: 0.7rem; line-height: 1; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ejd-ejey .ejd-ejey-ancho { position: static; display: block; visibility: hidden; transform: none; }
+.ejd-area { position: relative; border-left: 1px solid #3a3936; border-bottom: 1px solid #3a3936; }
+.ejd-linea { position: absolute; left: 0; right: 0; height: 1px; background: #262523; }
+.ejd-linea:first-child { display: none; }
+.ejd-barras { position: absolute; inset: 0; display: flex; align-items: stretch; gap: 3px; padding: 0 3px; }
+.ejd-col {
+  flex: 1; min-width: 0; height: 100%; display: flex; align-items: flex-end; justify-content: center;
+  padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.ejd-col:focus-visible { outline: 2px solid var(--ejd-azul); outline-offset: 2px; }
+.ejd-bar { width: 78%; max-width: 30px; background: var(--ejd-azul); border-radius: 2px 2px 0 0; transition: height 220ms ease, opacity 180ms ease; }
+.ejd-graf.con-eleccion .ejd-bar { opacity: 0.35; }
+.ejd-graf.con-eleccion .ejd-col.sel .ejd-bar { opacity: 1; }
+.ejd-ejex { display: flex; gap: 3px; padding: 0.35rem 3px 0; }
+.ejd-ejex span { flex: 1; min-width: 0; display: flex; justify-content: center; overflow: visible; }
+.ejd-ejex em { font-style: normal; color: var(--muted); font-size: 0.7rem; white-space: nowrap; }
+.ejd-metricas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.55rem; margin-top: 1.1rem; }
+.ejd-pill {
+  min-height: 40px; padding: 0 0.5rem; border: 0; border-radius: 999px; background: var(--surface-raised);
+  color: var(--ink); font: inherit; font-size: 0.95rem; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: background-color 180ms ease;
+}
+.ejd-pill.sel { background: var(--ejd-azul); color: #fff; }
+.ejd-pill:focus-visible { outline: 2px solid var(--ejd-azul); outline-offset: 2px; }
 
 .ejp-hist { margin-bottom: 1.4rem; }
 .ejp-hist-t { font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; margin: 0 0 0.7rem; }
@@ -1568,7 +1597,7 @@ body.in-finanzas .topbar-ajustes span { width: 20px; height: 20px; display: flex
   .ejf-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 0.5rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ejd-kpi, .ejd-col, .ejd-bar { transition: none; }
+  .ejd-pill, .ejd-bar { transition: none; }
 }
 
 /* ===== Ejercicio: Feed compartido ===== */
