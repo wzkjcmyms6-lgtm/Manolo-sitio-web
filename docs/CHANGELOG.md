@@ -1,5 +1,16 @@
 # Cambios
 
+## 2026-10-01 · Fase 8 (QA final)
+- Regresión ampliada: las 15 pantallas en teléfono (390 px) y computadora
+  (1280 px), sin errores ni scroll de lado; acciones de todos los días
+  (hábito, gasto, Running/Bici a mano, serie de gimnasio) y aviso "Sin
+  conexión".
+- El Firestore de prueba ahora entiende `FieldPath`, `increment` y
+  `arrayUnion`/`arrayRemove` como el real (antes no se podía probar marcar
+  un hábito).
+- Lista de pruebas para el iPhone del dueño en `docs/TESTING.md`.
+- Sin cambios en la app ni en la base de datos.
+
 ## 2026-10-01 · Fase 7 (optimización)
 - Mediciones de carga y de Firestore documentadas (`PERFORMANCE.md`,
   `COST_OPTIMIZATION.md`).

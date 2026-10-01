@@ -82,13 +82,26 @@
 
   const DEL = { __del: true };
   const HORA = { __hora: true };
-  function valor(v) { return v && v.__hora ? Date.now() : clone(v); }
-  function applyUpdate(obj, data) {
-    Object.keys(data).forEach(k => {
-      const parts = k.split("."); let o = obj;
+  function valor(v, previo) {
+    if (v && v.__hora) return Date.now();
+    if (v && v.__suma != null) return (typeof previo === "number" ? previo : 0) + v.__suma;
+    if (v && v.__union) return (Array.isArray(previo) ? previo : []).concat(v.__union.filter(x => !(previo || []).includes(x)));
+    if (v && v.__quitar) return (Array.isArray(previo) ? previo : []).filter(x => !v.__quitar.includes(x));
+    return clone(v);
+  }
+  // update({ "a.b": 1 }) o update(campo, valor, campo, valor…) con FieldPath.
+  function pares(a) {
+    if (a.length === 1) return Object.keys(a[0]).map(k => [k.split("."), a[0][k]]);
+    const out = [];
+    for (let i = 0; i < a.length; i += 2) out.push([a[i] && a[i].__ruta ? a[i].__ruta : String(a[i]).split("."), a[i + 1]]);
+    return out;
+  }
+  function applyUpdate(obj, lista) {
+    lista.forEach(([parts, v]) => {
+      let o = obj;
       for (let i = 0; i < parts.length - 1; i++) { o[parts[i]] = o[parts[i]] || {}; o = o[parts[i]]; }
-      const v = data[k]; const last = parts[parts.length - 1];
-      if (v && v.__del) delete o[last]; else o[last] = valor(v);
+      const last = parts[parts.length - 1];
+      if (v && v.__del) delete o[last]; else o[last] = valor(v, o[last]);
     });
     return obj;
   }
@@ -96,8 +109,8 @@
     Object.keys(b).forEach(k => {
       const v = b[k];
       if (v && v.__del) delete a[k];
-      else if (v && typeof v === "object" && !Array.isArray(v) && !v.__hora && a[k] && typeof a[k] === "object") merge(a[k], v);
-      else a[k] = valor(v);
+      else if (v && typeof v === "object" && !Array.isArray(v) && !v.__hora && v.__suma == null && !v.__union && !v.__quitar && a[k] && typeof a[k] === "object" && !Array.isArray(a[k])) merge(a[k], v);
+      else a[k] = valor(v, a[k]);
     });
     return a;
   }
@@ -130,9 +143,9 @@
         if (!puedeEscribir(path, "crear", existe())) return negado();
         const m = colMap(c); m.set(id, opts && opts.merge ? merge(m.get(id) || {}, data) : merge({}, data)); notify(); return Promise.resolve();
       },
-      update: data => {
+      update: (...data) => {
         if (!existe() || !puedeEscribir(path, "cambiar", true)) return negado();
-        const m = colMap(c); m.set(id, applyUpdate(m.get(id) || {}, data)); notify(); return Promise.resolve();
+        const m = colMap(c); m.set(id, applyUpdate(m.get(id) || {}, pares(data))); notify(); return Promise.resolve();
       },
       delete: () => {
         if (!puedeEscribir(path, "borrar", existe())) return negado();
@@ -147,7 +160,7 @@
     batch: () => {
       const ops = [];
       return {
-        set: (r, d, o) => ops.push(() => r.set(d, o)), update: (r, d) => ops.push(() => r.update(d)), delete: r => ops.push(() => r.delete()),
+        set: (r, d, o) => ops.push(() => r.set(d, o)), update: (r, ...d) => ops.push(() => r.update(...d)), delete: r => ops.push(() => r.delete()),
         commit: () => ops.reduce((p, f) => p.then(f), Promise.resolve())
       };
     },
@@ -185,7 +198,9 @@
   };
 
   const fs = () => db;
-  fs.FieldValue = { delete: () => DEL, serverTimestamp: () => HORA, increment: n => n };
+  fs.FieldValue = { delete: () => DEL, serverTimestamp: () => HORA, increment: n => ({ __suma: n }),
+    arrayUnion: (...x) => ({ __union: x }), arrayRemove: (...x) => ({ __quitar: x }) };
+  fs.FieldPath = function (...ruta) { this.__ruta = ruta; };
   const au = () => auth; au.Auth = { Persistence: { LOCAL: "local" } };
   window.firebase = { initializeApp: () => ({}), auth: au, firestore: fs };
 

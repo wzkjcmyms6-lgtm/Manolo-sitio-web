@@ -1,11 +1,15 @@
 # Fase actual
 
-**Fase 7 — Optimización: COMPLETADA** (2026-10-01).
+**Fase 8 — QA final: COMPLETADA** (2026-10-01). Las fases 0–8 del plan
+maestro están terminadas.
 
-## Fase 8 — QA final (siguiente, espera OK)
-Recorrido completo de MANOLO (390 px y escritorio): Login, Hábitos,
-Ejercicio, Finanzas, Inversiones, Administrador/avisos, Running, Bicicleta,
-CSV, rutinas, GPS simulado, audio/voz simulados, persistencia, offline,
-seguridad y rendimiento. Confirmar que Ejercicio, Finanzas y Hábitos
-funcionan como antes salvo las mejoras pedidas. Lista de pruebas a hacer en
-el iPhone del dueño (lo que no se puede simular).
+## Qué queda (no es código)
+1. El dueño publica `firestore.rules` y crea `admins/{su uid}`
+   (`docs/ADMIN.md`).
+2. El dueño hace la lista "Pruebas en el iPhone" de `docs/TESTING.md`
+   (GPS, pantalla encendida, mapa, voz y pitidos, teclado numérico).
+3. Lo que falle en esa prueba se corrige como cambio nuevo, con su prueba.
+
+## Ideas para después (no pedidas, no empezadas)
+- Ver ritmo por intervalo de la rutina en el resumen.
+- Exportar una actividad como GPX.
