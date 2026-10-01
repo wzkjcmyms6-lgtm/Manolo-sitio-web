@@ -42,12 +42,16 @@ Node y correctos tras suspensión de iOS. Consecuencia: la UI solo dibuja.
 Audio.** Motivo: sin costo ni red. Consecuencia: depende de las voces del
 sistema; se prueba en el iPhone.
 
-**D-009 (decidida F2) · Mapa.** Durante la actividad: trazo **SVG local**
+**D-009 (decidida F2, implementada F3) · Mapa.** Durante la actividad: trazo **SVG local**
 (sin red, gasta menos batería). En resumen e historial: **Leaflet
 vendorizado y cargado solo al abrir el mapa**, con teselas gratuitas con
-atribución; sin conexión o si fallan, vuelve al trazo SVG. Proveedor de
-teselas y sus condiciones de uso se verifican al integrarlo (fase 3); el
-service worker no guarda teselas en masa. Alternativas: solo SVG (sin
+atribución; sin conexión o si fallan, vuelve al trazo SVG. Teselas: servidor
+estándar de **OpenStreetMap** (`tile.openstreetmap.org`) con atribución
+visible, solo al abrir un resumen (uso personal y liviano, sin descargas
+masivas ni precarga); un filtro CSS las oscurece para el tema de Manolo.
+Leaflet 1.9.4 (BSD-2) vendorizado en `vendor/leaflet-1.9.4/`. Si el uso
+creciera mucho, cambiar a un proveedor con cuenta (una sola línea en
+`js/actividad-ui.js`). Alternativas: solo SVG (sin
 contexto de calles), mapa con teselas también en vivo (más batería y datos).
 
 **D-010 (propuesta F4) · CSV con `EjImportar.leerCsv` existente.** Motivo:
@@ -84,3 +88,17 @@ método razonable). Se implementa en fase 3.
 **D-017 (F2) · Avisos de voz solo en cambios de intervalo y al terminar;
 la cuenta 3-2-1 va con pitidos y en pantalla.** Motivo: no saturar ni tapar
 la música.
+
+**D-018 (F3) · Recuperación en pausa.** Si Manolo se cierra con la carrera
+activa, al volver queda en pausa desde el último guardado local (cada
+10 s). Motivo: no sumar como "activo" un tiempo que no se puede comprobar.
+Distinto de que el iPhone congele la app con la pantalla bloqueada: ahí el
+reloj sigue y el tramo sin GPS se marca como estimado (D-015).
+
+**D-019 (F3) · Finalizar solo desde la pausa y con "Volver a la carrera".**
+Motivo: evitar terminar por un toque accidental; se guarda una copia antes
+de finalizar para poder volver.
+
+**D-020 (F3) · Durante la actividad se ocultan las barras de la app** (en el
+teléfono). Motivo: pantalla de lectura rápida y evitar toques accidentales.
+Se sale con Finalizar o Cancelar.

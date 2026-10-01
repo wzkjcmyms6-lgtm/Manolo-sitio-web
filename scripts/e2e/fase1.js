@@ -3,62 +3,14 @@
 // Necesita Playwright con Chromium (en el entorno de Claude Code ya viene).
 // Levanta un servidor local, cambia Firebase por scripts/e2e/fake-firebase.js
 // y recorre la app a 390 px de ancho como un iPhone.
-const http = require("http");
-const fs = require("fs");
-const path = require("path");
+const { chromium, servidor, abrir, ok, captura: capturar, terminar } = require("./comun.js");
 
-let chromium;
-for (const p of ["playwright", "/opt/node22/lib/node_modules/playwright"]) {
-  try { ({ chromium } = require(p)); break; } catch (e) { /* siguiente */ }
-}
-if (!chromium) { console.error("Falta Playwright (npm i -g playwright)."); process.exit(2); }
-
-const RAIZ = path.resolve(__dirname, "../..");
 const CAPTURAS = process.argv[2] || null;
-const FAKE = fs.readFileSync(path.join(__dirname, "fake-firebase.js"), "utf8");
-const TIPOS = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2" };
-
 const USERS = {
   "juan@manolo-panel.local": { uid: "admin1", pass: "1234" },
   "lentina@manolo-panel.local": { uid: "user2", pass: "abc9" }
 };
-
-let fallos = 0;
-function ok(cond, msg) {
-  console.log(`${cond ? "✓" : "✗"} ${msg}`);
-  if (!cond) fallos++;
-}
-
-function servidor() {
-  return new Promise(res => {
-    const srv = http.createServer((req, resp) => {
-      const ruta = decodeURIComponent(req.url.split("?")[0]);
-      const archivo = path.join(RAIZ, ruta === "/" ? "index.html" : ruta);
-      if (!archivo.startsWith(RAIZ) || !fs.existsSync(archivo) || fs.statSync(archivo).isDirectory()) { resp.writeHead(404); resp.end(); return; }
-      resp.writeHead(200, { "Content-Type": TIPOS[path.extname(archivo)] || "application/octet-stream" });
-      fs.createReadStream(archivo).pipe(resp);
-    }).listen(0, () => res(srv));
-  });
-}
-
-async function nuevaPagina(browser, base, estado) {
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, serviceWorkers: "block" });
-  await ctx.route(/firebase-10\.7\.1|firebasejs/, r => r.request().url().includes("app-compat")
-    ? r.fulfill({ contentType: "text/javascript", body: FAKE })
-    : r.fulfill({ contentType: "text/javascript", body: "" }));
-  await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
-  // Solo la primera carga recibe el estado inicial; luego manda __STORE__.
-  await ctx.addInitScript(e => {
-    if (localStorage.getItem("__INIT__")) return;
-    localStorage.setItem("__INIT__", "1");
-    Object.keys(e).forEach(k => localStorage.setItem(k, typeof e[k] === "string" ? e[k] : JSON.stringify(e[k])));
-  }, estado);
-  const p = await ctx.newPage();
-  p.on("pageerror", err => { console.log("  error de página:", err.message); fallos++; });
-  await p.goto(base + "/index.html#inicio");
-  await p.waitForTimeout(700);
-  return p;
-}
+const nuevaPagina = (browser, base, estado) => abrir(browser, base, estado);
 const accesos = p => p.evaluate(() => [...window.__fakeStore.colMap("accesos").entries()]);
 // Hábitos puede festejar logros con un aviso a pantalla completa: se cierra.
 async function sinFestejos(p) {
@@ -67,9 +19,7 @@ async function sinFestejos(p) {
     await p.waitForTimeout(450);
   }
 }
-async function captura(p, nombre) {
-  if (CAPTURAS) await p.screenshot({ path: path.join(CAPTURAS, nombre) });
-}
+const captura = (p, nombre) => capturar(p, CAPTURAS, nombre);
 
 (async () => {
   const srv = await servidor();
@@ -203,8 +153,5 @@ async function captura(p, nombre) {
   ok(await p.evaluate(() => [...window.__fakeStore.colMap("accesos").values()].filter(d => d.uid !== "admin1").every(d => d.leido)), "«Marcar todo como leído» funciona");
   await p.context().close();
 
-  await browser.close();
-  srv.close();
-  console.log(fallos ? `\n${fallos} prueba(s) fallaron` : "\nTodo bien");
-  process.exit(fallos ? 1 : 0);
+  await terminar(browser, srv);
 })();

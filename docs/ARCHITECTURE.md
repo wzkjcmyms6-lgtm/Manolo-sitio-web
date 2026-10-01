@@ -77,14 +77,16 @@ dentro de WebKit (Safari / pantalla de inicio).
 | Hojas, pestañas, tarjetas | `budget-sheet`, `fin-tabs`, `stat-box`, tarjetas de sesión |
 | Ocultar el versículo | `showPanel()` en `modules.js` |
 
-## Arquitectura propuesta (resumen; detalle en los docs de cada tema)
+## Arquitectura deportiva (✅ = hecho)
 
 ```text
-js/actividad-motor.js   (UMD, sin DOM)  estados, tiempos, distancia, filtros GPS, parciales
-js/intervalos-motor.js  (UMD, sin DOM)  rutina por intervalos basada en timestamps
-js/actividad-gps.js     (DOM)           watchPosition, permisos, wake lock → motor
-js/actividad-ui.js      (DOM)           pantallas previa / activa / resumen, común
-js/running.js · js/bicicleta.js         reglas y métricas propias (ritmo vs velocidad)
-js/avisos.js            (DOM)           visual + Web Audio + speechSynthesis
-js/accesos.js           (DOM)           evento de login y bandeja del administrador
+js/actividad-motor.js   ✅ (UMD, sin DOM)  estados, tiempos, distancia, filtros GPS, parciales
+js/intervalos-motor.js  ✅ (UMD, sin DOM)  rutina por intervalos basada en timestamps
+js/actividad-vista.js   ✅ (UMD, sin DOM)  formatos, calorías estimadas, trazo SVG
+js/actividad-gps.js     ✅ (DOM)           watchPosition, permisos, wake lock
+js/actividad-ui.js      ✅ (DOM)           inicio / en vivo / resumen, guardado, recuperación, mapa Leaflet
+js/running.js ✅ · js/bicicleta.js (F5)    lista, registro a mano y montaje de la UI
+js/avisos.js            (F4, DOM)          visual + Web Audio + speechSynthesis
+js/accesos.js           ✅ (DOM)           evento de login y bandeja del administrador
+vendor/leaflet-1.9.4/   ✅                  mapa, cargado solo en el resumen
 ```

@@ -1,16 +1,17 @@
 # Fase actual
 
-**Fase 2 — Arquitectura deportiva: COMPLETADA** (2026-10-01).
+**Fase 3 — Running básico: COMPLETADA** (2026-10-01). Pendiente: prueba
+real del dueño en su iPhone (carrera corta al aire libre).
 
-## Fase 3 — Running básico (siguiente, espera OK)
-1. Quitar el versículo de Running (`showPanel()` en `modules.js`).
-2. `js/actividad-gps.js`: permisos, `watchPosition`, wake lock,
-   `visibilitychange`, guardado local cada ~10 s y recuperación.
-3. Pantallas: previa (Carrera libre, estado del GPS), activa (DISTANCIA,
-   tiempo, ritmo, trazo SVG; Pausar/Reanudar/Finalizar grandes), resumen
-   (distancia, tiempos, ritmo/vel. media, desnivel, parciales, mapa) → guardar
-   con `ActividadMotor.resumen()` en `running` + `rutas` (un lote).
-4. Mantener el registro manual. Lista: mostrar actividades GPS con su ritmo.
-5. Leaflet + teselas (D-009) solo en el resumen: verificar condiciones.
-6. Calorías estimadas (D-016). Pruebas E2E con GPS simulado; prueba real en
-   el iPhone del dueño (pantalla encendida, permisos).
+## Fase 4 — Running avanzado (siguiente, espera OK)
+1. Rutinas por CSV: formato final (`docs/CSV_ROUTINES.md`), parser con
+   `EjImportar.leerCsv`, validación y errores por fila, vista previa,
+   plantilla, guardar en `users/{uid}/rutinas_running`.
+2. Elegir rutina en el inicio de Running → carrera con rutina:
+   `IntervalosMotor` junto al motor de actividad (separados), pantalla con
+   intervalo actual, siguiente, restante y progreso.
+3. `js/avisos.js`: cuenta 3-2-1 en pantalla + pitidos (Web Audio), voz
+   local (`speechSynthesis`) en cambios y fin; desbloqueo con el toque de
+   Iniciar; prueba en el iPhone (modo silencio, música).
+4. Recuperación de la rutina con la carrera (mismo guardado local).
+5. Guardar con `rutina: { id, nombre }` e intervalos completados.

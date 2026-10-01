@@ -1,5 +1,17 @@
 # Cambios
 
+## 2026-10-01 · Fase 3 (Running con GPS)
+- Running sin versículo; carrera con GPS: inicio con estado del permiso,
+  pantalla en vivo (distancia, tiempo, ritmo, trazo, estado del GPS),
+  pausar/reanudar/finalizar, resumen con mapa (Leaflet + OpenStreetMap),
+  parciales, desnivel aprox. y calorías estimadas; RPE y notas; guardado en
+  un lote (resumen + ruta); recuperación tras cierre; aviso en Inicio.
+- Lista "Tus carreras": abrir y eliminar carreras GPS; registro a mano en un
+  desplegable. Tarjeta de Inicio actualizada.
+- Nuevos: `actividad-vista.js`, `actividad-gps.js`, `actividad-ui.js`,
+  `vendor/leaflet-1.9.4/`. Pruebas: 206 unitarias; E2E `fase3.js` (47) y
+  `scripts/e2e/comun.js`.
+
 ## 2026-10-01 · Fase 2 (arquitectura deportiva)
 - `js/actividad-motor.js`: estados, filtros GPS, distancia (Haversine),
   tiempos total/activo/en movimiento, ritmo y velocidad, desnivel,

@@ -1,4 +1,8 @@
 (function () {
+// Running: carrera con GPS (pantallas en js/actividad-ui.js), lista de tus
+// carreras y registro a mano (cinta o sin GPS). Todo en users/{uid}/running;
+// las carreras con GPS guardan su recorrido aparte en users/{uid}/rutas.
+
 // Fecha local de hoy (valueAsDate usa UTC y de noche marcaba el día siguiente).
 function fechaLocalHoy() {
   const d = new Date();
@@ -10,12 +14,28 @@ function runningCollection() {
   return db.collection("users").doc(currentUser.uid).collection("running");
 }
 
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str == null ? "" : String(str);
+  return div.innerHTML;
+}
+
 function formatPace(secPerKm) {
   if (!isFinite(secPerKm) || secPerKm <= 0) return "--";
   const m = Math.floor(secPerKm / 60);
   const s = Math.round(secPerKm % 60);
   return `${m}:${String(s).padStart(2, "0")} /km`;
 }
+
+const actividad = ActividadUI.crear({
+  deporte: "running",
+  panel: "running",
+  contenedor: document.getElementById("running-act"),
+  inicio: document.getElementById("running-home"),
+  coleccion: "running",
+  nombre: "carrera",
+  titulo: "Running"
+});
 
 function renderStats() {
   const totalKm = runningCache.reduce((sum, r) => sum + r.distance, 0);
@@ -30,7 +50,7 @@ function renderStats() {
 }
 
 function renderList() {
-  const list = runningCache.slice().sort((a, b) => b.date.localeCompare(a.date));
+  const list = runningCache.slice().sort((a, b) => b.date.localeCompare(a.date) || (b.inicio || 0) - (a.inicio || 0));
   const container = document.getElementById("running-list");
   const empty = document.getElementById("running-empty");
 
@@ -38,21 +58,28 @@ function renderList() {
   empty.style.display = list.length ? "none" : "block";
 
   list.forEach(entry => {
-    const pace = entry.distance > 0 ? (entry.duration * 60) / entry.distance : 0;
+    // Ritmo: con GPS, sobre el tiempo en movimiento; a mano, sobre los minutos.
+    const gps = entry.fuente === "gps";
+    const seg = gps && entry.tiempoMovS > 0 ? entry.tiempoMovS : entry.duration * 60;
+    const pace = entry.distance > 0 ? seg / entry.distance : 0;
     const item = document.createElement("div");
-    item.className = "list-item";
-    item.innerHTML = `
-      <div>
-        <strong>${entry.distance.toFixed(2)} km</strong> — ${entry.duration} min · ${formatPace(pace)}
-        <div class="meta">${entry.date}${entry.notes ? " · " + entry.notes : ""}</div>
-      </div>
-    `;
-    const del = document.createElement("button");
-    del.className = "delete";
-    del.setAttribute("aria-label", "Eliminar salida");
-    del.innerHTML = ICONS.trash;
-    del.addEventListener("click", () => runningCollection().doc(entry.id).delete());
-    item.appendChild(del);
+    item.className = "list-item" + (gps ? " act-item" : "");
+    const tiempo = gps ? ActividadVista.tiempo(entry.tiempoActivoS) : `${entry.duration} min`;
+    const cuerpo = `
+        <strong>${entry.distance.toFixed(2)} km</strong> — ${tiempo} · ${formatPace(pace)}${gps ? ` <span class="act-tag">GPS</span>` : ""}
+        <div class="meta">${entry.date}${entry.notes ? " · " + escapeHtml(entry.notes) : ""}</div>`;
+    item.innerHTML = gps
+      ? `<button type="button" class="act-item-abrir" aria-label="Ver la carrera del ${entry.date}">${cuerpo}</button>`
+      : `<div>${cuerpo}</div>`;
+    if (gps) item.querySelector(".act-item-abrir").addEventListener("click", () => actividad.abrirGuardada(entry));
+    else {
+      const del = document.createElement("button");
+      del.className = "delete";
+      del.setAttribute("aria-label", "Eliminar salida");
+      del.innerHTML = ICONS.trash;
+      del.addEventListener("click", () => runningCollection().doc(entry.id).delete());
+      item.appendChild(del);
+    }
     container.appendChild(item);
   });
 

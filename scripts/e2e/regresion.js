@@ -1,20 +1,9 @@
 // Regresión rápida: abre cada sección principal con datos de ejemplo y
 // comprueba que se dibuja sin errores de JavaScript.
 // Uso: node scripts/e2e/regresion.js [carpeta-para-capturas]
-const http = require("http");
-const fs = require("fs");
-const path = require("path");
+const { chromium, servidor, abrir, ok, captura, terminar } = require("./comun.js");
 
-let chromium;
-for (const p of ["playwright", "/opt/node22/lib/node_modules/playwright"]) {
-  try { ({ chromium } = require(p)); break; } catch (e) { /* siguiente */ }
-}
-if (!chromium) { console.error("Falta Playwright (npm i -g playwright)."); process.exit(2); }
-
-const RAIZ = path.resolve(__dirname, "../..");
 const CAPTURAS = process.argv[2] || null;
-const FAKE = fs.readFileSync(path.join(__dirname, "fake-firebase.js"), "utf8");
-const TIPOS = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2" };
 const hoy = new Date();
 const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const SEED = {
@@ -31,38 +20,20 @@ const PANTALLAS = [
   ["fin-presupuesto", "#panel-fin-presupuesto"], ["fin-analisis", "#panel-fin-analisis"], ["inversiones", "#panel-inversiones"]
 ];
 
-let fallos = 0;
-const ok = (c, m) => { console.log(`${c ? "✓" : "✗"} ${m}`); if (!c) fallos++; };
-
 (async () => {
-  const srv = await new Promise(res => {
-    const s = http.createServer((req, resp) => {
-      const ruta = decodeURIComponent(req.url.split("?")[0]);
-      const archivo = path.join(RAIZ, ruta === "/" ? "index.html" : ruta);
-      if (!archivo.startsWith(RAIZ) || !fs.existsSync(archivo) || fs.statSync(archivo).isDirectory()) { resp.writeHead(404); resp.end(); return; }
-      resp.writeHead(200, { "Content-Type": TIPOS[path.extname(archivo)] || "application/octet-stream" });
-      fs.createReadStream(archivo).pipe(resp);
-    }).listen(0, () => res(s));
-  });
+  const srv = await servidor();
   const base = `http://localhost:${srv.address().port}`;
   const browser = await chromium.launch();
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, serviceWorkers: "block" });
-  await ctx.route(/firebase-10\.7\.1|firebasejs/, r => r.request().url().includes("app-compat")
-    ? r.fulfill({ contentType: "text/javascript", body: FAKE }) : r.fulfill({ contentType: "text/javascript", body: "" }));
-  await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
-  await ctx.addInitScript(seed => { if (!localStorage.getItem("__SEED__")) localStorage.setItem("__SEED__", seed); }, JSON.stringify(SEED));
-  const p = await ctx.newPage();
-  const errores = [];
-  p.on("pageerror", e => errores.push(e.message));
-  await p.goto(base + "/index.html#inicio");
-  await p.waitForTimeout(1200);
+  const p = await abrir(browser, base, { __SEED__: SEED });
+  const errores = p.errores;
+  await p.waitForTimeout(400);
   for (const [hash, sel] of PANTALLAS) {
     errores.length = 0;
     await p.evaluate(h => { location.hash = h; }, hash);
     await p.waitForTimeout(500);
     const visible = await p.isVisible(sel);
     ok(visible && !errores.length, `#${hash}${errores.length ? " — " + errores.join(" | ") : visible ? "" : " — no se ve " + sel}`);
-    if (CAPTURAS) await p.screenshot({ path: path.join(CAPTURAS, `reg-${hash}.png`) });
+    await captura(p, CAPTURAS, `reg-${hash}.png`);
   }
   // Gimnasio: empezar la rutina y marcar una serie.
   errores.length = 0;
@@ -73,8 +44,5 @@ const ok = (c, m) => { console.log(`${c ? "✓" : "✗"} ${m}`); if (!c) fallos+
   await p.click('.gx-ej[data-ex-index="0"] .gx-fila[data-set-index="0"] .gx-check');
   await p.waitForTimeout(300);
   ok(!errores.length && (await p.textContent("#gym-active-series")) === "1", "gimnasio: empezar rutina y marcar una serie");
-  await browser.close();
-  srv.close();
-  console.log(fallos ? `\n${fallos} pantalla(s) con problemas` : "\nTodo bien");
-  process.exit(fallos ? 1 : 0);
+  await terminar(browser, srv);
 })();
