@@ -4,8 +4,10 @@
 //   API de nube.
 // - El iPhone solo deja sonar después de un toque: desbloquear() se llama en
 //   el toque de "Iniciar". Con la pantalla bloqueada no suena (la app está
-//   congelada); los pitidos respetan el modo silencio. Ver docs/GPS.md.
+//   congelada); los pitidos respetan el modo silencio. Ver docs/RUNNING.md.
 // - Sonido y voz se pueden apagar; la elección queda en el teléfono.
+// - Pantalla encendida (Wake Lock) mientras corre una rutina: así no se
+//   bloquea y los avisos siguen sonando.
 (function () {
 const CLAVE = "manolo.avisos";
 let prefs = { sonido: true, voz: true };
@@ -85,8 +87,29 @@ function hablar(texto) {
   speechSynthesis.speak(u);
 }
 
+// ---- Pantalla encendida ----
+let bloqueo = null, quiere = false;
+function pedirPantalla() {
+  quiere = true;
+  if (!("wakeLock" in navigator)) return Promise.resolve(false);
+  return navigator.wakeLock.request("screen").then(b => {
+    bloqueo = b;
+    b.addEventListener("release", () => { if (bloqueo === b) bloqueo = null; });
+    return true;
+  }).catch(() => false);
+}
+function soltarPantalla() {
+  quiere = false;
+  if (bloqueo) bloqueo.release().catch(() => {});
+  bloqueo = null;
+}
+// El sistema suelta el bloqueo al salir de la app: se pide de nuevo al volver.
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && quiere && !bloqueo) pedirPantalla();
+});
+
 window.Avisos = {
-  desbloquear, pitido, hablar,
+  desbloquear, pitido, hablar, pedirPantalla, soltarPantalla,
   vozDisponible: () => !!window.speechSynthesis,
   sonidoDisponible: () => !!(window.AudioContext || window.webkitAudioContext),
   prefs: () => Object.assign({}, prefs),

@@ -1,49 +1,56 @@
 # Running
 
-## Hoy
-`js/running.js` + `#panel-running`: formulario manual (fecha, km, minutos,
-RPE, notas), lista y totales. Colección `users/{uid}/running`. Muestra el
-banner de versículo (por ser sub-panel de Inicio).
+Desde 2026-10-01 (D-033) Running **no usa GPS**. La página tiene, de arriba
+abajo:
 
-## Fase 3 (hecha)
-- Sin versículo (`showPanel()` en `modules.js`).
-- `js/actividad-ui.js` (común con Bici): **Inicio** (botón, estado del
-  permiso de ubicación, aviso de pantalla encendida) → **en vivo**
-  (DISTANCIA grande, tiempo, ritmo actual y medio, trazo SVG, estado del
-  GPS; Iniciar · Pausar · Reanudar · Finalizar; sin barras de la app) →
-  **resumen** (mapa Leaflet + OpenStreetMap o trazo sin conexión, distancia,
-  tiempo, ritmo medio, en movimiento, total, velocidad media, desnivel
-  aprox., calorías estimadas con tu peso, parciales por km; RPE y notas;
-  Guardar · Volver a la carrera · Descartar).
-- Recuperación: si Manolo se cierra, al volver la carrera aparece **en
-  pausa** desde el último guardado local (cada 10 s); aviso en Inicio.
-- Guardado: un lote con el resumen en `running` y la ruta en `rutas`.
-  Lista "Tus carreras": las de GPS se abren (resumen + mapa) y se eliminan
-  con su ruta. El registro a mano sigue en un desplegable.
-## Fase 4 (hecha)
-- Inicio: sección "Con rutina de intervalos" (lista, importar CSV/Excel,
-  plantilla, eliminar). Formato en `docs/CSV_ROUTINES.md`.
-- Carrera con rutina: tarjeta con el intervalo actual (color por tipo),
-  tiempo restante grande, descripción, barra de progreso, siguiente
-  intervalo y "N de M"; botones Sonido y Voz (se recuerdan).
-- Avisos (`js/avisos.js`): cuenta 3-2-1 en pantalla con pitidos (Web Audio)
-  y, en cada cambio y al terminar, aviso grande + voz del sistema
-  (`speechSynthesis`, sin nube): "Siguiente intervalo: correr durante 2
-  minutos." Se habilitan con el toque de Iniciar/Reanudar.
-- La rutina va con su propio motor (`intervalos-motor.js`): sigue aunque se
-  pierda el GPS; con la carrera en pausa, se pausa. Si la app estuvo
-  congelada, al volver no recita avisos viejos: dice "Ahora: …".
-- Recuperación junto con la carrera; la carrera guarda
-  `rutina: {id, nombre, completados, total}` y el resumen lo muestra.
-- Fase 6: historial y detalle.
+1. **Resumen semanal** (`js/actividad-registro.js` + `js/actividad-analisis.js`,
+   común con Bici): la semana elegida (lunes a domingo) con **Distancia** y
+   **Tiempo**, y "Últimas 12 semanas" en un gráfico de línea. Tocar un punto
+   (o pasar el mouse, o flechas con el teclado) elige esa semana; tocar
+   Distancia o Tiempo cambia lo que dibuja el gráfico. Sin desnivel (D-035).
+   Suma todo: anotado a mano, rutinas guiadas y carreras viejas con GPS.
+2. **Rutinas guiadas** (`js/rutina-guiada.js`): la lista es una **cola**; la
+   de arriba dice "Siguiente". Importar CSV/Excel de uno o varios días
+   (`docs/CSV_ROUTINES.md`), plantilla de 3 días, eliminar (un día o el plan
+   entero). Al **completar** una rutina pasa al final de la lista (D-034,
+   D-036).
+3. **Registrar carrera** a mano (desplegable): fecha, km, minutos, RPE, notas.
+4. **Tus carreras**: historial por meses; cada una se puede eliminar. Las
+   hechas con rutina muestran la etiqueta "Rutina" y su nombre
+   ("Plan 5K · Día 2"), aunque la rutina ya no exista.
 
-## Fase 6 (hecha)
-- "Tu progreso" (arriba de la lista): distancia de las últimas 4 semanas con
-  ritmo medio y cambio frente a las 4 anteriores; barras de 12 semanas
-  (Distancia · Tiempo · Salidas); **mejores marcas solo con GPS**: mejor 1 km,
-  5 km y 10 km (mejores parciales seguidos) y carrera más larga. Tocar una
-  marca abre esa carrera.
-- Lista separada por meses.
-- Detalle: gráfico de ritmo a lo largo del recorrido (por tramos de
-  distancia; los huecos de señal quedan vacíos), altitud aproximada si hay, y
-  parciales con el mejor y el peor resaltados.
+## Pantalla de la rutina
+- Antes de empezar: intervalo inicial, lista de intervalos, Cancelar /
+  Iniciar. Pantalla completa (sin barras de la app).
+- En curso: tarjeta del intervalo (color por tipo, tiempo restante grande,
+  descripción, barra, siguiente, "Intervalo N de M"), Tiempo y Quedan, la
+  lista con lo hecho atenuado y el actual resaltado; Sonido y Voz apagables
+  (se recuerdan).
+- Avisos (`js/avisos.js`): cuenta 3-2-1 con pitidos (Web Audio) y, en cada
+  cambio y al terminar, aviso grande + voz del sistema (`speechSynthesis`,
+  sin nube). Se habilitan con el toque de Iniciar/Reanudar. Pantalla
+  encendida con Wake Lock mientras corre.
+- Pausar / Reanudar / Finalizar. Al terminar el último intervalo dice
+  "Rutina terminada. ¡Buen trabajo!" y pasa solo al resumen.
+- Si la app estuvo congelada (pantalla bloqueada), al volver no recita
+  avisos viejos: dice "Ahora: …" (motor `js/intervalos-motor.js`).
+- Recuperación: el estado se guarda en el teléfono
+  (`manolo.rutina.{uid}`) cada 10 s, al pausar y al salir; si Manolo se
+  cierra, vuelve **en pausa** y Inicio avisa "Tienes una rutina sin terminar".
+
+## Resumen y guardado
+"¡Rutina completada!" o "Rutina terminada" (si se finalizó antes), tiempo e
+intervalos hechos; **km opcionales** (si los mediste con otro reloj o app),
+RPE y notas. Guardar escribe en `users/{uid}/running` (con `fuente:"rutina"`,
+ver `docs/DATABASE.md`) y, si se completó, en el mismo lote mueve la rutina
+al final de la cola. "Volver a la rutina" solo si no se completó.
+
+## Límites del iPhone
+Ver `docs/GPS.md` (ahora: audio, voz y segundo plano): con el teléfono
+bloqueado la app se congela y los avisos no suenan; al volver, el tiempo es
+correcto porque se calcula con marcas de tiempo.
+
+## Historia
+Fases 3–7 tuvieron carrera con GPS (mapa, parciales, ritmo en vivo, marcas).
+Se retiró a pedido del dueño (D-033); el código queda en el historial de git
+(commit `a66de91` y anteriores).

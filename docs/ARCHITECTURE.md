@@ -54,15 +54,13 @@ dentro de WebKit (Safari / pantalla de inicio).
    referencia y pedir al dueño que publique cada cambio.
 2. **Sin servidor**: todo evento "de servidor" (login, notificación) debe
    apoyarse en reglas de Firestore o en Cloud Functions (plan Blaze, costo).
-3. **Página única grande**: todo el JS se carga al abrir (defer). Para el
-   módulo deportivo conviene cargar el mapa solo cuando se usa.
+3. **Página única grande**: todo el JS se carga al abrir (defer).
 4. **Listeners de colecciones completas** (`onSnapshot` sin límite): bien
-   con pocos datos; con rutas GPS dentro de cada documento crecería el
-   tráfico → guardar rutas aparte (ver `docs/DATABASE.md`).
+   con pocos datos (las rutas GPS viejas viven aparte y no se escuchan).
 5. **README desactualizado** (menciona archivos que ya no existen).
 6. **Varias sesiones/bots escriben en la misma rama** → siempre
    `git pull --rebase` antes de subir.
-7. **PWA en iOS**: sin GPS ni temporizadores en segundo plano (ver
+7. **PWA en iOS**: sin temporizadores ni sonido en segundo plano (ver
    `docs/GPS.md`).
 
 ## Seguridad y privacidad (revisión fase 7)
@@ -76,9 +74,9 @@ dentro de WebKit (Safari / pantalla de inicio).
 - CSV/Excel: límites de tamaño y filas; un archivo con errores no se guarda.
   Riesgo menor conocido: un .xlsx de 1 MB muy comprimido podría ocupar mucha
   memoria al abrirse (lector compartido con el importador del gimnasio).
-- Ubicación: las rutas solo se guardan en tu carpeta; al ver un mapa, el
-  servidor de teselas de OpenStreetMap recibe qué zona se mira (como
-  cualquier mapa web). Sin conexión se usa el trazo propio.
+- Ubicación: desde D-033 Manolo no pide ni usa la ubicación. Los
+  recorridos GPS viejos siguen solo en tu carpeta y se borran con su
+  actividad. Ya no se cargan mapas (OpenStreetMap) ni Leaflet.
 - Sin secretos en el código ni en los logs (la configuración de Firebase no
   es secreta).
 
@@ -97,17 +95,16 @@ dentro de WebKit (Safari / pantalla de inicio).
 ## Arquitectura deportiva (✅ = hecho)
 
 ```text
-js/actividad-motor.js   ✅ (UMD, sin DOM)  estados, tiempos, distancia, filtros GPS, parciales
-js/intervalos-motor.js  ✅ (UMD, sin DOM)  rutina por intervalos basada en timestamps
-js/actividad-vista.js   ✅ (UMD, sin DOM)  formatos, calorías estimadas, trazo SVG
-js/actividad-gps.js     ✅ (DOM)           watchPosition, permisos, wake lock
-js/actividad-ui.js      ✅ (DOM)           inicio / en vivo / resumen, guardado, recuperación, mapa Leaflet
-js/actividad-registro.js ✅ (DOM)          lista por meses, totales, "Tu progreso" y registro a mano (común)
-js/actividad-analisis.js ✅ (UMD, sin DOM)  ritmo/velocidad y altitud por distancia, semanas, tendencia, marcas
+js/intervalos-motor.js  ✅ (UMD, sin DOM)  rutina por intervalos basada en timestamps (con su reloj)
+js/rutina-running.js    ✅ (UMD, sin DOM)  lectura y validación de rutinas CSV/Excel (uno o varios días), cola
+js/actividad-analisis.js ✅ (UMD, sin DOM)  resumen semanal: semanas, textos, escala, gráfico SVG
+js/avisos.js            ✅ (DOM)           pitidos (Web Audio) + voz (speechSynthesis) + pantalla encendida
+js/rutinas-running-ui.js ✅ (DOM)          importar, vista previa, guardar, listar y borrar rutinas
+js/rutina-guiada.js     ✅ (DOM)           lista de rutinas, pantalla de la rutina, resumen, guardado, recuperación
+js/actividad-registro.js ✅ (DOM)          resumen semanal, historial por meses y registro a mano (común)
 js/running.js ✅ · js/bicicleta.js ✅     solo configuración de cada deporte
-js/avisos.js            ✅ (DOM)           pitidos (Web Audio) + voz (speechSynthesis), preferencias
-js/rutina-running.js    ✅ (UMD, sin DOM)  lectura y validación de rutinas CSV/Excel
-js/rutinas-running-ui.js ✅ (DOM)          importar, vista previa, guardar y listar rutinas
 js/accesos.js           ✅ (DOM)           evento de login y bandeja del administrador
-vendor/leaflet-1.9.4/   ✅                  mapa, cargado solo en el resumen
 ```
+
+El GPS (motor, pantalla en vivo, mapas con Leaflet) se retiró en D-033
+(2026-10-01); está en git hasta el commit `a66de91`.

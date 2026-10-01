@@ -79,8 +79,60 @@ test("filas de Excel (números) y columna en minutos", () => {
   assert.equal(r.rutina.nombre, "Excel");
 });
 
-test("la plantilla es una rutina válida", () => {
-  const r = desde(R.PLANTILLA, "plantilla");
-  assert.equal(r.ok, true);
-  assert.equal(r.rutina.intervalos.length, 5);
+test("plan de varios días: columna «dia», un grupo por día y en orden", () => {
+  const r = desde("Día,orden,tipo,duracion,descripcion\n2,1,caminar,5:00,Calentar\n1,2,correr,1:00,Correr\n1,1,caminar,3:00,Calentar\n2,2,correr,2:00,Correr\n", "Plan 5K.csv");
+  assert.equal(r.ok, true, JSON.stringify(r.errores));
+  assert.equal(r.nombre, "Plan 5K");
+  assert.equal(r.rutina, null, "con días no es una rutina suelta");
+  assert.deepEqual(r.dias.map(d => d.dia), [1, 2]);
+  assert.deepEqual(r.dias[0].intervalos.map(x => `${x.tipo}:${x.seg}`), ["caminar:180", "correr:60"]);
+  assert.equal(r.dias[1].totalSeg, 420);
+});
+
+test("plan: el día vacío sigue al de arriba; «Día 3» y «D3» se entienden", () => {
+  const r = desde("dia,tipo,duracion\nDía 1,caminar,60\n,correr,60\nD3,caminar,60\n,correr,90\n");
+  assert.equal(r.ok, true, JSON.stringify(r.errores));
+  assert.deepEqual(r.dias.map(d => [d.dia, d.intervalos.length]), [[1, 2], [3, 2]]);
+});
+
+test("plan: errores de día por fila y límites por día", () => {
+  const r = desde("dia,tipo,duracion\n,caminar,60\nx,correr,60\n1,correr,60\n");
+  assert.equal(r.ok, false);
+  assert.deepEqual(r.errores.map(e => e.fila), [2, 3]);
+  assert.match(r.errores[0].texto, /falta el día/);
+  assert.match(r.errores[1].texto, /«x» no es válido/);
+  const largo = "dia,tipo,duracion\n" + Array.from({ length: 5 }, () => "2,caminar,1:00:00").join("\n");
+  assert.match(desde(largo).errores[0].texto, /día 2 dura 300 minutos/);
+});
+
+test("la plantilla es un plan de 3 días válido", () => {
+  const r = desde(R.PLANTILLA, "plantilla.csv");
+  assert.equal(r.ok, true, JSON.stringify(r.errores));
+  assert.deepEqual(r.dias.map(d => d.dia), [1, 2, 3]);
+});
+
+test("cola de rutinas: la siguiente arriba, la completada pasa al final", () => {
+  const rutinas = [
+    { id: "d2", nombre: "Plan", dia: 2, orden: 2 },
+    { id: "vieja", nombre: "Suelta", creado: 5 },           // sin orden (rutina de antes)
+    { id: "d1", nombre: "Plan", dia: 1, orden: 1 },
+    { id: "d3", nombre: "Plan", dia: 3, orden: 3 }
+  ];
+  assert.deepEqual(R.ordenarCola(rutinas).map(r => r.id), ["vieja", "d1", "d2", "d3"]);
+  const fin = R.ordenAlFinal(rutinas);
+  assert.equal(fin, 4);
+  const despues = rutinas.map(r => (r.id === "d1" ? Object.assign({}, r, { orden: fin }) : r));
+  assert.deepEqual(R.ordenarCola(despues).map(r => r.id), ["vieja", "d2", "d3", "d1"]);
+  assert.equal(R.ordenAlFinal([]), 1);
+});
+
+test("resumen de una rutina corta: en segundos", () => {
+  assert.equal(R.resumen({ intervalos: [{ tipo: "correr", seg: 10 }, { tipo: "caminar", seg: 10 }] }), "2 intervalos · 20 s");
+});
+
+test("nombres de una rutina: título corto y nombre para el historial", () => {
+  assert.equal(R.titulo({ nombre: "Plan 5K", dia: 2 }), "Día 2");
+  assert.equal(R.nombreCompleto({ nombre: "Plan 5K", dia: 2 }), "Plan 5K · Día 2");
+  assert.equal(R.titulo({ nombre: "Intervalos" }), "Intervalos");
+  assert.equal(R.nombreCompleto({ nombre: "Intervalos" }), "Intervalos");
 });

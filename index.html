@@ -125,8 +125,7 @@
             </div>
             <p class="panel-sub">Tu panel de control personal. Elige una sección para empezar.</p>
 
-            <a class="gym-en-curso act-en-curso-aviso" href="#bicicleta" data-act-en-curso="bicicleta" hidden><span class="gym-en-curso-punto" aria-hidden="true"></span><span>Tienes una <strong>rodada</strong> sin terminar</span><span class="gym-en-curso-ir">Continuar</span></a>
-            <a class="gym-en-curso act-en-curso-aviso" href="#running" data-act-en-curso="running" hidden><span class="gym-en-curso-punto" aria-hidden="true"></span><span>Tienes una <strong>carrera</strong> sin terminar</span><span class="gym-en-curso-ir">Continuar</span></a>
+            <a class="gym-en-curso act-en-curso-aviso" href="#running" data-act-en-curso="running" hidden><span class="gym-en-curso-punto" aria-hidden="true"></span><span>Tienes una <strong>rutina</strong> sin terminar</span><span class="gym-en-curso-ir">Continuar</span></a>
             <div class="card-grid card-grid-home">
               <a class="card" href="#habitos">
                 <span class="icon" data-icon="habits"></span>
@@ -141,12 +140,12 @@
               <a class="card" href="#running">
                 <span class="icon" data-icon="running"></span>
                 <h3>Running</h3>
-                <p>Corre con GPS: recorrido, ritmo y parciales.</p>
+                <p>Rutinas guiadas y tu resumen semanal.</p>
               </a>
               <a class="card" href="#bicicleta">
                 <span class="icon" data-icon="cycling"></span>
                 <h3>Bicicleta</h3>
-                <p>Rueda con GPS: recorrido, velocidad y parciales.</p>
+                <p>Registra tus rodadas y mira tu resumen semanal.</p>
               </a>
               <a class="card" href="#finanzas">
                 <span class="icon" data-icon="finance"></span>
@@ -361,18 +360,14 @@
             <a class="back-link" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
             <h1 class="page-title">Running</h1>
 
-            <div class="act-app" id="running-act"></div>
+            <div class="act-app" id="running-act" hidden></div>
 
             <div id="running-home">
-              <div class="stat-row" id="running-stats"></div>
-
-              <section class="act-progreso" id="running-progreso" aria-label="Tu progreso"></section>
-              <h2 class="act-lista-t">Tus carreras</h2>
-              <div id="running-list"></div>
-              <p class="empty-state" id="running-empty" style="display:none;">Aún no registras salidas.</p>
+              <section class="dash" id="running-dash" aria-label="Resumen semanal"></section>
+              <section class="rg" id="running-rutinas" aria-label="Rutinas guiadas"></section>
 
               <details class="act-manual">
-                <summary>Registrar a mano <small>Cinta o sin GPS</small></summary>
+                <summary>Registrar carrera <small>a mano</small></summary>
                 <form class="tracker-form" id="running-form">
                   <input type="date" id="running-date" required>
                   <input type="number" id="running-distance" placeholder="Distancia (km)" min="0.01" step="0.01" required>
@@ -387,6 +382,10 @@
                   <button type="submit">Registrar</button>
                 </form>
               </details>
+
+              <h2 class="act-lista-t">Tus carreras</h2>
+              <div id="running-list"></div>
+              <p class="empty-state" id="running-empty" style="display:none;">Aún no registras salidas.</p>
             </div>
           </section>
 
@@ -395,18 +394,11 @@
             <a class="back-link" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
             <h1 class="page-title">Bicicleta</h1>
 
-            <div class="act-app" id="cycling-act"></div>
-
             <div id="cycling-home">
-              <div class="stat-row" id="cycling-stats"></div>
-
-              <section class="act-progreso" id="cycling-progreso" aria-label="Tu progreso"></section>
-              <h2 class="act-lista-t">Tus rodadas</h2>
-              <div id="cycling-list"></div>
-              <p class="empty-state" id="cycling-empty" style="display:none;">Aún no registras rodadas.</p>
+              <section class="dash" id="cycling-dash" aria-label="Resumen semanal"></section>
 
               <details class="act-manual">
-                <summary>Registrar a mano <small>Rodillo o sin GPS</small></summary>
+                <summary>Registrar rodada <small>a mano</small></summary>
                 <form class="tracker-form" id="cycling-form">
                   <input type="date" id="cycling-date" required>
                   <input type="number" id="cycling-distance" placeholder="Distancia (km)" min="0.01" step="0.01" required>
@@ -421,6 +413,10 @@
                   <button type="submit">Registrar</button>
                 </form>
               </details>
+
+              <h2 class="act-lista-t">Tus rodadas</h2>
+              <div id="cycling-list"></div>
+              <p class="empty-state" id="cycling-empty" style="display:none;">Aún no registras rodadas.</p>
             </div>
           </section>
 
@@ -1227,18 +1223,15 @@
   <script defer src="js/rangos.js?v=202609301500"></script>
   <script defer src="js/perfil-ejercicio.js?v=202609301"></script>
   <script defer src="js/offline.js?v=202610010700"></script>
-  <script defer src="js/actividad-motor.js?v=202610040300"></script>
-  <script defer src="js/intervalos-motor.js?v=202610050100"></script>
-  <script defer src="js/actividad-vista.js?v=202610040300"></script>
-  <script defer src="js/actividad-gps.js?v=202610040300"></script>
-  <script defer src="js/avisos.js?v=202610050100"></script>
-  <script defer src="js/rutina-running.js?v=202610050100"></script>
-  <script defer src="js/rutinas-running-ui.js?v=202610050100"></script>
-  <script defer src="js/actividad-ui.js?v=202610080300"></script>
-  <script defer src="js/actividad-analisis.js?v=202610080100"></script>
-  <script defer src="js/actividad-registro.js?v=202610070200"></script>
-  <script defer src="js/running.js?v=202610060100"></script>
-  <script defer src="js/bicicleta.js?v=202610060100"></script>
+  <script defer src="js/intervalos-motor.js?v=202610090100"></script>
+  <script defer src="js/avisos.js?v=202610090100"></script>
+  <script defer src="js/rutina-running.js?v=202610090100"></script>
+  <script defer src="js/rutinas-running-ui.js?v=202610090100"></script>
+  <script defer src="js/rutina-guiada.js?v=202610090100"></script>
+  <script defer src="js/actividad-analisis.js?v=202610090100"></script>
+  <script defer src="js/actividad-registro.js?v=202610090100"></script>
+  <script defer src="js/running.js?v=202610090100"></script>
+  <script defer src="js/bicicleta.js?v=202610090100"></script>
   <script defer src="js/finanzas/datos.js?v=202610011600"></script>
   <script defer src="js/finanzas/demo.js?v=202610011300"></script>
   <script defer src="js/finanzas/analisis.js?v=202610011500"></script>

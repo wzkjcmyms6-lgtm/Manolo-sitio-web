@@ -8,7 +8,8 @@
 - Preservar Ejercicio, Finanzas y Hábitos. Esquema de datos **solo aditivo**;
   nunca borrar ni reescribir datos del usuario.
 - Strava es solo referencia de UX: no copiar textos, marca ni diseño.
-- No inventar capacidades del dispositivo (ver `docs/GPS.md`).
+- No inventar capacidades del dispositivo (ver `docs/GPS.md`). El GPS se
+  retiró a pedido del dueño (D-033): no volver a agregarlo sin que lo pida.
 - Tras cambiar cualquier archivo que carga `index.html`: subir `?v=` del
   archivo y correr `npm run sw` (si no, falla `tests/sw-version.test.js`).
 - Lógica nueva en módulos UMD sin DOM con pruebas `node --test`.

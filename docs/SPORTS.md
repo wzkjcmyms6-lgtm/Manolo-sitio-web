@@ -1,70 +1,54 @@
-# Motor de actividades deportivas
+# Lógica deportiva (Running y Bicicleta)
 
-Implementado en la **fase 2** (sin pantallas todavía). Lógica pura UMD,
-probada con `node --test` (`tests/actividad-motor.test.js`,
-`tests/intervalos-motor.test.js`).
+Lógica pura UMD (sin DOM ni Firebase), probada con `node --test`. Desde
+D-033 no hay GPS: quedan el motor de intervalos (rutinas guiadas), la
+lectura de rutinas CSV y el resumen semanal.
 
 ```text
-GPS (fase 3: actividad-gps.js) ──► actividad-motor.js ──► metricas() ──► pantalla
-                                     estados · filtros · tiempos · parciales · ruta
-reloj (Date.now) ──► intervalos-motor.js ──► info() / avisos() ──► avisos visual/sonido/voz
-                     (no depende del GPS; comparte el reloj con pausas)
+reloj (Date.now) ──► intervalos-motor.js ──► info() / avisos() ──► pantalla + avisos.js (pitidos, voz)
+CSV / Excel ───────► rutina-running.js ────► rutinas (una por día) ──► cola (orden)
+running/ · bicicleta/ ──► actividad-analisis.js ──► semanas ──► resumen semanal (SVG)
 ```
 
-## `ActividadMotor` (`js/actividad-motor.js`)
-
-| Función | Qué hace |
-|---|---|
-| `crear(deporte)` | `"running"` o `"bicicleta"` (perfiles en `PERFILES`) → estado `listo` |
-| `iniciar / pausar / reanudar / finalizar(st, t)` | `listo → activo ⇄ pausado → finalizado` |
-| `punto(st, {lat, lon, t, acc, alt?, altAcc?})` | Devuelve `aceptado`, `quieto`, `impreciso`, `duplicado`, `salto`, `ignorado` o `invalido` |
-| `metricas(st, t)` | distancia, `huecoM` (estimada), tiempo total / activo / en movimiento, velocidad y ritmo actual y medio, vel. máx., desnivel (o `null`), parciales, parcial en curso, estado del GPS |
-| `resumen(st, extra)` | `{ documento, ruta }` listos para Firestore (ver `docs/DATABASE.md`) |
-| `leerRuta(ruta)` | Ruta guardada → tramos de puntos `{lat, lon, t, alt}` |
-| `codificar / decodificar` | Polilínea multicolumna (números grandes y negativos) |
-| `reloj.*` | Pausas y tiempo activo; lo reutiliza el motor de intervalos |
-
-Perfiles:
-
-| | Running | Bicicleta |
-|---|---|---|
-| Precisión mínima | 30 m | 30 m |
-| Velocidad imposible | > 12 m/s (43 km/h) | > 25 m/s (90 km/h) |
-| "En movimiento" desde | 0,5 m/s | 1,0 m/s |
-| Avance mínimo entre puntos | 3 m (o ½ de la precisión) | 4 m (o ½ de la precisión) |
-| Parciales | cada 1 km | cada 5 km |
-| Ventana del valor actual | 20 s | 10 s |
-| Métrica principal | ritmo (min/km) | velocidad (km/h) |
-
-Tiempos: **total** = fin − inicio; **activo** = total − pausas (el
-cronómetro); **en movimiento** = tramos con velocidad ≥ umbral. Ritmo y
-velocidad medios se calculan sobre el tiempo en movimiento.
-
-## `IntervalosMotor` (`js/intervalos-motor.js`)
+## `IntervalosMotor` (`js/intervalos-motor.js`, `tests/intervalos-motor.test.js`)
 
 | Función | Qué hace |
 |---|---|
 | `crear({nombre, intervalos:[{tipo, seg, texto?}]})` | Tipos: caminar · trotar · correr · descanso |
-| `iniciar / pausar / reanudar / finalizar` | Mismo reloj que la actividad |
+| `iniciar / pausar / reanudar / finalizar(st, t)` | `listo → activo ⇄ pausado → finalizado`, con marcas de tiempo |
 | `info(st, t)` | actual, siguiente, restante, transcurrido, %, completados, restantes, terminado |
 | `avisos(st, t0, t1)` | Avisos en (t0, t1]: `cambio`, `cuenta` (3-2-1, intervalos > 5 s), `fin`; tras un salto > 5 s (app congelada) solo `estado` (dónde va) |
 | `textoAviso(st, aviso)` | Frase para la voz: "Siguiente intervalo: correr durante 2 minutos." |
+| `activoMs / totalMs` | Tiempo activo (sin pausas) y duración total de la rutina |
 
-## `ActividadAnalisis` (`js/actividad-analisis.js`, fase 6)
+Tiempo activo = fin (o ahora) − inicio − pausas. El reloj vive en este
+archivo (antes lo compartía con el motor GPS, ya retirado).
+
+## `RutinaRunning` (`js/rutina-running.js`, `tests/rutina-running.test.js`)
 
 | Función | Qué hace |
 |---|---|
-| `serieVelocidad(tramos)` | Velocidad por tramos de distancia (50 m … 5 km según el largo, ≤ 60 tramos); `null` en huecos de señal o si estabas parado |
-| `serieAltitud(tramos)` | Altitud a lo largo del recorrido (si el GPS la dio) |
-| `svgLinea(puntos, o)` | Gráfico de línea en SVG (ritmo invertido: más rápido arriba) |
-| `porSemana(acts, hoy, n)` | km, minutos, cantidad y segundos para el promedio por semana (GPS: tiempo en movimiento; a mano: minutos) |
-| `tendencia(semanas)` | Últimas 4 semanas contra las 4 anteriores |
-| `mejores(acts, deporte)` | Marcas solo con GPS (ver D-027) |
-| `htmlBarras(barras, o)` | Barras por semana con escala (clases del gráfico de Ejercicio › Perfil) |
+| `interpretar(filas, {nombre})` / `desdeTexto(csv, …)` | → `{ ok, nombre, dias:[{dia, intervalos, totalSeg}], rutina (si es de un día), errores }` |
+| `ordenarCola(rutinas)` | Por `orden` (sin orden = 0), luego día y creación |
+| `ordenAlFinal(rutinas)` | Mayor `orden` + 1 (la completada pasa al final) |
+| `titulo(r)` / `nombreCompleto(r)` | "Día 2" / "Plan 5K · Día 2" (lo que queda en el historial) |
+| `resumen(r)` | "7 intervalos · 16 min" ("· 20 s" si dura menos de un minuto) |
 
-## Recuperación (fase 3/4)
+Formato del CSV en `docs/CSV_ROUTINES.md`.
 
-El estado de ambos motores es JSON: se guarda en `localStorage`
-(`manolo.actividad.{uid}`) cada ~10 s, al pausar y cuando la app pasa a
-segundo plano (`visibilitychange`). Al abrir: "Tienes una actividad sin
-terminar" → Continuar / Terminar y guardar / Descartar (máx. 12 h).
+## `ActividadAnalisis` (`js/actividad-analisis.js`, `tests/actividad-analisis.test.js`)
+
+| Función | Qué hace |
+|---|---|
+| `porSemana(acts, hoy, n)` | km, minutos y cantidad por semana (lunes a domingo); la última es la de hoy |
+| `rangoSemana(desde)` | "14 sept - 20 sept 2026" (con año en los dos lados si cambia) |
+| `textoKm(km)` / `textoTiempo(min)` | "13,58 km" / "5h 3min" |
+| `escala(max, metrica)` | 0 · paso · tope con números redondos y algo de aire (13,6 km → 8 / 16) |
+| `mesesEje(semanas)` | AGO, SEP, OCT bajo la semana que trae el día 1 |
+| `svgSemanas(semanas, {metrica, sel, id, ancho, alto})` | Línea con un punto por semana, la elegida resaltada (línea vertical, halo) y zonas de toque por semana con su texto |
+
+## Recuperación
+El estado de la rutina es JSON: se guarda en `localStorage`
+(`manolo.rutina.{uid}`) cada ~10 s, al pausar y al ocultarse la app; al
+abrir vuelve en pausa (máx. 12 h). El borrador viejo de la pantalla con GPS
+(`manolo.actividad.{uid}`) se borra al entrar.

@@ -1,5 +1,25 @@
 # Cambios
 
+## 2026-10-01 · Running y Bici sin GPS, resumen semanal y planes de varios días
+- **GPS retirado** (pedido del dueño, D-033): sin "Iniciar carrera/rodada",
+  sin permiso de ubicación, sin mapas ni Leaflet. Las actividades viejas con
+  GPS siguen en el historial.
+- **Resumen semanal** en Running y Bici (D-035): semana elegida con
+  Distancia y Tiempo y línea de las últimas 12 semanas; tocar un punto elige
+  la semana; sin desnivel.
+- **Rutinas guiadas de varios días** (D-034): columna `dia` en el CSV; cada
+  día es una rutina en una cola ("Siguiente" arriba); al completar una pasa
+  al final (D-036). Pantalla de la rutina sin GPS (intervalo, Tiempo, Quedan,
+  lista, pitidos y voz, pausa, recuperación) y resumen con km opcionales
+  (D-037). Borrar una rutina o un plan entero no borra el historial.
+- Historial: cada actividad se puede eliminar; las de rutina muestran su
+  nombre ("Plan 5K · Día 2") y los intervalos hechos.
+- Nuevos: `js/rutina-guiada.js`; reescritos `actividad-analisis.js` y
+  `actividad-registro.js`; `intervalos-motor.js` con su propio reloj; wake
+  lock en `avisos.js`. Borrados: `actividad-motor.js`, `actividad-vista.js`,
+  `actividad-gps.js`, `actividad-ui.js`, `vendor/leaflet-1.9.4/` y sus
+  pruebas. Pruebas: 209 unitarias; E2E nuevo `running.js` (64).
+
 ## 2026-10-01 · Fase 8 (QA final)
 - Regresión ampliada: las 15 pantallas en teléfono (390 px) y computadora
   (1280 px), sin errores ni scroll de lado; acciones de todos los días

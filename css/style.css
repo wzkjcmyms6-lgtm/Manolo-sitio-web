@@ -2081,135 +2081,85 @@ body.gym-en-entreno .content { padding-bottom: calc(7rem + env(safe-area-inset-b
 .avisos-toast[hidden] { display: none; }
 @media (min-width: 769px) { .sidebar-avisos { margin: 0; } }
 @media (max-width: 768px) { .sidebar-avisos { display: none !important; } }
-/* ---------- Actividades con GPS (Running; Bici en fase 5) ----------
-   Lectura rápida al aire libre: números grandes, botones grandes, naranja
-   de Manolo para lo principal, verde = GPS listo, rojo = problema. */
-.act-app { margin-bottom: 1.4rem; }
-.act-inicio { display: flex; flex-direction: column; gap: 0.7rem; padding: 1.1rem; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); }
-.act-btn-grande {
-  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%;
-  min-height: 56px; border: 0; border-radius: 999px; background: var(--accent-grad); color: #0a0a0a;
-  font: inherit; font-size: 1.1rem; font-weight: 700; cursor: pointer;
-}
-.act-btn-grande:disabled { opacity: 0.45; cursor: default; }
-.act-btn-grande .icon-sm { width: 22px; height: 22px; }
-.act-permiso { margin: 0; font-size: 0.88rem; color: var(--muted); }
-.act-permiso.is-mal { color: var(--danger); }
-.act-permiso:empty { display: none; }
-.act-ayuda { margin: 0; font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+/* ---------- Running y Bicicleta ----------
+   Resumen semanal arriba, rutinas guiadas (solo Running), registro a mano e
+   historial. Naranja de Manolo para lo principal. */
 .act-ok { margin: 0; padding: 0.55rem 0.8rem; border-radius: 12px; background: rgba(95, 207, 138, 0.12); color: #5fcf8a; font-weight: 600; font-size: 0.9rem; }
 .act-lista-t { font-size: 1.05rem; margin: 1.4rem 0 0.6rem; }
-.act-item { padding: 0; }
-.act-item-abrir { display: block; width: 100%; padding: 0.9rem 1rem; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .act-tag { display: inline-block; margin-left: 0.3rem; padding: 0.05rem 0.45rem; border-radius: 999px; background: rgba(255, 122, 48, 0.15); color: var(--accent-2); font-size: 0.7rem; font-weight: 700; vertical-align: middle; }
 .act-manual { margin-top: 1.2rem; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
 .act-manual summary { padding: 0.9rem 1rem; cursor: pointer; font-weight: 600; list-style: none; display: flex; align-items: baseline; gap: 0.5rem; }
 .act-manual summary::-webkit-details-marker { display: none; }
+.act-manual summary::before { content: "+"; color: var(--accent-1); font-weight: 700; }
+.act-manual[open] summary::before { content: "−"; }
 .act-manual summary small { color: var(--muted); font-weight: 400; font-size: 0.8rem; }
 .act-manual .tracker-form { margin: 0 1rem 1rem; }
+.act-mes { margin: 1rem 0 0.4rem; font-size: 0.85rem; font-weight: 600; color: var(--muted); text-transform: none; }
+.act-mes:first-child { margin-top: 0.2rem; }
 
-/* En vivo */
-.act-vivo { display: flex; flex-direction: column; gap: 1rem; min-height: calc(100dvh - 3rem); padding-top: env(safe-area-inset-top); }
-.act-top { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
-.act-dep { font-weight: 700; font-size: 1.05rem; }
-.act-gps { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.75rem; border-radius: 999px; font-size: 0.82rem; font-weight: 600; border: 1px solid var(--border); background: var(--surface); }
-.act-gps::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
-.act-gps.is-ok::before { background: #5fcf8a; }
-.act-gps.is-buscando::before { background: var(--accent-2); animation: act-latido 1.2s ease-in-out infinite; }
-.act-gps.is-mal { color: #f08a75; }
-.act-gps.is-mal::before { background: var(--danger); }
-@keyframes act-latido { 50% { opacity: 0.3; } }
-.act-principal { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.4rem; padding: 0.4rem 0 0; }
-.act-principal .act-lbl { width: 100%; }
-.act-lbl { color: var(--muted); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
-.act-grande { font-size: clamp(4rem, 22vw, 6.5rem); line-height: 1; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
-.act-unidad { font-size: 1.4rem; font-weight: 600; color: var(--muted); }
-.act-fila { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; }
-.act-fila > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.25rem; padding: 0.75rem 0.7rem; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); min-width: 0; }
-.act-fila .act-lbl { width: 100%; font-size: 0.68rem; }
-.act-fila strong { font-size: 1.55rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-.act-fila small { color: var(--muted); font-size: 0.75rem; }
-.act-ruta-vivo, .act-mapa { border-radius: 18px; background: #101010; border: 1px solid var(--border); overflow: hidden; }
-.act-ruta-vivo { min-height: 150px; display: grid; place-items: center; }
-.act-ruta { display: block; width: 100%; height: auto; }
-.act-ruta-linea polyline { fill: none; stroke: var(--accent-1); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
-.act-ruta-ini { fill: #5fcf8a; stroke: #0a0a0a; stroke-width: 2; }
-.act-ruta-fin { fill: var(--danger); stroke: #0a0a0a; stroke-width: 2; }
-.act-sin-ruta { margin: 0; padding: 1.6rem 1rem; color: var(--muted); font-size: 0.88rem; text-align: center; }
-.act-nota { margin: 0; min-height: 1.3em; color: var(--muted); font-size: 0.85rem; line-height: 1.4; }
-.act-botones { margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 0.6rem 0 calc(1rem + env(safe-area-inset-bottom)); }
-.act-btn-redondo {
-  width: 104px; height: 104px; flex-shrink: 0; border-radius: 50%; border: 0; cursor: pointer;
-  background: var(--accent-grad); color: #0a0a0a; font: inherit; font-size: 1.1rem; font-weight: 700;
-  box-shadow: 0 10px 26px rgba(255, 122, 48, 0.3);
-}
-.act-btn-redondo:active { transform: scale(0.96); }
-.act-btn-redondo.is-pausa { background: var(--surface-raised); color: var(--ink); border: 2px solid var(--accent-1); box-shadow: none; }
-.act-btn-redondo.is-fin { background: none; color: var(--danger); border: 2px solid var(--danger); box-shadow: none; }
-.act-btn-sec {
-  min-height: 48px; padding: 0 1.2rem; border-radius: 999px; border: 1px solid var(--border);
-  background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer;
-}
-.act-btn-peligro { min-height: 48px; padding: 0 1.2rem; border-radius: 999px; border: 0; background: rgba(226, 89, 63, 0.12); color: var(--danger); font: inherit; font-weight: 700; cursor: pointer; }
+/* Resumen semanal: semana elegida + línea de 12 semanas */
+.dash { padding: 1.1rem 1.1rem 0.6rem; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); }
+.dash:empty { display: none; }
+.dash-semana { margin: 0 0 0.8rem; font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.dash-stats { display: flex; gap: 2rem; }
+.dash-stat { display: flex; flex-direction: column; align-items: flex-start; gap: 0.15rem; padding: 0 0 0.35rem; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--ink); font: inherit; cursor: pointer; }
+.dash-stat span { color: var(--muted); font-size: 0.88rem; }
+.dash-stat strong { font-size: 1.65rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.dash-stat.is-sel { border-bottom-color: var(--accent-1); }
+.dash-sub { margin: 1rem 0 0.2rem; font-size: 0.88rem; color: var(--ink); }
+.dash-graf { outline: none; border-radius: 12px; }
+.dash-graf:focus-visible { box-shadow: 0 0 0 2px var(--accent-1); }
+.dash-svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
+.dash-grilla { stroke: #2a2a28; stroke-width: 1; }
+.dash-eje { fill: var(--muted); font-size: 11px; font-family: var(--font-body); }
+.dash-g0 { stop-color: var(--accent-1); stop-opacity: 0.35; }
+.dash-g1 { stop-color: var(--accent-1); stop-opacity: 0; }
+.dash-linea { fill: none; stroke: var(--accent-1); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.dash-punto { fill: var(--surface); stroke: var(--accent-1); stroke-width: 2; }
+.dash-sel-linea { stroke: var(--ink); stroke-width: 1.5; }
+.dash-halo { fill: var(--accent-1); fill-opacity: 0.25; }
+.dash-sel { fill: var(--accent-1); stroke: var(--surface); stroke-width: 2; }
+.dash-toque { fill: transparent; cursor: pointer; }
 
-/* Resumen */
-.act-resumen { display: flex; flex-direction: column; gap: 0.9rem; padding-top: env(safe-area-inset-top); }
-.act-titulo { margin: 0; font-size: 1.5rem; }
-.act-fecha { margin: -0.6rem 0 0; color: var(--muted); font-size: 0.9rem; }
-.act-mapa { min-height: 200px; }
-.act-leaflet, .act-mapa .leaflet-container { height: 260px; width: 100%; background: #1a1a1a; }
-.act-leaflet .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.6); }
-.act-leaflet .leaflet-control-attribution { background: rgba(10, 10, 10, 0.75); color: #bbb; font-size: 10px; }
-.act-leaflet .leaflet-control-attribution a { color: #ddd; }
-.act-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; }
-.act-tile { display: flex; flex-direction: column; gap: 0.15rem; padding: 0.75rem 0.85rem; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); min-width: 0; }
-.act-tile span { color: var(--muted); font-size: 0.78rem; }
-.act-tile strong { font-size: 1.25rem; font-variant-numeric: tabular-nums; }
-.act-tile small { color: var(--muted); font-size: 0.72rem; }
-.act-aviso { margin: 0; padding: 0.6rem 0.8rem; border-radius: 12px; background: rgba(255, 184, 77, 0.1); color: var(--accent-2); font-size: 0.85rem; }
-.act-sub { margin: 0.4rem 0 0; font-size: 1rem; }
-.act-parciales { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
-.act-parciales li { display: grid; grid-template-columns: 3.4rem minmax(0, 1fr) 4.6rem 3.6rem; align-items: center; gap: 0.6rem; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
-.act-parciales li span:nth-child(3), .act-parciales li span:nth-child(4) { text-align: right; }
-.act-parciales li span:nth-child(4) { color: var(--muted); }
-.act-p-barra { height: 10px; border-radius: 5px; background: var(--surface-raised); overflow: hidden; }
-.act-p-barra i { display: block; height: 100%; border-radius: 5px; background: var(--accent-grad); }
-.act-extra { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 0.6rem; }
-.act-extra label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.8rem; color: var(--muted); }
-.act-extra select, .act-extra input { min-height: 46px; padding: 0 0.7rem; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-soft); color: var(--ink); font: inherit; font-size: 1rem; }
-.act-acciones { display: flex; flex-direction: column; gap: 0.6rem; }
-.act-notas-guardadas { margin: 0; color: var(--muted); font-size: 0.9rem; }
-
-/* Con la actividad abierta: pantalla solo para la actividad (en el teléfono). */
-body.act-en-curso #panel-running > .back-link,
-body.act-en-curso #panel-running > .page-title,
-body.act-en-curso #panel-bicicleta > .back-link,
-body.act-en-curso #panel-bicicleta > .page-title { display: none; }
-body.act-en-curso #verse-banner { display: none; }
-@media (max-width: 768px) {
-  body.act-en-curso .topbar,
-  body.act-en-curso #bottom-nav-links { display: none !important; }
-  body.act-en-curso .content { padding-bottom: calc(1.25rem + env(safe-area-inset-bottom)); }
-}
-/* ---------- Running: rutinas por intervalos ---------- */
-.act-rutinas { margin-top: 0.4rem; padding-top: 0.9rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.6rem; }
-.act-rutinas-cab { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
-.act-rutinas-cab h3 { margin: 0; font-size: 0.98rem; }
-.act-rutinas-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.45rem; }
-.act-rutinas-lista li { display: flex; align-items: stretch; gap: 0.4rem; }
-.act-rutina {
+/* Rutinas guiadas: una cola (la de arriba es la siguiente) */
+.rg { margin-top: 0.4rem; }
+.rg-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
+.rg-cab .link-btn { flex-shrink: 0; }
+.rg .act-ok { margin-bottom: 0.6rem; }
+.rg-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.45rem; }
+.rg-item { display: flex; align-items: stretch; gap: 0.4rem; }
+.rg-abrir {
   flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem;
-  min-height: 56px; padding: 0.6rem 0.9rem; border-radius: 14px; border: 1px solid var(--border);
-  background: var(--surface-raised); color: var(--ink); font: inherit; text-align: left; cursor: pointer;
+  min-height: 58px; padding: 0.65rem 0.9rem; border-radius: 14px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer;
 }
-.act-rutina:disabled { opacity: 0.45; cursor: default; }
-.act-rutina strong { font-size: 0.98rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-.act-rutina span { color: var(--muted); font-size: 0.8rem; }
+.rg-abrir strong { font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.rg-abrir > span:last-child { color: var(--muted); font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.rg-item.is-siguiente .rg-abrir { border-color: rgba(255, 122, 48, 0.6); background: rgba(255, 122, 48, 0.08); }
+.rg-badge { padding: 0.05rem 0.5rem; border-radius: 999px; background: var(--accent-grad); color: #0a0a0a; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.02em; }
 .act-rutina-borrar { width: 48px; flex-shrink: 0; display: grid; place-items: center; border: 0; border-radius: 14px; background: none; color: var(--muted); cursor: pointer; }
 .act-rutina-borrar [data-icon] { width: 18px; height: 18px; }
-.act-rutinas-vacio { margin: 0; color: var(--muted); font-size: 0.85rem; line-height: 1.45; }
-.act-rutinas-vacio .link-btn { padding: 0; margin-left: 0.2rem; }
+.rg-ayuda { margin: 0.6rem 0 0; color: var(--muted); font-size: 0.82rem; line-height: 1.45; }
+.rg-ayuda .link-btn { padding: 0; margin-left: 0.2rem; }
 
+/* Rutina en curso */
+.act-vivo { display: flex; flex-direction: column; gap: 0.8rem; min-height: calc(100dvh - 3rem); padding-top: env(safe-area-inset-top); }
+.act-top { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.act-dep { font-weight: 700; font-size: 1.05rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.act-lbl { color: var(--muted); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.act-nota { margin: 0; min-height: 1.3em; color: var(--muted); font-size: 0.85rem; line-height: 1.4; }
+.act-rut-ctl { display: flex; gap: 0.3rem; flex-shrink: 0; }
+.act-rut-ctl button { min-height: 34px; padding: 0 0.7rem; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); font: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer; text-decoration: line-through; }
+.act-rut-ctl button[aria-pressed="true"] { color: var(--ink); text-decoration: none; border-color: rgba(255, 122, 48, 0.6); }
+.act-rut-ctl button[hidden] { display: none; }
+.rg-tiempos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+.rg-tiempos > div { display: flex; flex-direction: column; gap: 0.1rem; padding: 0.7rem 0.85rem; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); }
+.rg-tiempos strong { font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.rg-plan { max-height: 34dvh; position: relative; }
+.rg-plan li { padding: 0.15rem 0; transition: opacity 0.2s; }
+.rg-plan li.is-hecho { opacity: 0.4; }
+.rg-plan li.is-actual .rr-dur, .rg-plan li.is-actual .rr-texto { color: var(--ink); font-weight: 700; }
+.rg-plan li.is-actual .rr-tipo { box-shadow: inset 0 0 0 1.5px currentColor; }
 /* Tarjeta de la rutina en vivo: color según el intervalo */
 .act-rut { --rut: var(--accent-1); position: relative; padding: 0.9rem 1rem 1rem; border-radius: 20px; background: #171717; border: 1px solid var(--border); }
 @supports (background: color-mix(in srgb, red 50%, blue)) {
@@ -2234,9 +2184,7 @@ body.act-en-curso #verse-banner { display: none; }
 .act-rut-barra { height: 8px; margin-top: 0.7rem; border-radius: 4px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
 .act-rut-barra i { display: block; height: 100%; width: 0; border-radius: 4px; background: var(--rut); transition: width 0.25s linear; }
 .act-rut-sig { margin: 0.45rem 0 0; font-size: 0.85rem; color: var(--muted); min-height: 1.2em; }
-.act-vivo.con-rutina { gap: 0.8rem; }
-.act-vivo.con-rutina .act-grande { font-size: clamp(2.8rem, 15vw, 4rem); }
-.act-vivo.con-rutina .act-ruta-vivo { min-height: 110px; }
+.act-rut-cab { margin-bottom: 0.1rem; }
 /* Cuenta atrás y cambio: grande en el centro de la pantalla */
 .act-cuenta {
   position: fixed; left: 50%; top: 42%; z-index: 60; transform: translate(-50%, -50%) scale(0.6); opacity: 0; pointer-events: none;
@@ -2246,8 +2194,53 @@ body.act-en-curso #verse-banner { display: none; }
 .act-cuenta.is-palabra { font-size: clamp(2.4rem, 13vw, 4.5rem); padding: 0.35em 0.6em; border-radius: 24px; background: rgba(10, 10, 10, 0.88); border: 1px solid var(--border); text-shadow: none; }
 .act-cuenta.is-palabra.is-on { animation-duration: 1.7s; }
 @keyframes act-cuenta { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); } 25% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); } 70% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1); } }
-.act-rut-res { margin: 0; padding: 0.6rem 0.8rem; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); font-size: 0.9rem; }
+.act-botones { margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 0.6rem 0 calc(1rem + env(safe-area-inset-bottom)); }
+.act-btn-redondo {
+  width: 104px; height: 104px; flex-shrink: 0; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--accent-grad); color: #0a0a0a; font: inherit; font-size: 1.1rem; font-weight: 700;
+  box-shadow: 0 10px 26px rgba(255, 122, 48, 0.3);
+}
+.act-btn-redondo:active { transform: scale(0.96); }
+.act-btn-redondo.is-pausa { background: var(--surface-raised); color: var(--ink); border: 2px solid var(--accent-1); box-shadow: none; }
+.act-btn-redondo.is-fin { background: none; color: var(--danger); border: 2px solid var(--danger); box-shadow: none; }
+.act-btn-sec {
+  min-height: 48px; padding: 0 1.2rem; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer;
+}
+.act-btn-peligro { min-height: 48px; padding: 0 1.2rem; border-radius: 999px; border: 0; background: rgba(226, 89, 63, 0.12); color: var(--danger); font: inherit; font-weight: 700; cursor: pointer; }
 
+
+/* Resumen de la rutina */
+.act-resumen { display: flex; flex-direction: column; gap: 0.9rem; padding-top: env(safe-area-inset-top); }
+.act-titulo { margin: 0; font-size: 1.5rem; }
+.act-fecha { margin: -0.6rem 0 0; color: var(--muted); font-size: 0.9rem; }
+.act-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; }
+.act-tile { display: flex; flex-direction: column; gap: 0.15rem; padding: 0.75rem 0.85rem; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); min-width: 0; }
+.act-tile span { color: var(--muted); font-size: 0.78rem; }
+.act-tile strong { font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.act-extra { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.6rem; }
+.act-extra label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.8rem; color: var(--muted); }
+.act-extra select, .act-extra input { min-height: 46px; padding: 0 0.7rem; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-soft); color: var(--ink); font: inherit; font-size: 1rem; }
+.rg-extra .rg-notas { grid-column: 1 / -1; }
+.act-ayuda { margin: 0; font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+.rg-error { margin: 0; color: var(--danger); font-size: 0.88rem; font-weight: 600; }
+.rg-error[hidden] { display: none; }
+.act-acciones { display: flex; flex-direction: column; gap: 0.6rem; }
+.act-btn-grande {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%;
+  min-height: 56px; border: 0; border-radius: 999px; background: var(--accent-grad); color: #0a0a0a;
+  font: inherit; font-size: 1.1rem; font-weight: 700; cursor: pointer;
+}
+
+/* Con la actividad abierta: pantalla solo para la actividad (en el teléfono). */
+body.act-en-curso #panel-running > .back-link,
+body.act-en-curso #panel-running > .page-title { display: none; }
+body.act-en-curso #verse-banner { display: none; }
+@media (max-width: 768px) {
+  body.act-en-curso .topbar,
+  body.act-en-curso #bottom-nav-links { display: none !important; }
+  body.act-en-curso .content { padding-bottom: calc(1.25rem + env(safe-area-inset-bottom)); }
+}
 /* Hoja de importar rutina */
 .rr-cuerpo { padding: 0 1rem 0.8rem; display: flex; flex-direction: column; gap: 0.7rem; }
 .rr-nombre { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.82rem; color: var(--muted); }
@@ -2268,35 +2261,11 @@ body.act-en-curso #verse-banner { display: none; }
 .rr-error-nombre { margin: 0; color: var(--danger); font-size: 0.85rem; }
 .rr-error-nombre[hidden] { display: none; }
 .rr-acciones { display: flex; flex-direction: column; gap: 0.5rem; }
-/* ---------- Running y Bici: progreso, marcas, meses y gráficos ---------- */
-.act-progreso { --ejd-azul: var(--accent-1); margin-bottom: 0.4rem; }
-.act-progreso:empty { display: none; }
-.act-progreso .ejd-pill.sel { color: #0a0a0a; }
-.act-progreso .ejd-metricas { margin-top: 0.9rem; }
-.act-tend { margin: -0.2rem 0 0.8rem; color: var(--muted); font-size: 0.88rem; line-height: 1.45; }
-.act-tend strong { color: var(--ink); }
-.act-marcas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; margin-top: 0.5rem; }
-.act-marca {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem; min-width: 0;
-  padding: 0.75rem 0.85rem; border-radius: 16px; border: 1px solid var(--border); background: var(--surface);
-  color: var(--ink); font: inherit; text-align: left; cursor: pointer;
-}
-.act-marca span { color: var(--accent-2); font-size: 0.78rem; font-weight: 600; }
-.act-marca strong { font-size: 1.25rem; font-variant-numeric: tabular-nums; }
-.act-marca small { color: var(--muted); font-size: 0.74rem; }
-.act-mes { margin: 1rem 0 0.4rem; font-size: 0.85rem; font-weight: 600; color: var(--muted); text-transform: none; }
-.act-mes:first-child { margin-top: 0.2rem; }
-.act-graficos:empty { display: none; }
-.act-graficos .act-sub small { color: var(--muted); font-weight: 400; font-size: 0.78rem; }
-.act-linea { display: block; width: 100%; height: auto; margin-top: 0.4rem; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); }
-.act-linea-eje { stroke: #2a2a28; stroke-width: 1; }
-.act-linea-txt { fill: var(--muted); font-size: 10px; font-family: var(--font-body); }
-.act-linea-trazo { fill: none; stroke: var(--accent-1); stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; }
-.act-linea.is-alt .act-linea-trazo { stroke: #8fb8a0; }
-.act-parciales li.is-mejor span:nth-child(3) { color: #5fcf8a; font-weight: 700; }
-.act-parciales li.is-peor span:nth-child(3) { color: var(--muted); }
-/* En escritorio la actividad y su resumen no se estiran a todo el ancho. */
+.rr-lista li.rr-dia { display: block; margin-top: 0.5rem; padding: 0.2rem 0; font-weight: 700; color: var(--ink); border-bottom: 1px solid var(--border); }
+.rr-lista li.rr-dia:first-child { margin-top: 0; }
+/* En escritorio la rutina, su resumen y el resumen semanal no se estiran a todo el ancho. */
 @media (min-width: 769px) {
   .act-vivo, .act-resumen { max-width: 560px; margin-left: auto; margin-right: auto; }
+  .dash { max-width: 720px; }
   .act-vivo { min-height: 0; }
 }

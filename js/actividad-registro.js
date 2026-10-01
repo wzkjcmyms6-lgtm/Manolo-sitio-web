@@ -1,8 +1,11 @@
-// ---------- Lista y registro a mano de Running y Bicicleta ----------
-// Común a las dos: totales (distancia, salidas/rodadas, ritmo o velocidad
-// promedio), "Tu progreso" (barras por semana, tendencia y mejores marcas
-// GPS, cálculos en js/actividad-analisis.js), lista por meses (las de GPS se
-// abren con su resumen y su mapa) y el formulario para anotar a mano.
+// ---------- Running y Bicicleta: resumen semanal, historial y registro a mano ----------
+// Común a las dos:
+// - Arriba, el resumen semanal: la semana elegida (distancia y tiempo) y el
+//   gráfico de las últimas 12 semanas; tocar un punto elige esa semana.
+//   Cálculos en js/actividad-analisis.js.
+// - El historial por meses: lo anotado a mano, las rutinas guiadas y las
+//   carreras viejas que se grabaron con GPS (se ven igual, sin mapa).
+// - El formulario para anotar a mano.
 // Todo vive en users/{uid}/{coleccion}, como siempre.
 (function () {
 
@@ -17,89 +20,90 @@ function fechaLocalHoy() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-const coma = (n, d) => n.toFixed(d).replace(".", ",");
 function formatPace(secPerKm) {
   if (!isFinite(secPerKm) || secPerKm <= 0) return "--";
   const m = Math.floor(secPerKm / 60);
   const s = Math.round(secPerKm % 60);
   return `${m}:${String(s).padStart(2, "0")} /km`;
 }
+const SEMANAS = 12;
 
-// o = { deporte, coleccion, prefijo ("running" | "cycling"), total ("Salidas"
-//       | "Rodadas"), item ("salida" | "rodada"), actividad (ActividadUI) }
+// o = { deporte ("running" | "bicicleta"), coleccion, prefijo ("running" | "cycling"),
+//       item ("carrera" | "rodada") }
 function registro(o) {
-  const esRitmo = ActividadMotor.PERFILES[o.deporte].principal === "ritmo";
-  const $ = id => document.getElementById(`${o.prefijo}-${id}`);
-  const col = () => db.collection("users").doc(currentUser.uid).collection(o.coleccion);
-  let cache = [];
-  let metrica = "km";   // km · min · n (barras de "Tu progreso")
-
-  function renderStats() {
-    const totalKm = cache.reduce((sum, r) => sum + r.distance, 0);
-    const totalMin = cache.reduce((sum, r) => sum + r.duration, 0);
-    const promedio = esRitmo
-      ? formatPace(totalKm > 0 ? (totalMin * 60) / totalKm : 0)
-      : `${(totalMin > 0 ? totalKm / (totalMin / 60) : 0).toFixed(1)} km/h`;
-    $("stats").innerHTML = `
-      <div class="stat-box"><div class="value">${totalKm.toFixed(1)} km</div><div class="label">Distancia total</div></div>
-      <div class="stat-box"><div class="value">${cache.length}</div><div class="label">${o.total}</div></div>
-      <div class="stat-box"><div class="value">${promedio}</div><div class="label">${esRitmo ? "Ritmo promedio" : "Velocidad promedio"}</div></div>`;
-  }
-
-  // ---- Tu progreso: 12 semanas, tendencia y mejores marcas ----
   const AA = ActividadAnalisis;
-  const V = ActividadVista;
-  const METRICAS = {
-    km: { titulo: "Distancia", valor: s => s.km, texto: v => `${coma(v, 1)} km`, eje: v => `${coma(v, v < 10 && v % 1 ? 1 : 0)} km`, escala: "volumen" },
-    min: { titulo: "Tiempo", valor: s => s.min, texto: v => V.tiempo(v * 60), eje: (v, tope) => (tope >= 120 ? `${coma(v / 60, v % 60 ? 1 : 0)} h` : `${Math.round(v)} min`), escala: "duracion" },
-    n: { titulo: esRitmo ? "Salidas" : "Rodadas", valor: s => s.n, texto: v => String(v), eje: v => String(Math.round(v)), escala: "reps" }
-  };
-  function valorMarca(m) {
-    if (m.clave === "larga") return { valor: V.distancia(m.valor), detalle: "" };
-    if (m.clave === "media") return { valor: V.velocidad(m.valor), detalle: "media" };
-    const km = { "1k": 1, "5k": 5, "10k": 10 }[m.clave] || 1;
-    return { valor: V.tiempo(m.valor), detalle: esRitmo ? V.ritmo(m.valor / km) : V.velocidad(km * 1000 / m.valor) };
-  }
-  function renderProgreso() {
-    const cont = $("progreso");
+  const esRitmo = o.deporte === "running";
+  const $ = id => document.getElementById(`${o.prefijo}-${id}`);
+  const usuario = () => db.collection("users").doc(currentUser.uid);
+  const col = () => usuario().collection(o.coleccion);
+  let cache = [];
+  let metrica = "km";      // lo que muestra el gráfico: km · min
+  let sel = SEMANAS - 1;   // semana elegida (la última es la de hoy)
+  let semanas = [];
+  let anchoGraf = 0;       // el gráfico se dibuja al ancho real de su caja (texto nítido y del mismo tamaño en teléfono y compu)
+
+  // ---- Resumen semanal ----
+  function renderDash() {
+    const cont = $("dash");
     if (!cont) return;
-    if (!cache.length) { cont.innerHTML = ""; return; }
-    const hoy = ActividadMotor.fechaLocal(Date.now());
-    const semanas = AA.porSemana(cache, hoy, 12);
-    const t = AA.tendencia(semanas);
-    const ult = semanas.slice(-4);
-    const km4 = ult.reduce((s, x) => s + x.km, 0), seg4 = ult.reduce((s, x) => s + x.segMov, 0);
-    const promedio = km4 > 0 && seg4 > 0 ? (esRitmo ? `ritmo medio ${V.ritmo(seg4 / km4)}` : `velocidad media ${V.velocidad(km4 * 1000 / seg4)}`) : "";
-    const cambio = t.cambio == null ? ""
-      : t.cambio > 2 ? " · ▲ más del triple de distancia que las 4 anteriores"
-      : ` · ${t.cambio >= 0 ? "▲" : "▼"} ${Math.abs(Math.round(t.cambio * 100))} % de distancia frente a las 4 anteriores`;
-    const M = METRICAS[metrica];
-    const barras = semanas.map(s => ({ etiqueta: ES_SEMANA(s.desde), valor: M.valor(s), texto: M.texto(M.valor(s)) }));
-    const marcas = AA.mejores(cache, o.deporte);
+    semanas = AA.porSemana(cache, fechaLocalHoy(), SEMANAS);
+    sel = Math.max(0, Math.min(SEMANAS - 1, sel));
+    const s = semanas[sel];
+    const previo = cont.querySelector(".dash-graf");
+    anchoGraf = Math.round((previo && previo.clientWidth) || Math.max(0, cont.clientWidth - 36)) || 340;
+    const stat = (k, titulo, valor) => `
+      <button type="button" class="dash-stat${metrica === k ? " is-sel" : ""}" data-dash-metrica="${k}" aria-pressed="${metrica === k}">
+        <span>${titulo}</span><strong>${valor}</strong>
+      </button>`;
     cont.innerHTML = `
-      <h2 class="act-lista-t">Tu progreso</h2>
-      <p class="act-tend"><strong>Últimas 4 semanas: ${coma(km4, 1)} km</strong>${promedio ? ` · ${promedio}` : ""}${cambio}</p>
-      ${AA.htmlBarras(barras, { metrica: M.escala, etiquetaEje: M.eje })}
-      <div class="ejd-metricas" role="group" aria-label="Qué mostrar por semana">
-        ${Object.keys(METRICAS).map(k => `<button type="button" class="ejd-pill${k === metrica ? " sel" : ""}" data-act-metrica="${k}" aria-pressed="${k === metrica}">${METRICAS[k].titulo}</button>`).join("")}
+      <h2 class="dash-semana">${AA.rangoSemana(s.desde)}</h2>
+      <div class="dash-stats" role="group" aria-label="Qué mostrar en el gráfico">
+        ${stat("km", "Distancia", AA.textoKm(s.km))}
+        ${stat("min", "Tiempo", AA.textoTiempo(s.min))}
       </div>
-      <h3 class="act-sub">Mejores marcas</h3>
-      ${marcas.length ? `<div class="act-marcas">${marcas.map(m => {
-        const v = valorMarca(m);
-        return `<button type="button" class="act-marca" data-act-marca="${escapeHtml(m.id)}"><span>${escapeHtml(m.titulo)}</span><strong>${v.valor}</strong><small>${v.detalle ? `${v.detalle} · ` : ""}${escapeHtml(m.fecha)}</small></button>`;
-      }).join("")}</div>` : `<p class="act-rutinas-vacio">Tus mejores marcas aparecen cuando registras con GPS (las anotadas a mano no cuentan).</p>`}`;
+      <p class="dash-sub">Últimas ${SEMANAS} semanas</p>
+      <div class="dash-graf" tabindex="0" aria-label="Elige una semana con las flechas">${AA.svgSemanas(semanas, { metrica, sel, id: o.prefijo + "-dash", ancho: Math.max(260, anchoGraf), alto: 190 })}</div>`;
   }
-  const ES_SEMANA = iso => EjSesiones.etiquetaSemana(iso);
-  if ($("progreso")) $("progreso").addEventListener("click", e => {
-    const m = e.target.closest("[data-act-metrica]");
-    if (m) { metrica = m.dataset.actMetrica; renderProgreso(); return; }
-    const marca = e.target.closest("[data-act-marca]");
-    if (marca) {
-      const entry = cache.find(a => a.id === marca.dataset.actMarca);
-      if (entry) { o.actividad.abrirGuardada(entry); window.scrollTo(0, 0); }
-    }
+  function elegir(i) {
+    if (i === sel || i < 0 || i >= SEMANAS) return;
+    sel = i;
+    const enfocado = document.activeElement && document.activeElement.classList.contains("dash-graf");
+    renderDash();
+    if (enfocado) $("dash").querySelector(".dash-graf").focus();
+  }
+  const dash = $("dash");
+  dash.addEventListener("click", e => {
+    const m = e.target.closest("[data-dash-metrica]");
+    if (m && m.dataset.dashMetrica !== metrica) { metrica = m.dataset.dashMetrica; renderDash(); return; }
+    const t = e.target.closest("[data-dash-semana]");
+    if (t) elegir(Number(t.dataset.dashSemana));
+  });
+  // Con mouse basta pasar por encima (como en la compu).
+  dash.addEventListener("pointermove", e => {
+    if (e.pointerType !== "mouse") return;
+    const t = e.target.closest("[data-dash-semana]");
+    if (t) elegir(Number(t.dataset.dashSemana));
+  });
+  // Al mostrarse la sección o cambiar el tamaño de la ventana, se redibuja a la medida.
+  if (window.ResizeObserver) new ResizeObserver(() => {
+    const g = dash.querySelector(".dash-graf");
+    if (g && g.clientWidth && Math.abs(g.clientWidth - anchoGraf) > 4) renderDash();
+  }).observe(dash);
+  dash.addEventListener("keydown", e => {
+    if (!e.target.classList.contains("dash-graf")) return;
+    if (e.key === "ArrowLeft") { elegir(sel - 1); e.preventDefault(); }
+    if (e.key === "ArrowRight") { elegir(sel + 1); e.preventDefault(); }
   });
 
+  // ---- Historial ----
+  function eliminar(entry) {
+    if (!confirm(`¿Eliminar esta ${o.item} del ${entry.date}? No se puede deshacer.`)) return;
+    const lote = db.batch();
+    lote.delete(col().doc(entry.id));
+    // Las carreras viejas con GPS guardaban su recorrido aparte.
+    if (entry.conRuta) lote.delete(usuario().collection("rutas").doc(entry.id));
+    lote.commit().catch(err => console.error("Manolo: no se pudo eliminar", err));
+  }
   function renderList() {
     const lista = cache.slice().sort((a, b) => b.date.localeCompare(a.date) || (b.inicio || 0) - (a.inicio || 0));
     const cont = $("list");
@@ -117,36 +121,34 @@ function registro(o) {
         h.textContent = `${n.charAt(0).toUpperCase() + n.slice(1)} de ${m.slice(0, 4)}`;
         cont.appendChild(h);
       }
-      // Con GPS, ritmo y velocidad sobre el tiempo en movimiento; a mano, sobre los minutos.
-      const gps = entry.fuente === "gps";
-      const seg = gps && entry.tiempoMovS > 0 ? entry.tiempoMovS : entry.duration * 60;
+      const km = Number(entry.distance) || 0;
+      const min = Number(entry.duration) || 0;
       const valor = esRitmo
-        ? formatPace(entry.distance > 0 ? seg / entry.distance : 0)
-        : `${(seg > 0 ? entry.distance / (seg / 3600) : 0).toFixed(1)} km/h`;
-      const tiempo = gps ? ActividadVista.tiempo(entry.tiempoActivoS) : `${entry.duration} min`;
-      const cuerpo = `
-        <strong>${entry.distance.toFixed(2)} km</strong> — ${tiempo} · ${valor}${gps ? ` <span class="act-tag">GPS</span>` : ""}
-        <div class="meta">${escapeHtml(entry.date)}${entry.notes ? " · " + escapeHtml(entry.notes) : ""}</div>`;
+        ? formatPace(km > 0 ? (min * 60) / km : 0)
+        : `${(min > 0 ? km / (min / 60) : 0).toFixed(1)} km/h`;
+      const r = entry.rutina;
+      const rutina = r ? ` <span class="act-tag">Rutina</span>` : "";
+      const linea = km > 0
+        ? `<strong>${km.toFixed(2)} km</strong> — ${AA.textoTiempo(min)} · ${valor}${rutina}`
+        : `<strong>${AA.textoTiempo(min)}</strong>${rutina}`;
+      const detalle = [escapeHtml(entry.date)];
+      if (r) detalle.push(escapeHtml(r.nombre) + (r.total && r.completados < r.total ? ` (${r.completados} de ${r.total} intervalos)` : ""));
+      if (entry.notes) detalle.push(escapeHtml(entry.notes));
       const item = document.createElement("div");
-      item.className = "list-item" + (gps ? " act-item" : "");
-      item.innerHTML = gps
-        ? `<button type="button" class="act-item-abrir" aria-label="Ver la ${o.item} del ${escapeHtml(entry.date)}">${cuerpo}</button>`
-        : `<div>${cuerpo}</div>`;
-      if (gps) item.querySelector(".act-item-abrir").addEventListener("click", () => o.actividad.abrirGuardada(entry));
-      else {
-        const del = document.createElement("button");
-        del.className = "delete";
-        del.setAttribute("aria-label", `Eliminar ${o.item}`);
-        del.innerHTML = ICONS.trash;
-        del.addEventListener("click", () => col().doc(entry.id).delete());
-        item.appendChild(del);
-      }
+      item.className = "list-item";
+      item.innerHTML = `<div>${linea}<div class="meta">${detalle.join(" · ")}</div></div>`;
+      const del = document.createElement("button");
+      del.className = "delete";
+      del.setAttribute("aria-label", `Eliminar ${o.item}`);
+      del.innerHTML = ICONS.trash;
+      del.addEventListener("click", () => eliminar(entry));
+      item.appendChild(del);
       cont.appendChild(item);
     });
-    renderStats();
-    renderProgreso();
+    renderDash();
   }
 
+  // ---- Registro a mano ----
   $("form").addEventListener("submit", e => {
     e.preventDefault();
     const date = $("date").value;

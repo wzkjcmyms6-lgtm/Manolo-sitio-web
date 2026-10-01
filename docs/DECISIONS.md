@@ -150,3 +150,41 @@ min en pausa (vuelve al reanudar).
 
 **D-032 (F7) · Escala mínima en los gráficos de línea** (30 s/km, 4 km/h,
 10 m) para no dibujar un ritmo parejo como un serrucho.
+
+## 2026-10-01 · Pedido del dueño: sin GPS, resumen semanal y planes de varios días
+
+**D-033 · Se retira el GPS de Running y Bicicleta.** Pedido explícito del
+dueño ("lo del GPS quítalo"). Se borran la pantalla en vivo, el motor, el
+acceso a la ubicación, las vistas, los mapas y Leaflet (≈ 51 KB menos de
+código cargado). Se conservan los datos: las actividades viejas con GPS
+siguen en el historial y en el resumen (usan `distance`/`duration`); sus
+recorridos quedan sin uso y se borran solo si se elimina la actividad. El
+código vuelve con git si se pide (commit `a66de91`). Sustituye a D-016 a
+D-032 en lo que tocaba al GPS.
+
+**D-034 · Plan de varios días = una rutina por día, en una cola.** Columna
+opcional `dia` en el CSV. Cada día se guarda como su propia rutina (mismo
+`plan`, su `dia`) con un `orden`; la lista se ordena por `orden` y la de
+arriba es la siguiente. Alternativa descartada: un documento por plan con
+los días dentro (no permite que cada día rote solo, ni borrar un día). La
+cola es una sola lista para todas las rutinas, como pidió el dueño ("que se
+vaya al final de la lista").
+
+**D-035 · Resumen semanal tipo Strava: distancia y tiempo, sin desnivel.**
+Semana elegida arriba (rango, Distancia, Tiempo) y línea de 12 semanas con
+un punto por semana; tocar un punto la elige; tocar Distancia o Tiempo
+cambia el gráfico. Reemplaza los totales, las barras, la tendencia y las
+mejores marcas (estas eran solo GPS). El SVG se dibuja al ancho real de su
+caja para que el texto tenga el mismo tamaño en teléfono y compu. Mismo
+componente en Running y Bici. Sin desnivel por pedido del dueño (y sin GPS
+ya no hay de dónde sacarlo).
+
+**D-036 · Solo una rutina completada pasa al final.** Si se finaliza antes,
+queda primera (no se hizo) pero igual se guarda en el historial con
+"N de M intervalos". Toda rutina guardada va al historial con su nombre
+completo ("Plan 5K · Día 2"); borrar rutinas nunca toca el historial.
+
+**D-037 · Km opcionales al guardar una rutina.** Sin GPS, la rutina sabe el
+tiempo pero no la distancia: el resumen ofrece anotar los km (por ejemplo
+del reloj) para que cuenten en el resumen semanal; si no, se guarda con
+`distance: 0` y suma solo tiempo.

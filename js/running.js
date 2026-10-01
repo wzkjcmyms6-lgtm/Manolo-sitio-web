@@ -1,18 +1,13 @@
 (function () {
-// Running: carrera con GPS, libre o con rutina de intervalos (pantallas en
-// js/actividad-ui.js), lista de tus carreras y registro a mano (cinta o sin
-// GPS, en js/actividad-registro.js). Todo en users/{uid}/running; las
-// carreras con GPS guardan su recorrido aparte en users/{uid}/rutas.
-const actividad = ActividadUI.crear({
-  deporte: "running",
+// Running: resumen semanal, rutinas guiadas (pantallas en js/rutina-guiada.js,
+// rutinas importadas desde CSV en js/rutinas-running-ui.js), historial y
+// registro a mano (js/actividad-registro.js). Todo en users/{uid}/running.
+RutinaGuiada.crear({
   panel: "running",
-  contenedor: document.getElementById("running-act"),
-  inicio: document.getElementById("running-home"),
-  coleccion: "running",
-  nombre: "carrera",
-  titulo: "Running",
-  rutinas: true          // rutinas por intervalos desde CSV (js/rutinas-running-ui.js)
+  lista: document.getElementById("running-rutinas"),
+  pantalla: document.getElementById("running-act"),
+  inicio: document.getElementById("running-home")
 });
 
-ActividadRegistro.registro({ deporte: "running", coleccion: "running", prefijo: "running", total: "Salidas", item: "salida", actividad });
+ActividadRegistro.registro({ deporte: "running", coleccion: "running", prefijo: "running", item: "carrera" });
 })();

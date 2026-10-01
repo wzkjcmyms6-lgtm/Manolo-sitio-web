@@ -16,7 +16,7 @@ todo en **iPhone, instalada en la pantalla de inicio** (modo standalone).
 | Requisitos del prompt maestro (fases 0–8) | `docs/REQUIREMENTS.md` |
 | Arquitectura actual y propuesta | `docs/ARCHITECTURE.md` |
 | Modelo de datos Firestore | `docs/DATABASE.md` |
-| Motor deportivo común | `docs/SPORTS.md` · `docs/GPS.md` |
+| Lógica deportiva (rutinas, resumen semanal; GPS retirado) | `docs/SPORTS.md` · `docs/GPS.md` · `docs/RUNNING.md` · `docs/CYCLING.md` |
 | Running / Bicicleta | `docs/RUNNING.md` · `docs/CYCLING.md` |
 | Rutinas de Running por CSV | `docs/CSV_ROUTINES.md` |
 | Notificaciones y administrador | `docs/NOTIFICATIONS.md` · `docs/ADMIN.md` |

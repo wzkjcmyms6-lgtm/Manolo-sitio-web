@@ -1,16 +1,53 @@
 // ---------- Motor de rutinas por intervalos (sin pantalla) ----------
-// "3:00 caminar · 2:00 correr · …". Independiente del GPS: la rutina sigue
-// contando aunque se pierda la señal. Usa el mismo reloj por marcas de
-// tiempo que js/actividad-motor.js (pausas incluidas), así que si el iPhone
-// congela la app, al volver sabe exactamente en qué intervalo va.
+// "3:00 caminar · 2:00 correr · …". El tiempo se calcula con marcas de
+// tiempo (inicio, pausas, fin), no contando segundos: si el iPhone congela
+// la app, al volver sabe exactamente en qué intervalo va.
 // Se prueba en tests/intervalos-motor.test.js. Diseño en docs/SPORTS.md.
 (function (root, factory) {
-  if (typeof module === "object" && module.exports) module.exports = factory(require("./actividad-motor.js"));
-  else root.IntervalosMotor = factory(root.ActividadMotor);
-})(typeof self !== "undefined" ? self : this, function (AM) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.IntervalosMotor = factory();
+})(typeof self !== "undefined" ? self : this, function () {
 "use strict";
 
-const R = AM.reloj;
+// ---- Reloj: pausas y tiempo activo ----
+function msPausado(st, t) {
+  return (st.pausas || []).reduce((s, p) => s + Math.max(0, Math.min(p.hasta == null ? t : p.hasta, t) - p.desde), 0);
+}
+function tiempoActivoMs(st, t) {
+  if (st.inicio == null) return 0;
+  const fin = st.fin != null ? Math.min(st.fin, t) : t;
+  return Math.max(0, fin - st.inicio - msPausado(st, fin));
+}
+const R = {
+  iniciar(st, t) {
+    if (st.estado !== "listo") return st;
+    st.estado = "activo";
+    st.inicio = t;
+    return st;
+  },
+  pausar(st, t) {
+    if (st.estado !== "activo") return st;
+    st.estado = "pausado";
+    st.pausas.push({ desde: t, hasta: null });
+    return st;
+  },
+  reanudar(st, t) {
+    if (st.estado !== "pausado") return st;
+    st.estado = "activo";
+    const p = st.pausas[st.pausas.length - 1];
+    if (p && p.hasta == null) p.hasta = Math.max(p.desde, t);
+    return st;
+  },
+  finalizar(st, t) {
+    if (st.estado !== "activo" && st.estado !== "pausado") return st;
+    const p = st.pausas[st.pausas.length - 1];
+    if (p && p.hasta == null) p.hasta = Math.max(p.desde, t);
+    st.estado = "finalizado";
+    st.fin = t;
+    return st;
+  },
+  tiempoActivoMs
+};
 const TIPOS = {
   caminar: { nombre: "Caminar", verbo: "caminar" },
   trotar: { nombre: "Trotar", verbo: "trotar" },
@@ -118,5 +155,5 @@ function textoAviso(st, av) {
   return "";
 }
 
-return { TIPOS, crear, iniciar, pausar, reanudar, finalizar, info, avisos, avisosEntre, limites, totalMs, duracionHablada, textoAviso, SALTO_MS };
+return { TIPOS, crear, iniciar, pausar, reanudar, finalizar, info, avisos, avisosEntre, limites, totalMs, activoMs, duracionHablada, textoAviso, SALTO_MS };
 });

@@ -1,27 +1,16 @@
 # Bicicleta
 
-## Fase 5 (hecha)
-Mismas pantallas y motor que Running (`js/actividad-ui.js`,
-`js/actividad-motor.js` con el perfil `bicicleta`), configurado en
-`js/bicicleta.js`:
+Desde 2026-10-01 (D-033) Bicicleta **no usa GPS**. La página tiene:
 
-- Sin versículo. Inicio con "Iniciar rodada" y estado del permiso.
-- **En vivo: la velocidad actual es el número grande** (km/h); debajo
-  distancia, tiempo y velocidad media; trazo SVG; Iniciar · Pausar ·
-  Reanudar · Finalizar.
-- Resumen: mapa, distancia, tiempo, velocidad media, en movimiento, tiempo
-  total, velocidad máxima, desnivel aprox., parciales cada **5 km**; RPE y
-  notas. **Sin calorías** (D-016).
-- Perfil del motor: "en movimiento" desde 1 m/s, saltos imposibles > 25 m/s
-  (90 km/h), velocidad actual con ventana de 10 s.
-- Guardado en `users/{uid}/bicicleta` (con `distance`/`duration` de siempre)
-  + ruta en `users/{uid}/rutas`. Lista "Tus rodadas" (abrir/eliminar las de
-  GPS) y registro a mano (rodillo o sin GPS) en un desplegable — código
-  común con Running en `js/actividad-registro.js`.
-- Una sola actividad a la vez: con una carrera sin terminar no se puede
-  iniciar una rodada (y al revés); Inicio avisa cuál está pendiente.
+1. **Resumen semanal**: igual que Running (`docs/RUNNING.md`): semana
+   elegida con Distancia y Tiempo y gráfico de las últimas 12 semanas.
+2. **Registrar rodada** a mano (desplegable): fecha, km, minutos, RPE,
+   notas.
+3. **Tus rodadas**: historial por meses con la velocidad media (km/h); cada
+   una se puede eliminar (las viejas con GPS borran también su recorrido).
 
-## Fase 6 (hecha)
-"Tu progreso" igual que en Running (con velocidad media); marcas GPS: rodada
-más larga, mejor velocidad media (rodadas ≥ 5 km) y mejor 5 km. Detalle con
-gráfico de velocidad a lo largo de la rodada y altitud.
+Código: `js/bicicleta.js` (configuración) + `js/actividad-registro.js`
+(común con Running). Datos en `users/{uid}/bicicleta`, como siempre.
+
+Historia: fases 5–7 tuvieron rodada con GPS (velocidad en vivo, parciales de
+5 km, mapa, marcas); retirada en D-033.
