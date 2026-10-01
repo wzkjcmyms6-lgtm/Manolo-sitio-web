@@ -1,7 +1,7 @@
 # Pruebas
 
 ## Estado actual
-- `npm test` → **224 pruebas, todas pasan** (fin de fase 6). Lógica pura UMD:
+- `npm test` → **225 pruebas, todas pasan** (fin de fase 7). Lógica pura UMD:
   hábitos, finanzas, mapa muscular, rangos, rutinas, importador, series,
   sesiones, versión del service worker.
 - `tests/sw-version.test.js` falla si se cambia un archivo de la app sin

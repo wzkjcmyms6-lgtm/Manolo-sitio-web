@@ -1,28 +1,32 @@
 # Manolo — Panel personal
 
-Sitio web estático (HTML/CSS/JS puro, sin dependencias) para llevar control personal de hábitos, ejercicio y finanzas/inversiones.
+Aplicación web instalable (PWA) para llevar **Hábitos, Ejercicio (gimnasio,
+Running y Bicicleta con GPS), Finanzas e Inversiones**. HTML/CSS/JS puro,
+sin compilación; datos en Firebase (Auth + Firestore) con caché offline.
 
-## Estructura
+- `index.html` — la app completa (una sola página; las demás `.html` solo
+  redirigen). Navegación por `#hash` en `js/modules.js`.
+- `js/` — un archivo por pantalla y módulos de cálculo sin pantalla (UMD)
+  probados con `node --test`.
+- `vendor/` — Firebase 10.7.1 y Leaflet 1.9.4 guardados en el repo.
+- `sw.js` + `js/offline.js` — funciona sin conexión (`npm run sw` tras
+  cambiar archivos).
+- `firestore.rules` — copia de las reglas de seguridad (se publican en la
+  consola de Firebase; ver `docs/ADMIN.md`).
 
-- `index.html` — pantalla de inicio con versículo del día y accesos a cada sección.
-- `habitos.html` — seguimiento semanal de hábitos (marca los días cumplidos).
-- `ejercicio.html` — Ejercicio: mapa muscular (frente/espalda) y radar de distribución por semana, Gimnasio (rutinas, registro con buscador de ~570 ejercicios, RPE, notas, edición), Running y Bicicleta. Detalles en [`docs/mapa-muscular.md`](docs/mapa-muscular.md). Rangos de fuerza (estilo Symmetry) en Ejercicio › Rangos: [`docs/rangos.md`](docs/rangos.md).
-- `finanzas.html` — registro de ingresos, gastos e inversiones con balance.
-- `css/style.css` — estilos compartidos. Incluye un layout de **escritorio** (barra lateral fija) y uno de **móvil** distinto (barra superior + menú deslizante + barra de navegación inferior), controlados por media queries (`max-width: 768px`).
-- `js/verses.js` — banco de versículos y lógica del "versículo del día".
-- `js/main.js` — navegación (menú móvil, resaltado de sección activa).
-- `js/habitos.js`, `js/gimnasio.js`, `js/running.js`, `js/bicicleta.js`, `js/finanzas.js` — lógica de cada sección.
-- `js/muscle-engine.js`, `js/exercise-search.js`, `js/body-map.js`, `js/muscle-radar.js` (y afines) — mapa muscular; `data/ejercicios.json` se genera con `npm run ejercicios` desde free-exercise-db (dominio público).
-- `sw.js` + `js/offline.js` — la app funciona sin conexión.
+## Documentación
 
-## Tests
+Empieza por [`docs/PROJECT.md`](docs/PROJECT.md) (índice) y
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Estado actual del trabajo:
+[`.claude/PROJECT_STATE.md`](.claude/PROJECT_STATE.md).
 
-`npm test` (usa el test runner de Node, sin dependencias).
+## Pruebas
 
-## Datos
-
-Los datos se guardan en Firebase (Firestore), dentro de la carpeta de cada usuario, con caché offline en el teléfono: sin conexión se ve lo último y lo que registres se sube solo al volver la red.
+- `npm test` — pruebas de la lógica (Node 18+, sin instalar nada).
+- `node scripts/e2e/<fase>.js [carpeta-capturas]` — pruebas de pantalla con
+  Playwright y un Firebase falso (ver `docs/TESTING.md`).
 
 ## Cómo verlo
 
-Al ser un sitio estático, basta con abrir `index.html` en el navegador, o servirlo con cualquier servidor estático (por ejemplo `python3 -m http.server`) y también funciona directamente en GitHub Pages.
+Servir la carpeta con cualquier servidor estático (por ejemplo
+`python3 -m http.server`) o abrir la versión publicada en GitHub Pages.

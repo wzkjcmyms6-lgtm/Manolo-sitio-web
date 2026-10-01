@@ -1,5 +1,16 @@
 # Cambios
 
+## 2026-10-01 · Fase 7 (optimización)
+- Mediciones de carga y de Firestore documentadas (`PERFORMANCE.md`,
+  `COST_OPTIMIZATION.md`).
+- Batería: trazo en vivo como mucho cada 3 s, borrador cada 30 s en
+  actividades largas, GPS apagado tras 3 min en pausa.
+- Mapas: se liberan al cerrarse (sin fuga de memoria).
+- Gráficos con escala mínima (sin "serrucho" por diferencias de 1 s).
+- Escritorio: actividad y resumen con ancho máximo.
+- Revisión de seguridad de las plantillas nuevas (sin hallazgos de
+  inyección). README actualizado.
+
 ## 2026-10-01 · Fase 6 (historial y análisis)
 - Running y Bici: "Tu progreso" con barras de 12 semanas (distancia,
   tiempo, cantidad), tendencia de 4 semanas con ritmo/velocidad medio y

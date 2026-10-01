@@ -2295,3 +2295,8 @@ body.act-en-curso #verse-banner { display: none; }
 .act-linea.is-alt .act-linea-trazo { stroke: #8fb8a0; }
 .act-parciales li.is-mejor span:nth-child(3) { color: #5fcf8a; font-weight: 700; }
 .act-parciales li.is-peor span:nth-child(3) { color: var(--muted); }
+/* En escritorio la actividad y su resumen no se estiran a todo el ancho. */
+@media (min-width: 769px) {
+  .act-vivo, .act-resumen { max-width: 560px; margin-left: auto; margin-right: auto; }
+  .act-vivo { min-height: 0; }
+}

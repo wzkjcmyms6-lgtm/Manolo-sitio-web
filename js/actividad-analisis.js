@@ -60,16 +60,18 @@ function serieAltitud(tramos, maxPuntos) {
 
 // Gráfico de línea en SVG. puntos: [{ x, y }] (y null = corte).
 // opciones: { ancho, alto, invertido (lo más chico arriba: el ritmo),
-// etiquetaY(y) → texto, etiquetaX(x) → texto, clase }.
+// etiquetaY(y) → texto, etiquetaX(x) → texto, clase, rangoMin (escala
+// mínima del eje Y: diferencias chicas no se exageran) }.
 function svgLinea(puntos, o) {
-  o = Object.assign({ ancho: 340, alto: 130, invertido: false, etiquetaY: String, etiquetaX: String, clase: "" }, o || {});
+  o = Object.assign({ ancho: 340, alto: 130, invertido: false, etiquetaY: String, etiquetaX: String, clase: "", rangoMin: 0 }, o || {});
   const validos = puntos.filter(p => p.y != null);
   if (validos.length < 2) return "";
   const ml = 44, mr = 8, mt = 10, mb = 20;
   const xs = puntos.map(p => p.x), ys = validos.map(p => p.y);
   const x0 = Math.min(...xs), x1 = Math.max(...xs);
   let y0 = Math.min(...ys), y1 = Math.max(...ys);
-  if (y1 - y0 < 1e-9) { y0 -= 1; y1 += 1; }
+  const minimo = Math.max(o.rangoMin, 1e-6);
+  if (y1 - y0 < minimo) { const c = (y0 + y1) / 2; y0 = c - minimo / 2; y1 = c + minimo / 2; }
   const px = x => ml + (x1 > x0 ? (x - x0) / (x1 - x0) : 0) * (o.ancho - ml - mr);
   const py = y => {
     const f = (y - y0) / (y1 - y0);

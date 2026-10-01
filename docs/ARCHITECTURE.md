@@ -65,6 +65,23 @@ dentro de WebKit (Safari / pantalla de inicio).
 7. **PWA en iOS**: sin GPS ni temporizadores en segundo plano (ver
    `docs/GPS.md`).
 
+## Seguridad y privacidad (revisión fase 7)
+
+- Autorización: todo en reglas (`firestore.rules`); datos privados aislados
+  por usuario (`users/{uid}/**`); accesos y admins protegidos (ver
+  `docs/ADMIN.md`).
+- Textos del usuario (notas, nombres de rutinas, descripciones de hábitos,
+  nombres en accesos) se escapan antes de mostrarse; se revisaron todas las
+  plantillas nuevas.
+- CSV/Excel: límites de tamaño y filas; un archivo con errores no se guarda.
+  Riesgo menor conocido: un .xlsx de 1 MB muy comprimido podría ocupar mucha
+  memoria al abrirse (lector compartido con el importador del gimnasio).
+- Ubicación: las rutas solo se guardan en tu carpeta; al ver un mapa, el
+  servidor de teselas de OpenStreetMap recibe qué zona se mira (como
+  cualquier mapa web). Sin conexión se usa el trazo propio.
+- Sin secretos en el código ni en los logs (la configuración de Firebase no
+  es secreta).
+
 ## Oportunidades de reutilización
 
 | Necesidad nueva | Se reutiliza |

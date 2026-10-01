@@ -69,6 +69,7 @@ const rutas = p => p.evaluate(() => [...window.__fakeStore.colMap("users/test/ru
   await p.waitForTimeout(200);
   ok(await p.isVisible('#panel-running [data-act="reanudar"]') && await p.isVisible('#panel-running [data-act="finalizar"]'), "en pausa: Reanudar y Finalizar");
   ok(await p.evaluate(() => JSON.parse(localStorage.getItem("manolo.actividad.test")).st.estado) === "pausado", "el estado queda guardado en el teléfono");
+  await p.addInitScript(() => { window.__gpsPausaMs = 1500; });
   await p.reload();
   await p.waitForTimeout(900);
   ok(await p.isVisible("#panel-running .act-vivo") && await p.isVisible('#panel-running [data-act="reanudar"]'), "al reabrir Manolo recupera la carrera en pausa");
@@ -78,6 +79,9 @@ const rutas = p => p.evaluate(() => [...window.__fakeStore.colMap("users/test/ru
   await correr(p, 900, 100, 3);            // +300 m
   await p.click('#panel-running [data-act="pausar"]');
   await p.waitForTimeout(200);
+  ok(await p.evaluate(() => window.__vigilantes()) === 1, "en pausa corta el GPS sigue listo");
+  await p.waitForTimeout(1800);
+  ok(await p.evaluate(() => window.__vigilantes()) === 0 && (await texto(p, "#panel-running [data-act-gps]")) === "GPS en pausa", "en pausa larga se apaga el GPS (ahorra batería)");
 
   console.log("\nResumen y guardado");
   await p.click('#panel-running [data-act="finalizar"]');

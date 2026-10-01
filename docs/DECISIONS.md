@@ -139,3 +139,14 @@ el texto de tendencia.
 
 **D-029 (F6) · Gráfico de ritmo por tramos de distancia**, con los huecos de
 señal vacíos (no se dibuja una velocidad inventada).
+
+**D-030 (F7) · El código de deporte se carga con el resto** (no por
+partes): 44 KB comprimidos, 9 % del total; el riesgo de romper el orden de
+carga no compensa. Leaflet sí se carga solo al abrir un mapa.
+
+**D-031 (F7) · Ahorros de batería en la actividad**: trazo en vivo cada
+3 s como mucho, borrador cada 30 s en actividades largas, GPS apagado tras 3
+min en pausa (vuelve al reanudar).
+
+**D-032 (F7) · Escala mínima en los gráficos de línea** (30 s/km, 4 km/h,
+10 m) para no dibujar un ritmo parejo como un serrucho.

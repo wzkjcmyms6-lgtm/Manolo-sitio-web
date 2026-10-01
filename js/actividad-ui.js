@@ -19,7 +19,15 @@ const GPS = ActividadGps;
 const IM = IntervalosMotor;
 const NOMBRE_TIPO = { caminar: "Caminar", trotar: "Trotar", correr: "Correr", descanso: "Descanso" };
 const mmss = s => `${Math.floor(s / 60)}:${String(Math.max(0, Math.round(s)) % 60).padStart(2, "0")}`;
+// Ahorro de batería (fase 7): el borrador local se guarda cada 10 s (cada
+// 30 s en actividades largas, donde el estado pesa más), el trazo en vivo se
+// redibuja como mucho cada 3 s y, tras 3 minutos en pausa, se apaga el GPS
+// (vuelve solo al reanudar).
 const GUARDAR_CADA_MS = 10000;
+const GUARDAR_CADA_LARGA_MS = 30000;
+const PUNTOS_LARGA = 3000;
+const TRAZO_CADA_MS = 3000;
+const GPS_PAUSA_MS = window.__gpsPausaMs || 3 * 60000; // las pruebas lo acortan
 const RECUPERAR_MAX_MS = 12 * 3600000;
 const AJUSTES_IOS = "En el iPhone: Ajustes › Privacidad y seguridad › Localización › Sitios web de Safari › «Al usar la app».";
 
@@ -60,7 +68,14 @@ function cargarLeaflet() {
   });
   return cargaLeaflet;
 }
+// Mapas abiertos: los que quedaron fuera de la pantalla se liberan (Leaflet
+// deja oyentes en la ventana si no se llama a remove()).
+const mapas = new Set();
+function liberarMapas() {
+  mapas.forEach(m => { if (!m.getContainer().isConnected) { m.remove(); mapas.delete(m); } });
+}
 function pintarMapa(el, tramos) {
+  liberarMapas();
   const conPuntos = tramos.filter(t => t.length);
   el.innerHTML = conPuntos.length ? V.svgRuta(conPuntos, { ancho: 340, alto: 220 }) : `<p class="act-sin-ruta">Sin recorrido GPS.</p>`;
   if (!conPuntos.length || navigator.onLine === false) return;
@@ -72,6 +87,7 @@ function pintarMapa(el, tramos) {
     el.appendChild(div);
     const movil = L.Browser.mobile;
     const mapa = L.map(div, { zoomControl: !movil, dragging: !movil, scrollWheelZoom: false, tap: false });
+    mapas.add(mapa);
     const capa = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'
@@ -84,7 +100,7 @@ function pintarMapa(el, tramos) {
     mapa.fitBounds(L.featureGroup(lineas).getBounds(), { padding: [24, 24], maxZoom: 17 });
     // Sin teselas (sin red a mitad de camino): vuelve el trazo propio.
     let fallos = 0;
-    capa.on("tileerror", () => { if (++fallos === 6 && el.isConnected) { mapa.remove(); el.innerHTML = V.svgRuta(conPuntos, { ancho: 340, alto: 220 }); } });
+    capa.on("tileerror", () => { if (++fallos === 6 && el.isConnected) { mapa.remove(); mapas.delete(mapa); el.innerHTML = V.svgRuta(conPuntos, { ancho: 340, alto: 220 }); } });
   }).catch(() => { /* queda el trazo SVG */ });
 }
 const tramosDeMotor = st => st.tramos.map(t => t.map(p => ({ lat: p[0], lon: p[1], t: p[2], alt: p[3] })));
@@ -114,6 +130,8 @@ function crear(o) {
   let antesRut = null;
   let ultimoAvisoT = null;    // hasta dónde se procesaron los avisos de la rutina
   let cuentaTimer = null;
+  let trazoT = 0;             // último redibujo del trazo en vivo
+  let pausaGpsTimer = null;
 
   const Nombre = o.nombre.charAt(0).toUpperCase() + o.nombre.slice(1);
 
@@ -166,7 +184,8 @@ function crear(o) {
     if (vista !== "actividad" || !st) return;
     if (rut && rut.estado === "activo") procesarAvisos(Date.now());
     pintarVivo();
-    if (st.estado === "activo" && Date.now() - ultimoGuardadoLocal >= GUARDAR_CADA_MS) guardarLocal();
+    const cada = st.cuenta.aceptado > PUNTOS_LARGA ? GUARDAR_CADA_LARGA_MS : GUARDAR_CADA_MS;
+    if (st.estado === "activo" && Date.now() - ultimoGuardadoLocal >= cada) guardarLocal();
   }
   // Con rutina se mira 4 veces por segundo para que la cuenta 3-2-1 caiga a tiempo.
   function relojOn() { if (!reloj) reloj = setInterval(tic, rut ? 250 : 1000); }
@@ -372,7 +391,10 @@ function crear(o) {
 
     const ruta = raiz.querySelector("[data-act-ruta]");
     const n = st.cuenta.aceptado;
-    if (ruta.dataset.n !== String(n)) {
+    // Real (no el reloj simulado de las pruebas): solo para espaciar el dibujo.
+    const real = performance.now();
+    if (ruta.dataset.n !== String(n) && (n < 3 || real - trazoT >= TRAZO_CADA_MS || st.estado !== "activo")) {
+      trazoT = real;
       ruta.dataset.n = String(n);
       ruta.innerHTML = n > 1 ? V.svgRuta(tramosDeMotor(st), { ancho: 340, alto: 180, maxPuntos: 400 }) : `<p class="act-sin-ruta">${st.estado === "listo" ? "El recorrido aparecerá aquí." : "Esperando puntos del GPS…"}</p>`;
     }
@@ -456,11 +478,11 @@ function crear(o) {
     const km = x => `${(x / 1000).toFixed(1).replace(".", ",")} km`;
     const serie = AA.serieVelocidad(tramos).map(b => ({ x: (b.d0 + b.d1) / 2, y: b.v == null ? null : esRitmo ? 1000 / b.v : b.v * 3.6 }));
     const vel = AA.svgLinea(serie, esRitmo
-      ? { invertido: true, etiquetaY: y => V.ritmo(y, true), etiquetaX: km, clase: "is-ritmo" }
-      : { etiquetaY: y => `${Math.round(y)} km/h`, etiquetaX: km, clase: "is-vel" });
+      ? { invertido: true, etiquetaY: y => V.ritmo(y, true), etiquetaX: km, clase: "is-ritmo", rangoMin: 30 }
+      : { etiquetaY: y => `${Math.round(y)} km/h`, etiquetaX: km, clase: "is-vel", rangoMin: 4 });
     const alts = AA.serieAltitud(tramos);
     const rango = alts.length ? Math.max(...alts.map(a => a.alt)) - Math.min(...alts.map(a => a.alt)) : 0;
-    const alt = rango >= 3 ? AA.svgLinea(alts.map(a => ({ x: a.d, y: a.alt })), { etiquetaY: y => `${Math.round(y)} m`, etiquetaX: km, clase: "is-alt" }) : "";
+    const alt = rango >= 3 ? AA.svgLinea(alts.map(a => ({ x: a.d, y: a.alt })), { etiquetaY: y => `${Math.round(y)} m`, etiquetaX: km, clase: "is-alt", rangoMin: 10 }) : "";
     el.innerHTML = (vel ? `<h3 class="act-sub">${esRitmo ? "Ritmo" : "Velocidad"} a lo largo del recorrido</h3>${vel}` : "")
       + (alt ? `<h3 class="act-sub">Altitud <small>aprox. (GPS)</small></h3>${alt}` : "");
   }
@@ -503,11 +525,14 @@ function crear(o) {
     AM.pausar(st, t);
     if (rut) IM.pausar(rut, t);
     GPS.soltarPantalla();
+    clearTimeout(pausaGpsTimer);
+    pausaGpsTimer = setTimeout(() => { if (st && st.estado === "pausado") { detenerGps(); pintarVivo(); } }, GPS_PAUSA_MS);
     guardarLocal();
     pintarVivo();
   }
   function reanudar() {
     recuperada = false;
+    clearTimeout(pausaGpsTimer);
     const t = Date.now();
     AM.reanudar(st, t);
     if (rut) { Avisos.desbloquear(); IM.reanudar(rut, t); ultimoAvisoT = t; }

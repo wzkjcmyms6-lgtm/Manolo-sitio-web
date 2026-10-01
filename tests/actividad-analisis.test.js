@@ -88,3 +88,11 @@ test("barras por semana: una por semana con su escala", () => {
   assert.equal((html.match(/class="ejd-col"/g) || []).length, 2);
   assert.ok(html.includes("10 km"));
 });
+
+test("gráfico de línea: un ritmo casi parejo no se dibuja como serrucho", () => {
+  const pts = [{ x: 0, y: 333 }, { x: 1, y: 334 }, { x: 2, y: 333 }];
+  const ys = svg => (svg.match(/[ML][\d.]+,([\d.]+)/g) || []).map(t => Number(t.split(",")[1]));
+  const sin = ys(A.svgLinea(pts)), con = ys(A.svgLinea(pts, { rangoMin: 30 }));
+  assert.ok(Math.max(...sin) - Math.min(...sin) > 80, "sin rango mínimo ocupa todo el alto");
+  assert.ok(Math.max(...con) - Math.min(...con) < 5, "con rango mínimo de 30 s casi plano");
+});
