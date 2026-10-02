@@ -35,6 +35,18 @@ function eventoLogin(user) {
   return { id, datos: { uid: user.uid, usuario: nombreUsuario(user.email), tipo: "login", leido: false } };
 }
 
+// Abrir la app (o volver a ella después de un rato) también cuenta como
+// "ingresó": la sesión queda guardada en el teléfono y casi nadie vuelve a
+// escribir su contraseña. Como mucho uno cada 30 minutos por teléfono.
+// Mismo formato que el login (id uid_ms, tipo "login"): lo aceptan las
+// reglas que ya están publicadas.
+const PAUSA_APERTURA_MS = 30 * 60000;
+function eventoApertura(user, ahoraMs, ultimoMs) {
+  if (!user || !user.uid || typeof user.uid !== "string" || !isFinite(ahoraMs)) return null;
+  if (ultimoMs && ahoraMs - ultimoMs < PAUSA_APERTURA_MS && ahoraMs >= ultimoMs) return null;
+  return { id: `${user.uid}_${Math.floor(ahoraMs)}`, datos: { uid: user.uid, usuario: nombreUsuario(user.email), tipo: "login", leido: false } };
+}
+
 function msDe(creado) {
   if (!creado) return null;
   if (typeof creado.toMillis === "function") return creado.toMillis();
@@ -61,5 +73,5 @@ function fechaHora(ms) {
   return `${dos(d.getDate())}/${dos(d.getMonth() + 1)}/${d.getFullYear()} · ${dos(d.getHours())}:${dos(d.getMinutes())}`;
 }
 
-return { claveLogin, nombreUsuario, eventoLogin, bandeja, fechaHora, msDe, USUARIO_MAX };
+return { claveLogin, nombreUsuario, eventoLogin, eventoApertura, PAUSA_APERTURA_MS, bandeja, fechaHora, msDe, USUARIO_MAX };
 });

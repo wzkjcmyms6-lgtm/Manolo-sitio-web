@@ -47,7 +47,32 @@ function registrar(user) {
 }
 document.addEventListener("manolo:inicio-sesion", e => {
   const user = (e.detail && e.detail.user) || auth.currentUser;
-  if (user) registrar(user);
+  if (user) { marcarApertura(user, Date.now()); registrar(user); }
+});
+
+// ---- 1b. Abrir la app también cuenta (como mucho uno cada 30 min) ----
+function claveApertura(user) { return "manolo.acceso.ultimo." + user.uid; }
+function marcarApertura(user, ms) {
+  try { localStorage.setItem(claveApertura(user), String(ms)); } catch (e) { /* sin almacenamiento */ }
+}
+function registrarApertura(user) {
+  if (!user) return;
+  let ultimo = 0;
+  try { ultimo = Number(localStorage.getItem(claveApertura(user))) || 0; } catch (e) { ultimo = 0; }
+  const ahora = Date.now();
+  const ev = AL.eventoApertura(user, ahora, ultimo);
+  if (!ev) return;
+  marcarApertura(user, ahora); // antes de escribir: así no se duplica
+  const datos = Object.assign({}, ev.datos, { creado: firebase.firestore.FieldValue.serverTimestamp() });
+  db.collection("accesos").doc(ev.id).set(datos)
+    .then(() => guardarRegistro("ok"))
+    .catch(err => {
+      guardarRegistro((err && err.code) || "error");
+      console.warn("Manolo: no se pudo registrar la entrada", err && err.code);
+    });
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && typeof currentUser !== "undefined" && currentUser) registrarApertura(currentUser);
 });
 
 // ---- 2. Campana y bandeja del administrador ----
@@ -81,7 +106,7 @@ function pintarBandeja() {
       <button type="button" class="avisos-item${x.leido ? "" : " is-nuevo"}" data-aviso="${escapeHtml(x.id)}" aria-label="${escapeHtml(x.usuario)} ingresó a Manolo, ${escapeHtml(AL.fechaHora(x.ms))}${x.leido ? "" : ", sin leer"}">
         <span class="avisos-punto" aria-hidden="true"></span>
         <span class="avisos-txt">
-          <strong>Nuevo inicio de sesión</strong>
+          <strong>Nueva entrada</strong>
           <span>${escapeHtml(x.usuario)} ingresó a Manolo.</span>
           <small>${escapeHtml(AL.fechaHora(x.ms))}</small>
         </span>
@@ -199,8 +224,8 @@ function estadoCuentaHTML() {
     : estadoBandeja === "ok" ? [true, "La lista de accesos se puede leer."]
     : estadoBandeja ? [false, estadoBandeja === "permission-denied" ? "Las reglas no dejan leer <code>accesos</code>: publica <code>firestore.rules</code> completo." : "Error: " + escapeHtml(estadoBandeja)]
     : [null, "Revisando…"];
-  const registro = !reg ? [null, "Se prueba la próxima vez que alguien inicie sesión con usuario y contraseña en este teléfono."]
-    : reg.estado === "ok" ? [true, "Tu último inicio de sesión se registró bien."]
+  const registro = !reg ? [null, "Todavía no se registró ninguna entrada desde este teléfono."]
+    : reg.estado === "ok" ? [true, "Tu última entrada a Manolo se registró bien (" + escapeHtml(AL.fechaHora(reg.cuando)) + ")."]
     : [false, reg.estado === "permission-denied" ? "Firebase no dejó registrarlo: faltan publicar las reglas (o ya estaba registrado)." : "Error: " + escapeHtml(reg.estado)];
   return `
     <ul class="cuenta-lista">
@@ -210,7 +235,7 @@ function estadoCuentaHTML() {
       ${linea(true, "Versión de la app", escapeHtml(version))}
       ${linea(admin[0], "Administrador", admin[1])}
       ${bandeja ? linea(bandeja[0], "Lista de accesos", bandeja[1]) : ""}
-      ${linea(registro[0], "Registro de inicios de sesión", registro[1])}
+      ${linea(registro[0], "Registro de entradas", registro[1])}
     </ul>`;
 }
 function pintarEstadoCuenta() {
@@ -254,6 +279,7 @@ document.addEventListener("click", e => {
 
 onAuthReady(user => {
   miUid = user.uid;
+  registrarApertura(user);
   // Si las reglas no están publicadas, esto falla y la campana sigue oculta.
   db.collection("admins").doc(user.uid).onSnapshot({ includeMetadataChanges: true }, doc => {
     estadoAdmin = doc.exists ? "admin" : (doc.metadata && doc.metadata.fromCache ? "cache" : "sin-documento");

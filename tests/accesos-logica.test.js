@@ -51,3 +51,17 @@ test("fecha y hora legibles", () => {
   assert.equal(A.fechaHora(ms), "30/09/2026 · 22:05");
   assert.equal(A.fechaHora(null), "Ahora");
 });
+
+test("abrir la app cuenta como entrada, como mucho una cada 30 minutos", () => {
+  const AL2 = require("../js/accesos-logica.js");
+  const user = { uid: "abc", email: "lentina@manolo-panel.local" };
+  const ahora = Date.UTC(2026, 9, 2, 15, 0);
+  const ev = AL2.eventoApertura(user, ahora, 0);
+  assert.equal(ev.id, "abc_" + ahora);
+  assert.deepEqual(ev.datos, { uid: "abc", usuario: "Lentina", tipo: "login", leido: false });
+  assert.equal(AL2.eventoApertura(user, ahora + 10 * 60000, ahora), null);
+  assert.ok(AL2.eventoApertura(user, ahora + 31 * 60000, ahora));
+  // Si el reloj del teléfono retrocedió, igual registra.
+  assert.ok(AL2.eventoApertura(user, ahora - 5 * 60000, ahora));
+  assert.equal(AL2.eventoApertura(null, ahora, 0), null);
+});
