@@ -22,6 +22,14 @@ function escapeHtml(str) {
 
 // ---- 1. Registrar el inicio de sesión ----
 const CLAVE_ENVIADO = "manolo.acceso.enviado";
+// Para "Estado de la cuenta": cómo salió el último registro de inicio de sesión.
+const CLAVE_REGISTRO = "manolo.acceso.registro";
+function guardarRegistro(estado) {
+  try { localStorage.setItem(CLAVE_REGISTRO, JSON.stringify({ estado, cuando: Date.now() })); } catch (e) { /* sin almacenamiento */ }
+}
+function leerRegistro() {
+  try { return JSON.parse(localStorage.getItem(CLAVE_REGISTRO) || "null"); } catch (e) { return null; }
+}
 function registrar(user) {
   const ev = AL.eventoLogin(user);
   if (!ev) return;
@@ -29,10 +37,11 @@ function registrar(user) {
   const datos = Object.assign({}, ev.datos, { creado: firebase.firestore.FieldValue.serverTimestamp() });
   const marcar = () => { try { localStorage.setItem(CLAVE_ENVIADO, ev.id); } catch (e) { /* sin almacenamiento */ } };
   // Sin conexión, Firestore lo guarda en el teléfono y lo sube al volver.
-  db.collection("accesos").doc(ev.id).set(datos).then(marcar).catch(err => {
+  db.collection("accesos").doc(ev.id).set(datos).then(() => { marcar(); guardarRegistro("ok"); }).catch(err => {
     // "permission-denied": ya estaba registrado o faltan publicar las reglas.
     // No se reintenta en cada apertura.
     if (err && err.code === "permission-denied") marcar();
+    guardarRegistro((err && err.code) || "error");
     console.warn("Manolo: no se pudo registrar el acceso", err && err.code);
   });
 }
@@ -168,9 +177,92 @@ document.addEventListener("click", e => {
 });
 document.addEventListener("keydown", e => { if (e.key === "Escape") cerrar(); });
 
+// ---- 3. Estado de la cuenta (para revisar la configuración desde el teléfono) ----
+let estadoAdmin = "cargando";
+let estadoBandeja = null;
+function estadoCuentaHTML() {
+  const user = (typeof currentUser !== "undefined" && currentUser) || auth.currentUser;
+  const usuario = user && user.email ? user.email.split("@")[0] : "—";
+  const version = (window.ManoloOffline && window.ManoloOffline.version) || "—";
+  const reg = leerRegistro();
+  const linea = (ok, titulo, texto) => `<li class="cuenta-fila ${ok === true ? "is-ok" : ok === false ? "is-mal" : ""}">
+    <span class="cuenta-ic" aria-hidden="true">${ok === true ? "✓" : ok === false ? "!" : "…"}</span>
+    <span><strong>${titulo}</strong><small>${texto}</small></span></li>`;
+  const admin = {
+    cargando: [null, "Revisando…"],
+    cache: [null, "Esperando conexión para confirmar con Firebase."],
+    admin: [true, "Sí: existe <code>admins/" + escapeHtml(miUid) + "</code>. La campana debe verse arriba."],
+    "sin-documento": [false, "Firebase no encuentra <code>admins/" + escapeHtml(miUid) + "</code>. Revisa que la colección se llame exactamente <b>admins</b> (en minúsculas) y que el <b>ID del documento</b> sea el UID de arriba, sin espacios."],
+    "sin-permiso": [false, "Firebase no deja leerlo: las reglas nuevas (<code>firestore.rules</code>) todavía no están publicadas."]
+  }[estadoAdmin] || [false, "Error al consultar: " + escapeHtml(estadoAdmin)];
+  const bandeja = estadoAdmin !== "admin" ? null
+    : estadoBandeja === "ok" ? [true, "La lista de accesos se puede leer."]
+    : estadoBandeja ? [false, estadoBandeja === "permission-denied" ? "Las reglas no dejan leer <code>accesos</code>: publica <code>firestore.rules</code> completo." : "Error: " + escapeHtml(estadoBandeja)]
+    : [null, "Revisando…"];
+  const registro = !reg ? [null, "Se prueba la próxima vez que alguien inicie sesión con usuario y contraseña en este teléfono."]
+    : reg.estado === "ok" ? [true, "Tu último inicio de sesión se registró bien."]
+    : [false, reg.estado === "permission-denied" ? "Firebase no dejó registrarlo: faltan publicar las reglas (o ya estaba registrado)." : "Error: " + escapeHtml(reg.estado)];
+  return `
+    <ul class="cuenta-lista">
+      ${linea(true, "Usuario", escapeHtml(usuario))}
+      <li class="cuenta-fila"><span class="cuenta-ic" aria-hidden="true">#</span><span><strong>Tu UID</strong><small class="cuenta-uid">${escapeHtml(miUid || "—")}</small></span>
+        <button type="button" class="link-btn" id="cuenta-copiar">Copiar</button></li>
+      ${linea(true, "Versión de la app", escapeHtml(version))}
+      ${linea(admin[0], "Administrador", admin[1])}
+      ${bandeja ? linea(bandeja[0], "Lista de accesos", bandeja[1]) : ""}
+      ${linea(registro[0], "Registro de inicios de sesión", registro[1])}
+    </ul>`;
+}
+function pintarEstadoCuenta() {
+  const el = $("cuenta-cuerpo");
+  if (el && !$("cuenta-hoja").hidden) el.innerHTML = estadoCuentaHTML();
+}
+function abrirEstadoCuenta() {
+  const h = $("cuenta-hoja");
+  h.hidden = false;
+  h.classList.remove("is-closing");
+  document.body.classList.add("sheet-open");
+  if (typeof renderIcons === "function") renderIcons(h);
+  pintarEstadoCuenta();
+  // Prueba de lectura de la bandeja (solo si eres admin).
+  if (estadoAdmin === "admin") {
+    db.collection("accesos").orderBy("creado", "desc").limit(1).get()
+      .then(() => { estadoBandeja = "ok"; }, err => { estadoBandeja = (err && err.code) || "error"; })
+      .then(pintarEstadoCuenta);
+  }
+}
+function cerrarEstadoCuenta() {
+  const h = $("cuenta-hoja");
+  if (h.hidden) return;
+  h.classList.add("is-closing");
+  setTimeout(() => {
+    h.hidden = true;
+    h.classList.remove("is-closing");
+    document.body.classList.toggle("sheet-open", !!document.querySelector(".js-sheet:not([hidden])"));
+  }, 200);
+}
+document.addEventListener("click", e => {
+  if (e.target.closest("#cuenta-estado-btn")) { abrirEstadoCuenta(); return; }
+  if (e.target.closest("[data-cuenta-cerrar]")) { cerrarEstadoCuenta(); return; }
+  if (e.target.closest("#cuenta-copiar") && miUid) {
+    const b = e.target.closest("#cuenta-copiar");
+    const listo = () => { b.textContent = "Copiado"; setTimeout(() => { b.textContent = "Copiar"; }, 1800); };
+    if (navigator.clipboard) navigator.clipboard.writeText(miUid).then(listo, () => { prompt("Copia tu UID:", miUid); });
+    else prompt("Copia tu UID:", miUid);
+  }
+});
+
 onAuthReady(user => {
   miUid = user.uid;
   // Si las reglas no están publicadas, esto falla y la campana sigue oculta.
-  db.collection("admins").doc(user.uid).onSnapshot(doc => activarAdmin(doc.exists), () => activarAdmin(false));
+  db.collection("admins").doc(user.uid).onSnapshot({ includeMetadataChanges: true }, doc => {
+    estadoAdmin = doc.exists ? "admin" : (doc.metadata && doc.metadata.fromCache ? "cache" : "sin-documento");
+    activarAdmin(doc.exists);
+    pintarEstadoCuenta();
+  }, err => {
+    estadoAdmin = err && err.code === "permission-denied" ? "sin-permiso" : "error:" + ((err && err.code) || "desconocido");
+    activarAdmin(false);
+    pintarEstadoCuenta();
+  });
 });
 })();
