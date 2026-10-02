@@ -1506,6 +1506,8 @@ function renderTxnSheet() {
   document.getElementById("txn-sheet-title").textContent = t.readonly ? "Transferencia" : t.id ? "Editar transacción" : "Nueva transacción";
   pintarMontoTxn();
   document.getElementById("txn-sheet-currency").textContent = isTransfer ? walletCurrency(t.from) : "Bs";
+  const swap = document.getElementById("txn-sheet-swap");
+  if (swap) swap.disabled = !!t.readonly || t.to === "tarjeta";
   document.querySelectorAll("#txn-sheet [data-txn-type]").forEach(b => {
     b.classList.toggle("active", b.dataset.txnType === t.type);
     b.hidden = !editable || (t.id && b.dataset.txnType === "transferencia");
@@ -1784,9 +1786,11 @@ function chooseTxnPayment() {
 
 function chooseTxnWallet(side) {
   const t = txnSheet;
-  const other = side === "from" ? t.to : t.from;
-  // La tarjeta solo puede recibir (pagarla); nunca es origen.
-  const wallets = ledgerWallets().filter(w => (side === "to" || w.id !== "tarjeta") && w.id !== other);
+  const otroLado = side === "from" ? "to" : "from";
+  // La tarjeta solo puede recibir (pagarla); nunca es origen. Se muestran
+  // todas las demás, también la que está del otro lado: si la eliges, se
+  // intercambian (así Ahorro → Débito se arma en un toque).
+  const wallets = ledgerWallets().filter(w => (side === "to" || w.id !== "tarjeta") && w.id !== t[side]);
   openPicker({
     title: side === "from" ? "¿Desde qué cartera?" : "¿A qué cartera?",
     items: wallets.map(w => {
@@ -1795,8 +1799,13 @@ function chooseTxnWallet(side) {
     }),
     onPick: id => {
       closePicker();
+      const antes = t[side];
       t[side] = id;
-      if (walletCurrency(t.from) === walletCurrency(t.to)) t.amountTo = "";
+      if (t[otroLado] === id) {
+        // Se intercambian; la tarjeta nunca queda como origen.
+        t[otroLado] = otroLado === "from" && antes === "tarjeta" ? (id === "debito" ? "efectivo" : "debito") : antes;
+      }
+      t.amountTo = "";
       renderTxnSheet();
     }
   });
@@ -2094,6 +2103,14 @@ document.getElementById("txn-sheet").addEventListener("click", e => {
   if (e.target.closest("#txn-sheet-keypad-done")) { txnSheet.keypad = false; renderTxnSheet(); return; }
   if (e.target.closest("#txn-sheet-cat")) { chooseTxnCategory(); return; }
   if (e.target.closest("#txn-sheet-pay")) { chooseTxnPayment(); return; }
+  if (e.target.closest("#txn-sheet-swap")) {
+    const t = txnSheet;
+    if (t.readonly || t.to === "tarjeta") return;
+    [t.from, t.to] = [t.to, t.from];
+    t.amountTo = "";
+    renderTxnSheet();
+    return;
+  }
   if (e.target.closest("#txn-sheet-from")) { if (!txnSheet.readonly) chooseTxnWallet("from"); return; }
   if (e.target.closest("#txn-sheet-to")) { if (!txnSheet.readonly) chooseTxnWallet("to"); return; }
   if (e.target.closest("#txn-sheet-prev-day")) { shiftTxnDate(-1); return; }
