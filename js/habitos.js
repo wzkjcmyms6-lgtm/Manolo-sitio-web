@@ -9,8 +9,33 @@
 const HE = HabitosEngine;
 const HC = HabitosConfig;
 
-const EMOJIS = ["💧", "🏃", "🧘", "📖", "💪", "🛌", "🥗", "🚭", "🧹", "🙏", "💊", "🎯", "✍️", "🎨", "🚴", "🧠",
-  "🦷", "☀️", "🌙", "📵", "🍎", "🚶", "🎸", "💰", "📚", "🧴", "🫁", "❤️"];
+// Emojis del formulario, por categorías (como en otras apps de hábitos).
+// Están todos los de antes; además se puede escribir cualquiera del teclado.
+const EMOJI_GRUPOS = [
+  { id: "salud", nombre: "Salud", emojis: ["💧", "💊", "🦷", "🪥", "🛌", "😴", "🧴", "🩺", "🫁", "❤️", "🥛", "🚿", "🧼", "💆", "⚖️", "🌡️"] },
+  { id: "ejercicio", nombre: "Ejercicio", emojis: ["🏃", "🚶", "💪", "🏋️", "🚴", "🧘", "🏊", "⚽", "🏀", "🎾", "🥊", "🤸", "🧗", "🥾", "🏓", "🏐"] },
+  { id: "comida", nombre: "Comida", emojis: ["🥗", "🍎", "🥦", "🥑", "🥕", "🍌", "🍳", "🥣", "🐟", "🥜", "🍵", "☕", "🧃", "🍽️", "🫖", "🍓"] },
+  { id: "mente", nombre: "Mente", emojis: ["🧠", "📖", "📚", "✍️", "📝", "🎯", "💡", "🧩", "♟️", "🎓", "🗣️", "🌍", "🎧", "🔤", "📓", "🤔"] },
+  { id: "calma", nombre: "Calma", emojis: ["🙏", "🕯️", "🌿", "🌅", "🌙", "☀️", "🌳", "🛀", "😊", "🎵", "🌊", "✨", "🧖", "📿", "☮️", "🌸"] },
+  { id: "trabajo", nombre: "Trabajo", emojis: ["💼", "💻", "⏰", "📅", "✅", "📊", "📧", "📌", "🗂️", "🚀", "⌛", "🖊️", "📋", "🔔", "🎙️", "🏢"] },
+  { id: "hogar", nombre: "Hogar", emojis: ["🧹", "🧺", "🧽", "🛏️", "🪴", "🌱", "🐶", "🐱", "🗑️", "🛒", "🔧", "🚗", "👕", "🪣", "🔑", "🏠"] },
+  { id: "dinero", nombre: "Dinero", emojis: ["💰", "💵", "🪙", "🏦", "📈", "🐷", "💳", "🧾", "💹", "🤑", "📉", "🧮"] },
+  { id: "social", nombre: "Social", emojis: ["👨‍👩‍👧", "📞", "💬", "🤝", "💌", "🎁", "🫂", "🥰", "👋", "🎉", "👫", "🙌"] },
+  { id: "hobbies", nombre: "Hobbies", emojis: ["🎨", "🎸", "🎹", "🎤", "📷", "🎬", "🧶", "🎮", "🎲", "✈️", "🏕️", "🎣", "🪁", "🧑‍🍳", "🎻", "🖌️"] },
+  { id: "dejar", nombre: "Dejar", emojis: ["🚭", "📵", "🍺", "🍷", "🍔", "🍟", "🍩", "🍬", "🥤", "📱", "🎰", "💸", "🛑", "😤", "🕹️", "🧂"] }
+];
+const EMOJIS = EMOJI_GRUPOS.reduce((a, g) => a.concat(g.emojis), []);
+let emojiGrupo = null; // categoría abierta en el formulario (null = la del emoji elegido)
+// Primer emoji de lo que escribas (un emoji puede tener varios caracteres).
+function primerGrafema(txt) {
+  const t = String(txt || "").trim();
+  if (!t) return "";
+  if (typeof Intl !== "undefined" && Intl.Segmenter) {
+    const it = new Intl.Segmenter("es", { granularity: "grapheme" }).segment(t)[Symbol.iterator]().next();
+    return it.done ? "" : it.value.segment;
+  }
+  return Array.from(t).slice(0, 2).join("");
+}
 const DIAS_CORTOS = ["L", "M", "X", "J", "V", "S", "D"];
 const DIAS_NOMBRES = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
@@ -556,6 +581,17 @@ function abrirHoja(html, actual) {
     document.body.appendChild(hoja);
     hoja.addEventListener("click", onClickHoja);
     hoja.addEventListener("change", onCambioHoja);
+    hoja.addEventListener("input", e => {
+      if (e.target.name !== "emojiPropio" || !form) return;
+      const propio = primerGrafema(e.target.value);
+      const prev = hoja.querySelector("[data-emoji-actual]");
+      if (prev) prev.textContent = propio || form.emoji;
+      hoja.querySelectorAll(".hb-emoji-btn").forEach(b => {
+        const on = !propio && b.dataset.v === form.emoji;
+        b.classList.toggle("is-on", on);
+        b.setAttribute("aria-pressed", String(on));
+      });
+    });
     hoja.addEventListener("submit", onSubmitHoja);
     hoja.addEventListener("pointerdown", empezarArrastre);
     document.addEventListener("keydown", e => { if (e.key === "Escape") cerrarHoja(); });
@@ -824,7 +860,7 @@ function chips(nombre, opciones, actual) {
 }
 
 function hojaForm(id) {
-  if (id !== undefined) form = formDesde(id ? normal[id] : null);
+  if (id !== undefined) { form = formDesde(id ? normal[id] : null); emojiGrupo = null; }
   const f = form;
   const medible = f.tipo === "medible" || f.tipo === "tiempo";
   const evitar = f.tipo === "evitar";
@@ -836,8 +872,7 @@ function hojaForm(id) {
       <label class="hb-campo"><span>Nota <span class="hb-opcional">(opcional)</span></span>
         <textarea name="descripcion" rows="3" maxlength="${HC.CONST.DESCRIPCION_MAX}" placeholder="Ej: Agradecer por mi familia, por mi salud y por mi trabajo.">${escapeHtml(f.descripcion)}</textarea>
         <span class="hb-ayuda">Para recordar el porqué o el cómo. Se ve debajo del nombre.</span></label>
-      <div class="hb-emojis" role="group" aria-label="Emoji">${EMOJIS.map(e =>
-        `<button type="button" class="hb-emoji-btn${e === f.emoji ? " is-on" : ""}" data-campo="emoji" data-v="${e}" aria-pressed="${e === f.emoji}">${e}</button>`).join("")}</div>
+      ${emojisHtml(f)}
 
       <span class="hb-label">Tipo</span>
       ${chips("tipo", Object.keys(HC.TIPOS).map(k => [k, HC.TIPOS[k].nombre]), f.tipo)}
@@ -891,6 +926,23 @@ function opcionesCadena(f) {
 }
 
 // Pasa lo escrito en los campos de texto a `form` antes de redibujar.
+// Selector de emoji: categorías, la grilla de la categoría abierta y un campo
+// para escribir cualquier emoji del teclado.
+function emojisHtml(f) {
+  const propio = primerGrafema(f.emojiPropio);
+  const actual = propio || f.emoji;
+  const grupo = EMOJI_GRUPOS.find(g => g.id === emojiGrupo) || EMOJI_GRUPOS.find(g => g.emojis.includes(f.emoji)) || EMOJI_GRUPOS[0];
+  return `<div class="hb-emoji-cab"><span class="hb-label">Emoji</span><span class="hb-emoji-actual" data-emoji-actual aria-label="Emoji elegido">${escapeHtml(actual)}</span></div>
+      <div class="hb-emoji-grupos" role="tablist" aria-label="Categorías de emojis">${EMOJI_GRUPOS.map(g =>
+        `<button type="button" class="hb-emoji-grupo${g === grupo ? " is-on" : ""}" role="tab" aria-selected="${g === grupo}" data-emoji-grupo="${g.id}">${escapeHtml(g.nombre)}</button>`).join("")}</div>
+      <div class="hb-emojis" role="group" aria-label="Emojis de ${escapeHtml(grupo.nombre)}">${grupo.emojis.map(e => {
+        const on = !propio && e === f.emoji;
+        return `<button type="button" class="hb-emoji-btn${on ? " is-on" : ""}" data-campo="emoji" data-v="${e}" aria-pressed="${on}">${e}</button>`;
+      }).join("")}</div>
+      <label class="hb-campo hb-emoji-propio"><span>¿No está el que buscas? Escríbelo <span class="hb-opcional">(teclado de emojis)</span></span>
+        <input type="text" name="emojiPropio" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" value="${escapeHtml(propio)}" placeholder="🙂"></label>`;
+}
+
 function leerCampos() {
   if (!hoja) return;
   hoja.querySelectorAll(".hb-form input[name], .hb-form select[name], .hb-form textarea[name]").forEach(i => { form[i.name] = i.value; });
@@ -905,7 +957,7 @@ function guardarForm() {
   if (f.tipo !== "evitar" && f.freqType === "dias" && !f.days.some(Boolean)) { error("Elige al menos un día."); return; }
   const medible = f.tipo === "medible" || f.tipo === "tiempo";
   const datos = {
-    v: 2, name, emoji: f.emoji, tipo: f.tipo,
+    v: 2, name, emoji: primerGrafema(f.emojiPropio) || f.emoji, tipo: f.tipo,
     freqType: f.tipo === "evitar" ? "diario" : f.freqType,
     days: f.days.map(Boolean),
     timesPerWeek: Math.min(7, Math.max(1, parseInt(f.timesPerWeek, 10) || HC.CONST.TIMES_PER_WEEK_DEFECTO)),
@@ -1633,9 +1685,16 @@ function onClickHoja(e) {
   if ((b = q("[data-sonidos]"))) { guardarPref({ sonidos: b.dataset.sonidos === "1" }); if (b.dataset.sonidos === "1") sonar("moneda"); hojaAjustes(); return; }
   if ((b = q("[data-animo]"))) { guardarDiaMeta({ animo: Number(b.dataset.animo) }); hojaCierre(); return; }
   // Formulario: botones que cambian un campo y redibujan.
+  if ((b = q("[data-emoji-grupo]"))) {
+    leerCampos();
+    emojiGrupo = b.dataset.emojiGrupo;
+    hojaForm();
+    return;
+  }
   if ((b = q("[data-campo]"))) {
     leerCampos();
     form[b.dataset.campo] = b.dataset.v;
+    if (b.dataset.campo === "emoji") form.emojiPropio = "";
     hojaForm();
     return;
   }

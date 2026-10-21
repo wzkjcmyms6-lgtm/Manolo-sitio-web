@@ -26,6 +26,9 @@
     día», Inicio, Progreso, Semana, Guía, la tabla de verificación del dueño
     (días 1, 5, 31, 91, 180 y 181) y las horas del plan (27,5 · 36,7 · 50 ·
     65 h), y el temporizador guiado con reloj falso.
+  - `emojis.js` — selector de emojis del formulario: 11 categorías, elegir
+    uno de otra categoría sin perder lo escrito, emoji propio del teclado y
+    editar un hábito (abre la categoría de su emoji).
   - `regresion.js` — las 15 pantallas en teléfono (390 px) y computadora
     (1280 px): se ven, sin errores y sin scroll de lado; acciones de siempre:
     marcar un hábito, anotar un gasto, registrar Running y Bici a mano,
@@ -55,7 +58,7 @@
 ```bash
 npm test
 export NODE_PATH=/opt/node22/lib/node_modules   # donde está Playwright
-for f in fase1 running hojas scalping regresion; do node scripts/e2e/$f.js || break; done
+for f in fase1 running hojas scalping emojis regresion; do node scripts/e2e/$f.js || break; done
 ```
 Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
 

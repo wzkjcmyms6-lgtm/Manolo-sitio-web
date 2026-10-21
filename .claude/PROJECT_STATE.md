@@ -27,4 +27,4 @@ Actualizado: 2026-10-01 (después del plan maestro: Running/Bici sin GPS).
 - **Falta la prueba real en el iPhone**: pantalla encendida, voz y pitidos
   de las rutinas guiadas, teclado numérico.
 - **Tests**: 214/214 (`npm test`); E2E `fase1` (39), `running` (64),
-  `hojas` (16), `scalping` (59), `regresion` (39) en verde.
+  `hojas` (16), `scalping` (59), `emojis` (10), `regresion` (39) en verde.

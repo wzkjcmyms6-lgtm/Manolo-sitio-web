@@ -1,5 +1,11 @@
 # Cambios
 
+## 2026-10-21 · Hábitos: más emojis
+- El formulario de hábitos pasa de 28 a 167 emojis en 11 categorías (Salud,
+  Ejercicio, Comida, Mente, Calma, Trabajo, Hogar, Dinero, Social, Hobbies,
+  Dejar), con vista previa del elegido y un campo para escribir cualquier
+  emoji del teclado. Se conservan todos los de antes. E2E nuevo `emojis.js`.
+
 ## 2026-10-21 · Hábitos: Scalping, plan de 180 días
 - Nuevo hábito **Scalping** (masaje del cuero cabelludo): sesión de mañana y
   de noche, plan de 180 días con fases, zonas por día, fotos de control,
