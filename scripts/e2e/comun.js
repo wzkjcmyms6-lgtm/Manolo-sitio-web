@@ -48,11 +48,16 @@ function servidor() {
 }
 
 // Abre una página nueva. estado: claves de localStorage para la primera
-// carga (__SEED__, __USERS__, __SESION__…); opciones: { reloj, voz, ancho, alto, hash }.
+// carga (__SEED__, __USERS__, __SESION__…); opciones: { reloj, voz, ancho, alto, hash,
+// zona (huso horario, p. ej. "America/La_Paz"), fecha (Date fija, los timers siguen),
+// relojFalso (fecha de inicio de un reloj falso que se adelanta con p.clock.fastForward) }.
 async function abrir(browser, base, estado, opciones) {
   const o = Object.assign({ ancho: 390, alto: 844, hash: "#inicio" }, opciones || {});
   const movil = o.ancho <= 768;
-  const ctx = await browser.newContext({ viewport: { width: o.ancho, height: o.alto }, deviceScaleFactor: 2, isMobile: movil, hasTouch: movil, serviceWorkers: "block" });
+  const ctx = await browser.newContext(Object.assign({ viewport: { width: o.ancho, height: o.alto }, deviceScaleFactor: 2, isMobile: movil, hasTouch: movil, serviceWorkers: "block" },
+    o.zona ? { timezoneId: o.zona } : {}));
+  if (o.fecha) await ctx.clock.setFixedTime(new Date(o.fecha));
+  if (o.relojFalso) await ctx.clock.install({ time: new Date(o.relojFalso) });
   await ctx.route(/firebase-10\.7\.1|firebasejs/, r => r.request().url().includes("app-compat")
     ? r.fulfill({ contentType: "text/javascript", body: FAKE })
     : r.fulfill({ contentType: "text/javascript", body: "" }));

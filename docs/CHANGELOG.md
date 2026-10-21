@@ -1,5 +1,18 @@
 # Cambios
 
+## 2026-10-21 · Hábitos: Scalping, plan de 180 días
+- Nuevo hábito **Scalping** (masaje del cuero cabelludo): sesión de mañana y
+  de noche, plan de 180 días con fases, zonas por día, fotos de control,
+  hitos de horas, guía y ajustes. Contenido y lógica en
+  `js/scalping-habit.js` (sin cambios); pantallas en `js/habito-scalping.js`.
+- Tarjeta con botones rápidos, vista con 5 pestañas (Hoy, Progreso, Semana,
+  Guía, Ajustes) y temporizador guiado a pantalla completa.
+- Integrado al sistema de Hábitos (Medible de 2 sesiones: rachas, XP,
+  estadísticas, Inicio) y 3 logros nuevos (36, 50 y 65 horas).
+- Pruebas: 214 unitarias (incluye el `selfTest` del módulo y la tabla de
+  verificación); E2E nuevo `scalping.js` (59). El Firestore de prueba ahora
+  avisa también los documentos modificados y borrados, como el real.
+
 ## 2026-10-01 · Deslizar hacia abajo para cerrar las hojas
 - Todas las hojas que suben desde abajo (nueva transacción, filtros,
   presupuesto, categorías, hábitos, gimnasio, rutinas, récords, avisos…) se

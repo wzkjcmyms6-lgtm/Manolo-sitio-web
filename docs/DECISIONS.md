@@ -199,3 +199,25 @@ así cada hoja ejecuta su propio cierre; si una hoja no se deja cerrar así,
 vuelve a su lugar. Con el contenido desplazado, primero sube el contenido.
 Reemplaza el gesto propio que tenía solo la hoja del mapa muscular.
 Solo táctil (en la compu siguen la ✕, el fondo y Escape).
+
+## 2026-10-21 · Hábito Scalping
+
+**D-039 · Scalping es un hábito más en Firestore, no un almacenamiento
+aparte.** Pedido: guardarlo "con el mismo mecanismo que los demás hábitos";
+en Manolo eso es `users/{uid}/habitos` (con caché offline), no localStorage.
+Documento con id fijo `scalping`; el estado del módulo del dueño va en el
+campo `scalping` con la forma que él definió, y se guarda por ruta de campo
+(día, foto o ajustes) para no pisar otros días si hay dos pestañas.
+
+**D-040 · Para el motor, Medible con meta 2 sesiones.** Así "cumplido = mañana
+y noche" y "parcial = una sola" salen del motor existente, y Scalping entra
+sin código extra en rachas, XP, nivel, jefe, días perfectos, estadísticas e
+Inicio. (El motor deja que un parcial ≥ 50 % mantenga *su* racha; la vista
+de Scalping muestra además la racha del módulo, que exige las dos.) Los
+hitos de horas son logros nuevos que solo aparecen si tienes el hábito.
+
+**D-041 · Se agrega desde una sugerencia, no automáticamente.** Manolo tiene
+varios usuarios; crear Scalping para todos sería invasivo. Mientras no
+exista, Hábitos › Hoy muestra "Scalping · Agregar" (descartable). La fecha
+de inicio es el día en que se agrega. Archivar está en Ajustes de la vista
+(restaurar, en Ajustes de Hábitos, como cualquier hábito).

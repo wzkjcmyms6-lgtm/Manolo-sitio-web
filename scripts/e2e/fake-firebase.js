@@ -50,16 +50,24 @@
     if (q.tope) docs = docs.slice(0, q.tope);
     return docs;
   }
+  // docChanges() como el SDK: added, modified (cambió el contenido) y removed.
+  // previos: Map id → contenido (JSON) de la emisión anterior.
   function snapCol(q, previos) {
     const docs = filas(q);
-    const cambios = docs.filter(d => !previos || !previos.has(d.id)).map(doc => ({ type: "added", doc }));
-    return { docs, empty: !docs.length, size: docs.length, forEach: f => docs.forEach(f), docChanges: () => cambios, metadata: { fromCache: false } };
+    const ahora = new Map(docs.map(d => [d.id, JSON.stringify(d.data())]));
+    const cambios = [];
+    docs.forEach(doc => {
+      if (!previos || !previos.has(doc.id)) cambios.push({ type: "added", doc });
+      else if (previos.get(doc.id) !== ahora.get(doc.id)) cambios.push({ type: "modified", doc });
+    });
+    if (previos) previos.forEach((v, id) => { if (!ahora.has(id)) cambios.push({ type: "removed", doc: { id, exists: false, data: () => JSON.parse(v) } }); });
+    return { docs, empty: !docs.length, size: docs.length, forEach: f => docs.forEach(f), docChanges: () => cambios, metadata: { fromCache: false }, _vistos: ahora };
   }
   function emitir(l) {
     if (l.kind === "col") {
       if (!puedeLeer(l.q.path)) { if (l.err) l.err({ code: "permission-denied" }); return; }
       const s = snapCol(l.q, l.vistos);
-      l.vistos = new Set(s.docs.map(d => d.id));
+      l.vistos = s._vistos;
       l.cb(s);
     } else {
       if (!puedeLeer(l.path)) { if (l.err) l.err({ code: "permission-denied" }); return; }

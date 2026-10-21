@@ -1,6 +1,6 @@
 # Manolo — Panel personal
 
-Aplicación web instalable (PWA) para llevar **Hábitos, Ejercicio (gimnasio,
+Aplicación web instalable (PWA) para llevar **Hábitos (incluye el plan guiado Scalping), Ejercicio (gimnasio,
 Running con rutinas guiadas y Bicicleta, con resumen semanal), Finanzas e Inversiones**. HTML/CSS/JS puro,
 sin compilación; datos en Firebase (Auth + Firestore) con caché offline.
 

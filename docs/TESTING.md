@@ -20,6 +20,12 @@
     sigue al dedo, vuelve si se suelta a mitad, se cierra al bajarla o con un
     tirón, de lado no se mueve, con la lista desplazada primero sube la lista;
     en Finanzas, el selector de categorías, Hábitos y Running.
+  - `scalping.js` — hábito Scalping con fecha y huso de La Paz fijos:
+    agregarlo, tarjeta y botones rápidos, vista Hoy (aviso, fotos, pasos,
+    marcar con minutos, nota), Ajustes, persistencia al recargar, «Cerrar el
+    día», Inicio, Progreso, Semana, Guía, la tabla de verificación del dueño
+    (días 1, 5, 31, 91, 180 y 181) y las horas del plan (27,5 · 36,7 · 50 ·
+    65 h), y el temporizador guiado con reloj falso.
   - `regresion.js` — las 15 pantallas en teléfono (390 px) y computadora
     (1280 px): se ven, sin errores y sin scroll de lado; acciones de siempre:
     marcar un hábito, anotar un gasto, registrar Running y Bici a mano,
@@ -49,7 +55,7 @@
 ```bash
 npm test
 export NODE_PATH=/opt/node22/lib/node_modules   # donde está Playwright
-for f in fase1 running hojas regresion; do node scripts/e2e/$f.js || break; done
+for f in fase1 running hojas scalping regresion; do node scripts/e2e/$f.js || break; done
 ```
 Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
 
@@ -89,6 +95,14 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] En Finanzas toca **+**: baja la hoja con el dedo; a mitad de camino y
   soltando vuelve; bajándola más (o con un tirón) se cierra.
 - [ ] Lo mismo en el detalle de un hábito y en el selector de categorías.
+
+**Scalping**
+- [ ] En Hábitos toca **Agregar** en la sugerencia de Scalping: aparece la
+  tarjeta "Día 1/180…".
+- [ ] Toca **Mañana · 5 min**: queda marcado; ciérrala y ábrela: sigue marcado.
+- [ ] Abre la tarjeta › **Iniciar guiado**: la pantalla no se apaga, suena un
+  pitido en cada paso y al final la sesión queda hecha.
+- [ ] Revisa Progreso, Semana, Guía y Ajustes.
 
 **Hábitos, Ejercicio, Finanzas (como antes)**
 - [ ] Marcar y desmarcar un hábito; crear uno con nota y ver la nota.

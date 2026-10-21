@@ -20,7 +20,11 @@ Actualizado: 2026-10-01 (después del plan maestro: Running/Bici sin GPS).
   Ver `docs/RUNNING.md`, `docs/CYCLING.md`, `docs/CSV_ROUTINES.md`.
   Deslizar hacia abajo para cerrar todas las hojas (D-038,
   `js/hoja-deslizar.js`).
+- **Hábito Scalping** (2026-10-21): plan de 180 días, módulo del dueño
+  `js/scalping-habit.js` (no tocar) + pantallas `js/habito-scalping.js`;
+  integrado al motor como Medible de 2 sesiones (D-039 a D-041,
+  `docs/SCALPING.md`).
 - **Falta la prueba real en el iPhone**: pantalla encendida, voz y pitidos
   de las rutinas guiadas, teclado numérico.
-- **Tests**: 209/209 (`npm test`); E2E `fase1` (39), `running` (64),
-  `hojas` (16), `regresion` (37) en verde.
+- **Tests**: 214/214 (`npm test`); E2E `fase1` (39), `running` (64),
+  `hojas` (16), `scalping` (59), `regresion` (39) en verde.

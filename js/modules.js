@@ -21,6 +21,7 @@ const MODULES = [
 const SUB_PANELS = [
   { hash: "hab-stats", parent: "habitos" },
   { hash: "hab-logros", parent: "habitos" },
+  { hash: "hab-scalping", parent: "habitos" },
   { hash: "gimnasio", parent: "ejercicio" },
   { hash: "ej-feed", parent: "ejercicio" },
   { hash: "ej-rangos", parent: "ejercicio" },

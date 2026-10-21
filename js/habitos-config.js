@@ -176,7 +176,12 @@ const LOGROS = [
   L("limpio_30", "Treinta limpios", "30 días limpios en un hábito de Evitar.", "limpios", 30),
   L("semanal_4", "Mes constante", "4 semanas seguidas cumpliendo un hábito semanal.", "semanal", 4),
   L("noctambulo", "Noctámbulo", "Marca 10 hábitos entre las 0:00 y las 4:00.", "noctambulo", 10, true),
-  L("regreso", "De vuelta", "Cumple un hábito el día después de una pausa.", "regreso", 1, true)
+  L("regreso", "De vuelta", "Cumple un hábito el día después de una pausa.", "regreso", 1, true),
+  // Hitos de Scalping en minutos reales (los mismos de js/scalping-habit.js).
+  // Solo aparecen si tienes el hábito Scalping.
+  L("scalping_36", "Scalping: 36 horas", "Acumula 36 horas de masaje. Ahí, en promedio, la mejora empezaba a notarse.", "scalping", 2178),
+  L("scalping_50", "Scalping: 50 horas", "Acumula 50 horas: el mínimo recomendado antes de evaluar resultados.", "scalping", 3000),
+  L("scalping_65", "Scalping: 65 horas", "Acumula 65 horas: el plan de 6 meses completo.", "scalping", 3900)
 ];
 
 return { CONST, TIPOS, FRECUENCIAS, MOMENTOS, ESTADOS, MOTIVOS_SALTO, DIFICULTADES, XP, NIVEL, AREAS,

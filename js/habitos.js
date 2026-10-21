@@ -106,7 +106,9 @@ function nombreArea(id) {
 }
 function recalcular() {
   const lista = Object.keys(normal).map(id => normal[id]);
-  res = HE.evaluar(lista, { hoy: hoy(), finDia: finDia(), compras: compras(), misiones: juego.misiones || {}, jefes: juego.jefes || {}, areas: areasDef() });
+  // Scalping suma sus horas reales para sus logros (36, 50 y 65 horas).
+  const scalpingMinutos = window.HabitoScalping ? HabitoScalping.minutosTotales() : null;
+  res = HE.evaluar(lista, { hoy: hoy(), finDia: finDia(), compras: compras(), misiones: juego.misiones || {}, jefes: juego.jefes || {}, areas: areasDef(), scalpingMinutos });
 }
 
 // Misiones: se generan una vez por semana (el primer día que abras la app) y
@@ -325,6 +327,8 @@ function subtitulo(h, x, f) {
 }
 
 function filaHtml(h, f, encadenado) {
+  // Scalping tiene su propia tarjeta (js/habito-scalping.js).
+  if (window.HabitoScalping && HabitoScalping.es(h)) return HabitoScalping.filaHtml();
   const x = filaHoy(h, f);
   const sub = subtitulo(h, x, f);
   const clases = ["hb-fila", x.hecho && h.tipo !== "evitar" ? "is-hecho" : "", !x.toca ? "is-apagada" : "", encadenado ? "is-encadenado" : ""].filter(Boolean).join(" ");
@@ -353,7 +357,7 @@ function renderHoy() {
     lista.innerHTML = `<div class="hb-vacio">
       <p class="hb-vacio-t">Tu primer hábito empieza aquí</p>
       <p>Elige algo pequeño que quieras hacer a diario, como tomar agua o leer 10 minutos.</p>
-      <button type="button" class="hb-btn" data-nuevo>Crear un hábito</button></div>`;
+      <button type="button" class="hb-btn" data-nuevo>Crear un hábito</button></div>` + (window.HabitoScalping ? HabitoScalping.sugerenciaHtml() : "");
     renderIcons(lista);
     return;
   }
@@ -392,7 +396,7 @@ function renderHoy() {
   const semanaPasada = HE.semanaId(HE.addDias(HE.lunesDe(f), -7));
   let visto = null;
   try { visto = localStorage.getItem("hb-resumen-visto"); } catch (e) { /* sin almacenamiento */ }
-  html = jefeMiniHtml() + html;
+  html = (window.HabitoScalping ? HabitoScalping.sugerenciaHtml() : "") + jefeMiniHtml() + html;
   if (HE.diaSemana(f) === 0 && visto !== semanaPasada) html = resumenSemanaHtml(true) + html;
   const abierto = lista.querySelector(".hb-notoca") && lista.querySelector(".hb-notoca").open;
   lista.innerHTML = html;
@@ -445,7 +449,7 @@ function animarGolpe(cont) {
 // "+N XP" flotando sobre el botón que se tocó.
 function mostrarXP(id, n) {
   if (hoja && !hoja.hidden) return;
-  const btn = document.querySelector(`#hb-lista [data-marcar="${id}"]`);
+  const btn = document.querySelector(`#hb-lista [data-marcar="${id}"], #hb-lista [data-xp-ancla="${id}"]`);
   if (!btn || n <= 0) return;
   const r = btn.getBoundingClientRect();
   const el = document.createElement("span");
@@ -588,6 +592,8 @@ const NOMBRES_DIA = ["lunes", "martes", "miércoles", "jueves", "viernes", "sáb
 const MESES_LARGOS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 
 function hojaDetalle(id, fecha) {
+  // Scalping se abre en su propia pantalla (#hab-scalping).
+  if (window.HabitoScalping && HabitoScalping.es(id)) { cerrarHoja(); HabitoScalping.abrir(); return; }
   const h = normal[id];
   const rh = res && res.habitos[id];
   if (!h || !rh) { cerrarHoja(); return; }
@@ -1330,7 +1336,7 @@ function logrosHtml() {
       <span class="hb-logro-ico" aria-hidden="true"><span data-icon="${oculto ? "star" : "trophy"}"></span></span>
       <span class="hb-logro-txt"><b>${oculto ? "Logro secreto" : escapeHtml(l.nombre)}</b>
         <span>${oculto ? "Sigue usando la app para descubrirlo." : escapeHtml(l.desc)}</span>
-        ${l.desbloqueado ? `<span class="hb-tag">Conseguido</span>` : oculto ? "" : `${barra(l.progreso, l.nombre)}<span class="hb-logro-prog">${l.tipo === "rango" ? `Tu mejor: ${escapeHtml(mejorRangoNombre())}` : `${fmtNum(l.actual)} de ${fmtNum(l.metaProgreso)}`}</span>`}
+        ${l.desbloqueado ? `<span class="hb-tag">Conseguido</span>` : oculto ? "" : `${barra(l.progreso, l.nombre)}<span class="hb-logro-prog">${l.tipo === "rango" ? `Tu mejor: ${escapeHtml(mejorRangoNombre())}` : l.tipo === "scalping" ? `${ScalpingHabit.formatHoras(l.actual)} de ${ScalpingHabit.formatHoras(l.metaProgreso)}` : `${fmtNum(l.actual)} de ${fmtNum(l.metaProgreso)}`}</span>`}
       </span></li>`;
   }).join("")}</ul>`;
 }
@@ -1581,6 +1587,7 @@ function onClickHoja(e) {
   const q = sel => t.closest(sel);
   const fechaDe = el => el.dataset.fecha || res.hoy;
   let b;
+  if ((b = q("[data-sc-sesion]"))) { alternarScalping(b.dataset.scSesion); return; }
   if ((b = q("[data-marcar]"))) { marcar(b.dataset.marcar); return; }
   if ((b = q("[data-detalle]"))) { hojaDetalle(b.dataset.detalle); return; }
   if ((b = q("[data-detalle-dia]"))) { hojaActual = null; hojaDetalle(b.dataset.detalleDia, b.dataset.fecha); return; }
@@ -1681,7 +1688,25 @@ function onSubmitHoja(e) {
   if (e.target.classList.contains("hb-form")) guardarForm();
 }
 
+// ---------- Scalping (js/habito-scalping.js) ----------
+function alternarScalping(sesion) {
+  sonar("toque");
+  pendienteXP = { id: HabitoScalping.ID, xp: res.xp };
+  HabitoScalping.alternar(sesion);
+}
+function crearScalping() {
+  if (!window.HabitoScalping || docs[HabitoScalping.ID]) return;
+  const orden = Object.keys(normal).reduce((m, id) => Math.max(m, normal[id].orden || 0), 0) + 1;
+  HabitoScalping.crear(orden).catch(errorGuardar);
+  toast("Agregaste «Scalping». Hoy es tu día 1: tócalo para ver qué te toca.");
+}
+document.addEventListener("scalping:crear", crearScalping);
+
 document.getElementById("hb-lista").addEventListener("click", e => {
+  const sc = e.target.closest("[data-sc-sesion]");
+  if (sc) { alternarScalping(sc.dataset.scSesion); return; }
+  if (e.target.closest("[data-sc-crear]")) { crearScalping(); return; }
+  if (e.target.closest("[data-sc-descartar]")) { HabitoScalping.descartarSugerencia(); renderHoy(); return; }
   const m = e.target.closest("[data-marcar]");
   if (m) { marcar(m.dataset.marcar); return; }
   const d = e.target.closest("[data-detalle]");
@@ -2260,6 +2285,7 @@ if (panelHoy) {
 // ---------- Todo junto ----------
 function actualizar() {
   if (!cargado) return;
+  if (window.HabitoScalping) HabitoScalping.datos(docs[HabitoScalping.ID] || null);
   recalcular();
   asegurarMisiones();
   asegurarJefe();

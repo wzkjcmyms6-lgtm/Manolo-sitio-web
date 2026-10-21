@@ -429,7 +429,7 @@ function evaluar(docs, opciones) {
   res.monedas = { ganadas, gastadas, saldo: ganadas - gastadas };
   res.monedasGanadas = ganadas;
   res.areas = calcularAreas(res, o.areas || CFG.AREAS);
-  res.logros = calcularLogros(res, { compras, habitos });
+  res.logros = calcularLogros(res, { compras, habitos, scalpingMinutos: o.scalpingMinutos });
   return res;
 }
 
@@ -757,9 +757,12 @@ function calcularLogros(res, extra) {
     canje: (extra.compras || []).filter(c => c && c.que === "recompensa").length,
     limpios: lista.filter(rh => rh.habito.tipo === "evitar").reduce((m, rh) => Math.max(m, rh.racha.mejor), 0),
     semanal: lista.filter(rh => rh.racha.unidad === "semanas").reduce((m, rh) => Math.max(m, rh.racha.mejor), 0),
-    regreso
+    regreso,
+    // Minutos reales de Scalping (js/scalping-habit.js). Sin el hábito, sus logros no aparecen.
+    scalping: extra.scalpingMinutos || 0
   };
-  return CFG.LOGROS.map(l => {
+  const tieneScalping = extra.scalpingMinutos != null;
+  return CFG.LOGROS.filter(l => l.tipo !== "scalping" || tieneScalping).map(l => {
     let actual, meta;
     if (l.tipo === "rango") { meta = primerDe(l.meta); actual = Math.max(0, maxNivel); }
     else { meta = l.meta; actual = valores[l.tipo] || 0; }

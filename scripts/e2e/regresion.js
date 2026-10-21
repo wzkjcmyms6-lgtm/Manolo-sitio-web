@@ -17,7 +17,7 @@ const SEED = {
   "users/test/bicicleta": { b1: { date: iso(hoy), distance: 20, duration: 60, notes: "" } }
 };
 const PANTALLAS = [
-  ["inicio", "#panel-inicio"], ["habitos", "#hb-lista"], ["hab-stats", "#hb-stats"], ["ej-feed", "#panel-ej-feed"],
+  ["inicio", "#panel-inicio"], ["habitos", "#hb-lista"], ["hab-stats", "#hb-stats"], ["hab-scalping", "#sc-app"], ["ej-feed", "#panel-ej-feed"],
   ["ejercicio", "#panel-ejercicio"], ["gimnasio", "#gym-home"], ["ej-rangos", "#rk-app"], ["ej-perfil", "#ejd-dash"],
   ["running", "#running-list"], ["bicicleta", "#cycling-list"], ["finanzas", "#panel-finanzas"], ["fin-movimientos", "#panel-fin-movimientos"],
   ["fin-presupuesto", "#panel-fin-presupuesto"], ["fin-analisis", "#panel-fin-analisis"], ["inversiones", "#panel-inversiones"]

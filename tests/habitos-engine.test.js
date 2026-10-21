@@ -656,3 +656,19 @@ test("nota del hábito: opcional, recortada y compatible con hábitos viejos", (
   assert.equal(E.normalizar({ name: "X", descripcion: "a".repeat(500) }, "c").descripcion.length, CFG.CONST.DESCRIPCION_MAX);
   assert.equal(E.normalizar({ name: "X", descripcion: 42 }, "d").descripcion, "");
 });
+
+test("Scalping: medible de 2 sesiones (2 = cumplido, 1 = parcial) y logros por horas reales", () => {
+  const sc = hab("scalping", { tipo: "medible", meta: 2, unidad: "sesiones", inicio: "2026-10-21",
+    registros: { "2026-10-21": { v: 2, t: null }, "2026-10-22": { v: 1, t: null } } });
+  const rh = uno(sc, "2026-10-23");
+  assert.equal(rh.dias["2026-10-21"].estado, "hecho", "mañana y noche: día cumplido");
+  assert.equal(rh.dias["2026-10-22"].estado, "parcial", "una sola sesión: parcial");
+  const sinHabito = E.evaluar([hab("a")], { hoy: "2026-10-23" });
+  assert.ok(!sinHabito.logros.some(l => l.tipo === "scalping"), "sin Scalping sus logros no aparecen");
+  const L = (min, id) => E.evaluar([sc], { hoy: "2026-10-23", scalpingMinutos: min }).logros.find(l => l.id === id);
+  assert.equal(L(2200, "scalping_36").desbloqueado, true);
+  assert.equal(L(2200, "scalping_50").desbloqueado, false);
+  assert.equal(L(2200, "scalping_50").actual, 2200);
+  assert.equal(L(3900, "scalping_65").desbloqueado, true);
+  assert.deepEqual(CFG.LOGROS.filter(l => l.tipo === "scalping").map(l => l.meta), [2178, 3000, 3900], "los mismos hitos que el módulo");
+});
