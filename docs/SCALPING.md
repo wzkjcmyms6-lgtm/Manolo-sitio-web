@@ -7,9 +7,12 @@ dueño; **no se modifica**: textos, números y reglas están verificados con
 `js/habito-scalping.js`.
 
 ## Cómo se usa
-- En **Hábitos › Hoy** aparece una sugerencia "Scalping · Agregar" mientras
-  no exista (se puede descartar con "Ahora no"). Al agregarlo, la fecha de
-  inicio es **hoy** (se cambia en Ajustes).
+- Para agregarlo: en **Hábitos › Hoy**, la sugerencia "Scalping · Agregar"
+  (se puede descartar con "Ahora no"), o siempre desde el botón **+** →
+  "Plan guiado: Scalping · Agregar" (si ya lo tienes dice "Abrir"). Al
+  agregarlo, la fecha de inicio es **hoy** (se cambia en Ajustes).
+- Una vez agregado, su tarjeta está en Hábitos › Hoy, grupo "Cualquier
+  momento".
 - **Tarjeta** en la lista: `Día N/180 · Fase · Noche: zona`, botones
   **Mañana · X min** y **Noche · Y min** (marcan o desmarcan con los minutos
   del plan), barra del plan y horas acumuladas. Tocar la tarjeta abre la vista.

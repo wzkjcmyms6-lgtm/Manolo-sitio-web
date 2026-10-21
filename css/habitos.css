@@ -194,6 +194,12 @@
 .hb-error { margin: 0.9rem 0 0; color: var(--danger); font-size: 0.86rem; }
 .hb-error[hidden] { display: none; }
 .hb-emojis { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 0.35rem; margin-top: 0.8rem; }
+/* Planes guiados (Scalping) arriba del formulario de nuevo hábito */
+.hb-plan-guiado { display: flex; align-items: center; gap: 0.7rem; margin: 0.2rem 0 0.4rem; padding: 0.75rem 0.85rem; border-radius: 16px; background: var(--surface); border: 1px solid rgba(255, 122, 48, 0.45); }
+.hb-plan-emoji { font-size: 1.7rem; }
+.hb-plan-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; font-size: 0.8rem; color: var(--muted); }
+.hb-plan-txt b { color: var(--ink); font-size: 0.95rem; }
+.hb-plan-guiado .hb-btn, .hb-plan-guiado .hb-btn-sec { flex-shrink: 0; min-height: 40px; padding: 0 1rem; }
 /* Selector de emoji: categorías en una fila que se desliza y vista previa */
 .hb-emoji-cab { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; margin-top: 1rem; }
 .hb-form .hb-emoji-cab .hb-label { margin: 0; }

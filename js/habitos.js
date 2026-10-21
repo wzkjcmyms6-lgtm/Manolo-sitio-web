@@ -864,7 +864,7 @@ function hojaForm(id) {
   const f = form;
   const medible = f.tipo === "medible" || f.tipo === "tiempo";
   const evitar = f.tipo === "evitar";
-  abrirHoja(cabecera("", f.id ? "Editar hábito" : "Nuevo hábito") + `
+  abrirHoja(cabecera("", f.id ? "Editar hábito" : "Nuevo hábito") + (f.id ? "" : planesGuiadosHtml()) + `
     <form class="hb-form" novalidate>
       <label class="hb-campo">Nombre
         <input type="text" name="name" maxlength="60" required value="${escapeHtml(f.name)}" placeholder="Ej: Tomar agua" autocomplete="off">
@@ -926,6 +926,18 @@ function opcionesCadena(f) {
 }
 
 // Pasa lo escrito en los campos de texto a `form` antes de redibujar.
+// Planes guiados al crear un hábito (siempre a mano, aunque se haya
+// descartado la sugerencia de Hoy): Scalping se agrega o se abre desde aquí.
+function planesGuiadosHtml() {
+  if (!window.HabitoScalping) return "";
+  const existe = !!docs[HabitoScalping.ID];
+  return `<div class="hb-plan-guiado">
+      <span class="hb-plan-emoji" aria-hidden="true">💆</span>
+      <span class="hb-plan-txt"><b>Plan guiado: Scalping</b><span>Masaje del cuero cabelludo · 180 días</span></span>
+      <button type="button" class="${existe ? "hb-btn-sec" : "hb-btn"}" ${existe ? "data-sc-abrir" : "data-sc-crear"}>${existe ? "Abrir" : "Agregar"}</button>
+    </div>`;
+}
+
 // Selector de emoji: categorías, la grilla de la categoría abierta y un campo
 // para escribir cualquier emoji del teclado.
 function emojisHtml(f) {
@@ -1640,6 +1652,8 @@ function onClickHoja(e) {
   const fechaDe = el => el.dataset.fecha || res.hoy;
   let b;
   if ((b = q("[data-sc-sesion]"))) { alternarScalping(b.dataset.scSesion); return; }
+  if (q("[data-sc-crear]")) { cerrarHoja(); crearScalping(); return; }
+  if (q("[data-sc-abrir]")) { cerrarHoja(); HabitoScalping.abrir(); return; }
   if ((b = q("[data-marcar]"))) { marcar(b.dataset.marcar); return; }
   if ((b = q("[data-detalle]"))) { hojaDetalle(b.dataset.detalle); return; }
   if ((b = q("[data-detalle-dia]"))) { hojaActual = null; hojaDetalle(b.dataset.detalleDia, b.dataset.fecha); return; }

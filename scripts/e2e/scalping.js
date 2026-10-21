@@ -165,6 +165,27 @@ async function sinFestejos(p) {
   await captura(p, "sc-guia.png");
   await p.context().close();
 
+  console.log("\nDesde el botón + (con la sugerencia descartada)");
+  p = await abrir(browser, base, { __SEED__: { "users/test/habitos": { h1: LEER } } }, { zona: ZONA, fecha: enLaPaz("2026-10-21"), hash: "#habitos", ancho: 375 });
+  await p.click("[data-sc-descartar]");
+  await p.waitForTimeout(300);
+  ok(await p.isHidden(".sc-sugerencia"), "«Ahora no» oculta la sugerencia");
+  await p.click("#hb-nuevo");
+  await p.waitForTimeout(400);
+  ok(await p.isVisible(".hb-plan-guiado [data-sc-crear]"), "el botón + ofrece «Plan guiado: Scalping · Agregar»");
+  await captura(p, "sc-boton-mas.png");
+  await p.click(".hb-plan-guiado [data-sc-crear]");
+  await p.waitForTimeout(500);
+  await sinFestejos(p);
+  ok(!!(await doc(p)) && await p.isVisible(".sc-fila"), "lo agrega y aparece la tarjeta en Hoy");
+  await p.click("#hb-nuevo");
+  await p.waitForTimeout(400);
+  ok(await p.isVisible(".hb-plan-guiado [data-sc-abrir]"), "ya agregado, el botón + ofrece «Abrir»");
+  await p.click(".hb-plan-guiado [data-sc-abrir]");
+  await p.waitForTimeout(500);
+  ok((await p.evaluate(() => location.hash)) === "#hab-scalping" && await p.isVisible("#panel-hab-scalping"), "«Abrir» lleva a la pantalla de Scalping");
+  await p.context().close();
+
   console.log("\nTabla de verificación (inicio 2026-10-21)");
   const tabla = [
     ["2026-10-21", "Día 1 de 180", "Adaptación", "5 min", "10 min", "Costados y nuca"],

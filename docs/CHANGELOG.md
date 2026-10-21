@@ -1,5 +1,9 @@
 # Cambios
 
+## 2026-10-21 · Scalping también desde el botón +
+- El formulario de nuevo hábito muestra "Plan guiado: Scalping" con
+  Agregar (o Abrir si ya existe), aunque se haya descartado la sugerencia.
+
 ## 2026-10-21 · Hábitos: más emojis
 - El formulario de hábitos pasa de 28 a 167 emojis en 11 categorías (Salud,
   Ejercicio, Comida, Mente, Calma, Trabajo, Hogar, Dinero, Social, Hobbies,
