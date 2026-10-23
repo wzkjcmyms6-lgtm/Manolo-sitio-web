@@ -1,5 +1,13 @@
 # Cambios
 
+## 2026-10-23 · Scalping: avanza solo con días completos
+- El día del plan sube solo cuando completas mañana y noche; si no, al día
+  siguiente sigues en el mismo día (`js/scalping-avance.js`). El módulo
+  original no cambia.
+- Scalping volvió al día 1 (una sola vez, al abrir esta versión) y en
+  Ajustes hay "Reiniciar desde el día 1". Las sesiones viejas no se borran.
+- Pruebas: 221 unitarias (7 nuevas de la regla); E2E `scalping.js` (75).
+
 ## 2026-10-21 · Scalping también desde el botón +
 - El formulario de nuevo hábito muestra "Plan guiado: Scalping" con
   Agregar (o Abrir si ya existe), aunque se haya descartado la sugerencia.

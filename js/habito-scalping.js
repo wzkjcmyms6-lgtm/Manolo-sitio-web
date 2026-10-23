@@ -14,8 +14,11 @@
 //   setNote, markPhotos, updateSettings) y se guarda por ruta de campo junto
 //   con registros.AAAA-MM-DD (cantidad de sesiones del día).
 // - "Hoy" es siempre ScalpingHabit.todayISO() (fecha local, no UTC).
+// - El día del plan avanza solo con días completos (mañana y noche):
+//   js/scalping-avance.js (pedido del dueño, 2026-10-23).
 (function () {
 const S = ScalpingHabit;
+const AV = ScalpingAvance;
 const ID = S.HABIT_ID;
 const TABS = [["hoy", "Hoy"], ["progreso", "Progreso"], ["semana", "Semana"], ["guia", "Guía"], ["ajustes", "Ajustes"]];
 const ZONA_OPCIONES = [["", "Ninguna (toda la cabeza)"]].concat(S.PRIORITY_ZONES.map(z => [z, S.ZONES[z].nombre]));
@@ -27,6 +30,7 @@ let tab = "hoy";
 let renderPendiente = false;
 let notaTimer = null;
 let guia = null;         // temporizador guiado abierto
+let reinicioPedido = false;
 
 const panel = document.getElementById("panel-hab-scalping");
 const app = document.getElementById("sc-app");
@@ -59,7 +63,8 @@ const activo = () => !!raw && !raw.archivado;
 
 // ---------- Guardar ----------
 // cambios: { fecha } para el registro de un día, { foto: "30" } para un
-// control de fotos y { ajustes: true } para los ajustes (y la fecha de inicio).
+// control de fotos, { fotos: true } para todos, { ajustes: true } para los
+// ajustes (y la fecha de inicio) y { reinicio: true } al volver al día 1.
 function guardar(nuevo, cambios) {
   if (!raw) return;
   const args = [];
@@ -71,6 +76,8 @@ function guardar(nuevo, cambios) {
     args.push(FP("registros", f), n ? { v: n, t: Date.now() } : FV().delete());
   }
   if (cambios.foto) args.push(FP("scalping", "fotos", cambios.foto), nuevo.fotos[cambios.foto]);
+  if (cambios.fotos) args.push(FP("scalping", "fotos"), nuevo.fotos);
+  if (cambios.reinicio) args.push(FP("scalpingReinicio"), hoy());
   if (cambios.ajustes) args.push(FP("scalping", "settings"), nuevo.settings, FP("inicio"), nuevo.settings.startDate);
   args.push(FP("scalping", "version"), nuevo.version, FP("scalping", "habitId"), nuevo.habitId);
   st = nuevo;
@@ -84,7 +91,12 @@ function guardar(nuevo, cambios) {
 function marcarSesion(sesion, hecho, minutos) {
   const f = hoy();
   const opciones = hecho ? (minutos ? { minutos } : {}) : { hecho: false };
-  guardar(S.markSession(st, f, sesion, opciones), { fecha: f });
+  guardar(AV.marcarSesion(st, f, sesion, opciones), { fecha: f });
+}
+
+// Volver al día 1 desde hoy (las sesiones anteriores no se borran).
+function reiniciar() {
+  guardar(AV.reiniciar(st, hoy()), { ajustes: true, fotos: true, reinicio: true });
 }
 
 // ---------- Crear y archivar ----------
@@ -97,7 +109,7 @@ function crear(orden) {
     timeOfDay: "cualquiera", dificultad: "media", area: "cuerpo", minima: "", despuesDe: null, vinculo: null,
     descripcion: S.CONTENT.subtitulo,
     done: [], registros: {}, createdAt: Date.now(), inicio, orden: orden || 0,
-    scalping: estado
+    scalping: estado, scalpingReinicio: inicio
   });
 }
 function archivar() {
@@ -117,7 +129,7 @@ function botonRapido(sesion, plan, log) {
 function filaHtml() {
   if (!st) return "";
   const f = hoy();
-  const plan = S.getPlanForDate(st.settings, f);
+  const plan = AV.planHoy(st, f);
   const log = S.getLog(st, f);
   const stats = S.getStats(st, f);
   const completo = log.manana.hecho && log.noche.hecho;
@@ -216,7 +228,7 @@ function sesionHtml(sesion, log, interactivo) {
 }
 function tabHoy() {
   const f = hoy();
-  const plan = S.getPlanForDate(st.settings, f);
+  const plan = AV.planHoy(st, f);
   const log = S.getLog(st, f);
   let html = `<section class="hb-card sc-encabezado">
     <p class="sc-dia">${plan.estado === "pendiente" ? `Empiezas en ${plural(plan.diasParaEmpezar, "día", "días")}` : `Día ${plan.dia} de ${S.TOTAL_DAYS}`}</p>
@@ -224,6 +236,7 @@ function tabHoy() {
     <p class="hb-texto">${esc(plan.fase.descripcion)}</p>
     <p class="sc-fecha">${esc(plan.diaSemana)} · ${esc(plan.fechaTexto)}</p>
     ${barra(plan.progreso, "Progreso del plan de 180 días")}
+    ${plan.estado === "pendiente" ? "" : `<p class="sc-avance">${log.manana.hecho && log.noche.hecho ? "Día completo: mañana pasas al día siguiente." : "Pasas al día siguiente cuando completas mañana y noche. Si no, el plan te espera en este día."}</p>`}
   </section>`;
   if (plan.estado === "mantenimiento") html += `<p class="sc-banner">Plan de 180 días completado · Mantenimiento</p>`;
   if (plan.estado === "pendiente") {
@@ -231,7 +244,7 @@ function tabHoy() {
     html += `<p class="sc-banner">Empiezas en ${plural(plan.diasParaEmpezar, "día", "días")} (${esc(S.formatFecha(st.settings.startDate))}). Así será tu día 1:</p>
       ${sesionHtml(p1.manana, null, false)}${sesionHtml(p1.noche, null, false)}`;
   } else {
-    const aviso = S.getReminder(st, new Date());
+    const aviso = AV.aviso(st, new Date());
     if (aviso) html += `<p class="sc-recordatorio" role="status"><span data-icon="bell"></span>${esc(aviso.texto)}</p>`;
     if (plan.fotos && !st.fotos[String(plan.fotos.checkpoint)]) {
       html += `<section class="sc-fotos" aria-label="Fotos de control">
@@ -267,9 +280,10 @@ function heatmapHtml(historia) {
 function tabProgreso() {
   const f = hoy();
   const stats = S.getStats(st, f);
-  const plan = stats.minutosPlanHastaHoy;
+  const diaHoy = AV.diaPorAvance(st, f) || 0;          // día del plan (por avance)
+  const plan = S.getPlannedCumulativeMinutes(diaHoy, st.settings);
   const fotosHechas = st.fotos;
-  const diaHoy = stats.diaHoy;
+  const ajustes = AV.ajustesPlan(st, f);
   let html = `<section class="hb-card"><h2 class="hb-card-t">Horas acumuladas</h2>
     <div class="sc-horas"><span class="hb-num">${esc(S.formatHoras(stats.minutosTotales))}</span><span>de ${esc(S.formatHoras(plan))} que lleva el plan hasta hoy</span></div>
     ${barra(plan ? stats.minutosTotales / plan : 0, "Horas hechas contra las del plan")}
@@ -288,13 +302,13 @@ function tabProgreso() {
     <div class="hb-stat"><span class="hb-num">${pct(stats.cumplimiento)}</span><span>Cumplimiento</span></div>
   </div>`;
   html += `<section class="hb-card"><h2 class="hb-card-t">Los ${S.TOTAL_DAYS} días</h2>${heatmapHtml(S.getHistory(st, f))}</section>`;
-  html += `<section class="hb-card"><h2 class="hb-card-t">Fotos de control</h2><ul class="sc-filas">${S.getPhotoSchedule(st.settings.startDate).map(c => {
+  html += `<section class="hb-card"><h2 class="hb-card-t">Fotos de control</h2><p class="hb-texto">Fechas estimadas si completas cada día.</p><ul class="sc-filas">${S.getPhotoSchedule(ajustes.startDate).map(c => {
     const hecha = fotosHechas[String(c.checkpoint)];
     const abierta = diaHoy >= c.checkpoint - S.PHOTO_WINDOW;
     return `<li><span><b>Día ${c.checkpoint}</b> · ${esc(c.fechaTexto)}</span>
       ${hecha ? `<span class="sc-ok"><span data-icon="check"></span>Marcadas</span>` : abierta ? `<button type="button" class="hb-btn-sec sc-mini" data-sc-fotos="${c.checkpoint}">Marcar</button>` : `<span class="sc-pend">Pendiente</span>`}</li>`;
   }).join("")}</ul></section>`;
-  html += `<section class="hb-card"><h2 class="hb-card-t">Cuándo llega el plan a cada hito</h2><p class="hb-texto">Si haces todas las sesiones con los minutos del plan.</p><ul class="sc-filas">${S.getPlanMarkers(st.settings).map(m =>
+  html += `<section class="hb-card"><h2 class="hb-card-t">Cuándo llega el plan a cada hito</h2><p class="hb-texto">Si desde hoy completas cada día con los minutos del plan.</p><ul class="sc-filas">${S.getPlanMarkers(ajustes).map(m =>
     `<li><span><b>${esc(m.titulo)}</b></span><span>Día ${m.dia} · ${esc(m.fechaTexto)}</span></li>`).join("")}</ul></section>`;
   return html;
 }
@@ -311,7 +325,8 @@ function celebrarHitos() {
 
 // ---------- Pestaña Semana ----------
 function tabSemana() {
-  return `<ul class="sc-semana">${S.getWeekPreview(st.settings, hoy(), 7).map((d, i) => `
+  return `<p class="hb-texto sc-semana-nota">Si completas cada día. Si un día no lo completas, el plan te espera.</p>
+    <ul class="sc-semana">${S.getWeekPreview(AV.ajustesPlan(st, hoy()), hoy(), 7).map((d, i) => `
     <li class="sc-sem-dia${i === 0 ? " is-hoy" : ""}">
       <div class="sc-sem-fecha"><b>${i === 0 ? "Hoy" : esc(DIAS_CORTOS[d.diaSemana] || d.diaSemana)}</b><span>${esc(d.fechaTexto)}</span></div>
       <div class="sc-sem-info">
@@ -358,7 +373,7 @@ function tabGuia() {
 // ---------- Pestaña Ajustes ----------
 function tabAjustes() {
   const s = st.settings;
-  const plan = S.getPlanForDate(s, hoy());
+  const plan = AV.planHoy(st, hoy());
   return `<section class="hb-card">
     <label class="hb-campo"><span>Fecha de inicio</span>
       <input type="date" data-sc-inicio value="${esc(s.startDate)}"></label>
@@ -372,13 +387,18 @@ function tabAjustes() {
     <label class="sc-check sc-ajuste"><span><b>Noche extendida a 20 minutos</b><small>${esc(S.CONTENT.textoNocheExtendida)} Solo aplica desde la fase 3 (día 91)${plan.nocheExtendidaDisponible ? "" : "; antes no cambia nada"}.</small></span>
       <input type="checkbox" class="switch" data-sc-ajuste="nocheExtendida"${s.nocheExtendida ? " checked" : ""}></label>
   </section>
+  <section class="hb-card">
+    <h2 class="hb-card-t">Volver a empezar</h2>
+    <p class="hb-texto">El plan vuelve al día 1 desde hoy. Tus sesiones anteriores no se borran, pero el progreso del plan empieza de cero y los controles de fotos se desmarcan.</p>
+    <button type="button" class="hb-btn-sec" data-sc-reiniciar>Reiniciar desde el día 1</button>
+  </section>
   ${activo() ? `<div class="hb-acciones sc-archivar"><button type="button" class="hb-btn-sec" data-sc-archivar>Archivar hábito</button></div>` : ""}`;
 }
 
 // ---------- Temporizador guiado (pantalla completa) ----------
 function abrirGuia(sesionId) {
   const f = hoy();
-  const plan = S.getPlanForDate(st.settings, f);
+  const plan = AV.planHoy(st, f);
   const sesion = plan[sesionId];
   // En el mismo toque: audio (iOS solo lo permite tras un gesto) y pantalla encendida.
   S.browser.prepareAudio();
@@ -442,12 +462,12 @@ function terminoGuia(e) {
   cerrarGuia();
   if (e.completo) {
     S.browser.beep(660, 400);
-    guardar(S.markSession(st, fecha, sesion.id), { fecha });
+    guardar(AV.marcarSesion(st, fecha, sesion.id), { fecha });
     return;
   }
   const minutos = Math.max(1, Math.round(e.transcurridoSeg / 60));
   if (confirm(`¿Marcar la sesión de ${sesion.titulo.toLowerCase()} como hecha con ${minutos} min?`)) {
-    guardar(S.markSession(st, fecha, sesion.id, { minutos }), { fecha });
+    guardar(AV.marcarSesion(st, fecha, sesion.id, { minutos }), { fecha });
   }
 }
 function cerrarGuia() {
@@ -479,7 +499,7 @@ document.addEventListener("visibilitychange", () => {
 
 // ---------- Eventos de la vista ----------
 app.addEventListener("click", e => {
-  const b = e.target.closest("[data-sc-tab],[data-sc-crear],[data-sc-guiado],[data-sc-marcar],[data-sc-desmarcar],[data-sc-fotos],[data-sc-archivar]");
+  const b = e.target.closest("[data-sc-tab],[data-sc-crear],[data-sc-guiado],[data-sc-marcar],[data-sc-desmarcar],[data-sc-fotos],[data-sc-archivar],[data-sc-reiniciar]");
   if (!b) return;
   const d = b.dataset;
   if (d.scTab) { tab = d.scTab; render(); window.scrollTo(0, 0); return; }
@@ -497,6 +517,10 @@ app.addEventListener("click", e => {
     const c = Number(d.scFotos);
     const marcada = st.fotos[String(c)];
     guardar(S.markPhotos(st, c, marcada ? null : hoy()), { foto: String(c) });
+    return;
+  }
+  if (b.hasAttribute("data-sc-reiniciar")) {
+    if (confirm("¿Reiniciar Scalping desde el día 1? Empieza hoy. Tus sesiones anteriores no se borran.")) { reiniciar(); tab = "hoy"; render(); }
     return;
   }
   if (b.hasAttribute("data-sc-archivar")) archivar();
@@ -534,6 +558,13 @@ window.HabitoScalping = {
   datos(doc) {
     raw = doc || null;
     st = raw ? S.normalizeState(raw.scalping || { settings: { startDate: raw.inicio } }) : null;
+    // Pedido del dueño (2026-10-23): volver al día 1 una vez, con la regla
+    // nueva. Los hábitos creados desde esta versión ya traen la marca.
+    if (raw && !raw.archivado && !raw.scalpingReinicio && !reinicioPedido && currentUser) {
+      reinicioPedido = true;
+      reiniciar();
+      return;
+    }
     render();
   },
   // Minutos reales registrados (para los logros); null si no tienes el hábito.

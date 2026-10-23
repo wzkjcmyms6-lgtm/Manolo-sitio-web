@@ -10,12 +10,19 @@ const ZONA = "America/La_Paz";
 const enLaPaz = (fecha, hora = "10:00") => `${fecha}T${hora}:00-04:00`;
 const LEER = { v: 2, name: "Leer", emoji: "📖", tipo: "sino", freqType: "diario", days: [true, true, true, true, true, true, true], done: [], registros: {}, createdAt: Date.UTC(2026, 9, 1), inicio: "2026-10-01", orden: 1 };
 // Documento de Scalping como lo crea la app, con inicio el 2026-10-21.
-const SC = (extra) => Object.assign({
+// logs: { fecha: log } ya hechos (por defecto, ninguno).
+const SC = (extra, logs) => Object.assign({
   v: 2, especial: "scalping", name: "Scalping", emoji: "💆", tipo: "medible", meta: 2, unidad: "sesiones", freqType: "diario",
   days: [true, true, true, true, true, true, true], timeOfDay: "cualquiera", dificultad: "media", area: "cuerpo",
-  done: [], registros: {}, createdAt: Date.UTC(2026, 9, 21, 14), inicio: "2026-10-21", orden: 2,
-  scalping: { version: 1, habitId: "scalping", settings: { startDate: "2026-10-21", zonaPrioritaria: null, usarAceite: false, nocheExtendida: false }, logs: {}, fotos: {} }
+  done: [], registros: {}, createdAt: Date.UTC(2026, 9, 21, 14), inicio: "2026-10-21", orden: 2, scalpingReinicio: "2026-10-21",
+  scalping: { version: 1, habitId: "scalping", settings: { startDate: "2026-10-21", zonaPrioritaria: null, usarAceite: false, nocheExtendida: false }, logs: logs || {}, fotos: {} }
 }, extra);
+// Todos los días completos (mañana y noche) desde el inicio hasta el día anterior a `hasta`.
+function completosHasta(hasta, desde = "2026-10-21") {
+  const logs = {};
+  for (let f = desde; f < hasta; f = S.addDays(f, 1)) logs[f] = { manana: { hecho: true, minutos: 5 }, noche: { hecho: true, minutos: 10 }, aceite: false, nota: "" };
+  return logs;
+}
 
 const texto = (p, sel) => p.textContent(sel).then(t => (t || "").replace(/\s+/g, " ").trim());
 const doc = p => p.evaluate(() => window.__fakeStore.colMap("users/test/habitos").get("scalping"));
@@ -103,7 +110,7 @@ async function sinFestejos(p) {
   ok((await doc(p)).scalping.settings.startDate === "2026-09-20" && (await doc(p)).inicio === "2026-09-20", "cambiar la fecha de inicio la guarda (y el hábito empieza ese día)");
   await p.click('[data-sc-tab="hoy"]');
   await p.waitForTimeout(200);
-  ok((await texto(p, ".sc-dia")) === "Día 32 de 180" && (await texto(p, ".sc-fase")) === "Constancia", "con otro inicio, hoy es el día 32 (Constancia)");
+  ok((await texto(p, ".sc-dia")) === "Día 1 de 180", "con un inicio un mes antes sigue en el día 1: solo cuentan los días completos");
   await p.click('[data-sc-tab="ajustes"]');
   await p.fill("[data-sc-inicio]", "2026-10-21");
   await p.dispatchEvent("[data-sc-inicio]", "change");
@@ -186,7 +193,57 @@ async function sinFestejos(p) {
   ok((await p.evaluate(() => location.hash)) === "#hab-scalping" && await p.isVisible("#panel-hab-scalping"), "«Abrir» lleva a la pantalla de Scalping");
   await p.context().close();
 
-  console.log("\nTabla de verificación (inicio 2026-10-21)");
+  console.log("\nEl plan avanza solo con días completos");
+  const soloManana = { "2026-10-21": { manana: { hecho: true, minutos: 5 }, noche: { hecho: false, minutos: null }, aceite: false, nota: "" } };
+  p = await abrir(browser, base, { __SEED__: { "users/test/habitos": { scalping: SC({}, soloManana) } } }, { zona: ZONA, fecha: enLaPaz("2026-10-23"), hash: "#habitos", ancho: 375 });
+  ok((await texto(p, ".sc-fila .hb-sub")).startsWith("Día 1/180"), "dos días después, con el día 1 incompleto, sigue en el día 1");
+  await p.click('.sc-fila [data-detalle="scalping"]');
+  await p.waitForTimeout(400);
+  ok((await texto(p, ".sc-dia")) === "Día 1 de 180" && (await texto(p, ".sc-avance")).startsWith("Pasas al día siguiente cuando completas"), "la vista lo explica");
+  ok((await texto(p, ".sc-fecha")) === "Viernes · 23 oct 2026" && (await p.$$eval(".sc-sesion .sc-zona", els => els[1].textContent)).includes("Coronilla"), "la zona de la noche es la del día de hoy (viernes: coronilla)");
+  await p.evaluate(() => { location.hash = "habitos"; });
+  await p.waitForTimeout(300);
+  await p.click('[data-sc-sesion="manana"]');
+  await p.waitForTimeout(300);
+  await sinFestejos(p);
+  await p.click('[data-sc-sesion="noche"]');
+  await p.waitForTimeout(400);
+  await sinFestejos(p);
+  ok((await texto(p, ".sc-fila .hb-sub")).startsWith("Día 1/180"), "completar hoy no cambia el día de hoy");
+  await p.context().close();
+  // Al día siguiente (con el 23 completo) ya es el día 2.
+  const conDia23 = Object.assign({}, soloManana, { "2026-10-23": { manana: { hecho: true, minutos: 5 }, noche: { hecho: true, minutos: 10 }, aceite: false, nota: "" } });
+  p = await abrir(browser, base, { __SEED__: { "users/test/habitos": { scalping: SC({}, conDia23) } } }, { zona: ZONA, fecha: enLaPaz("2026-10-24"), hash: "#habitos", ancho: 375 });
+  ok((await texto(p, ".sc-fila .hb-sub")).startsWith("Día 2/180"), "al día siguiente de completar, pasa al día 2");
+  await p.context().close();
+
+  console.log("\nVolver al día 1");
+  // Hábito de antes de esta versión (sin marca de reinicio): vuelve solo al día 1, una vez.
+  const viejo = SC({ inicio: "2026-10-18", scalpingReinicio: undefined }, completosHasta("2026-10-20", "2026-10-18"));
+  delete viejo.scalpingReinicio;
+  viejo.scalping.settings.startDate = "2026-10-18";
+  viejo.scalping.fotos = { "1": "2026-10-18" };
+  p = await abrir(browser, base, { __SEED__: { "users/test/habitos": { scalping: viejo } } }, { zona: ZONA, fecha: enLaPaz("2026-10-23"), hash: "#habitos", ancho: 375 });
+  await p.waitForTimeout(400);
+  d = await doc(p);
+  ok(d.scalping.settings.startDate === "2026-10-23" && d.scalpingReinicio === "2026-10-23" && d.inicio === "2026-10-23", "el Scalping de antes vuelve al día 1 desde hoy (una sola vez)");
+  ok(d.scalping.logs["2026-10-18"].manana.hecho === true && d.scalping.fotos["1"] === null, "las sesiones viejas no se borran; los controles de fotos se desmarcan");
+  ok((await texto(p, ".sc-fila .hb-sub")).startsWith("Día 1/180"), "la tarjeta muestra el día 1");
+  await p.reload();
+  await p.waitForTimeout(1000);
+  ok((await doc(p)).scalpingReinicio === "2026-10-23", "al recargar no se vuelve a reiniciar");
+  await p.context().close();
+  // Botón en Ajustes.
+  p = await abrir(browser, base, { __SEED__: { "users/test/habitos": { scalping: SC({}, completosHasta("2026-10-25")) } } }, { zona: ZONA, fecha: enLaPaz("2026-10-25"), hash: "#hab-scalping", ancho: 375 });
+  ok((await texto(p, ".sc-dia")) === "Día 5 de 180", "con 4 días completos, hoy es el día 5");
+  await p.click('[data-sc-tab="ajustes"]');
+  await p.waitForTimeout(200);
+  await p.click("[data-sc-reiniciar]");          // pregunta y se acepta
+  await p.waitForTimeout(400);
+  ok((await doc(p)).scalping.settings.startDate === "2026-10-25" && (await texto(p, ".sc-dia")) === "Día 1 de 180", "«Reiniciar desde el día 1» vuelve al día 1 hoy");
+  await p.context().close();
+
+  console.log("\nTabla de verificación (inicio 2026-10-21, todos los días anteriores completos)");
   const tabla = [
     ["2026-10-21", "Día 1 de 180", "Adaptación", "5 min", "10 min", "Costados y nuca"],
     ["2026-10-25", "Día 5 de 180", "Adaptación", "5 min", "10 min", "Toda la cabeza"],
@@ -196,7 +253,7 @@ async function sinFestejos(p) {
     ["2027-04-19", "Día 181 de 180", "Mantenimiento", "10 min", "15 min", "Entradas y sienes"]
   ];
   for (const [fecha, dia, fase, man, noc, zona] of tabla) {
-    p = await abrir(browser, base, { __SEED__: { "users/test/habitos": { scalping: SC() } } }, { zona: ZONA, fecha: enLaPaz(fecha, "15:00"), hash: "#hab-scalping", ancho: 375 });
+    p = await abrir(browser, base, { __SEED__: { "users/test/habitos": { scalping: SC({}, completosHasta(fecha)) } } }, { zona: ZONA, fecha: enLaPaz(fecha, "15:00"), hash: "#hab-scalping", ancho: 375 });
     const mins = await p.$$eval(".sc-sesion .sc-min", els => els.map(e => e.textContent));
     const z = await p.$$eval(".sc-sesion .sc-zona", els => els.map(e => e.textContent.replace("Zona:", "").trim()));
     let extra = "";
@@ -208,7 +265,7 @@ async function sinFestejos(p) {
     await p.context().close();
   }
   for (const [fecha, dia, horas] of [["2027-01-18", 90, "27,5 h"], ["2027-02-09", 112, "36,7 h"], ["2027-03-13", 144, "50 h"], ["2027-04-18", 180, "65 h"]]) {
-    p = await abrir(browser, base, { __SEED__: { "users/test/habitos": { scalping: SC() } } }, { zona: ZONA, fecha: enLaPaz(fecha, "15:00"), hash: "#hab-scalping" });
+    p = await abrir(browser, base, { __SEED__: { "users/test/habitos": { scalping: SC({}, completosHasta(fecha)) } } }, { zona: ZONA, fecha: enLaPaz(fecha, "15:00"), hash: "#hab-scalping" });
     await p.click('[data-sc-tab="progreso"]');
     await p.waitForTimeout(200);
     ok((await texto(p, ".sc-horas")).includes(`de ${horas} que lleva el plan`), `día ${dia}: el plan acumula ${horas}`);

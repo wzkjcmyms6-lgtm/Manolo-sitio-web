@@ -20,7 +20,9 @@
     sigue al dedo, vuelve si se suelta a mitad, se cierra al bajarla o con un
     tirón, de lado no se mueve, con la lista desplazada primero sube la lista;
     en Finanzas, el selector de categorías, Hábitos y Running.
-  - `scalping.js` — hábito Scalping con fecha y huso de La Paz fijos:
+  - `scalping.js` — hábito Scalping con fecha y huso de La Paz fijos
+    (además: el plan no avanza sin día completo, reinicio automático una vez
+    y botón "Reiniciar desde el día 1"):
     agregarlo, tarjeta y botones rápidos, vista Hoy (aviso, fotos, pasos,
     marcar con minutos, nota), Ajustes, persistencia al recargar, «Cerrar el
     día», Inicio, Progreso, Semana, Guía, la tabla de verificación del dueño

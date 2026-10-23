@@ -6,6 +6,21 @@ dueño; **no se modifica**: textos, números y reglas están verificados con
 `ScalpingHabit.selfTest()` → 142 comprobaciones). Pantallas:
 `js/habito-scalping.js`.
 
+## Regla del día (pedido del dueño, 2026-10-23)
+El día del plan **avanza solo con días completos** (mañana y noche): día de
+hoy = días completos desde el inicio (sin contar hoy) + 1. Si un día no se
+completa, al día siguiente se sigue en el mismo día del plan. La fecha real
+manda el día de la semana (zona de la noche). Lógica en
+`js/scalping-avance.js` (probada en `tests/scalping-avance.test.js`); el
+módulo `js/scalping-habit.js` sigue intacto (se le pasa un inicio "corrido").
+Semana, fotos y fechas de hitos son estimadas "si completas cada día".
+Las estadísticas (horas, racha, cumplimiento, calendario) siguen por fecha.
+
+**Reiniciar desde el día 1** (Ajustes): inicio = hoy y controles de fotos
+sin marcar; las sesiones anteriores no se borran (quedan antes del nuevo
+inicio). Al publicar esta regla, el Scalping que ya existía se reinició solo
+una vez (marca `scalpingReinicio` en el documento).
+
 ## Cómo se usa
 - Para agregarlo: en **Hábitos › Hoy**, la sugerencia "Scalping · Agregar"
   (se puede descartar con "Ahora no"), o siempre desde el botón **+** →

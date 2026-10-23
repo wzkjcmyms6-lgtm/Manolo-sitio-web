@@ -21,7 +21,7 @@ por dueño).
 | Ruta | Fase | Campos | Notas |
 |---|---|---|---|
 | `users/{uid}/habitos/{id}.descripcion` ✅ | 1 | string ≤ 300, opcional | Aditivo; hábitos viejos sin campo = sin nota |
-| `users/{uid}/habitos/scalping` ✅ | 2026-10-21 | Hábito Medible (`meta: 2`, `unidad: "sesiones"`, `especial: "scalping"`) con `registros.{fecha}.v` = sesiones del día y el campo `scalping: { version, habitId, settings, logs, fotos }` | Id fijo. Lo crea el dueño desde la sugerencia en Hoy. Formato del estado: `js/scalping-habit.js`; uso: `docs/SCALPING.md` |
+| `users/{uid}/habitos/scalping` ✅ | 2026-10-21 | Hábito Medible (`meta: 2`, `unidad: "sesiones"`, `especial: "scalping"`) con `registros.{fecha}.v` = sesiones del día y el campo `scalping: { version, habitId, settings, logs, fotos }` ; `scalpingReinicio` (fecha del último reinicio al día 1) | Id fijo. Lo crea el dueño desde la sugerencia en Hoy. Formato del estado: `js/scalping-habit.js`; uso: `docs/SCALPING.md` |
 | `accesos/{uid}_{loginMs}` ✅ | 1 | `uid, usuario, tipo:"login", creado: serverTimestamp, leido:false` | Id determinista = **idempotente** (un login, un documento). Sin IP, dispositivo ni ubicación |
 | `admins/{uid}` ✅ | 1 | `{}` (o `nombre`) | Lo crea el dueño **a mano en la consola**; la app no puede escribirlo |
 | `users/{uid}/running/{id}` (rutina guiada) ✅ | 2026-10-01 | `fuente:"rutina", date, distance (km; 0 si no se anotaron), duration (min activos), notes, inicio, fin (ms), tiempoActivoS, rutina:{id, nombre, completados, total}`, opcional `rpe` | Lo arma `js/rutina-guiada.js`. Mismos `distance`/`duration` de siempre → resumen semanal y mapa muscular lo cuentan |

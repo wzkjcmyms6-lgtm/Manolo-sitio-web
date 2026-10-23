@@ -221,3 +221,12 @@ varios usuarios; crear Scalping para todos sería invasivo. Mientras no
 exista, Hábitos › Hoy muestra "Scalping · Agregar" (descartable). La fecha
 de inicio es el día en que se agrega. Archivar está en Ajustes de la vista
 (restaurar, en Ajustes de Hábitos, como cualquier hábito).
+
+**D-042 (2026-10-23) · Scalping avanza solo con días completos.** Pedido del
+dueño: "si no marco completo, que se quede en el mismo día". Día del plan =
+días completos antes de hoy + 1. Se implementa en `js/scalping-avance.js`
+pasándole al módulo del dueño un inicio corrido, así su contenido, sus
+reglas y su `selfTest` quedan intactos; la zona de la noche sigue el día de
+la semana real. Las estadísticas siguen por fecha. El reinicio al día 1 se
+hizo una vez automáticamente (marca `scalpingReinicio`) y queda un botón en
+Ajustes; no borra sesiones, solo mueve el inicio y desmarca las fotos.
