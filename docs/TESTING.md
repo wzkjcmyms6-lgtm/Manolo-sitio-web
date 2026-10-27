@@ -19,7 +19,9 @@
   - `hojas.js` — deslizar hacia abajo para cerrar (dedo simulado): la hoja
     sigue al dedo, vuelve si se suelta a mitad, se cierra al bajarla o con un
     tirón, de lado no se mueve, con la lista desplazada primero sube la lista;
-    en Finanzas, el selector de categorías, Hábitos y Running.
+    en Finanzas, el selector de categorías, Hábitos y Running. Además, que
+    las hojas no se salgan de ancho ni reboten (formulario Medible, Ajustes
+    de Hábitos, transacción) y que la pantalla no rebote.
   - `scalping.js` — hábito Scalping con fecha y huso de La Paz fijos
     (además: el plan no avanza sin día completo, reinicio automático una vez
     y botón "Reiniciar desde el día 1"):

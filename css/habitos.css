@@ -179,6 +179,10 @@
   font-family: inherit; font-size: 1rem; /* 16 px: el iPhone no hace zoom al escribir */
 }
 .hb-campo textarea { resize: vertical; line-height: 1.4; }
+/* Un campo nunca es más ancho que su columna: en las grillas de 2 columnas
+   (áreas, recompensas, meta y unidad) el input se salía de la hoja. */
+.hb-campo { min-width: 0; }
+.hb-campo input, .hb-campo textarea, .hb-campo select { width: 100%; min-width: 0; }
 .hb-campo input:focus, .hb-campo textarea:focus { outline: 2px solid var(--accent-1); outline-offset: 1px; }
 /* Nota del hábito: una línea en la lista, completa en el detalle. */
 .hb-desc-fila { font-size: 0.8rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -225,6 +229,7 @@
 }
 .hb-dia.is-on { background: var(--accent-grad); color: #0a0a0a; border-color: transparent; }
 .hb-fila-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; align-items: end; }
+.hb-fila-campos > * { min-width: 0; }
 .hb-unidad-fija { color: var(--muted); font-size: 0.9rem; padding-bottom: 0.75rem; }
 
 /* ===== Aviso con "Deshacer" y "+XP" ===== */

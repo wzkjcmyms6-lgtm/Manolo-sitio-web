@@ -106,6 +106,35 @@ const desplazada = (p, sel) => p.$eval(sel, el => el.style.transform || "");
   await p.waitForTimeout(500);
   ok(!(await visible(p, ".rr-hoja")) && (await p.evaluate(() => window.__fakeStore.colMap("users/test/rutinas_running").size)) === 0, "deslizar la cierra sin guardar");
 
+
+  console.log("\nSin rebote ni movimiento de lado");
+  // Lo que se sale de ancho permite arrastrar la hoja de lado y que rebote.
+  const ancho = sel => p.$eval(sel, el => ({ sobra: el.scrollWidth - el.clientWidth, ob: getComputedStyle(el).overscrollBehaviorY, ox: getComputedStyle(el).overflowX }));
+  await p.evaluate(() => { location.hash = "habitos"; });
+  await p.waitForTimeout(400);
+  await p.click("#hb-nuevo");
+  await p.waitForTimeout(400);
+  await p.click('[data-campo="tipo"][data-v="medible"]');
+  await p.waitForTimeout(250);
+  let m = await ancho(".hb-sheet .muscle-sheet-panel");
+  ok(m.sobra === 0, `nuevo hábito Medible: «Meta» y «Unidad» caben en la hoja (sobraban 71 px; ahora ${m.sobra})`);
+  ok(m.ob === "none" && m.ox === "hidden", "la hoja no rebota ni se mueve de lado");
+  await p.click(".hb-sheet .muscle-sheet-close");
+  await p.waitForTimeout(300);
+  await p.click("[data-ajustes]");
+  await p.waitForTimeout(400);
+  m = await ancho(".hb-sheet .muscle-sheet-panel");
+  ok(m.sobra === 0, `Ajustes de Hábitos: los nombres de las áreas caben (ahora sobran ${m.sobra} px)`);
+  await p.click(".hb-sheet .muscle-sheet-close");
+  await p.waitForTimeout(300);
+  ok(await p.evaluate(() => getComputedStyle(document.documentElement).overscrollBehaviorY === "none" && getComputedStyle(document.body).overscrollBehaviorY === "none"), "la pantalla tampoco rebota al llegar arriba o abajo");
+  await p.evaluate(() => { location.hash = "fin-movimientos"; });
+  await p.waitForTimeout(400);
+  await p.click("#txn-add");
+  await p.waitForTimeout(400);
+  m = await ancho("#txn-sheet .budget-sheet-panel");
+  ok(m.sobra === 0 && m.ob === "none", "Finanzas: la hoja de transacción tampoco rebota");
+
   await p.context().close();
   await terminar(browser, srv);
 })();

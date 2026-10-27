@@ -22,6 +22,8 @@
   --font-display: "Fraunces", "DM Sans", system-ui, serif;
 }
 * { box-sizing: border-box; }
+/* Sin el rebote elástico del iPhone al llegar arriba o abajo de la pantalla. */
+html, body { overscroll-behavior: none; }
 body {
   margin: 0;
   font-family: var(--font-body);
@@ -238,6 +240,10 @@ h1, h2, h3 { font-family: var(--font-body); font-weight: 700; letter-spacing: -0
 @keyframes muscle-sheet-up { from { transform: translateY(100%); } to { transform: none; } }
 @keyframes muscle-sheet-down { to { transform: translateY(100%); } }
 .muscle-sheet-grip { width: 40px; height: 4px; border-radius: 2px; background: var(--border); margin: 0.2rem auto 0.8rem; }
+/* Hojas que suben desde abajo: solo se desplazan de arriba abajo (nunca de
+   lado aunque algo sea más ancho) y sin el rebote elástico del iPhone. */
+.budget-sheet-panel, .muscle-sheet-panel, .cat-sheet-panel { overflow-x: hidden; overscroll-behavior: none; }
+.cat-sheet-body { overscroll-behavior: none; }
 /* Deslizar hacia abajo para cerrar (js/hoja-deslizar.js): mientras se
    arrastra, la hoja sigue al dedo sin retraso; al cerrarse deslizando, sigue
    bajando desde donde quedó (sin repetir su animación de cierre). */

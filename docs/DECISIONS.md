@@ -230,3 +230,10 @@ reglas y su `selfTest` quedan intactos; la zona de la noche sigue el día de
 la semana real. Las estadísticas siguen por fecha. El reinicio al día 1 se
 hizo una vez automáticamente (marca `scalpingReinicio`) y queda un botón en
 Ajustes; no borra sesiones, solo mueve el inicio y desmarca las fotos.
+
+**D-043 (2026-10-27) · Sin rebote elástico.** Pedido del dueño. `html`,
+`body` y las hojas usan `overscroll-behavior: none` (iOS 16+ respeta la
+regla); las hojas además `overflow-x: hidden` para que un contenido ancho
+nunca permita arrastrarlas de lado. La causa visible era un campo de
+formulario más ancho que su columna; se corrigió en el origen
+(`.hb-campo { min-width: 0 }` y campos al 100 % de su columna).

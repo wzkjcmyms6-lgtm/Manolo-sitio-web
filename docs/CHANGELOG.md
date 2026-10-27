@@ -1,5 +1,13 @@
 # Cambios
 
+## 2026-10-27 · Sin rebote en las hojas ni en la pantalla
+- El formulario de hábito (tipo Medible) y Ajustes de Hábitos tenían campos
+  más anchos que la hoja (71–85 px): la hoja se podía arrastrar de lado y
+  rebotaba. Ahora los campos caben en su columna.
+- Las hojas solo se desplazan de arriba abajo (`overflow-x: hidden`) y, como
+  la pantalla, sin el rebote elástico del iPhone (`overscroll-behavior: none`).
+- E2E `hojas.js` (21) mide que ninguna hoja se salga de ancho.
+
 ## 2026-10-23 · Scalping: avanza solo con días completos
 - El día del plan sube solo cuando completas mañana y noche; si no, al día
   siguiente sigues en el mismo día (`js/scalping-avance.js`). El módulo
