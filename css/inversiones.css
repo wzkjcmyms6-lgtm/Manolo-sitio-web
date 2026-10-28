@@ -67,6 +67,16 @@ button.inv-pos:active { background: var(--surface-raised); }
 .inv-peso { display: block; height: 4px; border-radius: 999px; background: var(--surface-raised); overflow: hidden; margin-top: 0.15rem; }
 .inv-peso i { display: block; height: 100%; border-radius: inherit; background: var(--accent-grad); }
 
+/* Ronda del mes */
+.inv-ronda-estado { display: flex; flex-direction: column; gap: 0.35rem; padding: 0.8rem 1rem; margin-bottom: 0.9rem; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); }
+.inv-ronda-estado .inv-nota { margin: 0; }
+.inv-ronda-estado.is-hecha { border-color: rgba(76, 195, 138, 0.45); }
+.inv-ronda-estado.is-hecha .inv-peso i { background: var(--inv-verde); }
+.inv-ronda-fila.is-hecho { opacity: 0.8; }
+.inv-ronda-ticker small { color: var(--inv-verde); font-weight: 600; font-size: 0.75rem; margin-left: 0.3rem; }
+.inv-exportar { margin-top: 0.9rem; }
+.inv-exportar .inv-acciones { margin-bottom: 0; }
+
 /* Dividendos */
 .inv-aviso-div p { margin: 0 0 0.35rem; }
 .inv-aviso-div .inv-nota { margin: 0.2rem 0 0.5rem; }

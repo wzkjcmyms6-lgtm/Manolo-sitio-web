@@ -211,12 +211,16 @@ async function deslizar(p, sel, dy) {
 
   console.log("\nRonda DCA");
   await pestana(p, "resumen");
+  ok(/Ronda DCA de octubre\s*2 de 6/.test(await texto(p, "#inv-resumen .inv-ronda-estado")) && /Ya compraste QQQ, VOO\. Falta: SCHD, VT, VIG, MSFT\./.test(await texto(p, "#inv-resumen .inv-ronda-estado")), "estado de la ronda del mes: 2 de 6 (QQQ y VOO ya comprados en octubre)");
   await p.click('#inv-resumen [data-inv="ronda"]');
   await p.waitForTimeout(400);
   const filas = await p.$$eval(".inv-ronda-fila", els => els.map(e => e.dataset.ticker));
   ok(filas.join(",") === "QQQ,VOO,SCHD,VT,VIG,MSFT", `los 6 del núcleo (${filas.join(", ")})`);
-  ok((await p.inputValue('.inv-ronda-fila[data-ticker="QQQ"] [name="monto"]')) === "33,18", "monto mensual por ticker ya puesto");
+  ok((await p.inputValue('.inv-ronda-fila[data-ticker="SCHD"] [name="monto"]')) === "33,18", "monto mensual por ticker ya puesto");
   const fila = t => `.inv-ronda-fila[data-ticker="${t}"]`;
+  ok(/ya compraste este mes/.test(await texto(p, fila("QQQ"))) && (await p.inputValue(`${fila("QQQ")} [name="monto"]`)) === "", "lo ya comprado este mes viene marcado y sin monto");
+  await escribir(p, `${fila("QQQ")} [name="monto"]`, "33,18");
+  await escribir(p, `${fila("VOO")} [name="monto"]`, "33,18");
   await escribir(p, `${fila("QQQ")} [name="precio"]`, "487,10");
   await escribir(p, `${fila("VOO")} [name="precio"]`, "619,20");
   await escribir(p, `${fila("SCHD")} [name="precio"]`, "27,50");
@@ -399,6 +403,23 @@ async function deslizar(p, sel, dy) {
   await pestana(p, "graficos");
   const filasDist = await p.$$eval("#inv-graficos .inv-dist-fila", els => els.map(e => e.textContent.replace(/\s+/g, " ").trim()));
   ok(filasDist.some(t => t.startsWith("QQQ") && t.includes("obj. 20 %")), "el gráfico usa el objetivo nuevo de QQQ");
+
+  console.log("\nFase 4: ronda del mes y exportar");
+  await pestana(p, "resumen");
+  const er = M.estadoRonda(await movsDe(p), await ajustes(p), "2026-10");
+  ok((await texto(p, "#inv-resumen .inv-ronda-estado")).includes(`${er.hechos.length} de ${er.plan.length}`) && (await p.$eval("#inv-resumen .inv-ronda-estado", e => e.dataset.rondaEstado)) === (er.completa ? "hecha" : "pendiente"), `estado de la ronda con el núcleo nuevo (${er.hechos.length} de ${er.plan.length})`);
+  await pestana(p, "ajustes");
+  const fs = require("fs");
+  const bajar = async sel => { const [d] = await Promise.all([p.waitForEvent("download"), p.click(sel)]); return { nombre: d.suggestedFilename(), texto: fs.readFileSync(await d.path(), "utf8") }; };
+  const csv = await bajar('#inv-ajustes [data-inv="exportar-csv"]');
+  const nMovs = (await todos(p)).length;
+  const lineasCsv = csv.texto.replace(/^\ufeff/, "").trim().split("\r\n");
+  ok(csv.nombre === "manolo-inversiones-2026-10-28.csv" && lineasCsv[0] === M.COLUMNAS_CSV.join(";") && lineasCsv.length === nMovs + 1, `CSV: encabezado y ${nMovs} movimientos`);
+  ok(lineasCsv.some(l => l.startsWith("2026-09-28;aporte;")) && lineasCsv.some(l => /;compra;QQQ;/.test(l)), "con el aporte viejo y las compras");
+  const json = await bajar('#inv-ajustes [data-inv="exportar-json"]');
+  const dj = JSON.parse(json.texto);
+  ok(json.nombre.endsWith(".json") && dj.movimientos.length === nMovs && dj.ajustes && dj.ajustes.broker === "IBKR", "JSON: todos los movimientos y los ajustes");
+  ok(JSON.stringify(dj.movimientos.find(m => m.id === "v2")) === JSON.stringify(Object.assign({ id: "v2" }, VIEJO_FONDO)), "el registro viejo sale tal cual");
 
   console.log("\nSin conexión: usa los últimos precios guardados");
   conRed = false;

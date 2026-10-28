@@ -8,7 +8,7 @@ y un satélite chico), con lo que cuesta llevar los Bs al broker.
 | 1 | Datos y movimientos: compra, venta, dividendo, fondeo, depósito/retiro, interés, ronda DCA, editar, borrar, completar aportes viejos, ajustes | ✅ 2026-10-28 |
 | 2 | Posiciones a costo promedio, precios diarios (`data/precios.json` con un workflow), precio a mano, valor y G/P de la cartera | ✅ 2026-10-28 |
 | 3 | Gráficos: valor vs aportado, rendimiento en US$ y Bs (TCO y AirTM), distribución contra objetivo, aportes por mes, dividendos, comisiones; objetivos en Ajustes | ✅ 2026-10-28 |
-| 4 | Indicador de la ronda del mes, exportar JSON y CSV | pendiente |
+| 4 | Indicador de la ronda del mes, exportar JSON y CSV | ✅ 2026-10-28 |
 
 ## Archivos
 
@@ -21,7 +21,8 @@ y un satélite chico), con lo que cuesta llevar los Bs al broker.
 | `css/inversiones.css` | Estilos propios (solo clases `.inv-`). Reutiliza `.fin-tabs` y `.budget-sheet` |
 | `tests/inversiones-posiciones.test.js` | Pruebas de posiciones, precios y cartera |
 | `tests/inversiones-dividendos.test.js` | Pruebas de la agenda y los avisos de dividendos |
-| `scripts/e2e/inversiones.js` | Prueba de pantalla (118 comprobaciones, con precios, dividendos y tipo de cambio fijos de prueba) |
+| `tests/inversiones-exportar.test.js` | Pruebas del estado de la ronda y de la exportación |
+| `scripts/e2e/inversiones.js` | Prueba de pantalla (125 comprobaciones, con precios, dividendos y tipo de cambio fijos de prueba) |
 | `data/tickers.json` | Tickers con precio diario y desde qué fecha guardar historial |
 | `scripts/precios.py` | Lee los cierres (sin claves) y actualiza `data/precios.json` |
 | `.github/workflows/precios.yml` | Corre el script de lunes a viernes 21:40 y 23:40 UTC (17:40 y 19:40 en La Paz) y a mano |
@@ -115,6 +116,18 @@ Un ticker que no está en `tickers` con `grupo: "nucleo"` es satélite.
 - **Valor de la cartera** = posiciones + efectivo + aportes viejos sin
   completar (a su monto). **G/P** = valor − aportado.
 
+## Ronda del mes y exportar (fase 4)
+
+- **Ronda DCA del mes** (Resumen): "N de M" tickers del núcleo con monto
+  mensual que ya tienen una compra este mes (de la ronda o suelta), con lo
+  que falta; ✅ cuando está completa. En la hoja de la ronda, lo ya
+  comprado este mes viene marcado y sin monto (se puede escribir igual).
+- **Exportar** (Ajustes): JSON completo (documentos tal cual, con su id, y
+  los ajustes: sirve de respaldo) y CSV para Excel/Numbers en español
+  (separador `;`, coma decimal, BOM UTF-8; una fila por movimiento, los
+  viejos con su registro original). En el iPhone abre el menú de compartir
+  (Guardar en Archivos, AirDrop…); en la compu, descarga.
+
 ## Dividendos: fechas y avisos (pedido 2026-10-28)
 
 - **De dónde salen** (mismo workflow de precios, en `data/precios.json` bajo
@@ -171,6 +184,16 @@ Un ticker que no está en `tickers` con `grupo: "nucleo"` es satélite.
 - **Toca y desliza** sobre una línea o columna para ver el día o mes; con
   teclado, flechas izquierda/derecha. Los gráficos se dibujan al ancho real
   y se rehacen si cambia (girar el teléfono, ventana de la compu).
+
+## Cómo probar en el iPhone (fase 4 y dividendos)
+
+1. Resumen: debajo de las cifras, "Ronda DCA de octubre · N de 6" con lo
+   que falta. Al completar los 6, sale ✅.
+2. Resumen, abajo: "Próximos dividendos" (MSFT anunciado: ex 19 nov, pago
+   10 dic; los ETF con fecha estimada). Desde 3 días antes de una fecha
+   aparece un aviso arriba; después del pago, "Anotar dividendo".
+3. Ajustes › Exportar › Descargar CSV: elige "Guardar en Archivos" y
+   ábrelo en Numbers. Repite con JSON (guárdalo como respaldo).
 
 ## Cómo probar en el iPhone (fase 3)
 

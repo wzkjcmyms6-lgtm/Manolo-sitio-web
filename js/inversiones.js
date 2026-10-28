@@ -119,10 +119,23 @@ function renderResumen() {
       <p>📥 Tienes <b>${r.nAportesViejos} ${r.nAportesViejos === 1 ? "aporte anterior" : "aportes anteriores"}</b> (${M.usd(r.aportesViejos)}) sin detalle. Complétalos con ticker, cantidad y precio para que cuenten como compras.</p>
       <button type="button" class="inv-btn-sec" data-inv="ver-aportes">Completar aportes</button>
     </div>`;
-  html += botones(true);
+  html += estadoRondaHtml() + botones(true);
   if (!movs.length) html += `<p class="empty-state">Aún no hay movimientos. Empieza con tu fondeo o tu primera compra; puedes poner fechas pasadas.</p>`;
   if (agenda.length) html += tarjetaAgenda(agenda);
   el.innerHTML = html;
+}
+
+// ¿Ya hiciste la ronda DCA de este mes? (compras del núcleo en el mes)
+function estadoRondaHtml() {
+  const hoy = hoyLocal(), er = M.estadoRonda(movs, guardados, M.mesDe(hoy));
+  if (!er.plan.length) return "";
+  const pct = Math.round((er.hechos.length / er.plan.length) * 100);
+  return `
+    <div class="inv-ronda-estado${er.completa ? " is-hecha" : ""}" data-ronda-estado="${er.completa ? "hecha" : "pendiente"}">
+      <div class="inv-pos-fila"><b>${er.completa ? "✅" : "🗓️"} Ronda DCA de ${nombreMes(hoy)}</b><span>${er.hechos.length} de ${er.plan.length}</span></div>
+      <span class="inv-peso" aria-hidden="true"><i style="width:${pct}%"></i></span>
+      <p class="inv-nota">${er.completa ? `Hecha: ${M.usd(er.invertido)} invertidos en el núcleo este mes.` : `${er.hechos.length ? `Ya compraste ${esc(er.hechos.join(", "))}. ` : ""}Falta: ${esc(er.faltan.join(", "))}.`}</p>
+    </div>`;
 }
 
 // ---------- Dividendos: avisos y próximas fechas ----------
@@ -541,12 +554,35 @@ $("panel-inversiones").addEventListener("click", e => {
   if (accion === "nuevo") abrirMov({ tipo: "compra" });
   else if (accion === "ronda") abrirRonda();
   else if (accion === "agregar-ticker") agregarTicker();
+  else if (accion === "exportar-json") descargar(`manolo-inversiones-${hoyLocal()}.json`, M.exportarJson(docs, guardados, new Date().toISOString()), "application/json");
+  else if (accion === "exportar-csv") descargar(`manolo-inversiones-${hoyLocal()}.csv`, M.exportarCsv(movs), "text/csv;charset=utf-8");
   else if (accion === "ver-aportes") {
     irA("movimientos");
     const primero = document.querySelector("#inv-movimientos .inv-chip.is-completar");
     if (primero) primero.closest(".inv-fila").scrollIntoView({ block: "center" });
   }
 });
+
+// ---------- Exportar ----------
+// En el iPhone, el menú de compartir (Guardar en Archivos, AirDrop…); en la
+// compu, una descarga normal.
+function descargar(nombre, contenido, tipo) {
+  const blob = new Blob([contenido], { type: tipo });
+  const archivo = typeof File === "function" ? new File([blob], nombre, { type: tipo }) : null;
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (ios && archivo && navigator.canShare && navigator.canShare({ files: [archivo] })) {
+    navigator.share({ files: [archivo], title: nombre }).catch(() => { /* cancelado */ });
+    return;
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nombre;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
 
 // ---------- Hoja ----------
 function abrirHoja(titulo, cuerpo) {
@@ -856,12 +892,13 @@ function borrarMov() {
 function abrirRonda() {
   const a = aj(), hoy = hoyLocal();
   const tickers = M.nucleo(a);
+  const hechos = M.estadoRonda(movs, guardados, M.mesDe(hoy)).hechos;
   est = { modo: "ronda" };
   const filas = tickers.map(t => `
-        <div class="inv-ronda-fila" data-ticker="${esc(t)}">
-          <b class="inv-ronda-ticker">${esc(t)}</b>
+        <div class="inv-ronda-fila${hechos.includes(t) ? " is-hecho" : ""}" data-ticker="${esc(t)}">
+          <b class="inv-ronda-ticker">${esc(t)}${hechos.includes(t) ? ` <small>✓ ya compraste este mes</small>` : ""}</b>
           <div class="inv-ronda-campos">
-            ${campo("monto", "Monto US$", enCampo(a.tickers[t].dca, true))}
+            ${campo("monto", "Monto US$", hechos.includes(t) ? "" : enCampo(a.tickers[t].dca, true))}
             ${campo("precio", "Precio", "")}
             ${campo("cantidad", "Cantidad", "", "decimal", { placeholder: "0,000000" })}
           </div>
@@ -965,7 +1002,15 @@ function renderAjustes() {
         <span class="inv-guardado" role="status"${Date.now() - guardadoEn < 4000 ? "" : " hidden"}>Guardado ✓</span>
         <button type="submit" class="inv-btn">Guardar ajustes</button>
       </div>
-    </form>`;
+    </form>
+    <section class="inv-bloque inv-exportar">
+      <h3>Exportar</h3>
+      <p class="inv-ayuda">Una copia de todos tus movimientos (${movs.length}) y ajustes. <b>JSON</b>: completa, para respaldo. <b>CSV</b>: para abrir en Excel o Numbers. En el iPhone se abre el menú para guardarla en Archivos o mandarla.</p>
+      <div class="inv-acciones">
+        <button type="button" class="inv-btn-sec" data-inv="exportar-json">Descargar JSON</button>
+        <button type="button" class="inv-btn-sec" data-inv="exportar-csv">Descargar CSV</button>
+      </div>
+    </section>`;
   totalDca();
 }
 const formAjustes = () => $("inv-ajustes").querySelector(".inv-ajustes");

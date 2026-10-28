@@ -293,3 +293,11 @@ historial de Yahoo (los 6), calendario de Yahoo con *crumb* y Nasdaq
 anuncio, la próxima fecha se estima y se marca "estimada". Los avisos van en
 Inversiones › Resumen (la app no puede mandar notificaciones al teléfono);
 no se marcó en Finanzas por el alcance de la tarea.
+
+**D-049 (2026-10-28) · Ronda del mes y exportar.** La ronda cuenta como
+hecha para un ticker del núcleo si tiene cualquier compra ese mes (de la
+ronda o suelta). Exportar: JSON con los documentos tal como están (respaldo
+fiel, incluidos los registros viejos sin tocar) y CSV pensado para Excel o
+Numbers en español (`;`, coma decimal, BOM). En iPhone se usa el menú de
+compartir (Web Share con archivos), porque la descarga directa en una PWA
+de pantalla de inicio no siempre deja guardar el archivo.

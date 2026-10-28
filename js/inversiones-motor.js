@@ -501,6 +501,49 @@ function avisosDividendos(agenda) {
   });
 }
 
+// ---- Fase 4: ronda del mes y exportar ----
+// Ronda DCA de un mes: qué tickers del núcleo (con monto mensual) ya tienen
+// una compra ese mes (de la ronda o suelta) y cuáles faltan.
+function estadoRonda(movs, aj, mes) {
+  const a = ajustes(aj);
+  const plan = nucleo(a).filter(t => a.tickers[t].dca > 0);
+  const delMes = movs.filter(m => m.tipo === "compra" && mesDe(m.fecha) === mes);
+  const hechos = plan.filter(t => delMes.some(m => m.ticker === t));
+  const invertido = red(delMes.filter(m => plan.includes(m.ticker)).reduce((s, m) => s + m.total, 0));
+  return { mes, plan, hechos, faltan: plan.filter(t => !hechos.includes(t)), invertido, completa: plan.length > 0 && hechos.length === plan.length };
+}
+
+// CSV para abrir en Excel o Numbers en español: separador ";", coma
+// decimal y BOM UTF-8. Una fila por movimiento (los viejos también, con
+// su registro original).
+const COLUMNAS_CSV = ["fecha", "tipo", "ticker", "cantidad", "precio", "comision", "total", "monto", "sentido", "bs", "tipo_cambio", "usd_enviados", "comision_airtm", "comision_transferencia", "usd_recibidos", "broker", "ronda", "nota", "registro_original", "id"];
+function exportarCsv(movs) {
+  const n = (v, d = 6) => (typeof v === "number" && isFinite(v) ? String(red(v, d)).replace(".", ",") : "");
+  const celda = v => { const t = String(v == null ? "" : v); return /[;"\n\r]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t; };
+  const filas = ordenar(movs).reverse().map(m => {
+    const o = m.original;
+    const fila = {
+      fecha: m.fecha, tipo: m.tipo === "efectivo" ? (m.sentido === "retiro" ? "retiro" : "deposito") : m.tipo, ticker: m.ticker || "",
+      cantidad: n(m.cantidad, 8), precio: n(m.precio), comision: n(m.comision, 2), total: n(m.total, 2),
+      monto: m.tipo === "compra" || m.tipo === "venta" ? "" : n(m.monto, 2), sentido: m.sentido || "",
+      bs: n(m.bs, 2), tipo_cambio: n(m.tasa, 4), usd_enviados: n(m.usdEnviado, 2), comision_airtm: n(m.comisionAirtm, 2),
+      comision_transferencia: n(m.comisionTransferencia, 2), usd_recibidos: n(m.usd, 2),
+      broker: m.broker, ronda: m.ronda || "", nota: m.nota,
+      registro_original: o ? `${o.fecha} ${o.nombre} US$ ${n(o.monto, 2)}${o.nota ? ` (${o.nota})` : ""}` : "", id: m.id
+    };
+    return COLUMNAS_CSV.map(k => celda(fila[k])).join(";");
+  });
+  return "\ufeff" + [COLUMNAS_CSV.join(";")].concat(filas).join("\r\n") + "\r\n";
+}
+// JSON completo: los documentos tal como están guardados (con su id) y los ajustes.
+function exportarJson(docs, ajustesGuardados, ahora) {
+  return JSON.stringify({
+    app: "Manolo · Inversiones", version: 1, exportado: ahora,
+    ajustes: ajustesGuardados || null,
+    movimientos: Object.keys(docs).sort().map(id => Object.assign({ id }, docs[id]))
+  }, null, 2);
+}
+
 // Valor de la cartera = posiciones (sin precio, a su costo) + efectivo +
 // aportes viejos sin completar (a su monto). G/P = valor − aportado.
 function cartera(movs, precios, aj) {
@@ -519,6 +562,7 @@ return {
   validar, calcularFondeo, camposCompletar, cantidadDesdeMonto,
   ronda, comprasDeRonda, resumen, interesMensual, cantidades, tickersConocidos, tickerSugerido,
   precioDiario, precioDe, precioEn, fechaPrecios, diasEntre, posiciones, cartera,
-  VENTANA_AVISO, agendaDividendos, avisosDividendos
+  VENTANA_AVISO, agendaDividendos, avisosDividendos,
+  estadoRonda, COLUMNAS_CSV, exportarCsv, exportarJson
 };
 });
