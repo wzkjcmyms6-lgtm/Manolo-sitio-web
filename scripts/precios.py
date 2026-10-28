@@ -5,17 +5,19 @@ Conserva el historial y solo agrega o corrige días (repasa los últimos 10).
 El precio es el cierre normal (no ajustado por dividendos), para compararlo
 con el precio de compra.
 También guarda las fechas de dividendos de cada ticker ("dividendos"): el
-historial de Yahoo (fecha ex y monto) y, si Nasdaq ya las anunció, la próxima
-fecha ex y la de pago. Si no hay anuncio, la próxima se estima con el ritmo
-de las anteriores. Formato y uso: docs/INVERSIONES.md."""
+historial de Yahoo (fecha ex y monto) y, si ya están anunciadas, la próxima
+fecha ex y la de pago (calendario de Yahoo y tabla de Nasdaq). Si no hay
+anuncio, la próxima se estima con el ritmo de las anteriores. Formato y uso: docs/INVERSIONES.md."""
 import statistics
 import csv
 import datetime as dt
+import http.cookiejar
 import io
 import json
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 TICKERS = "data/tickers.json"
@@ -169,17 +171,66 @@ def div_nasdaq(ticker):
     raise ValueError("; ".join(errores))
 
 
+# Calendario de Yahoo (próxima fecha ex y de pago). Pide una "crumb" que se
+# obtiene con una cookie de Yahoo; sin claves.
+_sesion = {}
+
+
+def yahoo_sesion():
+    if "crumb" in _sesion:
+        return _sesion["op"], _sesion["crumb"]
+    op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+    for url in ("https://fc.yahoo.com", "https://finance.yahoo.com/"):
+        try:
+            op.open(urllib.request.Request(url, headers=HEADERS), timeout=20).read()
+        except Exception:  # fc.yahoo.com responde 404 pero deja la cookie
+            pass
+    crumb = op.open(urllib.request.Request("https://query1.finance.yahoo.com/v1/test/getcrumb", headers=HEADERS), timeout=20).read().decode().strip()
+    if not crumb or "<" in crumb or len(crumb) > 60:
+        raise ValueError("sin crumb")
+    _sesion.update(op=op, crumb=crumb)
+    return op, crumb
+
+
+def leer_calendario(texto):
+    """quoteSummary (calendarEvents, summaryDetail) -> {ex, pago} (lo que haya)."""
+    r = json.loads(texto)["quoteSummary"]["result"][0]
+    cal, sd = r.get("calendarEvents") or {}, r.get("summaryDetail") or {}
+    ex = (cal.get("exDividendDate") or sd.get("exDividendDate") or {}).get("raw")
+    pago = (cal.get("dividendDate") or {}).get("raw")
+    fecha = lambda t: dt.datetime.fromtimestamp(t, dt.timezone.utc).date().isoformat()
+    out = {}
+    if ex:
+        out["ex"] = fecha(ex)
+    if pago:
+        out["pago"] = fecha(pago)
+    return out
+
+
+def div_calendario(ticker):
+    op, crumb = yahoo_sesion()
+    url = (f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker}"
+           f"?modules=calendarEvents,summaryDetail&crumb={urllib.parse.quote(crumb)}")
+    resp = op.open(urllib.request.Request(url, headers=HEADERS), timeout=20)
+    body = resp.read()
+    print(f"  GET quoteSummary/{ticker} -> {resp.status}, {len(body)} bytes")
+    return leer_calendario(body)
+
+
 FRECUENCIAS = [(45, "mensual"), (120, "trimestral"), (240, "semestral"), (10000, "anual")]
 
 
-def armar_dividendos(eventos_yahoo, eventos_nasdaq, hoy):
-    """Junta las dos fuentes (Nasdaq trae la fecha de pago) y arma la próxima
-    fecha: la anunciada (fecha ex desde hoy) o, si no hay, la estimada."""
+def armar_dividendos(eventos_yahoo, eventos_nasdaq, hoy, calendario=None):
+    """Junta las fuentes (Nasdaq y el calendario traen la fecha de pago) y
+    arma la próxima fecha: la anunciada (fecha ex desde hoy) o, si no hay,
+    la estimada con el intervalo y la demora de pago típicos (últimos 8)."""
     por_ex = {}
     for e in eventos_yahoo or []:
         por_ex[e["ex"]] = dict(e)
     for e in eventos_nasdaq or []:
         por_ex.setdefault(e["ex"], {}).update(e)
+    if calendario and calendario.get("ex"):
+        por_ex.setdefault(calendario["ex"], {}).update(calendario)
     eventos = sorted(por_ex.values(), key=lambda e: e["ex"])
     if not eventos:
         return None
@@ -188,13 +239,20 @@ def armar_dividendos(eventos_yahoo, eventos_nasdaq, hoy):
     exs = [dt.date.fromisoformat(e["ex"]) for e in pasados[-9:]]
     intervalos = [(b - a).days for a, b in zip(exs, exs[1:]) if (b - a).days > 5]
     paso = int(statistics.median(intervalos)) if intervalos else None
-    demoras = [(dt.date.fromisoformat(e["pago"]) - dt.date.fromisoformat(e["ex"])).days for e in eventos if e.get("pago")]
+    demoras = [(dt.date.fromisoformat(e["pago"]) - dt.date.fromisoformat(e["ex"])).days for e in pasados[-8:] if e.get("pago")]
     demora = int(statistics.median(demoras)) if demoras else None
     out = {"historial": pasados[-8:]}
     if paso:
         out["frecuencia"] = next(n for tope, n in FRECUENCIAS if paso <= tope)
     if futuros:
-        out["proximo"] = dict(futuros[0], estimado=False)
+        prox = dict(futuros[0], estimado=False)
+        if not prox.get("monto") and pasados and pasados[-1].get("monto"):
+            prox["monto"] = pasados[-1]["monto"]  # el monto se anuncia después: el del último
+            prox["montoEstimado"] = True
+        if not prox.get("pago") and demora is not None:
+            prox["pago"] = (dt.date.fromisoformat(prox["ex"]) + dt.timedelta(days=demora)).isoformat()
+            prox["pagoEstimado"] = True
+        out["proximo"] = prox
     elif paso and pasados:
         ex = dt.date.fromisoformat(pasados[-1]["ex"]) + dt.timedelta(days=paso)
         while ex.isoformat() < hoy:
@@ -214,7 +272,7 @@ def dividendos(lista, previo, hoy):
     out = dict(previo or {})
     for t in lista:
         print(f"{t}: dividendos")
-        y, n = None, None
+        y, n, c = None, None, None
         try:
             y = div_yahoo(t)
             print(f"  yahoo: {len(y)} pagos")
@@ -222,16 +280,22 @@ def dividendos(lista, previo, hoy):
             print(f"  yahoo falló: {err}")
         time.sleep(1)
         try:
+            c = div_calendario(t)
+            print(f"  calendario: {c or 'sin fechas'}")
+        except Exception as err:
+            print(f"  calendario falló: {err}")
+        time.sleep(1)
+        try:
             n = div_nasdaq(t)
             print(f"  nasdaq: {len(n)} filas, última ex {n[-1]['ex']}")
         except Exception as err:
             print(f"  nasdaq falló: {err}")
         time.sleep(1)
-        d = armar_dividendos(y, n, hoy)
+        d = armar_dividendos(y, n, hoy, c)
         if not d:
             print(f"::warning::{t}: sin fechas de dividendos; se mantiene lo guardado")
             continue
-        d["fuentes"] = [nombre for nombre, ok in (("yahoo", y), ("nasdaq", n)) if ok]
+        d["fuentes"] = [nombre for nombre, ok in (("yahoo", y), ("calendario", c), ("nasdaq", n)) if ok]
         out[t] = d
         p = d.get("proximo")
         print(f"  próximo: {p and p.get('ex')} ({'estimado' if p and p.get('estimado') else 'anunciado'}), pago {p and p.get('pago')}")
