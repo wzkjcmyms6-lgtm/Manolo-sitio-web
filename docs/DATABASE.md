@@ -36,6 +36,8 @@ por dueño).
 | `users/{uid}/libros_portadas/{id del libro}` ✅ | Libros 4 | `v:1, datos` (data URL JPEG, ≤ 300 000 caracteres ≈ 220 KB; en la práctica ~50 KB), `ancho, alto` (≤ 400 × 600), `kb, actualizado` | La foto va aparte del libro para no recargar la lista ni reenviarla en cada edición. Sin Firebase Storage. Se borra al quitar la portada o borrar el libro |
 | `users/{uid}/libros_frases/{id}` ✅ | Libros 3 | `v:1, libroId, texto` (≤ 2000), `pagina` (número o `null`), `fecha`, `creado` | Aparte de los libros para listar "Todas mis frases" y editar una sin reescribir el libro. Al borrar un libro se borran sus frases (con confirmación) |
 
+| `users/{uid}/tiempos/{AAAA-MM-DD}` ✅ | Medir tiempos (2026-10-29, **provisoria**) | `fecha` (AAAA-MM-DD, igual al id), `seg: { manana, ejercicio, correr, desayunar, banarse, leer }` (segundos enteros > 0; solo las actividades anotadas ese día), `actualizado` (ms) | Un documento por día. Al guardar se reescribe el día entero (conservando claves que la pantalla no edita); si quedan todas vacías se borra el día. Promedios y el cierre a los 30 registros por actividad **no se guardan**: se calculan (`js/tiempos-motor.js`). Ver `docs/TIEMPOS.md` |
+
 Datos derivados (ritmo medio, velocidad media) **no se guardan**: se
 calculan de distancia y tiempos. Los parciales sí (costoso de recalcular sin
 la ruta).

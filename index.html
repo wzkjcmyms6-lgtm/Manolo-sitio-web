@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="css/habitos.css?v=202610270100">
   <link rel="stylesheet" href="css/inversiones.css?v=202610291000">
   <link rel="stylesheet" href="css/libros.css?v=202610290600">
+  <link rel="stylesheet" href="css/tiempos.css?v=202610291100">
   <link rel="stylesheet" href="css/ej-calendario.css?v=202610290900">
 </head>
 <body>
@@ -170,6 +171,11 @@
                 <span class="icon" data-icon="biblia"></span>
                 <h3>Biblia</h3>
                 <p>El versículo que lees al despertar.</p>
+              </a>
+              <a class="card" href="#tiempos">
+                <span class="icon" data-icon="timer"></span>
+                <h3>Medir tiempos</h3>
+                <p>Cuánto tardas en tu rutina de cada día.</p>
               </a>
             </div>
             <button type="button" class="link-btn cuenta-estado-btn" id="cuenta-estado-btn">Estado de la cuenta</button>
@@ -390,6 +396,13 @@
             <a class="back-link lib-volver" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
             <h1 class="page-title">Biblia</h1>
             <div class="bib-app" id="bib-app"></div>
+          </section>
+
+          <!-- ===== Medir tiempos (provisoria, sub-panel de Inicio; ver docs/TIEMPOS.md) ===== -->
+          <section id="panel-tiempos" hidden>
+            <a class="back-link lib-volver" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
+            <h1 class="page-title">Medir tiempos</h1>
+            <div class="tmp-app" id="tmp-app"></div>
           </section>
 
           <section id="panel-running" hidden>
@@ -1254,7 +1267,7 @@
   <script defer src="js/accesos.js?v=202610100400"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
   <script defer src="js/icons.js?v=202610100300"></script>
-  <script defer src="js/modules.js?v=202610291000"></script>
+  <script defer src="js/modules.js?v=202610291100"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
   <script defer src="js/exercise-search.js?v=202609291"></script>
@@ -1311,5 +1324,7 @@
   <script defer src="js/biblia.js?v=202610290300"></script>
   <script defer src="js/libros-motor.js?v=202610290600"></script>
   <script defer src="js/libros.js?v=202610290700"></script>
+  <script defer src="js/tiempos-motor.js?v=202610291100"></script>
+  <script defer src="js/tiempos.js?v=202610291110"></script>
 </body>
 </html>

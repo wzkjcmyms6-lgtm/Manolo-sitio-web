@@ -343,3 +343,19 @@ id="panel-inv-…" class="inv-panel">`; los `id` de las vistas
 `data-engranaje` porque `data-ajustes` ya lo escucha Hábitos (abriría su
 hoja). No cambia ningún dato. Libros y Biblia se suman a la lista de
 `showPanel()` que oculta el versículo; Inicio lo sigue mostrando.
+
+**D-053 (2026-10-29) · Medir tiempos (sección provisoria).** Pedido del
+dueño: registrar por día cuánto tarda en la rutina de la mañana (levantarse,
+lavarse los dientes, scalping, rezar, decretar y tender la cama), ejercicio,
+correr, desayunar, bañarse y alistarse, y leer 30 páginas; promedio por
+semana y por mes; con 30 registros, ya no registrar más y ese es el
+promedio. "No muy bien hecha, la borraremos más adelante": tarjeta en Inicio
+y sub-panel `#tiempos`, como Libros y Biblia, todo en archivos propios
+(`js/tiempos*.js`, `css/tiempos.css`) para quitarla fácil (pasos en
+`docs/TIEMPOS.md`). Decisiones: el tope de 30 es **por actividad** (no todas
+se hacen todos los días; si se anotan todas a diario, es lo mismo que 30
+días); un registro = un día; los que ya cuentan se pueden corregir. Tiempo
+en minutos y segundos con dos campos numéricos (el teclado numérico del
+iPhone no tiene ":"). Semana de lunes a domingo. Sin versículo arriba,
+igual que Libros y Biblia. Nada se calcula guardado: promedios y cierre
+salen de los días anotados (`users/{uid}/tiempos/{fecha}`).
