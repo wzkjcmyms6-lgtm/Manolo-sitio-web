@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="css/style.css?v=202610270100">
   <link rel="stylesheet" href="css/finanzas.css?v=202610270100">
   <link rel="stylesheet" href="css/habitos.css?v=202610270100">
-  <link rel="stylesheet" href="css/inversiones.css?v=202610280100">
+  <link rel="stylesheet" href="css/inversiones.css?v=202610280200">
 </head>
 <body>
   <!-- Degradado marfil y brillo del maniquí (mapa corporal y creador de ejercicios) -->
@@ -754,11 +754,13 @@
 
             <div class="fin-tabs inv-tabs" role="tablist" aria-label="Inversiones">
               <button type="button" class="fin-tab active" role="tab" data-inv-tab="resumen" aria-selected="true">Resumen</button>
+              <button type="button" class="fin-tab" role="tab" data-inv-tab="posiciones" aria-selected="false">Posiciones</button>
               <button type="button" class="fin-tab" role="tab" data-inv-tab="movimientos" aria-selected="false">Movimientos</button>
               <button type="button" class="fin-tab" role="tab" data-inv-tab="ajustes" aria-selected="false">Ajustes</button>
             </div>
 
             <div class="inv-vista" id="inv-resumen" data-inv-vista="resumen"></div>
+            <div class="inv-vista" id="inv-posiciones" data-inv-vista="posiciones" hidden></div>
             <div class="inv-vista" id="inv-movimientos" data-inv-vista="movimientos" hidden></div>
             <div class="inv-vista" id="inv-ajustes" data-inv-vista="ajustes" hidden></div>
           </section>
@@ -1259,7 +1261,7 @@
   <script defer src="js/finanzas/analisis.js?v=202610011500"></script>
   <script defer src="js/finanzas/presupuesto.js?v=202610011600"></script>
   <script defer src="js/finanzas/app.js?v=202610100300"></script>
-  <script defer src="js/inversiones-motor.js?v=202610280100"></script>
-  <script defer src="js/inversiones.js?v=202610280100"></script>
+  <script defer src="js/inversiones-motor.js?v=202610280200"></script>
+  <script defer src="js/inversiones.js?v=202610280200"></script>
 </body>
 </html>

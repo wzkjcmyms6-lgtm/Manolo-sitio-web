@@ -1,6 +1,7 @@
 // ---------- Inversiones: pantallas ----------
-// Resumen, movimientos (compra, venta, dividendo, fondeo, depósito/retiro,
-// interés), ronda DCA del mes y ajustes. Las cuentas viven en
+// Resumen, posiciones (con precios diarios de data/precios.json o a mano),
+// movimientos (compra, venta, dividendo, fondeo, depósito/retiro, interés),
+// ronda DCA del mes y ajustes. Las cuentas viven en
 // js/inversiones-motor.js; aquí solo se pinta y se guarda en Firestore.
 // Los registros viejos se completan AGREGANDO campos: nunca se reescribe
 // su date, name, amount ni notes. Ver docs/INVERSIONES.md.
@@ -18,6 +19,9 @@ let est = null;         // qué muestra la hoja: { modo: "mov"|"ronda", tipo, id
 let borrador = null;    // ajustes en edición
 let sucio = false;      // hay cambios sin guardar en Ajustes
 let guardadoEn = 0;     // cuándo se guardaron los ajustes (para el ✓)
+let precios = null;     // data/precios.json (o la última copia guardada)
+let preciosLeidos = 0;  // cuándo se pidieron por última vez
+const CLAVE_PRECIOS = "manolo-inv-precios";
 
 function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -35,17 +39,28 @@ const decimales = (n, d) => (n || 0).toLocaleString("es-ES", { minimumFractionDi
 const nombreMes = f => M.mesTitulo(M.mesDe(f)).split(" ")[0].toLowerCase();
 
 // ---------- Pestañas ----------
-document.querySelector("#panel-inversiones .inv-tabs").addEventListener("click", e => {
+// Si no caben todas, la barra se desliza de lado y un borde difuminado
+// avisa que hay más.
+const barraTabs = document.querySelector("#panel-inversiones .inv-tabs");
+barraTabs.addEventListener("click", e => {
   const b = e.target.closest("[data-inv-tab]");
   if (b) irA(b.dataset.invTab);
 });
+function marcarDesborde() {
+  barraTabs.classList.toggle("hay-izq", barraTabs.scrollLeft > 2);
+  barraTabs.classList.toggle("hay-der", barraTabs.scrollLeft + barraTabs.clientWidth < barraTabs.scrollWidth - 2);
+}
+barraTabs.addEventListener("scroll", marcarDesborde, { passive: true });
+if (typeof ResizeObserver === "function") new ResizeObserver(marcarDesborde).observe(barraTabs);
 function irA(v) {
   vista = v;
   document.querySelectorAll("#panel-inversiones [data-inv-tab]").forEach(b => {
     const on = b.dataset.invTab === vista;
     b.classList.toggle("active", on);
     b.setAttribute("aria-selected", String(on));
+    if (on) barraTabs.scrollLeft = b.offsetLeft - (barraTabs.clientWidth - b.offsetWidth) / 2;
   });
+  marcarDesborde();
   document.querySelectorAll("#panel-inversiones [data-inv-vista]").forEach(el => { el.hidden = el.dataset.invVista !== vista; });
   if (vista === "ajustes") { borrador = null; sucio = false; }
   render();
@@ -53,6 +68,7 @@ function irA(v) {
 
 function render() {
   if (vista === "resumen") renderResumen();
+  else if (vista === "posiciones") renderPosiciones();
   else if (vista === "movimientos") renderMovimientos();
   else if (vista === "ajustes") renderAjustes();
 }
@@ -64,12 +80,13 @@ const dato = (etiqueta, valor, pie) => `
 function renderResumen() {
   const el = $("inv-resumen");
   if (!cargado) { el.innerHTML = cargando; return; }
-  const r = M.resumen(movs), a = aj();
+  const c = M.cartera(movs, precios, guardados), r = c.resumen, a = aj();
   const interes = M.interesMensual(r.efectivo, a.tasaEfectivo);
   let html = `
     <div class="inv-hero">
-      <span class="inv-hero-label">Aportado</span>
-      <strong class="inv-hero-valor">${M.usd(r.aportado)}</strong>
+      <span class="inv-hero-label">Valor de tu cartera</span>
+      <strong class="inv-hero-valor">${M.usd(c.valor)}</strong>
+      <span class="inv-hero-sub">${gp(c.gp, c.gpPct)} sobre <b>${M.usd(r.aportado)}</b> aportados</span>
       <span class="inv-hero-sub">Efectivo en el broker: <b>${M.usd(r.efectivo)}</b>${interes > 0 ? ` · al ${M.pct(a.tasaEfectivo)} anual ≈ ${M.usd(interes)} al mes` : ""}</span>
     </div>
     <div class="inv-grid">
@@ -79,6 +96,9 @@ function renderResumen() {
       ${dato("Intereses", M.usd(r.intereses))}
     </div>`;
   const notas = [];
+  const tp = c.posiciones.total;
+  if (c.posiciones.abiertas.length) notas.push(textoPrecios());
+  if (tp.sinPrecio) notas.push(`${tp.sinPrecio === 1 ? "1 posición sin precio cuenta" : `${tp.sinPrecio} posiciones sin precio cuentan`} a su costo.`);
   if (r.bsEnviados > 0) notas.push(`Fondeos: ${M.bs(r.bsEnviados)} enviados, a un promedio de ${decimales(r.tasaPromedio, 2)} Bs por US$.`);
   if (r.sinFondeo > 0) notas.push(`Incluye ${M.usd(r.sinFondeo)} de compras sin fondeo anotado.`);
   if (notas.length) html += `<p class="inv-nota">${notas.join(" ")}</p>`;
@@ -96,6 +116,127 @@ const botones = rondaPrimero => {
   const nuevo = `<button type="button" class="inv-btn${rondaPrimero ? "-sec" : ""}" data-inv="nuevo">＋ Movimiento</button>`;
   return `<div class="inv-acciones">${rondaPrimero ? ronda + nuevo : nuevo + ronda}</div>`;
 };
+
+// Ganancia o pérdida con su color.
+const gp = (n, p) => `<span class="inv-gp ${n > 0 ? "is-sube" : n < 0 ? "is-baja" : ""}">${M.usdS(n)} (${M.pctS(p)})</span>`;
+function textoPrecios() {
+  const f = M.fechaPrecios(precios);
+  if (!f) return "Todavía no hay precios diarios guardados.";
+  const dias = M.diasEntre(f, hoyLocal());
+  return `Precios al cierre del ${M.fechaLarga(f)}${dias > 4 ? ` (hace ${dias} días${navigator.onLine === false ? ", sin conexión" : ""})` : ""}.`;
+}
+
+// ---------- Precios ----------
+// data/precios.json lo actualiza un workflow de GitHub cada día hábil. Sin
+// conexión, el service worker devuelve la última copia; si tampoco hay, se
+// usa la guardada en este teléfono.
+function cargarPrecios() {
+  preciosLeidos = Date.now();
+  fetch(`data/precios.json?t=${Date.now()}`, { cache: "no-store" })
+    .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+    .then(d => {
+      precios = d;
+      try { localStorage.setItem(CLAVE_PRECIOS, JSON.stringify(d)); } catch (e) { /* sin espacio: no pasa nada */ }
+    })
+    .catch(() => {
+      if (precios) return;
+      try { precios = JSON.parse(localStorage.getItem(CLAVE_PRECIOS) || "null"); } catch (e) { precios = null; }
+    })
+    .then(() => { if (vista !== "ajustes") render(); });
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && Date.now() - preciosLeidos > 30 * 60 * 1000) cargarPrecios();
+});
+
+// ---------- Posiciones ----------
+function renderPosiciones() {
+  const el = $("inv-posiciones");
+  if (!cargado) { el.innerHTML = cargando; return; }
+  const c = M.cartera(movs, precios, guardados), pos = c.posiciones, t = pos.total, r = c.resumen;
+  if (!pos.abiertas.length && !pos.cerradas.length && !r.nAportesViejos) {
+    el.innerHTML = `<p class="empty-state">Aún no tienes posiciones. Anota una compra (o una ronda DCA) y aquí verás cuánto tienes de cada ticker y cuánto vale.</p>`;
+    return;
+  }
+  let html = `
+    <div class="inv-hero">
+      <span class="inv-hero-label">Posiciones</span>
+      <strong class="inv-hero-valor">${M.usd(t.valor)}</strong>
+      <span class="inv-hero-sub">Invertido <b>${M.usd(t.invertido)}</b>${t.invertidoConPrecio > 0 ? ` · ${gp(t.gp, t.gpPct)}` : ""}</span>
+    </div>
+    <p class="inv-nota">${textoPrecios()} Toca un ticker para ver o poner su precio.</p>`;
+  html += pos.abiertas.map(tarjeta).join("");
+  if (r.nAportesViejos) html += `
+    <div class="inv-pos is-sin-asignar">
+      <div class="inv-pos-fila"><b>📥 Aportes sin completar</b><span class="inv-pos-valor">${M.usd(r.aportesViejos)}</span></div>
+      <div class="inv-pos-fila"><span>${r.nAportesViejos} ${r.nAportesViejos === 1 ? "registro anterior" : "registros anteriores"} sin ticker: cuentan a su monto.</span></div>
+      <button type="button" class="inv-btn-sec" data-inv="ver-aportes">Completar</button>
+    </div>`;
+  if (pos.cerradas.length) html += `
+    <h3 class="inv-mes-titulo">Vendidas por completo</h3>
+    ${pos.cerradas.map(o => `
+    <div class="inv-pos is-cerrada">
+      <div class="inv-pos-fila"><b>${esc(o.ticker)}</b><span class="inv-gp ${o.realizado > 0 ? "is-sube" : o.realizado < 0 ? "is-baja" : ""}">${M.usdS(o.realizado)}</span></div>
+      <div class="inv-pos-fila"><span>Ganancia realizada${o.dividendos ? ` · dividendos ${M.usd(o.dividendos)}` : ""}</span></div>
+    </div>`).join("")}`;
+  const extra = [];
+  if (t.realizado) extra.push(`Ganancia realizada en ventas: ${M.usdS(t.realizado)}.`);
+  if (r.dividendos) extra.push(`Dividendos cobrados: ${M.usd(r.dividendos)}.`);
+  if (extra.length) html += `<p class="inv-nota">${extra.join(" ")}</p>`;
+  el.innerHTML = html;
+}
+function tarjeta(o) {
+  let precio;
+  if (o.fuentePrecio === "manual") precio = `✍️ Precio manual ${M.usd(o.precio)} · ${M.fechaLarga(o.fechaPrecio)}`;
+  else if (o.fuentePrecio === "diario") {
+    const dias = M.diasEntre(o.fechaPrecio, hoyLocal());
+    precio = `${M.usd(o.precio)} · cierre ${M.fechaLarga(o.fechaPrecio)}${dias > 4 ? ` · hace ${dias} días` : ""}`;
+  } else precio = "⚠️ Sin precio diario · tócalo";
+  return `
+    <button type="button" class="inv-pos${o.precio == null ? " is-sin-precio" : ""}" data-inv-precio="${esc(o.ticker)}">
+      <span class="inv-pos-fila"><b>${esc(o.ticker)} <span class="inv-chip">${o.grupo === "nucleo" ? "Núcleo" : "Satélite"}</span></b><span class="inv-pos-valor">${o.valor != null ? M.usd(o.valor) : "—"}</span></span>
+      <span class="inv-pos-fila"><span>${M.cantidadTexto(o.cantidad)} acc. · prom. ${M.usd(o.costoPromedio)}</span>${o.gp != null ? gp(o.gp, o.gpPct) : `<span>Costo ${M.usd(o.invertido)}</span>`}</span>
+      <span class="inv-pos-fila"><span class="inv-pos-precio">${precio}</span><span>Peso ${M.pct(o.peso, 1)}</span></span>
+      <span class="inv-peso" aria-hidden="true"><i style="width:${Math.min(100, Math.max(0, o.peso))}%"></i></span>
+    </button>`;
+}
+
+// ---------- Hoja de precio (ver el diario o poner uno a mano) ----------
+function abrirPrecio(ticker) {
+  const a = aj();
+  const diario = M.precioDiario(precios, ticker);
+  const manual = a.preciosManuales[ticker];
+  est = { modo: "precio", ticker };
+  const info = diario
+    ? `<p class="inv-nota">Precio diario: <b>${M.usd(diario.precio)}</b> (cierre del ${M.fechaLarga(diario.fecha)}). Se actualiza solo de lunes a viernes.</p>`
+    : `<div class="inv-aviso"><p>⚠️ <b>${esc(ticker)}</b> no está en la lista de precios diarios: el precio que pongas aquí <b>no se actualiza solo</b>. Para que se actualice cada día hay que agregarlo a la lista (data/tickers.json).</p></div>`;
+  const guardado = manual && Number(manual.precio) > 0
+    ? `<p class="inv-nota">Precio manual guardado: <b>${M.usd(Number(manual.precio))}</b> del ${M.fechaLarga(manual.fecha)}.</p>` : "";
+  abrirHoja(`Precio de ${ticker}`, `${info}${guardado}
+      <form class="inv-form inv-precio-form" novalidate>
+        ${par(campo("precio", "Precio a mano (US$)", manual ? enCampo(Number(manual.precio)) : ""), campo("fecha", "Fecha del precio", hoyLocal(), "fecha"))}
+        <p class="inv-ayuda">Manda el precio más reciente: cuando llegue un precio diario más nuevo, se usa ese.</p>
+        <p class="inv-error" role="alert" hidden></p>
+        <div class="inv-hoja-acciones">
+          ${manual ? `<button type="button" class="inv-btn-peligro" data-inv-quitar-precio>Quitar precio manual</button>` : ""}
+          <button type="submit" class="inv-btn">Guardar precio</button>
+        </div>
+      </form>`);
+}
+function guardarPrecio(f) {
+  const precio = M.numero(f.elements.precio.value), fecha = f.elements.fecha.value;
+  const errores = [];
+  if (!(precio > 0)) errores.push({ campo: "precio", texto: "Revisa el precio." });
+  if (!M.fechaOk(fecha)) errores.push({ campo: "fecha", texto: "Pon la fecha." });
+  else if (fecha > hoyLocal()) errores.push({ campo: "fecha", texto: "La fecha no puede ser futura." });
+  if (errores.length) { mostrarErrores(f, errores); return; }
+  refAjustes().set({ preciosManuales: { [est.ticker]: { precio: M.red(precio, 6), fecha } } }, { merge: true }).catch(avisarFallo);
+  cerrarHoja();
+}
+function quitarPrecio() {
+  const t = est.ticker;
+  refAjustes().update(new firebase.firestore.FieldPath("preciosManuales", t), firebase.firestore.FieldValue.delete()).catch(avisarFallo);
+  cerrarHoja();
+}
 
 // ---------- Movimientos ----------
 function renderMovimientos() {
@@ -150,6 +291,8 @@ function textoFila(m) {
 $("panel-inversiones").addEventListener("click", e => {
   const ed = e.target.closest("[data-inv-editar]");
   if (ed) { abrirMov({ id: ed.dataset.invEditar }); return; }
+  const pr = e.target.closest("[data-inv-precio]");
+  if (pr) { abrirPrecio(pr.dataset.invPrecio); return; }
   const q = e.target.closest("[data-inv-quitar]");
   if (q) { quitarTicker(q.dataset.invQuitar); return; }
   const b = e.target.closest("[data-inv]");
@@ -344,6 +487,7 @@ function alTocarHoja(e) {
     return;
   }
   if (e.target.closest("[data-inv-borrar]")) borrarMov();
+  if (e.target.closest("[data-inv-quitar-precio]")) quitarPrecio();
 }
 
 const leer = f => {
@@ -440,7 +584,9 @@ const avisarFallo = err => alert(`No se pudo guardar: ${err && err.message ? err
 function alEnviar(e) {
   e.preventDefault();
   if (!est) return;
-  if (est.modo === "ronda") guardarRonda(e.target); else guardarMov(e.target);
+  if (est.modo === "ronda") guardarRonda(e.target);
+  else if (est.modo === "precio") guardarPrecio(e.target);
+  else guardarMov(e.target);
 }
 
 function guardarMov(f) {
@@ -644,7 +790,8 @@ $("inv-ajustes").addEventListener("submit", e => {
     comisionAirtm: valor("comisionAirtm", "la comisión de AirTM"),
     comisionTransferencia: valor("comisionTransferencia", "la comisión de transferencia"),
     objetivoSatelite: borrador.objetivoSatelite,
-    tickers: {}
+    tickers: {},
+    preciosManuales: (guardados && guardados.preciosManuales) || {}
   };
   if (!doc.broker) errores.push({ campo: "broker", texto: "Escribe el broker." });
   Object.keys(borrador.tickers).forEach(t => { doc.tickers[t] = Object.assign({}, borrador.tickers[t]); });
@@ -680,4 +827,5 @@ onAuthReady(() => {
   }, err => console.warn("Inversiones (ajustes):", err));
 });
 render();
+cargarPrecios();
 })();

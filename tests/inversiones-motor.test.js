@@ -14,7 +14,7 @@ test("números con coma o punto (teclado del iPhone en español)", () => {
   assert.ok(isNaN(M.numero("")));
   assert.ok(isNaN(M.numero("abc")));
   assert.ok(isNaN(M.numero("1,2,3x")));
-  assert.equal(M.numero("8.020"), 8020, "punto de miles (estilo venezolano)");
+  assert.equal(M.numero("8.020"), 8020, "punto de miles (estilo boliviano)");
   assert.equal(M.numero("8.020.000"), 8020000);
   assert.equal(M.numero("0.068"), 0.068);
   assert.equal(M.numero("487.10"), 487.1);
@@ -85,7 +85,7 @@ test("validar cada tipo", () => {
   assert.equal(r.doc.monto, 0.9);
   r = ok("efectivo", { monto: "10", sentido: "retiro" });
   assert.equal(r.doc.sentido, "retiro");
-  r = ok("fondeo", { bs: "8000", tasa: "", usd: "190" });
+  r = ok("fondeo", { bs: "2800", tasa: "", usd: "190" });
   assert.equal(r.ok, false, "Bs sin tipo de cambio");
   assert.equal(r.errores[0].campo, "tasa");
   r = ok("fondeo", { usd: "199,10" });
@@ -100,7 +100,7 @@ test("validar cada tipo", () => {
 });
 
 test("fondeo: AirTM 1,40 % y transferencia 0,65 %", () => {
-  const f = M.calcularFondeo({ bs: "8.020", tasa: "40,1" }, null);
+  const f = M.calcularFondeo({ bs: "2.800", tasa: "14" }, null);
   assert.equal(f.usdEnviado, 200);
   assert.equal(f.comisionAirtm, 2.8);
   assert.equal(f.comisionTransferencia, M.red((200 - 2.8) * 0.0065));
@@ -138,7 +138,7 @@ test("ronda DCA: una compra por ticker con su comisión", () => {
 test("resumen: aportado, efectivo y comisiones", () => {
   const docs = {
     v1: viejo,
-    f1: { v: 1, tipo: "fondeo", fecha: "2026-10-02", bs: 8020, tasa: 40.1, usdEnviado: 200, comisionAirtm: 2.8, comisionTransferencia: 1.28, usd: 195.92 },
+    f1: { v: 1, tipo: "fondeo", fecha: "2026-10-02", bs: 2800, tasa: 14, usdEnviado: 200, comisionAirtm: 2.8, comisionTransferencia: 1.28, usd: 195.92 },
     c1: { v: 1, tipo: "compra", fecha: "2026-10-03", ticker: "QQQ", cantidad: 0.1, precio: 500, comision: 0.15 },
     c2: { v: 1, tipo: "compra", fecha: "2026-10-03", ticker: "VOO", cantidad: 0.2, precio: 600, comision: 0.15 },
     d1: { v: 1, tipo: "dividendo", fecha: "2026-10-20", ticker: "VOO", monto: 0.5 },
@@ -151,7 +151,7 @@ test("resumen: aportado, efectivo y comisiones", () => {
   assert.equal(r.aportado, M.red(195.92 + 50));
   assert.equal(r.comisiones, M.red(0.3 + 2.8 + 1.28));
   assert.equal(r.nAportesViejos, 1);
-  assert.equal(r.tasaPromedio, 40.1);
+  assert.equal(r.tasaPromedio, 14);
   // Compras sin fondeo anotado: lo que falta cuenta como aportado.
   const solo = M.resumen([M.normalizar("c1", docs.c1)]);
   assert.equal(solo.aportado, 50.15);

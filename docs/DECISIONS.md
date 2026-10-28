@@ -251,4 +251,19 @@ VOO, SCHD, VT, VIG, MSFT con US$ 33,18 cada uno (la ronda entra en US$ 200
 con comisiones), objetivo 95 % núcleo en partes iguales y 5 % satélite.
 "Aportado" = US$ que llegaron al broker; si se compró sin fondeo anotado,
 la diferencia también cuenta. Números con coma o punto; el punto con grupos
-de 3 cifras es de miles (estilo venezolano).
+de 3 cifras es de miles (estilo boliviano).
+
+**D-045 (2026-10-28) · Precios diarios desde Yahoo Finance, verificados en
+GitHub Actions.** Como el tipo de cambio: un workflow
+(`.github/workflows/precios.yml`) corre `scripts/precios.py` de lunes a
+viernes después del cierre de Nueva York y guarda `data/precios.json`; el
+teléfono no llama a ninguna API ni lleva claves. Verificado el 2026-10-28
+con dos corridas a mano: el gráfico público de Yahoo
+(`query1.finance.yahoo.com/v8/finance/chart`) respondió 200 para los 6
+tickers desde un runner de GitHub (39 cierres desde 2026-09-01). Stooq queda
+como respaldo (no verificado: no hizo falta). Yahoo a veces no trae aún la
+barra del día; se toma su último precio si es de las 16:00 de Nueva York o
+después. Los tickers seguidos viven en `data/tickers.json`; uno que no está
+se puede valuar a mano en la app (con aviso). En `sw.js`,
+`data/precios.json` va primero a la red con copia para sin conexión (mismo
+trato que `data/tipo-cambio.json`).

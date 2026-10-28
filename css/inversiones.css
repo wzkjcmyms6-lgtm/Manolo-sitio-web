@@ -7,7 +7,10 @@
 #panel-inversiones .inv-vista { max-width: 720px; min-width: 0; }
 .inv-tabs { margin-bottom: 1.2rem; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
 .inv-tabs::-webkit-scrollbar { display: none; }
-.inv-tabs .fin-tab { white-space: nowrap; }
+.inv-tabs.hay-der { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent); }
+.inv-tabs.hay-izq { -webkit-mask-image: linear-gradient(90deg, transparent, #000 32px); mask-image: linear-gradient(90deg, transparent, #000 32px); }
+.inv-tabs.hay-izq.hay-der { -webkit-mask-image: linear-gradient(90deg, transparent, #000 32px, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(90deg, transparent, #000 32px, #000 calc(100% - 32px), transparent); }
+.inv-tabs .fin-tab { white-space: nowrap; padding: 0.5rem 0.85rem; }
 
 /* Resumen */
 .inv-hero {
@@ -37,6 +40,32 @@
   padding: 0.9rem 1rem; margin-bottom: 0.9rem;
 }
 .inv-aviso p { margin: 0 0 0.7rem; font-size: 0.92rem; }
+
+.inv-gp { font-weight: 600; color: var(--ink); }
+.inv-gp.is-sube { color: var(--inv-verde); }
+.inv-gp.is-baja { color: var(--danger); }
+
+/* Posiciones */
+.inv-pos {
+  display: flex; flex-direction: column; gap: 0.3rem; width: 100%; min-width: 0; box-sizing: border-box;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+  padding: 0.85rem 1rem; margin-bottom: 0.55rem; color: var(--ink); font: inherit; text-align: left;
+}
+button.inv-pos { cursor: pointer; }
+button.inv-pos:active { background: var(--surface-raised); }
+.inv-pos.is-sin-precio { border-color: rgba(255, 184, 77, 0.45); }
+.inv-pos.is-sin-asignar { border-style: dashed; }
+.inv-pos.is-sin-asignar .inv-btn-sec { align-self: flex-start; min-height: 40px; padding: 0.45rem 1rem; margin-top: 0.2rem; }
+.inv-pos-fila { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; min-width: 0; font-size: 0.85rem; color: var(--muted); }
+.inv-pos-fila > :first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inv-pos-fila > :last-child { flex-shrink: 0; white-space: nowrap; }
+.inv-pos-fila > :only-child { flex-shrink: 1; white-space: normal; overflow: visible; }
+.inv-pos-fila b { color: var(--ink); font-size: 1.05rem; font-weight: 700; }
+.inv-pos-fila b .inv-chip { vertical-align: 0.15em; margin-left: 0.25rem; }
+.inv-pos-valor { color: var(--ink); font-size: 1.05rem; font-weight: 600; }
+.inv-pos.is-sin-precio .inv-pos-precio { color: var(--accent-2); }
+.inv-peso { display: block; height: 4px; border-radius: 999px; background: var(--surface-raised); overflow: hidden; margin-top: 0.15rem; }
+.inv-peso i { display: block; height: 100%; border-radius: inherit; background: var(--accent-grad); }
 
 /* Botones */
 .inv-acciones { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1.2rem; }

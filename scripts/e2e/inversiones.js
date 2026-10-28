@@ -1,17 +1,24 @@
-// Pruebas de pantalla de Inversiones (js/inversiones.js), fase 1:
-// aportes viejos, movimientos de cada tipo, editar, borrar, ronda DCA y ajustes.
+// Pruebas de pantalla de Inversiones (js/inversiones.js): aportes viejos,
+// movimientos de cada tipo, editar, borrar, ronda DCA y ajustes (fase 1);
+// posiciones, precios diarios, precio a mano y sin conexión (fase 2).
+// Los precios de la prueba son fijos (no el data/precios.json real).
 // Uso: node scripts/e2e/inversiones.js [carpeta-para-capturas]
 const { chromium, servidor, abrir, ok, captura: capturar, terminar } = require("./comun.js");
 const M = require("../../js/inversiones-motor.js");
 
 const CAPTURAS = process.argv[2] || null;
 const captura = (p, n) => capturar(p, CAPTURAS, n);
-const ZONA = "America/Caracas";
+const ZONA = "America/La_Paz";
 const HOY = "2026-10-28T10:00:00-04:00";
 const COL = "users/test/inversiones";
 const VIEJO_VOO = { date: "2026-10-01", name: "VOO", amount: 50, notes: "primer aporte" };
 const VIEJO_FONDO = { date: "2026-09-28", name: "<b>Fondo</b>", amount: 30, notes: "" };
 const SEED = { [COL]: { v1: VIEJO_VOO, v2: VIEJO_FONDO } };
+const PRECIOS = { fuente: "prueba", actualizado: "2026-10-27T21:40:00Z", tickers: {
+  QQQ: { ultimo: { fecha: "2026-10-27", cierre: 500 }, historial: { "2026-10-05": 480, "2026-10-27": 500 } },
+  VOO: { ultimo: { fecha: "2026-10-20", cierre: 640 }, historial: { "2026-10-01": 619, "2026-10-20": 640 } },
+  SCHD: { ultimo: { fecha: "2026-10-27", cierre: 28 }, historial: { "2026-10-27": 28 } }
+} };
 
 const texto = (p, sel) => p.textContent(sel).then(t => (t || "").replace(/\s+/g, " ").trim());
 const todos = p => p.evaluate(c => Array.from(window.__fakeStore.colMap(c).entries()), COL);
@@ -34,6 +41,8 @@ async function nuevo(p, tipo) {
 }
 const pestana = async (p, t) => { await p.click(`#panel-inversiones [data-inv-tab="${t}"]`); await p.waitForTimeout(250); };
 const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
+const ajustes = p => p.evaluate(() => window.__fakeStore.colMap("users/test/meta").get("inversiones_ajustes") || null);
+const movsDe = async p => (await todos(p)).map(([id, x]) => M.normalizar(id, x));
 // Arrastra con un dedo hacia abajo desde el centro de `sel` (como hojas.js).
 async function deslizar(p, sel, dy) {
   const c = await p.$eval(sel, el => { const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + Math.min(r.height / 2, 120) }; });
@@ -53,6 +62,11 @@ async function deslizar(p, sel, dy) {
   const base = `http://localhost:${srv.address().port}`;
   const browser = await chromium.launch();
   const p = await abrir(browser, base, { __SEED__: SEED }, { hash: "#inversiones", zona: ZONA, fecha: HOY });
+  // Precios fijos de prueba; con conRed = false, el archivo no llega (sin conexión).
+  let conRed = true;
+  await p.context().route(/\/data\/precios\.json/, r => (conRed ? r.fulfill({ contentType: "application/json", body: JSON.stringify(PRECIOS) }) : r.abort()));
+  await p.reload();
+  await p.waitForTimeout(800);
 
   console.log("\nResumen con registros viejos");
   ok(await visible(p, "#inv-resumen"), "se ve el Resumen");
@@ -115,20 +129,20 @@ async function deslizar(p, sel, dy) {
   await nuevo(p, "fondeo");
   ok((await p.inputValue(campo("fecha"))) === "2026-10-28", "cambiar de tipo conserva la fecha");
   await p.fill(campo("fecha"), "2026-10-02");
-  await escribir(p, campo("bs"), "8020");
-  await escribir(p, campo("tasa"), "40,1");
-  const f = M.calcularFondeo({ bs: 8020, tasa: 40.1 }, null);
+  await escribir(p, campo("bs"), "2800");
+  await escribir(p, campo("tasa"), "14");
+  const f = M.calcularFondeo({ bs: 2800, tasa: 14 }, null);
   const vals = await Promise.all(["usdEnviado", "comisionAirtm", "comisionTransferencia", "usd"].map(k => p.inputValue(campo(k))));
   ok(vals.join("|") === ["200", "2,8", String(f.comisionTransferencia).replace(".", ","), String(f.usd).replace(".", ",")].join("|"), `se calcula todo (${vals.join(" · ")})`);
   ok(/Cada US\$ que llegó al broker te costó/.test(await texto(p, ".inv-hoja [data-inv-total]")), "muestra lo que costó cada US$");
   await escribir(p, campo("usd"), "195,50");
-  await escribir(p, campo("tasa"), "40");
+  await escribir(p, campo("tasa"), "13,9");
   ok((await p.inputValue(campo("usd"))) === "195,50", "lo que escribes a mano no se pisa");
   await captura(p, "inv-fondeo.png");
   await guardar(p);
   lista = await todos(p);
   const fon = lista.find(([, x]) => x.tipo === "fondeo");
-  ok(fon && fon[1].bs === 8020 && fon[1].tasa === 40 && fon[1].usdEnviado === 200.5 && fon[1].usd === 195.5, "fondeo guardado con Bs, tipo de cambio y US$");
+  ok(fon && fon[1].bs === 2800 && fon[1].tasa === 13.9 && fon[1].usdEnviado === 201.44 && fon[1].usd === 195.5, "fondeo guardado con Bs, tipo de cambio y US$");
 
   console.log("\nCambiar de tipo y deslizar para cerrar");
   await nuevo(p);
@@ -243,14 +257,74 @@ async function deslizar(p, sel, dy) {
   await p.click(".inv-hoja .budget-sheet-close");
   await p.waitForTimeout(350);
 
+  console.log("\nPosiciones y precios");
+  await nuevo(p);
+  await p.fill(campo("fecha"), "2026-10-20");
+  await escribir(p, campo("ticker"), "NVDA");
+  await escribir(p, campo("precio"), "130");
+  await escribir(p, campo("cantidad"), "1");
+  await guardar(p);
+  await pestana(p, "posiciones");
+  ok(await p.$eval('#panel-inversiones [data-inv-tab="posiciones"]', b => b.classList.contains("active")), "pestaña Posiciones");
+  ok(await p.$eval("#panel-inversiones .inv-tabs", b => b.scrollWidth <= b.clientWidth || b.classList.contains("hay-der") || b.classList.contains("hay-izq")), "si las pestañas no caben, el borde avisa que hay más");
+  let pos = M.posiciones(await movsDe(p), PRECIOS, await ajustes(p));
+  const tarjetas = await p.$$eval("#inv-posiciones [data-inv-precio]", els => els.map(e => e.dataset.invPrecio));
+  ok(tarjetas.join(",") === pos.abiertas.map(o => o.ticker).join(","), `una tarjeta por ticker, por valor (${tarjetas.join(", ")})`);
+  const tq = '#inv-posiciones [data-inv-precio="QQQ"]';
+  const q = pos.abiertas.find(o => o.ticker === "QQQ");
+  ok((await texto(p, `${tq} .inv-pos-valor`)) === M.usd(q.valor), `QQQ vale ${M.usd(q.valor)} (cantidad × cierre)`);
+  ok((await texto(p, tq)).includes(M.usdS(q.gp)) && (await texto(p, tq)).includes(`prom. ${M.usd(q.costoPromedio)}`), "con costo promedio y G/P");
+  ok(/cierre 27 oct 2026/.test(await texto(p, tq)) && /Núcleo/.test(await texto(p, tq)), "precio del cierre y grupo");
+  ok(/cierre 20 oct 2026 · hace 8 días/.test(await texto(p, '#inv-posiciones [data-inv-precio="VOO"]')), "avisa si el precio es viejo");
+  const tn = '#inv-posiciones [data-inv-precio="NVDA"]';
+  ok(await p.$eval(tn, el => el.classList.contains("is-sin-precio")) && /Sin precio diario/.test(await texto(p, tn)) && /Satélite/.test(await texto(p, tn)), "NVDA: satélite y sin precio diario");
+  ok((await texto(p, "#inv-posiciones .is-sin-asignar")).includes("US$ 30,00"), "los aportes sin completar se muestran aparte");
+  ok((await texto(p, "#inv-posiciones .inv-hero-valor")) === M.usd(pos.total.valor), `total de posiciones ${M.usd(pos.total.valor)}`);
+  await captura(p, "inv-posiciones.png");
+
+  await p.click(tn);
+  await p.waitForTimeout(400);
+  ok((await texto(p, "#inv-hoja-t")) === "Precio de NVDA" && /no está en la lista de precios diarios/.test(await texto(p, ".inv-hoja .inv-aviso")), "precio a mano: avisa que no se actualiza solo");
+  await captura(p, "inv-precio-manual.png");
+  await escribir(p, '.inv-hoja [name="precio"]', "140,50");
+  await guardar(p);
+  const ajM = await ajustes(p);
+  ok(ajM && ajM.preciosManuales && ajM.preciosManuales.NVDA && ajM.preciosManuales.NVDA.precio === 140.5 && ajM.preciosManuales.NVDA.fecha === "2026-10-28", "se guarda en tus ajustes");
+  ok(/Precio manual US\$ 140,50 · 28 oct 2026/.test(await texto(p, tn)) && (await texto(p, `${tn} .inv-pos-valor`)) === "US$ 140,50", "la tarjeta usa el precio manual");
+  await p.click(tq);
+  await p.waitForTimeout(400);
+  ok(/Precio diario: US\$ 500,00 \(cierre del 27 oct 2026\)/.test(await texto(p, ".inv-hoja")) && !(await p.$(".inv-hoja .inv-aviso")), "un ticker de la lista muestra su precio diario");
+  await p.click(".inv-hoja .budget-sheet-close");
+  await p.waitForTimeout(350);
+  await pestana(p, "ajustes");
+  await p.click("#inv-ajustes [type=submit]");
+  await p.waitForTimeout(300);
+  ok(((await ajustes(p)).preciosManuales || {}).NVDA, "guardar Ajustes no borra los precios manuales");
+  await pestana(p, "posiciones");
+  await p.click(tn);
+  await p.waitForTimeout(400);
+  await p.click(".inv-hoja [data-inv-quitar-precio]");
+  await p.waitForTimeout(400);
+  ok(!((await ajustes(p)).preciosManuales || {}).NVDA && /Sin precio diario/.test(await texto(p, tn)), "«Quitar precio manual» vuelve a sin precio");
+
   console.log("\nResumen final");
   await pestana(p, "resumen");
-  const r = M.resumen((await todos(p)).map(([id, x]) => M.normalizar(id, x)));
-  ok((await texto(p, "#inv-resumen .inv-hero-valor")) === M.usd(r.aportado), `Aportado coincide con el motor (${M.usd(r.aportado)})`);
+  const c = M.cartera(await movsDe(p), PRECIOS, await ajustes(p));
+  ok((await texto(p, "#inv-resumen .inv-hero-valor")) === M.usd(c.valor), `valor de la cartera coincide con el motor (${M.usd(c.valor)})`);
+  ok((await texto(p, "#inv-resumen .inv-hero")).includes(`${M.usdS(c.gp)} (${M.pctS(c.gpPct)}) sobre ${M.usd(c.resumen.aportado)} aportados`), "G/P sobre lo aportado");
+  ok(/Precios al cierre del 27 oct 2026/.test(await texto(p, "#inv-resumen")) && /1 posición sin precio cuenta a su costo/.test(await texto(p, "#inv-resumen")), "dice de cuándo son los precios y cuántas no tienen");
   ok(/1 aporte anterior/.test(await texto(p, "#inv-resumen .inv-aviso")), "queda 1 aporte por completar");
   d = await uno(p, "v2");
   ok(JSON.stringify(d) === JSON.stringify(VIEJO_FONDO), "el otro registro viejo sigue intacto");
   await captura(p, "inv-resumen.png");
+
+  console.log("\nSin conexión: usa los últimos precios guardados");
+  conRed = false;
+  await p.reload();
+  await p.waitForTimeout(900);
+  await pestana(p, "posiciones");
+  ok((await texto(p, `${tq} .inv-pos-valor`)) === M.usd(q.valor), "sin red, QQQ sigue con su valor");
+  conRed = true;
 
   console.log("\nCelular angosto: nada se sale de ancho");
   await p.setViewportSize({ width: 320, height: 700 });
@@ -265,6 +339,11 @@ async function deslizar(p, sel, dy) {
   await p.click('#inv-movimientos [data-inv="ronda"]');
   await p.waitForTimeout(350);
   ok((await sobra(p, ".inv-hoja .budget-sheet-panel")) === 0, "la ronda DCA cabe a 320 px");
+  await p.click(".inv-hoja .budget-sheet-close");
+  await p.waitForTimeout(350);
+  await pestana(p, "posiciones");
+  ok((await sobra(p, "html")) <= 0 && (await sobra(p, "#inv-posiciones")) <= 0, "Posiciones cabe a 320 px");
+  ok(await p.$eval('#panel-inversiones [data-inv-tab="posiciones"]', b => { const r = b.getBoundingClientRect(), c = b.parentElement.getBoundingClientRect(); return r.left >= c.left - 1 && r.right <= c.right + 1; }), "la pestaña elegida queda a la vista");
   ok(!p.errores.length, "sin errores de página");
 
   await p.context().close();

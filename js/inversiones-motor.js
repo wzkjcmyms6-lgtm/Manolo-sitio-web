@@ -28,7 +28,7 @@ function ajustesBase() {
   const objetivo = Math.round((95 / NUCLEO.length) * 100) / 100;
   const tickers = {};
   NUCLEO.forEach((t, i) => { tickers[t] = { grupo: "nucleo", dca: porTicker, objetivo, orden: i }; });
-  return { v: 1, broker: "Hapi", comisionTicker: comision, comisionAirtm: 1.4, comisionTransferencia: 0.65, tasaEfectivo: 6.5, objetivoSatelite: 5, tickers };
+  return { v: 1, broker: "Hapi", comisionTicker: comision, comisionAirtm: 1.4, comisionTransferencia: 0.65, tasaEfectivo: 6.5, objetivoSatelite: 5, tickers, preciosManuales: {} };
 }
 
 // Ajustes guardados encima de los de por defecto (lo que falte se completa).
@@ -37,6 +37,7 @@ function ajustes(guardados) {
   const g = guardados && typeof guardados === "object" ? guardados : {};
   const out = Object.assign({}, base, g);
   out.tickers = g.tickers && typeof g.tickers === "object" ? g.tickers : base.tickers;
+  out.preciosManuales = g.preciosManuales && typeof g.preciosManuales === "object" ? g.preciosManuales : {};
   ["comisionTicker", "comisionAirtm", "comisionTransferencia", "tasaEfectivo", "objetivoSatelite"].forEach(k => {
     if (!(typeof out[k] === "number" && isFinite(out[k]) && out[k] >= 0)) out[k] = base[k];
   });
@@ -54,7 +55,7 @@ function nucleo(aj) {
 // ---- Números y textos ----
 // Acepta "33,5", "33.5", "1.234,56" o "1,234.56". La coma sola es decimal
 // (teclado del iPhone en español). El punto solo es decimal, salvo como
-// miles al estilo venezolano: "8.020" u "8.020.000" (1 a 3 cifras sin cero
+// miles al estilo boliviano: "8.020" u "8.020.000" (1 a 3 cifras sin cero
 // adelante y grupos de 3).
 function numero(v) {
   if (typeof v === "number") return isFinite(v) ? v : NaN;
@@ -77,7 +78,10 @@ const num = (n, min, max) => (n || 0).toLocaleString("es-ES", { minimumFractionD
 const usd = n => `${n < 0 ? "−" : ""}US$ ${num(Math.abs(n), 2, 2)}`;
 const bs = n => `Bs ${num(n, 2, 2)}`;
 const cantidadTexto = n => num(n, 0, 6);
-const pct = (n, d = 2) => `${num(n, 0, d)} %`;
+const pct = (n, d = 2) => `${n < 0 ? "−" : ""}${num(Math.abs(n), 0, d)} %`;
+// Con signo para ganancias y pérdidas: "+US$ 2,10", "−US$ 1,20", "+1,4 %".
+const usdS = n => `${n > 0 ? "+" : ""}${usd(n)}`;
+const pctS = (n, d = 1) => `${n > 0 ? "+" : ""}${pct(n, d)}`;
 const tickerOk = t => /^[A-Z][A-Z0-9.\-]{0,9}$/.test(t);
 const fechaOk = f => /^\d{4}-\d{2}-\d{2}$/.test(f) && !isNaN(new Date(f + "T12:00:00").getTime());
 const texto = s => String(s == null ? "" : s).trim().slice(0, 300);
@@ -312,7 +316,7 @@ function resumen(movs) {
 const interesMensual = (efectivo, tasaAnual) => red(efectivo * (tasaAnual / 100) / 12);
 
 // Cantidad por ticker según compras y ventas (para avisar si se vende más
-// de lo que hay). Las posiciones completas llegan en la fase 2.
+// de lo que hay).
 function cantidades(movs, excluirId) {
   const out = {};
   movs.forEach(m => {
@@ -335,12 +339,122 @@ function tickerSugerido(nombre) {
   return tickerOk(t) ? t : "";
 }
 
+// ---- Precios (fase 2) ----
+// precios: contenido de data/precios.json
+//   { tickers: { QQQ: { ultimo: { fecha, cierre }, historial: { fecha: cierre } } } }
+// manuales: ajustes.preciosManuales { TICKER: { precio, fecha } }.
+// Se usa el más reciente de los dos; si son del mismo día, el diario.
+function precioDiario(precios, ticker) {
+  const t = precios && precios.tickers && precios.tickers[ticker];
+  if (!t) return null;
+  let u = t.ultimo && t.ultimo.cierre > 0 && fechaOk(t.ultimo.fecha) ? { fecha: t.ultimo.fecha, precio: t.ultimo.cierre } : null;
+  if (!u && t.historial) {
+    const f = Object.keys(t.historial).filter(fechaOk).sort().pop();
+    if (f && t.historial[f] > 0) u = { fecha: f, precio: t.historial[f] };
+  }
+  return u;
+}
+function precioDe(ticker, precios, manuales) {
+  const d = precioDiario(precios, ticker);
+  const m0 = manuales && manuales[ticker];
+  const m = m0 && Number(m0.precio) > 0 && fechaOk(m0.fecha) ? { fecha: m0.fecha, precio: Number(m0.precio) } : null;
+  if (m && (!d || m.fecha > d.fecha)) return Object.assign(m, { fuente: "manual", listado: !!d });
+  if (d) return Object.assign(d, { fuente: "diario", listado: true });
+  return { precio: null, fecha: null, fuente: null, listado: false };
+}
+// Cierre en una fecha (o el último antes de ella): para los gráficos.
+function precioEn(precios, ticker, fecha) {
+  const h = precios && precios.tickers && precios.tickers[ticker] && precios.tickers[ticker].historial;
+  if (!h) return null;
+  let mejor = null;
+  Object.keys(h).forEach(f => { if (f <= fecha && h[f] > 0 && (!mejor || f > mejor)) mejor = f; });
+  return mejor ? h[mejor] : null;
+}
+// Fecha del cierre más nuevo del archivo de precios.
+function fechaPrecios(precios) {
+  let f = null;
+  Object.keys((precios && precios.tickers) || {}).forEach(t => { const d = precioDiario(precios, t); if (d && (!f || d.fecha > f)) f = d.fecha; });
+  return f;
+}
+const diasEntre = (a, b) => Math.round((new Date(b + "T12:00:00") - new Date(a + "T12:00:00")) / 864e5);
+
+// ---- Posiciones a costo promedio ----
+// Compra: suma cantidad y costo (con comisión). Venta: saca costo en
+// proporción a lo vendido; ganancia realizada = lo recibido − ese costo.
+// Si se vende más de lo registrado, la posición queda en cero.
+function posiciones(movs, precios, aj) {
+  const a = ajustes(aj);
+  const nuc = nucleo(a);
+  const por = {};
+  const crono = movs.slice().sort((x, y) => (x.fecha || "").localeCompare(y.fecha || "") || (x.creado - y.creado) || String(x.id).localeCompare(String(y.id)));
+  const de = t => (por[t] = por[t] || { ticker: t, cantidad: 0, costo: 0, realizado: 0, dividendos: 0, compras: 0, ventas: 0 });
+  crono.forEach(m => {
+    if (m.tipo === "compra") { const p = de(m.ticker); p.cantidad += m.cantidad; p.costo += m.total; p.compras++; }
+    else if (m.tipo === "venta") {
+      const p = de(m.ticker);
+      const parte = p.cantidad > 0 ? Math.min(1, m.cantidad / p.cantidad) : 0;
+      const costoVendido = p.costo * parte;
+      p.realizado += m.total - costoVendido;
+      p.costo -= costoVendido;
+      p.cantidad = Math.max(0, p.cantidad - m.cantidad);
+      p.ventas++;
+      if (p.cantidad < 1e-9) { p.cantidad = 0; p.costo = 0; }
+    } else if (m.tipo === "dividendo") de(m.ticker).dividendos += m.monto;
+  });
+  const abiertas = [], cerradas = [];
+  Object.keys(por).forEach(t => {
+    const p = por[t];
+    const pr = precioDe(t, precios, a.preciosManuales);
+    const o = {
+      ticker: t, grupo: nuc.includes(t) ? "nucleo" : "satelite",
+      cantidad: red(p.cantidad, 8), invertido: red(p.costo), costoPromedio: p.cantidad > 0 ? red(p.costo / p.cantidad, 4) : 0,
+      precio: pr.precio, fechaPrecio: pr.fecha, fuentePrecio: pr.fuente, listado: pr.listado,
+      realizado: red(p.realizado), dividendos: red(p.dividendos), compras: p.compras, ventas: p.ventas
+    };
+    if (p.cantidad > 0) {
+      o.valor = pr.precio != null ? red(p.cantidad * pr.precio) : null;
+      o.gp = o.valor != null ? red(o.valor - o.invertido) : null;
+      o.gpPct = o.valor != null && o.invertido > 0 ? red((o.gp / o.invertido) * 100) : null;
+      abiertas.push(o);
+    } else if (p.compras || p.ventas) cerradas.push(o);
+  });
+  // Sin precio, la posición cuenta a su costo (para el peso y los totales).
+  const valorO = o => (o.valor != null ? o.valor : o.invertido);
+  const total = abiertas.reduce((s, o) => s + valorO(o), 0);
+  abiertas.forEach(o => { o.peso = total > 0 ? red((valorO(o) / total) * 100, 1) : 0; });
+  abiertas.sort((x, y) => valorO(y) - valorO(x) || x.ticker.localeCompare(y.ticker));
+  cerradas.sort((x, y) => x.ticker.localeCompare(y.ticker));
+  const conPrecio = abiertas.filter(o => o.valor != null);
+  const tot = {
+    valor: red(total),
+    invertido: red(abiertas.reduce((s, o) => s + o.invertido, 0)),
+    gp: red(conPrecio.reduce((s, o) => s + o.gp, 0)),
+    invertidoConPrecio: red(conPrecio.reduce((s, o) => s + o.invertido, 0)),
+    realizado: red(abiertas.concat(cerradas).reduce((s, o) => s + o.realizado, 0)),
+    sinPrecio: abiertas.length - conPrecio.length,
+    manuales: abiertas.filter(o => o.fuentePrecio === "manual").length
+  };
+  tot.gpPct = tot.invertidoConPrecio > 0 ? red((tot.gp / tot.invertidoConPrecio) * 100) : 0;
+  return { abiertas, cerradas, total: tot };
+}
+
+// Valor de la cartera = posiciones (sin precio, a su costo) + efectivo +
+// aportes viejos sin completar (a su monto). G/P = valor − aportado.
+function cartera(movs, precios, aj) {
+  const r = resumen(movs);
+  const pos = posiciones(movs, precios, aj);
+  const valor = red(pos.total.valor + r.efectivo + r.aportesViejos);
+  const gp = red(valor - r.aportado);
+  return { resumen: r, posiciones: pos, valor, gp, gpPct: r.aportado > 0 ? red((gp / r.aportado) * 100) : 0 };
+}
+
 return {
   TIPOS, NOMBRE, EMOJI, NUCLEO, MESES,
   ajustesBase, ajustes, nucleo,
-  numero, red, usd, bs, cantidadTexto, pct, fechaLarga, mesTitulo, mesDe, tickerOk, fechaOk,
+  numero, red, usd, usdS, bs, cantidadTexto, pct, pctS, fechaLarga, mesTitulo, mesDe, tickerOk, fechaOk,
   esViejo, normalizar, ordenar, porMes,
   validar, calcularFondeo, camposCompletar, cantidadDesdeMonto,
-  ronda, comprasDeRonda, resumen, interesMensual, cantidades, tickersConocidos, tickerSugerido
+  ronda, comprasDeRonda, resumen, interesMensual, cantidades, tickersConocidos, tickerSugerido,
+  precioDiario, precioDe, precioEn, fechaPrecios, diasEntre, posiciones, cartera
 };
 });

@@ -10,16 +10,18 @@
 //   publica una versión nueva (VERSION distinta), el teléfono la descarga en
 //   segundo plano y Manolo muestra "Nueva versión disponible · Actualizar".
 // - Al activarse una versión, se borran los cachés viejos.
-// - El tipo de cambio (data/tipo-cambio.json) va primero a la red y, sin
-//   conexión, usa la última copia.
+// - El tipo de cambio (data/tipo-cambio.json) y los precios de Inversiones
+//   (data/precios.json) van primero a la red y, sin conexión, usan la
+//   última copia.
 //
 // IMPORTANTE: cada entrega que cambie la app debe subir VERSION y HUELLA con
 // `npm run sw` (el test tests/sw-version.test.js falla si alguien lo olvida).
-const VERSION = "2026-10-28.3";
-const HUELLA = "ecd11962a7fb";
+const VERSION = "2026-10-28.6";
+const HUELLA = "081f2e8f55d6";
 const PREFIJO = "manolo-app-";
 const CACHE = PREFIJO + VERSION;
-const DATOS = "manolo-datos"; // copias de respaldo de datos que cambian solos (tipo de cambio)
+const DATOS = "manolo-datos"; // copias de respaldo de datos que cambian solos (tipo de cambio, precios)
+const DATOS_VIVOS = /\/data\/(tipo-cambio|precios)\.json/;
 
 // Archivos que no aparecen en index.html pero la app necesita.
 const EXTRAS = ["./", "manifest.json", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "js/importar-rutinas.js", "js/importar-ui.js"];
@@ -101,7 +103,7 @@ self.addEventListener("activate", e => {
 async function guardarLista(urls) {
   const cache = await caches.open(CACHE);
   await Promise.all((urls || []).filter(propio).map(async url => {
-    if (/\/data\/tipo-cambio\.json/.test(url) || /\/sw\.js/.test(url)) return;
+    if (DATOS_VIVOS.test(url) || /\/sw\.js/.test(url)) return;
     if (await cache.match(url)) return;
     try {
       const res = await fetch(url, { credentials: "same-origin" });
@@ -143,8 +145,8 @@ async function pagina(req) {
   }
 }
 
-// Tipo de cambio: primero la red; sin conexión, la última copia (una sola,
-// sin importar el ?t= que agrega la página).
+// Tipo de cambio y precios: primero la red; sin conexión, la última copia
+// (una sola, sin importar el ?t= que agrega la página).
 async function redPrimero(req) {
   const cache = await caches.open(DATOS);
   const clave = new URL(req.url).origin + new URL(req.url).pathname;
@@ -161,6 +163,6 @@ self.addEventListener("fetch", e => {
   const req = e.request;
   if (req.method !== "GET" || !propio(req.url)) return; // Firebase (red) pasa directo
   if (req.mode === "navigate") { e.respondWith(pagina(req)); return; }
-  if (/\/data\/tipo-cambio\.json$/.test(new URL(req.url).pathname)) { e.respondWith(redPrimero(req)); return; }
+  if (DATOS_VIVOS.test(new URL(req.url).pathname)) { e.respondWith(redPrimero(req)); return; }
   e.respondWith(desdeCache(req));
 });
