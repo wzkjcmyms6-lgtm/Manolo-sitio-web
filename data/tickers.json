@@ -1,0 +1,5 @@
+{
+ "nota": "Tickers con precio diario en Inversiones (data/precios.json). Para seguir uno nuevo, agrégalo aquí; 'desde' es la fecha desde la que se guarda el historial.",
+ "desde": "2026-09-01",
+ "tickers": ["QQQ", "VOO", "SCHD", "VT", "VIG", "MSFT"]
+}

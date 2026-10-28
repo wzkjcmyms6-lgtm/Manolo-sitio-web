@@ -1,0 +1,38 @@
+name: Precios de inversiones
+
+on:
+  schedule:
+    # Lunes a viernes, después del cierre de Nueva York (16:00 hora de NY):
+    # 17:40 y 19:40 en La Paz (UTC-4). El segundo repasa por si el primero falló.
+    - cron: "40 21,23 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: precios
+  cancel-in-progress: false
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Leer cierres diarios
+        run: python scripts/precios.py
+      - name: Guardar si cambió
+        run: |
+          if git diff --quiet -- data/precios.json; then
+            echo "Sin cambios"
+          else
+            git config user.name "precios-bot"
+            git config user.email "precios-bot@users.noreply.github.com"
+            git add data/precios.json
+            git commit -m "Precios de inversiones $(date -u +%F)"
+            git pull --rebase
+            git push
+          fi
