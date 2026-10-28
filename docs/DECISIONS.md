@@ -314,3 +314,15 @@ Firebase). Portadas: Open Library (verificado desde GitHub Actions el
 sin clave dio "cuota excedida") guardando solo la URL; fotos achicadas a
 400 × 600 y comprimidas (~50 KB) en `libros_portadas`, sin Firebase Storage.
 La comprobación se hizo con un workflow temporal que luego se borró.
+
+**D-051 (2026-10-29) · Calendario anual de entrenamientos (Ejercicio ›
+Perfil).** Pedido del dueño con una captura de Hevy como referencia.
+"Entrenamientos de AAAA": los 12 meses en cuadritos, en azul de Ejercicio
+los días con entrenamiento de Gimnasio (los mismos datos de
+`EjercicioDatos`; no se guarda nada nuevo). Semanas de lunes a domingo, como
+el resto de Manolo (Hevy empieza en domingo). Flechas por año (desde el
+primer entrenamiento), tocar un día dice qué entrenaste y "Compartir imagen"
+dibuja un PNG de 1080 × 1350 (MANOLO + tu usuario) que en el iPhone abre el
+menú de compartir. Archivos nuevos: `js/ej-calendario.js` (lógica, pruebas),
+`js/ej-anual.js`, `css/ej-calendario.css`, `scripts/e2e/ej-calendario.js`;
+en `index.html`, una `<section>` en Perfil y sus `<script>`/`<link>`.
