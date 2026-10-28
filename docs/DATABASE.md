@@ -29,6 +29,8 @@ por dueño).
 | `users/{uid}/rutas/{mismo id}` (**histórico**, D-033) | 3 | `v:1, deporte, inicio, enc` (lat, lon a 1e-5 y segundos desde el inicio), `tramos:[n por tramo]`, `n`, `alt?` | Ya no se lee ni se crea. Se borra junto con su actividad si el dueño la elimina |
 | `users/{uid}/rutinas_running/{id}` ✅ (F4) | 4 | `v:1, nombre, intervalos:[{tipo, seg, texto}], totalSeg, creado`; desde 2026-10-01 también `orden` (cola) y, si es un día de un plan, `plan` y `dia` | Desde CSV o Excel (`docs/CSV_ROUTINES.md`). Aditivo: las viejas sin `orden` van primero. Al completarla, `orden` = mayor + 1 |
 
+| `users/{uid}/biblia/{id}` ✅ | Biblia 2 (2026-10-29) | `v:1, fecha (AAAA-MM-DD), libro` (código estilo OSIS: `"John"`, `"Ps"`, `"1Cor"`…), `capitulo` (número), `versiculo` (texto normalizado: `"16"`, `"16-18"`, `"1,3"`), `texto` (≤ 2000), `nota` (≤ 1000, puede ir vacía), `creado` (ms) | Colección nueva. Nombres y capítulos de los 66 libros en `js/biblia-motor.js`. Racha y calendario se calculan (no se guardan). Ver `docs/LIBROS_BIBLIA.md` |
+
 Datos derivados (ritmo medio, velocidad media) **no se guardan**: se
 calculan de distancia y tiempos. Los parciales sí (costoso de recalcular sin
 la ruta).

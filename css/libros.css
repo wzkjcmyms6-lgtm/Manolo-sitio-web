@@ -11,3 +11,91 @@
 .back-link.lib-volver:active { background: var(--surface-raised); }
 .back-link.lib-volver .icon-sm { width: 16px; height: 16px; }
 #panel-libros .lib-app, #panel-biblia .bib-app { max-width: 720px; min-width: 0; }
+
+/* Piezas comunes */
+.lib-btn, .lib-btn-sec, .lib-btn-peligro {
+  min-height: 46px; padding: 0.7rem 1.2rem; border-radius: 999px; font: inherit; font-weight: 700; font-size: 0.95rem;
+  cursor: pointer; touch-action: manipulation;
+}
+.lib-btn { background: var(--accent-grad); color: #0a0a0a; border: none; }
+.lib-btn-sec { background: transparent; color: var(--ink); border: 1px solid var(--border); }
+.lib-btn-peligro { background: transparent; color: var(--danger); border: 1px solid var(--border); }
+.lib-btn:active, .lib-btn-sec:active, .lib-btn-peligro:active { transform: scale(0.98); }
+.lib-btn-ancho { width: 100%; }
+.lib-exportar { display: block; margin: 1.4rem auto 0; }
+.lib-nota { color: var(--muted); font-size: 0.85rem; margin: 0 0 0.7rem; }
+.lib-mes-titulo { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; font-size: 1rem; margin: 1rem 0 0.5rem; }
+.lib-mes-titulo span { color: var(--muted); font-size: 0.8rem; font-weight: 400; }
+/* 16 px: con menos, el iPhone hace zoom al escribir. */
+.lib-input {
+  width: 100%; min-width: 0; box-sizing: border-box; min-height: 44px; padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--lib-campo, var(--bg-soft)); color: var(--ink);
+  font: inherit; font-size: 16px;
+}
+textarea.lib-input { resize: vertical; line-height: 1.45; }
+select.lib-input { -webkit-appearance: none; appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 2rem; }
+input[type="date"].lib-input { -webkit-appearance: none; appearance: none; }
+.lib-input::placeholder { color: var(--muted); }
+.lib-input:focus { outline: none; border-color: var(--accent-1); box-shadow: 0 0 0 3px rgba(255, 122, 48, 0.2); }
+.lib-input.is-error { border-color: var(--danger); }
+.lib-input:disabled { opacity: 0.5; }
+
+/* Hojas (Finanzas pone .budget-sheet; aquí el contenido) */
+.bib-hoja, .lib-hoja { --lib-campo: var(--surface); }
+.lib-hoja-panel { max-height: 92dvh; overflow-x: hidden; }
+.lib-hoja-cuerpo { padding: 0 1rem 1rem; min-width: 0; }
+.lib-form { display: flex; flex-direction: column; gap: 0.7rem; min-width: 0; }
+.lib-campo { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+.lib-campo > span { color: var(--muted); font-size: 0.78rem; }
+.lib-par { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+.lib-par .lib-campo { justify-content: flex-end; }
+.lib-error { margin: 0; color: var(--danger); font-size: 0.9rem; }
+.lib-acciones { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.3rem; }
+.lib-acciones .lib-btn { flex: 1; }
+
+/* ---------- Biblia ---------- */
+.bib-resumen { margin-bottom: 1rem; }
+.bib-racha { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin-bottom: 0.6rem; }
+.bib-racha > div {
+  display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; padding: 0.75rem 0.7rem; border-radius: 14px;
+  background: radial-gradient(140% 160% at 100% 0%, rgba(255, 122, 48, 0.08), transparent 60%), var(--surface); border: 1px solid var(--border);
+}
+.bib-racha b { font-size: 1.35rem; font-weight: 600; }
+.bib-racha span { color: var(--muted); font-size: 0.75rem; line-height: 1.25; }
+.bib-hoy { margin: 0 0 0.6rem; color: var(--muted); font-size: 0.9rem; }
+.bib-hoy.is-hecho { color: #4cc38a; }
+.bib-tabs { display: flex; width: fit-content; margin-bottom: 0.9rem; }
+.bib-filtros { display: grid; grid-template-columns: 1fr; gap: 0.5rem; margin-bottom: 0.4rem; }
+@media (min-width: 600px) { .bib-filtros { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
+#panel-biblia { --lib-campo: var(--surface); }
+.bib-item {
+  display: flex; flex-direction: column; gap: 0.35rem; width: 100%; min-width: 0; box-sizing: border-box; text-align: left;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 0.8rem 0.95rem; margin-bottom: 0.5rem;
+  color: var(--ink); font: inherit; cursor: pointer;
+}
+.bib-item:active { background: var(--surface-raised); }
+.bib-item-arriba { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; min-width: 0; }
+.bib-item-arriba b { font-weight: 700; }
+.bib-item-arriba small { color: var(--muted); font-size: 0.78rem; white-space: nowrap; }
+.bib-texto {
+  border-left: 3px solid var(--accent-1); padding-left: 0.65rem; font-family: var(--font-display); font-size: 1rem; line-height: 1.45;
+  white-space: pre-line; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden;
+}
+.bib-nota { color: var(--muted); font-size: 0.85rem; white-space: pre-line; overflow-wrap: anywhere; }
+.bib-cal { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 0.8rem; }
+.bib-cal-cab { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+.bib-cal-nav { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--ink); font-size: 1.3rem; cursor: pointer; }
+.bib-cal-nav:disabled { opacity: 0.3; cursor: default; }
+.bib-cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.bib-cal-dow { text-align: center; color: var(--muted); font-size: 0.72rem; padding: 0.2rem 0; }
+.bib-cal-dia {
+  aspect-ratio: 1; min-height: 36px; border-radius: 10px; border: 1px solid transparent; background: var(--bg-soft); color: var(--ink);
+  font: inherit; font-size: 0.85rem; cursor: pointer; padding: 0;
+}
+.bib-cal-dia.is-fuera { opacity: 0.35; }
+.bib-cal-dia.is-hecho { background: var(--accent-grad); color: #0a0a0a; font-weight: 700; }
+.bib-cal-dia.is-hoy { border-color: var(--ink); }
+.bib-cal-dia.is-elegido { box-shadow: 0 0 0 2px var(--accent-2); }
+.bib-cal-dia:disabled { opacity: 0.2; cursor: default; }
+.bib-cal .lib-nota { margin: 0.6rem 0 0; }
+
