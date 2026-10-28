@@ -70,6 +70,7 @@ async function deslizar(p, sel, dy) {
 
   console.log("\nResumen con registros viejos");
   ok(await visible(p, "#inv-resumen"), "se ve el Resumen");
+  ok(await p.$eval("#verse-banner", el => el.hidden), "Inversiones no muestra el versículo");
   ok((await texto(p, "#inv-resumen .inv-hero-valor")) === "US$ 80,00", "Aportado suma los aportes viejos (US$ 80,00)");
   ok(/2 aportes anteriores/.test(await texto(p, "#inv-resumen .inv-aviso")), "avisa que hay 2 aportes para completar");
   ok(/Ronda DCA de octubre/.test(await texto(p, '#inv-resumen [data-inv="ronda"]')), "botón de la ronda DCA del mes");
