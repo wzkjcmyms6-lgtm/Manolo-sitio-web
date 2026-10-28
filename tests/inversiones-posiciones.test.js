@@ -100,6 +100,8 @@ test("montos con signo", () => {
   assert.equal(M.pctS(1.44), "+1,4 %");
   assert.equal(M.pctS(-0.26), "−0,3 %");
   assert.equal(M.pct(-2.5), "−2,5 %");
+  assert.equal(M.bsS(1234.5), "+Bs 1234,50");
+  assert.equal(M.bsS(-12), "−Bs 12,00");
 });
 
 test("ajustes: precios manuales se conservan", () => {

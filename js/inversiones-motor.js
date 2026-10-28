@@ -76,11 +76,12 @@ function numero(v) {
 const red = (n, d = 2) => { const f = Math.pow(10, d); return Math.round((n + Number.EPSILON) * f) / f; };
 const num = (n, min, max) => (n || 0).toLocaleString("es-ES", { minimumFractionDigits: min, maximumFractionDigits: max });
 const usd = n => `${n < 0 ? "−" : ""}US$ ${num(Math.abs(n), 2, 2)}`;
-const bs = n => `Bs ${num(n, 2, 2)}`;
+const bs = n => `${n < 0 ? "−" : ""}Bs ${num(Math.abs(n), 2, 2)}`;
 const cantidadTexto = n => num(n, 0, 6);
 const pct = (n, d = 2) => `${n < 0 ? "−" : ""}${num(Math.abs(n), 0, d)} %`;
 // Con signo para ganancias y pérdidas: "+US$ 2,10", "−US$ 1,20", "+1,4 %".
 const usdS = n => `${n > 0 ? "+" : ""}${usd(n)}`;
+const bsS = n => `${n > 0 ? "+" : ""}${bs(n)}`;
 const pctS = (n, d = 1) => `${n > 0 ? "+" : ""}${pct(n, d)}`;
 const tickerOk = t => /^[A-Z][A-Z0-9.\-]{0,9}$/.test(t);
 const fechaOk = f => /^\d{4}-\d{2}-\d{2}$/.test(f) && !isNaN(new Date(f + "T12:00:00").getTime());
@@ -288,9 +289,12 @@ function comprasDeRonda(movs, mes) {
 // completar suman su monto (D-044).
 function resumen(movs) {
   const r = { fondeado: 0, retirado: 0, comprado: 0, vendido: 0, dividendos: 0, intereses: 0, aportesViejos: 0, nAportesViejos: 0,
-    comisionesCompra: 0, comisionesFondeo: 0, bsEnviados: 0, usdComprados: 0, n: movs.length };
+    comisionesCompra: 0, comisionesFondeo: 0, comisionesAirtm: 0, comisionesTransferencia: 0, bsEnviados: 0, usdComprados: 0, n: movs.length };
   movs.forEach(m => {
-    if (m.tipo === "fondeo") { r.fondeado += m.usd; r.comisionesFondeo += m.comision; r.bsEnviados += m.bs; if (m.bs > 0) r.usdComprados += m.usdEnviado; }
+    if (m.tipo === "fondeo") {
+      r.fondeado += m.usd; r.comisionesFondeo += m.comision; r.comisionesAirtm += m.comisionAirtm; r.comisionesTransferencia += m.comisionTransferencia;
+      r.bsEnviados += m.bs; if (m.bs > 0) r.usdComprados += m.usdEnviado;
+    }
     else if (m.tipo === "efectivo") { if (m.sentido === "retiro") r.retirado += m.monto; else r.fondeado += m.monto; }
     else if (m.tipo === "compra") { r.comprado += m.total; r.comisionesCompra += m.comision; }
     else if (m.tipo === "venta") { r.vendido += m.total; r.comisionesCompra += m.comision; }
@@ -308,7 +312,7 @@ function resumen(movs) {
   const base = r.aportado + r.comisionesFondeo;
   r.comisionesPct = base > 0 ? red((r.comisiones / base) * 100) : 0;
   r.tasaPromedio = r.usdComprados > 0 ? red(r.bsEnviados / r.usdComprados, 4) : 0;
-  ["fondeado", "retirado", "comprado", "vendido", "dividendos", "intereses", "aportesViejos", "comisionesCompra", "comisionesFondeo", "bsEnviados", "usdComprados"].forEach(k => { r[k] = red(r[k]); });
+  ["fondeado", "retirado", "comprado", "vendido", "dividendos", "intereses", "aportesViejos", "comisionesCompra", "comisionesFondeo", "comisionesAirtm", "comisionesTransferencia", "bsEnviados", "usdComprados"].forEach(k => { r[k] = red(r[k]); });
   return r;
 }
 
@@ -451,7 +455,7 @@ function cartera(movs, precios, aj) {
 return {
   TIPOS, NOMBRE, EMOJI, NUCLEO, MESES,
   ajustesBase, ajustes, nucleo,
-  numero, red, usd, usdS, bs, cantidadTexto, pct, pctS, fechaLarga, mesTitulo, mesDe, tickerOk, fechaOk,
+  numero, red, usd, usdS, bs, bsS, cantidadTexto, pct, pctS, fechaLarga, mesTitulo, mesDe, tickerOk, fechaOk,
   esViejo, normalizar, ordenar, porMes,
   validar, calcularFondeo, camposCompletar, cantidadDesdeMonto,
   ronda, comprasDeRonda, resumen, interesMensual, cantidades, tickersConocidos, tickerSugerido,

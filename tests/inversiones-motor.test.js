@@ -150,6 +150,7 @@ test("resumen: aportado, efectivo y comisiones", () => {
   assert.equal(r.efectivo, M.red(195.92 + 0.5 + 0.2 - 170.3));
   assert.equal(r.aportado, M.red(195.92 + 50));
   assert.equal(r.comisiones, M.red(0.3 + 2.8 + 1.28));
+  assert.deepEqual([r.comisionesCompra, r.comisionesAirtm, r.comisionesTransferencia], [0.3, 2.8, 1.28], "desglose de comisiones");
   assert.equal(r.nAportesViejos, 1);
   assert.equal(r.tasaPromedio, 14);
   // Compras sin fondeo anotado: lo que falta cuenta como aportado.

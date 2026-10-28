@@ -7,7 +7,7 @@ y un satélite chico), con lo que cuesta llevar los Bs al broker.
 |---|---|---|
 | 1 | Datos y movimientos: compra, venta, dividendo, fondeo, depósito/retiro, interés, ronda DCA, editar, borrar, completar aportes viejos, ajustes | ✅ 2026-10-28 |
 | 2 | Posiciones a costo promedio, precios diarios (`data/precios.json` con un workflow), precio a mano, valor y G/P de la cartera | ✅ 2026-10-28 |
-| 3 | Gráficos | pendiente |
+| 3 | Gráficos: valor vs aportado, rendimiento en US$ y Bs (TCO y AirTM), distribución contra objetivo, aportes por mes, dividendos, comisiones; objetivos en Ajustes | ✅ 2026-10-28 |
 | 4 | Indicador de la ronda del mes, exportar JSON y CSV | pendiente |
 
 ## Archivos
@@ -15,10 +15,12 @@ y un satélite chico), con lo que cuesta llevar los Bs al broker.
 | Archivo | Qué hace |
 |---|---|
 | `js/inversiones-motor.js` | UMD sin DOM: leer documentos (viejos y nuevos), validar, fondeo, ronda DCA, resumen. Pruebas: `tests/inversiones-motor.test.js` |
-| `js/inversiones.js` | Pantallas: pestañas Resumen · Posiciones · Movimientos · Ajustes, hojas de movimiento, ronda DCA y precio |
+| `js/inversiones.js` | Pantallas: pestañas Resumen · Posiciones · Movimientos · Gráficos · Ajustes, hojas de movimiento, ronda DCA y precio |
+| `js/inversiones-series.js` | UMD sin DOM: serie diaria (valor y aportado), aportes por mes, distribución, TCO y tipo AirTM, rendimiento. Pruebas: `tests/inversiones-series.test.js` |
+| `js/inversiones-graficos.js` | Dibujo SVG (líneas, columnas) sin DOM + "toca y desliza para leer". Pruebas: `tests/inversiones-graficos.test.js` |
 | `css/inversiones.css` | Estilos propios (solo clases `.inv-`). Reutiliza `.fin-tabs` y `.budget-sheet` |
 | `tests/inversiones-posiciones.test.js` | Pruebas de posiciones, precios y cartera |
-| `scripts/e2e/inversiones.js` | Prueba de pantalla (88 comprobaciones, con precios fijos de prueba) |
+| `scripts/e2e/inversiones.js` | Prueba de pantalla (111 comprobaciones, con precios y tipo de cambio fijos de prueba) |
 | `data/tickers.json` | Tickers con precio diario y desde qué fecha guardar historial |
 | `scripts/precios.py` | Lee los cierres (sin claves) y actualiza `data/precios.json` |
 | `.github/workflows/precios.yml` | Corre el script de lunes a viernes 21:40 y 23:40 UTC (17:40 y 19:40 en La Paz) y a mano |
@@ -111,6 +113,53 @@ Un ticker que no está en `tickers` con `grupo: "nucleo"` es satélite.
   Peso = valor de cada una sobre el total.
 - **Valor de la cartera** = posiciones + efectivo + aportes viejos sin
   completar (a su monto). **G/P** = valor − aportado.
+
+## Gráficos (fase 3)
+
+| Tarjeta | Qué muestra | Forma |
+|---|---|---|
+| Valor vs aportado | Valor de la cartera y lo aportado, día por día desde el primer movimiento | 2 líneas (aportado en escalones, gris de contexto) |
+| Rendimiento | Valor − aportado en US$, en Bs al TCO del BCB y en Bs al tipo de AirTM; por ticker en US$ y tabla con las 3 monedas | 3 cifras + barras a ambos lados de cero |
+| Distribución | Núcleo vs satélite y cada ticker contra su % objetivo | barra apilada + barras con raya de objetivo |
+| Aportes por mes | Lo que subió lo aportado cada mes, con la ronda DCA como línea | columnas |
+| Dividendos acumulados | Total cobrado en el tiempo y por ticker | línea en escalones |
+| Comisiones | Total y % de lo que pusiste; broker, AirTM y transferencia | cifras |
+
+- **Valor de cada día**: posiciones a su cierre de ese día (o el manual si
+  ya existía; sin precio, a su costo) + efectivo + aportes viejos. El último
+  día coincide con "Valor de tu cartera" (probado).
+- **Bs al TCO del BCB** (`data/tipo-cambio.json`): lo aportado se convierte
+  al TCO del día en que entró; el valor de hoy, al TCO de hoy. Antes del
+  inicio del historial se usa el primer TCO guardado.
+- **Bs al tipo de AirTM**: los fondeos con Bs cuentan sus Bs exactos (con
+  comisiones incluidas); lo aportado sin Bs se convierte al promedio de Bs
+  por US$ que llegó al broker hasta esa fecha. El valor de hoy se convierte
+  al tipo de cambio de tu último fondeo.
+- **Por ticker**: G/P abierta + ganancia realizada + dividendos, con el
+  mismo criterio de tasas; el % es sobre todo lo que se puso en ese ticker.
+- **Objetivos**: % por ticker del núcleo y uno para todo el satélite, en
+  Ajustes (avisa si no suman 100 %). De fábrica: 15,83 % × 6 y 5 %.
+- **Diseño** (guía de visualización): marcas finas (líneas de 2 px,
+  columnas de hasta 24 px con punta redondeada), rejilla de 1 px, el texto
+  nunca va del color de la serie, leyenda cuando hay 2 o más series y
+  "Ver tabla" con los mismos números. Colores validados sobre el fondo
+  oscuro `#161616` (franja de luminosidad, daltonismo, contraste):
+  principal `#e8651f`, satélite `#3987e5`, ganancia `#2fa37a`, pérdida
+  `#e2593f` (siempre con signo + / −), contexto gris `#9a978f`.
+- **Toca y desliza** sobre una línea o columna para ver el día o mes; con
+  teclado, flechas izquierda/derecha. Los gráficos se dibujan al ancho real
+  y se rehacen si cambia (girar el teléfono, ventana de la compu).
+
+## Cómo probar en el iPhone (fase 3)
+
+1. Inversiones ya no muestra la frase de la Biblia arriba.
+2. Pestaña Gráficos (desliza la barra de pestañas si no la ves).
+3. En "Valor vs aportado", apoya el dedo y deslízalo: aparece el día con
+   valor, aportado y ganancia.
+4. Rendimiento: revisa las tres cifras (US$, Bs BCB, Bs AirTM) y abre
+   "Ver tabla".
+5. Ajustes: cambia el objetivo de un ticker, mira el aviso de la suma y
+   guarda; en Gráficos › Distribución la raya blanca se mueve.
 
 ## Cómo probar en el iPhone (fase 2)
 

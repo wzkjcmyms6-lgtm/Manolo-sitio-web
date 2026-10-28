@@ -267,3 +267,18 @@ después. Los tickers seguidos viven en `data/tickers.json`; uno que no está
 se puede valuar a mano en la app (con aviso). En `sw.js`,
 `data/precios.json` va primero a la red con copia para sin conexión (mismo
 trato que `data/tipo-cambio.json`).
+
+**D-046 (2026-10-28) · Inversiones sin versículo.** Pedido del dueño: es
+una sección aparte. Se agregó Inversiones a la condición que ya ocultaba el
+versículo en Finanzas y Hábitos (`showPanel()` en `js/modules.js`; único
+cambio fuera del alcance de Inversiones, hecho a pedido).
+
+**D-047 (2026-10-28) · Gráficos de Inversiones.** SVG propio, sin
+librerías (la app no usa ninguna y debe andar sin conexión), dibujado al
+ancho real de la caja. Rendimiento en Bs de dos formas: al TCO del BCB (lo
+aportado al TCO de su día, el valor al de hoy) y al tipo real de AirTM (los
+Bs de los fondeos tal cual; lo demás al promedio de Bs por US$ recibido; el
+valor al tipo del último fondeo). Paleta validada con la guía de
+visualización sobre `#161616`: el naranja de la app bajado un paso
+(`#e8651f`) porque `#ff7a30` queda fuera de la franja de luminosidad para
+marcas en fondo oscuro. Detalle en `docs/INVERSIONES.md`.

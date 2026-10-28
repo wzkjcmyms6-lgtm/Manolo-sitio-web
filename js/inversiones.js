@@ -1,12 +1,15 @@
 // ---------- Inversiones: pantallas ----------
 // Resumen, posiciones (con precios diarios de data/precios.json o a mano),
 // movimientos (compra, venta, dividendo, fondeo, depósito/retiro, interés),
-// ronda DCA del mes y ajustes. Las cuentas viven en
+// gráficos (js/inversiones-series.js + js/inversiones-graficos.js), ronda
+// DCA del mes y ajustes. Las cuentas viven en
 // js/inversiones-motor.js; aquí solo se pinta y se guarda en Firestore.
 // Los registros viejos se completan AGREGANDO campos: nunca se reescribe
 // su date, name, amount ni notes. Ver docs/INVERSIONES.md.
 (function () {
 const M = window.InversionesMotor;
+const S = window.InversionesSeries;
+const G = window.InversionesGraficos;
 const $ = id => document.getElementById(id);
 
 let docs = {};          // id → datos tal como están en Firestore
@@ -20,8 +23,12 @@ let borrador = null;    // ajustes en edición
 let sucio = false;      // hay cambios sin guardar en Ajustes
 let guardadoEn = 0;     // cuándo se guardaron los ajustes (para el ✓)
 let precios = null;     // data/precios.json (o la última copia guardada)
+let tipoCambio = null;  // data/tipo-cambio.json (TCO del BCB)
 let preciosLeidos = 0;  // cuándo se pidieron por última vez
 const CLAVE_PRECIOS = "manolo-inv-precios";
+const CLAVE_TC = "manolo-inv-tc";
+let graficos = null;    // series ya calculadas para dibujar
+const tablasAbiertas = new Set();
 
 function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -58,7 +65,10 @@ function irA(v) {
     const on = b.dataset.invTab === vista;
     b.classList.toggle("active", on);
     b.setAttribute("aria-selected", String(on));
-    if (on) barraTabs.scrollLeft = b.offsetLeft - (barraTabs.clientWidth - b.offsetWidth) / 2;
+    if (on && barraTabs.clientWidth) {
+      const rb = b.getBoundingClientRect(), rc = barraTabs.getBoundingClientRect();
+      barraTabs.scrollLeft += (rb.left - rc.left) - (rc.width - rb.width) / 2;
+    }
   });
   marcarDesborde();
   document.querySelectorAll("#panel-inversiones [data-inv-vista]").forEach(el => { el.hidden = el.dataset.invVista !== vista; });
@@ -70,6 +80,7 @@ function render() {
   if (vista === "resumen") renderResumen();
   else if (vista === "posiciones") renderPosiciones();
   else if (vista === "movimientos") renderMovimientos();
+  else if (vista === "graficos") renderGraficos();
   else if (vista === "ajustes") renderAjustes();
 }
 const cargando = `<p class="empty-state">Cargando…</p>`;
@@ -130,19 +141,23 @@ function textoPrecios() {
 // data/precios.json lo actualiza un workflow de GitHub cada día hábil. Sin
 // conexión, el service worker devuelve la última copia; si tampoco hay, se
 // usa la guardada en este teléfono.
-function cargarPrecios() {
-  preciosLeidos = Date.now();
-  fetch(`data/precios.json?t=${Date.now()}`, { cache: "no-store" })
+// El tipo de cambio del BCB (para el rendimiento en Bs) llega igual.
+function leerArchivo(ruta, clave) {
+  return fetch(`${ruta}?t=${Date.now()}`, { cache: "no-store" })
     .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
     .then(d => {
-      precios = d;
-      try { localStorage.setItem(CLAVE_PRECIOS, JSON.stringify(d)); } catch (e) { /* sin espacio: no pasa nada */ }
+      try { localStorage.setItem(clave, JSON.stringify(d)); } catch (e) { /* sin espacio: no pasa nada */ }
+      return d;
     })
-    .catch(() => {
-      if (precios) return;
-      try { precios = JSON.parse(localStorage.getItem(CLAVE_PRECIOS) || "null"); } catch (e) { precios = null; }
-    })
-    .then(() => { if (vista !== "ajustes") render(); });
+    .catch(() => { try { return JSON.parse(localStorage.getItem(clave) || "null"); } catch (e) { return null; } });
+}
+function cargarPrecios() {
+  preciosLeidos = Date.now();
+  Promise.all([leerArchivo("data/precios.json", CLAVE_PRECIOS), leerArchivo("data/tipo-cambio.json", CLAVE_TC)]).then(([p, tc]) => {
+    if (p) precios = p;
+    if (tc) tipoCambio = tc;
+    if (vista !== "ajustes") render();
+  });
 }
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && Date.now() - preciosLeidos > 30 * 60 * 1000) cargarPrecios();
@@ -198,6 +213,197 @@ function tarjeta(o) {
       <span class="inv-pos-fila"><span class="inv-pos-precio">${precio}</span><span>Peso ${M.pct(o.peso, 1)}</span></span>
       <span class="inv-peso" aria-hidden="true"><i style="width:${Math.min(100, Math.max(0, o.peso))}%"></i></span>
     </button>`;
+}
+
+// ---------- Gráficos ----------
+const C = G.COLORES;
+const tarjetaG = (titulo, cuerpo, sub) => `
+    <section class="inv-card">
+      <h3 class="inv-card-t">${titulo}</h3>
+      ${sub ? `<p class="inv-card-sub">${sub}</p>` : ""}
+      ${cuerpo}
+    </section>`;
+const clave = (color, linea) => `<i class="inv-key${linea ? " is-linea" : ""}" style="--c:${color}"></i>`;
+const kpi = (etiqueta, valor, pie) => `<div class="inv-kpi"><span>${etiqueta}</span><b>${valor}</b>${pie ? `<small>${pie}</small>` : ""}</div>`;
+const conColor = (n, texto) => `<span class="inv-gp ${n > 0 ? "is-sube" : n < 0 ? "is-baja" : ""}">${texto}</span>`;
+// Tabla con los mismos números (para leerlos sin tocar el gráfico).
+const tabla = (id, cab, filas) => `
+      <details class="inv-tabla" data-tabla="${id}"${tablasAbiertas.has(id) ? " open" : ""}>
+        <summary>Ver tabla</summary>
+        <div class="inv-tabla-caja"><table>
+          <thead><tr>${cab.map(c => `<th scope="col">${c}</th>`).join("")}</tr></thead>
+          <tbody>${filas.map(f => `<tr>${f.map((c, i) => (i ? `<td>${c}</td>` : `<th scope="row">${c}</th>`)).join("")}</tr>`).join("")}</tbody>
+        </table></div>
+      </details>`;
+
+function renderGraficos() {
+  const el = $("inv-graficos");
+  if (!cargado) { el.innerHTML = cargando; return; }
+  const hoy = hoyLocal();
+  const ser = S.serie(movs, precios, guardados, hoy);
+  if (!ser.length) { graficos = null; el.innerHTML = `<p class="empty-state">Los gráficos aparecen cuando anotes tu primer movimiento.</p>`; return; }
+  const c = M.cartera(movs, precios, guardados);
+  const meses = S.aportesPorMes(ser), meta = S.metaMensual(guardados);
+  graficos = { ser, meses, meta };
+  el.innerHTML = [
+    tarjetaValor(ser),
+    tarjetaRendimiento(S.rendimiento(movs, precios, guardados, tipoCambio, hoy)),
+    tarjetaDistribucion(S.distribucion(c.posiciones, guardados), c.resumen),
+    tarjetaAportes(meses, meta),
+    tarjetaDividendos(ser, c.resumen),
+    tarjetaComisiones(c.resumen)
+  ].join("");
+  dibujar();
+}
+
+function tarjetaValor(ser) {
+  const u = ser[ser.length - 1];
+  const finDeMes = ser.filter((p, k) => k === ser.length - 1 || ser[k + 1].fecha.slice(0, 7) !== p.fecha.slice(0, 7));
+  return tarjetaG("Valor vs aportado", `
+      <div class="inv-leyenda">
+        <span>${clave(C.principal, true)}Valor <b>${M.usd(u.valor)}</b></span>
+        <span>${clave(C.contexto, true)}Aportado <b>${M.usd(u.aportado)}</b></span>
+      </div>
+      <div class="inv-g" data-g="valor"></div>
+      ${tabla("valor", ["Fecha", "Valor", "Aportado", "G/P"], finDeMes.map(p => [esc(M.fechaLarga(p.fecha)), M.usd(p.valor), M.usd(p.aportado), conColor(p.valor - p.aportado, M.usdS(M.red(p.valor - p.aportado)))]))}`,
+    `Desde ${M.fechaLarga(ser[0].fecha)}, en US$. Toca y desliza sobre el gráfico para ver cada día.`);
+}
+
+function tarjetaRendimiento(r) {
+  if (!r) return "";
+  const enBs = (x, nombre, pie, falta) => (x
+    ? kpi(nombre, conColor(x.gp, `${M.bsS(x.gp)} (${M.pctS(x.pct)})`), pie)
+    : kpi(nombre, `<span class="inv-falta">—</span>`, falta));
+  const max = Math.max(0.01, ...r.tickers.map(t => Math.abs(t.usd)));
+  const filas = r.tickers.map(t => `
+        <div class="inv-div-fila">
+          <span class="inv-div-t">${esc(t.ticker)}</span>
+          <span class="inv-div-pista"><i class="${t.usd >= 0 ? "is-sube" : "is-baja"}" style="--w:${Math.round((Math.abs(t.usd) / max) * 500) / 10}%"></i></span>
+          <span class="inv-div-v">${t.sinPrecio ? `<span class="inv-falta">sin precio</span>` : M.usdS(t.usd)}</span>
+        </div>`).join("");
+  const nada = v => (v == null ? "—" : M.bsS(v));
+  return tarjetaG("Rendimiento", `
+      <div class="inv-kpis">
+        ${kpi("En dólares", conColor(r.usd.gp, `${M.usdS(r.usd.gp)} (${M.pctS(r.usd.pct)})`), `Valor ${M.usd(r.usd.valor)} · aportado ${M.usd(r.usd.aportado)}`)}
+        ${enBs(r.bsTco, "En Bs · TCO del BCB", r.bsTco && `Aportado ${M.bs(r.bsTco.aportado)} (al TCO de cada día) · hoy ${decimales(r.bsTco.tasa, 2)} Bs/US$`, "Todavía no hay tipo de cambio del BCB guardado.")}
+        ${enBs(r.bsReal, "En Bs · tipo AirTM", r.bsReal && `Aportado ${M.bs(r.bsReal.aportado)} (tus fondeos en Bs; lo demás a tu tipo AirTM) · valor a ${decimales(r.bsReal.tasa, 2)} Bs/US$, tu último fondeo (${M.fechaLarga(r.bsReal.fecha)})`, "Anota un fondeo con Bs y tipo de cambio para verlo.")}
+      </div>
+      ${r.tickers.length ? `<h4 class="inv-card-h">Por ticker, en US$</h4>${filas}
+      <p class="inv-ayuda">Incluye lo ya vendido y los dividendos. Sin precio, un ticker cuenta a su costo.</p>
+      ${tabla("rendimiento", ["Ticker", "US$", "Bs BCB", "Bs AirTM"], r.tickers.map(t => [esc(t.ticker), conColor(t.usd, M.usdS(t.usd)), nada(t.bsTco), nada(t.bsReal)]))}` : ""}`,
+    "Lo que vale hoy tu cartera menos lo que aportaste.");
+}
+
+function tarjetaDistribucion(d, r) {
+  if (!d.hayPosiciones) return tarjetaG("Distribución", `<p class="empty-state">Cuando tengas posiciones verás aquí el peso de cada ticker contra tu objetivo.</p>`);
+  const tope = Math.min(100, Math.max(10, Math.ceil(Math.max(...d.filas.map(f => Math.max(f.peso, f.objetivo || 0))) / 10) * 10));
+  const pos = v => `${Math.min(100, (v / tope) * 100).toFixed(1)}%`;
+  const filas = d.filas.map(f => `
+        <div class="inv-dist-fila">
+          <span class="inv-dist-t">${esc(f.ticker)}</span>
+          <span class="inv-dist-pista"><i style="width:${pos(f.peso)};--c:${f.grupo === "nucleo" ? C.principal : C.satelite}"></i>${f.objetivo != null ? `<b class="inv-obj" style="left:${pos(f.objetivo)}"></b>` : ""}</span>
+          <span class="inv-dist-v">${M.pct(f.peso, 1)}<small>${f.objetivo != null ? `obj. ${M.pct(f.objetivo, 1)}` : "satélite"}</small></span>
+        </div>`).join("");
+  const nota = r.nAportesViejos ? ` Sin contar ${M.usd(r.aportesViejos)} de aportes sin completar.` : "";
+  return tarjetaG("Distribución", `
+      <div class="inv-stack" role="img" aria-label="Núcleo ${M.pct(d.nucleo, 1)}, satélite ${M.pct(d.satelite, 1)}">
+        <i style="width:${d.nucleo}%;--c:${C.principal}"></i><i style="width:${d.satelite}%;--c:${C.satelite}"></i>
+        <b class="inv-obj" style="left:${Math.min(100, d.objetivoNucleo)}%"></b>
+      </div>
+      <div class="inv-leyenda">
+        <span>${clave(C.principal)}Núcleo <b>${M.pct(d.nucleo, 1)}</b> · obj. ${M.pct(d.objetivoNucleo, 1)}</span>
+        <span>${clave(C.satelite)}Satélite <b>${M.pct(d.satelite, 1)}</b> · obj. ${M.pct(d.objetivoSatelite, 1)}</span>
+        <span><i class="inv-key is-obj"></i>Objetivo</span>
+      </div>
+      <h4 class="inv-card-h">Por ticker</h4>
+      ${filas}
+      <p class="inv-ayuda">La barra llega hasta ${tope} %. Peso sobre el valor de tus posiciones, sin el efectivo.${nota} Los objetivos se cambian en Ajustes.</p>`,
+    "Peso de cada parte de tu cartera contra tu objetivo.");
+}
+
+function tarjetaAportes(meses, meta) {
+  return tarjetaG("Aportes por mes", `
+      ${meta > 0 ? `<div class="inv-leyenda"><span>${clave(C.principal)}Aporte del mes</span><span>${clave(G.TINTA.suave, true)}Ronda DCA <b>${M.usd(meta)}</b></span></div>` : ""}
+      <div class="inv-g" data-g="aportes"></div>
+      ${tabla("aportes", ["Mes", "Aporte"], meses.map(m => [esc(m.titulo), M.usd(m.monto)]))}`,
+    "Lo que entró al broker cada mes, en US$.");
+}
+
+function tarjetaDividendos(ser, r) {
+  if (!(r.dividendos > 0)) return tarjetaG("Dividendos acumulados", `<p class="empty-state">Todavía no anotaste dividendos. Cuando cobres uno, anótalo en Movimientos › Dividendo.</p>${r.intereses > 0 ? `<p class="inv-nota">Intereses del efectivo: ${M.usd(r.intereses)}.</p>` : ""}`);
+  const divs = S.dividendosPorTicker(movs);
+  return tarjetaG("Dividendos acumulados", `
+      <p class="inv-card-big">${M.usd(r.dividendos)}</p>
+      <div class="inv-g" data-g="dividendos"></div>
+      <div class="inv-lista-simple">${divs.map(d => `<div><span>${esc(d.ticker)}</span><b>${M.usd(d.monto)}</b></div>`).join("")}</div>
+      ${r.intereses > 0 ? `<p class="inv-nota">Además, intereses del efectivo: ${M.usd(r.intereses)}.</p>` : ""}`,
+    "Lo cobrado en dividendos, sumado en el tiempo.");
+}
+
+function tarjetaComisiones(r) {
+  return tarjetaG("Comisiones", `
+      <p class="inv-card-big">${M.usd(r.comisiones)} <small>${M.pct(r.comisionesPct)} de lo que pusiste</small></p>
+      <div class="inv-kpis is-3">
+        ${kpi("Broker", M.usd(r.comisionesCompra), "compras y ventas")}
+        ${kpi("AirTM", M.usd(r.comisionesAirtm), "Bs → US$")}
+        ${kpi("Transferencia", M.usd(r.comisionesTransferencia), "AirTM → broker")}
+      </div>
+      <p class="inv-ayuda">«Lo que pusiste» = lo aportado más las comisiones de los fondeos (salen antes de llegar al broker).</p>`);
+}
+
+// Dibuja cada gráfico al ancho real de su caja (y lo vuelve a dibujar si cambia).
+function dibujar() {
+  const el = $("inv-graficos");
+  if (!graficos || el.hidden) return;
+  const { ser, meses, meta } = graficos;
+  el.querySelectorAll(".inv-g[data-g]").forEach(viejo => {
+    const ancho = viejo.clientWidth;
+    if (!ancho) return;
+    const caja = viejo.cloneNode(false); // sin oyentes viejos
+    viejo.replaceWith(caja);
+    caja.dataset.ancho = String(ancho);
+    const tipo = caja.dataset.g;
+    if (tipo === "valor") {
+      const g = G.lineas({ ancho, alto: 200, titulo: "Valor vs aportado", fechas: ser.map(p => p.fecha), series: [
+        { id: "valor", nombre: "Valor", color: C.principal, valores: ser.map(p => p.valor) },
+        { id: "aportado", nombre: "Aportado", color: C.contexto, valores: ser.map(p => p.aportado), escalon: true }
+      ] });
+      caja.innerHTML = g.svg;
+      G.conectar(caja, {
+        xs: g.xs,
+        fila: i => ({ titulo: M.fechaLarga(ser[i].fecha), items: [
+          { color: C.principal, valor: M.usd(ser[i].valor), nombre: "Valor" },
+          { color: C.contexto, valor: M.usd(ser[i].aportado), nombre: "Aportado" },
+          { color: "transparent", valor: M.usdS(M.red(ser[i].valor - ser[i].aportado)), nombre: "Ganancia" }
+        ] }),
+        puntos: i => [{ serie: "valor", y: g.ys.valor[i] }, { serie: "aportado", y: g.ys.aportado[i] }]
+      });
+    } else if (tipo === "aportes") {
+      const g = G.columnas({ ancho, alto: 180, titulo: "Aportes por mes", color: C.principal, barras: meses.map(m => ({ etiqueta: m.corto, valor: m.monto })), meta: meta > 0 ? { valor: meta, texto: `Ronda DCA ${M.usd(meta)}` } : null });
+      caja.innerHTML = g.svg;
+      G.conectar(caja, { xs: g.xs, fila: i => ({ titulo: meses[i].titulo, items: [{ color: C.principal, valor: M.usd(meses[i].monto), nombre: "Aporte" }] }) });
+    } else if (tipo === "dividendos") {
+      const g = G.lineas({ ancho, alto: 150, titulo: "Dividendos acumulados", fechas: ser.map(p => p.fecha), series: [
+        { id: "div", nombre: "Dividendos", color: C.principal, valores: ser.map(p => p.dividendos), area: true, escalon: true }
+      ] });
+      caja.innerHTML = g.svg;
+      G.conectar(caja, { xs: g.xs, fila: i => ({ titulo: M.fechaLarga(ser[i].fecha), items: [{ color: C.principal, valor: M.usd(ser[i].dividendos), nombre: "Acumulado" }] }), puntos: i => [{ serie: "div", y: g.ys.div[i] }] });
+    }
+  });
+}
+$("inv-graficos").addEventListener("toggle", e => {
+  const d = e.target.closest && e.target.closest("[data-tabla]");
+  if (d) { if (d.open) tablasAbiertas.add(d.dataset.tabla); else tablasAbiertas.delete(d.dataset.tabla); }
+}, true);
+if (typeof ResizeObserver === "function") {
+  let anchoVisto = 0, pedido = 0;
+  new ResizeObserver(() => {
+    const a = $("inv-graficos").clientWidth;
+    if (!a || a === anchoVisto) return;
+    anchoVisto = a;
+    cancelAnimationFrame(pedido);
+    pedido = requestAnimationFrame(dibujar);
+  }).observe($("inv-graficos"));
 }
 
 // ---------- Hoja de precio (ver el diario o poner uno a mano) ----------
@@ -700,21 +906,25 @@ function renderAjustes() {
         ${par(campo("comisionAirtm", "AirTM: Bs → US$ (%)", enCampo(b.comisionAirtm)), campo("comisionTransferencia", "AirTM → broker (%)", enCampo(b.comisionTransferencia)))}
       </section>
       <section class="inv-bloque">
-        <h3>Ronda DCA mensual</h3>
-        <p class="inv-ayuda">Los tickers del núcleo y cuánto pones en cada uno al mes. Cualquier otro ticker cuenta como satélite.</p>
+        <h3>Núcleo: ronda DCA y objetivo</h3>
+        <p class="inv-ayuda">Los tickers del núcleo, cuánto pones en cada uno al mes y qué % de tu cartera quieres en cada uno. Cualquier otro ticker cuenta como satélite.</p>
         <div class="inv-dca-lista">
+          ${tickers.length ? `<div class="inv-dca-fila is-cabecera" aria-hidden="true"><span>Ticker</span><span>US$ al mes</span><span>Objetivo %</span><span></span></div>` : ""}
           ${tickers.map(t => `
           <div class="inv-dca-fila" data-ticker="${esc(t)}">
             <b>${esc(t)}</b>
             <input name="dca" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00" aria-label="Monto mensual de ${esc(t)} (US$)" value="${esc(enCampo(b.tickers[t].dca, true))}">
+            <input name="objetivo" type="text" inputmode="decimal" autocomplete="off" placeholder="0" aria-label="Objetivo de ${esc(t)} (%)" value="${esc(enCampo(typeof b.tickers[t].objetivo === "number" ? b.tickers[t].objetivo : 0))}">
             <button type="button" class="inv-quitar" data-inv-quitar="${esc(t)}" aria-label="Quitar ${esc(t)} del núcleo">✕</button>
           </div>`).join("") || `<p class="empty-state">Sin tickers en el núcleo.</p>`}
         </div>
+        ${campo("objetivoSatelite", "Satélite: objetivo para todo el grupo (%)", enCampo(b.objetivoSatelite))}
         <div class="inv-dca-nuevo">
           <input name="nuevoTicker" type="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="10" placeholder="Ticker (ej: VXUS)" aria-label="Ticker para agregar al núcleo">
           <button type="button" class="inv-btn-sec" data-inv="agregar-ticker">Agregar</button>
         </div>
         <p class="inv-total" data-inv-total-dca></p>
+        <p class="inv-total" data-inv-total-obj></p>
       </section>
       <p class="inv-error" role="alert" hidden></p>
       <div class="inv-hoja-acciones">
@@ -729,13 +939,14 @@ const formAjustes = () => $("inv-ajustes").querySelector(".inv-ajustes");
 function tomarBorrador() {
   const f = formAjustes();
   if (!f || !borrador) return;
-  ["broker", "comisionTicker", "tasaEfectivo", "comisionAirtm", "comisionTransferencia"].forEach(k => {
+  ["broker", "comisionTicker", "tasaEfectivo", "comisionAirtm", "comisionTransferencia", "objetivoSatelite"].forEach(k => {
     const v = f.elements[k].value;
     borrador[k] = k === "broker" ? v : (isFinite(M.numero(v)) ? M.numero(v) : borrador[k]);
   });
-  f.querySelectorAll(".inv-dca-fila").forEach(r => {
-    const n = M.numero(r.querySelector('[name="dca"]').value);
+  f.querySelectorAll(".inv-dca-fila[data-ticker]").forEach(r => {
+    const n = M.numero(r.querySelector('[name="dca"]').value), o = M.numero(r.querySelector('[name="objetivo"]').value);
     borrador.tickers[r.dataset.ticker].dca = isFinite(n) ? n : 0;
+    borrador.tickers[r.dataset.ticker].objetivo = isFinite(o) ? o : 0;
   });
 }
 function totalDca() {
@@ -746,6 +957,13 @@ function totalDca() {
   const com = M.numero(f.elements.comisionTicker.value);
   const c = isFinite(com) ? com * n : 0;
   f.querySelector("[data-inv-total-dca]").innerHTML = n ? `Al mes: ${M.usd(total)} + ${M.usd(c)} de comisiones = <b>${M.usd(total + c)}</b>` : "";
+  let obj = 0;
+  f.querySelectorAll('.inv-dca-fila [name="objetivo"]').forEach(i => { const v = M.numero(i.value); if (v > 0) obj += v; });
+  const sat = M.numero(f.elements.objetivoSatelite.value);
+  obj = M.red(obj + (sat > 0 ? sat : 0), 2);
+  f.querySelector("[data-inv-total-obj]").innerHTML = Math.abs(obj - 100) < 0.05
+    ? `Objetivos: suman <b>100 %</b> ✓`
+    : `⚠️ Los objetivos suman <b>${M.pct(obj)}</b>: deberían sumar 100 %.`;
 }
 function agregarTicker() {
   const f = formAjustes();
@@ -789,19 +1007,22 @@ $("inv-ajustes").addEventListener("submit", e => {
     tasaEfectivo: valor("tasaEfectivo", "el interés del efectivo"),
     comisionAirtm: valor("comisionAirtm", "la comisión de AirTM"),
     comisionTransferencia: valor("comisionTransferencia", "la comisión de transferencia"),
-    objetivoSatelite: borrador.objetivoSatelite,
+    objetivoSatelite: valor("objetivoSatelite", "el objetivo del satélite"),
     tickers: {},
     preciosManuales: (guardados && guardados.preciosManuales) || {}
   };
   if (!doc.broker) errores.push({ campo: "broker", texto: "Escribe el broker." });
   Object.keys(borrador.tickers).forEach(t => { doc.tickers[t] = Object.assign({}, borrador.tickers[t]); });
   const malos = [];
-  f.querySelectorAll(".inv-dca-fila").forEach(r => {
-    const i = r.querySelector('[name="dca"]');
+  f.querySelectorAll(".inv-dca-fila[data-ticker]").forEach(r => {
+    const i = r.querySelector('[name="dca"]'), io = r.querySelector('[name="objetivo"]');
     const n = i.value.trim() === "" ? 0 : M.numero(i.value);
+    const o = io.value.trim() === "" ? 0 : M.numero(io.value);
     if (!isFinite(n) || n < 0) malos.push(i); else doc.tickers[r.dataset.ticker].dca = M.red(n);
+    if (!isFinite(o) || o < 0 || o > 100) malos.push(io); else doc.tickers[r.dataset.ticker].objetivo = M.red(o, 2);
   });
-  if (malos.length) errores.push({ campo: "dca", texto: "Revisa los montos de la ronda." });
+  if (doc.objetivoSatelite > 100) errores.push({ campo: "objetivoSatelite", texto: "El objetivo del satélite va de 0 a 100 %." });
+  if (malos.length) errores.push({ campo: "dca", texto: "Revisa los montos y objetivos del núcleo (objetivos de 0 a 100 %)." });
   if (errores.length) { mostrarErrores(f, errores, e2 => (e2.campo === "dca" ? null : f.elements[e2.campo])); malos.forEach(i => i.classList.add("is-error")); return; }
   refAjustes().set(JSON.parse(JSON.stringify(doc))).catch(avisarFallo); // sin campos vacíos (Firestore no acepta undefined)
   guardados = doc;

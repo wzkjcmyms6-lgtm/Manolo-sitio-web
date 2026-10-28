@@ -1,10 +1,12 @@
 // Pruebas de pantalla de Inversiones (js/inversiones.js): aportes viejos,
 // movimientos de cada tipo, editar, borrar, ronda DCA y ajustes (fase 1);
-// posiciones, precios diarios, precio a mano y sin conexión (fase 2).
-// Los precios de la prueba son fijos (no el data/precios.json real).
+// posiciones, precios diarios, precio a mano y sin conexión (fase 2);
+// gráficos, rendimiento en Bs y objetivos (fase 3).
+// Precios y tipo de cambio de la prueba son fijos (no los archivos reales).
 // Uso: node scripts/e2e/inversiones.js [carpeta-para-capturas]
 const { chromium, servidor, abrir, ok, captura: capturar, terminar } = require("./comun.js");
 const M = require("../../js/inversiones-motor.js");
+const S = require("../../js/inversiones-series.js");
 
 const CAPTURAS = process.argv[2] || null;
 const captura = (p, n) => capturar(p, CAPTURAS, n);
@@ -41,6 +43,7 @@ async function nuevo(p, tipo) {
 }
 const pestana = async (p, t) => { await p.click(`#panel-inversiones [data-inv-tab="${t}"]`); await p.waitForTimeout(250); };
 const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
+const TC = { fuente: "prueba", ultimo: { fecha: "2026-10-27", tco: 12.02 }, historial: { "2026-09-24": 12.26, "2026-10-01": 12.0, "2026-10-02": 11.9, "2026-10-27": 12.02 } };
 const ajustes = p => p.evaluate(() => window.__fakeStore.colMap("users/test/meta").get("inversiones_ajustes") || null);
 const movsDe = async p => (await todos(p)).map(([id, x]) => M.normalizar(id, x));
 // Arrastra con un dedo hacia abajo desde el centro de `sel` (como hojas.js).
@@ -65,6 +68,7 @@ async function deslizar(p, sel, dy) {
   // Precios fijos de prueba; con conRed = false, el archivo no llega (sin conexión).
   let conRed = true;
   await p.context().route(/\/data\/precios\.json/, r => (conRed ? r.fulfill({ contentType: "application/json", body: JSON.stringify(PRECIOS) }) : r.abort()));
+  await p.context().route(/\/data\/tipo-cambio\.json/, r => (conRed ? r.fulfill({ contentType: "application/json", body: JSON.stringify(TC) }) : r.abort()));
   await p.reload();
   await p.waitForTimeout(800);
 
@@ -319,6 +323,59 @@ async function deslizar(p, sel, dy) {
   ok(JSON.stringify(d) === JSON.stringify(VIEJO_FONDO), "el otro registro viejo sigue intacto");
   await captura(p, "inv-resumen.png");
 
+  console.log("\nGráficos");
+  await pestana(p, "graficos");
+  const titulosG = await p.$$eval("#inv-graficos .inv-card-t", els => els.map(e => e.textContent));
+  ok(titulosG.join("|") === "Valor vs aportado|Rendimiento|Distribución|Aportes por mes|Dividendos acumulados|Comisiones", `6 gráficos (${titulosG.join(", ")})`);
+  const movsG = await movsDe(p), ajG = await ajustes(p);
+  const ser = S.serie(movsG, PRECIOS, ajG, "2026-10-28");
+  const cG = M.cartera(movsG, PRECIOS, ajG);
+  ok(ser[ser.length - 1].valor === cG.valor, "la serie termina en el valor de la cartera");
+  const svgV = await p.$eval('#inv-graficos .inv-g[data-g="valor"]', c => { const s = c.querySelector("svg"); return { w: Number(s.getAttribute("width")), caja: c.clientWidth, lineas: s.querySelectorAll('path[stroke-width="2"]').length }; });
+  ok(svgV.w === svgV.caja && svgV.lineas === 2, `valor vs aportado: 2 líneas, al ancho de la pantalla (${svgV.w} px)`);
+  ok((await texto(p, "#inv-graficos .inv-leyenda")).includes(`Valor ${M.usd(cG.valor)}`), "la leyenda dice el valor de hoy");
+  const caja = await p.$('#inv-graficos .inv-g[data-g="valor"] svg');
+  const bb = await caja.boundingBox();
+  await p.mouse.click(bb.x + bb.width - 12, bb.y + bb.height / 2);
+  await p.waitForTimeout(150);
+  ok(/28 oct 2026/.test(await texto(p, '#inv-graficos .inv-g[data-g="valor"] .inv-g-tip')) && await visible(p, '#inv-graficos .inv-g[data-g="valor"] .inv-g-tip'), "tocar el gráfico muestra el día y sus valores");
+  await captura(p, "inv-graficos-valor.png");
+  const rend = S.rendimiento(movsG, PRECIOS, ajG, TC, "2026-10-28");
+  const kpis = await p.$$eval("#inv-graficos .inv-kpis:not(.is-3) .inv-kpi b", els => els.map(e => e.textContent.trim()));
+  ok(kpis[0] === `${M.usdS(rend.usd.gp)} (${M.pctS(rend.usd.pct)})`, `rendimiento en US$ (${kpis[0]})`);
+  ok(kpis[1] === `${M.bsS(rend.bsTco.gp)} (${M.pctS(rend.bsTco.pct)})`, `en Bs con el TCO del BCB (${kpis[1]})`);
+  ok(kpis[2] === `${M.bsS(rend.bsReal.gp)} (${M.pctS(rend.bsReal.pct)})`, `en Bs con el tipo de AirTM (${kpis[2]})`);
+  ok((await p.$$("#inv-graficos .inv-div-fila")).length === rend.tickers.length, "una barra de rendimiento por ticker");
+  await p.click('#inv-graficos [data-tabla="rendimiento"] summary');
+  await p.waitForTimeout(150);
+  const filaQ = await p.$$eval('#inv-graficos [data-tabla="rendimiento"] tbody tr', trs => trs.map(t => t.textContent.replace(/\s+/g, " ").trim()).find(t => t.startsWith("QQQ")));
+  const rq = rend.tickers.find(t => t.ticker === "QQQ");
+  ok(filaQ && filaQ.includes(M.bsS(rq.bsTco)) && filaQ.includes(M.bsS(rq.bsReal)), `tabla: QQQ en US$, Bs BCB y Bs AirTM`);
+  const dist = S.distribucion(cG.posiciones, ajG);
+  ok((await texto(p, "#inv-graficos .inv-stack + .inv-leyenda")).includes(`Núcleo ${M.pct(dist.nucleo, 1)} · obj. ${M.pct(dist.objetivoNucleo, 1)}`), `núcleo contra su objetivo (${M.pct(dist.objetivoNucleo, 1)})`);
+  ok((await p.$$("#inv-graficos .inv-dist-fila .inv-obj")).length === dist.filas.filter(f => f.objetivo != null).length, "una raya de objetivo por ticker del núcleo");
+  const meses = S.aportesPorMes(ser);
+  const metaG = S.metaMensual(ajG);
+  ok((await p.$$('#inv-graficos .inv-g[data-g="aportes"] .inv-g-barra')).length === meses.filter(m => Math.abs(m.monto) > 0.01).length && !!(await p.$('#inv-graficos .inv-g[data-g="aportes"] line.inv-g-meta')) && (await texto(p, "#inv-graficos .inv-card:nth-of-type(4) .inv-leyenda")).includes(`Ronda DCA ${M.usd(metaG)}`), `aportes por mes con la línea de la ronda (${M.usd(metaG)})`);
+  ok((await texto(p, "#inv-graficos .inv-card:nth-of-type(5) .inv-card-big")) === M.usd(cG.resumen.dividendos), "dividendos acumulados");
+  ok((await texto(p, "#inv-graficos .inv-card:nth-of-type(6) .inv-card-big")).startsWith(M.usd(cG.resumen.comisiones)), "total de comisiones");
+  await captura(p, "inv-graficos.png");
+  await p.screenshot({ path: CAPTURAS ? require("path").join(CAPTURAS, "inv-graficos-completo.png") : "/dev/null", fullPage: true }).catch(() => {});
+
+  console.log("\nObjetivos en Ajustes");
+  await pestana(p, "ajustes");
+  // Antes se quitó MSFT y se agregó VXUS (objetivo 0): ya no suman 100 %.
+  ok(/⚠️ Los objetivos suman 84,15 %: deberían sumar 100 %/.test(await texto(p, "#inv-ajustes [data-inv-total-obj]")), "si los objetivos no suman 100 %, avisa");
+  await escribir(p, '#inv-ajustes .inv-dca-fila[data-ticker="QQQ"] [name="objetivo"]', "20");
+  await escribir(p, '#inv-ajustes .inv-dca-fila[data-ticker="VXUS"] [name="objetivo"]', "11,68");
+  ok(/Objetivos: suman 100 % ✓/.test(await texto(p, "#inv-ajustes [data-inv-total-obj]")), "y confirma cuando suman 100 %");
+  await p.click("#inv-ajustes [type=submit]");
+  await p.waitForTimeout(300);
+  ok((await ajustes(p)).tickers.QQQ.objetivo === 20, "objetivo de QQQ guardado (20 %)");
+  await pestana(p, "graficos");
+  const filasDist = await p.$$eval("#inv-graficos .inv-dist-fila", els => els.map(e => e.textContent.replace(/\s+/g, " ").trim()));
+  ok(filasDist.some(t => t.startsWith("QQQ") && t.includes("obj. 20 %")), "el gráfico usa el objetivo nuevo de QQQ");
+
   console.log("\nSin conexión: usa los últimos precios guardados");
   conRed = false;
   await p.reload();
@@ -344,7 +401,14 @@ async function deslizar(p, sel, dy) {
   await p.waitForTimeout(350);
   await pestana(p, "posiciones");
   ok((await sobra(p, "html")) <= 0 && (await sobra(p, "#inv-posiciones")) <= 0, "Posiciones cabe a 320 px");
-  ok(await p.$eval('#panel-inversiones [data-inv-tab="posiciones"]', b => { const r = b.getBoundingClientRect(), c = b.parentElement.getBoundingClientRect(); return r.left >= c.left - 1 && r.right <= c.right + 1; }), "la pestaña elegida queda a la vista");
+  await pestana(p, "graficos");
+  await p.waitForTimeout(200);
+  ok((await sobra(p, "html")) <= 0 && (await sobra(p, "#inv-graficos")) <= 0, "Gráficos cabe a 320 px");
+  const anchoSvg = await p.$eval('#inv-graficos .inv-g[data-g="valor"]', c => [Number(c.querySelector("svg").getAttribute("width")), c.clientWidth]);
+  ok(anchoSvg[0] === anchoSvg[1], `el gráfico se vuelve a dibujar al nuevo ancho (${anchoSvg[0]} px)`);
+  await pestana(p, "ajustes");
+  ok((await sobra(p, "html")) <= 0 && (await sobra(p, "#inv-ajustes .inv-dca-lista")) <= 0, "Ajustes (con objetivos) cabe a 320 px");
+  ok(await p.$eval('#panel-inversiones .inv-tabs .fin-tab.active', b => { const r = b.getBoundingClientRect(), c = b.parentElement.getBoundingClientRect(); return b.dataset.invTab === "ajustes" && r.left >= c.left - 1 && r.right <= c.right + 1; }), "la pestaña elegida (Ajustes, la última) queda a la vista");
   ok(!p.errores.length, "sin errores de página");
 
   await p.context().close();
