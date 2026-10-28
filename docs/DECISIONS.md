@@ -282,3 +282,14 @@ valor al tipo del último fondeo). Paleta validada con la guía de
 visualización sobre `#161616`: el naranja de la app bajado un paso
 (`#e8651f`) porque `#ff7a30` queda fuera de la franja de luminosidad para
 marcas en fondo oscuro. Detalle en `docs/INVERSIONES.md`.
+
+**D-048 (2026-10-28) · Fechas de dividendos y avisos.** Pedido del dueño:
+saber cuándo pagan dividendos sus acciones e índices, con aviso unos 3 días
+antes y después. El workflow de precios guarda también las fechas
+(`data/precios.json` › `dividendos`), así no hace falta otro archivo ni
+tocar `sw.js`. Fuentes verificadas desde GitHub Actions el 2026-10-28:
+historial de Yahoo (los 6), calendario de Yahoo con *crumb* y Nasdaq
+(fechas anunciadas; hoy solo MSFT, los ETF anuncian pocos días antes). Sin
+anuncio, la próxima fecha se estima y se marca "estimada". Los avisos van en
+Inversiones › Resumen (la app no puede mandar notificaciones al teléfono);
+no se marcó en Finanzas por el alcance de la tarea.

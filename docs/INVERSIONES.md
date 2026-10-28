@@ -20,7 +20,8 @@ y un satélite chico), con lo que cuesta llevar los Bs al broker.
 | `js/inversiones-graficos.js` | Dibujo SVG (líneas, columnas) sin DOM + "toca y desliza para leer". Pruebas: `tests/inversiones-graficos.test.js` |
 | `css/inversiones.css` | Estilos propios (solo clases `.inv-`). Reutiliza `.fin-tabs` y `.budget-sheet` |
 | `tests/inversiones-posiciones.test.js` | Pruebas de posiciones, precios y cartera |
-| `scripts/e2e/inversiones.js` | Prueba de pantalla (111 comprobaciones, con precios y tipo de cambio fijos de prueba) |
+| `tests/inversiones-dividendos.test.js` | Pruebas de la agenda y los avisos de dividendos |
+| `scripts/e2e/inversiones.js` | Prueba de pantalla (118 comprobaciones, con precios, dividendos y tipo de cambio fijos de prueba) |
 | `data/tickers.json` | Tickers con precio diario y desde qué fecha guardar historial |
 | `scripts/precios.py` | Lee los cierres (sin claves) y actualiza `data/precios.json` |
 | `.github/workflows/precios.yml` | Corre el script de lunes a viernes 21:40 y 23:40 UTC (17:40 y 19:40 en La Paz) y a mano |
@@ -113,6 +114,27 @@ Un ticker que no está en `tickers` con `grupo: "nucleo"` es satélite.
   Peso = valor de cada una sobre el total.
 - **Valor de la cartera** = posiciones + efectivo + aportes viejos sin
   completar (a su monto). **G/P** = valor − aportado.
+
+## Dividendos: fechas y avisos (pedido 2026-10-28)
+
+- **De dónde salen** (mismo workflow de precios, en `data/precios.json` bajo
+  `dividendos`): historial de Yahoo (fecha ex y monto, 3 años), calendario
+  de Yahoo y tabla de Nasdaq (fechas anunciadas, con pago). Verificado
+  desde GitHub Actions (D-048): MSFT anunciado por las dos (ex 19 nov, pago
+  10 dic 2026); los ETF anuncian pocos días antes, así que hasta entonces
+  la próxima fecha se **estima** con el intervalo típico de los últimos
+  pagos (y la demora típica del pago, si se conoce).
+- **Formato**: `dividendos: { MSFT: { frecuencia, fuentes, historial: [{ ex,
+  pago?, registro?, anuncio?, monto }], proximo: { ex, pago?, monto?,
+  estimado, montoEstimado?, pagoEstimado? } } }`.
+- **En la app** (Resumen): solo los tickers que tienes. Aviso desde 3 días
+  antes hasta 3 días después de la fecha ex o del pago; explica que hay que
+  tener la acción **antes** de la fecha ex; monto ≈ acciones que tenías
+  antes de la fecha ex × último monto (bruto, antes de la retención de EE.
+  UU.). Después del pago, botón "Anotar dividendo" (ticker, fecha y monto
+  ya puestos); cuando lo anotas, el aviso se va. Tarjeta "Próximos
+  dividendos" con fechas anunciadas o estimadas.
+- No se tocó Finanzas (fuera del alcance de esta tarea).
 
 ## Gráficos (fase 3)
 

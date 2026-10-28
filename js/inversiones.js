@@ -93,7 +93,8 @@ function renderResumen() {
   if (!cargado) { el.innerHTML = cargando; return; }
   const c = M.cartera(movs, precios, guardados), r = c.resumen, a = aj();
   const interes = M.interesMensual(r.efectivo, a.tasaEfectivo);
-  let html = `
+  const agenda = M.agendaDividendos(precios, movs, hoyLocal());
+  let html = M.avisosDividendos(agenda).map(avisoDividendo).join("") + `
     <div class="inv-hero">
       <span class="inv-hero-label">Valor de tu cartera</span>
       <strong class="inv-hero-valor">${M.usd(c.valor)}</strong>
@@ -120,7 +121,34 @@ function renderResumen() {
     </div>`;
   html += botones(true);
   if (!movs.length) html += `<p class="empty-state">Aún no hay movimientos. Empieza con tu fondeo o tu primera compra; puedes poner fechas pasadas.</p>`;
+  if (agenda.length) html += tarjetaAgenda(agenda);
   el.innerHTML = html;
+}
+
+// ---------- Dividendos: avisos y próximas fechas ----------
+// Las fechas las guarda el workflow de precios (data/precios.json). Avisa de
+// 3 días antes a 3 días después de la fecha ex o del pago.
+const aprox = (f, estimada) => `${M.fechaLarga(f)}${estimada ? " (estimada)" : ""}`;
+const montoDiv = x => (x.total != null ? `≈ ${M.usd(x.total)} por tus ${M.cantidadTexto(x.acciones)} acciones (${M.usd(x.monto)} c/u, antes de impuestos)` : "");
+function avisoDividendo(x) {
+  return `
+    <div class="inv-aviso inv-aviso-div" data-div="${esc(x.ticker)}">
+      <p><b>💰 Dividendo de ${esc(x.ticker)}</b>${x.estimado ? ` <span class="inv-chip">fecha estimada</span>` : ""}</p>
+      ${x.lineas.map(l => `<p>${esc(l)}</p>`).join("")}
+      ${x.total != null ? `<p class="inv-nota">${esc(montoDiv(x))}</p>` : ""}
+      ${x.anotar ? `<button type="button" class="inv-btn-sec" data-inv-anotar-div="${esc(x.ticker)}" data-fecha="${esc(x.pago)}" data-monto="${x.total != null ? esc(enCampo(x.total)) : ""}">Anotar dividendo</button>` : ""}
+    </div>`;
+}
+function tarjetaAgenda(agenda) {
+  const filas = agenda.map(x => `
+      <div class="inv-agenda-fila">
+        <div class="inv-pos-fila"><b>${esc(x.ticker)}</b><span>${x.estimado ? `<span class="inv-chip">estimada</span>` : `<span class="inv-chip is-ok">anunciada</span>`}</span></div>
+        <div class="inv-pos-fila"><span>Fecha ex: ${aprox(x.ex, x.estimado)}</span><span>${x.pago ? `Pago: ${aprox(x.pago, x.estimado || x.pagoEstimado)}` : "Pago: sin anunciar"}</span></div>
+        ${x.total != null ? `<div class="inv-pos-fila"><span>${esc(montoDiv(x))}</span></div>` : ""}
+      </div>`).join("");
+  return tarjetaG("Próximos dividendos", `${filas}
+      <p class="inv-ayuda">Para cobrar un dividendo tienes que tener la acción <b>antes</b> de la fecha ex. Los montos son brutos: EE. UU. retiene impuestos, así que llega algo menos. Te aviso aquí desde 3 días antes hasta 3 días después.</p>`,
+    "De lo que tienes, según las fechas anunciadas o el ritmo de pagos anteriores.");
 }
 const botones = rondaPrimero => {
   const ronda = `<button type="button" class="inv-btn${rondaPrimero ? "" : "-sec"}" data-inv="ronda">🗓️ Ronda DCA de ${nombreMes(hoyLocal())}</button>`;
@@ -499,6 +527,12 @@ $("panel-inversiones").addEventListener("click", e => {
   if (ed) { abrirMov({ id: ed.dataset.invEditar }); return; }
   const pr = e.target.closest("[data-inv-precio]");
   if (pr) { abrirPrecio(pr.dataset.invPrecio); return; }
+  const dv = e.target.closest("[data-inv-anotar-div]");
+  if (dv) {
+    const hoy = hoyLocal();
+    abrirMov({ tipo: "dividendo", valores: { ticker: dv.dataset.invAnotarDiv, fecha: dv.dataset.fecha && dv.dataset.fecha <= hoy ? dv.dataset.fecha : hoy, monto: dv.dataset.monto || "" } });
+    return;
+  }
   const q = e.target.closest("[data-inv-quitar]");
   if (q) { quitarTicker(q.dataset.invQuitar); return; }
   const b = e.target.closest("[data-inv]");

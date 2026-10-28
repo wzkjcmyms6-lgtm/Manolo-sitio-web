@@ -442,6 +442,65 @@ function posiciones(movs, precios, aj) {
   return { abiertas, cerradas, total: tot };
 }
 
+// ---- Dividendos: fechas y avisos ----
+// precios.dividendos (lo guarda scripts/precios.py):
+//   { SCHD: { historial: [{ ex, pago?, monto }], proximo: { ex, pago?, monto?, estimado }, frecuencia } }
+// Para cobrar un dividendo hay que tener la acción ANTES de la fecha ex.
+const VENTANA_AVISO = 3; // días antes y después
+function cantidadesAntesDe(movs, fecha) {
+  return cantidades(movs.filter(m => (m.fecha || "") < fecha));
+}
+// Agenda de los tickers que tienes: próxima fecha ex y de pago (y la del
+// último dividendo si su pago aún no pasó hace más de VENTANA_AVISO días).
+function agendaDividendos(precios, movs, hoy) {
+  const d = (precios && precios.dividendos) || {};
+  const ahora = cantidades(movs);
+  const out = [];
+  Object.keys(d).forEach(t => {
+    const info = d[t] || {};
+    const eventos = [];
+    const ultimo = (info.historial || [])[(info.historial || []).length - 1];
+    if (ultimo && ultimo.pago && diasEntre(hoy, ultimo.pago) >= -VENTANA_AVISO) eventos.push(Object.assign({ estimado: false }, ultimo));
+    if (info.proximo && info.proximo.ex && !eventos.some(e => e.ex === info.proximo.ex)) eventos.push(info.proximo);
+    eventos.forEach(e => {
+      if (!fechaOk(e.ex)) return;
+      const pasado = e.ex <= hoy;
+      const acciones = pasado ? (cantidadesAntesDe(movs, e.ex)[t] || 0) : (ahora[t] || 0);
+      if (!(acciones > 0)) return; // solo lo que tienes (o tenías antes de la fecha ex)
+      const anotado = movs.some(m => m.tipo === "dividendo" && m.ticker === t && m.fecha >= e.ex);
+      out.push({
+        ticker: t, ex: e.ex, pago: fechaOk(e.pago) ? e.pago : null, estimado: !!e.estimado, pagoEstimado: !!e.pagoEstimado,
+        monto: e.monto > 0 ? e.monto : null, acciones: red(acciones, 6),
+        total: e.monto > 0 && acciones > 0 ? red(e.monto * acciones) : null,
+        diasEx: diasEntre(hoy, e.ex), diasPago: fechaOk(e.pago) ? diasEntre(hoy, e.pago) : null,
+        frecuencia: info.frecuencia || null, anotado
+      });
+    });
+  });
+  const clave = x => (x.diasPago != null && x.diasPago >= -VENTANA_AVISO && x.diasEx < 0 ? x.pago : x.ex);
+  return out.sort((a, b) => clave(a).localeCompare(clave(b)) || a.ticker.localeCompare(b.ticker));
+}
+// Avisos: lo que cae entre 3 días antes y 3 días después de hoy (fecha ex
+// o de pago). Un pago que ya pasó sin anotar pide anotarlo.
+function avisosDividendos(agenda) {
+  const v = n => n != null && Math.abs(n) <= VENTANA_AVISO;
+  return agenda.filter(x => v(x.diasEx) || (v(x.diasPago) && !(x.diasPago < 0 && x.anotado))).map(x => {
+    const lineas = [];
+    const cuando = n => (n === 0 ? "hoy" : n > 0 ? `en ${n} ${n === 1 ? "día" : "días"}` : `hace ${-n} ${n === -1 ? "día" : "días"}`);
+    if (v(x.diasEx)) {
+      if (x.diasEx > 0) lineas.push(`Fecha ex ${cuando(x.diasEx)} (${fechaLarga(x.ex)}): para cobrar este dividendo tienes que tener la acción antes de esa fecha.`);
+      else if (x.diasEx === 0) lineas.push("Hoy es la fecha ex: si ya tenías acciones ayer, cobras este dividendo.");
+      else lineas.push(`La fecha ex fue ${cuando(x.diasEx)} (${fechaLarga(x.ex)}).`);
+    }
+    if (v(x.diasPago)) {
+      if (x.diasPago > 0) lineas.push(`Paga ${cuando(x.diasPago)} (${fechaLarga(x.pago)}).`);
+      else if (x.diasPago === 0) lineas.push("Paga hoy.");
+      else lineas.push(`Pagó ${cuando(x.diasPago)} (${fechaLarga(x.pago)}): anótalo cuando lo veas en tu broker.`);
+    }
+    return Object.assign({ lineas, anotar: x.diasPago != null && x.diasPago <= 0 && !x.anotado }, x);
+  });
+}
+
 // Valor de la cartera = posiciones (sin precio, a su costo) + efectivo +
 // aportes viejos sin completar (a su monto). G/P = valor − aportado.
 function cartera(movs, precios, aj) {
@@ -459,6 +518,7 @@ return {
   esViejo, normalizar, ordenar, porMes,
   validar, calcularFondeo, camposCompletar, cantidadDesdeMonto,
   ronda, comprasDeRonda, resumen, interesMensual, cantidades, tickersConocidos, tickerSugerido,
-  precioDiario, precioDe, precioEn, fechaPrecios, diasEntre, posiciones, cartera
+  precioDiario, precioDe, precioEn, fechaPrecios, diasEntre, posiciones, cartera,
+  VENTANA_AVISO, agendaDividendos, avisosDividendos
 };
 });

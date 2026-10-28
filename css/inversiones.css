@@ -67,6 +67,16 @@ button.inv-pos:active { background: var(--surface-raised); }
 .inv-peso { display: block; height: 4px; border-radius: 999px; background: var(--surface-raised); overflow: hidden; margin-top: 0.15rem; }
 .inv-peso i { display: block; height: 100%; border-radius: inherit; background: var(--accent-grad); }
 
+/* Dividendos */
+.inv-aviso-div p { margin: 0 0 0.35rem; }
+.inv-aviso-div .inv-nota { margin: 0.2rem 0 0.5rem; }
+.inv-aviso-div .inv-btn-sec { min-height: 40px; padding: 0.45rem 1rem; }
+.inv-agenda-fila { display: flex; flex-direction: column; gap: 0.2rem; padding: 0.55rem 0; border-bottom: 1px solid var(--border); min-width: 0; }
+.inv-agenda-fila:last-of-type { border-bottom: none; }
+.inv-agenda-fila .inv-pos-fila { flex-wrap: wrap; }
+.inv-agenda-fila .inv-pos-fila > :first-child { white-space: normal; }
+.inv-chip.is-ok { background: rgba(76, 195, 138, 0.15); color: var(--inv-verde); }
+
 /* Botones */
 .inv-acciones { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1.2rem; }
 .inv-acciones > * { flex: 1 1 160px; }

@@ -20,6 +20,10 @@ const PRECIOS = { fuente: "prueba", actualizado: "2026-10-27T21:40:00Z", tickers
   QQQ: { ultimo: { fecha: "2026-10-27", cierre: 500 }, historial: { "2026-10-05": 480, "2026-10-27": 500 } },
   VOO: { ultimo: { fecha: "2026-10-20", cierre: 640 }, historial: { "2026-10-01": 619, "2026-10-20": 640 } },
   SCHD: { ultimo: { fecha: "2026-10-27", cierre: 28 }, historial: { "2026-10-27": 28 } }
+}, dividendos: {
+  QQQ: { frecuencia: "trimestral", historial: [{ ex: "2026-10-20", pago: "2026-10-27", monto: 0.75 }], proximo: { ex: "2027-01-19", estimado: true, monto: 0.75 } },
+  VOO: { frecuencia: "trimestral", historial: [{ ex: "2026-09-26", pago: "2026-09-30", monto: 1.74 }], proximo: { ex: "2026-10-30", pago: "2026-11-03", monto: 1.8, estimado: false } },
+  VT: { historial: [], proximo: { ex: "2026-12-18", estimado: true, monto: 0.4 } }
 } };
 
 const texto = (p, sel) => p.textContent(sel).then(t => (t || "").replace(/\s+/g, " ").trim());
@@ -76,7 +80,7 @@ async function deslizar(p, sel, dy) {
   ok(await visible(p, "#inv-resumen"), "se ve el Resumen");
   ok(await p.$eval("#verse-banner", el => el.hidden), "Inversiones no muestra el versículo");
   ok((await texto(p, "#inv-resumen .inv-hero-valor")) === "US$ 80,00", "Aportado suma los aportes viejos (US$ 80,00)");
-  ok(/2 aportes anteriores/.test(await texto(p, "#inv-resumen .inv-aviso")), "avisa que hay 2 aportes para completar");
+  ok(/2 aportes anteriores/.test(await texto(p, "#inv-resumen .inv-aviso:not(.inv-aviso-div)")), "avisa que hay 2 aportes para completar");
   ok(/Ronda DCA de octubre/.test(await texto(p, '#inv-resumen [data-inv="ronda"]')), "botón de la ronda DCA del mes");
   await captura(p, "inv-resumen-viejos.png");
 
@@ -318,10 +322,30 @@ async function deslizar(p, sel, dy) {
   ok((await texto(p, "#inv-resumen .inv-hero-valor")) === M.usd(c.valor), `valor de la cartera coincide con el motor (${M.usd(c.valor)})`);
   ok((await texto(p, "#inv-resumen .inv-hero")).includes(`${M.usdS(c.gp)} (${M.pctS(c.gpPct)}) sobre ${M.usd(c.resumen.aportado)} aportados`), "G/P sobre lo aportado");
   ok(/Precios al cierre del 27 oct 2026/.test(await texto(p, "#inv-resumen")) && /1 posición sin precio cuenta a su costo/.test(await texto(p, "#inv-resumen")), "dice de cuándo son los precios y cuántas no tienen");
-  ok(/1 aporte anterior/.test(await texto(p, "#inv-resumen .inv-aviso")), "queda 1 aporte por completar");
+  ok(/1 aporte anterior/.test(await texto(p, "#inv-resumen .inv-aviso:not(.inv-aviso-div)")), "queda 1 aporte por completar");
   d = await uno(p, "v2");
   ok(JSON.stringify(d) === JSON.stringify(VIEJO_FONDO), "el otro registro viejo sigue intacto");
   await captura(p, "inv-resumen.png");
+
+  console.log("\nDividendos: avisos de 3 días antes a 3 después");
+  await pestana(p, "resumen");
+  const avisos = await p.$$eval("#inv-resumen .inv-aviso-div", els => els.map(e => [e.dataset.div, e.textContent.replace(/\s+/g, " ").trim()]));
+  ok(avisos.map(a => a[0]).join(",") === "QQQ,VOO", `avisa QQQ (pagó ayer) y VOO (fecha ex en 2 días), no VT (falta mucho): ${avisos.map(a => a[0]).join(", ")}`);
+  ok(/Pagó hace 1 día \(27 oct 2026\): anótalo/.test(avisos[0][1]), "QQQ: pagó ayer, pide anotarlo");
+  ok(/Fecha ex en 2 días \(30 oct 2026\): para cobrar este dividendo tienes que tener la acción antes/.test(avisos[1][1]), "VOO: explica la fecha ex");
+  const agendaTxt = await texto(p, "#inv-resumen .inv-card");
+  ok(/Próximos dividendos/.test(agendaTxt) && /19 ene 2027 \(estimada\)/.test(agendaTxt) && !/VT/.test(agendaTxt), "tarjeta de próximos dividendos (QQQ estimada; VT no, porque no la tienes)");
+  await captura(p, "inv-dividendos.png");
+  await p.click('#inv-resumen [data-inv-anotar-div="QQQ"]');
+  await p.waitForTimeout(400);
+  // Cuentan las acciones que tenías antes de la fecha ex (no las de la ronda de hoy).
+  const qqqAntes = M.agendaDividendos(PRECIOS, await movsDe(p), "2026-10-28").find(x => x.ticker === "QQQ" && x.ex === "2026-10-20");
+  const hojaDiv = [await p.inputValue(campo("ticker")), await p.inputValue(campo("fecha")), await p.inputValue(campo("monto"))];
+  ok(hojaDiv.join("|") === ["QQQ", "2026-10-27", String(qqqAntes.total).replace(".", ",")].join("|"), `«Anotar dividendo» abre la hoja con ticker, fecha de pago y monto estimado (${hojaDiv.join(" · ")})`);
+  await escribir(p, campo("monto"), "0,04");
+  await guardar(p);
+  ok((await todos(p)).some(([, x]) => x.tipo === "dividendo" && x.ticker === "QQQ" && x.monto === 0.04 && x.fecha === "2026-10-27"), "dividendo de QQQ guardado");
+  ok(!(await p.$('#inv-resumen .inv-aviso-div[data-div="QQQ"]')), "ya anotado: el aviso de QQQ desaparece");
 
   console.log("\nGráficos");
   await pestana(p, "graficos");
