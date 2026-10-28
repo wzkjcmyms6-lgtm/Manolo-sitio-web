@@ -99,3 +99,96 @@ input[type="date"].lib-input { -webkit-appearance: none; appearance: none; }
 .bib-cal-dia:disabled { opacity: 0.2; cursor: default; }
 .bib-cal .lib-nota { margin: 0.6rem 0 0; }
 
+
+/* ---------- Libros ---------- */
+#panel-libros { --lib-campo: var(--surface); }
+.lib-mt { margin-top: 0.6rem; }
+.lib-ayuda { margin: -0.2rem 0 0; color: var(--muted); font-size: 0.8rem; }
+.lib-cifras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin-bottom: 0.8rem; }
+.lib-cifras > div {
+  display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; padding: 0.75rem 0.7rem; border-radius: 14px;
+  background: radial-gradient(140% 160% at 100% 0%, rgba(255, 122, 48, 0.08), transparent 60%), var(--surface); border: 1px solid var(--border);
+}
+.lib-cifras b { font-size: 1.35rem; font-weight: 600; }
+.lib-cifras span { color: var(--muted); font-size: 0.75rem; line-height: 1.25; }
+.lib-tabs { display: flex; width: fit-content; margin: 1rem 0 0.9rem; }
+.lib-filtros { display: grid; grid-template-columns: 1fr; gap: 0.5rem; margin-bottom: 0.6rem; }
+@media (min-width: 600px) { .lib-filtros { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
+.lib-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.9rem; }
+.lib-filtro {
+  min-height: 36px; padding: 0.35rem 0.8rem; border-radius: 999px; border: 1px solid var(--border); background: transparent;
+  color: var(--muted); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+}
+.lib-filtro span { opacity: 0.7; font-weight: 400; margin-left: 0.15rem; }
+.lib-filtro.active { background: var(--surface-raised); color: var(--ink); border-color: var(--accent-1); }
+
+.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.9rem 0.7rem; }
+.lib-card {
+  display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; text-align: left; padding: 0; border: none; background: none;
+  color: var(--ink); font: inherit; cursor: pointer;
+}
+.lib-card:active .lib-portada { transform: scale(0.98); }
+.lib-portada {
+  display: block; position: relative; width: 100%; aspect-ratio: 2 / 3; border-radius: 6px 10px 10px 6px; overflow: hidden;
+  background: var(--surface-raised); box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45); margin-bottom: 0.35rem; transition: transform 0.15s ease;
+}
+.lib-portada.is-grande { width: 110px; flex-shrink: 0; margin: 0; }
+.lib-portada img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* Tapa genérica: dos tonos, lomo a la izquierda, título y autor. */
+.lib-tapa {
+  position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 0.4rem;
+  padding: 14% 10% 10% 16%; color: #f5f0e6;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0, rgba(255, 255, 255, 0.08) 5%, transparent 9%), linear-gradient(160deg, var(--tapa-a), var(--tapa-b));
+}
+.lib-tapa::after { content: ""; position: absolute; left: 16%; right: 10%; top: 9%; height: 1px; background: rgba(245, 240, 230, 0.35); }
+.lib-tapa b {
+  font-family: var(--font-display); font-weight: 600; font-size: 0.95rem; line-height: 1.2; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;
+}
+.lib-tapa small { font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-tapa.is-grande b { font-size: 0.85rem; -webkit-line-clamp: 4; }
+.lib-card-t { font-weight: 600; font-size: 0.92rem; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.lib-card-a { color: var(--muted); font-size: 0.78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-card-pie { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; margin-top: 0.1rem; }
+.lib-chip { display: inline-flex; align-items: center; gap: 0.2rem; padding: 0.12rem 0.5rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; background: var(--surface-raised); color: var(--muted); white-space: nowrap; }
+.lib-chip.is-leyendo { background: rgba(57, 135, 229, 0.18); color: #8ab8f2; }
+.lib-chip.is-terminado { background: rgba(76, 195, 138, 0.15); color: #4cc38a; }
+.lib-estrellas { color: var(--accent-2); font-size: 0.78rem; letter-spacing: 0.05em; }
+.lib-estrellas.is-grande { font-size: 1.05rem; margin: 0.35rem 0 0; }
+.lib-ficha-info .lib-estrellas { color: var(--accent-2); }
+
+/* Ficha */
+.lib-ficha { display: flex; flex-direction: column; gap: 0.7rem; min-width: 0; }
+.lib-ficha-cab { display: flex; gap: 0.9rem; align-items: flex-start; }
+.lib-ficha-info { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 0.3rem; }
+.lib-ficha-info h4 { margin: 0; font-family: var(--font-display); font-size: 1.25rem; line-height: 1.2; overflow-wrap: anywhere; }
+.lib-ficha-info p { margin: 0; color: var(--muted); }
+.lib-datos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem 0.8rem; margin: 0; padding: 0.7rem 0.8rem; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); }
+.lib-datos div { min-width: 0; }
+.lib-datos dt { color: var(--muted); font-size: 0.72rem; }
+.lib-datos dd { margin: 0; font-size: 0.9rem; }
+.lib-h { margin: 0.3rem 0 0; font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+.lib-h-fila { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.lib-h-fila h5 { margin: 0; font-size: 0.95rem; color: var(--ink); }
+.lib-h-fila h5 span { color: var(--muted); font-weight: 400; margin-left: 0.2rem; }
+.lib-opinion { margin: 0; white-space: pre-line; overflow-wrap: anywhere; line-height: 1.5; }
+.lib-btn-chico { min-height: 36px; padding: 0.35rem 0.9rem; font-size: 0.85rem; }
+.lib-frase {
+  display: flex; flex-direction: column; gap: 0.3rem; width: 100%; min-width: 0; box-sizing: border-box; text-align: left; margin-bottom: 0.5rem;
+  padding: 0.75rem 0.9rem; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; cursor: pointer;
+}
+.lib-frase:active { background: var(--surface-raised); }
+.lib-frase-t { font-family: var(--font-display); font-size: 1rem; line-height: 1.45; white-space: pre-line; overflow-wrap: anywhere; }
+.lib-frase-t::before { content: "“"; color: var(--accent-1); margin-right: 0.1rem; }
+.lib-frase-t::after { content: "”"; color: var(--accent-1); margin-left: 0.05rem; }
+.lib-frase small { color: var(--muted); font-size: 0.78rem; }
+#lib-frases { margin-top: 0.8rem; }
+
+/* Formulario del libro */
+.lib-segmento { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.25rem; padding: 0.25rem; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); }
+.lib-segmento button { min-height: 38px; padding: 0.4rem 0.3rem; border-radius: 999px; border: none; background: transparent; color: var(--muted); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+.lib-segmento button.active { background: var(--accent-grad); color: #0a0a0a; }
+.lib-estrellas-elegir { display: flex; align-items: center; gap: 0.15rem; flex-wrap: wrap; }
+.lib-estrellas-elegir [data-lib-cal]:not(.lib-sin-cal) { width: 40px; height: 40px; border: none; background: none; color: var(--border); font-size: 1.7rem; line-height: 1; cursor: pointer; padding: 0; }
+.lib-estrellas-elegir [data-lib-cal].on { color: var(--accent-2); }
+.lib-sin-cal { margin-left: 0.4rem; min-height: 32px; padding: 0.25rem 0.7rem; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--muted); font: inherit; font-size: 0.78rem; cursor: pointer; }

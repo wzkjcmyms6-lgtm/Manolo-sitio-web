@@ -31,6 +31,9 @@ por dueño).
 
 | `users/{uid}/biblia/{id}` ✅ | Biblia 2 (2026-10-29) | `v:1, fecha (AAAA-MM-DD), libro` (código estilo OSIS: `"John"`, `"Ps"`, `"1Cor"`…), `capitulo` (número), `versiculo` (texto normalizado: `"16"`, `"16-18"`, `"1,3"`), `texto` (≤ 2000), `nota` (≤ 1000, puede ir vacía), `creado` (ms) | Colección nueva. Nombres y capítulos de los 66 libros en `js/biblia-motor.js`. Racha y calendario se calculan (no se guardan). Ver `docs/LIBROS_BIBLIA.md` |
 
+| `users/{uid}/libros/{id}` ✅ | Libros 3 (2026-10-29) | `v:1, titulo` (≤ 200), `autor` (≤ 150), `paginas` (número o `null`), `estado` (`"por_leer"`, `"leyendo"`, `"terminado"`), `calificacion` (1–5 o `null`), `opinion` (≤ 5000), `fechaRegistro` (AAAA-MM-DD), `fechaInicio`, `fechaFin` (fecha o `null`), `creado` (ms); desde la fase 4 también `portada` | Colección nueva. Lógica en `js/libros-motor.js` |
+| `users/{uid}/libros_frases/{id}` ✅ | Libros 3 | `v:1, libroId, texto` (≤ 2000), `pagina` (número o `null`), `fecha`, `creado` | Aparte de los libros para listar "Todas mis frases" y editar una sin reescribir el libro. Al borrar un libro se borran sus frases (con confirmación) |
+
 Datos derivados (ritmo medio, velocidad media) **no se guardan**: se
 calculan de distancia y tiempos. Los parciales sí (costoso de recalcular sin
 la ruta).

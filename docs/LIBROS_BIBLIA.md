@@ -11,7 +11,7 @@ vuelve (la navegación es por `#hash`).
 |---|---|---|
 | 1 | Tarjetas en Inicio + secciones vacías con botón volver | ✅ 2026-10-29 |
 | 2 | Biblia completa | ✅ 2026-10-29 |
-| 3 | Libros sin portada + frases | pendiente |
+| 3 | Libros sin portada + frases | ✅ 2026-10-29 |
 | 4 | Portadas (búsqueda gratuita y foto) | pendiente |
 
 ## Archivos
@@ -21,6 +21,7 @@ vuelve (la navegación es por `#hash`).
 | `js/lectura-comun.js` | Piezas de pantalla de las dos secciones: hoja que sube desde abajo, exportar, errores |
 | `js/biblia-motor.js` | UMD sin DOM: 66 libros, validar, buscar, racha, calendario, exportar. Pruebas: `tests/biblia-motor.test.js` |
 | `js/biblia.js` | Pantalla de Biblia. Registra su ícono (`ICONS.biblia`) |
+| `js/libros-motor.js` | UMD sin DOM: validar libros y frases, ordenar, buscar, resumen, color de la tapa genérica, exportar. Pruebas: `tests/libros-motor.test.js` |
 | `js/libros.js` | Pantalla de Libros. Registra su ícono (`ICONS.libro`) |
 | `css/libros.css` | Estilos propios (solo `.lib-` y `.bib-`) |
 | `scripts/e2e/lectura.js` | Prueba de pantalla de las dos secciones |
@@ -51,6 +52,24 @@ nuevos (antes de que `renderIcons()` corra al cargar), sin tocar
   menú de compartir.
 - Sin internet funciona igual (Firestore guarda los cambios y los sube al
   volver la conexión).
+
+## Libros (fase 3)
+
+- **Agregar o editar**: título (obligatorio), autor, páginas, estado (Por
+  leer / Leyendo / Terminado), calificación opcional de 1 a 5 estrellas,
+  "Mi opinión" y tres fechas con selector: registro (hoy por defecto; se
+  puede poner una pasada para cargar libros leídos antes), inicio y fin.
+  Al marcar "Leyendo" o "Terminado" sin fecha, propone la de hoy (y avisa).
+  La fecha de fin no puede ser antes del inicio; ninguna puede ser futura.
+- **Lista**: cuadrícula con portada (por ahora tapa genérica: dos tonos
+  por libro, título y autor), estado y estrellas. Buscador por título o
+  autor (sin tildes), filtro por estado y orden: registro, terminado,
+  empezado (lo nuevo primero; sin esa fecha, al final) o título A–Z.
+- **Ficha** (tocar un libro): datos, fechas, opinión y sus frases; Editar,
+  Eliminar (borra también sus frases; pide confirmación) y "＋ Frase".
+- **Frases**: texto, página opcional y fecha (hoy por defecto). Dentro de
+  cada libro y en "Todas mis frases" (buscador por frase, título o autor).
+- **Exportar (JSON)**: libros y frases.
 
 ## Firebase
 

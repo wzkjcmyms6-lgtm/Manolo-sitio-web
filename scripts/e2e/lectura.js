@@ -183,5 +183,145 @@ const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
   ok(!q.errores.length, "sin errores de página");
   await q.context().close();
 
+  // ---------- Fase 3: Libros sin portada + frases ----------
+  console.log("\nFase 3: Libros");
+  const LIB = "users/test/libros", FRA = "users/test/libros_frases";
+  const lb = (d) => Object.assign({ v: 1, autor: "", paginas: null, estado: "por_leer", calificacion: null, opinion: "", fechaInicio: null, fechaFin: null, creado: 1 }, d);
+  const SEED_L = {
+    [LIB]: {
+      l1: lb({ titulo: "El principito", autor: "Antoine de Saint-Exupéry", paginas: 96, estado: "terminado", calificacion: 5, fechaRegistro: "2026-03-05", fechaInicio: "2026-02-20", fechaFin: "2026-03-01" }),
+      l2: lb({ titulo: "Cien años de soledad", autor: "Gabriel García Márquez", paginas: 471, estado: "leyendo", fechaRegistro: "2026-10-20", fechaInicio: "2026-10-20" }),
+      l3: lb({ titulo: "Rayuela <b>x</b>", autor: "Julio Cortázar", fechaRegistro: "2026-09-01" })
+    },
+    [FRA]: { f1: { v: 1, libroId: "l1", texto: "Lo esencial es invisible a los ojos.", pagina: 72, fecha: "2026-03-02", creado: 1 } }
+  };
+  const w = await abrir(browser, base, { __SEED__: SEED_L }, { hash: "#libros", zona: ZONA, fecha: HOY });
+  const tx = sel => w.textContent(sel).then(t => (t || "").replace(/\s+/g, " ").trim());
+  const col = c => w.evaluate(c => Array.from(window.__fakeStore.colMap(c).entries()), c);
+  const lc = n => `.lib-hoja [name="${n}"]`;
+  const esc2 = async (sel, val) => { await w.fill(sel, ""); await w.type(sel, String(val)); };
+  const guardarL = async () => { await w.click('.lib-hoja [type="submit"]'); await w.waitForTimeout(350); };
+  const hojaL = () => w.evaluate(() => { const h = document.querySelector(".lib-hoja"); return !!h && !h.hidden; });
+  const titulos = () => w.$$eval("#lib-lista .lib-card-t", els => els.map(e => e.textContent));
+
+  const cifras = await w.$$eval(".lib-cifras b", els => els.map(e => e.textContent));
+  ok(cifras.join("|") === "1|1|96", `resumen: 1 leyendo, 1 terminado en 2026, 96 páginas leídas (${cifras.join(" · ")})`);
+  ok((await titulos()).join(" | ") === "Cien años de soledad | Rayuela <b>x</b> | El principito", "lista por fecha de registro, lo nuevo primero (y < > como texto)");
+  ok(await w.$$eval("#lib-lista .lib-tapa b", els => els.length === 3 && els[0].textContent === "Cien años de soledad"), "sin portada: tapa genérica con título y autor");
+  await captura(w, "libros-lista.png");
+  await w.type("#lib-buscar", "exupery");
+  await w.waitForTimeout(150);
+  ok((await titulos()).join() === "El principito", "buscar por autor sin tildes");
+  await w.fill("#lib-buscar", "");
+  await w.dispatchEvent("#lib-buscar", "input");
+  await w.click('[data-lib-estado="leyendo"]');
+  await w.waitForTimeout(150);
+  ok((await titulos()).join() === "Cien años de soledad", "filtro por estado (Leyendo)");
+  await w.click('[data-lib-estado=""]');
+  await w.selectOption("#lib-orden", "titulo");
+  await w.waitForTimeout(150);
+  ok((await titulos()).join(" | ") === "Cien años de soledad | El principito | Rayuela <b>x</b>", "ordenar por título");
+  await w.selectOption("#lib-orden", "fin");
+  await w.waitForTimeout(150);
+  ok((await titulos())[0] === "El principito" && /Terminado 1 mar 2026/.test(await tx("#lib-lista")), "ordenar por fecha de fin (y la muestra)");
+  await w.selectOption("#lib-orden", "registro");
+
+  console.log("\nAgregar y editar un libro");
+  await w.click('[data-lib="nuevo"]');
+  await w.waitForTimeout(350);
+  ok((await w.inputValue(lc("fechaRegistro"))) === "2026-10-29" && (await w.inputValue(lc("fechaInicio"))) === "", "fecha de registro: hoy por defecto");
+  await guardarL();
+  ok(await hojaL() && /Escribe el título/.test(await tx(".lib-hoja .lib-error")), "sin título no se guarda");
+  await esc2(lc("titulo"), "Pedro Páramo");
+  await esc2(lc("autor"), "Juan Rulfo");
+  await esc2(lc("paginas"), "124");
+  await w.click('.lib-hoja [data-lib-set-estado="leyendo"]');
+  ok((await w.inputValue(lc("fechaInicio"))) === "2026-10-29" && /Puse hoy como fecha de inicio/.test(await tx(".lib-hoja [data-lib-aviso-fecha]")), "al marcar «Leyendo» propone hoy como inicio (y avisa)");
+  await w.click('.lib-hoja [data-lib-cal="4"]');
+  await w.fill(lc("fechaRegistro"), "2025-12-01");
+  await w.fill(lc("fechaInicio"), "2025-12-01");
+  await w.click('.lib-hoja [data-lib-set-estado="terminado"]');
+  await w.fill(lc("fechaFin"), "2025-11-20");
+  await guardarL();
+  ok(/no puede ser antes del inicio/.test(await tx(".lib-hoja .lib-error")), "fin antes del inicio no se guarda");
+  await w.fill(lc("fechaFin"), "2025-12-28");
+  await esc2(lc("opinion"), "Corto e inolvidable.");
+  await captura(w, "libros-form.png");
+  await guardarL();
+  let libs = await col(LIB);
+  const pp = libs.find(([, d]) => d.titulo === "Pedro Páramo");
+  ok(pp && pp[1].autor === "Juan Rulfo" && pp[1].paginas === 124 && pp[1].estado === "terminado" && pp[1].calificacion === 4 && pp[1].fechaRegistro === "2025-12-01" && pp[1].fechaInicio === "2025-12-01" && pp[1].fechaFin === "2025-12-28" && pp[1].opinion === "Corto e inolvidable.", "guardado con todos sus datos y fechas pasadas");
+
+  console.log("\nFicha y frases");
+  await w.click('[data-lib-ver="l1"]');
+  await w.waitForTimeout(350);
+  const ficha = await tx(".lib-hoja .lib-ficha");
+  ok(/El principito/.test(ficha) && /★★★★★/.test(ficha) && /Páginas\s*96/.test(ficha) && /Terminado\s*1 mar 2026/.test(ficha) && /Lo esencial es invisible/.test(ficha), "la ficha muestra datos, calificación, fechas y frases");
+  await w.click('.lib-hoja [data-lib="frase-de"]');
+  await w.waitForTimeout(300);
+  ok(/De El principito/.test(await tx(".lib-hoja")) && (await w.inputValue(lc("fecha"))) === "2026-10-29", "frase desde el libro: el libro ya elegido y fecha de hoy");
+  await esc2(lc("texto"), "Fue el tiempo que pasaste con tu rosa lo que la hizo tan importante.");
+  await esc2(lc("pagina"), "80");
+  await guardarL();
+  ok(/Frases 2/.test(await tx(".lib-hoja .lib-h-fila")), "al guardar vuelve a la ficha con 2 frases");
+  await captura(w, "libros-ficha.png");
+  const fNueva = (await col(FRA)).find(([, d]) => d.pagina === 80);
+  await w.click(`.lib-hoja [data-lib-frase="${fNueva[0]}"]`);
+  await w.waitForTimeout(300);
+  await esc2(lc("pagina"), "81");
+  await guardarL();
+  ok((await col(FRA)).find(([id]) => id === fNueva[0])[1].pagina === 81, "editar una frase");
+  await w.click('.lib-hoja [data-lib="editar"]');
+  await w.waitForTimeout(300);
+  ok((await w.inputValue(lc("titulo"))) === "El principito" && (await w.$eval('.lib-hoja [data-lib-cal="5"]', b => b.classList.contains("on"))), "Editar trae los datos del libro");
+  await esc2(lc("opinion"), "Para releer cada año.");
+  await guardarL();
+  ok(/Para releer cada año/.test(await tx(".lib-hoja .lib-opinion")), "al guardar vuelve a la ficha con la opinión");
+  await w.click(".lib-hoja .budget-sheet-close");
+  await w.waitForTimeout(300);
+
+  await w.click('[data-lib-vista="frases"]');
+  await w.waitForTimeout(200);
+  ok((await w.$$("#lib-frases .lib-frase")).length === 2 && /El principito, Antoine de Saint-Exupéry · p. 81/.test(await tx("#lib-frases")), "Todas mis frases, con su libro y página");
+  await w.type("#lib-buscar-frases", "rosa");
+  await w.waitForTimeout(150);
+  ok((await w.$$("#lib-frases .lib-frase")).length === 1, "buscador de frases");
+  await w.fill("#lib-buscar-frases", "principito");
+  await w.dispatchEvent("#lib-buscar-frases", "input");
+  ok((await w.$$("#lib-frases .lib-frase")).length === 2, "también busca por el libro");
+  await w.click('[data-lib="nueva-frase"]');
+  await w.waitForTimeout(300);
+  await esc2(lc("texto"), "Andábamos sin buscarnos.");
+  await guardarL();
+  ok(/Elige el libro/.test(await tx(".lib-hoja .lib-error")), "desde Todas mis frases hay que elegir el libro");
+  await w.selectOption(lc("libroId"), "l3");
+  await guardarL();
+  ok((await col(FRA)).some(([, d]) => d.libroId === "l3" && d.texto === "Andábamos sin buscarnos."), "frase guardada en el libro elegido");
+  await w.click('[data-lib-vista="libros"]');
+  await w.waitForTimeout(200);
+
+  console.log("\nBorrar y exportar");
+  await w.click('[data-lib-ver="l1"]');
+  await w.waitForTimeout(300);
+  await w.click('.lib-hoja [data-lib="borrar"]');
+  await w.waitForTimeout(400);
+  ok(!(await col(LIB)).some(([id]) => id === "l1") && !(await col(FRA)).some(([, d]) => d.libroId === "l1"), "Eliminar (con confirmación) borra el libro y sus frases");
+  ok((await col(FRA)).length === 1, "las frases de otros libros quedan");
+  const fs2 = require("fs");
+  const [dl] = await Promise.all([w.waitForEvent("download"), w.click('[data-lib="exportar"]')]);
+  const jl = JSON.parse(fs2.readFileSync(await dl.path(), "utf8"));
+  ok(dl.suggestedFilename() === "manolo-libros-2026-10-29.json" && jl.libros.length === (await col(LIB)).length && jl.frases.length === 1, "Exportar (JSON) con libros y frases");
+  await w.setViewportSize({ width: 320, height: 700 });
+  await w.waitForTimeout(200);
+  ok((await w.$eval("html", el => el.scrollWidth - el.clientWidth)) <= 0, "la lista cabe a 320 px");
+  await w.click(`[data-lib-ver="${pp[0]}"]`);
+  await w.waitForTimeout(300);
+  ok((await w.$eval(".lib-hoja .budget-sheet-panel", el => el.scrollWidth - el.clientWidth)) === 0, "la ficha cabe a 320 px");
+  await w.click('.lib-hoja [data-lib="editar"]');
+  await w.waitForTimeout(300);
+  ok((await w.$eval(".lib-hoja .budget-sheet-panel", el => el.scrollWidth - el.clientWidth)) === 0 && (await w.$eval(lc("titulo"), el => getComputedStyle(el).fontSize)) === "16px", "el formulario cabe y sus campos son de 16 px");
+  ok(!w.errores.length, "sin errores de página");
+  await w.context().close();
+
   await terminar(browser, srv);
 })();
