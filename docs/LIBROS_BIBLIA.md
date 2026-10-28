@@ -12,7 +12,7 @@ vuelve (la navegación es por `#hash`).
 | 1 | Tarjetas en Inicio + secciones vacías con botón volver | ✅ 2026-10-29 |
 | 2 | Biblia completa | ✅ 2026-10-29 |
 | 3 | Libros sin portada + frases | ✅ 2026-10-29 |
-| 4 | Portadas (búsqueda gratuita y foto) | pendiente |
+| 4 | Portadas (búsqueda gratuita y foto) | ✅ 2026-10-29 |
 
 ## Archivos
 
@@ -24,7 +24,7 @@ vuelve (la navegación es por `#hash`).
 | `js/libros-motor.js` | UMD sin DOM: validar libros y frases, ordenar, buscar, resumen, color de la tapa genérica, exportar. Pruebas: `tests/libros-motor.test.js` |
 | `js/libros.js` | Pantalla de Libros. Registra su ícono (`ICONS.libro`) |
 | `css/libros.css` | Estilos propios (solo `.lib-` y `.bib-`) |
-| `scripts/e2e/lectura.js` | Prueba de pantalla de las dos secciones |
+| `scripts/e2e/lectura.js` | Prueba de pantalla de las dos secciones (95 comprobaciones; Open Library simulado) |
 
 Cambios en archivos compartidos (los mínimos pedidos): dos tarjetas y dos
 `<section>` en `index.html` (con su `<link>`/`<script>`) y dos líneas en
@@ -70,6 +70,43 @@ nuevos (antes de que `renderIcons()` corra al cargar), sin tocar
 - **Frases**: texto, página opcional y fecha (hoy por defecto). Dentro de
   cada libro y en "Todas mis frases" (buscador por frase, título o autor).
 - **Exportar (JSON)**: libros y frases.
+
+## Portadas (fase 4)
+
+- **Buscar portada** (en el formulario del libro): usa el título y el autor
+  escritos y consulta **Open Library** (`openlibrary.org/search.json`),
+  gratis y sin clave. Muestra hasta 6 portadas; tocas la tuya y se guarda
+  **solo la URL** (`covers.openlibrary.org/b/id/…-M.jpg`). Verificado el
+  2026-10-29 desde GitHub Actions (D-050): encontró portadas de 6 libros de
+  prueba en español e inglés, responde en menos de 0,6 s y permite que la
+  app la llame desde el teléfono (CORS). Google Books sin clave respondió
+  "cuota excedida": descartado.
+- **Tomar o subir foto**: en el iPhone abre cámara o fotos. La foto se
+  achica a 400 × 600 como máximo y se comprime en JPEG (calidad 0,72 → 0,4
+  hasta que entre en ~220 KB; una foto de 2400 × 3200 quedó en ~50 KB). Se
+  guarda en `libros_portadas/{id}`; el documento de Firestore admite 1 MB.
+  No usa Firebase Storage (es de pago).
+- **Quitar portada**: vuelve a la tapa genérica (y borra la foto).
+- **Sin portada o sin internet**: la tapa genérica (dos tonos, título y
+  autor) está siempre debajo; si la imagen de Open Library no carga (por
+  ejemplo sin conexión), se ve esa tapa. Las fotos sí se ven sin internet
+  (están en Firestore, con su caché).
+- Exportar (JSON) incluye las fotos de portada (`fotosDePortada`).
+
+## Cómo probar en el iPhone
+
+1. Inicio: abajo, las tarjetas **Libros** y **Biblia**. Cada sección tiene
+   "‹ Inicio" arriba; el gesto de volver también funciona.
+2. **Biblia**: "Anotar versículo" (fecha de hoy; cámbiala para un día
+   pasado), elige el libro, capítulo, versículo, pega el texto y guarda.
+   Mira la racha, busca una palabra, filtra por libro y abre "Calendario".
+3. **Libros**: "Agregar libro", escribe título y autor, toca "Buscar
+   portada" y elige una; o "Tomar o subir foto". Pon estado, estrellas,
+   fechas y tu opinión. Abre el libro y agrega una frase; mira "Todas mis
+   frases".
+4. Con modo avión: anota un versículo o una frase; al volver la conexión se
+   sube solo.
+5. "Exportar (JSON)" en cada sección: "Guardar en Archivos".
 
 ## Firebase
 

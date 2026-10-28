@@ -168,14 +168,61 @@ function filtrarFrases(frases, libros, q) {
 }
 const frasesDe = (frases, libroId) => ordenarFrases(frases.filter(f => f.libroId === libroId));
 
-function exportarJson(libros, frases, ahora) {
+// ---- Portadas (fase 4) ----
+// a) Open Library (gratis, sin clave; verificado el 2026-10-29, D-050): se
+//    busca por título y autor y se guarda solo la URL de la portada.
+// b) Foto del iPhone: se achica y comprime en JPEG para que entre holgada
+//    en un documento de Firestore (límite 1 MB), sin Firebase Storage.
+const OL_BUSCAR = "https://openlibrary.org/search.json";
+const urlPortadaOL = (id, tam) => `https://covers.openlibrary.org/b/id/${id}-${tam || "M"}.jpg`;
+function urlBusqueda(titulo, autor) {
+  const p = [["title", String(titulo || "").trim()]];
+  if (String(autor || "").trim()) p.push(["author", String(autor).trim()]);
+  p.push(["limit", "12"], ["fields", "key,title,author_name,cover_i,first_publish_year"]);
+  return `${OL_BUSCAR}?${p.map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&")}`;
+}
+// Respuesta de Open Library → hasta `max` portadas distintas.
+function leerBusqueda(json, max) {
+  const vistos = new Set(), out = [];
+  ((json && json.docs) || []).forEach(d => {
+    const id = d && Number(d.cover_i);
+    if (!(id > 0) || vistos.has(id) || out.length >= (max || 6)) return;
+    vistos.add(id);
+    out.push({ titulo: String(d.title || ""), autor: Array.isArray(d.author_name) ? d.author_name.join(", ") : "", anio: d.first_publish_year || null,
+      url: urlPortadaOL(id, "M"), urlChica: urlPortadaOL(id, "S") });
+  });
+  return out;
+}
+// Solo se muestran portadas de Open Library (nada de URLs arbitrarias).
+const portadaUrlOk = u => /^https:\/\/covers\.openlibrary\.org\/b\/id\/\d+-[SML]\.jpg$/.test(String(u || ""));
+// Achicar sin agrandar, manteniendo la proporción, dentro de maxAncho × maxAlto.
+function medidasFoto(ancho, alto, maxAncho, maxAlto) {
+  const mA = maxAncho || 400, mH = maxAlto || 600;
+  const k = Math.min(1, mA / ancho, mH / alto);
+  return { ancho: Math.max(1, Math.round(ancho * k)), alto: Math.max(1, Math.round(alto * k)) };
+}
+const CALIDADES = [0.72, 0.6, 0.5, 0.4];
+const LIMITE_FOTO = 300000; // caracteres del data URL (≈ 220 KB): muy por debajo de 1 MB
+const fotoOk = d => typeof d === "string" && d.startsWith("data:image/jpeg;base64,") && d.length <= LIMITE_FOTO;
+const kb = d => Math.round(((String(d).length - 23) * 3) / 4 / 1024);
+// Lo que se guarda en el libro según lo elegido. undefined = no cambiar.
+function portadaParaGuardar(sel, ahora) {
+  if (sel === undefined) return undefined;
+  if (sel && sel.tipo === "url" && portadaUrlOk(sel.url)) return { tipo: "url", url: sel.url, fuente: "openlibrary" };
+  if (sel && sel.tipo === "foto" && fotoOk(sel.datos)) return { tipo: "foto", actualizado: ahora };
+  return null;
+}
+
+function exportarJson(libros, frases, ahora, portadas) {
   const lista = docs => Object.keys(docs).sort().map(id => Object.assign({ id }, docs[id]));
-  return JSON.stringify({ app: "Manolo · Libros", version: 1, exportado: ahora, libros: lista(libros), frases: lista(frases) }, null, 2);
+  return JSON.stringify({ app: "Manolo · Libros", version: 1, exportado: ahora, libros: lista(libros), frases: lista(frases),
+    fotosDePortada: lista(portadas || {}).map(p => ({ libroId: p.id, datos: p.datos, ancho: p.ancho, alto: p.alto })) }, null, 2);
 }
 
 return {
   ESTADOS, ESTADO, ORDENES, normalizar, fechaOk, fechaLarga, estrellas,
   validarLibro, normalizarLibro, ordenar, filtrar, resumen, colorTapa,
-  validarFrase, normalizarFrase, ordenarFrases, filtrarFrases, frasesDe, exportarJson
+  validarFrase, normalizarFrase, ordenarFrases, filtrarFrases, frasesDe, exportarJson,
+  urlBusqueda, leerBusqueda, urlPortadaOL, portadaUrlOk, medidasFoto, CALIDADES, LIMITE_FOTO, fotoOk, kb, portadaParaGuardar
 };
 });

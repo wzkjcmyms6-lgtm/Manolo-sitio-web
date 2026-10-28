@@ -323,5 +323,113 @@ const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
   ok(!w.errores.length, "sin errores de página");
   await w.context().close();
 
+  // ---------- Fase 4: portadas ----------
+  console.log("\nFase 4: portadas");
+  const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64");
+  const OL = { docs: [
+    { title: "Pedro Páramo", author_name: ["Juan Rulfo"], cover_i: 5419076, first_publish_year: 1955 },
+    { title: "Pedro Páramo (edición crítica)", author_name: ["Juan Rulfo"] },
+    { title: "Pedro Páramo", author_name: ["Juan Rulfo"], cover_i: 8000001 }
+  ] };
+  let modoOL = "ok"; // ok | vacio | caido
+  const SEED_P = { [LIB]: {
+    lc: lb({ titulo: "Cien años de soledad", autor: "Gabriel García Márquez", fechaRegistro: "2026-10-20", portada: { tipo: "url", url: "https://covers.openlibrary.org/b/id/12627383-M.jpg", fuente: "openlibrary" } }),
+    lr: lb({ titulo: "Rayuela", autor: "Julio Cortázar", fechaRegistro: "2026-10-10", portada: { tipo: "url", url: "https://covers.openlibrary.org/b/id/404-M.jpg", fuente: "openlibrary" } })
+  } };
+  const z = await abrir(browser, base, { __SEED__: SEED_P }, { hash: "#libros", zona: ZONA, fecha: HOY });
+  await z.context().route(/openlibrary\.org\/search\.json/, r => (modoOL === "caido" ? r.abort() : r.fulfill({ contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: JSON.stringify(modoOL === "vacio" ? { docs: [] } : OL) })));
+  await z.context().route(/covers\.openlibrary\.org/, r => (/\/404-/.test(r.request().url()) ? r.fulfill({ status: 404, body: "" }) : r.fulfill({ contentType: "image/png", body: PNG })));
+  await z.reload();
+  await z.waitForTimeout(900);
+  const zt = sel => z.textContent(sel).then(t => (t || "").replace(/\s+/g, " ").trim());
+  const zc = c => z.evaluate(c => Array.from(window.__fakeStore.colMap(c).entries()), c);
+  const zl = n => `.lib-hoja [name="${n}"]`;
+  const zEsc = async (sel, val) => { await z.fill(sel, ""); await z.type(sel, String(val)); };
+  const zGuardar = async () => { await z.click('.lib-hoja [type="submit"]'); await z.waitForTimeout(400); };
+  const imgDe = id => z.$eval(`[data-lib-ver="${id}"] .lib-portada`, el => { const i = el.querySelector("img"); return i ? { src: i.getAttribute("src"), ok: i.complete && i.naturalWidth > 0 } : null; }).catch(() => null);
+
+  let im = await imgDe("lc");
+  ok(im && im.ok && /12627383-M\.jpg$/.test(im.src), "portada de Open Library guardada como URL: se ve en la lista");
+  ok((await imgDe("lr")) === null && await z.$eval('[data-lib-ver="lr"] .lib-tapa b', b => b.textContent === "Rayuela"), "si la imagen no carga (sin internet o borrada), queda la tapa genérica");
+
+  await z.click('[data-lib="nuevo"]');
+  await z.waitForTimeout(350);
+  await z.click('.lib-hoja [data-lib="buscar-portada"]');
+  await z.waitForTimeout(200);
+  ok(/Escribe el título primero/.test(await zt(".lib-hoja [data-lib-portada-msg]")), "buscar sin título pide escribirlo");
+  await zEsc(zl("titulo"), "Pedro Páramo");
+  await zEsc(zl("autor"), "Juan Rulfo");
+  await z.click('.lib-hoja [data-lib="buscar-portada"]');
+  await z.waitForTimeout(500);
+  const resultados = await z.$$eval(".lib-hoja [data-lib-elegir-portada]", bs => bs.map(b => b.dataset.libElegirPortada));
+  ok(resultados.join(",") === "https://covers.openlibrary.org/b/id/5419076-M.jpg,https://covers.openlibrary.org/b/id/8000001-M.jpg", `busca por título y autor y muestra solo las que tienen portada (${resultados.length})`);
+  await captura(z, "libros-buscar-portada.png");
+  await z.click(`.lib-hoja [data-lib-elegir-portada="${resultados[0]}"]`);
+  ok((await z.$eval(".lib-hoja [data-lib-prev] img", i => i.getAttribute("src"))) === resultados[0] && await z.$eval(`.lib-hoja [data-lib-elegir-portada="${resultados[0]}"]`, b => b.classList.contains("is-elegida")), "al tocar una, se ve en la vista previa");
+  await zGuardar();
+  let libsP = await zc(LIB);
+  const pedro = libsP.find(([, d]) => d.titulo === "Pedro Páramo");
+  ok(pedro && JSON.stringify(pedro[1].portada) === JSON.stringify({ tipo: "url", url: resultados[0], fuente: "openlibrary" }), "se guarda solo la URL de la portada");
+
+  await z.click(`[data-lib-ver="${pedro[0]}"]`);
+  await z.waitForTimeout(300);
+  await z.click('.lib-hoja [data-lib="editar"]');
+  await z.waitForTimeout(300);
+  modoOL = "vacio";
+  await z.click('.lib-hoja [data-lib="buscar-portada"]');
+  await z.waitForTimeout(400);
+  ok(/No encontré portadas/.test(await zt(".lib-hoja [data-lib-portada-msg]")), "sin resultados lo dice y sugiere una foto");
+  modoOL = "caido";
+  await z.click('.lib-hoja [data-lib="buscar-portada"]');
+  await z.waitForTimeout(400);
+  ok(/No se pudo buscar \(¿estás sin internet\?\)/.test(await zt(".lib-hoja [data-lib-portada-msg]")), "sin internet, la búsqueda avisa (y no se rompe nada)");
+
+  console.log("\nFoto desde el iPhone");
+  const grande = await z.evaluate(() => {
+    const c = document.createElement("canvas"); c.width = 2400; c.height = 3200;
+    const x = c.getContext("2d");
+    for (let i = 0; i < 6000; i++) { x.fillStyle = `hsl(${(i * 37) % 360},70%,${25 + (i % 50)}%)`; x.fillRect((i * 7919) % 2400, (i * 104729) % 3200, 90, 90); }
+    return c.toDataURL("image/png").split(",")[1];
+  });
+  await z.setInputFiles(".lib-hoja [data-lib-foto]", { name: "foto.png", mimeType: "image/png", buffer: Buffer.from(grande, "base64") });
+  await z.waitForTimeout(1200);
+  ok(/Foto lista \(≈ \d+ KB\)/.test(await zt(".lib-hoja [data-lib-portada-msg]")), `una foto grande (2400 × 3200) se prepara: ${await zt(".lib-hoja [data-lib-portada-msg]")}`);
+  ok(/^data:image\/jpeg/.test(await z.$eval(".lib-hoja [data-lib-prev] img", i => i.getAttribute("src"))), "y se ve en la vista previa");
+  await zGuardar();
+  const fotos = await zc("users/test/libros_portadas");
+  const foto = fotos.find(([id]) => id === pedro[0]);
+  ok(foto && foto[1].datos.startsWith("data:image/jpeg;base64,") && foto[1].datos.length <= 300000 && foto[1].ancho <= 400 && foto[1].alto <= 600, `foto achicada y comprimida (${foto && foto[1].ancho} × ${foto && foto[1].alto}, ≈ ${foto && foto[1].kb} KB) en libros_portadas, lejos del límite de 1 MB`);
+  libsP = await zc(LIB);
+  ok(libsP.find(([id]) => id === pedro[0])[1].portada.tipo === "foto" && !("datos" in libsP.find(([id]) => id === pedro[0])[1].portada), "en el libro va solo «foto» (la imagen, aparte)");
+  await z.click(".lib-hoja .budget-sheet-close");
+  await z.waitForTimeout(300);
+  im = await imgDe(pedro[0]);
+  ok(im && im.ok && /^data:image\/jpeg/.test(im.src), "la foto se ve en la lista");
+  await captura(z, "libros-portadas.png");
+
+  await z.click(`[data-lib-ver="${pedro[0]}"]`);
+  await z.waitForTimeout(300);
+  await z.click('.lib-hoja [data-lib="editar"]');
+  await z.waitForTimeout(300);
+  await z.click('.lib-hoja [data-lib="quitar-portada"]');
+  await zGuardar();
+  ok((await zc(LIB)).find(([id]) => id === pedro[0])[1].portada === null && !(await zc("users/test/libros_portadas")).some(([id]) => id === pedro[0]), "«Quitar portada» vuelve a la tapa genérica y borra la foto");
+
+  await z.click('.lib-hoja [data-lib="editar"]');
+  await z.waitForTimeout(300);
+  await z.setInputFiles(".lib-hoja [data-lib-foto]", { name: "foto.png", mimeType: "image/png", buffer: Buffer.from(grande, "base64") });
+  await z.waitForTimeout(1200);
+  await zGuardar();
+  const [dlP] = await Promise.all([z.waitForEvent("download"), z.evaluate(() => { document.querySelector(".lib-hoja .budget-sheet-close").click(); }).then(() => z.waitForTimeout(300)).then(() => z.click('[data-lib="exportar"]'))]);
+  const jp = JSON.parse(require("fs").readFileSync(await dlP.path(), "utf8"));
+  ok(jp.fotosDePortada.length === 1 && jp.fotosDePortada[0].libroId === pedro[0], "Exportar (JSON) incluye las fotos de portada");
+  await z.click(`[data-lib-ver="${pedro[0]}"]`);
+  await z.waitForTimeout(300);
+  await z.click('.lib-hoja [data-lib="borrar"]');
+  await z.waitForTimeout(400);
+  ok(!(await zc("users/test/libros_portadas")).length, "borrar el libro borra también su foto de portada");
+  ok(!z.errores.length, "sin errores de página");
+  await z.context().close();
+
   await terminar(browser, srv);
 })();

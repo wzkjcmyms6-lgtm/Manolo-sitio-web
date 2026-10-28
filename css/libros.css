@@ -192,3 +192,18 @@ input[type="date"].lib-input { -webkit-appearance: none; appearance: none; }
 .lib-estrellas-elegir [data-lib-cal]:not(.lib-sin-cal) { width: 40px; height: 40px; border: none; background: none; color: var(--border); font-size: 1.7rem; line-height: 1; cursor: pointer; padding: 0; }
 .lib-estrellas-elegir [data-lib-cal].on { color: var(--accent-2); }
 .lib-sin-cal { margin-left: 0.4rem; min-height: 32px; padding: 0.25rem 0.7rem; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--muted); font: inherit; font-size: 0.78rem; cursor: pointer; }
+
+/* Portadas (fase 4) */
+.lib-portada-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: var(--surface-raised); }
+.lib-portada-editar { display: flex; gap: 0.8rem; align-items: flex-start; }
+.lib-portada-editar .lib-portada.is-grande { width: 96px; }
+.lib-portada-botones { display: flex; flex-direction: column; align-items: stretch; gap: 0.45rem; min-width: 0; flex: 1; }
+.lib-portada-botones .lib-btn-chico { text-align: center; }
+.lib-portada-botones [hidden] { display: none; }
+.lib-subir { position: relative; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; }
+.lib-subir input { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 16px; }
+.lib-resultados { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
+.lib-resultados:empty { display: none; }
+.lib-resultado { padding: 0; border: 2px solid transparent; border-radius: 8px; overflow: hidden; background: var(--surface-raised); aspect-ratio: 2 / 3; cursor: pointer; }
+.lib-resultado img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.lib-resultado.is-elegida { border-color: var(--accent-1); box-shadow: 0 0 0 2px rgba(255, 122, 48, 0.35); }

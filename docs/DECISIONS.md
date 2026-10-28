@@ -301,3 +301,16 @@ fiel, incluidos los registros viejos sin tocar) y CSV pensado para Excel o
 Numbers en español (`;`, coma decimal, BOM). En iPhone se usa el menú de
 compartir (Web Share con archivos), porque la descarga directa en una PWA
 de pantalla de inicio no siempre deja guardar el archivo.
+
+## 2026-10-29 · Libros y Biblia (detalle en `docs/LIBROS_BIBLIA.md`)
+
+**D-050 · Dos sub-paneles de Inicio y portadas sin servicios pagos.**
+Libros y Biblia solo se abren desde dos tarjetas de Inicio (como Running y
+Bicicleta: `SUB_PANELS`), no en la barra ni en el menú. Íconos registrados
+desde sus propios archivos (sin tocar `js/icons.js`). Colecciones nuevas
+bajo `users/{uid}/…` (las reglas ya las cubren: no hay que cambiar nada en
+Firebase). Portadas: Open Library (verificado desde GitHub Actions el
+2026-10-29: 200, CORS abierto, portadas en español e inglés; Google Books
+sin clave dio "cuota excedida") guardando solo la URL; fotos achicadas a
+400 × 600 y comprimidas (~50 KB) en `libros_portadas`, sin Firebase Storage.
+La comprobación se hizo con un workflow temporal que luego se borró.

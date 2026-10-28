@@ -3,7 +3,8 @@
 // opinión y fechas (registro, inicio, fin), con sus frases. Lista con
 // portadas, buscador, filtro por estado y orden; "Todas mis frases" con
 // buscador; editar, borrar y exportar.
-// Datos: users/{uid}/libros y users/{uid}/libros_frases; la lógica en
+// Datos: users/{uid}/libros, users/{uid}/libros_frases y, para las fotos
+// de portada, users/{uid}/libros_portadas/{id del libro}; la lógica en
 // js/libros-motor.js. Ver docs/LIBROS_BIBLIA.md.
 (function () {
 // Ícono de la tarjeta de Inicio (mismo trazo que js/icons.js). Se registra
@@ -17,13 +18,14 @@ const { esc, hoyLocal } = window.Lectura;
 const app = document.getElementById("lib-app");
 const hoja = window.Lectura.hoja("lib-hoja");
 
-let librosDocs = {}, frasesDocs = {};
+let librosDocs = {}, frasesDocs = {}, portadasDocs = {};
 let libros = [], frases = [];
 let cargados = 0;               // 2 = libros y frases ya llegaron
 let vista = "libros";           // "libros" | "frases"
 const filtro = { texto: "", estado: "", orden: "registro" };
 let textoFrases = "";
 let actual = null;              // qué muestra la hoja: { modo: "ver"|"libro"|"frase", id, libroId, volver }
+let portadaSel;                 // en el formulario: undefined = sin cambios, null = quitar, { tipo: "url"|"foto", … }
 
 const ref = n => db.collection("users").doc(currentUser.uid).collection(n);
 const fallo = (que) => err => alert(`No se pudo ${que}: ${err && err.message ? err.message : err}`);
@@ -52,11 +54,21 @@ app.innerHTML = `
   <button type="button" class="lib-btn-sec lib-exportar" data-lib="exportar">Exportar (JSON)</button>`;
 const $ = id => document.getElementById(id);
 
-// Tapa genérica con título y autor (las portadas llegan en la fase 4).
-function tapa(l, grande) {
+// Portada: la tapa genérica (título y autor) siempre debajo y, encima, la
+// imagen si hay (de Open Library o foto). Si la imagen no carga (por
+// ejemplo sin internet), se quita y queda la tapa genérica.
+function tapa(l, grande, sel) {
   const [a, b] = L.colorTapa(l.titulo, l.autor);
-  return `<span class="lib-tapa${grande ? " is-grande" : ""}" style="--tapa-a:${a};--tapa-b:${b}" aria-hidden="true"><b>${esc(l.titulo)}</b>${l.autor ? `<small>${esc(l.autor)}</small>` : ""}</span>`;
+  const p = sel !== undefined ? sel : l.portada;
+  let img = "";
+  if (p && p.tipo === "url" && L.portadaUrlOk(p.url)) img = p.url;
+  else if (p && p.tipo === "foto") img = (p.datos && L.fotoOk(p.datos)) ? p.datos : (portadasDocs[l.id] && L.fotoOk(portadasDocs[l.id].datos) ? portadasDocs[l.id].datos : "");
+  return `<span class="lib-tapa${grande ? " is-grande" : ""}" style="--tapa-a:${a};--tapa-b:${b}" aria-hidden="true"><b>${esc(l.titulo)}</b>${l.autor ? `<small>${esc(l.autor)}</small>` : ""}</span>` +
+    (img ? `<img class="lib-portada-img" src="${esc(img)}" alt="" loading="lazy" decoding="async">` : "");
 }
+const quitarRota = e => { if (e.target && e.target.classList && e.target.classList.contains("lib-portada-img")) e.target.remove(); };
+app.addEventListener("error", quitarRota, true);
+hoja.el.addEventListener("error", quitarRota, true);
 const chipEstado = id => `<span class="lib-chip is-${id}">${L.ESTADO[id].emoji} ${L.ESTADO[id].nombre}</span>`;
 
 function render() {
@@ -162,8 +174,21 @@ function formLibro(id) {
   const v = l || { titulo: "", autor: "", paginas: null, estado: "por_leer", calificacion: null, opinion: "", fechaRegistro: hoyLocal(), fechaInicio: null, fechaFin: null };
   const hoy = hoyLocal();
   const fecha = (name, etiqueta, valor) => `<label class="lib-campo"><span>${etiqueta}</span><input type="date" name="${name}" max="${hoy}" value="${esc(valor || "")}" class="lib-input"></label>`;
+  portadaSel = undefined;
   hoja.abrir(l ? "Editar libro" : "Agregar libro", `
       <form class="lib-form lib-form-libro" novalidate>
+        <div class="lib-campo"><span>Portada</span>
+          <div class="lib-portada-editar">
+            <span class="lib-portada is-grande" data-lib-prev>${tapa(v, true)}</span>
+            <div class="lib-portada-botones">
+              <button type="button" class="lib-btn-sec lib-btn-chico" data-lib="buscar-portada">🔎 Buscar portada</button>
+              <label class="lib-btn-sec lib-btn-chico lib-subir">📷 Tomar o subir foto<input type="file" accept="image/*" data-lib-foto></label>
+              <button type="button" class="lib-btn-sec lib-btn-chico" data-lib="quitar-portada"${v.portada ? "" : " hidden"}>Quitar portada</button>
+            </div>
+          </div>
+          <p class="lib-ayuda" data-lib-portada-msg hidden></p>
+          <div class="lib-resultados" data-lib-resultados></div>
+        </div>
         <label class="lib-campo"><span>Título</span><input type="text" name="titulo" maxlength="200" autocomplete="off" value="${esc(v.titulo)}" class="lib-input" placeholder="Ej: Cien años de soledad"></label>
         <label class="lib-campo"><span>Autor</span><input type="text" name="autor" maxlength="150" autocomplete="off" value="${esc(v.autor)}" class="lib-input" placeholder="Ej: Gabriel García Márquez"></label>
         <label class="lib-campo"><span>Páginas (opcional)</span><input type="text" inputmode="numeric" name="paginas" autocomplete="off" value="${esc(v.paginas || "")}" class="lib-input" placeholder="350"></label>
@@ -229,12 +254,19 @@ hoja.el.addEventListener("submit", e => {
   if (actual && actual.modo === "libro") {
     const r = L.validarLibro(leer(f), { hoy });
     if (!r.ok) { window.Lectura.errores(f, r.errores); return; }
-    if (actual.id) { ref("libros").doc(actual.id).update(r.doc).catch(fallo("guardar")); ver(actual.id); }
-    else {
-      const nuevo = ref("libros").doc();
-      nuevo.set(Object.assign(r.doc, { creado: Date.now() })).catch(fallo("guardar"));
-      hoja.cerrar();
-    }
+    // Portada: en el libro va solo el tipo (y la URL); la foto, aparte en
+    // libros_portadas/{id} para no recargar la lista ni cada edición.
+    const ahora = Date.now();
+    const portada = L.portadaParaGuardar(portadaSel, ahora);
+    const docRef = actual.id ? ref("libros").doc(actual.id) : ref("libros").doc();
+    const fotoRef = ref("libros_portadas").doc(docRef.id);
+    const lote = db.batch();
+    if (portada !== undefined) r.doc.portada = portada;
+    if (actual.id) lote.update(docRef, r.doc); else lote.set(docRef, Object.assign(r.doc, { creado: ahora }));
+    if (portada && portada.tipo === "foto") lote.set(fotoRef, { v: 1, datos: portadaSel.datos, ancho: portadaSel.ancho, alto: portadaSel.alto, kb: L.kb(portadaSel.datos), actualizado: ahora });
+    else if (portada !== undefined && portadasDocs[docRef.id]) lote.delete(fotoRef);
+    lote.commit().catch(fallo("guardar"));
+    if (actual.id) ver(actual.id); else hoja.cerrar();
   } else if (actual && actual.modo === "frase") {
     const r = L.validarFrase(leer(f), { hoy, libros: libros.map(x => x.id) });
     if (!r.ok) { window.Lectura.errores(f, r.errores); return; }
@@ -246,6 +278,12 @@ hoja.el.addEventListener("submit", e => {
 
 hoja.el.addEventListener("input", e => {
   if (e.target.type === "date") { const aviso = hoja.el.querySelector("[data-lib-aviso-fecha]"); if (aviso) aviso.hidden = true; }
+  // La tapa genérica de la vista previa sigue al título y al autor que escribes.
+  if ((e.target.name === "titulo" || e.target.name === "autor") && actual && actual.modo === "libro") {
+    const f = e.target.form, previa = hoja.el.querySelector("[data-lib-prev]");
+    const original = actual.id ? (libros.find(x => x.id === actual.id) || {}).portada : null;
+    if (previa) previa.innerHTML = tapa({ titulo: f.elements.titulo.value.trim() || "Sin título", autor: f.elements.autor.value.trim(), id: actual.id || "" }, true, portadaSel !== undefined ? portadaSel : original);
+  }
   if (!e.target.classList.contains("is-error")) return;
   e.target.classList.remove("is-error");
   e.target.removeAttribute("aria-invalid");
@@ -282,14 +320,96 @@ hoja.el.addEventListener("click", e => {
   }
   const fr = e.target.closest("[data-lib-frase]");
   if (fr) { formFrase(fr.dataset.libFrase, null, "ver"); return; }
+  const elegida = e.target.closest("[data-lib-elegir-portada]");
+  if (elegida) { elegirPortada({ tipo: "url", url: elegida.dataset.libElegirPortada }); return; }
   const b = e.target.closest("[data-lib]");
   if (!b || !actual) return;
   const accion = b.dataset.lib;
+  if (accion === "buscar-portada") { buscarPortada(); return; }
+  if (accion === "quitar-portada") { elegirPortada(null); mensajePortada("Sin portada: se usa la tapa con título y autor."); return; }
   if (accion === "editar") formLibro(actual.id);
   else if (accion === "volver-ficha") ver(actual.id);
   else if (accion === "frase-de") formFrase(null, actual.id, "ver");
   else if (accion === "borrar") borrarLibro(actual.id);
   else if (accion === "borrar-frase") borrarFrase(actual.id);
+});
+
+// ---------- Portada en el formulario ----------
+function mensajePortada(t) {
+  const m = hoja.el.querySelector("[data-lib-portada-msg]");
+  if (!m) return;
+  m.textContent = t || "";
+  m.hidden = !t;
+}
+function elegirPortada(sel) {
+  const f = hoja.el.querySelector(".lib-form-libro");
+  if (!f) return;
+  portadaSel = sel;
+  const datos = { titulo: f.elements.titulo.value.trim() || "Sin título", autor: f.elements.autor.value.trim(), id: actual.id || "" };
+  hoja.el.querySelector("[data-lib-prev]").innerHTML = tapa(datos, true, sel);
+  hoja.el.querySelector('[data-lib="quitar-portada"]').hidden = !sel;
+  hoja.el.querySelectorAll("[data-lib-elegir-portada]").forEach(b => b.classList.toggle("is-elegida", !!sel && sel.tipo === "url" && b.dataset.libElegirPortada === sel.url));
+}
+// Busca en Open Library con el título y el autor escritos en el formulario.
+function buscarPortada() {
+  const f = hoja.el.querySelector(".lib-form-libro");
+  const titulo = f.elements.titulo.value.trim(), autor = f.elements.autor.value.trim();
+  const caja = hoja.el.querySelector("[data-lib-resultados]");
+  if (!titulo) { mensajePortada("Escribe el título primero (y el autor, si lo sabes)."); f.elements.titulo.focus(); return; }
+  mensajePortada("Buscando portadas…");
+  caja.innerHTML = "";
+  const corte = typeof AbortController === "function" ? new AbortController() : null;
+  const reloj = setTimeout(() => corte && corte.abort(), 12000);
+  fetch(L.urlBusqueda(titulo, autor), corte ? { signal: corte.signal } : {})
+    .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+    .then(json => {
+      if (!hoja.el.contains(caja)) return;
+      const lista = L.leerBusqueda(json, 6);
+      if (!lista.length) { mensajePortada("No encontré portadas con ese título. Prueba con el título original, sin el autor, o sube una foto."); return; }
+      mensajePortada("Toca la portada que corresponde a tu libro (de Open Library).");
+      caja.innerHTML = lista.map(x => `
+          <button type="button" class="lib-resultado" data-lib-elegir-portada="${esc(x.url)}" title="${esc(`${x.titulo}${x.autor ? ` — ${x.autor}` : ""}${x.anio ? ` (${x.anio})` : ""}`)}">
+            <img src="${esc(x.url)}" alt="${esc(x.titulo)}" loading="lazy" decoding="async">
+          </button>`).join("");
+    })
+    .catch(() => mensajePortada("No se pudo buscar (¿estás sin internet?). Puedes subir una foto o intentarlo después."))
+    .finally(() => clearTimeout(reloj));
+}
+// Foto del iPhone (cámara o fotos): se achica a 400 × 600 como máximo y se
+// comprime en JPEG hasta que entre holgada en un documento de Firestore.
+function comprimirFoto(archivo) {
+  return new Promise((resolver, rechazar) => {
+    const url = URL.createObjectURL(archivo);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        let { ancho, alto } = L.medidasFoto(img.naturalWidth, img.naturalHeight);
+        for (let intento = 0; intento < 3; intento++) {
+          const c = document.createElement("canvas");
+          c.width = ancho; c.height = alto;
+          c.getContext("2d").drawImage(img, 0, 0, ancho, alto);
+          for (const q of L.CALIDADES) {
+            const datos = c.toDataURL("image/jpeg", q);
+            if (L.fotoOk(datos)) { resolver({ tipo: "foto", datos, ancho, alto }); return; }
+          }
+          ancho = Math.round(ancho * 0.7); alto = Math.round(alto * 0.7);
+        }
+        rechazar(new Error("muy grande"));
+      } catch (err) { rechazar(err); } finally { URL.revokeObjectURL(url); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rechazar(new Error("no es una imagen")); };
+    img.src = url;
+  });
+}
+hoja.el.addEventListener("change", e => {
+  if (!e.target.matches("[data-lib-foto]")) return;
+  const archivo = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if (!archivo) return;
+  mensajePortada("Preparando la foto…");
+  comprimirFoto(archivo)
+    .then(sel => { elegirPortada(sel); hoja.el.querySelector("[data-lib-resultados]").innerHTML = ""; mensajePortada(`Foto lista (≈ ${L.kb(sel.datos)} KB). Se guarda al tocar Guardar.`); })
+    .catch(() => mensajePortada("No pude usar esa imagen. Prueba con otra foto."));
 });
 
 function borrarLibro(id) {
@@ -300,6 +420,7 @@ function borrarLibro(id) {
   const lote = db.batch();
   lote.delete(ref("libros").doc(id));
   fs.forEach(f => lote.delete(ref("libros_frases").doc(f.id)));
+  if (portadasDocs[id]) lote.delete(ref("libros_portadas").doc(id));
   lote.commit().catch(fallo("eliminar"));
   hoja.cerrar();
 }
@@ -333,7 +454,7 @@ app.addEventListener("click", e => {
   else if (b.dataset.lib === "nueva-frase") {
     if (!libros.length) { alert("Primero agrega un libro."); return; }
     formFrase(null, null, null);
-  } else if (b.dataset.lib === "exportar") window.Lectura.descargar(`manolo-libros-${hoyLocal()}.json`, L.exportarJson(librosDocs, frasesDocs, new Date().toISOString()), "application/json");
+  } else if (b.dataset.lib === "exportar") window.Lectura.descargar(`manolo-libros-${hoyLocal()}.json`, L.exportarJson(librosDocs, frasesDocs, new Date().toISOString(), portadasDocs), "application/json");
 });
 $("lib-buscar").addEventListener("input", e => { filtro.texto = e.target.value; renderLista(); });
 $("lib-orden").addEventListener("change", e => { filtro.orden = e.target.value; renderLista(); });
@@ -355,6 +476,12 @@ onAuthReady(() => {
     frases = Object.keys(frasesDocs).map(id => L.normalizarFrase(id, frasesDocs[id]));
     listo("frases");
   }, err => console.warn("Libros (frases):", err));
+  ref("libros_portadas").onSnapshot(snap => {
+    portadasDocs = {};
+    snap.docs.forEach(d => { portadasDocs[d.id] = d.data(); });
+    if (cargados >= 2 && vista === "libros") renderLista();
+    if (hoja.abierta() && actual && actual.modo === "ver") ver(actual.id);
+  }, err => console.warn("Libros (portadas):", err));
 });
 render();
 })();

@@ -72,7 +72,46 @@ test("frases: validar, ordenar, buscar (también por libro)", () => {
   assert.deepEqual(L.filtrarFrases(frases, libros, "principito").map(f => f.id).sort(), ["f1", "f3"], "busca también por el libro");
 });
 
-test("exportar JSON con libros y frases", () => {
-  const j = JSON.parse(L.exportarJson({ a: { titulo: "X" } }, { f: { libroId: "a", texto: "y" } }, "2026-10-29T12:00:00Z"));
-  assert.deepEqual([j.version, j.libros[0].id, j.frases[0].libroId], [1, "a", "a"]);
+test("exportar JSON con libros, frases y fotos de portada", () => {
+  const j = JSON.parse(L.exportarJson({ a: { titulo: "X" } }, { f: { libroId: "a", texto: "y" } }, "2026-10-29T12:00:00Z", { a: { datos: "data:image/jpeg;base64,AA", ancho: 1, alto: 1 } }));
+  assert.deepEqual([j.version, j.libros[0].id, j.frases[0].libroId, j.fotosDePortada[0].libroId], [1, "a", "a", "a"]);
+  assert.deepEqual(JSON.parse(L.exportarJson({}, {}, "x")).fotosDePortada, []);
+});
+
+test("portadas: búsqueda en Open Library y solo URLs de portadas", () => {
+  assert.equal(L.urlBusqueda("Cien años de soledad", "García Márquez"),
+    "https://openlibrary.org/search.json?title=Cien%20a%C3%B1os%20de%20soledad&author=Garc%C3%ADa%20M%C3%A1rquez&limit=12&fields=key%2Ctitle%2Cauthor_name%2Ccover_i%2Cfirst_publish_year");
+  assert.ok(!L.urlBusqueda("Rayuela", "").includes("author="), "sin autor, busca solo por título");
+  const r = L.leerBusqueda({ docs: [
+    { title: "Cien años de soledad", author_name: ["Gabriel García Márquez"], cover_i: 12627383, first_publish_year: 1967 },
+    { title: "Sin tapa" },
+    { title: "Repetida", cover_i: 12627383 },
+    { title: "Otra", author_name: ["A", "B"], cover_i: 7 }
+  ] });
+  assert.deepEqual(r.map(x => x.url), ["https://covers.openlibrary.org/b/id/12627383-M.jpg", "https://covers.openlibrary.org/b/id/7-M.jpg"], "solo con portada y sin repetir");
+  assert.equal(r[1].autor, "A, B");
+  assert.equal(r[0].urlChica, "https://covers.openlibrary.org/b/id/12627383-S.jpg");
+  assert.deepEqual(L.leerBusqueda(null), []);
+  assert.equal(L.leerBusqueda({ docs: Array.from({ length: 20 }, (_, i) => ({ cover_i: i + 1 })) }, 6).length, 6);
+  assert.ok(L.portadaUrlOk("https://covers.openlibrary.org/b/id/123-L.jpg"));
+  assert.ok(!L.portadaUrlOk("https://ejemplo.com/x.jpg"));
+  assert.ok(!L.portadaUrlOk("javascript:alert(1)"));
+});
+
+test("portadas: foto achicada y comprimida para Firestore", () => {
+  assert.deepEqual(L.medidasFoto(3024, 4032), { ancho: 400, alto: 533 }, "foto del iPhone: entra en 400 × 600 sin deformarse");
+  assert.deepEqual(L.medidasFoto(1200, 1800), { ancho: 400, alto: 600 });
+  assert.deepEqual(L.medidasFoto(200, 300), { ancho: 200, alto: 300 }, "una chica no se agranda");
+  assert.ok(L.CALIDADES.every((q, i) => i === 0 || q < L.CALIDADES[i - 1]), "calidades de mayor a menor");
+  assert.ok(L.LIMITE_FOTO * 1.1 < 1048576, "muy por debajo del límite de 1 MB por documento");
+  const chica = "data:image/jpeg;base64," + "A".repeat(1000);
+  assert.ok(L.fotoOk(chica));
+  assert.ok(!L.fotoOk("data:image/png;base64,AAAA"), "solo JPEG");
+  assert.ok(!L.fotoOk("data:image/jpeg;base64," + "A".repeat(L.LIMITE_FOTO)), "más grande que el límite: no");
+  assert.equal(L.portadaParaGuardar(undefined, 1), undefined, "sin cambios");
+  assert.equal(L.portadaParaGuardar(null, 1), null, "quitar");
+  assert.deepEqual(L.portadaParaGuardar({ tipo: "url", url: "https://covers.openlibrary.org/b/id/7-M.jpg" }, 1), { tipo: "url", url: "https://covers.openlibrary.org/b/id/7-M.jpg", fuente: "openlibrary" });
+  assert.equal(L.portadaParaGuardar({ tipo: "url", url: "https://otro.com/a.jpg" }, 1), null);
+  assert.deepEqual(L.portadaParaGuardar({ tipo: "foto", datos: chica }, 5), { tipo: "foto", actualizado: 5 });
+  assert.equal(L.kb("data:image/jpeg;base64," + "A".repeat(4096)), 3);
 });
