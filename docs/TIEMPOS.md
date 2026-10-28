@@ -18,8 +18,12 @@ borraremos más adelante" para medir cuánto tarda cada día en:
   `inicio` (`#tiempos`), con "‹ Inicio" para volver y sin versículo.
 - **Anotar tiempos**: el día (hoy por defecto; se puede elegir uno pasado,
   nunca futuro) y, por actividad, minutos y segundos (teclado numérico).
-  Si el día ya tiene tiempos, se cargan para corregirlos. Vaciar todos los
-  campos de un día y guardar lo borra.
+  **Cada actividad tiene su propio botón Guardar** (2026-10-29: no todos los
+  días se hace todo): se guarda solo esa, las demás quedan vacías o como
+  estaban, y lo escrito en otras filas no se pierde. Lo guardado muestra
+  "✓ 25 min", el botón pasa a "Cambiar" y aparece "Quitar de este día"
+  (pide confirmar; si no queda ninguna actividad, se borra el día). La
+  tecla "Ir" del teclado guarda esa fila.
 - **Promedios**: por semana (lunes a domingo, como el resto de Manolo) o
   por mes, con flechas para ver las anteriores. Columna "Días" = cuántos
   registros entraron en el promedio. La semana o el mes en curso dicen que
@@ -41,7 +45,7 @@ reglas de Firestore ya cubren `users/{uid}/**`: no hubo que tocar la consola.
 | `js/tiempos-motor.js` | UMD sin DOM: actividades, leer minutos/segundos, promedios por semana y mes, cierre a los 30. Pruebas: `tests/tiempos-motor.test.js` |
 | `js/tiempos.js` | Pantalla (formulario, promedios, promedio final, tus días) y Firestore |
 | `css/tiempos.css` | Estilos propios (clases `.tmp-`); reutiliza `.lib-input`, `.lib-btn`, `.bib-item`, `.fin-tabs` |
-| `scripts/e2e/tiempos.js` | Prueba de pantalla (43 comprobaciones) |
+| `scripts/e2e/tiempos.js` | Prueba de pantalla (53 comprobaciones) |
 
 ## Cómo borrarla
 
@@ -59,8 +63,9 @@ reglas de Firestore ya cubren `users/{uid}/**`: no hubo que tocar la consola.
 ## Cómo probar en el iPhone
 
 1. Inicio › Medir tiempos (última tarjeta). Arriba no hay versículo.
-2. Escribe los minutos (y segundos, si quieres) de lo que hiciste hoy y
-   toca **Guardar**: sale "✓ Guardado".
+2. Escribe los minutos (y segundos, si quieres) de **una sola** actividad
+   y toca el **Guardar** de esa fila: sale "✓ Guardado" y, junto al nombre,
+   "✓ 25 min". Las demás pueden quedar vacías. Más tarde, guarda otra.
 3. Baja a **Promedios**: "Esta semana" con tus tiempos; toca **Mes** y las
    flechas ‹ › para ver otros meses.
 4. **Promedio final**: cada actividad muestra "N de 30".

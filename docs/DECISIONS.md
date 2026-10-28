@@ -359,3 +359,13 @@ en minutos y segundos con dos campos numéricos (el teclado numérico del
 iPhone no tiene ":"). Semana de lunes a domingo. Sin versículo arriba,
 igual que Libros y Biblia. Nada se calcula guardado: promedios y cierre
 salen de los días anotados (`users/{uid}/tiempos/{fecha}`).
+
+**D-054 (2026-10-29) · Medir tiempos: guardar cada actividad por
+separado.** El dueño: "no todos los días hago todo eso… actualmente tengo
+que registrar todo para guardarlo". El formulario tenía un solo "Guardar"
+al final (y 0 min daba error), así que parecía obligatorio llenar todo.
+Ahora cada actividad es su propio formulario con su botón (en pantallas de
+menos de 360 px baja a su línea): guarda con `set` + `merge` solo esa
+actividad del día, muestra "✓ tiempo" y "Cambiar", y "Quitar de este día"
+borra solo esa (o el día, si era la última). Lo escrito y no guardado en
+otras filas se conserva al repintar. Los datos no cambian de forma.
