@@ -1,0 +1,58 @@
+name: Verificar portadas (temporal)
+
+# Prueba de una sola vez: ¿responde hoy una fuente gratuita de portadas sin
+# clave, y deja que la app la llame desde el teléfono (CORS)? Se borra
+# después de verificar (docs/LIBROS_BIBLIA.md).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open Library y Google Books
+        run: |
+          python3 - <<'PY'
+          import json, time, urllib.parse, urllib.request
+          ORIGEN = "https://wzkjcmyms6-lgtm.github.io"
+          UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1"
+          def get(url, metodo="GET"):
+              req = urllib.request.Request(url, method=metodo, headers={"User-Agent": UA, "Origin": ORIGEN, "Accept": "application/json,image/*,*/*"})
+              t = time.time()
+              try:
+                  r = urllib.request.urlopen(req, timeout=20)
+                  cuerpo = r.read() if metodo == "GET" else b""
+                  return r.status, dict(r.headers), cuerpo, round(time.time() - t, 2), r.geturl()
+              except urllib.error.HTTPError as e:
+                  return e.code, dict(e.headers), e.read(), round(time.time() - t, 2), url
+          libros = [("El principito", "Saint-Exupéry"), ("Cien años de soledad", "García Márquez"), ("Pedro Páramo", "Juan Rulfo"),
+                    ("Hábitos atómicos", "James Clear"), ("Atomic Habits", "James Clear"), ("La sombra del viento", "Carlos Ruiz Zafón")]
+          print("== Open Library: búsqueda ==")
+          primera = None
+          for titulo, autor in libros:
+              q = urllib.parse.urlencode({"title": titulo, "author": autor, "limit": 5, "fields": "key,title,author_name,cover_i,first_publish_year"})
+              s, h, c, t, _ = get(f"https://openlibrary.org/search.json?{q}")
+              docs = json.loads(c).get("docs", []) if s == 200 else []
+              con = [d for d in docs if d.get("cover_i")]
+              print(f"{titulo} / {autor}: HTTP {s}, {t}s, CORS={h.get('Access-Control-Allow-Origin') or h.get('access-control-allow-origin')}, {len(docs)} resultados, {len(con)} con portada")
+              if con:
+                  print(f"   primero: {con[0].get('title')} — {con[0].get('author_name')} cover_i={con[0]['cover_i']}")
+                  primera = primera or con[0]["cover_i"]
+          print("== Open Library: imagen de portada ==")
+          if primera:
+              for tam in ("S", "M", "L"):
+                  s, h, c, t, final = get(f"https://covers.openlibrary.org/b/id/{primera}-{tam}.jpg")
+                  print(f"{tam}: HTTP {s}, {t}s, {h.get('Content-Type')}, {len(c)} bytes, CORS={h.get('Access-Control-Allow-Origin')}, final={final[:80]}")
+          print("== Google Books (sin clave) ==")
+          for titulo, autor in libros[:3]:
+              q = urllib.parse.quote(f"intitle:{titulo} inauthor:{autor}")
+              s, h, c, t, _ = get(f"https://www.googleapis.com/books/v1/volumes?q={q}&maxResults=3")
+              items = json.loads(c).get("items", []) if s == 200 else []
+              thumbs = [i.get("volumeInfo", {}).get("imageLinks", {}).get("thumbnail") for i in items]
+              print(f"{titulo}: HTTP {s}, {t}s, CORS={h.get('Access-Control-Allow-Origin') or h.get('access-control-allow-origin')}, {len(items)} resultados, miniaturas={sum(1 for x in thumbs if x)}")
+              if s != 200:
+                  print("   ", c[:200])
+          PY
