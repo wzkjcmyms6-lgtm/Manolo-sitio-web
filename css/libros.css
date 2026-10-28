@@ -1,0 +1,13 @@
+/* ---------- Libros y Biblia (clases .lib- y .bib-) ----------
+   Sub-paneles de Inicio. Reutiliza .budget-sheet, .fin-tabs y .empty-state;
+   aquí va lo propio. Tema oscuro, pensado primero para el celular. */
+
+/* Botón para volver a Inicio (más visible que el enlace de Running). */
+.back-link.lib-volver {
+  min-height: 40px; padding: 0.4rem 0.95rem 0.4rem 0.7rem; margin-bottom: 0.9rem;
+  border-radius: 999px; border: 1px solid var(--border); background: var(--surface);
+  color: var(--ink); font-size: 0.9rem; font-weight: 600;
+}
+.back-link.lib-volver:active { background: var(--surface-raised); }
+.back-link.lib-volver .icon-sm { width: 16px; height: 16px; }
+#panel-libros .lib-app, #panel-biblia .bib-app { max-width: 720px; min-width: 0; }

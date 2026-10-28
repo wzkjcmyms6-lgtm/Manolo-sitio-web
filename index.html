@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="css/finanzas.css?v=202610270100">
   <link rel="stylesheet" href="css/habitos.css?v=202610270100">
   <link rel="stylesheet" href="css/inversiones.css?v=202610280600">
+  <link rel="stylesheet" href="css/libros.css?v=202610290100">
 </head>
 <body>
   <!-- Degradado marfil y brillo del maniquí (mapa corporal y creador de ejercicios) -->
@@ -157,6 +158,16 @@
                 <span class="icon" data-icon="investing"></span>
                 <h3>Inversiones</h3>
                 <p>Registra tus aportes y sigue tu portafolio.</p>
+              </a>
+              <a class="card" href="#libros">
+                <span class="icon" data-icon="libro"></span>
+                <h3>Libros</h3>
+                <p>Tus lecturas, opiniones y frases favoritas.</p>
+              </a>
+              <a class="card" href="#biblia">
+                <span class="icon" data-icon="biblia"></span>
+                <h3>Biblia</h3>
+                <p>El versículo que lees al despertar.</p>
               </a>
             </div>
             <button type="button" class="link-btn cuenta-estado-btn" id="cuenta-estado-btn">Estado de la cuenta</button>
@@ -364,6 +375,20 @@
           </section>
 
           <!-- ===== Running ===== -->
+          <!-- ===== Libros (sub-panel de Inicio) ===== -->
+          <section id="panel-libros" hidden>
+            <a class="back-link lib-volver" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
+            <h1 class="page-title">Libros</h1>
+            <div class="lib-app" id="lib-app"></div>
+          </section>
+
+          <!-- ===== Biblia (sub-panel de Inicio) ===== -->
+          <section id="panel-biblia" hidden>
+            <a class="back-link lib-volver" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
+            <h1 class="page-title">Biblia</h1>
+            <div class="bib-app" id="bib-app"></div>
+          </section>
+
           <section id="panel-running" hidden>
             <a class="back-link" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
             <h1 class="page-title">Running</h1>
@@ -1217,7 +1242,7 @@
   <script defer src="js/accesos.js?v=202610100400"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
   <script defer src="js/icons.js?v=202610100300"></script>
-  <script defer src="js/modules.js?v=202610280300"></script>
+  <script defer src="js/modules.js?v=202610290100"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
   <script defer src="js/exercise-search.js?v=202609291"></script>
@@ -1267,5 +1292,7 @@
   <script defer src="js/inversiones-series.js?v=202610280400"></script>
   <script defer src="js/inversiones-graficos.js?v=202610280400"></script>
   <script defer src="js/inversiones.js?v=202610280600"></script>
+  <script defer src="js/biblia.js?v=202610290100"></script>
+  <script defer src="js/libros.js?v=202610290100"></script>
 </body>
 </html>

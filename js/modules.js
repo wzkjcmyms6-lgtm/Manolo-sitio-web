@@ -16,7 +16,7 @@ const MODULES = [
 
 // Sub-paneles que cuelgan de un módulo pero no aparecen en el menú
 // principal (se llega a ellos con tarjetas, ej: Ejercicio → Gimnasio, o
-// Inicio → Running/Bicicleta). Igual se muestran/ocultan según el hash, y
+// Inicio → Running/Bicicleta/Libros/Biblia). Igual se muestran/ocultan según el hash, y
 // la nav resalta el módulo padre mientras estás en uno de ellos.
 const SUB_PANELS = [
   { hash: "hab-stats", parent: "habitos" },
@@ -28,6 +28,8 @@ const SUB_PANELS = [
   { hash: "ej-perfil", parent: "ejercicio" },
   { hash: "running", parent: "inicio" },
   { hash: "bicicleta", parent: "inicio" },
+  { hash: "libros", parent: "inicio" },
+  { hash: "biblia", parent: "inicio" },
   { hash: "fin-presupuesto", parent: "finanzas" },
   { hash: "fin-movimientos", parent: "finanzas" },
   { hash: "fin-analisis", parent: "finanzas" },
