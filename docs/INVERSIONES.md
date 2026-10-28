@@ -148,6 +148,13 @@ Un ticker que no está en `tickers` con `grupo: "nucleo"` es satélite.
   ya puestos); cuando lo anotas, el aviso se va. Tarjeta "Próximos
   dividendos" con fechas anunciadas o estimadas.
 - No se tocó Finanzas (fuera del alcance de esta tarea).
+- **Aviso en el teléfono** (pedido 2026-10-28): tarea programada de Claude
+  "Aviso de dividendos", todos los días a las 7:42 de La Paz, con
+  notificación push. Lee `data/tickers.json` y `data/precios.json` (el repo
+  es público) y, si una fecha ex o de pago cae entre 3 días antes y 3 días
+  después, avisa; si no, no dice nada. Solo lectura. Como no puede ver tus
+  datos privados (Firestore), usa los tickers del núcleo, no tus cantidades.
+  Se pausa o borra desde la lista de tareas programadas de Claude.
 
 ## Gráficos (fase 3)
 
