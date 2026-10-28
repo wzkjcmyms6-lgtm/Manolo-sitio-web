@@ -1,10 +1,11 @@
 {
- "actualizado": "2026-10-28T04:46:18Z",
+ "actualizado": "2026-10-28T04:50:01Z",
  "dividendos": {
   "MSFT": {
    "frecuencia": "trimestral",
    "fuentes": [
     "yahoo",
+    "calendario",
     "nasdaq"
    ],
    "historial": [
@@ -134,7 +135,7 @@
     "estimado": true,
     "ex": "2026-12-21",
     "monto": 0.75143,
-    "pago": "2027-01-29"
+    "pago": "2027-01-07"
    }
   },
   "SCHD": {
