@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="css/style.css?v=202610270100">
   <link rel="stylesheet" href="css/finanzas.css?v=202610270100">
   <link rel="stylesheet" href="css/habitos.css?v=202610270100">
+  <link rel="stylesheet" href="css/inversiones.css?v=202610280100">
 </head>
 <body>
   <!-- Degradado marfil y brillo del maniquí (mapa corporal y creador de ejercicios) -->
@@ -751,18 +752,15 @@
           <section id="panel-inversiones" hidden>
             <h1 class="page-title">Inversiones</h1>
 
-            <div class="stat-row" id="investing-stats"></div>
+            <div class="fin-tabs inv-tabs" role="tablist" aria-label="Inversiones">
+              <button type="button" class="fin-tab active" role="tab" data-inv-tab="resumen" aria-selected="true">Resumen</button>
+              <button type="button" class="fin-tab" role="tab" data-inv-tab="movimientos" aria-selected="false">Movimientos</button>
+              <button type="button" class="fin-tab" role="tab" data-inv-tab="ajustes" aria-selected="false">Ajustes</button>
+            </div>
 
-            <form class="tracker-form" id="investing-form">
-              <input type="date" id="investing-date" required>
-              <input type="text" id="investing-name" placeholder="Activo (ej: AAPL, Fondo indexado)" required>
-              <input type="number" id="investing-amount" placeholder="Monto invertido" min="0.01" step="0.01" required>
-              <input type="text" id="investing-notes" placeholder="Notas (opcional)">
-              <button type="submit">Registrar</button>
-            </form>
-
-            <div id="investing-list"></div>
-            <p class="empty-state" id="investing-empty" style="display:none;">Aún no registras aportes.</p>
+            <div class="inv-vista" id="inv-resumen" data-inv-vista="resumen"></div>
+            <div class="inv-vista" id="inv-movimientos" data-inv-vista="movimientos" hidden></div>
+            <div class="inv-vista" id="inv-ajustes" data-inv-vista="ajustes" hidden></div>
           </section>
 
         </div>
@@ -1261,6 +1259,7 @@
   <script defer src="js/finanzas/analisis.js?v=202610011500"></script>
   <script defer src="js/finanzas/presupuesto.js?v=202610011600"></script>
   <script defer src="js/finanzas/app.js?v=202610100300"></script>
-  <script defer src="js/inversiones.js?v=202609232200"></script>
+  <script defer src="js/inversiones-motor.js?v=202610280100"></script>
+  <script defer src="js/inversiones.js?v=202610280100"></script>
 </body>
 </html>

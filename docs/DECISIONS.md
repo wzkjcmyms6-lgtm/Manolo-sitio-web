@@ -237,3 +237,18 @@ regla); las hojas además `overflow-x: hidden` para que un contenido ancho
 nunca permita arrastrarlas de lado. La causa visible era un campo de
 formulario más ancho que su columna; se corrigió en el origen
 (`.hb-campo { min-width: 0 }` y campos al 100 % de su columna).
+
+## 2026-10-28 · Inversiones (detalle en `docs/INVERSIONES.md`)
+
+**D-044 · Datos de Inversiones.** Se sigue usando
+`users/{uid}/inversiones`; los registros viejos (`date, name, amount, notes`)
+se muestran como *Aporte* y completarlos solo agrega campos (`tipo`,
+`ticker`, `cantidad`, `precio`, `comision`, `broker`, `fecha`, `nota`), nunca
+reescribe los originales. Movimientos nuevos con `v: 1` y `tipo`. Ajustes en
+`meta/inversiones_ajustes`; por defecto: broker Hapi, US$ 0,15 por ticker,
+AirTM 1,40 %, transferencia 0,65 %, efectivo al 6,5 % anual, núcleo QQQ,
+VOO, SCHD, VT, VIG, MSFT con US$ 33,18 cada uno (la ronda entra en US$ 200
+con comisiones), objetivo 95 % núcleo en partes iguales y 5 % satélite.
+"Aportado" = US$ que llegaron al broker; si se compró sin fondeo anotado,
+la diferencia también cuenta. Números con coma o punto; el punto con grupos
+de 3 cifras es de miles (estilo venezolano).
