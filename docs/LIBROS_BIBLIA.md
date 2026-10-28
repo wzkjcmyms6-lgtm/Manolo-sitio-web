@@ -5,7 +5,8 @@ dos tarjetas de **Inicio** (debajo de Finanzas e Inversiones); son
 sub-paneles de `inicio` en `SUB_PANELS` (`js/modules.js`), como Running y
 Bicicleta: **no** están en la barra inferior ni en el menú ☰. Cada una
 tiene el botón "‹ Inicio" arriba; el gesto o atrás del navegador también
-vuelve (la navegación es por `#hash`).
+vuelve (la navegación es por `#hash`). No muestran el versículo de arriba
+(pedido del dueño, 2026-10-29: `showPanel()` en `js/modules.js`).
 
 | Fase | Contenido | Estado |
 |---|---|---|

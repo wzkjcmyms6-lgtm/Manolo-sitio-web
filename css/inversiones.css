@@ -1,16 +1,10 @@
 /* ---------- Inversiones (solo clases .inv-) ----------
    Reutiliza .fin-tabs, .budget-sheet y .empty-state; aquí va lo propio.
    Tema oscuro, pensado primero para el celular. */
-#panel-inversiones, .inv-hoja { --inv-verde: #4cc38a; }
-#panel-inversiones, .inv-ronda-fila { --inv-campo: var(--bg-soft); }
+.inv-panel, .inv-hoja { --inv-verde: #4cc38a; }
+.inv-panel, .inv-ronda-fila { --inv-campo: var(--bg-soft); }
 .inv-hoja { --inv-campo: var(--surface); }
-#panel-inversiones .inv-vista { max-width: 720px; min-width: 0; }
-.inv-tabs { margin-bottom: 1.2rem; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
-.inv-tabs::-webkit-scrollbar { display: none; }
-.inv-tabs.hay-der { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent); }
-.inv-tabs.hay-izq { -webkit-mask-image: linear-gradient(90deg, transparent, #000 32px); mask-image: linear-gradient(90deg, transparent, #000 32px); }
-.inv-tabs.hay-izq.hay-der { -webkit-mask-image: linear-gradient(90deg, transparent, #000 32px, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(90deg, transparent, #000 32px, #000 calc(100% - 32px), transparent); }
-.inv-tabs .fin-tab { white-space: nowrap; padding: 0.5rem 0.85rem; }
+.inv-panel .inv-vista { max-width: 720px; min-width: 0; }
 
 /* Resumen */
 .inv-hero {

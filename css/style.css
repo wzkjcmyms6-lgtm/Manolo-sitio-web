@@ -1512,14 +1512,16 @@ body.has-home-btn .topbar-clock { margin-right: 0; }
 /* Herramientas → Categorías: mover arrastrando desde ⋮⋮ */
 /* Mover secciones: solo se ven los títulos mientras se arrastra */
 
-/* Engranaje de Ajustes de Finanzas en la barra de arriba (solo en Finanzas) */
+/* Engranaje de Ajustes en la barra de arriba (solo en Finanzas e Inversiones) */
 .topbar-ajustes { display: none; }
-body.in-finanzas .topbar-ajustes {
+body.in-finanzas .topbar-ajustes[data-engranaje="finanzas"],
+body.in-inversiones .topbar-ajustes[data-engranaje="inversiones"] {
   display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
   width: 44px; height: 44px; margin-left: 0.4rem; border-radius: 50%; color: var(--ink);
   border: 1px solid var(--border); background: rgba(255, 255, 255, 0.04);
 }
-body.in-finanzas .topbar-ajustes span { width: 20px; height: 20px; display: flex; }
+body.in-finanzas .topbar-ajustes[data-engranaje="finanzas"] span,
+body.in-inversiones .topbar-ajustes[data-engranaje="inversiones"] span { width: 20px; height: 20px; display: flex; }
 
 /* Saludo de Inicio: elegir "Bienvenido" o "Bienvenida" (solo la primera vez) */
 .saludo-eleccion { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 0.9rem; margin: -0.2rem 0 1rem; padding: 0.8rem 1rem; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); font-size: 0.92rem; color: var(--muted); }

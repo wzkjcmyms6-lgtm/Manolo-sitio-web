@@ -10,7 +10,7 @@ dentro de WebKit (Safari / pantalla de inicio).
 |---|---|
 | Lenguaje | HTML + CSS + JavaScript puro (ES2018+, sin build, sin TypeScript) |
 | Página | **Una sola página** `index.html` (~1.200 líneas); `habitos.html`, `ejercicio.html`, `finanzas.html`, `inversiones.html` solo redirigen a `index.html#…` |
-| Navegación | `js/modules.js`: lista `MODULES` + `SUB_PANELS`; cambiar de sección = cambiar el `#hash` y mostrar/ocultar `<section id="panel-…">`. Barra inferior con pestañas propias por módulo (Hábitos, Finanzas, Ejercicio) |
+| Navegación | `js/modules.js`: lista `MODULES` + `SUB_PANELS`; cambiar de sección = cambiar el `#hash` y mostrar/ocultar `<section id="panel-…">`. Barra inferior con pestañas propias por módulo (Hábitos, Finanzas, Ejercicio, Inversiones) |
 | Estilos | `css/style.css` (general + Ejercicio), `css/habitos.css`, `css/finanzas.css`, `css/fuentes.css` (DM Sans, Fraunces locales). Tema oscuro; móvil ≤768 px |
 | Backend | **No hay servidor propio.** Firebase compat 10.7.1 **vendorizado** en `vendor/firebase-10.7.1/` (app, auth, firestore). No se usan Functions, Messaging ni Storage |
 | Auth | `js/auth.js`: usuario + contraseña → `usuario@manolo-panel.local` → `signInWithEmailAndPassword`. Persistencia LOCAL. Las cuentas se crean en la consola de Firebase (no hay registro en la app) |
@@ -32,7 +32,9 @@ dentro de WebKit (Safari / pantalla de inicio).
   (`rangos*.js`), Perfil (`perfil-ejercicio.js`, `ej-vistas.js`). Ver
   `docs/mapa-muscular.md`.
 - **Finanzas / Inversiones** — `js/finanzas/*.js` (app.js ~5.250 líneas),
-  `inversiones.js`.
+  `inversiones*.js`. Inversiones es un módulo aparte con barra inferior
+  propia (`#inversiones`, `#inv-posiciones`, `#inv-movimientos`,
+  `#inv-graficos`; Ajustes en `#inv-ajustes`, engranaje de arriba).
 - **Running / Bicicleta** — `running.js`, `bicicleta.js`: formulario manual
   (fecha, km, minutos, RPE, notas) y lista. Son sub-paneles de **Inicio**
   (tarjetas en `#inicio`) y hoy muestran el banner de versículo.

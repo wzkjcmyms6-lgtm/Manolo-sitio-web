@@ -17,10 +17,10 @@
   <!-- Fuentes guardadas en el repo: la app no depende de internet para verse bien -->
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
-  <link rel="stylesheet" href="css/style.css?v=202610270100">
+  <link rel="stylesheet" href="css/style.css?v=202610291010">
   <link rel="stylesheet" href="css/finanzas.css?v=202610270100">
   <link rel="stylesheet" href="css/habitos.css?v=202610270100">
-  <link rel="stylesheet" href="css/inversiones.css?v=202610280600">
+  <link rel="stylesheet" href="css/inversiones.css?v=202610291000">
   <link rel="stylesheet" href="css/libros.css?v=202610290600">
   <link rel="stylesheet" href="css/ej-calendario.css?v=202610290900">
 </head>
@@ -62,7 +62,8 @@
       <span class="net-status" data-net-status role="status" hidden>Sin conexión</span>
       <span class="topbar-clock" data-clock></span>
       <button type="button" class="avisos-btn topbar-avisos" data-avisos hidden aria-label="Avisos de acceso"><span data-icon="bell"></span><span class="avisos-n" data-avisos-n hidden></span></button>
-      <a href="#fin-ajustes" class="topbar-ajustes" aria-label="Ajustes de Finanzas"><span data-icon="gear"></span></a>
+      <a href="#fin-ajustes" class="topbar-ajustes" data-engranaje="finanzas" aria-label="Ajustes de Finanzas"><span data-icon="gear"></span></a>
+      <a href="#inv-ajustes" class="topbar-ajustes" data-engranaje="inversiones" aria-label="Ajustes de Inversiones"><span data-icon="gear"></span></a>
       <button class="menu-toggle" id="menu-toggle" data-icon="menu" aria-expanded="false" aria-label="Abrir menú"></button>
     </div>
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
@@ -775,23 +776,32 @@
 
             <!-- Hoja "Nueva transacción" (como Buddy) -->
 
-          <!-- ===== Inversiones ===== -->
-          <section id="panel-inversiones" hidden>
+          <!-- ===== Inversiones (sección aparte, con barra inferior propia) ===== -->
+          <section id="panel-inversiones" class="inv-panel" hidden>
             <h1 class="page-title">Inversiones</h1>
+            <div class="inv-vista" id="inv-resumen"></div>
+          </section>
 
-            <div class="fin-tabs inv-tabs" role="tablist" aria-label="Inversiones">
-              <button type="button" class="fin-tab active" role="tab" data-inv-tab="resumen" aria-selected="true">Resumen</button>
-              <button type="button" class="fin-tab" role="tab" data-inv-tab="posiciones" aria-selected="false">Posiciones</button>
-              <button type="button" class="fin-tab" role="tab" data-inv-tab="movimientos" aria-selected="false">Movimientos</button>
-              <button type="button" class="fin-tab" role="tab" data-inv-tab="graficos" aria-selected="false">Gráficos</button>
-              <button type="button" class="fin-tab" role="tab" data-inv-tab="ajustes" aria-selected="false">Ajustes</button>
-            </div>
+          <section id="panel-inv-posiciones" class="inv-panel" hidden>
+            <h1 class="page-title">Posiciones</h1>
+            <div class="inv-vista" id="inv-posiciones"></div>
+          </section>
 
-            <div class="inv-vista" id="inv-resumen" data-inv-vista="resumen"></div>
-            <div class="inv-vista" id="inv-posiciones" data-inv-vista="posiciones" hidden></div>
-            <div class="inv-vista" id="inv-movimientos" data-inv-vista="movimientos" hidden></div>
-            <div class="inv-vista" id="inv-graficos" data-inv-vista="graficos" hidden></div>
-            <div class="inv-vista" id="inv-ajustes" data-inv-vista="ajustes" hidden></div>
+          <section id="panel-inv-movimientos" class="inv-panel" hidden>
+            <h1 class="page-title">Movimientos</h1>
+            <div class="inv-vista" id="inv-movimientos"></div>
+          </section>
+
+          <section id="panel-inv-graficos" class="inv-panel" hidden>
+            <h1 class="page-title">Gráficos</h1>
+            <div class="inv-vista" id="inv-graficos"></div>
+          </section>
+
+          <!-- Inversiones: Ajustes (engranaje de arriba) -->
+          <section id="panel-inv-ajustes" class="inv-panel" hidden>
+            <a class="back-link" href="#inversiones"><span class="icon-sm" data-icon="chevronLeft"></span>Resumen</a>
+            <h1 class="page-title">Ajustes de Inversiones</h1>
+            <div class="inv-vista" id="inv-ajustes"></div>
           </section>
 
         </div>
@@ -1244,7 +1254,7 @@
   <script defer src="js/accesos.js?v=202610100400"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
   <script defer src="js/icons.js?v=202610100300"></script>
-  <script defer src="js/modules.js?v=202610290100"></script>
+  <script defer src="js/modules.js?v=202610291000"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
   <script defer src="js/exercise-search.js?v=202609291"></script>
@@ -1295,7 +1305,7 @@
   <script defer src="js/inversiones-motor.js?v=202610280600"></script>
   <script defer src="js/inversiones-series.js?v=202610280400"></script>
   <script defer src="js/inversiones-graficos.js?v=202610280400"></script>
-  <script defer src="js/inversiones.js?v=202610280600"></script>
+  <script defer src="js/inversiones.js?v=202610291000"></script>
   <script defer src="js/lectura-comun.js?v=202610290200"></script>
   <script defer src="js/biblia-motor.js?v=202610290200"></script>
   <script defer src="js/biblia.js?v=202610290300"></script>

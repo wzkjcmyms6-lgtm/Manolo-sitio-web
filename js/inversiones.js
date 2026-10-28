@@ -45,36 +45,26 @@ const enCampo = (n, vacioSiCero) => (typeof n === "number" && isFinite(n) && !(v
 const decimales = (n, d) => (n || 0).toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: d });
 const nombreMes = f => M.mesTitulo(M.mesDe(f)).split(" ")[0].toLowerCase();
 
-// ---------- Pestañas ----------
-// Si no caben todas, la barra se desliza de lado y un borde difuminado
-// avisa que hay más.
-const barraTabs = document.querySelector("#panel-inversiones .inv-tabs");
-barraTabs.addEventListener("click", e => {
-  const b = e.target.closest("[data-inv-tab]");
-  if (b) irA(b.dataset.invTab);
-});
-function marcarDesborde() {
-  barraTabs.classList.toggle("hay-izq", barraTabs.scrollLeft > 2);
-  barraTabs.classList.toggle("hay-der", barraTabs.scrollLeft + barraTabs.clientWidth < barraTabs.scrollWidth - 2);
-}
-barraTabs.addEventListener("scroll", marcarDesborde, { passive: true });
-if (typeof ResizeObserver === "function") new ResizeObserver(marcarDesborde).observe(barraTabs);
-function irA(v) {
+// ---------- Pantallas ----------
+// Cada vista es su propio panel (#inversiones, #inv-posiciones…) y se cambia
+// con la barra inferior, como en Finanzas; Ajustes va en el engranaje de
+// arriba. Se pinta solo la que está a la vista.
+const VISTAS = { inversiones: "resumen", "inv-posiciones": "posiciones", "inv-movimientos": "movimientos", "inv-graficos": "graficos", "inv-ajustes": "ajustes" };
+const vistaDelHash = () => VISTAS[location.hash.replace("#", "")] || null;
+let alPrimerAporte = false;   // «Completar aportes»: bajar hasta el primero
+window.addEventListener("hashchange", () => {
+  const v = vistaDelHash();
+  if (!v) return;
+  if (v === "ajustes" && vista !== "ajustes") { borrador = null; sucio = false; }
   vista = v;
-  document.querySelectorAll("#panel-inversiones [data-inv-tab]").forEach(b => {
-    const on = b.dataset.invTab === vista;
-    b.classList.toggle("active", on);
-    b.setAttribute("aria-selected", String(on));
-    if (on && barraTabs.clientWidth) {
-      const rb = b.getBoundingClientRect(), rc = barraTabs.getBoundingClientRect();
-      barraTabs.scrollLeft += (rb.left - rc.left) - (rc.width - rb.width) / 2;
-    }
-  });
-  marcarDesborde();
-  document.querySelectorAll("#panel-inversiones [data-inv-vista]").forEach(el => { el.hidden = el.dataset.invVista !== vista; });
-  if (vista === "ajustes") { borrador = null; sucio = false; }
   render();
-}
+  if (alPrimerAporte && v === "movimientos") {
+    alPrimerAporte = false;
+    const primero = document.querySelector("#inv-movimientos .inv-chip.is-completar");
+    if (primero) primero.closest(".inv-fila").scrollIntoView({ block: "center" });
+  }
+});
+vista = vistaDelHash() || vista;
 
 function render() {
   if (vista === "resumen") renderResumen();
@@ -535,7 +525,7 @@ function textoFila(m) {
 }
 
 // ---------- Acciones de la sección ----------
-$("panel-inversiones").addEventListener("click", e => {
+function alTocar(e) {
   const ed = e.target.closest("[data-inv-editar]");
   if (ed) { abrirMov({ id: ed.dataset.invEditar }); return; }
   const pr = e.target.closest("[data-inv-precio]");
@@ -556,12 +546,9 @@ $("panel-inversiones").addEventListener("click", e => {
   else if (accion === "agregar-ticker") agregarTicker();
   else if (accion === "exportar-json") descargar(`manolo-inversiones-${hoyLocal()}.json`, M.exportarJson(docs, guardados, new Date().toISOString()), "application/json");
   else if (accion === "exportar-csv") descargar(`manolo-inversiones-${hoyLocal()}.csv`, M.exportarCsv(movs), "text/csv;charset=utf-8");
-  else if (accion === "ver-aportes") {
-    irA("movimientos");
-    const primero = document.querySelector("#inv-movimientos .inv-chip.is-completar");
-    if (primero) primero.closest(".inv-fila").scrollIntoView({ block: "center" });
-  }
-});
+  else if (accion === "ver-aportes") { alPrimerAporte = true; location.hash = "#inv-movimientos"; }
+}
+document.querySelectorAll(".inv-panel").forEach(p => p.addEventListener("click", alTocar));
 
 // ---------- Exportar ----------
 // En el iPhone, el menú de compartir (Guardar en Archivos, AirDrop…); en la

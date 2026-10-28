@@ -326,3 +326,20 @@ dibuja un PNG de 1080 × 1350 (MANOLO + tu usuario) que en el iPhone abre el
 menú de compartir. Archivos nuevos: `js/ej-calendario.js` (lógica, pruebas),
 `js/ej-anual.js`, `css/ej-calendario.css`, `scripts/e2e/ej-calendario.js`;
 en `index.html`, una `<section>` en Perfil y sus `<script>`/`<link>`.
+
+**D-052 (2026-10-29) · Inversiones, sección aparte; Libros y Biblia sin
+versículo.** Pedido del dueño: "que inversiones sea algo aparte, como lo es
+ejercicio, hábitos o finanzas" y "en libros y biblia, ya no aparezca el
+versículo arriba". Inversiones pasa de pestañas dentro del panel a un
+módulo con barra inferior propia, copiando a Finanzas: Resumen
+(`#inversiones`), Posiciones, Movimientos y Gráficos abajo (`INV_TABS` en
+`TAB_BARS`), y Ajustes (`#inv-ajustes`) en el engranaje de arriba, con
+"‹ Resumen" para volver. Cuatro pestañas y no cinco para que quepan a
+320 px, igual que Finanzas. Arriba, la casita vuelve a Inicio. En la compu,
+pills arriba de cada pantalla (`crearPillsEscritorio`, ahora con el
+engranaje también para Inversiones). Cada pantalla es su `<section
+id="panel-inv-…" class="inv-panel">`; los `id` de las vistas
+(`#inv-resumen`…) no cambian. El engranaje de arriba se elige con
+`data-engranaje` porque `data-ajustes` ya lo escucha Hábitos (abriría su
+hoja). No cambia ningún dato. Libros y Biblia se suman a la lista de
+`showPanel()` que oculta el versículo; Inicio lo sigue mostrando.

@@ -15,14 +15,14 @@ y un satélite chico), con lo que cuesta llevar los Bs al broker.
 | Archivo | Qué hace |
 |---|---|
 | `js/inversiones-motor.js` | UMD sin DOM: leer documentos (viejos y nuevos), validar, fondeo, ronda DCA, resumen. Pruebas: `tests/inversiones-motor.test.js` |
-| `js/inversiones.js` | Pantallas: pestañas Resumen · Posiciones · Movimientos · Gráficos · Ajustes, hojas de movimiento, ronda DCA y precio |
+| `js/inversiones.js` | Pantallas Resumen · Posiciones · Movimientos · Gráficos · Ajustes (cada una con su `#hash`), hojas de movimiento, ronda DCA y precio |
 | `js/inversiones-series.js` | UMD sin DOM: serie diaria (valor y aportado), aportes por mes, distribución, TCO y tipo AirTM, rendimiento. Pruebas: `tests/inversiones-series.test.js` |
 | `js/inversiones-graficos.js` | Dibujo SVG (líneas, columnas) sin DOM + "toca y desliza para leer". Pruebas: `tests/inversiones-graficos.test.js` |
 | `css/inversiones.css` | Estilos propios (solo clases `.inv-`). Reutiliza `.fin-tabs` y `.budget-sheet` |
 | `tests/inversiones-posiciones.test.js` | Pruebas de posiciones, precios y cartera |
 | `tests/inversiones-dividendos.test.js` | Pruebas de la agenda y los avisos de dividendos |
 | `tests/inversiones-exportar.test.js` | Pruebas del estado de la ronda y de la exportación |
-| `scripts/e2e/inversiones.js` | Prueba de pantalla (125 comprobaciones, con precios, dividendos y tipo de cambio fijos de prueba) |
+| `scripts/e2e/inversiones.js` | Prueba de pantalla (137 comprobaciones, con precios, dividendos y tipo de cambio fijos de prueba) |
 | `data/tickers.json` | Tickers con precio diario y desde qué fecha guardar historial |
 | `scripts/precios.py` | Lee los cierres (sin claves) y actualiza `data/precios.json` |
 | `.github/workflows/precios.yml` | Corre el script de lunes a viernes 21:40 y 23:40 UTC (17:40 y 19:40 en La Paz) y a mano |
@@ -192,6 +192,30 @@ Un ticker que no está en `tickers` con `grupo: "nucleo"` es satélite.
   teclado, flechas izquierda/derecha. Los gráficos se dibujan al ancho real
   y se rehacen si cambia (girar el teléfono, ventana de la compu).
 
+## Navegación: sección aparte, como Finanzas (2026-10-29)
+
+Pedido del dueño: Inversiones funciona igual que Hábitos, Ejercicio y
+Finanzas. Cada pantalla es su propio panel y su propio `#hash`:
+
+| Pantalla | Hash | Cómo se llega |
+|---|---|---|
+| Resumen | `#inversiones` | Tarjeta de Inicio o barra de abajo |
+| Posiciones | `#inv-posiciones` | Barra de abajo |
+| Movimientos | `#inv-movimientos` | Barra de abajo |
+| Gráficos | `#inv-graficos` | Barra de abajo |
+| Ajustes | `#inv-ajustes` | Engranaje de arriba (como Ajustes de Finanzas) |
+
+- En el celular, la barra de abajo cambia a las 4 pestañas de Inversiones
+  (`INV_TABS` en `TAB_BARS`, `js/modules.js`) y arriba quedan la casita
+  (volver a Inicio) y el engranaje. En la compu, las mismas pestañas salen
+  como pills arriba de cada pantalla, con el engranaje al final.
+- `js/inversiones.js` escucha `hashchange` y pinta solo la vista a la
+  vista; ya no hay pestañas dentro del panel (se quitaron `.inv-tabs`,
+  `irA` y el borde difuminado).
+- "Completar aportes" lleva a `#inv-movimientos` y baja hasta el primero.
+- El engranaje de la barra de arriba se elige con `data-engranaje`
+  (`finanzas` o `inversiones`); `data-ajustes` ya lo usa Hábitos.
+
 ## Cómo probar en el iPhone (fase 4 y dividendos)
 
 1. Resumen: debajo de las cifras, "Ronda DCA de octubre · N de 6" con lo
@@ -205,7 +229,7 @@ Un ticker que no está en `tickers` con `grupo: "nucleo"` es satélite.
 ## Cómo probar en el iPhone (fase 3)
 
 1. Inversiones ya no muestra la frase de la Biblia arriba.
-2. Pestaña Gráficos (desliza la barra de pestañas si no la ves).
+2. Pestaña Gráficos (en la barra de abajo).
 3. En "Valor vs aportado", apoya el dedo y deslízalo: aparece el día con
    valor, aportado y ganancia.
 4. Rendimiento: revisa las tres cifras (US$, Bs BCB, Bs AirTM) y abre

@@ -41,10 +41,14 @@ const SUB_PANELS = [
   { hash: "fin-herramientas-periodo", parent: "fin-ajustes" },
   { hash: "fin-herramientas-reiva", parent: "fin-ajustes" },
   { hash: "fin-herramientas-exportar", parent: "fin-ajustes" },
-  { hash: "fin-recurrentes", parent: "fin-ajustes" }
+  { hash: "fin-recurrentes", parent: "fin-ajustes" },
+  { hash: "inv-posiciones", parent: "inversiones" },
+  { hash: "inv-movimientos", parent: "inversiones" },
+  { hash: "inv-graficos", parent: "inversiones" },
+  { hash: "inv-ajustes", parent: "inversiones" }
 ];
 
-// Mientras estás dentro de Hábitos, Finanzas o Ejercicio, la barra inferior (solo en
+// Mientras estás dentro de Hábitos, Finanzas, Ejercicio o Inversiones, la barra inferior (solo en
 // móvil, que es donde hace falta el espacio) deja de mostrar los módulos
 // generales y muestra las pestañas propias del módulo. Para volver a Inicio
 // la barra de arriba muestra una casita.
@@ -65,7 +69,15 @@ const HAB_TABS = [
   { hash: "hab-stats", label: "Estadísticas", icon: "chart", color: "#ffb84d" },
   { hash: "hab-logros", label: "Logros", icon: "trophy", color: "#ffb84d" }
 ];
-const TAB_BARS = { habitos: HAB_TABS, finanzas: FIN_TABS, ejercicio: EJ_TABS };
+// Inversiones es una sección aparte, como Finanzas (pedido del dueño
+// 2026-10-29): sus Ajustes van en el engranaje de arriba.
+const INV_TABS = [
+  { hash: "inversiones", label: "Resumen", icon: "investing", color: "#4cc38a" },
+  { hash: "inv-posiciones", label: "Posiciones", icon: "wallet", color: "#4cc38a" },
+  { hash: "inv-movimientos", label: "Movimientos", icon: "finList", color: "#4cc38a" },
+  { hash: "inv-graficos", label: "Gráficos", icon: "chart", color: "#4cc38a" }
+];
+const TAB_BARS = { habitos: HAB_TABS, finanzas: FIN_TABS, ejercicio: EJ_TABS, inversiones: INV_TABS };
 
 const ALL_HASHES = MODULES.map(m => m.hash).concat(SUB_PANELS.map(s => s.hash));
 
@@ -115,14 +127,16 @@ function showPanel(hash) {
   // El mapa muscular solo va en la portada de Entrenamiento, no dentro del registro.
   const showBody = isExercise && hash === "ejercicio";
   document.body.classList.toggle("in-finanzas", activeModule === "finanzas");
+  document.body.classList.toggle("in-inversiones", activeModule === "inversiones");
   // Con barra inferior propia, la de arriba solo muestra una casita para volver al inicio.
   document.body.classList.toggle("has-home-btn", !!TAB_BARS[activeModule]);
   // Running y Bicicleta tampoco llevan versículo: la pantalla es para la actividad.
   // Inversiones tampoco (pedido del dueño 2026-10-28): es una sección aparte.
-  document.getElementById("verse-banner").hidden = isExercise || activeModule === "finanzas" || activeModule === "habitos" || activeModule === "inversiones" || hash === "running" || hash === "bicicleta";
+  // Libros y Biblia tampoco (pedido del dueño 2026-10-29).
+  document.getElementById("verse-banner").hidden = isExercise || activeModule === "finanzas" || activeModule === "habitos" || activeModule === "inversiones" || ["running", "bicicleta", "libros", "biblia"].includes(hash);
   document.getElementById("body-banner").hidden = !showBody;
 
-  // Pestañas propias de cada módulo (Finanzas, Hábitos, Ejercicio), visibles
+  // Pestañas propias de cada módulo (Finanzas, Hábitos, Ejercicio, Inversiones), visibles
   // como pills dentro del panel en escritorio.
   document.querySelectorAll("[data-hash-link]").forEach(a => {
     const activa = a.dataset.hash === tabHash(hash, TAB_BARS[a.dataset.grupo || "finanzas"]);
@@ -131,10 +145,11 @@ function showPanel(hash) {
   });
 }
 
-// En escritorio no hay barra inferior: Hábitos y Ejercicio muestran sus
-// pestañas como pills arriba de cada una de sus secciones (Finanzas ya las
-// tiene en index.html). En móvil se ocultan (.fin-outer-tabs).
-const PILLS_ESCRITORIO = { habitos: "Secciones de Hábitos", ejercicio: "Secciones de Ejercicio", finanzas: "Secciones de Finanzas" };
+// En escritorio no hay barra inferior: cada módulo con pestañas propias las
+// muestra como pills arriba de cada una de sus secciones. En móvil se ocultan
+// (.fin-outer-tabs). Finanzas e Inversiones suman el engranaje de Ajustes.
+const PILLS_ESCRITORIO = { habitos: "Secciones de Hábitos", ejercicio: "Secciones de Ejercicio", finanzas: "Secciones de Finanzas", inversiones: "Secciones de Inversiones" };
+const PILL_AJUSTES = { finanzas: ["fin-ajustes", "Ajustes de Finanzas"], inversiones: ["inv-ajustes", "Ajustes de Inversiones"] };
 function crearPillsEscritorio() {
   Object.keys(PILLS_ESCRITORIO).forEach(grupo => {
     TAB_BARS[grupo].forEach(tab => {
@@ -145,7 +160,7 @@ function crearPillsEscritorio() {
       nav.setAttribute("aria-label", PILLS_ESCRITORIO[grupo]);
       nav.innerHTML = TAB_BARS[grupo].map(t =>
         `<a href="#${t.hash}" class="fin-tab" data-hash-link data-grupo="${grupo}" data-hash="${t.hash}">${t.label}</a>`).join("")
-        + (grupo === "finanzas" ? `<a href="#fin-ajustes" class="fin-tab fin-tab-ajustes" aria-label="Ajustes de Finanzas"><span data-icon="gear"></span></a>` : "");
+        + (PILL_AJUSTES[grupo] ? `<a href="#${PILL_AJUSTES[grupo][0]}" class="fin-tab fin-tab-ajustes" aria-label="${PILL_AJUSTES[grupo][1]}"><span data-icon="gear"></span></a>` : "");
       panel.prepend(nav);
       if (typeof renderIcons === "function") renderIcons(nav);
     });

@@ -45,7 +45,13 @@ async function nuevo(p, tipo) {
   await p.waitForTimeout(350);
   if (tipo) { await p.click(`.inv-hoja [data-inv-tipo="${tipo}"]`); await p.waitForTimeout(150); }
 }
-const pestana = async (p, t) => { await p.click(`#panel-inversiones [data-inv-tab="${t}"]`); await p.waitForTimeout(250); };
+// Inversiones es una sección aparte: sus pantallas se cambian con la barra de
+// abajo (como Finanzas) y Ajustes con el engranaje de arriba.
+const HASH_INV = { resumen: "inversiones", posiciones: "inv-posiciones", movimientos: "inv-movimientos", graficos: "inv-graficos" };
+const pestana = async (p, t) => {
+  await p.click(t === "ajustes" ? '.topbar-ajustes[data-engranaje="inversiones"]' : `#bottom-nav-links a[data-hash="${HASH_INV[t]}"]`);
+  await p.waitForTimeout(250);
+};
 const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
 const TC = { fuente: "prueba", ultimo: { fecha: "2026-10-27", tco: 12.02 }, historial: { "2026-09-24": 12.26, "2026-10-01": 12.0, "2026-10-02": 11.9, "2026-10-27": 12.02 } };
 const ajustes = p => p.evaluate(() => window.__fakeStore.colMap("users/test/meta").get("inversiones_ajustes") || null);
@@ -79,6 +85,13 @@ async function deslizar(p, sel, dy) {
   console.log("\nResumen con registros viejos");
   ok(await visible(p, "#inv-resumen"), "se ve el Resumen");
   ok(await p.$eval("#verse-banner", el => el.hidden), "Inversiones no muestra el versículo");
+  console.log("\nSección aparte, como Finanzas");
+  ok(await p.$eval("#bottom-nav-links", n => n.dataset.mode === "inversiones"), "la barra de abajo muestra las pestañas de Inversiones");
+  ok((await p.$$eval("#bottom-nav-links a", as => as.map(a => a.textContent.trim()).join(","))) === "Resumen,Posiciones,Movimientos,Gráficos", "pestañas: Resumen, Posiciones, Movimientos y Gráficos");
+  ok(await p.$eval('#bottom-nav-links a[data-hash="inversiones"]', a => a.classList.contains("active")), "Resumen resaltado abajo");
+  ok(await visible(p, ".topbar-home"), "arriba, la casita para volver a Inicio");
+  ok(await visible(p, '.topbar-ajustes[data-engranaje="inversiones"]') && !(await visible(p, '.topbar-ajustes[data-engranaje="finanzas"]')), "el engranaje lleva a Ajustes de Inversiones (no a los de Finanzas)");
+  ok(!(await p.$("#panel-inversiones .inv-tabs")), "ya no hay pestañas dentro de la pantalla");
   ok((await texto(p, "#inv-resumen .inv-hero-valor")) === "US$ 80,00", "Aportado suma los aportes viejos (US$ 80,00)");
   ok(/2 aportes anteriores/.test(await texto(p, "#inv-resumen .inv-aviso:not(.inv-aviso-div)")), "avisa que hay 2 aportes para completar");
   ok(/Ronda DCA de octubre/.test(await texto(p, '#inv-resumen [data-inv="ronda"]')), "botón de la ronda DCA del mes");
@@ -278,8 +291,8 @@ async function deslizar(p, sel, dy) {
   await escribir(p, campo("cantidad"), "1");
   await guardar(p);
   await pestana(p, "posiciones");
-  ok(await p.$eval('#panel-inversiones [data-inv-tab="posiciones"]', b => b.classList.contains("active")), "pestaña Posiciones");
-  ok(await p.$eval("#panel-inversiones .inv-tabs", b => b.scrollWidth <= b.clientWidth || b.classList.contains("hay-der") || b.classList.contains("hay-izq")), "si las pestañas no caben, el borde avisa que hay más");
+  ok(await p.$eval('#bottom-nav-links a[data-hash="inv-posiciones"]', b => b.classList.contains("active")) && (await p.evaluate(() => location.hash)) === "#inv-posiciones", "pestaña Posiciones (#inv-posiciones)");
+  ok(await visible(p, "#inv-posiciones") && !(await visible(p, "#inv-resumen")), "solo se ve la pantalla elegida");
   let pos = M.posiciones(await movsDe(p), PRECIOS, await ajustes(p));
   const tarjetas = await p.$$eval("#inv-posiciones [data-inv-precio]", els => els.map(e => e.dataset.invPrecio));
   ok(tarjetas.join(",") === pos.abiertas.map(o => o.ticker).join(","), `una tarjeta por ticker, por valor (${tarjetas.join(", ")})`);
@@ -453,9 +466,24 @@ async function deslizar(p, sel, dy) {
   ok(anchoSvg[0] === anchoSvg[1], `el gráfico se vuelve a dibujar al nuevo ancho (${anchoSvg[0]} px)`);
   await pestana(p, "ajustes");
   ok((await sobra(p, "html")) <= 0 && (await sobra(p, "#inv-ajustes .inv-dca-lista")) <= 0, "Ajustes (con objetivos) cabe a 320 px");
-  ok(await p.$eval('#panel-inversiones .inv-tabs .fin-tab.active', b => { const r = b.getBoundingClientRect(), c = b.parentElement.getBoundingClientRect(); return b.dataset.invTab === "ajustes" && r.left >= c.left - 1 && r.right <= c.right + 1; }), "la pestaña elegida (Ajustes, la última) queda a la vista");
+  ok(await visible(p, "#panel-inv-ajustes .back-link") && (await p.evaluate(() => location.hash)) === "#inv-ajustes", "Ajustes (#inv-ajustes) con «‹ Resumen» para volver");
+  ok((await sobra(p, "#bottom-nav-links")) <= 0 && await p.$$eval("#bottom-nav-links a", as => as.every(a => a.scrollWidth <= a.clientWidth + 1)), "la barra de abajo cabe a 320 px");
+  await p.click(".topbar-home");
+  await p.waitForTimeout(300);
+  ok((await p.evaluate(() => location.hash)) === "#inicio" && !(await p.$eval("#bottom-nav-links", n => n.classList.contains("tab-mode"))), "la casita vuelve a Inicio con la barra general");
   ok(!p.errores.length, "sin errores de página");
-
   await p.context().close();
+
+  console.log("\nEscritorio: las pestañas van arriba");
+  const pc = await abrir(browser, base, { __SEED__: SEED }, { hash: "#inv-graficos", ancho: 1280, alto: 800, zona: ZONA, fecha: HOY });
+  await pc.waitForTimeout(800);
+  ok(await visible(pc, "#inv-graficos") && await pc.$eval("#verse-banner", el => el.hidden), "abre directo en Gráficos, sin versículo");
+  const pills = await pc.$$eval("#panel-inv-graficos .fin-outer-tabs a", as => as.map(a => (a.textContent.trim() || a.getAttribute("aria-label")) + (a.classList.contains("active") ? "*" : "")).join(","));
+  ok(pills === "Resumen,Posiciones,Movimientos,Gráficos*,Ajustes de Inversiones", `pills de escritorio (${pills})`);
+  await pc.click("#panel-inv-graficos .fin-outer-tabs .fin-tab-ajustes");
+  await pc.waitForTimeout(300);
+  ok(await visible(pc, "#inv-ajustes .inv-ajustes"), "el engranaje abre Ajustes de Inversiones");
+  ok(!pc.errores.length, "escritorio sin errores de página");
+  await pc.context().close();
   await terminar(browser, srv);
 })();
