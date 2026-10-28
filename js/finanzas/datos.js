@@ -217,7 +217,7 @@ function unirRespaldo(partes) {
 const FORMATO = "manolo-finanzas";
 const COLECCIONES = ["finanzas", "ahorros", "carteras_movimientos"];
 // Documentos de meta/ que forman parte de Finanzas y viajan en la copia.
-const META_COPIA = ["config_presupuesto", "presupuestos", "presupuestos_periodos", "categorias_gasto", "categorias_ingreso", "carteras_custom", "finanzas_ajustes", "finanzas_recurrentes"];
+const META_COPIA = ["config_presupuesto", "presupuestos", "presupuestos_periodos", "categorias_gasto", "categorias_ingreso", "carteras_custom", "finanzas_ajustes", "finanzas_recurrentes", "finanzas_tarjetas"];
 
 function copiaCompleta(datos, ahora) {
   const t = ahora || Date.now();
@@ -305,6 +305,7 @@ function planImportacion(copia, actual) {
   listaQueFalta("categorias_ingreso", "list");
   listaQueFalta("carteras_custom", "list");
   listaQueFalta("finanzas_recurrentes", "list");
+  listaQueFalta("finanzas_tarjetas", "list");
   if (esObj(mc.presupuestos)) {
     const faltan = {};
     Object.keys(mc.presupuestos).forEach(k => { if (idOk(k) && !(esObj(ma.presupuestos) && k in ma.presupuestos) && montoValido(mc.presupuestos[k])) faltan[k] = Number(mc.presupuestos[k]); });

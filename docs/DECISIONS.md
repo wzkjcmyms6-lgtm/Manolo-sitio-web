@@ -369,3 +369,25 @@ menos de 360 px baja a su línea): guarda con `set` + `merge` solo esa
 actividad del día, muestra "✓ tiempo" y "Cambiar", y "Quitar de este día"
 borra solo esa (o el día, si era la última). Lo escrito y no guardado en
 otras filas se conserva al repintar. Los datos no cambian de forma.
+
+**D-055 (2026-10-29) · Finanzas: varias tarjetas de crédito con su límite.**
+Pedido del dueño ("creo que tendré más de una"). Antes había una sola
+cartera "Tarjeta de crédito" (deuda total y un día de pago en Ajustes). Ahora
+se registran tarjetas en `meta/finanzas_tarjetas` (nombre, límite en Bs, día
+de pago propio u "el de Ajustes"), y cada gasto con tarjeta y cada pago
+guardan `tarjetaId` (campo nuevo). Decisiones: la cartera `tarjeta` sigue
+siendo **una** (la suma), así Disponible, colchón, transferencias, filtros,
+CSV y copias no cambian; la deuda por tarjeta se reparte en
+`js/finanzas/tarjetas.js` (UMD, pruebas) y siempre suma la deuda total. Lo
+anotado antes, sin `tarjetaId`, cuenta para la primera tarjeta, la
+"principal" (se puede cambiar con "Hacer principal"); eliminar una tarjeta
+no toca movimientos: su deuda pasa a la principal (con "Deshacer"). Sin
+tarjetas registradas, todo se ve como antes. Dónde se ve: Finanzas ›
+Ajustes › Tarjetas de crédito (`#fin-tarjetas`, también al tocar una
+tarjeta en Movimientos): por tarjeta, cuánto debes, disponible (límite −
+deuda), barra de uso (verde, ámbar desde 50 %, roja desde 80 %), aviso
+al pasar del 80 % o del límite, próximo pago y "Pagar" (transferencia
+Débito → esa tarjeta). En Movimientos, una cartera por tarjeta; en
+"¿Con qué pagaste?" y en pagos recurrentes, cada tarjeta por su nombre (la
+hoja recuerda la última usada); "Atención" y "Próximos 30 días" avisan el
+pago de cada una. Límite en Bs, aceptando "5.000" (punto de miles).

@@ -1,6 +1,8 @@
 (function () {
 // Lectura y escritura de datos (centavos, saldos, respaldo): js/finanzas/datos.js
 const FD = FinanzasDatos;
+// Tarjetas de crédito con su límite (varias): js/finanzas/tarjetas.js
+const TC = FinanzasTarjetas;
 // Modo demo: datos ficticios guardados aparte, solo en este teléfono. Con el
 // modo demo activo, TODO Finanzas lee y escribe en ese almacén local y nunca
 // en tu nube (ver js/finanzas/demo.js).
@@ -59,6 +61,7 @@ let gastoCategoriesCache = flattenCategoryGroups(DEFAULT_CATEGORY_GROUPS); // ve
 let ahorrosCache = [];
 let carterasCustomCache = []; // carteras que el usuario crea a mano, con su propio saldo
 let carterasMovCache = []; // movimientos (aportes, retiros, transferencias) de esas carteras
+let tarjetasCache = []; // tarjetas de crédito con su límite; la primera es la "principal"
 let categoriasArchivadas = []; // categorías borradas: se guardan para seguir mostrando su nombre
 
 function financeCollection() {
@@ -87,6 +90,9 @@ function carterasCustomDocRef() {
 }
 function carterasMovimientosCollection() {
   return raiz().collection("carteras_movimientos");
+}
+function tarjetasDocRef() {
+  return raiz().collection("meta").doc("finanzas_tarjetas");
 }
 
 // Convierte los grupos con subcategorías a la lista plana {id,label,icon,color}
@@ -279,6 +285,7 @@ function renderStats() {
       ${tarjeta("gastos", "Disponible", signo(saldo), "Efectivo + Débito", "is-total")}
       ${tarjeta("efectivo", "Efectivo", signo(efectivo))}
       ${tarjeta("debito", "Débito", signo(debito))}
+      ${tarjetasCache.length ? estadoTarjetas().lista.map(filaTarjetaResumen).join("") : `
       <div class="fin-cartera is-tarjeta" role="listitem">
         <button type="button" class="fin-cartera-btn" data-abrir-cartera="tarjeta">
           <span class="fin-cartera-top"><span class="fin-cartera-ico" style="background:${walletVisual("tarjeta").color}" data-icon="finance"></span><span class="fin-cartera-nombre">Tarjeta de crédito</span></span>
@@ -286,19 +293,31 @@ function renderStats() {
           <span class="fin-cartera-sub">${faltan === 0 ? "Hoy toca pagar" : `Pago: ${cuando} · ${faltan === 1 ? "falta 1 día" : `faltan ${faltan} días`}`}</span>
         </button>
         ${deuda > 0 ? `<button type="button" class="fin-cartera-pagar" data-pagar-tarjeta>Pagar</button>` : ""}
-      </div>
+      </div>`}
       ${tarjeta("ahorro", "Ahorro", formatUSD(ahorro), tco ? `≈ ${formatBsShort(Math.round(ahorro * tco))}` : "")}
       ${carterasCustomCache.map(w => tarjeta(w.id, w.nombre, w.moneda === "US$" ? formatUSD(customWalletBalance(w.id)) : signo(customWalletBalance(w.id)))).join("")}
     </div>`;
   renderIcons(document.getElementById("finance-stats"));
 }
+// Cada tarjeta registrada: lo que debes, lo disponible de su límite y su pago.
+function filaTarjetaResumen(t) {
+  const pct = Math.min(100, Math.round(t.uso * 100));
+  return `
+      <div class="fin-cartera is-tarjeta" role="listitem" data-tc-fila="${escapeHtml(t.id)}">
+        <button type="button" class="fin-cartera-btn" data-ver-tarjetas>
+          <span class="fin-cartera-top"><span class="fin-cartera-ico" style="background:${t.color}" data-icon="finance"></span><span class="fin-cartera-nombre">${escapeHtml(t.nombre)}</span></span>
+          <span class="fin-cartera-valor${t.deudaCent > 0 ? " neg" : ""}">${t.deudaCent > 0 ? "−" : ""}${formatMoney(FD.aBs(Math.abs(t.deudaCent)))}</span>
+          <span class="fin-tc-barra is-${t.nivel}" aria-hidden="true"><i style="width:${pct}%"></i></span>
+          <span class="fin-cartera-sub">Disponible: ${formatBsShort(FD.aBs(t.disponibleCent))}</span>
+          <span class="fin-cartera-sub">${t.pago.dias === 0 ? "Hoy toca pagar" : `Pago: ${fechaCorta(t.pago.fecha)} · ${t.pago.dias === 1 ? "falta 1 día" : `faltan ${t.pago.dias} días`}`}</span>
+        </button>
+        ${t.deudaCent > 0 ? `<button type="button" class="fin-cartera-pagar" data-pagar-tarjeta="${escapeHtml(t.id)}" aria-label="Pagar ${escapeHtml(t.nombre)}">Pagar</button>` : ""}
+      </div>`;
+}
 document.getElementById("finance-stats").addEventListener("click", e => {
-  if (e.target.closest("[data-pagar-tarjeta]")) {
-    // Pagar la tarjeta es una transferencia de Débito a la tarjeta.
-    const { deuda } = computeTotals(financeCache);
-    openTxnSheet(null, { type: "transferencia", from: "debito", to: "tarjeta", amount: String(Math.round(deuda * 100) / 100).replace(".", ","), desc: "Pago de tarjeta" });
-    return;
-  }
+  const pg = e.target.closest("[data-pagar-tarjeta]");
+  if (pg) { pagarTarjeta(pg.dataset.pagarTarjeta || null); return; }
+  if (e.target.closest("[data-ver-tarjetas]")) { location.hash = "#fin-tarjetas"; return; }
   const b = e.target.closest("[data-abrir-cartera]");
   if (b) openWalletDetail(b.dataset.abrirCartera);
 });
@@ -445,7 +464,7 @@ function renderMovements() {
           const cat = findCategory(m.type, m.category);
           const pay = findPayment(m.payment);
           let title = m.desc || cat.label;
-          let sub = [m.desc ? cat.label : "", m.payment === "credito" ? (pay ? pay.label : "") : "", m.type === "gasto" && m.factura ? "Con factura" : "", m.recurrenteId ? "Recurrente" : "", m.excluded ? "Excluido del presupuesto" : ""].filter(Boolean).join(" · ");
+          let sub = [m.desc ? cat.label : "", m.payment === "credito" ? (tarjetasCache.length ? nombreTarjeta(m) : pay ? pay.label : "") : "", m.type === "gasto" && m.factura ? "Con factura" : "", m.recurrenteId ? "Recurrente" : "", m.excluded ? "Excluido del presupuesto" : ""].filter(Boolean).join(" · ");
           if (m.type === "transferencia") {
             const route = `${walletLabel(m.from)} → ${walletLabel(m.to)}`;
             title = m.desc || route;
@@ -827,9 +846,9 @@ function resAtencionHTML(period) {
     FD.proximosRecurrentes(recurrentes, financeCache, hoy, 3).forEach(p => {
       items.push({ peso: 2, html: `<a class="res-item" href="#fin-analisis"><span class="res-item-ic" aria-hidden="true"><span data-icon="calendar"></span></span><span><strong>${enDias(p.fecha)}:</strong> ${escapeHtml(p.rec.nombre)} · ${p.rec.type === "ingreso" ? "+" : ""}${bsCent(p.rec.montoCent || 0)}</span></a>` });
     });
-    const t = FD.saldos(financeCache);
-    const { days } = nextCardPayDate();
-    if (t.deuda > 0 && days <= 3) items.push({ peso: 2.5, html: `<a class="res-item aviso" href="#fin-movimientos"><span class="res-item-ic" aria-hidden="true"><span data-icon="calendar"></span></span><span><strong>${days === 0 ? "Hoy" : days === 1 ? "Mañana" : `En ${days} días`}:</strong> pago de la tarjeta · ${bsCent(t.deuda)}</span></a>` });
+    pagosDeTarjeta().forEach(x => {
+      if (x.deudaCent > 0 && x.dias <= 3) items.push({ peso: 2.5, html: `<a class="res-item aviso" href="${tarjetasCache.length ? "#fin-tarjetas" : "#fin-movimientos"}"><span class="res-item-ic" aria-hidden="true"><span data-icon="calendar"></span></span><span><strong>${x.dias === 0 ? "Hoy" : x.dias === 1 ? "Mañana" : `En ${x.dias} días`}:</strong> pago de ${x.nombre ? escapeHtml(x.nombre) : "la tarjeta"} · ${bsCent(x.deudaCent)}</span></a>` });
+    });
   }
   items.sort((a, b) => b.peso - a.peso);
   const head = `<h2 class="an-titulo" id="res-atencion-t">Atención</h2>`;
@@ -1252,12 +1271,9 @@ function anProximosHTML() {
   const hoy = isoDate(new Date());
   const lista = FD.proximosRecurrentes(recurrentes, financeCache, hoy, 30)
     .map(p => ({ fecha: p.fecha, nombre: p.rec.nombre, cent: p.rec.montoCent || 0, ingreso: p.rec.type === "ingreso" }));
-  const t = FD.saldos(financeCache);
-  if (t.deuda > 0) {
-    const { date } = nextCardPayDate();
-    const f = isoDate(date);
-    if (f > hoy) lista.push({ fecha: f, nombre: "Pago de la tarjeta", cent: t.deuda, ingreso: false, tarjeta: true });
-  }
+  pagosDeTarjeta().forEach(x => {
+    if (x.deudaCent > 0 && x.fecha > hoy) lista.push({ fecha: x.fecha, nombre: x.nombre ? `Pago de ${x.nombre}` : "Pago de la tarjeta", cent: x.deudaCent, ingreso: false, tarjeta: true });
+  });
   lista.sort((x, y) => x.fecha.localeCompare(y.fecha));
   const head = `<h2 class="an-titulo" id="an-proximos-t">Próximos 30 días</h2>`;
   if (!lista.length) return `${head}<p class="an-vacio">No hay pagos programados. <a href="#fin-recurrentes">Configura tus pagos recurrentes</a> (alquiler, servicios, suscripciones) para verlos venir.</p>`;
@@ -1424,14 +1440,15 @@ function openTxnSheet(movement, inicial) {
     ? {
         id: movement.id, type: movement.type, category: movement.category, payment: movement.payment || "efectivo",
         amount: toStr(movement.amount), desc: movement.desc || "", date: movement.date,
-        excluded: !!movement.excluded, factura: !!movement.factura, keypad: false,
+        excluded: !!movement.excluded, factura: !!movement.factura, keypad: false, tarjetaId: movement.tarjetaId || null,
         from: cashWallet(movement.from || "debito"), to: cashWallet(movement.to || "ahorro"),
         amountTo: movement.amountTo != null ? toStr(movement.amountTo) : "",
         rate: movement.tipoCambio ? toStr(movement.tipoCambio) : "", rateTouched: true,
         readonly: movement.type === "transferencia", movement
       }
-    : { id: null, type: "gasto", category: null, payment: ultimaCartera("gasto"), amount: "0", desc: "", date: isoDate(new Date()), excluded: false, factura: false, keypad: true, from: "debito", to: "ahorro", amountTo: "", rate: "", rateTouched: false, readonly: false };
+    : { id: null, type: "gasto", category: null, payment: ultimaCartera("gasto"), amount: "0", desc: "", date: isoDate(new Date()), excluded: false, factura: false, keypad: true, from: "debito", to: "ahorro", amountTo: "", rate: "", rateTouched: false, readonly: false, tarjetaId: null };
   if (inicial && !movement) Object.assign(txnSheet, inicial, { keypad: inicial.keypad !== undefined ? inicial.keypad : true });
+  if (!movement && !txnSheet.tarjetaId && (txnSheet.payment === "credito" || txnSheet.to === "tarjeta")) txnSheet.tarjetaId = ultimaTarjeta();
   txnError(null);
   renderTxnSheet();
   showSheet(document.getElementById("txn-sheet"));
@@ -1448,12 +1465,20 @@ function ultimaCartera(tipo) {
   } catch (e) { /* sin almacenamiento */ }
   return tipo === "ingreso" ? "debito" : "efectivo";
 }
-function recordarCartera(tipo, pago) {
+function recordarCartera(tipo, pago, tarjetaId) {
   try {
     const o = JSON.parse(localStorage.getItem(CLAVE_ULTIMA_CARTERA) || "{}");
     o[tipo] = pago;
+    if (pago === "credito" && tarjetaId) o.tarjeta = tarjetaId;
     localStorage.setItem(CLAVE_ULTIMA_CARTERA, JSON.stringify(o));
   } catch (e) { /* sin almacenamiento */ }
+}
+// La última tarjeta usada (si sigue existiendo), si no la principal.
+function ultimaTarjeta() {
+  if (!tarjetasCache.length) return null;
+  let id = null;
+  try { id = JSON.parse(localStorage.getItem(CLAVE_ULTIMA_CARTERA) || "{}").tarjeta; } catch (e) { /* sin almacenamiento */ }
+  return TC.tarjetaDe({ tarjetaId: id }, tarjetasCache);
 }
 // Monto del teclado en Bs (acepta "25+18").
 function montoTxn(t) {
@@ -1515,8 +1540,9 @@ function renderTxnSheet() {
 
   const walletRow = (key, id) => {
     const v = walletVisual(id);
-    document.getElementById(`txn-sheet-${key}-badge`).outerHTML = `<span id="txn-sheet-${key}-badge" class="txn-icon txn-icon-solid" style="background:${v.color}" data-icon="${v.icon}"></span>`;
-    document.getElementById(`txn-sheet-${key}-label`).textContent = `${walletLabel(id)} · ${walletBalanceText(id)}`;
+    const tc = id === "tarjeta" ? tarjetaEstado(t.tarjetaId) : null;
+    document.getElementById(`txn-sheet-${key}-badge`).outerHTML = `<span id="txn-sheet-${key}-badge" class="txn-icon txn-icon-solid" style="background:${tc ? tc.color : v.color}" data-icon="${v.icon}"></span>`;
+    document.getElementById(`txn-sheet-${key}-label`).textContent = tc ? `${tc.nombre} · ${tc.deudaCent > 0 ? "−" : ""}${formatMoney(FD.aBs(Math.abs(tc.deudaCent)))}` : `${walletLabel(id)} · ${walletBalanceText(id)}`;
     document.getElementById(`txn-sheet-${key}`).disabled = !!t.readonly;
   };
   walletRow("from", t.from);
@@ -1552,8 +1578,9 @@ function renderTxnSheet() {
   document.getElementById("txn-sheet-cat").disabled = !editable;
 
   const pay = findPayment(t.payment) || PAYMENTS[0];
-  document.getElementById("txn-sheet-pay-badge").outerHTML = `<span id="txn-sheet-pay-badge" class="txn-icon txn-icon-solid" style="background:${PAYMENT_COLORS[pay.id]}" data-icon="${PAYMENT_ICONS[pay.id]}"></span>`;
-  document.getElementById("txn-sheet-pay-label").textContent = `${pay.label} · ${walletBalanceText(pay.id === "credito" ? "tarjeta" : pay.id)}`;
+  const tc = pay.id === "credito" ? tarjetaEstado(t.tarjetaId) : null;
+  document.getElementById("txn-sheet-pay-badge").outerHTML = `<span id="txn-sheet-pay-badge" class="txn-icon txn-icon-solid" style="background:${tc ? tc.color : PAYMENT_COLORS[pay.id]}" data-icon="${PAYMENT_ICONS[pay.id]}"></span>`;
+  document.getElementById("txn-sheet-pay-label").textContent = tc ? `${tc.nombre} · ${textoDisponible(tc)}` : `${pay.label} · ${walletBalanceText(pay.id === "credito" ? "tarjeta" : pay.id)}`;
   document.getElementById("txn-sheet-pay-prefix").textContent = t.type === "ingreso" ? "Hacia:" : "Desde:";
 
   const note = document.getElementById("txn-sheet-note");
@@ -1777,10 +1804,23 @@ document.getElementById("cat-sheet-search").addEventListener("input", () => { if
 function chooseTxnPayment() {
   const t = txnSheet;
   const options = t.type === "ingreso" ? PAYMENTS.filter(p => p.id !== "credito") : PAYMENTS;
+  // Con tarjetas registradas, cada una sale por su nombre ("credito|id").
+  const items = [];
+  options.forEach(p => {
+    if (p.id === "credito" && tarjetasCache.length) {
+      estadoTarjetas().lista.forEach(c => items.push({ id: `credito|${c.id}`, label: c.nombre, sub: textoDisponible(c), icon: PAYMENT_ICONS.credito, color: c.color }));
+    } else items.push({ id: p.id, label: p.label, sub: walletBalanceText(p.id === "credito" ? "tarjeta" : p.id), icon: PAYMENT_ICONS[p.id], color: PAYMENT_COLORS[p.id] });
+  });
   openPicker({
     title: t.type === "ingreso" ? "¿A dónde entra?" : "¿Con qué pagaste?",
-    items: options.map(p => ({ id: p.id, label: p.label, sub: walletBalanceText(p.id === "credito" ? "tarjeta" : p.id), icon: PAYMENT_ICONS[p.id], color: PAYMENT_COLORS[p.id] })),
-    onPick: id => { closePicker(); t.payment = id; renderTxnSheet(); }
+    items,
+    onPick: id => {
+      closePicker();
+      const [pago, tarjetaId] = String(id).split("|");
+      t.payment = pago;
+      t.tarjetaId = tarjetaId || null;
+      renderTxnSheet();
+    }
   });
 }
 
@@ -1790,15 +1830,23 @@ function chooseTxnWallet(side) {
   // La tarjeta solo puede recibir (pagarla); nunca es origen. Se muestran
   // todas las demás, también la que está del otro lado: si la eliges, se
   // intercambian (así Ahorro → Débito se arma en un toque).
-  const wallets = ledgerWallets().filter(w => (side === "to" || w.id !== "tarjeta") && w.id !== t[side]);
+  const wallets = ledgerWallets().filter(w => (side === "to" || w.id !== "tarjeta") && (w.id !== t[side] || (w.id === "tarjeta" && tarjetasCache.length > 1)));
+  const items = [];
+  wallets.forEach(w => {
+    const v = walletVisual(w.id);
+    // Pagar una tarjeta: con varias registradas, se elige cuál ("tarjeta|id").
+    if (w.id === "tarjeta" && tarjetasCache.length) {
+      estadoTarjetas().lista.filter(c => !(t[side] === "tarjeta" && c.id === t.tarjetaId)).forEach(c => items.push({ id: `tarjeta|${c.id}`, label: `${c.nombre} (Bs)`, sub: `${c.deudaCent > 0 ? "−" : ""}${formatMoney(FD.aBs(Math.abs(c.deudaCent)))}`, icon: v.icon, color: c.color }));
+    } else items.push({ id: w.id, label: `${walletLabel(w.id)} (${w.moneda})`, sub: walletBalanceText(w.id), icon: v.icon, color: v.color });
+  });
   openPicker({
     title: side === "from" ? "¿Desde qué cartera?" : "¿A qué cartera?",
-    items: wallets.map(w => {
-      const v = walletVisual(w.id);
-      return { id: w.id, label: `${walletLabel(w.id)} (${w.moneda})`, sub: walletBalanceText(w.id), icon: v.icon, color: v.color };
-    }),
-    onPick: id => {
+    items,
+    onPick: elegido => {
       closePicker();
+      const [id, tarjetaId] = String(elegido).split("|");
+      if (tarjetaId) t.tarjetaId = tarjetaId;
+      if (id === t[side]) { renderTxnSheet(); return; }
       const antes = t[side];
       t[side] = id;
       if (t[otroLado] === id) {
@@ -1837,6 +1885,7 @@ function saveTxn(yOtro) {
     }
     const rate = parseNum(t.rate);
     const payload = { from: t.from, to: t.to, amount, amountTo, desc: t.desc.trim(), date: t.date };
+    if (t.to === "tarjeta" && tarjetasCache.length) payload.tarjetaId = TC.tarjetaDe({ tarjetaId: t.tarjetaId }, tarjetasCache);
     if (walletCurrency(t.from) !== walletCurrency(t.to) && rate > 0) payload.tipoCambio = rate;
     createTransfer(payload).catch(err => console.error("Manolo: no se pudo guardar la transferencia", err));
     trasGuardar(yOtro, `Transferencia de ${formatBsShort(amount)} guardada`);
@@ -1847,9 +1896,11 @@ function saveTxn(yOtro) {
     return;
   }
   const data = FD.conCentavos({ date: t.date, type: t.type, category: t.category, payment: t.payment, desc: t.desc.trim(), amount, excluded: t.excluded, factura: t.type === "gasto" && !!t.factura });
+  // Campo nuevo (aditivo): con qué tarjeta se pagó.
+  if (t.payment === "credito" && tarjetasCache.length) data.tarjetaId = TC.tarjetaDe({ tarjetaId: t.tarjetaId }, tarjetasCache);
   let alerta = null;
   try { alerta = avisoPresupuesto(t, amount); } catch (err) { console.error("Manolo: no se pudo revisar el presupuesto", err); }
-  recordarCartera(t.type, t.payment);
+  recordarCartera(t.type, t.payment, data.tarjetaId);
   let guardado;
   if (t.id) guardado = financeCollection().doc(t.id).update(data);
   else {
@@ -1860,6 +1911,7 @@ function saveTxn(yOtro) {
     else if (t.repetir) {
       const rec = { id: "rec_" + Date.now().toString(36), nombre: t.desc.trim() || findCategory(t.type, t.category).label, type: t.type, category: t.category, payment: t.payment,
         amount, montoCent: FD.aCentavos(amount), frecuencia: t.repetir, inicio: t.date, activo: true, omitidos: [], creado: Date.now() };
+      if (data.tarjetaId) rec.tarjetaId = data.tarjetaId;
       Object.assign(nuevo, { recurrenteId: rec.id, recurrenteFecha: t.date });
       lote.set(recDocRef(), { list: recurrentes.concat([rec]) }, { merge: true });
     }
@@ -3485,6 +3537,180 @@ function cardScheduleHTML(deuda) {
   return `<div class="card-sched"><span class="card-sched-days">${left}</span><span>Pago: ${when}</span></div>`;
 }
 
+// ================= Tarjetas de crédito: varias, cada una con su límite =================
+// Pedido del dueño (2026-10-29). Se guardan en meta/finanzas_tarjetas { list }.
+// La cartera "tarjeta" sigue siendo la suma de todas; aquí se reparte por
+// tarjeta con el campo tarjetaId de cada movimiento. Lo anotado antes (sin
+// tarjetaId) cuenta para la primera, la "principal". Lógica: js/finanzas/tarjetas.js.
+function estadoTarjetas() {
+  return TC.estado(financeCache, tarjetasCache, isoDate(new Date()), diaPagoTarjeta());
+}
+// La tarjeta elegida (o la principal) con su deuda y disponible; null si no hay tarjetas.
+function tarjetaEstado(id) {
+  if (!tarjetasCache.length) return null;
+  const real = TC.tarjetaDe({ tarjetaId: id }, tarjetasCache);
+  return estadoTarjetas().lista.find(c => c.id === real) || null;
+}
+const conSigno = cent => `${cent < 0 ? "−" : ""}${formatMoney(FD.aBs(Math.abs(cent)))}`;
+function textoDisponible(c) {
+  return c.disponibleCent < 0 ? `te pasaste ${formatBsShort(FD.aBs(-c.disponibleCent))}` : `disponible ${formatBsShort(FD.aBs(c.disponibleCent))}`;
+}
+function nombreTarjeta(m) {
+  const id = TC.tarjetaDe(m, tarjetasCache);
+  const c = tarjetasCache.find(x => x.id === id);
+  return c ? c.nombre : "";
+}
+// Pagos que vienen: uno por tarjeta (o el de siempre, si no registraste ninguna).
+function pagosDeTarjeta() {
+  if (!tarjetasCache.length) {
+    const { date, days } = nextCardPayDate();
+    return [{ nombre: "", deudaCent: FD.saldos(financeCache).deuda, fecha: isoDate(date), dias: days }];
+  }
+  return estadoTarjetas().lista.map(c => ({ nombre: c.nombre, deudaCent: c.deudaCent, fecha: c.pago.fecha, dias: c.pago.dias }));
+}
+// Pagar es una transferencia de Débito a la tarjeta, por el total que debes.
+function pagarTarjeta(id) {
+  const c = id ? tarjetaEstado(id) : null;
+  const deudaCent = Math.max(0, c ? c.deudaCent : FD.saldos(financeCache).deuda);
+  openTxnSheet(null, { type: "transferencia", from: "debito", to: "tarjeta", tarjetaId: c ? c.id : null, amount: String(FD.aBs(deudaCent)).replace(".", ","), desc: c ? `Pago de ${c.nombre}` : "Pago de tarjeta" });
+}
+
+function renderTarjetas() {
+  const el = document.getElementById("fin-tarjetas");
+  if (!el) return;
+  const e = estadoTarjetas();
+  if (!e.lista.length) {
+    const deuda = FD.saldos(financeCache).deuda;
+    el.innerHTML = `
+      <div class="fin-tc-vacio">
+        <span class="fin-tc-vacio-ico" data-icon="finance"></span>
+        <p>Agrega tus tarjetas de crédito con su límite: verás cuánto debes en cada una y cuánto te queda disponible.</p>
+        <p>Al anotar un gasto con tarjeta, eliges con cuál pagaste.</p>
+        ${deuda > 0 ? `<p class="fin-tc-nota">Ahora debes ${formatMoney(FD.aBs(deuda))} con tarjeta: al agregar tu primera tarjeta, esa deuda queda en ella.</p>` : ""}
+      </div>`;
+    renderIcons(el);
+    return;
+  }
+  const tot = e.total;
+  el.innerHTML = `
+    ${e.lista.length > 1 ? `
+    <div class="fin-tc-total" aria-label="Todas tus tarjetas">
+      <div class="fin-tc-cifras">
+        <div><span>Límite total</span><strong>${formatBsShort(FD.aBs(tot.limiteCent))}</strong></div>
+        <div><span>Debes</span><strong>${formatBsShort(FD.aBs(Math.max(tot.deudaCent, 0)))}</strong></div>
+        <div><span>Disponible</span><strong>${formatBsShort(FD.aBs(tot.disponibleCent))}</strong></div>
+      </div>
+      <span class="fin-tc-barra is-${tot.nivel}" aria-hidden="true"><i style="width:${Math.min(100, Math.round(tot.uso * 100))}%"></i></span>
+    </div>` : ""}
+    ${e.lista.map((c, i) => tarjetaHTML(c, i === 0 && e.lista.length > 1)).join("")}
+    <p class="fin-tc-nota">El disponible es tu límite menos lo que debes.${e.lista.length > 1 ? " La principal se queda con los gastos con tarjeta que anotaste antes de registrar tus tarjetas." : ""}</p>`;
+  renderIcons(el);
+}
+function tarjetaHTML(c, principal) {
+  const pct = Math.round(c.uso * 100);
+  return `
+    <article class="fin-tc" data-tc="${escapeHtml(c.id)}">
+      <div class="fin-tc-cab">
+        <span class="fin-tc-ico" style="background:${c.color}" data-icon="finance"></span>
+        <h2 class="fin-tc-nombre">${escapeHtml(c.nombre)}</h2>
+        ${principal ? `<span class="fin-tc-chip">Principal</span>` : ""}
+        <button type="button" class="fin-tc-editar" data-tc-editar="${escapeHtml(c.id)}" aria-label="Editar ${escapeHtml(c.nombre)}"><span data-icon="edit"></span></button>
+      </div>
+      <div class="fin-tc-cifras">
+        <div><span>Debes</span><strong class="${c.deudaCent > 0 ? "neg" : ""}">${formatMoney(FD.aBs(Math.max(c.deudaCent, 0)))}</strong></div>
+        <div><span>Disponible</span><strong class="${c.disponibleCent < 0 ? "neg" : ""}">${conSigno(c.disponibleCent)}</strong></div>
+      </div>
+      <span class="fin-tc-barra is-${c.nivel}" role="img" aria-label="Usaste el ${pct} % del límite"><i style="width:${Math.min(100, pct)}%"></i></span>
+      <p class="fin-tc-pie"><span>Usaste el ${pct} % de ${formatBsShort(FD.aBs(c.limiteCent))}</span>${c.deudaCent < 0 ? `<span>Saldo a favor: ${formatBsShort(FD.aBs(-c.deudaCent))}</span>` : ""}</p>
+      <p class="fin-tc-pie"><span>${c.pago.dias === 0 ? "Hoy toca pagar" : `Pago: ${fechaCorta(c.pago.fecha)} (${c.pago.dias === 1 ? "falta 1 día" : `faltan ${c.pago.dias} días`})`}</span></p>
+      ${c.nivel === "pasado" ? `<p class="fin-tc-alerta">Te pasaste del límite por ${formatBsShort(FD.aBs(-c.disponibleCent))}.</p>` : c.nivel === "alto" ? `<p class="fin-tc-alerta is-aviso">Ya usaste el ${pct} % del límite.</p>` : ""}
+      ${c.deudaCent > 0 ? `<button type="button" class="fin-tc-pagar" data-tc-pagar="${escapeHtml(c.id)}">Pagar ${formatMoney(FD.aBs(c.deudaCent))}</button>` : ""}
+    </article>`;
+}
+
+// ---- Hoja para agregar o editar una tarjeta ----
+let tcEditando = null; // { id|null, nombre, limite, diaPago } tal como están en el formulario
+// La lista tal como está guardada (se editan esas entradas para no perder campos).
+const tarjetasCrudas = () => (metaCrudo.finanzas_tarjetas && Array.isArray(metaCrudo.finanzas_tarjetas.list) ? metaCrudo.finanzas_tarjetas.list : []);
+function guardarTarjetas(list) {
+  // Sin campos vacíos (Firestore no acepta undefined).
+  tarjetasDocRef().set({ list: JSON.parse(JSON.stringify(list)) }, { merge: true }).catch(err => console.error("Manolo: no se pudieron guardar las tarjetas", err));
+}
+function abrirTarjeta(id) {
+  const c = id ? tarjetasCache.find(x => x.id === id) : null;
+  tcEditando = c
+    ? { id: c.id, nombre: c.nombre, limite: String(FD.aBs(c.limiteCent)).replace(".", ","), diaPago: c.diaPago ? String(c.diaPago) : "" }
+    : { id: null, nombre: "", limite: "", diaPago: "" };
+  renderTarjetaForm([]);
+  document.getElementById("tc-sheet-title").textContent = c ? "Editar tarjeta" : "Nueva tarjeta";
+  document.getElementById("tc-borrar").hidden = !c;
+  showSheet(document.getElementById("tc-sheet"));
+}
+function renderTarjetaForm(errores) {
+  const r = tcEditando;
+  const principal = !!r.id && tarjetasCache.length > 1 && tarjetasCache[0].id === r.id;
+  const dias = Array.from({ length: 31 }, (_, i) => i + 1);
+  const f = document.getElementById("tc-form");
+  f.innerHTML = `
+    <label class="rec-campo">Nombre<input type="text" name="nombre" maxlength="40" value="${escapeHtml(r.nombre)}" placeholder="Visa BNB" autocomplete="off"></label>
+    <label class="rec-campo">Límite (Bs)<input type="text" name="limite" inputmode="decimal" value="${escapeHtml(r.limite)}" placeholder="5000" autocomplete="off"></label>
+    <label class="rec-campo">Día de pago<select name="diaPago" class="txn-filtro-select">
+      <option value="">El de Ajustes (día ${diaPagoTarjeta()})</option>
+      ${dias.map(d => `<option value="${d}"${String(d) === r.diaPago ? " selected" : ""}>Día ${d}</option>`).join("")}
+    </select></label>
+    ${r.id && tarjetasCache.length > 1 ? (principal
+      ? `<p class="fin-aj-texto">Es tu tarjeta principal: los gastos con tarjeta que anotaste antes de registrar tus tarjetas cuentan aquí.</p>`
+      : `<button type="button" class="fin-aj-btn fin-tc-hacer-principal" data-tc-principal>Hacer principal</button>`) : ""}
+    <p class="txn-sheet-error" id="tc-error" role="alert"${errores.length ? "" : " hidden"}>${errores.map(x => escapeHtml(x.texto)).join("<br>")}</p>`;
+  errores.forEach(x => { const i = f.elements[x.campo]; if (i) { i.classList.add("is-error"); i.setAttribute("aria-invalid", "true"); } });
+}
+function leerTarjetaForm() {
+  const f = document.getElementById("tc-form");
+  Object.assign(tcEditando, { nombre: f.elements.nombre.value, limite: f.elements.limite.value, diaPago: f.elements.diaPago.value });
+}
+function guardarTarjeta() {
+  leerTarjetaForm();
+  const r = tcEditando;
+  const v = TC.validar(r, tarjetasCache, r.id);
+  if (!v.ok) { renderTarjetaForm(v.errores); return; }
+  const crudas = tarjetasCrudas();
+  guardarTarjetas(r.id ? crudas.map(x => (x && x.id === r.id ? TC.editar(x, v.datos) : x)) : crudas.concat([TC.nueva(v.datos, tarjetasCache)]));
+  hideSheet(document.getElementById("tc-sheet"));
+  avisoFin(r.id ? `«${v.datos.nombre}» guardada` : `«${v.datos.nombre}» agregada · límite ${formatBsShort(FD.aBs(v.datos.limiteCent))}`);
+}
+function borrarTarjeta() {
+  const c = tarjetasCache.find(x => x.id === tcEditando.id);
+  if (!c) return;
+  const antes = tarjetasCrudas().slice();
+  const tenia = financeCache.some(m => m.tarjetaId === c.id);
+  hideSheet(document.getElementById("tc-sheet"));
+  guardarTarjetas(antes.filter(x => !(x && x.id === c.id)));
+  // Los movimientos no se tocan: su deuda pasa a contar para la principal.
+  showUndoToast(`«${c.nombre}» eliminada${tenia && tarjetasCache.length > 1 ? ": sus gastos pasan a la principal" : ""}`, () => guardarTarjetas(antes));
+}
+function hacerPrincipal() {
+  const crudas = tarjetasCrudas();
+  const i = crudas.findIndex(x => x && x.id === tcEditando.id);
+  if (i <= 0) return;
+  guardarTarjetas([crudas[i]].concat(crudas.filter((_, j) => j !== i)));
+  hideSheet(document.getElementById("tc-sheet"));
+  avisoFin(`«${crudas[i].nombre}» es ahora tu tarjeta principal`);
+}
+document.getElementById("panel-fin-tarjetas").addEventListener("click", e => {
+  const ed = e.target.closest("[data-tc-editar]");
+  if (ed) { abrirTarjeta(ed.dataset.tcEditar); return; }
+  const pg = e.target.closest("[data-tc-pagar]");
+  if (pg) { pagarTarjeta(pg.dataset.tcPagar); return; }
+  if (e.target.closest("[data-tc-nueva]")) abrirTarjeta(null);
+});
+document.getElementById("tc-sheet").addEventListener("click", e => {
+  if (e.target.closest("#tc-guardar")) { guardarTarjeta(); return; }
+  if (e.target.closest("#tc-borrar")) { borrarTarjeta(); return; }
+  if (e.target.closest("[data-tc-principal]")) { hacerPrincipal(); return; }
+  if (e.target.closest(".budget-sheet-close") || e.target.classList.contains("budget-sheet-overlay")) hideSheet(document.getElementById("tc-sheet"));
+});
+document.getElementById("tc-form").addEventListener("submit", e => { e.preventDefault(); guardarTarjeta(); });
+
 // ================= Herramientas: RE-IVA =================
 // Cada compra marcada "con factura" suma el 5 % de su monto al mes
 // calendario (1 al 30/31) en que se hizo, sin importar el periodo del
@@ -3963,7 +4189,7 @@ function formatWalletAmount(id, n) {
 // Todo en un solo lote con ids creados en el teléfono: sin conexión se
 // guarda completo al instante (antes esperaba al servidor entre un paso y
 // otro y, si cerrabas la app, quedaba a medias).
-function createTransfer({ from, to, amount, amountTo, desc, date, tipoCambio }) {
+function createTransfer({ from, to, amount, amountTo, desc, date, tipoCambio, tarjetaId }) {
   const suffix = desc ? " · " + desc : "";
   const links = [];
   const lote = nuevoLote();
@@ -3984,6 +4210,7 @@ function createTransfer({ from, to, amount, amountTo, desc, date, tipoCambio }) 
   side(to, amountTo, `Transferencia desde ${walletLabel(from)}${suffix}`);
   const record = FD.conCentavos({ date, type: "transferencia", category: "transferencia", from, to, amount, amountTo, desc: desc || "", links, createdAt: creado });
   if (tipoCambio) record.tipoCambio = tipoCambio;
+  if (to === "tarjeta" && tarjetaId) record.tarjetaId = tarjetaId;
   lote.set(financeCollection().doc(), record);
   return lote.commit();
 }
@@ -4211,7 +4438,7 @@ function walletMovementsFor(walletId) {
         id: m.id, date: m.date, createdAt: m.createdAt, desc: m.desc || findCategory(m.type, m.category).label,
         icon: findCategory(m.type, m.category).icon, color: findCategory(m.type, m.category).color,
         amount: m.type === "gasto" ? -m.amount : m.type === "transferencia" ? (m.amountTo != null ? m.amountTo : m.amount) : m.amount,
-        meta: m.type === "transferencia" ? `Desde ${walletLabel(m.from)}` : "",
+        meta: [m.type === "transferencia" ? `Desde ${walletLabel(m.from)}` : "", tarjetasCache.length > 1 ? nombreTarjeta(m) : ""].filter(Boolean).join(" · "),
         usd: false,
         onDelete: () => m.type === "transferencia" ? deleteTransfer(m) : deleteMovement(m.id)
       }));
@@ -4459,7 +4686,8 @@ function renderAjustes() {
     </section>
     <section class="fin-aj-bloque">
       <h2>Tarjeta y RE-IVA</h2>
-      <label class="fin-aj-fila fin-aj-campo"><span><span class="fin-aj-t">Día de pago de la tarjeta</span><span class="fin-aj-sub">En meses más cortos, el último día</span></span>
+      <a class="fin-aj-fila" href="#fin-tarjetas"><span><span class="fin-aj-t">Tarjetas de crédito</span><span class="fin-aj-sub">${tarjetasCache.length ? `${tarjetasCache.length} tarjeta${tarjetasCache.length === 1 ? "" : "s"} · límite total ${formatBsShort(FD.aBs(estadoTarjetas().total.limiteCent))}` : "Agrega tus tarjetas y su límite"}</span></span><span class="fin-aj-chev" data-icon="chevronRight"></span></a>
+      <label class="fin-aj-fila fin-aj-campo"><span><span class="fin-aj-t">Día de pago de la tarjeta</span><span class="fin-aj-sub">${tarjetasCache.length ? "Para las tarjetas sin día propio" : "En meses más cortos, el último día"}</span></span>
         <select id="fin-aj-dia-pago" aria-label="Día de pago de la tarjeta">${dias.map(d => `<option value="${d}"${d === diaPagoTarjeta() ? " selected" : ""}>${d}</option>`).join("")}</select></label>
       <label class="fin-aj-fila fin-aj-campo"><span><span class="fin-aj-t">Reintegro RE-IVA</span><span class="fin-aj-sub">Porcentaje estimado de tus compras con factura</span></span>
         <span class="fin-aj-pct"><input type="number" id="fin-aj-reiva" inputmode="decimal" min="0" max="100" step="0.5" value="${(reivaTasa() * 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}" aria-label="Porcentaje de reintegro RE-IVA"><span>%</span></span></label>
@@ -4801,6 +5029,7 @@ function confirmarPendiente(recId, fecha) {
   if (!r) return;
   const ref = financeCollection().doc();
   const datos = FD.conCentavos({ date: fecha, type: r.type, category: r.category, payment: r.payment, desc: r.nombre, amount: FD.aBs(r.montoCent || 0), excluded: false, factura: false, recurrenteId: r.id, recurrenteFecha: fecha, createdAt: Date.now() });
+  if (r.payment === "credito" && tarjetasCache.length) datos.tarjetaId = TC.tarjetaDe(r, tarjetasCache);
   ref.set(datos).catch(err => console.error("Manolo: no se pudo confirmar", err));
   try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) { /* sin vibración */ }
   showUndoToast(`${r.nombre} confirmado`, () => ref.delete());
@@ -4822,7 +5051,7 @@ document.getElementById("fin-pendientes").addEventListener("click", e => {
   if (ab) {
     const r = recurrentes.find(x => x.id === ab.dataset.pendAbrir);
     if (!r) return;
-    openTxnSheet(null, { type: r.type, category: r.category, payment: r.payment, desc: r.nombre, date: ab.dataset.fecha,
+    openTxnSheet(null, { type: r.type, category: r.category, payment: r.payment, tarjetaId: r.tarjetaId || null, desc: r.nombre, date: ab.dataset.fecha,
       amount: String(FD.aBs(r.montoCent || 0)).replace(".", ","), recurrenteId: r.id, recurrenteFecha: ab.dataset.fecha });
   }
 });
@@ -4870,7 +5099,9 @@ function renderRecForm() {
       ${secciones.map(sec => `<optgroup label="${escapeHtml(sec.title)}">${sec.items.map(c => `<option value="${escapeHtml(c.id)}"${r.category === c.id ? " selected" : ""}>${escapeHtml(c.label)}</option>`).join("")}</optgroup>`).join("")}
     </select></label>
     <label class="rec-campo">${r.type === "ingreso" ? "Entra a" : "Se paga con"}<select name="payment" class="txn-filtro-select">
-      ${pagos.map(p => `<option value="${p.id}"${r.payment === p.id ? " selected" : ""}>${p.label}</option>`).join("")}
+      ${pagos.map(p => p.id === "credito" && tarjetasCache.length
+        ? tarjetasCache.map(c => `<option value="credito|${escapeHtml(c.id)}"${r.payment === "credito" && TC.tarjetaDe(r, tarjetasCache) === c.id ? " selected" : ""}>${escapeHtml(c.nombre)}</option>`).join("")
+        : `<option value="${p.id}"${r.payment === p.id ? " selected" : ""}>${p.label}</option>`).join("")}
     </select></label>
     <label class="rec-campo">Se repite<select name="frecuencia" class="txn-filtro-select">
       <option value="mensual"${r.frecuencia === "mensual" ? " selected" : ""}>Cada mes</option>
@@ -4888,7 +5119,8 @@ function leerRecForm() {
   r.nombre = f.nombre.value.trim();
   r.montoTexto = f.monto.value;
   r.category = f.category.value || null;
-  r.payment = f.payment.value;
+  [r.payment, r.tarjetaId] = f.payment.value.split("|");
+  if (!r.tarjetaId) delete r.tarjetaId;
   r.frecuencia = f.frecuencia.value;
   if (/^\d{4}-\d{2}-\d{2}$/.test(f.inicio.value)) r.inicio = f.inicio.value;
   if (f.activo) r.activo = f.activo.checked;
@@ -4902,6 +5134,7 @@ function guardarRec() {
   if (err) { el.hidden = false; el.textContent = err; return; }
   const limpio = { id: r.id || "rec_" + Date.now().toString(36), nombre: r.nombre, type: r.type, category: r.category, payment: r.payment,
     montoCent: cent, amount: FD.aBs(cent), frecuencia: r.frecuencia, inicio: r.inicio, activo: r.activo !== false, omitidos: r.omitidos || [], creado: r.creado || Date.now() };
+  if (r.payment === "credito" && r.tarjetaId) limpio.tarjetaId = r.tarjetaId;
   guardarRecurrentes(r.id ? recurrentes.map(x => x.id === r.id ? limpio : x) : recurrentes.concat([limpio]));
   hideSheet(document.getElementById("rec-sheet"));
   avisoFin(`«${limpio.nombre}» guardado: ${textoFrecuencia(limpio).toLowerCase()}.`);
@@ -4957,7 +5190,7 @@ const RENDERERS = [
   renderStats, updateMonthLabel, renderMovements, renderGasto, renderAnalisis, renderVistaGeneral,
   updateBudgetMonthLabel, renderBudgets, renderBudgetInputs, renderBudgetSummary, renderBudgetInfo,
   renderPresHerramientas, renderCategoryGroups, renderPeriodSettings, renderWallets, updateExportSummary, renderReiva, renderEstadoDatos,
-  renderAjustes, renderRecordatorio, renderDemoBanner, renderPerfil, renderPendientes, renderRecurrentes
+  renderAjustes, renderRecordatorio, renderDemoBanner, renderPerfil, renderPendientes, renderRecurrentes, renderTarjetas
 ];
 // Finanzas solo se dibuja cuando se ve: si estás en otra sección, los
 // cambios quedan marcados y se dibujan al entrar (así no frena el resto de
@@ -5083,7 +5316,7 @@ function intentarRespaldo() {
   if (respaldando || !esquemaCargado || (esquema && esquema.respaldo)) return;
   if (!delServidor.finanzas || !delServidor.ahorros || !delServidor.carteras) return;
   respaldando = true;
-  const nombres = ["config_presupuesto", "presupuestos", "categorias_gasto", "categorias_ingreso", "categorias_personalizadas", "carteras_custom", "finanzas_ajustes", "finanzas_recurrentes"];
+  const nombres = ["config_presupuesto", "presupuestos", "categorias_gasto", "categorias_ingreso", "categorias_personalizadas", "carteras_custom", "finanzas_ajustes", "finanzas_recurrentes", "finanzas_tarjetas"];
   Promise.all(nombres.map(n => metaDocRef(n).get({ source: "server" }).then(d => [n, d.exists ? d.data() : null])))
     .then(pares => {
       const meta = {};
@@ -5254,6 +5487,11 @@ onAuthReady(() => {
     ahorrosCache = crudos.ahorros.map(d => FD.adaptarAhorro(d.id, d));
     pedirRender();
     intentarRespaldo();
+  });
+  tarjetasDocRef().onSnapshot(doc => {
+    metaCrudo.finanzas_tarjetas = doc.exists ? doc.data() : null;
+    tarjetasCache = TC.normalizar(doc.exists ? doc.data().list : []);
+    pedirRender();
   });
   carterasCustomDocRef().onSnapshot(doc => {
     metaCrudo.carteras_custom = doc.exists ? doc.data() : null;

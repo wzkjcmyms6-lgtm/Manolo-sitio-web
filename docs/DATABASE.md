@@ -38,6 +38,9 @@ por dueño).
 
 | `users/{uid}/tiempos/{AAAA-MM-DD}` ✅ | Medir tiempos (2026-10-29, **provisoria**) | `fecha` (AAAA-MM-DD, igual al id), `seg: { manana, ejercicio, correr, desayunar, banarse, leer }` (segundos enteros > 0; solo las actividades anotadas ese día), `actualizado` (ms) | Un documento por día. Cada actividad se guarda sola con `set(…, { merge: true })` (solo cambia `seg.<actividad>`); quitar una usa `update` con `FieldValue.delete()`, y si no queda ninguna se borra el día. Promedios y el cierre a los 30 registros por actividad **no se guardan**: se calculan (`js/tiempos-motor.js`). Ver `docs/TIEMPOS.md` |
 
+| `users/{uid}/meta/finanzas_tarjetas` ✅ | Tarjetas de crédito (2026-10-29) | `list: [{ id ("tc_…"), nombre (≤ 40), limiteCent (entero), limite (Bs, decimal), diaPago (1–31 o null = el de Ajustes), color, creado }]`. El orden importa: la primera es la **principal** | Va en la copia de seguridad (`META_COPIA`) y al importar se suman las que falten. Ver D-055 |
+| `users/{uid}/finanzas/{id}.tarjetaId` ✅ | Tarjetas de crédito | id de la tarjeta en gastos con `payment: "credito"` y en transferencias a `"tarjeta"` (pagos) | **Aditivo**: lo viejo no lo tiene y cuenta para la principal (también si la tarjeta se eliminó). La cartera `tarjeta` sigue siendo la suma de todas. También en `meta/finanzas_recurrentes.list[].tarjetaId` |
+
 Datos derivados (ritmo medio, velocidad media) **no se guardan**: se
 calculan de distancia y tiempos. Los parciales sí (costoso de recalcular sin
 la ruta).

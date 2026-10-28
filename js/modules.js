@@ -44,6 +44,7 @@ const SUB_PANELS = [
   { hash: "fin-herramientas-reiva", parent: "fin-ajustes" },
   { hash: "fin-herramientas-exportar", parent: "fin-ajustes" },
   { hash: "fin-recurrentes", parent: "fin-ajustes" },
+  { hash: "fin-tarjetas", parent: "finanzas" },
   { hash: "inv-posiciones", parent: "inversiones" },
   { hash: "inv-movimientos", parent: "inversiones" },
   { hash: "inv-graficos", parent: "inversiones" },

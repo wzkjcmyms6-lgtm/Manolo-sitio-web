@@ -1752,3 +1752,37 @@ button.res-cat { cursor: pointer; }
 .txn-swap [data-icon] { width: 20px; height: 20px; }
 .txn-swap:disabled { opacity: 0.35; cursor: default; }
 .txn-swap:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+
+/* ---------- Tarjetas de crédito (varias, cada una con su límite) ---------- */
+/* Barra de uso del límite: verde, ámbar desde 50 %, roja desde 80 %. */
+.fin-tc-barra { display: block; height: 6px; border-radius: 3px; background: var(--bg-soft); overflow: hidden; }
+.fin-tc-barra i { display: block; height: 100%; border-radius: 3px; background: #4cc38a; }
+.fin-tc-barra.is-medio i { background: #ffb84d; }
+.fin-tc-barra.is-alto i, .fin-tc-barra.is-pasado i { background: #e2593f; }
+.fin-cartera .fin-tc-barra { width: 100%; margin: 0.1rem 0; }
+.fin-tc-lista { display: flex; flex-direction: column; gap: 0.8rem; max-width: 720px; margin-bottom: 1rem; }
+.fin-tc, .fin-tc-total { display: flex; flex-direction: column; gap: 0.55rem; padding: 1rem; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); min-width: 0; }
+.fin-tc-cab { display: flex; align-items: center; gap: 0.55rem; min-width: 0; }
+.fin-tc-ico { display: flex; flex-shrink: 0; width: 30px; height: 30px; padding: 6px; border-radius: 50%; color: #fff; }
+.fin-tc-nombre { flex: 1; min-width: 0; margin: 0; font-size: 1.05rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fin-tc-chip { flex-shrink: 0; padding: 0.15rem 0.55rem; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); font-size: 0.72rem; font-weight: 600; }
+.fin-tc-editar { flex-shrink: 0; display: grid; place-items: center; width: 44px; height: 44px; margin: -0.4rem -0.4rem -0.4rem 0; border: 0; border-radius: 50%; background: none; color: var(--muted); cursor: pointer; }
+.fin-tc-editar [data-icon] { width: 18px; height: 18px; display: flex; }
+.fin-tc-cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 0.5rem; }
+.fin-tc-cifras > div { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.fin-tc-cifras span { color: var(--muted); font-size: 0.78rem; }
+.fin-tc-cifras strong { font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fin-tc-total .fin-tc-cifras strong { font-size: 1rem; }
+.fin-tc-cifras strong.neg { color: #f1a193; }
+.fin-tc-pie { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.2rem 0.8rem; margin: 0; color: var(--muted); font-size: 0.82rem; }
+.fin-tc-alerta { margin: 0; padding: 0.5rem 0.7rem; border-radius: 12px; background: rgba(226, 89, 63, 0.12); color: #f1a193; font-size: 0.85rem; }
+.fin-tc-alerta.is-aviso { background: rgba(255, 184, 77, 0.12); color: #ffcf85; }
+.fin-tc-pagar { align-self: flex-start; min-height: 44px; padding: 0 1.1rem; border-radius: 999px; border: 0; background: var(--accent-grad); color: #0a0a0a; font: inherit; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
+.fin-tc-nota { margin: 0; color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
+.fin-tc-vacio { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; padding: 1.1rem; border-radius: 18px; background: var(--surface); border: 1px dashed var(--border); }
+.fin-tc-vacio p { margin: 0; color: var(--muted); font-size: 0.9rem; line-height: 1.45; }
+.fin-tc-vacio-ico { display: flex; width: 40px; height: 40px; padding: 9px; border-radius: 50%; background: #e05656; color: #fff; }
+.fin-tc-hacer-principal { margin-top: 0.9rem; }
+.rec-form .is-error { border-color: var(--danger); }
+/* 16 px: con menos, el iPhone hace zoom al escribir. */
+#tc-form input, #tc-form select { font-size: 16px; }

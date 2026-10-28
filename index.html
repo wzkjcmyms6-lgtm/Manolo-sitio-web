@@ -18,7 +18,7 @@
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
   <link rel="stylesheet" href="css/style.css?v=202610291010">
-  <link rel="stylesheet" href="css/finanzas.css?v=202610270100">
+  <link rel="stylesheet" href="css/finanzas.css?v=202610291300">
   <link rel="stylesheet" href="css/habitos.css?v=202610270100">
   <link rel="stylesheet" href="css/inversiones.css?v=202610291000">
   <link rel="stylesheet" href="css/libros.css?v=202610290600">
@@ -777,6 +777,14 @@
             <button type="button" class="fin-aj-btn is-principal fin-rec-nuevo" data-rec-nuevo><span data-icon="plus"></span>Nuevo pago recurrente</button>
           </section>
 
+          <!-- ===== Finanzas: Tarjetas de crédito (varias, con su límite) ===== -->
+          <section id="panel-fin-tarjetas" hidden>
+            <a class="back-link" href="#finanzas"><span class="icon-sm" data-icon="chevronLeft"></span>Resumen</a>
+            <h1 class="page-title">Tarjetas de crédito</h1>
+            <div id="fin-tarjetas" class="fin-tc-lista"></div>
+            <button type="button" class="fin-aj-btn is-principal fin-rec-nuevo" data-tc-nueva><span data-icon="plus"></span>Agregar tarjeta</button>
+          </section>
+
           <!-- ===== Finanzas: Ajustes (engranaje) ===== -->
           <section id="panel-fin-ajustes" hidden>
             <a class="back-link" href="#finanzas"><span class="icon-sm" data-icon="chevronLeft"></span>Resumen</a>
@@ -928,6 +936,22 @@
                 </div>
               </div>
             </div>
+
+<!-- Agregar o editar una tarjeta de crédito -->
+  <div id="tc-sheet" class="js-sheet budget-sheet" hidden>
+    <div class="budget-sheet-overlay"></div>
+    <div class="budget-sheet-panel txn-filtros-panel" role="dialog" aria-modal="true" aria-labelledby="tc-sheet-title">
+      <div class="budget-sheet-header">
+        <button type="button" class="budget-sheet-close" aria-label="Cerrar"><span data-icon="close"></span></button>
+        <h3 id="tc-sheet-title">Tarjeta de crédito</h3>
+      </div>
+      <form class="txn-filtros-cuerpo rec-form" id="tc-form" novalidate></form>
+      <div class="txn-sheet-actions">
+        <button type="button" class="txn-save txn-save-otro" id="tc-borrar">Eliminar</button>
+        <button type="button" class="txn-save" id="tc-guardar">Guardar</button>
+      </div>
+    </div>
+  </div>
 
 <!-- Crear o editar un pago recurrente -->
   <div id="rec-sheet" class="js-sheet budget-sheet" hidden>
@@ -1267,7 +1291,7 @@
   <script defer src="js/accesos.js?v=202610100400"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
   <script defer src="js/icons.js?v=202610100300"></script>
-  <script defer src="js/modules.js?v=202610291100"></script>
+  <script defer src="js/modules.js?v=202610291300"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
   <script defer src="js/exercise-search.js?v=202609291"></script>
@@ -1310,11 +1334,12 @@
   <script defer src="js/actividad-registro.js?v=202610090100"></script>
   <script defer src="js/running.js?v=202610090100"></script>
   <script defer src="js/bicicleta.js?v=202610090100"></script>
-  <script defer src="js/finanzas/datos.js?v=202610011600"></script>
+  <script defer src="js/finanzas/datos.js?v=202610291300"></script>
   <script defer src="js/finanzas/demo.js?v=202610011300"></script>
   <script defer src="js/finanzas/analisis.js?v=202610011500"></script>
   <script defer src="js/finanzas/presupuesto.js?v=202610011600"></script>
-  <script defer src="js/finanzas/app.js?v=202610100300"></script>
+  <script defer src="js/finanzas/tarjetas.js?v=202610291310"></script>
+  <script defer src="js/finanzas/app.js?v=202610291310"></script>
   <script defer src="js/inversiones-motor.js?v=202610280600"></script>
   <script defer src="js/inversiones-series.js?v=202610280400"></script>
   <script defer src="js/inversiones-graficos.js?v=202610280400"></script>
