@@ -50,12 +50,22 @@ def leer_yahoo(texto):
         raise ValueError(f"moneda {r['meta'].get('currency')}")
     offset = (r.get("meta") or {}).get("gmtoffset", -14400)
     cierres = ((r.get("indicators") or {}).get("quote") or [{}])[0].get("close") or []
+    local = lambda t: dt.datetime.fromtimestamp(t + offset, dt.timezone.utc)
     out = {}
     for t, c in zip(r.get("timestamp") or [], cierres):
         if c is None or not c > 0:
             continue
-        fecha = dt.datetime.fromtimestamp(t + offset, dt.timezone.utc).date().isoformat()
-        out[fecha] = round(float(c), 4)
+        out[local(t).date().isoformat()] = round(float(c), 4)
+    # El cierre del último día a veces no viene como barra todavía: si la
+    # sesión ya cerró (último precio a las 16:00 de Nueva York o después),
+    # ese precio es el cierre del día.
+    meta = r.get("meta") or {}
+    precio, hora = meta.get("regularMarketPrice"), meta.get("regularMarketTime")
+    if precio and precio > 0 and hora:
+        h = local(hora)
+        print(f"  último precio {precio} a las {h:%Y-%m-%d %H:%M} (hora de la bolsa)")
+        if h.hour >= 16 and h.date().isoformat() not in out:
+            out[h.date().isoformat()] = round(float(precio), 4)
     return out
 
 
