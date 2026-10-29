@@ -391,3 +391,26 @@ Débito → esa tarjeta). En Movimientos, una cartera por tarjeta; en
 "¿Con qué pagaste?" y en pagos recurrentes, cada tarjeta por su nombre (la
 hoja recuerda la última usada); "Atención" y "Próximos 30 días" avisan el
 pago de cada una. Límite en Bs, aceptando "5.000" (punto de miles).
+
+**D-056 (2026-10-29) · Libros más desarrollado e inteligente.** Pedido del
+dueño (con una captura del formulario donde escribía el autor a mano).
+Decisiones: (1) "Buscar el libro" con una sola búsqueda de texto libre en
+Open Library que completa título, autor, páginas, portada y género (antes
+solo buscaba portadas y el resto se escribía a mano); se verificó desde
+GitHub Actions con un workflow temporal (ya borrado) qué campos da
+(`number_of_pages_median`, `first_publish_year`, temas) y que busca sin
+tildes y por ISBN. El género sale de los temas con pistas en español e
+inglés (las cortas como palabra entera); los resultados sin portada,
+páginas ni autor (resúmenes, análisis) van al final. (2) Progreso de
+lectura dentro del libro (`paginaActual`, `progreso` por día, `paginaBase`)
+en vez de una colección aparte: un documento por libro, sin escrituras
+extra; las páginas por día salen de las diferencias entre días. La primera
+vez que anotas un libro que ya venías leyendo, lo que llevabas no cuenta
+como leído hoy (no infla la meta). Llegar a la última página lo termina y
+festeja. (3) Meta diaria de páginas que empieza en 30 (su rutina "Leer 30
+páginas") y reto anual opcional, en `meta/libros_ajustes`. (4) Estadísticas
+con dos gráficos de una sola serie (sin leyenda, barra naranja #d9732e
+validada contra el fondo oscuro, tocar = número, "Ver tabla"). (5) Aviso de
+libro repetido y pregunta antes de agregarlo. Todo aditivo: los libros
+viejos se ven igual. Pruebas: 13 de lógica nuevas, E2E
+`scripts/e2e/libros-progreso.js` (52).

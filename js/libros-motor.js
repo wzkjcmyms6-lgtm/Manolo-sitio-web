@@ -15,11 +15,29 @@ const ESTADOS = [
 ];
 const ESTADO = {};
 ESTADOS.forEach(e => { ESTADO[e.id] = e; });
+// Géneros para clasificar (la búsqueda sugiere uno según los temas de Open Library).
+const GENEROS = [
+  { id: "novela", nombre: "Novela" },
+  { id: "desarrollo", nombre: "Desarrollo personal" },
+  { id: "finanzas", nombre: "Negocios y finanzas" },
+  { id: "fe", nombre: "Fe y espiritualidad" },
+  { id: "biografia", nombre: "Biografía" },
+  { id: "historia", nombre: "Historia" },
+  { id: "psicologia", nombre: "Psicología" },
+  { id: "filosofia", nombre: "Filosofía" },
+  { id: "ciencia", nombre: "Ciencia" },
+  { id: "poesia", nombre: "Poesía" },
+  { id: "infantil", nombre: "Infantil y juvenil" },
+  { id: "otro", nombre: "Otro" }
+];
+const GENERO = {};
+GENEROS.forEach(g => { GENERO[g.id] = g; });
 const ORDENES = [
   { id: "registro", nombre: "Registrado (nuevo primero)" },
   { id: "fin", nombre: "Terminado (nuevo primero)" },
   { id: "inicio", nombre: "Empezado (nuevo primero)" },
-  { id: "titulo", nombre: "Título (A–Z)" }
+  { id: "titulo", nombre: "Título (A–Z)" },
+  { id: "calificacion", nombre: "Calificación (mejor primero)" }
 ];
 const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 
@@ -66,9 +84,14 @@ function validarLibro(datos, opciones) {
   const fechaFin = fecha("fechaFin", "fecha de fin", false);
   if (fechaInicio && fechaFin && fechaFin < fechaInicio) err("fechaFin", "La fecha de fin no puede ser antes del inicio.");
   if (errores.length) return { ok: false, errores, doc: null };
+  // Datos que completa la búsqueda (2026-10-29): género, año y obra de Open Library.
+  const anio = Number(datos.anio);
   return {
     ok: true, errores: [],
-    doc: { v: 1, titulo, autor: texto(datos.autor, 150).replace(/\s+/g, " "), paginas, estado, calificacion, opinion: texto(datos.opinion, 5000), fechaRegistro, fechaInicio, fechaFin }
+    doc: { v: 1, titulo, autor: texto(datos.autor, 150).replace(/\s+/g, " "), paginas, estado, calificacion, opinion: texto(datos.opinion, 5000), fechaRegistro, fechaInicio, fechaFin,
+      genero: GENERO[datos.genero] ? datos.genero : null,
+      anio: Number.isInteger(anio) && anio >= 1 && anio <= 2100 ? anio : null,
+      olKey: /^\/works\/OL\d+W$/.test(String(datos.olKey || "")) ? datos.olKey : null }
   };
 }
 
@@ -81,7 +104,12 @@ function normalizarLibro(id, d) {
     opinion: d.opinion ? String(d.opinion) : "", fechaRegistro: fechaOk(d.fechaRegistro) ? d.fechaRegistro : "",
     fechaInicio: fechaOk(d.fechaInicio) ? d.fechaInicio : null, fechaFin: fechaOk(d.fechaFin) ? d.fechaFin : null,
     portada: d.portada && typeof d.portada === "object" ? d.portada : null,
-    creado: typeof d.creado === "number" ? d.creado : 0
+    creado: typeof d.creado === "number" ? d.creado : 0,
+    genero: GENERO[d.genero] ? d.genero : null, anio: Number.isInteger(d.anio) ? d.anio : null, olKey: typeof d.olKey === "string" ? d.olKey : null,
+    // Progreso de lectura (js/libros-progreso.js).
+    paginaActual: Number.isInteger(d.paginaActual) && d.paginaActual >= 0 ? d.paginaActual : null,
+    paginaBase: Number.isInteger(d.paginaBase) && d.paginaBase >= 0 ? d.paginaBase : null,
+    progreso: d.progreso && typeof d.progreso === "object" ? d.progreso : null
   };
 }
 
@@ -89,6 +117,7 @@ function normalizarLibro(id, d) {
 // final) o por título.
 function ordenar(lista, criterio) {
   const porTitulo = (a, b) => a.titulo.localeCompare(b.titulo, "es", { sensitivity: "base" });
+  if (criterio === "calificacion") return lista.slice().sort((a, b) => (b.calificacion || 0) - (a.calificacion || 0) || porTitulo(a, b) || a.id.localeCompare(b.id));
   const campo = { registro: "fechaRegistro", fin: "fechaFin", inicio: "fechaInicio" }[criterio];
   if (!campo) return lista.slice().sort((a, b) => porTitulo(a, b) || a.id.localeCompare(b.id));
   return lista.slice().sort((a, b) => {
@@ -98,11 +127,11 @@ function ordenar(lista, criterio) {
   });
 }
 
-// Buscar por título o autor (todas las palabras, sin tildes) y filtrar por estado.
+// Buscar por título o autor (todas las palabras, sin tildes) y filtrar por estado y género.
 function filtrar(lista, f) {
   f = f || {};
   const palabras = normalizar(f.texto).split(/\s+/).filter(Boolean);
-  return lista.filter(l => (!f.estado || l.estado === f.estado) && palabras.every(p => normalizar(`${l.titulo} ${l.autor}`).includes(p)));
+  return lista.filter(l => (!f.estado || l.estado === f.estado) && (!f.genero || l.genero === f.genero) && palabras.every(p => normalizar(`${l.titulo} ${l.autor}`).includes(p)));
 }
 
 function resumen(lista, hoy) {
@@ -193,6 +222,75 @@ function leerBusqueda(json, max) {
   });
   return out;
 }
+// ---- Buscar el libro (Open Library, 2026-10-29) ----
+// Una sola búsqueda por texto libre (título, autor o ISBN) que trae título,
+// autor, año, páginas, portada y temas. Verificado desde GitHub Actions el
+// 2026-10-29: responde en ~1 s, con CORS abierto, busca sin tildes y por ISBN.
+const OL_CAMPOS = "key,title,author_name,cover_i,first_publish_year,number_of_pages_median,subject,edition_count";
+function esIsbn(q) { return /^(97[89])?\d{9}[\dX]$/i.test(String(q || "").replace(/[-\s]/g, "")); }
+function urlBuscarLibro(q) {
+  const t = String(q || "").trim();
+  const consulta = esIsbn(t) ? `isbn:${t.replace(/[-\s]/g, "").toUpperCase()}` : t;
+  return `${OL_BUSCAR}?q=${encodeURIComponent(consulta)}&limit=12&fields=${OL_CAMPOS}`;
+}
+// Temas (en español o inglés) → género. Gana el que más pistas junta;
+// en empate, el que va primero en esta lista.
+const PISTAS = [
+  ["fe", ["christian", "christianity", "religio", "bible", "biblia", "god", "dios", "spiritual", "espiritual", "faith", "church", "iglesia", "prayer", "oracion", "theolog", "teolog", "devotional", "cristian", "evangel"]],
+  ["finanzas", ["finance", "finanza", "money", "dinero", "invest", "inversion", "wealth", "riqueza", "business", "negocio", "economic", "economia", "entrepreneur", "empren", "management", "rich people"]],
+  ["desarrollo", ["self-help", "self help", "autoayuda", "success", "exito", "habit", "habito", "personal growth", "personal development", "desarrollo personal", "motivation", "motivacion", "self-actualization", "superacion", "productivity", "productividad", "leadership", "liderazgo"]],
+  ["psicologia", ["psycholog", "psicolog"]],
+  ["biografia", ["biograph", "biografia", "autobiograph", "memoir", "memorias"]],
+  ["infantil", ["juvenile", "children", "infantil", "juvenil", "fairy tales", "cuentos de hadas"]],
+  ["poesia", ["poetry", "poesia", "poems", "poemas"]],
+  ["filosofia", ["philosoph", "filosof"]],
+  ["ciencia", ["science", "ciencia", "physics", "fisica", "biology", "biologia", "astronom", "cosmolog"]],
+  ["novela", ["fiction", "ficcion", "novel", "novela", "love stories", "historias de amor", "magic realism", "realismo magico", "fantasy", "fantasia"]],
+  ["historia", ["history", "historia"]]
+];
+// Las pistas cortas ("god", "dios") van como palabra entera: "estudios" no es "dios".
+const coincide = (t, p) => (p.length <= 4 ? new RegExp(`(^|[^a-z])${p}([^a-z]|$)`).test(t) : t.includes(p));
+function generoDesdeTemas(temas) {
+  const ts = (Array.isArray(temas) ? temas : []).slice(0, 40).map(normalizar);
+  let mejor = null, max = 0;
+  PISTAS.forEach(([id, pistas]) => {
+    const n = ts.filter(t => pistas.some(p => coincide(t, p))).length;
+    if (n > max) { max = n; mejor = id; }
+  });
+  return mejor;
+}
+// Respuesta → libros para elegir. Primero los que tienen portada, páginas y
+// autor (los resúmenes y análisis casi nunca los tienen); dentro de eso,
+// el orden de Open Library.
+function leerLibros(json, max) {
+  const docs = ((json && json.docs) || []).filter(d => d && d.title);
+  const puntos = d => (Number(d.cover_i) > 0 ? 2 : 0) + (Number(d.number_of_pages_median) > 0 ? 1 : 0) + (Array.isArray(d.author_name) && d.author_name.length ? 1 : 0);
+  return docs.map((d, i) => ({ d, i, p: puntos(d) }))
+    .sort((a, b) => b.p - a.p || a.i - b.i)
+    .slice(0, max || 8)
+    .map(({ d }) => {
+      const id = Number(d.cover_i);
+      const pags = Number(d.number_of_pages_median);
+      return {
+        titulo: String(d.title).trim().slice(0, 200),
+        autor: Array.isArray(d.author_name) ? d.author_name.slice(0, 3).join(", ").slice(0, 150) : "",
+        anio: Number.isInteger(d.first_publish_year) ? d.first_publish_year : null,
+        paginas: Number.isInteger(pags) && pags > 0 && pags <= 20000 ? pags : null,
+        url: id > 0 ? urlPortadaOL(id, "M") : "", urlChica: id > 0 ? urlPortadaOL(id, "S") : "",
+        genero: generoDesdeTemas(d.subject),
+        olKey: /^\/works\/OL\d+W$/.test(String(d.key || "")) ? d.key : null,
+        ediciones: Number(d.edition_count) || 0
+      };
+    });
+}
+// ¿Ya está en tu lista? (mismo título, sin tildes, mayúsculas ni signos)
+const claveTitulo = t => normalizar(t).replace(/[^a-z0-9ñ ]/g, " ").replace(/\s+/g, " ").trim();
+function duplicado(libros, titulo, idActual) {
+  const k = claveTitulo(titulo);
+  if (!k) return null;
+  return (libros || []).find(l => l.id !== idActual && claveTitulo(l.titulo) === k) || null;
+}
+
 // Solo se muestran portadas de Open Library (nada de URLs arbitrarias).
 const portadaUrlOk = u => /^https:\/\/covers\.openlibrary\.org\/b\/id\/\d+-[SML]\.jpg$/.test(String(u || ""));
 // Achicar sin agrandar, manteniendo la proporción, dentro de maxAncho × maxAlto.
@@ -220,9 +318,9 @@ function exportarJson(libros, frases, ahora, portadas) {
 }
 
 return {
-  ESTADOS, ESTADO, ORDENES, normalizar, fechaOk, fechaLarga, estrellas,
+  ESTADOS, ESTADO, ORDENES, GENEROS, GENERO, normalizar, fechaOk, fechaLarga, estrellas,
   validarLibro, normalizarLibro, ordenar, filtrar, resumen, colorTapa,
   validarFrase, normalizarFrase, ordenarFrases, filtrarFrases, frasesDe, exportarJson,
-  urlBusqueda, leerBusqueda, urlPortadaOL, portadaUrlOk, medidasFoto, CALIDADES, LIMITE_FOTO, fotoOk, kb, portadaParaGuardar
+  urlBusqueda, leerBusqueda, urlBuscarLibro, esIsbn, leerLibros, generoDesdeTemas, duplicado, urlPortadaOL, portadaUrlOk, medidasFoto, CALIDADES, LIMITE_FOTO, fotoOk, kb, portadaParaGuardar
 };
 });

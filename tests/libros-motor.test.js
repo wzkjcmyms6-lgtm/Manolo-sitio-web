@@ -10,7 +10,7 @@ test("validar un libro: título obligatorio, fechas editables y coherentes", () 
     opinion: " Una obra maestra. ", fechaRegistro: "2025-03-01", fechaInicio: "2025-01-10", fechaFin: "2025-02-20" }, { hoy: HOY });
   assert.equal(r.ok, true);
   assert.deepEqual(r.doc, { v: 1, titulo: "Cien años de soledad", autor: "Gabriel García Márquez", paginas: 471, estado: "terminado", calificacion: 5,
-    opinion: "Una obra maestra.", fechaRegistro: "2025-03-01", fechaInicio: "2025-01-10", fechaFin: "2025-02-20" });
+    opinion: "Una obra maestra.", fechaRegistro: "2025-03-01", fechaInicio: "2025-01-10", fechaFin: "2025-02-20", genero: null, anio: null, olKey: null });
   const min = L.validarLibro({ titulo: "Solo título", fechaRegistro: HOY }, { hoy: HOY });
   assert.deepEqual([min.ok, min.doc.paginas, min.doc.calificacion, min.doc.fechaInicio, min.doc.fechaFin, min.doc.estado], [true, null, null, null, null, "por_leer"], "lo demás es opcional");
   const mal = L.validarLibro({ titulo: "", paginas: "12.5", calificacion: "6", fechaRegistro: "", fechaInicio: "2026-10-20", fechaFin: "2026-10-10" }, { hoy: HOY });
@@ -115,3 +115,64 @@ test("portadas: foto achicada y comprimida para Firestore", () => {
   assert.deepEqual(L.portadaParaGuardar({ tipo: "foto", datos: chica }, 5), { tipo: "foto", actualizado: 5 });
   assert.equal(L.kb("data:image/jpeg;base64," + "A".repeat(4096)), 3);
 });
+
+// ---- Buscar el libro (Open Library, 2026-10-29) ----
+// Respuesta real (recortada) de search.json, verificada desde GitHub Actions.
+const RESPUESTA = { docs: [
+  { key: "/works/OL22363054W", title: "Motivos y tópicos amatorios clásicos en El amor en los tiempos del cólera", author_name: ["Manuel Cabello Pino"], first_publish_year: 2010, number_of_pages_median: 365, edition_count: 1 },
+  { key: "/works/OL274518W", title: "El amor en los tiempos del cólera", author_name: ["Gabriel García Márquez"], first_publish_year: 1985, number_of_pages_median: 451, cover_i: 10096404, edition_count: 130,
+    subject: ["Vida familiar", "Family life", "Historias de amor", "Love stories", "Ficció histórica", "Historical fiction", "Novels", "Novela", "Colombian fiction"] },
+  { key: "/works/OL42465352W", title: "El amor en los tiempos de cólera", first_publish_year: 1985, number_of_pages_median: 473, cover_i: 14839677, edition_count: 1 },
+  { title: "Sin key ni nada" }
+] };
+
+test("buscar el libro: texto libre o ISBN", () => {
+  assert.equal(L.urlBuscarLibro(" el amor en los tiempos "), "https://openlibrary.org/search.json?q=el%20amor%20en%20los%20tiempos&limit=12&fields=key,title,author_name,cover_i,first_publish_year,number_of_pages_median,subject,edition_count");
+  assert.match(L.urlBuscarLibro("978-0-307-38726-4"), /\?q=isbn%3A9780307387264&/);
+  assert.match(L.urlBuscarLibro("84-376-0494-x"), /\?q=isbn%3A843760494X&/);
+  assert.equal(L.esIsbn("1984"), false, "un año no es un ISBN");
+});
+
+test("buscar el libro: lo más completo primero, con autor, páginas, año, portada y género", () => {
+  const r = L.leerLibros(RESPUESTA, 8);
+  assert.equal(r[0].titulo, "El amor en los tiempos del cólera");
+  assert.deepEqual(r[0], { titulo: "El amor en los tiempos del cólera", autor: "Gabriel García Márquez", anio: 1985, paginas: 451,
+    url: "https://covers.openlibrary.org/b/id/10096404-M.jpg", urlChica: "https://covers.openlibrary.org/b/id/10096404-S.jpg",
+    genero: "novela", olKey: "/works/OL274518W", ediciones: 130 });
+  assert.equal(r[1].autor, "", "sin autor también sale, más abajo");
+  assert.equal(r[2].url, "", "los análisis sin portada van después");
+  assert.equal(r[3].olKey, null);
+  assert.equal(L.leerLibros({ docs: [] }).length, 0);
+  assert.equal(L.leerLibros(null).length, 0);
+});
+
+test("género sugerido según los temas reales de Open Library", () => {
+  assert.equal(L.generoDesdeTemas(["Habit", "Habit breaking", "Self-actualization (psychology)", "Business", "psychology", "Personal Growth", "SELF-HELP / Personal Growth / General."]), "desarrollo");
+  assert.equal(L.generoDesdeTemas(["Rich people", "Personal Finance", "Investments", "Finanzas personales", "Inversiones", "Riqueza", "Success"]), "finanzas");
+  assert.equal(L.generoDesdeTemas(["Christian life", "Vida cristiana"]), "fe");
+  assert.equal(L.generoDesdeTemas(["Fantasy", "Juvenile fiction", "Cuentos de hadas", "Fairy tales", "Children's fiction"]), "infantil");
+  assert.equal(L.generoDesdeTemas(["Estudios literarios", "Novela"]), "novela", "«estudios» no es «dios»");
+  assert.equal(L.generoDesdeTemas([]), null);
+  assert.equal(L.GENEROS.length, 12);
+});
+
+test("validar guarda género, año y obra de Open Library; libro duplicado", () => {
+  const r = L.validarLibro({ titulo: "X", fechaRegistro: HOY, genero: "fe", anio: "2003", olKey: "/works/OL8469328W" }, { hoy: HOY });
+  assert.deepEqual([r.doc.genero, r.doc.anio, r.doc.olKey], ["fe", 2003, "/works/OL8469328W"]);
+  const malo = L.validarLibro({ titulo: "X", fechaRegistro: HOY, genero: "terror", anio: "abc", olKey: "javascript:alert(1)" }, { hoy: HOY });
+  assert.deepEqual([malo.doc.genero, malo.doc.anio, malo.doc.olKey], [null, null, null]);
+  const lista = [libro("a", { titulo: "Cien años de soledad" }), libro("b", { titulo: "El principito" })];
+  assert.equal(L.duplicado(lista, "  cien AÑOS de soledad. ", null).id, "a");
+  assert.equal(L.duplicado(lista, "Cien años de soledad", "a"), null, "al editar, no choca consigo mismo");
+  assert.equal(L.duplicado(lista, "Otro libro", null), null);
+  const n = L.normalizarLibro("z", { titulo: "Y", paginaActual: 40, paginaBase: 10, progreso: { "2026-10-29": 40 }, genero: "novela", anio: 1967 });
+  assert.deepEqual([n.paginaActual, n.paginaBase, n.progreso["2026-10-29"], n.genero, n.anio], [40, 10, 40, "novela", 1967]);
+});
+
+test("filtrar por género y ordenar por calificación", () => {
+  const lista = [libro("a", { titulo: "A", genero: "fe", calificacion: 3 }), libro("b", { titulo: "B", genero: "novela", calificacion: 5 }), libro("c", { titulo: "C" })];
+  assert.deepEqual(L.filtrar(lista, { genero: "fe" }).map(l => l.id), ["a"]);
+  assert.deepEqual(L.ordenar(lista, "calificacion").map(l => l.id), ["b", "a", "c"]);
+  assert.ok(L.ORDENES.some(o => o.id === "calificacion"));
+});
+

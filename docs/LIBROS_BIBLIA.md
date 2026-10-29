@@ -94,6 +94,53 @@ nuevos (antes de que `renderIcons()` corra al cargar), sin tocar
   (están en Firestore, con su caché).
 - Exportar (JSON) incluye las fotos de portada (`fotosDePortada`).
 
+## Libros más inteligente (2026-10-29)
+
+Pedido del dueño: "que la parte de los libros sea más desarrollada y más
+inteligente". Lógica nueva en `js/libros-progreso.js` (UMD, pruebas en
+`tests/libros-progreso.test.js`) y en `js/libros-motor.js`.
+
+- **Buscar el libro** (arriba del formulario): escribes título, autor o
+  ISBN y, al dejar de escribir (o con Enter / "Buscar"), consulta Open
+  Library (`search.json?q=…`). Cada resultado muestra portada, título,
+  autor, año, páginas y género; al tocarlo completa **título, autor,
+  páginas, portada y género** (y guarda el año y la obra de Open Library).
+  Primero los resultados completos (con portada, páginas y autor); los
+  resúmenes y análisis quedan al final. Un ISBN (10 o 13 cifras, con o sin
+  guiones) se busca como ISBN. Al editar, una portada que ya tenías se
+  respeta. Verificado desde GitHub Actions el 2026-10-29 (workflow temporal,
+  ya borrado): ~1 s, CORS abierto, busca sin tildes y por ISBN; da
+  `number_of_pages_median`, `first_publish_year` y temas en español e inglés.
+- **Género** sugerido por los temas de Open Library (Novela, Desarrollo
+  personal, Negocios y finanzas, Fe y espiritualidad, Biografía, Historia,
+  Psicología, Filosofía, Ciencia, Poesía, Infantil y juvenil, Otro);
+  se puede cambiar. Filtro por género en la lista (aparece si algún libro
+  tiene género) y orden "Calificación (mejor primero)".
+- **¿Ya lo tienes?** Si el título coincide con uno de tu lista (sin tildes
+  ni mayúsculas), avisa y pregunta antes de agregarlo otra vez.
+- **Sigue leyendo** (arriba): cada libro "Leyendo" con la página en la que
+  vas, % y barra, lo que falta y cuándo lo terminas — a tu ritmo (páginas
+  desde que empezaste ÷ días) o, si todavía no hay ritmo, con tu meta
+  diaria — y el botón **Anotar página** (también en la ficha).
+- **Anotar página**: "Voy en la página N", con +10 / +20 / +30 y "Lo
+  terminé". Se guarda en el libro `paginaActual` y `progreso` (la última
+  página de cada día). Si ya lo venías leyendo, la primera vez lo que
+  llevabas no cuenta como leído hoy (`paginaBase`). Al llegar a la última
+  página queda **Terminado** con la fecha de hoy y sale el festejo: estrellas
+  de un toque y "Escribir mi opinión".
+- **Meta diaria y reto** (tarjetas de arriba, se tocan para cambiarlas):
+  páginas por día (empieza en 30, como la rutina «Leer 30 páginas»), con
+  racha de días seguidos leyendo; y libros a terminar en el año, con "vas al
+  día / adelantado / te faltan N para ir al día". En
+  `users/{uid}/meta/libros_ajustes`.
+- **Estadísticas** (tercera pestaña): libros y páginas del año, páginas al
+  día (promedio de 30 días), racha y la mejor, días leyendo, calificación
+  promedio; gráfico de páginas por día (30 días, con la línea de tu meta) y
+  de libros terminados por mes (tocar una barra dice el número; "Ver tabla");
+  lo que más lees, tu autor más leído, cuánto tardas por libro y el más
+  largo. Las páginas del año suman lo anotado día a día más los libros
+  terminados ese año sin páginas anotadas.
+
 ## Cómo probar en el iPhone
 
 1. Inicio: abajo, las tarjetas **Libros** y **Biblia**. Cada sección tiene
@@ -108,6 +155,12 @@ nuevos (antes de que `renderIcons()` corra al cargar), sin tocar
 4. Con modo avión: anota un versículo o una frase; al volver la conexión se
    sube solo.
 5. "Exportar (JSON)" en cada sección: "Guardar en Archivos".
+6. **Libros más inteligente**: "Agregar libro" → en "Buscar el libro"
+   escribe "el amor en los tiempos" y toca el de García Márquez: se llenan
+   título, autor, páginas, portada y género. En "Sigue leyendo" toca
+   "Anotar página", pon la página y guarda; arriba, "Hoy" suma las páginas.
+   Toca "Hoy" para cambiar la meta o ponerte un reto de libros. Abre
+   "Estadísticas".
 
 ## Firebase
 
