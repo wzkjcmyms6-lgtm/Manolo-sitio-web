@@ -16,7 +16,7 @@ const MODULES = [
 
 // Sub-paneles que cuelgan de un módulo pero no aparecen en el menú
 // principal (se llega a ellos con tarjetas, ej: Ejercicio → Gimnasio, o
-// Inicio → Running/Bicicleta/Libros/Biblia/Medir tiempos). Igual se
+// Inicio → Running/Bicicleta/Libros/Biblia/Movilidad/Medir tiempos). Igual se
 // muestran/ocultan según el hash, y la nav resalta el módulo padre mientras
 // estás en uno de ellos.
 const SUB_PANELS = [
@@ -31,6 +31,7 @@ const SUB_PANELS = [
   { hash: "bicicleta", parent: "inicio" },
   { hash: "libros", parent: "inicio" },
   { hash: "biblia", parent: "inicio" },
+  { hash: "movilidad", parent: "inicio" },
   { hash: "tiempos", parent: "inicio" },
   { hash: "fin-presupuesto", parent: "finanzas" },
   { hash: "fin-movimientos", parent: "finanzas" },
@@ -135,8 +136,8 @@ function showPanel(hash) {
   document.body.classList.toggle("has-home-btn", !!TAB_BARS[activeModule]);
   // Running y Bicicleta tampoco llevan versículo: la pantalla es para la actividad.
   // Inversiones tampoco (pedido del dueño 2026-10-28): es una sección aparte.
-  // Libros y Biblia tampoco (pedido del dueño 2026-10-29), ni Medir tiempos.
-  document.getElementById("verse-banner").hidden = isExercise || activeModule === "finanzas" || activeModule === "habitos" || activeModule === "inversiones" || ["running", "bicicleta", "libros", "biblia", "tiempos"].includes(hash);
+  // Libros y Biblia tampoco (pedido del dueño 2026-10-29), ni Medir tiempos ni Movilidad.
+  document.getElementById("verse-banner").hidden = isExercise || activeModule === "finanzas" || activeModule === "habitos" || activeModule === "inversiones" || ["running", "bicicleta", "libros", "biblia", "movilidad", "tiempos"].includes(hash);
   document.getElementById("body-banner").hidden = !showBody;
 
   // Pestañas propias de cada módulo (Finanzas, Hábitos, Ejercicio, Inversiones), visibles

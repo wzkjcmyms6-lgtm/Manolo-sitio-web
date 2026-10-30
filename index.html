@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="css/habitos.css?v=202610270100">
   <link rel="stylesheet" href="css/inversiones.css?v=202610291000">
   <link rel="stylesheet" href="css/libros.css?v=202610291410">
+  <link rel="stylesheet" href="css/movilidad.css?v=202610300100">
   <link rel="stylesheet" href="css/tiempos.css?v=202610291200">
   <link rel="stylesheet" href="css/ej-calendario.css?v=202610290900">
 </head>
@@ -171,6 +172,11 @@
                 <span class="icon" data-icon="biblia"></span>
                 <h3>Biblia</h3>
                 <p>El versículo que lees al despertar.</p>
+              </a>
+              <a class="card" href="#movilidad">
+                <span class="icon" data-icon="movilidad"></span>
+                <h3>Movilidad</h3>
+                <p>Rutinas guiadas para soltar el cuerpo.</p>
               </a>
               <a class="card" href="#tiempos">
                 <span class="icon" data-icon="timer"></span>
@@ -396,6 +402,13 @@
             <a class="back-link lib-volver" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
             <h1 class="page-title">Biblia</h1>
             <div class="bib-app" id="bib-app"></div>
+          </section>
+
+          <!-- ===== Movilidad (sub-panel de Inicio) ===== -->
+          <section id="panel-movilidad" hidden>
+            <a class="back-link lib-volver" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
+            <h1 class="page-title">Movilidad</h1>
+            <div class="mov-app" id="mov-app"></div>
           </section>
 
           <!-- ===== Medir tiempos (provisoria, sub-panel de Inicio; ver docs/TIEMPOS.md) ===== -->
@@ -1291,7 +1304,7 @@
   <script defer src="js/accesos.js?v=202610100400"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
   <script defer src="js/icons.js?v=202610100300"></script>
-  <script defer src="js/modules.js?v=202610291300"></script>
+  <script defer src="js/modules.js?v=202610300100"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
   <script defer src="js/exercise-search.js?v=202609291"></script>
@@ -1350,6 +1363,9 @@
   <script defer src="js/libros-motor.js?v=202610291400"></script>
   <script defer src="js/libros-progreso.js?v=202610291400"></script>
   <script defer src="js/libros.js?v=202610291410"></script>
+  <script defer src="js/movilidad-rutinas.js?v=202610300100"></script>
+  <script defer src="js/movilidad-motor.js?v=202610300100"></script>
+  <script defer src="js/movilidad.js?v=202610300100"></script>
   <script defer src="js/tiempos-motor.js?v=202610291100"></script>
   <script defer src="js/tiempos.js?v=202610291200"></script>
 </body>

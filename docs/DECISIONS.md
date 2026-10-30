@@ -414,3 +414,21 @@ validada contra el fondo oscuro, tocar = número, "Ver tabla"). (5) Aviso de
 libro repetido y pregunta antes de agregarlo. Todo aditivo: los libros
 viejos se ven igual. Pruebas: 13 de lógica nuevas, E2E
 `scripts/e2e/libros-progreso.js` (52).
+
+**D-057 (2026-10-30) · Movilidad: rutinas guiadas de estiramiento.** Pedido
+del dueño: sección "Movilidad" igual que Libros y Biblia (tarjeta en Inicio,
+"‹ Inicio", mismos componentes y colores) con dos rutinas guiadas ("Liberar
+el cuerpo", 2 min; "Antes de correr", 5 min) e historial. Decisiones:
+(1) las rutinas son datos (`js/movilidad-rutinas.js`, con partes y una nota
+por parte) y `MovilidadMotor.problemas` las revisa en `npm test`, para
+editarlas sin tocar la lógica; "Antes de correr" reusa la lista de "Liberar
+el cuerpo" en vez de copiarla. (2) Motor propio con marcas de tiempo (como
+`intervalos-motor.js`, que es de caminar/correr y no tiene "saltar" ni
+"por lado"): la cuenta 3-2-1 va dentro (el inicio queda 3 s después) y
+`cambios()` dice cuándo vibrar una sola vez. (3) Historial en Firestore
+(`users/{uid}/movilidad`), como Libros y Biblia, no en `localStorage`: se
+sincroniza y funciona sin internet. (4) Pantalla encendida con
+`Avisos.pedirPantalla()` (ya existía para Running). (5) Salir de la app
+pausa la rutina; salir de la sección la cierra sin guardar. (6) En el
+iPhone no hay vibración web (Apple no lo permite): se documenta. Tarjeta
+después de Biblia; Medir tiempos (provisoria) queda al final.

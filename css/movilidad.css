@@ -1,0 +1,85 @@
+/* ---------- Movilidad (clases .mov-) ----------
+   Sub-panel de Inicio, como Libros y Biblia: reutiliza .lib-cifras,
+   .bib-hoy, .lib-btn, .lib-nota, .lib-h y la hoja (.budget-sheet) de
+   css/libros.css y css/finanzas.css; aquí va lo propio. Tema oscuro,
+   pensado primero para el celular. */
+#panel-movilidad .mov-app { max-width: 720px; min-width: 0; }
+
+/* Tarjetas de las rutinas */
+.mov-rutinas { display: flex; flex-direction: column; gap: 0.6rem; margin: 0.4rem 0 0.4rem; }
+.mov-rutina {
+  display: flex; align-items: center; gap: 0.8rem; min-height: 76px; padding: 0.9rem 1rem; border-radius: 18px; text-align: left;
+  background: radial-gradient(140% 160% at 100% 0%, rgba(255, 122, 48, 0.1), transparent 60%), var(--surface);
+  border: 1px solid var(--border); color: var(--ink); font: inherit; cursor: pointer; min-width: 0;
+}
+.mov-rutina:active { background: var(--surface-raised); }
+.mov-rutina-ico { flex-shrink: 0; display: flex; width: 44px; height: 44px; padding: 10px; border-radius: 14px; background: var(--surface-raised); color: var(--accent-2); }
+.mov-rutina-txt { display: flex; flex-direction: column; gap: 0.15rem; flex: 1; min-width: 0; }
+.mov-rutina-txt b { font-size: 1.05rem; }
+.mov-rutina-txt span { color: var(--muted); font-size: 0.85rem; }
+.mov-rutina-chev { flex-shrink: 0; display: flex; width: 20px; height: 20px; color: var(--muted); }
+
+/* Últimas sesiones */
+.mov-sesiones { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.45rem; }
+.mov-sesion { display: flex; flex-direction: column; gap: 0.15rem; padding: 0.7rem 0.9rem; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); }
+.mov-sesion small { color: var(--muted); font-size: 0.8rem; }
+
+/* Vista previa (hoja) */
+.mov-previa .lib-h { margin: 0.9rem 0 0.4rem; }
+.mov-lista { margin: 0; padding-left: 1.5rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.mov-lista li::marker { color: var(--muted); font-variant-numeric: tabular-nums; }
+.mov-lista-cab { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.1rem 0.6rem; }
+.mov-lista small { display: block; margin-top: 0.15rem; color: var(--muted); font-size: 0.82rem; line-height: 1.35; }
+.mov-seg { color: var(--accent-2); font-size: 0.8rem; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.mov-nota { margin: 0 0 0.5rem; padding: 0.55rem 0.75rem; border-radius: 12px; background: rgba(255, 184, 77, 0.1); color: #ffcf85; font-size: 0.85rem; line-height: 1.4; }
+.mov-empezar { position: sticky; bottom: 0; margin-top: 1rem; padding: 0.8rem 0 0.2rem; background: linear-gradient(transparent, var(--surface) 35%); }
+
+/* Modo guiado: pantalla completa, encima de todo */
+.mov-guia {
+  position: fixed; inset: 0; z-index: 950; display: flex; flex-direction: column; gap: 0.6rem;
+  padding: max(0.8rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+  background: var(--bg); color: var(--ink); overflow-y: auto;
+}
+.mov-guia[hidden] { display: none; }
+body.mov-en-guia { overflow: hidden; }
+.mov-guia-cab { display: flex; align-items: center; gap: 0.7rem; }
+.mov-guia-salir { flex-shrink: 0; display: grid; place-items: center; width: 44px; height: 44px; padding: 11px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--ink); cursor: pointer; }
+.mov-guia-salir [data-icon] { display: flex; width: 20px; height: 20px; }
+.mov-guia-t { display: flex; flex-direction: column; min-width: 0; }
+.mov-guia-t b { font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mov-guia-t span { color: var(--muted); font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+.mov-barra { flex-shrink: 0; height: 6px; border-radius: 3px; background: var(--surface-raised); overflow: hidden; }
+.mov-barra i { display: block; width: 0; height: 100%; border-radius: 3px; background: var(--accent-grad); transition: width 0.2s linear; }
+.mov-guia-cuerpo { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; text-align: center; min-height: 0; }
+.mov-parte { margin: 0; color: var(--muted); font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.mov-ej { margin: 0; font-size: clamp(1.6rem, 7vw, 2.4rem); line-height: 1.15; overflow-wrap: anywhere; }
+.mov-instr { margin: 0; max-width: 30rem; color: var(--muted); font-size: clamp(1rem, 4.4vw, 1.2rem); line-height: 1.4; }
+.mov-reloj { position: relative; width: min(62vw, 15rem); aspect-ratio: 1; margin: 0.4rem 0; }
+.mov-reloj svg { display: block; width: 100%; height: 100%; }
+.mov-reloj-fondo { fill: none; stroke: var(--surface-raised); stroke-width: 8; }
+.mov-reloj-arco { fill: none; stroke: var(--accent-1); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.1s linear; }
+.mov-reloj-num { position: absolute; inset: 0; display: grid; place-items: center; font-size: clamp(3.2rem, 17vw, 4.6rem); font-weight: 700; font-variant-numeric: tabular-nums; }
+.mov-reloj-sub { position: absolute; left: 0; right: 0; bottom: 24%; color: var(--muted); font-size: 0.85rem; }
+.mov-guia.is-pausa .mov-reloj-arco { stroke: var(--muted); }
+.mov-guia.is-pausa .mov-reloj-num { opacity: 0.6; }
+.mov-guia.is-cuenta .mov-reloj-num { color: var(--accent-2); }
+.mov-cambio { margin: 0; padding: 0.45rem 0.9rem; border-radius: 999px; background: var(--accent-grad); color: #0a0a0a; font-weight: 700; animation: mov-latido 0.9s ease-in-out infinite; }
+.mov-cambio[hidden] { display: none; }
+@keyframes mov-latido { 50% { transform: scale(1.06); } }
+.mov-guia .mov-nota { max-width: 30rem; margin: 0; }
+.mov-guia .mov-nota[hidden], .mov-parte[hidden] { display: none; }
+.mov-sig { margin: 0; color: var(--muted); font-size: 0.9rem; }
+.mov-guia-botones { flex-shrink: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 0.6rem; }
+.mov-guia-botones button { min-height: 54px; font-size: 1rem; }
+.mov-guia-botones button:disabled { opacity: 0.4; cursor: default; }
+/* Rutina completada */
+.mov-guia.is-fin .mov-guia-cuerpo, .mov-guia.is-fin .mov-guia-botones { display: none; }
+.mov-fin { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; text-align: center; }
+.mov-fin[hidden] { display: none; }
+.mov-fin h2 { margin: 0; font-size: 1.8rem; }
+.mov-fin-nombre { margin: 0; color: var(--ink); font-size: 1.05rem; }
+.mov-fin .lib-btn { max-width: 22rem; margin-top: 0.8rem; }
+@media (prefers-reduced-motion: reduce) {
+  .mov-cambio { animation: none; }
+  .mov-barra i, .mov-reloj-arco { transition: none; }
+}

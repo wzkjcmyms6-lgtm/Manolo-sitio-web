@@ -208,7 +208,7 @@ const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
   const hojaL = () => w.evaluate(() => { const h = document.querySelector(".lib-hoja"); return !!h && !h.hidden; });
   const titulos = () => w.$$eval("#lib-lista .lib-card-t", els => els.map(e => e.textContent));
 
-  const cifras = await w.$$eval(".lib-cifras b", els => els.map(e => e.textContent));
+  const cifras = await w.$$eval("#panel-libros .lib-cifras b", els => els.map(e => e.textContent));
   ok(cifras.join("|") === "1|1|96", `resumen: 1 leyendo, 1 terminado en 2026, 96 páginas leídas (${cifras.join(" · ")})`);
   ok((await titulos()).join(" | ") === "Cien años de soledad | Rayuela <b>x</b> | El principito", "lista por fecha de registro, lo nuevo primero (y < > como texto)");
   ok(await w.$$eval("#lib-lista .lib-tapa b", els => els.length === 3 && els[0].textContent === "Cien años de soledad"), "sin portada: tapa genérica con título y autor");

@@ -49,7 +49,7 @@ async function elegirDia(p, f) {
 
   console.log("\nTarjeta en Inicio y sección");
   const tarjetas = await p.$$eval("#panel-inicio .card-grid-home > a.card", els => els.map(a => a.getAttribute("href")));
-  ok(tarjetas.slice(-3).join(",") === "#libros,#biblia,#tiempos", `«Medir tiempos» va después de Libros y Biblia (${tarjetas.join(" ")})`);
+  ok(tarjetas[tarjetas.length - 1] === "#tiempos" && tarjetas.indexOf("#biblia") < tarjetas.indexOf("#tiempos"), `«Medir tiempos» va al final, después de Libros y Biblia (${tarjetas.join(" ")})`);
   ok(await p.$eval('#panel-inicio a[href="#tiempos"] .icon svg', () => true).catch(() => false), "la tarjeta tiene su ícono (reloj)");
   ok(await p.$$eval('a[href="#tiempos"], [data-hash="tiempos"]', els => els.filter(e => !e.closest(".card-grid-home")).length) === 0, "no aparece en la barra inferior ni en el menú");
   await p.click('#panel-inicio a[href="#tiempos"]');
