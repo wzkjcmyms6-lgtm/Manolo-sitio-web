@@ -8,18 +8,20 @@ de Biblia), sub-panel de `inicio` en `SUB_PANELS` (`#movilidad`), botón
 
 ## Rutinas (datos en `js/movilidad-rutinas.js`)
 
+Desde el 2026-10-30 hay **solo dos rutinas de 3 minutos** (pedido del dueño,
+D-059):
+
 | Rutina | Duración | Ejercicios |
 |---|---|---|
-| Liberar el cuerpo | 2 min | 6 × 20 s (World's greatest stretch: 10 s por lado) |
-| Antes de correr | 5 min | los 6 de arriba + 6 × 30 s "en movimiento" (balanceos de pierna: 15 s por pierna) |
-| Después de correr | 5 min | 1 min caminando suave + 5 estiramientos sostenidos de 20 s por lado (gemelos, cuádriceps, isquiotibiales, flexor de cadera, glúteo) + postura del niño y rodillas al pecho (20 s) |
+| Todo el cuerpo | 3 min | Gato-vaca, postura del niño, perro boca abajo pedaleando, World's greatest stretch (15 s por lado), sentadilla profunda, círculos de hombros y cuello: 30 s cada uno |
+| Después de correr | 3 min | Gemelos en la pared, cuádriceps de pie, isquiotibiales, flexor de cadera en zancada, glúteo en figura 4: 36 s cada uno (18 s por lado) |
 
-En "Antes de correr", durante la segunda parte se ve la nota "En esta parte
-todo va en movimiento continuo, sin sostener posiciones." Es un
-calentamiento dinámico: va **antes**. "Después de correr" (agregada el
-2026-10-30, D-058) hace lo contrario: bajar pulsaciones y estirar
-sosteniendo, con la nota "Sostén cada estiramiento sin rebotar: hasta sentir
-tensión, nunca dolor."
+"Todo el cuerpo" conserva el id de la antigua "Liberar el cuerpo" (son los
+mismos seis ejercicios, ahora de 30 s). Durante "Después de correr" se ve la
+nota "Sostén cada estiramiento sin rebotar: hasta sentir tensión, nunca
+dolor." Las rutinas anteriores ("Liberar el cuerpo" de 2 min, "Antes de
+correr" y la primera "Después de correr" de 5 min, D-057/D-058) ya no
+aparecen, pero sus sesiones siguen en el historial con su nombre.
 
 ### Cómo editar o agregar una rutina
 
@@ -87,15 +89,17 @@ Firestore) y se sube sola al volver la conexión. Las reglas ya cubren
 | `js/movilidad-motor.js` | UMD sin DOM: pasos, cuenta 3-2-1, info en cada instante, pausa, saltar, cambios (para vibrar), sesión, racha, últimas. Pruebas: `tests/movilidad-motor.test.js` |
 | `js/movilidad.js` | Pantallas y Firestore |
 | `css/movilidad.css` | Estilos propios (clases `.mov-`) |
-| `scripts/e2e/movilidad.js` | Prueba de pantalla con reloj falso (57 comprobaciones) |
+| `scripts/e2e/movilidad.js` | Prueba de pantalla con reloj falso (55 comprobaciones) |
 
 ## Cómo probar en el iPhone
 
-1. Cierra Manolo y vuelve a abrirlo. Inicio › **Movilidad**.
-2. Toca "Liberar el cuerpo": mira la lista y toca **Empezar**.
-3. Cuenta 3-2-1 y empieza Gato-vaca; espera que pase solo al siguiente.
-   Prueba **Pausar**, **Reanudar** y **Saltar**.
-4. En "World's greatest stretch", a los 10 s sale "Cambia de lado".
+1. Cierra Manolo y vuelve a abrirlo. Inicio › **Movilidad**: dos tarjetas,
+   "Todo el cuerpo" y "Después de correr", de 3 min cada una.
+2. Toca "Todo el cuerpo": mira la lista y toca **Empezar**.
+3. Cuenta 3-2-1 y empieza Gato-vaca (30 s); espera que pase solo al
+   siguiente. Prueba **Pausar**, **Reanudar** y **Saltar**.
+4. En "World's greatest stretch", a los 15 s sale "Cambia de lado".
 5. Al terminar: "Rutina completada"; toca **Listo** y mira la racha y
    "Últimas sesiones".
-6. Con modo avión también funciona (y la sesión se sube después).
+6. "Después de correr": cada estiramiento cambia de lado a los 18 s.
+7. Con modo avión también funciona (y la sesión se sube después).

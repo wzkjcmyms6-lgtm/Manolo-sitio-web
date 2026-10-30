@@ -139,6 +139,15 @@ function tituloRango(tipo, r, hoy) {
   return `${corto(d)} – ${corto(h)}${h.getUTCFullYear() !== fechaUtc(hoy).getUTCFullYear() ? ` ${h.getUTCFullYear()}` : ""}`;
 }
 
+// Total de un día: la suma de todo lo que anotaste ese día (2026-10-30:
+// "que se registren los días y se haga un promedio de los días").
+const totalDia = d => ACTIVIDADES.reduce((s, a) => s + (d && d.seg && d.seg[a.id] > 0 ? d.seg[a.id] : 0), 0);
+// Días anotados (con algo) entre desde y hasta (sin límites = todos) y el promedio de sus totales.
+function promedioDias(ds, desde, hasta) {
+  const dias = (ds || []).filter(d => (!desde || d.fecha >= desde) && (!hasta || d.fecha <= hasta) && totalDia(d) > 0);
+  return { dias: dias.length, promedio: dias.length ? Math.round(dias.reduce((s, d) => s + totalDia(d), 0) / dias.length) : null };
+}
+
 // Promedio de cada actividad en la semana o el mes de `ref` (solo registros que cuentan).
 function periodo(ds, tipo, ref, hoy) {
   const r = rango(tipo, ref), c = contados(ds), act = {};
@@ -148,6 +157,7 @@ function periodo(ds, tipo, ref, hoy) {
   });
   return {
     tipo, desde: r.desde, hasta: r.hasta, act,
+    dias: promedioDias(ds, r.desde, r.hasta),
     titulo: tituloRango(tipo, r, hoy || r.hasta),
     enCurso: !!hoy && hoy >= r.desde && hoy <= r.hasta,
     futuro: !!hoy && r.desde > hoy,
@@ -161,5 +171,5 @@ function fechaLarga(f) {
   return `${DIAS[d.getUTCDay()]} ${d.getUTCDate()} de ${MESES[d.getUTCMonth()]}`;
 }
 
-return { ACTIVIDADES, LIMITE, dias, contados, estado, bloqueada, leer, campos, texto, lunes, rango, mover, periodo, fechaLarga };
+return { ACTIVIDADES, LIMITE, dias, contados, totalDia, promedioDias, estado, bloqueada, leer, campos, texto, lunes, rango, mover, periodo, fechaLarga };
 });

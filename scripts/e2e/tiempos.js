@@ -111,6 +111,8 @@ async function elegirDia(p, f) {
   ok((await fila(p, '[data-tmp-prom="manana"]')) === `Rutina de la mañana ${T.texto(sem.act.manana.promedio)} 2`, `mañana: ${T.texto(sem.act.manana.promedio)} en 2 días`);
   ok((await fila(p, '[data-tmp-prom="correr"]')) === `Correr ${T.texto(sem.act.correr.promedio)} 3`, `correr: ${T.texto(sem.act.correr.promedio)} en 3 días`);
   ok((await fila(p, '[data-tmp-prom="desayunar"]')) === "Desayunar — 0", "sin datos: guion");
+  const diaSem = T.promedioDias(ds, "2026-10-26", "2026-11-01");
+  ok((await fila(p, '[data-tmp-prom="dia"]')) === `Tu día (todo junto) ${T.texto(diaSem.promedio)} 3`, `abajo, tu día completo en promedio: ${T.texto(diaSem.promedio)} en 3 días`);
   ok(await p.$eval('[data-tmp-mover="1"]', b => b.disabled), "no se puede ir a una semana futura");
   ok(/todavía no termina/.test(await texto(p, "#tmp-promedios")), "avisa que la semana sigue en curso");
   await p.click('[data-tmp-mover="-1"]');
@@ -132,6 +134,9 @@ async function elegirDia(p, f) {
 
   console.log("\nTus días: corregir y quitar");
   ok((await p.$$eval("[data-tmp-dia]", els => els.map(e => e.dataset.tmpDia))).slice(0, 3).join(",") === "2026-10-28,2026-10-27,2026-10-26", "lista con el más nuevo primero");
+  const todosDias = T.promedioDias(ds);
+  ok((await p.$eval("[data-tmp-resumen-dias]", el => el.innerText.replace(/\s+/g, " ").trim())) === `${todosDias.dias} días registrados ${T.texto(todosDias.promedio)} tu día en promedio (todo junto)`, `días registrados (${todosDias.dias}) y el promedio de los días (${T.texto(todosDias.promedio)})`);
+  ok((await p.$eval('[data-tmp-dia="2026-10-28"] .tmp-dia-total', el => el.textContent)) === T.texto(T.totalDia(ds.find(d => d.fecha === "2026-10-28"))), "cada día muestra su total");
   await elegirDia(p, "2026-10-28");
   await p.click('[data-tmp-dia="2026-10-27"]');
   await p.waitForTimeout(300);

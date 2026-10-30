@@ -443,3 +443,18 @@ caminando suave para bajar pulsaciones y estiramientos sostenidos (gemelos,
 cuádriceps, isquiotibiales, flexor de cadera y glúteo, 20 s por lado;
 postura del niño y rodillas al pecho, 20 s), 5 min en total. No cambia la
 lógica ni los datos guardados.
+
+**D-059 (2026-10-30) · Movilidad: dos rutinas de 3 min; Medir tiempos:
+total y promedio de los días.** Pedido del dueño: "que en la parte de
+estiramiento solo existan 2 estiramientos, uno para todo el cuerpo, que dure
+3 min y 1 para cuando correr que dure 3 min" y "que en medir tiempos se
+registren los días y se haga un promedio de los días". Movilidad: "Todo el
+cuerpo" (los seis ejercicios de "Liberar el cuerpo", ahora 30 s cada uno;
+conserva su id) y "Después de correr" (cinco estiramientos sostenidos de 18 s
+por lado: gemelos, cuádriceps, isquiotibiales, flexor de cadera y glúteo).
+"Para cuando correr" se tomó como **después** (estirar), siguiendo su
+pregunta anterior (D-058); el calentamiento dinámico "Antes de correr" sale.
+Solo cambian datos (`js/movilidad-rutinas.js`); el historial no se toca.
+Medir tiempos: `totalDia` y `promedioDias` en `js/tiempos-motor.js`; cada día
+muestra su total, arriba de "Tus días" los días registrados y el promedio de
+los totales, y en Promedios la fila "Tu día (todo junto)" por semana o mes.

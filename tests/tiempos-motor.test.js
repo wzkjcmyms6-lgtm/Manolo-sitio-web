@@ -121,3 +121,20 @@ test("periodo: solo cuentan los primeros 30", () => {
 test("fechaLarga", () => {
   assert.strictEqual(T.fechaLarga("2026-10-28"), "mié 28 de octubre");
 });
+
+test("total de cada día y promedio de los días", () => {
+  const ds = T.dias(docsDe({
+    "2026-10-26": { manana: 1800, correr: 1500 },   // 55 min
+    "2026-10-27": { leer: 1200 },                    // 20 min
+    "2026-10-28": { manana: 1500, desayunar: 600, leer: 900 }  // 50 min
+  }));
+  assert.equal(T.totalDia(ds[0]), 3300);
+  assert.equal(T.totalDia({ seg: {} }), 0);
+  assert.deepEqual(T.promedioDias(ds), { dias: 3, promedio: 2500 });
+  assert.deepEqual(T.promedioDias(ds, "2026-10-27", "2026-10-28"), { dias: 2, promedio: 2100 });
+  assert.deepEqual(T.promedioDias([]), { dias: 0, promedio: null });
+  const s = T.periodo(ds, "semana", "2026-10-28", "2026-10-28");
+  assert.deepEqual(s.dias, { dias: 3, promedio: 2500 });
+  assert.deepEqual(T.periodo(ds, "semana", "2026-10-19", "2026-10-28").dias, { dias: 0, promedio: null });
+});
+

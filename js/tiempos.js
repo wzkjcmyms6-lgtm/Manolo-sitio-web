@@ -149,6 +149,7 @@ function renderPromedios() {
       <tbody>${T.ACTIVIDADES.map(a => `
         <tr data-tmp-prom="${a.id}"><td>${esc(a.nombre)}</td><td>${T.texto(p.act[a.id].promedio)}</td><td>${p.act[a.id].n}</td></tr>`).join("")}
       </tbody>
+      <tfoot><tr data-tmp-prom="dia"><th scope="row">Tu día (todo junto)</th><td>${T.texto(p.dias.promedio)}</td><td>${p.dias.dias}</td></tr></tfoot>
     </table>`}
     ${p.enCurso && p.hayDatos ? `<p class="tmp-nota">${tipo === "semana" ? "La semana" : "El mes"} todavía no termina: el promedio se va armando con cada día.</p>` : ""}`;
 }
@@ -175,13 +176,18 @@ function renderAvance() {
 function renderDias() {
   const el = $("tmp-dias");
   const lista = ds.slice().reverse();
+  const todos = T.promedioDias(ds);
   el.innerHTML = `
     <h2 class="tmp-titulo" id="tmp-dias-t">Tus días</h2>
     ${!cargado ? `<p class="empty-state">Cargando…</p>` : !lista.length ? `<p class="empty-state">Todavía no anotaste ningún día.</p>` : `
+    <div class="tmp-resumen-dias" data-tmp-resumen-dias>
+      <div><b>${todos.dias}</b><span>${todos.dias === 1 ? "día registrado" : "días registrados"}</span></div>
+      <div><b>${T.texto(todos.promedio)}</b><span>tu día en promedio (todo junto)</span></div>
+    </div>
     <p class="tmp-nota">Toca un día para corregirlo.</p>
     ${lista.map(d => `
     <button type="button" class="bib-item tmp-dia" data-tmp-dia="${d.fecha}">
-      <b>${esc(T.fechaLarga(d.fecha))}</b>
+      <span class="tmp-dia-cab"><b>${esc(T.fechaLarga(d.fecha))}</b><b class="tmp-dia-total">${T.texto(T.totalDia(d))}</b></span>
       <span>${T.ACTIVIDADES.filter(a => d.seg[a.id]).map(a => `${esc(a.nombre)}: ${T.texto(d.seg[a.id])}`).join(" · ")}</span>
     </button>`).join("")}`}`;
 }

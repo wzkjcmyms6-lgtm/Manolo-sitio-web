@@ -34,6 +34,12 @@ borraremos más adelante" para medir cuánto tarda cada día en:
   corregir. Si por dos aparatos sin conexión llegara un registro 31, no
   cuenta (se toman los 30 primeros por fecha).
 - **Tus días**: lista del más nuevo al más viejo; tocar uno lo abre arriba.
+  Cada día muestra su **total** (la suma de todo lo anotado ese día) y,
+  arriba de la lista, cuántos **días registrados** hay y **tu día en
+  promedio** (el promedio de esos totales). En **Promedios**, la última fila
+  "Tu día (todo junto)" da el promedio de los totales de esa semana o mes.
+  Pedido del dueño 2026-10-30 ("que se registren los días y se haga un
+  promedio de los días"); se calcula, no se guarda nada nuevo.
 
 Datos: `users/{uid}/tiempos/{AAAA-MM-DD}` (ver `docs/DATABASE.md`). Las
 reglas de Firestore ya cubren `users/{uid}/**`: no hubo que tocar la consola.
