@@ -12,9 +12,14 @@ de Biblia), sub-panel de `inicio` en `SUB_PANELS` (`#movilidad`), botón
 |---|---|---|
 | Liberar el cuerpo | 2 min | 6 × 20 s (World's greatest stretch: 10 s por lado) |
 | Antes de correr | 5 min | los 6 de arriba + 6 × 30 s "en movimiento" (balanceos de pierna: 15 s por pierna) |
+| Después de correr | 5 min | 1 min caminando suave + 5 estiramientos sostenidos de 20 s por lado (gemelos, cuádriceps, isquiotibiales, flexor de cadera, glúteo) + postura del niño y rodillas al pecho (20 s) |
 
 En "Antes de correr", durante la segunda parte se ve la nota "En esta parte
-todo va en movimiento continuo, sin sostener posiciones."
+todo va en movimiento continuo, sin sostener posiciones." Es un
+calentamiento dinámico: va **antes**. "Después de correr" (agregada el
+2026-10-30, D-058) hace lo contrario: bajar pulsaciones y estirar
+sosteniendo, con la nota "Sostén cada estiramiento sin rebotar: hasta sentir
+tensión, nunca dolor."
 
 ### Cómo editar o agregar una rutina
 

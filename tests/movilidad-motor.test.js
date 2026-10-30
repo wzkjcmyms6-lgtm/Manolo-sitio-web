@@ -3,13 +3,13 @@ const assert = require("node:assert/strict");
 const RUTINAS = require("../js/movilidad-rutinas.js");
 const M = require("../js/movilidad-motor.js");
 
-const [LIBERAR, CORRER] = RUTINAS;
+const [LIBERAR, CORRER, DESPUES] = RUTINAS;
 const T0 = 1000000;
 const s = n => T0 + M.CUENTA_MS + n * 1000;   // instante n segundos después de la cuenta 3-2-1
 
 test("las rutinas están bien escritas y duran lo pedido", () => {
   assert.deepEqual(M.problemas(RUTINAS), []);
-  assert.deepEqual(RUTINAS.map(r => r.id), ["liberar-el-cuerpo", "antes-de-correr"]);
+  assert.deepEqual(RUTINAS.map(r => r.id), ["liberar-el-cuerpo", "antes-de-correr", "despues-de-correr"]);
   assert.equal(M.duracion(LIBERAR), 120);
   assert.equal(M.pasos(LIBERAR).length, 6);
   assert.equal(M.duracion(CORRER), 300);
@@ -122,3 +122,15 @@ test("sesión guardada, racha y últimas", () => {
   assert.equal(M.estaSemana(ses, "2026-10-30"), 4, "lunes 26 a hoy");
   assert.equal(M.fechaCorta("2026-10-30"), "vie 30 oct");
 });
+
+test("Después de correr: caminar y luego estiramientos sostenidos (5 min)", () => {
+  const ps = M.pasos(DESPUES);
+  assert.equal(M.duracion(DESPUES), 300);
+  assert.equal(ps.length, 8);
+  assert.equal(ps[0].nombre, "Caminar suave");
+  assert.deepEqual(ps.filter(p => p.porLado).map(p => p.segundos), [40, 40, 40, 40, 40], "cinco estiramientos de 20 s por lado");
+  assert.equal(ps[1].nota, "Sostén cada estiramiento sin rebotar: hasta sentir tensión, nunca dolor.");
+  assert.equal(ps[0].nota, "");
+  assert.ok(!ps.some(p => /balanceo|skipping|trotando/i.test(p.nombre)), "nada en movimiento: eso es para antes");
+});
+

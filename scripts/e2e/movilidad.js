@@ -55,7 +55,7 @@ function simular() {
   ok((await p.$$eval("#mov-app .lib-cifras b", els => els.map(e => e.textContent.trim()).join("|"))) === "🔥 2|2|2", "racha de 2 días, 2 esta semana, 2 en total");
   ok(/Haz una rutina hoy para seguir la racha/.test(await tx("#mov-app .bib-hoy")), "invita a seguir la racha");
   const rut = await p.$$eval("[data-mov-rutina]", els => els.map(e => e.innerText.replace(/\s+/g, " ").trim()));
-  ok(rut.join(" | ") === "Liberar el cuerpo 2 min · 6 ejercicios | Antes de correr 5 min · 12 ejercicios", `dos tarjetas con nombre, duración y ejercicios (${rut.join(" | ")})`);
+  ok(rut.join(" | ") === "Liberar el cuerpo 2 min · 6 ejercicios | Antes de correr 5 min · 12 ejercicios | Después de correr 5 min · 8 ejercicios", `una tarjeta por rutina con nombre, duración y ejercicios (${rut.join(" | ")})`);
   ok((await p.$$(".mov-sesion")).length === 2 && /jue 29 oct · 7:20 · 2 min/.test(await tx(".mov-sesion")), "últimas sesiones, la más nueva primero");
   await captura(p, "movilidad-inicio.png");
 
@@ -67,6 +67,12 @@ function simular() {
   ok(/En esta parte todo va en movimiento continuo, sin sostener posiciones\./.test(await tx(".mov-hoja .mov-nota")), "con la nota visible");
   ok(/Balanceo de pierna adelante-atrás 30 s · 15 s por lado/.test(await tx(".mov-hoja .mov-previa")), "los «por lado» lo dicen");
   await captura(p, "movilidad-previa.png");
+  await p.click(".mov-hoja .budget-sheet-close");
+  await p.waitForTimeout(350);
+  await p.click('[data-mov-rutina="despues-de-correr"]');
+  await p.waitForTimeout(350);
+  ok((await p.$$(".mov-hoja .mov-lista li")).length === 8 && (await p.$$eval(".mov-hoja .lib-h", els => els.map(e => e.textContent).join("|"))) === "Bajar pulsaciones|Estiramientos sostenidos", "Después de correr: caminar y luego 7 estiramientos sostenidos");
+  ok(/Sostén cada estiramiento sin rebotar/.test(await tx(".mov-hoja .mov-nota")) && /Gemelos en la pared 40 s · 20 s por lado/.test(await tx(".mov-hoja .mov-previa")), "con su nota y 20 s por lado");
   await p.click(".mov-hoja .budget-sheet-close");
   await p.waitForTimeout(350);
   await p.click('[data-mov-rutina="liberar-el-cuerpo"]');

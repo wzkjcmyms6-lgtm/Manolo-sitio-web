@@ -34,6 +34,18 @@ const EN_MOVIMIENTO = [
   { nombre: "Talones al glúteo trotando en el sitio", instruccion: "Trota en el sitio llevando los talones al glúteo.", segundos: 30, porLado: false }
 ];
 
+// Después de correr (agregada el 2026-10-30): bajar pulsaciones y estirar
+// sosteniendo, lo contrario de "Antes de correr" (que es en movimiento).
+const SOSTENIDOS = [
+  { nombre: "Gemelos en la pared", instruccion: "Manos en la pared, una pierna atrás estirada con el talón en el suelo.", segundos: 40, porLado: true },
+  { nombre: "Cuádriceps de pie", instruccion: "Toma el empeine y lleva el talón al glúteo, rodillas juntas y cadera adelante.", segundos: 40, porLado: true },
+  { nombre: "Isquiotibiales", instruccion: "Talón apoyado adelante y pierna estirada; inclínate desde la cadera con la espalda recta.", segundos: 40, porLado: true },
+  { nombre: "Flexor de cadera en zancada", instruccion: "Rodilla de atrás en el suelo; empuja la cadera hacia adelante.", segundos: 40, porLado: true },
+  { nombre: "Glúteo en figura 4", instruccion: "Acostado, tobillo sobre la rodilla contraria; acerca las piernas al pecho.", segundos: 40, porLado: true },
+  { nombre: "Postura del niño", instruccion: "Caderas atrás, brazos estirados, respira lento.", segundos: 20, porLado: false },
+  { nombre: "Rodillas al pecho", instruccion: "Acostado, abraza las rodillas y relaja la espalda baja.", segundos: 20, porLado: false }
+];
+
 return [
   {
     id: "liberar-el-cuerpo",
@@ -46,6 +58,16 @@ return [
     partes: [
       { titulo: "Liberar el cuerpo", ejercicios: LIBERAR_EL_CUERPO },
       { titulo: "En movimiento", nota: "En esta parte todo va en movimiento continuo, sin sostener posiciones.", ejercicios: EN_MOVIMIENTO }
+    ]
+  },
+  {
+    id: "despues-de-correr",
+    nombre: "Después de correr",
+    partes: [
+      { titulo: "Bajar pulsaciones", ejercicios: [
+        { nombre: "Caminar suave", instruccion: "Camina despacio y respira hondo para bajar las pulsaciones.", segundos: 60, porLado: false }
+      ] },
+      { titulo: "Estiramientos sostenidos", nota: "Sostén cada estiramiento sin rebotar: hasta sentir tensión, nunca dolor.", ejercicios: SOSTENIDOS }
     ]
   }
 ];

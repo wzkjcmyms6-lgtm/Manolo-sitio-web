@@ -432,3 +432,14 @@ sincroniza y funciona sin internet. (4) Pantalla encendida con
 pausa la rutina; salir de la sección la cierra sin guardar. (6) En el
 iPhone no hay vibración web (Apple no lo permite): se documenta. Tarjeta
 después de Biblia; Medir tiempos (provisoria) queda al final.
+
+**D-058 (2026-10-30) · Movilidad: rutina "Después de correr".** El dueño
+preguntó si el prompt era para estirar después de correr. La segunda rutina
+del prompt (balanceos de pierna, zancadas, skipping, talones al glúteo, "en
+movimiento continuo, sin sostener posiciones") es un calentamiento dinámico:
+corresponde a **antes** de correr y se deja como está. Para después se agrega
+una tercera rutina, solo como datos en `js/movilidad-rutinas.js`: 1 min
+caminando suave para bajar pulsaciones y estiramientos sostenidos (gemelos,
+cuádriceps, isquiotibiales, flexor de cadera y glúteo, 20 s por lado;
+postura del niño y rodillas al pecho, 20 s), 5 min en total. No cambia la
+lógica ni los datos guardados.
