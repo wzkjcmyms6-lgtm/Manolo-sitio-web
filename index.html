@@ -17,7 +17,7 @@
   <!-- Fuentes guardadas en el repo: la app no depende de internet para verse bien -->
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
-  <link rel="stylesheet" href="css/style.css?v=202611040400">
+  <link rel="stylesheet" href="css/style.css?v=202611040500">
   <link rel="stylesheet" href="css/finanzas.css?v=202610291300">
   <link rel="stylesheet" href="css/habitos.css?v=202610270100">
   <link rel="stylesheet" href="css/inversiones.css?v=202610291000">
@@ -25,7 +25,7 @@
   <link rel="stylesheet" href="css/movilidad.css?v=202610300100">
   <link rel="stylesheet" href="css/tiempos.css?v=202610300310">
   <link rel="stylesheet" href="css/ej-calendario.css?v=202610290900">
-  <link rel="stylesheet" href="css/run.css?v=202611040400">
+  <link rel="stylesheet" href="css/run.css?v=202611040500">
 </head>
 <body>
   <!-- Degradado marfil y brillo del maniquí (mapa corporal y creador de ejercicios) -->
@@ -67,6 +67,7 @@
       <button type="button" class="avisos-btn topbar-avisos" data-avisos hidden aria-label="Avisos de acceso"><span data-icon="bell"></span><span class="avisos-n" data-avisos-n hidden></span></button>
       <a href="#fin-ajustes" class="topbar-ajustes" data-engranaje="finanzas" aria-label="Ajustes de Finanzas"><span data-icon="gear"></span></a>
       <a href="#inv-ajustes" class="topbar-ajustes" data-engranaje="inversiones" aria-label="Ajustes de Inversiones"><span data-icon="gear"></span></a>
+      <a href="#run-ajustes" class="topbar-ajustes" data-engranaje="running" aria-label="Ajustes de Running"><span data-icon="gear"></span></a>
       <button class="menu-toggle" id="menu-toggle" data-icon="menu" aria-expanded="false" aria-label="Abrir menú"></button>
     </div>
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
@@ -432,8 +433,15 @@
 
           <section id="panel-run-progreso" hidden>
             <h1 class="page-title">Progreso</h1>
+            <div id="rp-arriba" class="rp-app"></div>
             <section class="dash" id="running-dash" aria-label="Resumen semanal"></section>
             <div id="rp-app" class="rp-app"></div>
+          </section>
+
+          <section id="panel-run-ajustes" hidden>
+            <a class="back-link" href="#run-progreso"><span class="icon-sm" data-icon="chevronLeft"></span>Progreso</a>
+            <h1 class="page-title">Ajustes de Running</h1>
+            <div id="ra-app" class="ra-app"></div>
           </section>
 
           <section id="panel-run-segmentos" hidden>
@@ -1355,7 +1363,7 @@
   <script defer src="js/accesos.js?v=202610100400"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
   <script defer src="js/icons.js?v=202611040400"></script>
-  <script defer src="js/modules.js?v=202611040400"></script>
+  <script defer src="js/modules.js?v=202611040500"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
   <script defer src="js/exercise-search.js?v=202609291"></script>
@@ -1400,16 +1408,18 @@
   <script defer src="js/run-zip.js?v=202611040100"></script>
   <script defer src="js/run-csv.js?v=202611040100"></script>
   <script defer src="js/run-metricas.js?v=202611040100"></script>
-  <script defer src="js/run-guardar.js?v=202611040200"></script>
+  <script defer src="js/run-guardar.js?v=202611040500"></script>
   <script defer src="js/run-enriquecer.js?v=202611040200"></script>
-  <script defer src="js/run-importar.js?v=202611040100"></script>
+  <script defer src="js/run-importar.js?v=202611040500"></script>
   <script defer src="js/run-vista.js?v=202611040200"></script>
   <script defer src="js/run-graficos.js?v=202611040200"></script>
-  <script defer src="js/run-analisis.js?v=202611040400"></script>
+  <script defer src="js/run-analisis.js?v=202611040500"></script>
   <script defer src="js/run-datos.js?v=202611040400"></script>
   <script defer src="js/run-mapa.js?v=202611040300"></script>
   <script defer src="js/run-detalle.js?v=202611040200"></script>
   <script defer src="js/run-feed.js?v=202611040400"></script>
+  <script defer src="js/run-progreso.js?v=202611040500"></script>
+  <script defer src="js/run-ajustes.js?v=202611040500"></script>
   <script defer src="js/running.js?v=202611040400"></script>
   <script defer src="js/bicicleta.js?v=202610090100"></script>
   <script defer src="js/finanzas/datos.js?v=202610291300"></script>

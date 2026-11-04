@@ -1,5 +1,15 @@
 # Cambios
 
+## 2026-11-04 · Running: Progreso y Ajustes (fase 4)
+- Progreso: totales de semana, mes, año y todo contra el período anterior,
+  racha de semanas, metas con anillos, diario con círculos por km, mejores
+  marcas (top 3 y evolución), predicciones de 5K a maratón, forma y fatiga
+  de 90 días y zapatillas con aviso de cambio.
+- Ajustes (engranaje): FC máxima y en reposo, ritmo umbral, metas y
+  zapatillas (predeterminada, retirar).
+- Pruebas: 371 unitarias (nuevo `run-analisis.test.js`); E2E nuevo
+  `run-progreso.js` (36).
+
 ## 2026-11-04 · Running: Actividades y barra propia (fase 3)
 - Running tiene su barra: Actividades · Progreso · (+) · Segmentos ·
   Rutinas. El "+" abre Importar · Anotar a mano · Rutina guiada.

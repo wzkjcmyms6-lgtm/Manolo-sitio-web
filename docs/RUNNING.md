@@ -117,6 +117,11 @@ Esquema en `docs/DATABASE.md`.
 - `ActividadRegistro` sigue guardando y dibujando el resumen semanal; si no
   hay lista (Running), solo avisa los datos al feed.
 
+### Hecho en la fase 4 (2026-11-04)
+- Progreso (`#run-progreso`, `js/run-progreso.js`) y Ajustes
+  (`#run-ajustes`, `js/run-ajustes.js`, engranaje arriba y en las pills de
+  la computadora). D-072. El mapa de calor va con los segmentos (fase 6).
+
 ---
 
 ## Lo que ya existe (desde 2026-10-01)

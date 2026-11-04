@@ -627,3 +627,24 @@ vez (`RunAnalisis.logrosPorId`, O(n) por distancia). La tarjeta de Running
 en Inicio dice los km de la semana y la última carrera. Después de anotar
 una carrera a mano o guardar una rutina del día, se sugiere estirar con
 Movilidad › Después de correr (2 horas, se puede ocultar).
+
+**D-072 (2026-11-04) · Progreso y Ajustes de Running (fase 4).** Progreso
+(`js/run-progreso.js`, cálculos en `js/run-analisis.js`): totales de la
+semana (lunes a domingo), el mes, el año o todo, contra el período anterior
+**completo**; el resumen semanal de siempre debajo; racha = semanas
+seguidas con al menos una carrera (si esta semana todavía no hay, sigue
+viva desde la pasada); metas de km con anillos; diario (calendario del mes,
+círculos con área según los km del día, tocar abre la carrera); mejores
+marcas por distancia con el top 3 y su evolución (escalón de la mejor hasta
+cada día); predicciones (D-065); forma y fatiga de 90 días con medias
+exponenciales k = 1 − e^(−1/42) y 1 − e^(−1/7); la carga de una actividad
+sin carga guardada sale del RPE (a mano y rutinas). Zapatillas con km
+acumulados (km iniciales + carreras) y aviso al 90 % y al 100 % del límite
+(700 km por defecto). Ajustes con el engranaje de arriba (`#run-ajustes`):
+FC máx y de reposo, ritmo umbral (sugerido por la mejor marca de 10K; si
+no, 5:30), metas y zapatillas (agregar, editar, predeterminada, retirar).
+La predeterminada se pone sola al importar carreras **desde que se
+agregó** (las viejas no se tocan) y nunca reemplaza la que ya tiene una
+carrera unida. Cambiar la FC o el umbral no recalcula las cargas ya
+guardadas (haría falta leer todas las rutas); las zonas del detalle sí usan
+los ajustes de hoy. El peso sale de Ejercicio › Perfil.

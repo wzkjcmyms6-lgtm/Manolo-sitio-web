@@ -151,7 +151,8 @@ async function cargarContexto() {
     existentes,
     opciones: {
       fcMax: Number(ajustes.fcMax) || null, fcMaxVista: fcVista, fcReposo: Number(ajustes.fcReposo) || null,
-      ritmoUmbralS: Number(ajustes.ritmoUmbralS) || null,
+      ritmoUmbralS: Number(ajustes.ritmoUmbralS) || (window.RunAnalisis ? RunAnalisis.ritmoUmbralSugerido(existentes.running) : null),
+      zapatilla: (ajustes.zapatillas || []).find(z => z.predeterminada && !z.retirada) || null,
       pesoKg: fechas.length ? Number(pesajes[fechas[fechas.length - 1]]) : Number(ajustes.pesoKg) || null
     }
   };
@@ -427,6 +428,9 @@ async function guardar() {
       pantallaAvance("Guardando…", i, lista.length, lista[i].titulo || "");
       await tick();
       const nueva = await prepararNueva(lista[i]);
+      // Zapatilla predeterminada (Ajustes): solo para carreras desde que se agregó.
+      const zap = estado.ctx.opciones.zapatilla;
+      if (zap && nueva.deporte === "running" && !nueva.zapatillaId && nueva.campos.inicio >= (zap.creado || 0)) nueva.zapatillaId = zap.id;
       const o = G.operaciones(nueva, lista[i].clase, lista[i].existente, ahora);
       o.ops.forEach(op => { ops.push(op); tam += JSON.stringify(op.datos).length; });
       guardadas.push({ id: o.id, col: o.col, doc: o.doc });

@@ -149,7 +149,8 @@ for (let i = 0; i < 45; i++) { const d = new Date(2026, 9, 31 - i); MUCHAS[`v${i
 
   console.log("\nComputadora (1280 px)");
   p = await abrir(browser, base, { __SEED__: { "users/test/running": RUN } }, { hash: "#running", zona: ZONA, ancho: 1280, alto: 900, fecha: "2026-11-04T09:00:00-04:00" });
-  const pills = await p.$$eval("#panel-running .fin-outer-tabs > *", els => els.map(e => e.textContent.trim()));
+  const pills = await p.$$eval("#panel-running .fin-outer-tabs > *:not(.fin-tab-ajustes)", els => els.map(e => e.textContent.trim()));
+  ok(await p.$('#panel-running .fin-outer-tabs a.fin-tab-ajustes[href="#run-ajustes"]') !== null, "y el engranaje de Ajustes");
   ok(pills.join("|") === "Actividades|Progreso|+ Agregar|Segmentos|Rutinas", `pestañas arriba en la compu (${pills.join("|")})`);
   await p.click("#panel-running .fin-tab-accion");
   await p.waitForTimeout(300);

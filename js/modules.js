@@ -32,6 +32,7 @@ const SUB_PANELS = [
   { hash: "run-progreso", parent: "running" },
   { hash: "run-segmentos", parent: "running" },
   { hash: "run-rutinas", parent: "running" },
+  { hash: "run-ajustes", parent: "running" },
   { hash: "bicicleta", parent: "inicio" },
   { hash: "libros", parent: "inicio" },
   { hash: "biblia", parent: "inicio" },
@@ -178,7 +179,7 @@ function showPanel(hash) {
 // muestra como pills arriba de cada una de sus secciones. En móvil se ocultan
 // (.fin-outer-tabs). Finanzas e Inversiones suman el engranaje de Ajustes.
 const PILLS_ESCRITORIO = { habitos: "Secciones de Hábitos", ejercicio: "Secciones de Ejercicio", finanzas: "Secciones de Finanzas", inversiones: "Secciones de Inversiones", running: "Secciones de Running" };
-const PILL_AJUSTES = { finanzas: ["fin-ajustes", "Ajustes de Finanzas"], inversiones: ["inv-ajustes", "Ajustes de Inversiones"] };
+const PILL_AJUSTES = { finanzas: ["fin-ajustes", "Ajustes de Finanzas"], inversiones: ["inv-ajustes", "Ajustes de Inversiones"], running: ["run-ajustes", "Ajustes de Running"] };
 function crearPillsEscritorio() {
   Object.keys(PILLS_ESCRITORIO).forEach(grupo => {
     TAB_BARS[grupo].forEach(tab => {

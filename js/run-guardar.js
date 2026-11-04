@@ -35,6 +35,7 @@ function documento(nueva, ahora) {
     importado: ahora
   });
   if (nueva.subtipo) doc.subtipo = nueva.subtipo;
+  if (nueva.zapatillaId) doc.zapatillaId = nueva.zapatillaId;
   return doc;
 }
 function limpiarOrigen(o) {
@@ -87,6 +88,7 @@ function fusion(existente, doc) {
   const out = {};
   Object.keys(doc).forEach(k => {
     if (["v", "fuente", "date", "notes", "rpe", "rutina"].includes(k)) return;
+    if (k === "zapatillaId" && existente.zapatillaId) return;
     out[k] = doc[k];
   });
   out.previo = { distance: Number(existente.distance) || 0, duration: Number(existente.duration) || 0 };
