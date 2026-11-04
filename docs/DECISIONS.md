@@ -553,8 +553,13 @@ CC BY 4.0 con atribución): pronóstico con fecha pasada para los últimos 90
 días y el archivo histórico para lo anterior; temperatura, sensación,
 humedad, viento y código del tiempo a la hora del inicio. Lugar aproximado:
 geocodificación inversa de Nominatim (OpenStreetMap, atribución, máx. 1
-pedido por segundo, nivel barrio). Solo se envían coordenadas redondeadas a
-2 decimales (~1 km), nunca la ruta ni datos del dueño. Se piden después de
+pedido por segundo, nivel barrio). Solo se envían coordenadas redondeadas:
+2 decimales (~1 km) para el clima y 3 (~100 m) para el lugar, que con 1 km
+caía en el barrio vecino; nunca la ruta ni datos del dueño. Verificado el
+2026-11-04 desde GitHub Actions (el entorno de trabajo bloquea esos
+dominios): las dos APIs responden con CORS abierto; la de elevación admite
+hasta 100 puntos por pedido; el pronóstico con fecha pasada funciona a 80
+días y el archivo histórico tiene datos hasta 2 días atrás. Se piden después de
 guardar, en segundo plano, y se guardan en la actividad (`clima`, `lugar`);
 además un caché en el teléfono por coordenada redondeada
 (`manolo.run.lugares`). Sin internet, se completan después.

@@ -83,6 +83,22 @@ Zapatillas (km, aviso de cambio, retirar) · Mapa de calor
 Todo lo que no es pantalla es UMD sin DOM con pruebas `node --test`.
 Esquema en `docs/DATABASE.md`.
 
+### Hecho en la fase 1 (2026-11-04)
+- Botón **Importar** en la cabecera de Running (hasta que llegue la barra
+  propia en la fase 3) → hoja `#ri-hoja` (`js/run-importar.js`,
+  `css/run.css`).
+- ZIP de Strava: la vista previa sale de `activities.csv`; al guardar se lee
+  cada archivo. Si un archivo falta o no se puede leer, se guarda con los
+  datos del CSV y se avisa. Título y descripción del CSV.
+- Otros ZIP (Apple Salud, adidas Running u otros): se leen los GPX/TCX/FIT
+  que traigan. Si el archivo no dice el deporte, se adivina por la
+  velocidad (> 6,5 m/s bici, ≥ 1,9 m/s carrera; más lento queda como "No
+  importar") y se puede cambiar en la vista previa.
+- FC máx para zonas y carga: la de Ajustes (fase 4); mientras no exista, la
+  más alta vista hasta ahora (≥ 150), como estimación.
+- Clima y lugar: al guardar y cada vez que llega la lista de carreras, para
+  las importadas que no los tienen (una vez por sesión, máx. 60 por vez).
+
 ---
 
 ## Lo que ya existe (desde 2026-10-01)

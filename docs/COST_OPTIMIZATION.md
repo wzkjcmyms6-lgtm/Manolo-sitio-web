@@ -4,6 +4,7 @@
 
 | Recurso | Estado |
 |---|---|
+| Running importado (2026-11) | 2 escrituras por actividad (resumen + ruta) en lotes de ≤ 400; 500 carreras ≈ 1000 escrituras (cuota gratis: 20 000/día). Sin Storage ni Cloud Functions; los archivos originales no se suben. La ruta completa (≤ 1 MiB) se lee solo en el detalle; listas y tarjetas usan la mini ruta del resumen. Clima y lugar: 1–2 pedidos por actividad, una sola vez, con caché |
 | Firestore: lecturas al abrir | Escuchas de colecciones propias (como antes). `running`/`bicicleta` las escuchan dos módulos (Ejercicio y Running/Bici), pero el SDK comparte una sola conexión por consulta: no se duplican lecturas |
 | Firestore: rutas GPS (históricas) | Ya no se leen ni se crean (D-033) |
 | Firestore: escrituras | Una rutina guiada = un lote al guardar (la actividad y, si se completó, el `orden` de la rutina). Importar un plan = un lote |

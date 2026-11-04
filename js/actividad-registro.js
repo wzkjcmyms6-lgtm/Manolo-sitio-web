@@ -100,8 +100,8 @@ function registro(o) {
     if (!confirm(`¿Eliminar esta ${o.item} del ${entry.date}? No se puede deshacer.`)) return;
     const lote = db.batch();
     lote.delete(col().doc(entry.id));
-    // Las carreras viejas con GPS guardaban su recorrido aparte.
-    if (entry.conRuta) lote.delete(usuario().collection("rutas").doc(entry.id));
+    // Las carreras con GPS (viejas) o importadas guardan su recorrido aparte.
+    if (entry.conRuta || entry.fuente === "importado" || entry.conImportado) lote.delete(usuario().collection("rutas").doc(entry.id));
     lote.commit().catch(err => console.error("Manolo: no se pudo eliminar", err));
   }
   function renderList() {
@@ -127,13 +127,15 @@ function registro(o) {
         ? formatPace(km > 0 ? (min * 60) / km : 0)
         : `${(min > 0 ? km / (min / 60) : 0).toFixed(1)} km/h`;
       const r = entry.rutina;
-      const rutina = r ? ` <span class="act-tag">Rutina</span>` : "";
+      const rutina = (r ? ` <span class="act-tag">Rutina</span>` : "") + (entry.conRuta && entry.fuente !== "gps" ? ` <span class="act-tag">Ruta</span>` : "");
       const linea = km > 0
         ? `<strong>${km.toFixed(2)} km</strong> — ${AA.textoTiempo(min)} · ${valor}${rutina}`
         : `<strong>${AA.textoTiempo(min)}</strong>${rutina}`;
       const detalle = [escapeHtml(entry.date)];
+      if (entry.titulo) detalle.unshift(escapeHtml(entry.titulo));
+      if (entry.lugar) detalle.push(escapeHtml(entry.lugar));
       if (r) detalle.push(escapeHtml(r.nombre) + (r.total && r.completados < r.total ? ` (${r.completados} de ${r.total} intervalos)` : ""));
-      if (entry.notes) detalle.push(escapeHtml(entry.notes));
+      if (entry.notes) detalle.push(escapeHtml(String(entry.notes).length > 140 ? String(entry.notes).slice(0, 140) + "…" : entry.notes));
       const item = document.createElement("div");
       item.className = "list-item";
       item.innerHTML = `<div>${linea}<div class="meta">${detalle.join(" · ")}</div></div>`;
@@ -168,6 +170,8 @@ function registro(o) {
     col().onSnapshot(snap => {
       cache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderList();
+      // Running al nivel de Strava: otros módulos (clima y lugar pendientes) usan la misma lista.
+      window.dispatchEvent(new CustomEvent("manolo:actividades", { detail: { coleccion: o.coleccion, docs: cache } }));
     });
   });
 }

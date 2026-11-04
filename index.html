@@ -25,6 +25,7 @@
   <link rel="stylesheet" href="css/movilidad.css?v=202610300100">
   <link rel="stylesheet" href="css/tiempos.css?v=202610300310">
   <link rel="stylesheet" href="css/ej-calendario.css?v=202610290900">
+  <link rel="stylesheet" href="css/run.css?v=202611040100">
 </head>
 <body>
   <!-- Degradado marfil y brillo del maniquí (mapa corporal y creador de ejercicios) -->
@@ -420,7 +421,10 @@
 
           <section id="panel-running" hidden>
             <a class="back-link" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
-            <h1 class="page-title">Running</h1>
+            <div class="run-cabecera">
+              <h1 class="page-title">Running</h1>
+              <button type="button" class="run-importar-btn" data-ri-abrir>Importar</button>
+            </div>
 
             <div class="act-app" id="running-act" hidden></div>
 
@@ -1344,7 +1348,14 @@
   <script defer src="js/rutinas-running-ui.js?v=202610090100"></script>
   <script defer src="js/rutina-guiada.js?v=202610090100"></script>
   <script defer src="js/actividad-analisis.js?v=202610090100"></script>
-  <script defer src="js/actividad-registro.js?v=202610090100"></script>
+  <script defer src="js/actividad-registro.js?v=202611040100"></script>
+  <script defer src="js/run-formatos.js?v=202611040100"></script>
+  <script defer src="js/run-zip.js?v=202611040100"></script>
+  <script defer src="js/run-csv.js?v=202611040100"></script>
+  <script defer src="js/run-metricas.js?v=202611040100"></script>
+  <script defer src="js/run-guardar.js?v=202611040100"></script>
+  <script defer src="js/run-enriquecer.js?v=202611040100"></script>
+  <script defer src="js/run-importar.js?v=202611040100"></script>
   <script defer src="js/running.js?v=202610090100"></script>
   <script defer src="js/bicicleta.js?v=202610090100"></script>
   <script defer src="js/finanzas/datos.js?v=202610291300"></script>

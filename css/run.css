@@ -1,0 +1,62 @@
+/* ---------- Running al nivel de Strava (clases .run- y .ri-) ----------
+   Aspecto de Manolo: variables de css/style.css. La hoja de importar reusa
+   .budget-sheet (css/finanzas.css); aquí va lo propio. */
+
+/* Cabecera de Running con el botón Importar */
+.run-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; }
+.run-cabecera .page-title { margin-bottom: 0.6rem; }
+.run-importar-btn {
+  flex-shrink: 0; min-height: 44px; padding: 0.5rem 1.1rem; border-radius: 999px; border: none;
+  background: var(--accent-grad); color: #0a0a0a; font: inherit; font-weight: 700; cursor: pointer;
+}
+.run-importar-btn:active { transform: scale(0.97); }
+
+/* Hoja de importar */
+.ri-panel { display: flex; flex-direction: column; max-height: 92dvh; }
+.ri-cuerpo { flex: 1; min-height: 0; overflow-y: auto; padding: 0 1rem 0.5rem; }
+.ri-acciones { display: flex; gap: 0.6rem; padding: 0.7rem 1rem 0; }
+.ri-acciones:empty { display: none; }
+.ri-acciones .txn-save { min-height: 48px; padding: 0.8rem 1rem; letter-spacing: 0.06em; }
+.ri-acciones .txn-save:disabled { opacity: 0.4; cursor: default; }
+.ri-acciones .txn-save-otro { background: transparent; color: var(--ink); border: 1px solid var(--border); }
+.ri-texto { margin: 0 0 0.6rem; line-height: 1.45; }
+.ri-nota { color: var(--muted); font-size: 0.85rem; line-height: 1.4; margin: 0.3rem 0 0.6rem; }
+.ri-grande { font-size: 1.15rem; margin: 0.2rem 0; }
+.ri-error { color: var(--danger); margin: 0 0 0.8rem; line-height: 1.4; }
+
+.ri-guia { margin-top: 0.8rem; border: 1px solid var(--border); border-radius: 14px; padding: 0 0.9rem; background: var(--surface); }
+.ri-guia summary { min-height: 44px; display: flex; align-items: center; font-weight: 600; cursor: pointer; }
+.ri-guia h4 { margin: 0.6rem 0 0.3rem; font-size: 0.95rem; }
+.ri-guia ol { margin: 0 0 0.4rem; padding-left: 1.2rem; }
+.ri-guia li, .ri-guia p { color: var(--muted); font-size: 0.88rem; line-height: 1.45; margin: 0 0 0.35rem; }
+.ri-guia p:last-child { margin-bottom: 0.9rem; }
+
+.ri-avance { padding: 1.4rem 0 1rem; }
+.ri-barra { height: 8px; border-radius: 4px; background: var(--surface-raised); overflow: hidden; margin: 0.6rem 0; }
+.ri-barra i { display: block; height: 100%; background: var(--accent-grad); border-radius: 4px; transition: width 0.2s; }
+
+.ri-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; list-style: none; padding: 0; margin: 0.4rem 0 0.8rem; }
+.ri-chips li { padding: 0.25rem 0.65rem; border-radius: 999px; background: var(--surface-raised); border: 1px solid var(--border); font-size: 0.8rem; }
+.ri-chips .ri-chip-error { color: var(--danger); }
+.ri-lista { list-style: none; padding: 0; margin: 0 0 0.6rem; }
+.ri-fila { padding: 0.65rem 0; border-top: 1px solid var(--border); min-width: 0; }
+.ri-fila.is-off { opacity: 0.55; }
+.ri-fila-cab { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; min-width: 0; }
+.ri-fila-cab b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.ri-fila-dato { color: var(--muted); font-size: 0.83rem; margin-top: 0.15rem; }
+.ri-fila-dato i { font-style: normal; color: var(--accent-2); }
+.ri-fila-estado { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; margin-top: 0.35rem; font-size: 0.83rem; }
+.ri-fusion { color: #4cc38a; }
+.ri-dep { flex-shrink: 0; font-size: 0.75rem; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 0.1rem 0.5rem; }
+.ri-select {
+  flex-shrink: 0; min-height: 36px; padding: 0.2rem 0.5rem; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 0.85rem;
+}
+.ri-mas { color: var(--muted); font-size: 0.85rem; padding: 0.6rem 0; border-top: 1px solid var(--border); }
+.ri-mas-info { margin: 0.4rem 0; }
+.ri-mas-info summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--muted); font-size: 0.9rem; }
+.ri-errores { margin: 0 0 0.6rem; padding-left: 1.1rem; color: var(--muted); font-size: 0.83rem; line-height: 1.4; }
+.ri-estirar {
+  display: flex; align-items: center; min-height: 48px; margin-top: 0.8rem; padding: 0.6rem 0.9rem; border-radius: 14px;
+  background: rgba(76, 195, 138, 0.12); color: #4cc38a; text-decoration: none; font-size: 0.92rem;
+}

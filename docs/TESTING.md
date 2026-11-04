@@ -1,6 +1,14 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-04 (Running fase 1): `npm test` → **356 pruebas**. Nuevas:
+  `run-formatos` (GPX, TCX, FIT armado byte a byte en
+  `tests/run-fixtures.js`: big-endian, horas comprimidas, campos de
+  desarrollador, pausas, vueltas), `run-zip` (ZIP64, lectura parcial, gzip,
+  respaldo sin deflate-raw), `run-csv` (columnas repetidas, fechas UTC,
+  inglés/español), `run-metricas` (distancia, tiempo en movimiento, pausas,
+  limpieza, desnivel, parciales, GAP, mejores marcas, zonas, carga, ruta
+  ≤ 1 MiB) y `run-guardar` (duplicados, fusión, lotes, clima y lugar).
 - `npm test` → **209 pruebas, todas pasan** (2026-10-01, sin GPS). Lógica pura
   UMD: hábitos, finanzas, mapa muscular, rangos, rutinas, importador, series,
   sesiones, intervalos, rutinas CSV de varios días y cola, resumen semanal,
@@ -33,6 +41,13 @@
   - `emojis.js` — selector de emojis del formulario: 11 categorías, elegir
     uno de otra categoría sin perder lo escrito, emoji propio del teclado y
     editar un hábito (abre la categoría de su emoji).
+  - `run-importar.js` — Running › Importar (390 y 1280 px): ZIP del export
+    de Strava (CSV con columnas repetidas, FIT.gz, GPX, foto que no se lee),
+    GPX suelto sin deporte, archivo roto, duplicada, fusión con una rutina
+    guiada y con una carrera a mano, otros deportes, la que falta en el ZIP,
+    guardado (rutas aparte), historial con título y lugar, clima y lugar en
+    segundo plano (respuestas simuladas, solo coordenadas redondeadas) y
+    volver a importar lo mismo (todo se salta).
   - `regresion.js` — las 15 pantallas en teléfono (390 px) y computadora
     (1280 px): se ven, sin errores y sin scroll de lado; acciones de siempre:
     marcar un hábito, anotar un gasto, registrar Running y Bici a mano,

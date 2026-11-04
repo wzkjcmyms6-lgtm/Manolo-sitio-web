@@ -1,5 +1,16 @@
 # Cambios
 
+## 2026-11-04 · Running: importar carreras (fase 1)
+- Botón **Importar** en Running: GPX, TCX, FIT (también .gz), varios a la
+  vez, el ZIP completo de Strava y ZIPs con GPX (Apple Salud y otros).
+  Vista previa con duplicadas, fusiones con rutinas o carreras a mano, otros
+  deportes y errores; guardado con avance; "Cómo traer mis carreras".
+- Motor de métricas: distancia, tiempo total y en movimiento, desnivel,
+  parciales por km con ritmo ajustado por pendiente, mejores marcas, zonas,
+  carga, calorías solo con datos reales. Clima y lugar en segundo plano.
+- El historial muestra el título, la etiqueta "Ruta" y el lugar.
+- Pruebas: 356 unitarias; E2E nuevo `run-importar.js` (70).
+
 ## 2026-11-04 · Running al nivel de Strava: diseño (fase 0)
 - Plan por fases, pantallas con bocetos, esquema y decisiones D-060 a
   D-069 (`docs/RUNNING.md`, `docs/DATABASE.md`). Nueva regla: imitar de

@@ -7,7 +7,7 @@ Diseño en `docs/RUNNING.md`; decisiones D-060 a D-069; esquema en
 | Fase | Qué | Estado |
 |---|---|---|
 | 0 | Diseño: auditoría dirigida, pantallas, esquema, decisiones | ✅ |
-| 1 | Importación (GPX/TCX/FIT/gz, ZIP de Strava y otros) + motor de métricas + guardado | en curso |
+| 1 | Importación (GPX/TCX/FIT/gz, ZIP de Strava y otros) + motor de métricas + guardado | ✅ (falta comparar con un export real) |
 | 2 | Detalle de la actividad (mapa, gráfico, parciales, editar, GPX, borrar) | — |
 | 3 | Actividades (feed) + barra propia + tarjeta Running en Inicio | — |
 | 4 | Progreso (totales, diario, mejores marcas, predicciones, forma y fatiga, metas, zapatillas) | — |
@@ -16,10 +16,10 @@ Diseño en `docs/RUNNING.md`; decisiones D-060 a D-069; esquema en
 | 7 | Compartir (imagen tipo historia; publicar en el Feed solo con OK) | — |
 | 8 | QA final (390 y 1280 px, rendimiento, offline, respaldo) | — |
 
-Al cerrar la fase 1: pedir al dueño 1–2 archivos del export de Strava y
-comparar (distancia ±2 %, tiempo en movimiento ±3 %, desnivel ±15 %).
-Pendiente de verificar desde GitHub (el entorno bloquea esos dominios):
-respuesta y CORS de Open-Meteo (elevación, histórico) y Nominatim.
+**Pedido al dueño (2026-11-04):** `activities.csv` y 1–2 archivos de la
+carpeta `activities/` de su export de Strava, para comparar (distancia
+±2 %, tiempo en movimiento ±3 %, desnivel ±15 %) y ajustar el motor.
+APIs de clima, elevación y lugar verificadas desde GitHub Actions (D-066).
 
 ## Para después (anotado, no hacer)
 - Planificador de rutas con perfil de altura y GPX para el reloj.
