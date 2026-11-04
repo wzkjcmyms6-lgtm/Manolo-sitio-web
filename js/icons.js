@@ -78,6 +78,7 @@ const ICONS = {
   sword: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M14.5 3.5 20.5 9.5 11 19l-4-4z"/><path d="M11 15 5 21l-2-2 6-6"/><path d="M14.5 3.5 17 6"/></svg>`,
   bell: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></svg>`,
 
+  segmento: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><circle cx="5" cy="18.5" r="2"/><circle cx="19" cy="5.5" r="2"/><path d="M6.8 17.3c3-1.2 1.6-5 4.7-6.2 3-1.2 3.6 1.6 6.1-4"/></svg>`,
   timer: `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 1.5"/><path d="M9.5 2.5h5"/></svg>`,
 
   moreV: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="5.5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="18.5" r="1.9"/></svg>`,

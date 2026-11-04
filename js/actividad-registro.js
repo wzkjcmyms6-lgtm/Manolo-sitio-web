@@ -107,6 +107,8 @@ function registro(o) {
   function renderList() {
     const lista = cache.slice().sort((a, b) => b.date.localeCompare(a.date) || (b.inicio || 0) - (a.inicio || 0));
     const cont = $("list");
+    // Running ya no tiene esta lista: la reemplaza el feed de tarjetas (js/run-feed.js).
+    if (!cont) { renderDash(); return; }
     cont.innerHTML = "";
     $("empty").style.display = lista.length ? "none" : "block";
     let mes = "";

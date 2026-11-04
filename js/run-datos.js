@@ -6,6 +6,7 @@
 (function () {
 "use strict";
 const listas = { running: [], bicicleta: [] };
+const cargadas = {};
 let ajustes = {};
 const oyentes = new Set();
 const avisar = () => oyentes.forEach(fn => { try { fn(); } catch (e) { console.error(e); } });
@@ -14,6 +15,7 @@ window.addEventListener("manolo:actividades", e => {
   const d = e.detail || {};
   if (!listas[d.coleccion]) return;
   listas[d.coleccion] = d.docs || [];
+  cargadas[d.coleccion] = true;
   avisar();
 });
 if (typeof onAuthReady === "function") onAuthReady(() => {
@@ -23,6 +25,7 @@ if (typeof onAuthReady === "function") onAuthReady(() => {
 
 window.RunDatos = {
   lista: col => listas[col] || [],
+  cargada: col => !!cargadas[col],
   doc: (col, id) => (listas[col] || []).find(d => d.id === id) || null,
   ajustes: () => ajustes,
   // FC máx: la de Ajustes o la más alta vista (estimada, D-065).

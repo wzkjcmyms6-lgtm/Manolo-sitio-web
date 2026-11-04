@@ -137,8 +137,8 @@ const SEED = {
     const r2 = await doc(RUN, "rut1");
     ok(r2.clima && r2.clima.tC === 8.5 && r2.lugar === "Sopocachi, La Paz", `clima y lugar completados en segundo plano (${JSON.stringify(r2.clima)} · ${r2.lugar})`);
     ok(pedidos.length > 0 && pedidos.every(u => !/\d\.\d{4,}/.test(new URL(u).search)), "solo coordenadas redondeadas");
-    const lista = await tx("#running-list");
-    ok(/Fondo por el Prado/.test(lista) && /Ruta/.test(lista) && /Sopocachi, La Paz/.test(lista), "el historial muestra título, «Ruta» y lugar");
+    const lista = await tx("#rf-feed");
+    ok(/Fondo por el Prado/.test(lista) && /Sopocachi, La Paz/.test(lista) && (await p.$$("#rf-feed .rf-mapa svg")).length === 2, "Actividades muestra título, lugar y el trazo de las rutas");
     await captura(p, `run-importar-historial-${ancho}.png`);
 
     console.log("Volver a importar lo mismo");

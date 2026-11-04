@@ -58,9 +58,9 @@ const SEED = {
   const doc = (c, id) => p.evaluate(([c, id]) => window.__fakeStore.colMap(c).get(id) || null, [c, id]);
 
   console.log("\nAbrir desde el historial");
-  await p.click('#running-list a[href="#run-actividad/running/imp_a"]');
+  await p.click('#rf-feed a[href="#run-actividad/running/imp_a"]');
   await p.waitForSelector(".rd-titulo");
-  ok(await vis("#panel-run-actividad") && !(await vis("#panel-running")), "tocar la carrera abre su detalle");
+  ok(await vis("#panel-run-actividad") && !(await vis("#panel-running")), "tocar la tarjeta abre su detalle");
   ok(await p.$eval("#verse-banner", el => el.hidden), "sin versículo");
   ok((await tx(".rd-titulo")) === "Fondo por el Prado", "título");
   const meta = await tx(".rd-meta");

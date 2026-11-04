@@ -54,6 +54,10 @@
     editar, exportar GPX (descarga), corregir desnivel (API simulada, lotes
     ≤ 100), intervalos de la rutina sombreados, carrera a mano, sin internet
     (trazo SVG), eliminar con su ruta y 1280 px.
+  - `run-feed.js` — Actividades: barra propia con el "+", tarjetas, mes,
+    filtros, abrir el detalle, pestañas, anotar a mano desde el "+",
+    sugerencia de estirar, importar y rutina guiada desde el "+", tarjeta
+    de Inicio, estado vacío, carga de a 20 y pills en la computadora.
   - `regresion.js` — las 15 pantallas en teléfono (390 px) y computadora
     (1280 px): se ven, sin errores y sin scroll de lado; acciones de siempre:
     marcar un hábito, anotar un gasto, registrar Running y Bici a mano,

@@ -1,6 +1,9 @@
 // Pruebas de pantalla de Running y Bicicleta (sin GPS):
 // resumen semanal, rutinas guiadas de varios días (cola: la completada pasa
 // al final), historial que no depende de las rutinas, registro a mano.
+// Desde la fase 3 del plan "al nivel de Strava" (D-061): el resumen está en
+// Progreso, las rutinas en Rutinas, el historial es el feed de Actividades y
+// anotar a mano está en el "+" de la barra.
 // Uso: node scripts/e2e/running.js [carpeta-para-capturas]
 // Reloj y voz simulados (scripts/e2e/comun.js): una rutina se recorre en
 // segundos. La voz y los pitidos reales se prueban en el iPhone.
@@ -42,7 +45,7 @@ async function avanzar(p, seg) {
   const srv = await servidor();
   const base = `http://localhost:${srv.address().port}`;
   const browser = await chromium.launch();
-  let p = await abrir(browser, base, { __SEED__: SEED }, { reloj: true, voz: true, hash: "#running" });
+  let p = await abrir(browser, base, { __SEED__: SEED }, { reloj: true, voz: true, hash: "#run-progreso" });
   await p.evaluate(() => window.__congelar());
 
   console.log("\nRunning: resumen semanal y sin GPS");
@@ -69,6 +72,8 @@ async function avanzar(p, seg) {
   ok((await texto(p, '[data-dash-metrica="km"] strong')) === "5,00 km", "volver a tocar esta semana la elige otra vez");
 
   console.log("\nImportar un plan de varios días");
+  await p.evaluate(() => { location.hash = "run-rutinas"; });
+  await p.waitForTimeout(300);
   const [elegir] = await Promise.all([p.waitForEvent("filechooser"), p.click('#running-rutinas [data-rg="importar"]')]);
   await elegir.setFiles({ name: "Plan prueba.csv", mimeType: "text/csv", buffer: Buffer.from(CSV_PLAN) });
   await p.waitForTimeout(600);
@@ -125,7 +130,7 @@ async function avanzar(p, seg) {
   ok(rs.find(r => r.dia === 1).orden === 4, "Día 1 pasa al final (orden 4)");
   ok((await listaRutinas(p)).join() === "Día 2,Día 3,Día 1", "la lista queda Día 2, Día 3, Día 1");
   ok((await texto(p, "#running-rutinas .act-ok")).includes("Pasó al final"), "y lo avisa");
-  ok((await texto(p, "#running-list")).includes("Plan prueba · Día 1") && (await texto(p, "#running-list")).includes("Rutina"), "aparece en «Tus carreras»");
+  ok((await texto(p, "#rf-feed")).includes("Plan prueba · Día 1") && (await texto(p, "#rf-feed")).includes("Rutina"), "aparece en Actividades");
   ok((await texto(p, '[data-dash-metrica="km"] strong')) === "7,50 km", "y suma al resumen de la semana");
   ok(await p.evaluate(() => localStorage.getItem("manolo.rutina.test")) === null, "el borrador del teléfono se borra");
   await captura(p, "run-cola.png");
@@ -148,8 +153,8 @@ async function avanzar(p, seg) {
   ok((await texto(p, "[data-rg-resta]")) === resta, "donde iba");
   await p.evaluate(() => { location.hash = "inicio"; });
   await p.waitForTimeout(300);
-  ok(await p.isVisible('[data-act-en-curso="running"]'), "en Inicio avisa «Tienes una rutina sin terminar»");
-  await p.evaluate(() => { location.hash = "running"; });
+  ok(await p.isVisible('[data-act-en-curso="run-rutinas"]'), "en Inicio avisa «Tienes una rutina sin terminar»");
+  await p.evaluate(() => { location.hash = "run-rutinas"; });
   await p.waitForTimeout(300);
   const nDichos = (await dichos(p)).length;
   await p.click('[data-rg="reanudar"]');
@@ -167,7 +172,7 @@ async function avanzar(p, seg) {
   const h2 = hist.find(d => d.rutina.nombre === "Plan prueba · Día 2");
   ok(h2 && h2.distance === 0 && h2.rutina.completados === 0, "sin terminar también queda en el historial (sin km)");
   ok((await listaRutinas(p)).join() === "Día 2,Día 3,Día 1", "sin terminar no se mueve: Día 2 sigue primero");
-  ok((await texto(p, "#running-list")).includes("(0 de 2 intervalos)"), "el historial dice cuántos intervalos hiciste");
+  ok((await texto(p, "#rf-feed")).includes("Plan prueba · Día 2"), "y en Actividades");
 
   console.log("\nVoz apagada y descartar");
   await p.click("#running-rutinas .rg-item:first-child .rg-abrir");
@@ -197,16 +202,20 @@ async function avanzar(p, seg) {
   await p.waitForTimeout(400);
   ok((await rutinas(p)).length === 0, "o se puede borrar el plan entero");
   hist = (await coleccion(p, "users/test/running")).map(([, d]) => d).filter(d => d.fuente === "rutina");
-  ok(hist.length === 2 && (await texto(p, "#running-list")).includes("Plan prueba · Día 1"), "el historial de esas rutinas sigue en la lista");
+  ok(hist.length === 2 && (await texto(p, "#rf-feed")).includes("Plan prueba · Día 1"), "el historial de esas rutinas sigue en Actividades");
   ok((await texto(p, "#running-rutinas")).includes("Importa tus rutinas"), "sin rutinas: explica cómo importar");
 
   console.log("\nHistorial y registro a mano");
   await p.evaluate(() => { window.confirm = () => true; });
-  const items = await p.$$("#running-list .list-item");
-  for (const it of items) { if ((await it.textContent()).includes("3.00 km")) { await (await it.$(".delete")).click(); break; } }
+  await p.evaluate(() => { location.hash = "run-actividad/running/gps1"; });
+  await p.waitForSelector(".rd-titulo");
+  await p.click('.rd-acciones [data-rd="eliminar"]');
   await p.waitForTimeout(400);
   ok(!(await coleccion(p, "users/test/running")).some(([id]) => id === "gps1") && (await coleccion(p, "users/test/rutas")).length === 0, "borrar una carrera vieja con GPS borra también su recorrido");
-  await p.click("#panel-running .act-manual summary");
+  await p.click(".tab-accion");
+  await p.waitForTimeout(250);
+  await p.click('[data-run-op="manual"]');
+  await p.waitForTimeout(250);
   await p.fill("#running-distance", "4");
   await p.fill("#running-duration", "25");
   await p.click("#running-form button[type=submit]");
@@ -230,7 +239,7 @@ async function avanzar(p, seg) {
   await p.context().close();
 
   console.log("\nComputadora");
-  p = await abrir(browser, base, { __SEED__: SEED }, { ancho: 1280, alto: 800, hash: "#running" });
+  p = await abrir(browser, base, { __SEED__: SEED }, { ancho: 1280, alto: 800, hash: "#run-progreso" });
   const ancho = await p.$eval("#running-dash", el => el.getBoundingClientRect().width);
   ok(ancho > 300 && (await p.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)) <= 1, `el resumen se ve bien en la compu (${Math.round(ancho)} px)`);
   await captura(p, "run-compu.png");

@@ -29,6 +29,9 @@ const SUB_PANELS = [
   { hash: "ej-perfil", parent: "ejercicio" },
   { hash: "running", parent: "inicio" },
   { hash: "run-actividad", parent: "running" },
+  { hash: "run-progreso", parent: "running" },
+  { hash: "run-segmentos", parent: "running" },
+  { hash: "run-rutinas", parent: "running" },
   { hash: "bicicleta", parent: "inicio" },
   { hash: "libros", parent: "inicio" },
   { hash: "biblia", parent: "inicio" },
@@ -82,7 +85,24 @@ const INV_TABS = [
   { hash: "inv-movimientos", label: "Movimientos", icon: "finList", color: "#4cc38a" },
   { hash: "inv-graficos", label: "Gráficos", icon: "chart", color: "#4cc38a" }
 ];
-const TAB_BARS = { habitos: HAB_TABS, finanzas: FIN_TABS, ejercicio: EJ_TABS, inversiones: INV_TABS };
+// Running tiene su propia barra (D-061), con un "+" al centro que no es una
+// pestaña sino una acción (abre Importar · Anotar a mano · Rutina guiada).
+const RUN_TABS = [
+  { hash: "running", label: "Actividades", icon: "running", color: "#ff7a30" },
+  { hash: "run-progreso", label: "Progreso", icon: "chart", color: "#ff7a30" },
+  { accion: "run-mas", label: "Agregar", icon: "plus" },
+  { hash: "run-segmentos", label: "Segmentos", icon: "segmento", color: "#ff7a30" },
+  { hash: "run-rutinas", label: "Rutinas", icon: "timer", color: "#ff7a30" }
+];
+const TAB_BARS = { habitos: HAB_TABS, finanzas: FIN_TABS, ejercicio: EJ_TABS, inversiones: INV_TABS, running: RUN_TABS };
+
+// Grupo de pestañas de un hash: el primer nivel (subiendo) que tiene barra
+// propia. Para Finanzas, Hábitos, etc. es el módulo; para Running, "running".
+function grupoTabs(hash) {
+  let h = hash;
+  while (h) { if (TAB_BARS[h]) return h; h = parentOf(h); }
+  return null;
+}
 
 const ALL_HASHES = MODULES.map(m => m.hash).concat(SUB_PANELS.map(s => s.hash));
 
@@ -113,7 +133,7 @@ function activeModuleHash(hash) {
 // Gimnasio sigue resaltando "Entrenamiento").
 function tabHash(hash, tabs) {
   let h = hash;
-  while (h && !tabs.some(t => t.hash === h)) h = parentOf(h);
+  while (h && !tabs.some(t => t.hash && t.hash === h)) h = parentOf(h);
   return h || tabs[0].hash;
 }
 
@@ -136,7 +156,9 @@ function showPanel(hash) {
   document.body.classList.toggle("in-finanzas", activeModule === "finanzas");
   document.body.classList.toggle("in-inversiones", activeModule === "inversiones");
   // Con barra inferior propia, la de arriba solo muestra una casita para volver al inicio.
-  document.body.classList.toggle("has-home-btn", !!TAB_BARS[activeModule]);
+  const grupo = grupoTabs(hash);
+  document.body.classList.toggle("has-home-btn", !!grupo);
+  document.body.classList.toggle("in-running", grupo === "running");
   // Running y Bicicleta tampoco llevan versículo: la pantalla es para la actividad.
   // Inversiones tampoco (pedido del dueño 2026-10-28): es una sección aparte.
   // Libros y Biblia tampoco (pedido del dueño 2026-10-29), ni Medir tiempos ni Movilidad.
@@ -155,18 +177,20 @@ function showPanel(hash) {
 // En escritorio no hay barra inferior: cada módulo con pestañas propias las
 // muestra como pills arriba de cada una de sus secciones. En móvil se ocultan
 // (.fin-outer-tabs). Finanzas e Inversiones suman el engranaje de Ajustes.
-const PILLS_ESCRITORIO = { habitos: "Secciones de Hábitos", ejercicio: "Secciones de Ejercicio", finanzas: "Secciones de Finanzas", inversiones: "Secciones de Inversiones" };
+const PILLS_ESCRITORIO = { habitos: "Secciones de Hábitos", ejercicio: "Secciones de Ejercicio", finanzas: "Secciones de Finanzas", inversiones: "Secciones de Inversiones", running: "Secciones de Running" };
 const PILL_AJUSTES = { finanzas: ["fin-ajustes", "Ajustes de Finanzas"], inversiones: ["inv-ajustes", "Ajustes de Inversiones"] };
 function crearPillsEscritorio() {
   Object.keys(PILLS_ESCRITORIO).forEach(grupo => {
     TAB_BARS[grupo].forEach(tab => {
+      if (!tab.hash) return;
       const panel = document.getElementById("panel-" + tab.hash);
       if (!panel || panel.querySelector(":scope > .fin-outer-tabs")) return;
       const nav = document.createElement("nav");
       nav.className = "fin-tabs fin-outer-tabs";
       nav.setAttribute("aria-label", PILLS_ESCRITORIO[grupo]);
-      nav.innerHTML = TAB_BARS[grupo].map(t =>
-        `<a href="#${t.hash}" class="fin-tab" data-hash-link data-grupo="${grupo}" data-hash="${t.hash}">${t.label}</a>`).join("")
+      nav.innerHTML = TAB_BARS[grupo].map(t => t.accion
+        ? `<button type="button" class="fin-tab fin-tab-accion" data-${t.accion}>+ ${t.label}</button>`
+        : `<a href="#${t.hash}" class="fin-tab" data-hash-link data-grupo="${grupo}" data-hash="${t.hash}">${t.label}</a>`).join("")
         + (PILL_AJUSTES[grupo] ? `<a href="#${PILL_AJUSTES[grupo][0]}" class="fin-tab fin-tab-ajustes" aria-label="${PILL_AJUSTES[grupo][1]}"><span data-icon="gear"></span></a>` : "");
       panel.prepend(nav);
       if (typeof renderIcons === "function") renderIcons(nav);
@@ -194,9 +218,10 @@ function renderNav() {
 
   const bottomNav = document.getElementById("bottom-nav-links");
   if (bottomNav) {
-    const tabs = TAB_BARS[current];
+    const grupo = grupoTabs(hash);
+    const tabs = grupo && TAB_BARS[grupo];
     if (tabs) {
-      renderTabBar(bottomNav, current, tabs, tabHash(hash, tabs));
+      renderTabBar(bottomNav, grupo, tabs, tabHash(hash, tabs));
     } else {
       glassIndex = null;
       bottomNav.classList.remove("tab-mode");
@@ -218,12 +243,13 @@ function renderTabBar(nav, mode, tabs, activeHash) {
     nav.dataset.mode = mode;
     nav.classList.add("tab-mode");
     nav.style.setProperty("--tabs", tabs.length);
-    nav.innerHTML = `<span class="tab-glass" aria-hidden="true"></span>` + tabs.map(m =>
-      `<a href="#${m.hash}" data-nav-link data-hash="${m.hash}" style="--tab-color:${m.color}">` +
-      `<span class="icon" data-icon="${m.icon}"></span>${m.label}</a>`).join("");
+    nav.innerHTML = `<span class="tab-glass" aria-hidden="true"></span>` + tabs.map(m => m.accion
+      ? `<button type="button" class="tab-accion" data-${m.accion} aria-label="${m.label}"><span class="icon" data-icon="${m.icon}"></span></button>`
+      : `<a href="#${m.hash}" data-nav-link data-hash="${m.hash}" style="--tab-color:${m.color}">` +
+        `<span class="icon" data-icon="${m.icon}"></span>${m.label}</a>`).join("");
   }
   nav.querySelectorAll("a[data-hash]").forEach(a => a.classList.toggle("active", a.dataset.hash === activeHash));
-  moveGlass(nav, tabs.findIndex(t => t.hash === activeHash));
+  moveGlass(nav, tabs.findIndex(t => t.hash && t.hash === activeHash));
 }
 
 // Al cambiar de pestaña el indicador se "levanta" como una lupa de vidrio

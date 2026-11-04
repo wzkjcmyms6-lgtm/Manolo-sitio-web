@@ -32,8 +32,28 @@ function logros(doc, todos) {
   });
   return out;
 }
+// Logros de todas las actividades de una vez (para el feed): id → [{ clave, nombre, t, puesto }].
+// Por distancia, en orden de fecha, con las 3 mejores hasta ese momento: O(n) por distancia.
+function logrosPorId(docs) {
+  const out = {};
+  const orden = (docs || []).slice().sort((a, b) => momento(a) - momento(b));
+  RunMetricas.DISTANCIAS.forEach(([, clave, nombre]) => {
+    const top = [];
+    orden.forEach(d => {
+      const t = d.mejores && d.mejores[clave];
+      if (!(t > 0)) return;
+      let i = top.findIndex(x => t < x);
+      if (i < 0) i = top.length;
+      if (i >= 3) return;
+      top.splice(i, 0, t);
+      if (top.length > 3) top.pop();
+      (out[d.id] = out[d.id] || []).push({ clave, nombre, t, puesto: i + 1 });
+    });
+  });
+  return out;
+}
 const MEDALLA = { 1: "🥇", 2: "🥈", 3: "🥉" };
 const textoPuesto = p => (p === 1 ? "Mejor marca" : p === 2 ? "2.ª mejor" : "3.ª mejor");
 
-return { NOMBRES, esfuerzos, logros, MEDALLA, textoPuesto, momento };
+return { NOMBRES, esfuerzos, logros, logrosPorId, MEDALLA, textoPuesto, momento };
 });

@@ -1,5 +1,17 @@
 # Cambios
 
+## 2026-11-04 · Running: Actividades y barra propia (fase 3)
+- Running tiene su barra: Actividades · Progreso · (+) · Segmentos ·
+  Rutinas. El "+" abre Importar · Anotar a mano · Rutina guiada.
+- Actividades: tarjetas con título, fecha, lugar, distancia, ritmo,
+  tiempo, el trazo de la ruta y medallas; filtros y separadores por mes;
+  carga de a 20.
+- El resumen semanal pasó a Progreso y las rutinas guiadas a Rutinas (con
+  un acceso a estirar). La tarjeta de Inicio resume la semana.
+- Pruebas: 365 unitarias; E2E nuevo `run-feed.js` (47); `running.js`,
+  `run-detalle.js`, `run-importar.js`, `regresion.js` y `movilidad.js`
+  adaptados a la navegación nueva.
+
 ## 2026-11-04 · Running: detalle de cada actividad (fase 2)
 - Tocar una carrera (o rodada) del historial abre su detalle: mapa con
   inicio y fin (se amplía), cifras, logros con medallas, perfil de ritmo,

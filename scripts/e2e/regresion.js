@@ -19,7 +19,7 @@ const SEED = {
 const PANTALLAS = [
   ["inicio", "#panel-inicio"], ["habitos", "#hb-lista"], ["hab-stats", "#hb-stats"], ["hab-scalping", "#sc-app"], ["ej-feed", "#panel-ej-feed"],
   ["ejercicio", "#panel-ejercicio"], ["gimnasio", "#gym-home"], ["ej-rangos", "#rk-app"], ["ej-perfil", "#ejd-dash"],
-  ["running", "#running-list"], ["bicicleta", "#cycling-list"], ["finanzas", "#panel-finanzas"], ["fin-movimientos", "#panel-fin-movimientos"],
+  ["running", "#rf-feed"], ["bicicleta", "#cycling-list"], ["finanzas", "#panel-finanzas"], ["fin-movimientos", "#panel-fin-movimientos"],
   ["fin-presupuesto", "#panel-fin-presupuesto"], ["fin-analisis", "#panel-fin-analisis"], ["inversiones", "#panel-inversiones"]
 ];
 const coleccion = (p, ruta) => p.evaluate(r => [...window.__fakeStore.colMap(r).entries()], ruta);
@@ -86,7 +86,13 @@ async function recorrer(p, etiqueta) {
     errores.length = 0;
     await p.evaluate(h => { location.hash = h; }, hash);
     await p.waitForTimeout(400);
-    await p.click(`#panel-${hash} .act-manual summary`);
+    // Running: anotar a mano está en el "+" de su barra (D-061).
+    if (hash === "running") {
+      if (await p.isVisible(".tab-accion")) await p.click(".tab-accion"); else await p.click("#panel-running .fin-tab-accion");
+      await p.waitForTimeout(250);
+      await p.click('[data-run-op="manual"]');
+      await p.waitForTimeout(300);
+    } else await p.click(`#panel-${hash} .act-manual summary`);
     await p.fill(`#${pref}-distance`, "4");
     await p.fill(`#${pref}-duration`, "25");
     await p.click(`#${pref}-form button[type=submit]`);

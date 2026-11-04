@@ -122,3 +122,11 @@ test("corregir desnivel: muestras cada ≥ 20 m, lotes de 100, histéresis de 1 
   assert.deepEqual(E.desnivelDe([3600, 3600.5, 3602, 3605, 3604.5, 3600, 3601]), { pos: 6, neg: 5 });
   assert.equal(E.desnivelDe([1]), null);
 });
+
+test("logros de todas a la vez: igual que uno por uno", () => {
+  const d = (id, dia, t5, t1) => ({ id, inicio: Date.UTC(2026, 9, dia), mejores: Object.assign({ "5000": t5 }, t1 ? { "1000": t1 } : {}) });
+  const todos = [d("a", 1, 1500, 280), d("b", 5, 1450, 270), d("c", 9, 1480, 290), d("e", 20, 1400, 260), d("f", 22, 1600, 300), d("g", 23, 1460)];
+  const m = A.logrosPorId(todos);
+  todos.forEach(x => assert.deepEqual(m[x.id] || [], A.logros(x, todos), x.id));
+  assert.equal(m.f, undefined, "la 4.ª no tiene logro");
+});

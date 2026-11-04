@@ -17,7 +17,7 @@
   <!-- Fuentes guardadas en el repo: la app no depende de internet para verse bien -->
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
-  <link rel="stylesheet" href="css/style.css?v=202610291010">
+  <link rel="stylesheet" href="css/style.css?v=202611040400">
   <link rel="stylesheet" href="css/finanzas.css?v=202610291300">
   <link rel="stylesheet" href="css/habitos.css?v=202610270100">
   <link rel="stylesheet" href="css/inversiones.css?v=202610291000">
@@ -25,7 +25,7 @@
   <link rel="stylesheet" href="css/movilidad.css?v=202610300100">
   <link rel="stylesheet" href="css/tiempos.css?v=202610300310">
   <link rel="stylesheet" href="css/ej-calendario.css?v=202610290900">
-  <link rel="stylesheet" href="css/run.css?v=202611040300">
+  <link rel="stylesheet" href="css/run.css?v=202611040400">
 </head>
 <body>
   <!-- Degradado marfil y brillo del maniquí (mapa corporal y creador de ejercicios) -->
@@ -132,7 +132,7 @@
             </div>
             <p class="panel-sub">Tu panel de control personal. Elige una sección para empezar.</p>
 
-            <a class="gym-en-curso act-en-curso-aviso" href="#running" data-act-en-curso="running" hidden><span class="gym-en-curso-punto" aria-hidden="true"></span><span>Tienes una <strong>rutina</strong> sin terminar</span><span class="gym-en-curso-ir">Continuar</span></a>
+            <a class="gym-en-curso act-en-curso-aviso" href="#run-rutinas" data-act-en-curso="run-rutinas" hidden><span class="gym-en-curso-punto" aria-hidden="true"></span><span>Tienes una <strong>rutina</strong> sin terminar</span><span class="gym-en-curso-ir">Continuar</span></a>
             <div class="card-grid card-grid-home">
               <a class="card" href="#habitos">
                 <span class="icon" data-icon="habits"></span>
@@ -147,7 +147,7 @@
               <a class="card" href="#running">
                 <span class="icon" data-icon="running"></span>
                 <h3>Running</h3>
-                <p>Rutinas guiadas y tu resumen semanal.</p>
+                <p id="run-inicio">Tus carreras, mapas, marcas y rutinas.</p>
               </a>
               <a class="card" href="#bicicleta">
                 <span class="icon" data-icon="cycling"></span>
@@ -419,25 +419,71 @@
             <div class="tmp-app" id="tmp-app"></div>
           </section>
 
+          <!-- ===== Running (D-061): Actividades · Progreso · (+) · Segmentos · Rutinas ===== -->
           <section id="panel-running" hidden>
-            <a class="back-link" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
             <div class="run-cabecera">
               <h1 class="page-title">Running</h1>
               <button type="button" class="run-importar-btn" data-ri-abrir>Importar</button>
             </div>
+            <div class="run-estirar" data-run-estirar hidden></div>
+            <div class="rf-filtros" id="rf-filtros" role="group" aria-label="Filtrar actividades"></div>
+            <div class="rf-feed" id="rf-feed" aria-live="polite"></div>
+          </section>
 
+          <section id="panel-run-progreso" hidden>
+            <h1 class="page-title">Progreso</h1>
+            <section class="dash" id="running-dash" aria-label="Resumen semanal"></section>
+            <div id="rp-app" class="rp-app"></div>
+          </section>
+
+          <section id="panel-run-segmentos" hidden>
+            <h1 class="page-title">Segmentos</h1>
+            <div id="rs-app" class="rs-app">
+              <div class="run-vacio">
+                <span class="icon" data-icon="segmento"></span>
+                <p><b>Tus tramos favoritos, cronometrados solos.</b></p>
+                <p>Muy pronto podrás marcar un tramo de una ruta (una subida, una vuelta al parque) y Manolo lo buscará en todas tus carreras para mostrarte tus mejores tiempos.</p>
+              </div>
+            </div>
+          </section>
+
+          <section id="panel-run-rutinas" hidden>
+            <h1 class="page-title">Rutinas</h1>
             <div class="act-app" id="running-act" hidden></div>
-
             <div id="running-home">
-              <section class="dash" id="running-dash" aria-label="Resumen semanal"></section>
+              <div class="run-estirar" data-run-estirar hidden></div>
               <section class="rg" id="running-rutinas" aria-label="Rutinas guiadas"></section>
+              <a class="run-movilidad" href="#movilidad"><span class="icon" data-icon="movilidad"></span><span><b>Después de correr</b><small>Estiramientos guiados de 3 min (Movilidad)</small></span><span class="icon-sm" data-icon="chevronRight"></span></a>
+            </div>
+          </section>
 
-              <details class="act-manual">
-                <summary>Registrar carrera <small>a mano</small></summary>
-                <form class="tracker-form" id="running-form">
-                  <input type="date" id="running-date" required>
-                  <input type="number" id="running-distance" placeholder="Distancia (km)" min="0.01" step="0.01" required>
-                  <input type="number" id="running-duration" placeholder="Minutos" min="1" required>
+          <!-- "+" de Running: Importar · Anotar a mano · Rutina guiada -->
+          <div id="run-mas-hoja" class="js-sheet budget-sheet" hidden>
+            <div class="budget-sheet-overlay"></div>
+            <div class="budget-sheet-panel ri-panel" role="dialog" aria-modal="true" aria-labelledby="run-mas-t">
+              <div class="budget-sheet-header">
+                <button type="button" class="budget-sheet-close" aria-label="Cerrar"><span data-icon="close"></span></button>
+                <h3 id="run-mas-t">Agregar</h3>
+              </div>
+              <div class="ri-cuerpo run-mas-opciones">
+                <button type="button" class="run-mas-op" data-run-op="importar"><span class="icon" data-icon="download"></span><span><b>Importar</b><small>GPX, TCX, FIT o el ZIP de Strava</small></span></button>
+                <button type="button" class="run-mas-op" data-run-op="manual"><span class="icon" data-icon="edit"></span><span><b>Anotar a mano</b><small>Fecha, distancia y tiempo</small></span></button>
+                <a class="run-mas-op" href="#run-rutinas" data-run-op="rutina"><span class="icon" data-icon="timer"></span><span><b>Rutina guiada</b><small>Intervalos con avisos de voz</small></span></a>
+              </div>
+            </div>
+          </div>
+          <div id="run-manual-hoja" class="js-sheet budget-sheet" hidden>
+            <div class="budget-sheet-overlay"></div>
+            <div class="budget-sheet-panel ri-panel" role="dialog" aria-modal="true" aria-labelledby="run-manual-t">
+              <div class="budget-sheet-header">
+                <button type="button" class="budget-sheet-close" aria-label="Cerrar"><span data-icon="close"></span></button>
+                <h3 id="run-manual-t">Anotar carrera</h3>
+              </div>
+              <div class="ri-cuerpo">
+                <form class="tracker-form run-manual-form" id="running-form">
+                  <input type="date" id="running-date" required aria-label="Fecha">
+                  <input type="number" id="running-distance" placeholder="Distancia (km)" min="0.01" step="0.01" required inputmode="decimal">
+                  <input type="number" id="running-duration" placeholder="Minutos" min="1" required inputmode="numeric">
                   <select id="running-rpe" aria-label="Esfuerzo percibido (RPE)">
                     <option value="">RPE (opcional)</option>
                     <option value="1">RPE 1 · muy suave</option><option value="2">RPE 2</option><option value="3">RPE 3</option>
@@ -447,13 +493,9 @@
                   <input type="text" id="running-notes" placeholder="Notas (opcional)">
                   <button type="submit">Registrar</button>
                 </form>
-              </details>
-
-              <h2 class="act-lista-t">Tus carreras</h2>
-              <div id="running-list"></div>
-              <p class="empty-state" id="running-empty" style="display:none;">Aún no registras salidas.</p>
+              </div>
             </div>
-          </section>
+          </div>
 
           <!-- ===== Bicicleta ===== -->
           <section id="panel-run-actividad" hidden>
@@ -1312,8 +1354,8 @@
   <script defer src="js/accesos-logica.js?v=202610100400"></script>
   <script defer src="js/accesos.js?v=202610100400"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
-  <script defer src="js/icons.js?v=202610100300"></script>
-  <script defer src="js/modules.js?v=202611040200"></script>
+  <script defer src="js/icons.js?v=202611040400"></script>
+  <script defer src="js/modules.js?v=202611040400"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
   <script defer src="js/exercise-search.js?v=202609291"></script>
@@ -1353,7 +1395,7 @@
   <script defer src="js/rutinas-running-ui.js?v=202610090100"></script>
   <script defer src="js/rutina-guiada.js?v=202610090100"></script>
   <script defer src="js/actividad-analisis.js?v=202610090100"></script>
-  <script defer src="js/actividad-registro.js?v=202611040200"></script>
+  <script defer src="js/actividad-registro.js?v=202611040400"></script>
   <script defer src="js/run-formatos.js?v=202611040100"></script>
   <script defer src="js/run-zip.js?v=202611040100"></script>
   <script defer src="js/run-csv.js?v=202611040100"></script>
@@ -1363,11 +1405,12 @@
   <script defer src="js/run-importar.js?v=202611040100"></script>
   <script defer src="js/run-vista.js?v=202611040200"></script>
   <script defer src="js/run-graficos.js?v=202611040200"></script>
-  <script defer src="js/run-analisis.js?v=202611040200"></script>
-  <script defer src="js/run-datos.js?v=202611040200"></script>
+  <script defer src="js/run-analisis.js?v=202611040400"></script>
+  <script defer src="js/run-datos.js?v=202611040400"></script>
   <script defer src="js/run-mapa.js?v=202611040300"></script>
   <script defer src="js/run-detalle.js?v=202611040200"></script>
-  <script defer src="js/running.js?v=202610090100"></script>
+  <script defer src="js/run-feed.js?v=202611040400"></script>
+  <script defer src="js/running.js?v=202611040400"></script>
   <script defer src="js/bicicleta.js?v=202610090100"></script>
   <script defer src="js/finanzas/datos.js?v=202610291300"></script>
   <script defer src="js/finanzas/demo.js?v=202610011300"></script>

@@ -43,7 +43,7 @@ function simular() {
   const tarjetas = await p.$$eval("#panel-inicio .card-grid-home > a.card", els => els.map(a => a.getAttribute("href")));
   ok(tarjetas.indexOf("#movilidad") === tarjetas.indexOf("#biblia") + 1, `«Movilidad» va después de Libros y Biblia (${tarjetas.join(" ")})`);
   ok(await p.$eval('#panel-inicio a[href="#movilidad"] .icon svg', () => true).catch(() => false), "la tarjeta tiene su ícono");
-  ok((await p.$$eval('a[href="#movilidad"], [data-hash="movilidad"]', els => els.filter(e => !e.closest(".card-grid-home")).length)) === 0, "no aparece en la barra inferior ni en el menú");
+  ok((await p.$$eval('#bottom-nav-links a[href="#movilidad"], #nav-links a[href="#movilidad"], [data-hash="movilidad"]', els => els.length)) === 0, "no aparece en la barra inferior ni en el menú");
   await p.click('#panel-inicio a[href="#movilidad"]');
   await p.waitForTimeout(400);
   ok(await vis("#panel-movilidad") && !(await vis("#panel-inicio")), "la tarjeta abre Movilidad");

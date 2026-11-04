@@ -607,3 +607,23 @@ guiada unida a un archivo del reloj se sombrean en el perfil usando la hora
 de la rutina (`previo.inicio`). El cursor del gráfico mueve un punto en el
 mapa; el mapa se amplía a pantalla completa. Exportar GPX 1.1 con FC y
 cadencia (extensión de Garmin), que Manolo vuelve a leer igual.
+
+**D-071 (2026-11-04) · Actividades y barra propia (fase 3).** Running se
+reparte en pestañas: **Actividades** (`#running`, el feed de tarjetas que
+reemplaza la lista "Tus carreras"), **Progreso** (`#run-progreso`, por ahora
+el resumen semanal de siempre, D-035), **Segmentos** (`#run-segmentos`,
+estado vacío hasta la fase 6) y **Rutinas** (`#run-rutinas`, las rutinas
+guiadas y su pantalla; el aviso de Inicio lleva ahí). El "+" del centro es
+un botón (no una pestaña) que abre Importar · Anotar a mano (el mismo
+formulario de siempre, en una hoja) · Rutina guiada. `modules.js` busca la
+barra del primer nivel que la tenga (`grupoTabs`) y admite acciones en la
+barra y en las pills de la computadora. Tarjeta: título, fecha, hora y
+lugar, Distancia · Ritmo · Tiempo, trazo de la mini ruta, medallas (hasta
+3) y etiquetas (Rutina, tipo, A mano); filtros Todas · Con mapa · Rutinas ·
+A mano · Competencias (solo los que tienen algo); separadores por mes con
+km y cantidad; de a 20 tarjetas, con las siguientes al llegar al final
+(cientos de carreras sin trabarse). Medallas de todas las carreras de una
+vez (`RunAnalisis.logrosPorId`, O(n) por distancia). La tarjeta de Running
+en Inicio dice los km de la semana y la última carrera. Después de anotar
+una carrera a mano o guardar una rutina del día, se sugiere estirar con
+Movilidad › Después de correr (2 horas, se puede ocultar).

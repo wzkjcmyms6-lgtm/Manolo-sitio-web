@@ -109,6 +109,14 @@ Esquema en `docs/DATABASE.md`.
   `js/run-datos.js` (listas y ajustes compartidos, sin lecturas extra).
 - Decisión D-070.
 
+### Hecho en la fase 3 (2026-11-04)
+- Barra propia y pestañas (D-071). `js/run-feed.js`: feed, filtros, carga
+  de a 20, tarjeta de Inicio, hoja del "+" (`#run-mas-hoja`), hoja de
+  anotar a mano (`#run-manual-hoja`, el formulario `#running-form` de
+  siempre) y la sugerencia de estirar.
+- `ActividadRegistro` sigue guardando y dibujando el resumen semanal; si no
+  hay lista (Running), solo avisa los datos al feed.
+
 ---
 
 ## Lo que ya existe (desde 2026-10-01)
