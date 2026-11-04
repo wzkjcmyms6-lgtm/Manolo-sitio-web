@@ -648,3 +648,19 @@ agregó** (las viejas no se tocan) y nunca reemplaza la que ya tiene una
 carrera unida. Cambiar la FC o el umbral no recalcula las cargas ya
 guardadas (haría falta leer todas las rutas); las zonas del detalle sí usan
 los ajustes de hoy. El peso sale de Ejercicio › Perfil.
+
+**D-073 (2026-11-04) · Inteligencia por reglas (fase 5).** Sin IA externa ni
+servidor: `js/run-inteligencia.js`. **Mismo recorrido**: otra carrera con
+inicio y fin a ≤ 200 m, distancia ±5 % y la misma forma (20 puntos a
+distancias iguales de cada mini ruta, separación media ≤ 150 m; en el mismo
+sentido). Usa solo la mini ruta del resumen: no lee rutas completas. En el
+detalle: cuántas veces, el puesto por tiempo en movimiento y la lista (las
+10 más nuevas) con barras. **Resumen inteligente**: 2 a 4 frases, en este
+orden de prioridad: nueva mejor marca (la distancia más larga) o podio; la
+más larga de los últimos 3 meses; recorrido repetido (desde 3 veces); ritmo
+contra el promedio del último mes en distancias parecidas (±30 %, desde 3
+carreras); parciales (segunda mitad más rápida, ritmo parejo o el último km
+más lento); desnivel ≥ 150 m con el ritmo ajustado; zona de FC con ≥ 40 %
+del tiempo; y la semana. Mira solo lo que había **hasta esa carrera** (así
+una vieja no compara con el futuro). Si hay menos de dos frases, la primera
+son las cifras de la carrera. Nunca consejos de salud ni de entrenamiento.

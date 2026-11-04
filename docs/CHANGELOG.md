@@ -1,5 +1,13 @@
 # Cambios
 
+## 2026-11-04 · Running: Resumen inteligente y Mismo recorrido (fase 5)
+- En el detalle de cada carrera: un "Resumen inteligente" de 2 a 4 frases
+  con datos reales (marcas, recorrido repetido, ritmo contra tu promedio,
+  parciales, desnivel, zonas, semana) y "Mismo recorrido" con tus vueltas
+  por el mismo camino y tu puesto.
+- Pruebas: 374 unitarias (nuevo `run-inteligencia.test.js`); E2E nuevo
+  `run-inteligencia.js` (14).
+
 ## 2026-11-04 · Running: Progreso y Ajustes (fase 4)
 - Progreso: totales de semana, mes, año y todo contra el período anterior,
   racha de semanas, metas con anillos, diario con círculos por km, mejores

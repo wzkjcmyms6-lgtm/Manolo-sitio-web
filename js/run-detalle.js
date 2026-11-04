@@ -129,8 +129,10 @@ function pintar() {
     ${d.conRuta || d.mini ? `<div class="rd-mapa-caja"><div class="rd-mapa" id="rd-mapa">${d.mini ? V.svgRuta([M.leerMini(d.mini)], { ancho: 340, alto: 240, clase: "run-ruta run-ruta-mapa" }) : ""}</div>
       <button type="button" class="rd-ampliar" data-rd="ampliar" aria-label="Ampliar el mapa">⤢</button></div>` : ""}
     <div class="rd-stats">${stats}</div>
+    <div id="rd-ia-caja">${inteligente(d, bici)}</div>
     ${d.notes ? `<p class="rd-notas">${esc(d.notes)}</p>` : ""}
     ${logros.length ? `<section class="rd-sec"><h2>Logros</h2><ul class="rd-logros">${logros.map(l => `<li><span>${A.MEDALLA[l.puesto]}</span><b>${esc(l.nombre)}</b><i>${V.tiempo(l.t)}</i><small>${A.textoPuesto(l.puesto)}</small></li>`).join("")}</ul></section>` : ""}
+    <div id="rd-rec-caja">${bici ? "" : recorrido(d)}</div>
     <section class="rd-sec rd-perfil-sec" id="rd-perfil" hidden></section>
     ${parciales(d, bici)}
     ${vueltas(d, bici)}
@@ -145,6 +147,30 @@ function pintar() {
   if (actual.mapa) { actual.mapa.destruir(); actual.mapa = null; }
   if (actual.tramos) pintarRuta();
   else pintarZonas();
+}
+
+// ---- Inteligencia por reglas (fase 5, js/run-inteligencia.js) ----
+function inteligente(d, bici) {
+  if (bici || !window.RunInteligencia) return "";
+  const frases = RunInteligencia.resumen(d, RunDatos.lista("running"));
+  if (!frases.length) return "";
+  return `<section class="rd-ia" aria-label="Resumen inteligente"><h2><span aria-hidden="true">✦</span> Resumen inteligente</h2>
+    <ul>${frases.map(f => `<li>${esc(f)}</li>`).join("")}</ul></section>`;
+}
+function recorrido(d) {
+  if (!window.RunInteligencia || !d.mini) return "";
+  const r = RunInteligencia.mismoRecorrido(d, RunDatos.lista("running"));
+  if (!r) return "";
+  const lista = r.lista.slice(0, 10);
+  const max = Math.max(...r.lista.map(x => x.t)), min = Math.min(...r.lista.map(x => x.t));
+  return `<section class="rd-sec rd-recorrido"><h2>Mismo recorrido <small>${r.veces} veces</small></h2>
+    <p class="rd-nota">${r.puesto === 1 ? "Este fue tu mejor tiempo en este recorrido." : `Puesto ${r.puesto} de ${r.veces}; tu mejor: ${V.tiempo(r.mejor.t)} (${esc(V.fechaActividad(r.mejor))}).`}</p>
+    <ul class="rd-rec-lista">${lista.map(x => `<li class="${x.esta ? "is-esta" : ""}${x.id === r.mejor.id ? " is-mejor" : ""}">
+      ${x.esta ? `<span class="rd-rec-fecha">Esta carrera</span>` : `<a class="rd-rec-fecha" href="#run-actividad/running/${encodeURIComponent(x.id)}">${esc(V.fechaActividad(x))}</a>`}
+      <span class="rd-rec-barra"><i style="width:${max > min ? Math.round(35 + 65 * (max - x.t) / (max - min)) : 100}%"></i></span>
+      <b>${V.tiempo(x.t)}</b><small>${V.ritmo(x.ritmo, true)}</small></li>`).join("")}</ul>
+    ${r.veces > lista.length ? `<p class="rd-nota">Y ${r.veces - lista.length} más.</p>` : ""}
+  </section>`;
 }
 
 function parciales(d, bici) {
@@ -423,5 +449,13 @@ document.addEventListener("pointerdown", moverCursor);
 document.addEventListener("keydown", e => { if (e.key === "Escape" && document.body.classList.contains("rd-mapa-abierto")) document.querySelector('[data-rd="ampliar"]').click(); });
 window.addEventListener("hashchange", abrirDesdeHash);
 document.addEventListener("DOMContentLoaded", abrirDesdeHash);
-if (window.RunDatos) RunDatos.al(() => { if (actual && actual.doc && !document.querySelector("#rd-hoja:not([hidden])")) pintarZonas(); });
+// Cuando llegan o cambian las listas: zonas, resumen y mismo recorrido (sin redibujar el mapa).
+if (window.RunDatos) RunDatos.al(() => {
+  if (!actual || !actual.doc || document.querySelector("#rd-hoja:not([hidden])")) return;
+  pintarZonas();
+  const bici = actual.col === "bicicleta";
+  const ia = document.getElementById("rd-ia-caja"), rec = document.getElementById("rd-rec-caja");
+  if (ia) ia.innerHTML = inteligente(actual.doc, bici);
+  if (rec) rec.innerHTML = bici ? "" : recorrido(actual.doc);
+});
 })();

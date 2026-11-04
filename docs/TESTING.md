@@ -63,6 +63,9 @@
     marcas y evolución, predicciones, forma y fatiga, zapatillas; Ajustes
     (validación, guardar sin pisar zapatillas, agregar, predeterminada,
     retirar) y el selector de zapatillas del detalle; 1280 px.
+  - `run-inteligencia.js` — Resumen inteligente (marca, recorrido
+    repetido, sin consejos de salud, al menos dos frases) y Mismo
+    recorrido (lista, mejor, puesto en otra vuelta, sin ruta no aparece).
   - `regresion.js` — las 15 pantallas en teléfono (390 px) y computadora
     (1280 px): se ven, sin errores y sin scroll de lado; acciones de siempre:
     marcar un hábito, anotar un gasto, registrar Running y Bici a mano,

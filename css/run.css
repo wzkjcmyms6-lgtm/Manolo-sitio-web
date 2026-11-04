@@ -363,3 +363,18 @@ body.rd-mapa-abierto .rd-ampliar { top: max(12px, env(safe-area-inset-top)); bot
 .ra-zap small { display: block; color: var(--muted); font-size: 0.8rem; margin-top: 0.1rem; }
 .ra-zap-btns { display: flex; flex-wrap: wrap; gap: 0 0.9rem; }
 .ra-zap-form form { display: flex; flex-direction: column; gap: 0.7rem; padding: 0.6rem 0; }
+
+/* ---------- Inteligencia (fase 5) ---------- */
+.rd-ia { margin: 0 0 1rem; padding: 0.9rem 1rem; border-radius: 16px; background: linear-gradient(135deg, rgba(255, 122, 48, 0.12), rgba(255, 184, 77, 0.06)); border: 1px solid rgba(255, 122, 48, 0.3); }
+.rd-ia h2 { margin: 0 0 0.5rem; font-size: 0.95rem; color: var(--accent-2); }
+.rd-ia ul { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.35rem; }
+.rd-ia li { line-height: 1.45; font-size: 0.92rem; }
+.rd-recorrido h2 small { color: var(--muted); font-weight: 500; font-size: 0.85rem; margin-left: 0.3rem; }
+.rd-rec-lista { list-style: none; padding: 0; margin: 0.4rem 0 0; }
+.rd-rec-lista li { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto auto; align-items: center; gap: 0.6rem; padding: 0.45rem 0; border-top: 1px solid var(--border); font-size: 0.88rem; font-variant-numeric: tabular-nums; }
+.rd-rec-fecha { color: var(--ink); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rd-rec-lista li.is-esta .rd-rec-fecha { color: var(--accent-2); font-weight: 600; }
+.rd-rec-barra { height: 8px; border-radius: 4px; background: var(--surface-raised); overflow: hidden; }
+.rd-rec-barra i { display: block; height: 100%; background: rgba(255, 122, 48, 0.5); border-radius: 4px; }
+.rd-rec-lista li.is-mejor .rd-rec-barra i { background: #4cc38a; }
+.rd-rec-lista small { color: var(--muted); }
