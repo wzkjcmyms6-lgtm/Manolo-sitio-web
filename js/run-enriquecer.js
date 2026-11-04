@@ -121,5 +121,41 @@ async function completar(docs, deps) {
   return hechas;
 }
 
-return { urlClima, leerClima, textoClima, urlLugar, leerLugar, claveLugar, completar };
+// ---- "Corregir desnivel" (botón opcional del detalle, D-070) ----
+// Muestra la ruta cada ≥ 20 m (máx. 1000 puntos), pide la altura del mapa
+// (DEM de 90 m) en lotes de 100 (el máximo de la API) y suma el desnivel con
+// una histéresis de 1 m (el modelo ya viene suavizado).
+function muestrasDesnivel(tramos, haversine, maximo) {
+  const ps = [].concat(...(tramos || [])).filter(p => p.lat != null);
+  if (ps.length < 2) return [];
+  const max = maximo || 1000;
+  let total = 0;
+  for (let i = 1; i < ps.length; i++) total += haversine(ps[i - 1], ps[i]);
+  const paso = Math.max(20, total / max);
+  const out = [{ lat: ps[0].lat, lon: ps[0].lon, d: 0 }];
+  let acum = 0, ultimo = 0;
+  for (let i = 1; i < ps.length; i++) {
+    acum += haversine(ps[i - 1], ps[i]);
+    if (acum - ultimo >= paso || i === ps.length - 1) { out.push({ lat: ps[i].lat, lon: ps[i].lon, d: Math.round(acum) }); ultimo = acum; }
+  }
+  return out;
+}
+function urlsElevacion(muestras) {
+  const urls = [];
+  for (let i = 0; i < muestras.length; i += 100) {
+    const g = muestras.slice(i, i + 100);
+    urls.push(`https://api.open-meteo.com/v1/elevation?latitude=${g.map(p => r(p.lat, 4)).join(",")}&longitude=${g.map(p => r(p.lon, 4)).join(",")}`);
+  }
+  return urls;
+}
+function desnivelDe(alturas, umbral) {
+  const u = umbral == null ? 1 : umbral;
+  const v = (alturas || []).filter(x => typeof x === "number" && isFinite(x));
+  if (v.length < 2) return null;
+  let ref = v[0], pos = 0, neg = 0;
+  v.forEach(x => { if (x >= ref + u) { pos += x - ref; ref = x; } else if (x <= ref - u) { neg += ref - x; ref = x; } });
+  return { pos: Math.round(pos), neg: Math.round(neg) };
+}
+
+return { urlClima, leerClima, textoClima, urlLugar, leerLugar, claveLugar, completar, muestrasDesnivel, urlsElevacion, desnivelDe };
 });

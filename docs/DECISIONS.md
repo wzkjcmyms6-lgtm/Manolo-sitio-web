@@ -589,3 +589,21 @@ Strava, Apple Salud y adidas Running aparecen solo como **origen de los
 datos** en "Cómo traer mis carreras" y en la vista previa de importación
 (uso descriptivo, en texto simple, sin logos). En el resto de Running no
 aparecen.
+
+**D-070 (2026-11-04) · Detalle de la actividad.** `#run-actividad/{colección}/{id}`
+(`currentHash` ignora lo que va después de la primera barra); sirve para
+cualquier actividad: a mano, rutina, GPS viejo o importada, y también para
+rodadas (con velocidad en vez de ritmo). Tocar una actividad del historial
+la abre. Logros: puesto 1–3 de cada mejor marca **entre las actividades
+hasta ese día** (como era cuando se corrió, así una marca vieja no pierde su
+medalla). Zonas con la FC máx y de reposo de Ajustes; sin ajustes, con la FC
+más alta registrada (se avisa). "Tipo" es un solo campo (`subtipo`):
+competencia, fondo largo, series, trail, cinta o pista (rodada: competencia,
+rodillo, virtual). "Corregir desnivel" lo pide el dueño con un botón: manda
+hasta 1000 puntos de la ruta redondeados a 4 decimales (~10 m) a la API de
+elevación de Open-Meteo, en lotes de 100, y guarda el resultado (no se
+vuelve a pedir); se avisa antes. Los intervalos de correr de una rutina
+guiada unida a un archivo del reloj se sombrean en el perfil usando la hora
+de la rutina (`previo.inicio`). El cursor del gráfico mueve un punto en el
+mapa; el mapa se amplía a pantalla completa. Exportar GPX 1.1 con FC y
+cadencia (extensión de Garmin), que Manolo vuelve a leer igual.

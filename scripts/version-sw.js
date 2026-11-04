@@ -11,7 +11,7 @@ const crypto = require("crypto");
 
 const RAIZ = path.join(__dirname, "..");
 // Archivos que la app carga sin estar en index.html (el importador de rutinas se carga al usarlo).
-const EXTRAS = ["manifest.json", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "js/importar-rutinas.js", "js/importar-ui.js"];
+const EXTRAS = ["manifest.json", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "js/importar-rutinas.js", "js/importar-ui.js", "vendor/leaflet-1.9.4/leaflet.js", "vendor/leaflet-1.9.4/leaflet.css"];
 
 // Misma idea que recursosDe() en sw.js: rutas locales de src/href/url().
 function rutasDe(texto, desde) {

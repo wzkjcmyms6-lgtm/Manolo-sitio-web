@@ -90,6 +90,8 @@ function fusion(existente, doc) {
     out[k] = doc[k];
   });
   out.previo = { distance: Number(existente.distance) || 0, duration: Number(existente.duration) || 0 };
+  // La hora de la rutina (del teléfono) sirve para sombrear sus intervalos en el gráfico.
+  if (Number(existente.inicio) > 0) { out.previo.inicio = Number(existente.inicio); if (Number(existente.fin) > 0) out.previo.fin = Number(existente.fin); }
   out.fusionado = doc.importado;
   if (existente.notes && doc.notes && !String(existente.notes).includes(doc.notes)) out.notes = `${existente.notes}\n${doc.notes}`.slice(0, 2000);
   else if (!existente.notes && doc.notes) out.notes = doc.notes;

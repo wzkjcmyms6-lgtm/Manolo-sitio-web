@@ -28,6 +28,7 @@ const SUB_PANELS = [
   { hash: "ej-rangos", parent: "ejercicio" },
   { hash: "ej-perfil", parent: "ejercicio" },
   { hash: "running", parent: "inicio" },
+  { hash: "run-actividad", parent: "running" },
   { hash: "bicicleta", parent: "inicio" },
   { hash: "libros", parent: "inicio" },
   { hash: "biblia", parent: "inicio" },
@@ -85,8 +86,10 @@ const TAB_BARS = { habitos: HAB_TABS, finanzas: FIN_TABS, ejercicio: EJ_TABS, in
 
 const ALL_HASHES = MODULES.map(m => m.hash).concat(SUB_PANELS.map(s => s.hash));
 
+// Algunos paneles llevan un dato después de la barra (#run-actividad/running/ID):
+// el panel es lo de antes de la primera barra.
 function currentHash() {
-  const h = window.location.hash.replace("#", "");
+  const h = window.location.hash.replace("#", "").split("/")[0];
   return ALL_HASHES.includes(h) ? h : "inicio";
 }
 
@@ -137,7 +140,7 @@ function showPanel(hash) {
   // Running y Bicicleta tampoco llevan versículo: la pantalla es para la actividad.
   // Inversiones tampoco (pedido del dueño 2026-10-28): es una sección aparte.
   // Libros y Biblia tampoco (pedido del dueño 2026-10-29), ni Medir tiempos ni Movilidad.
-  document.getElementById("verse-banner").hidden = isExercise || activeModule === "finanzas" || activeModule === "habitos" || activeModule === "inversiones" || ["running", "bicicleta", "libros", "biblia", "movilidad", "tiempos"].includes(hash);
+  document.getElementById("verse-banner").hidden = isExercise || activeModule === "finanzas" || activeModule === "habitos" || activeModule === "inversiones" || ["running", "bicicleta", "libros", "biblia", "movilidad", "tiempos"].includes(hash) || hash.startsWith("run-");
   document.getElementById("body-banner").hidden = !showBody;
 
   // Pestañas propias de cada módulo (Finanzas, Hábitos, Ejercicio, Inversiones), visibles

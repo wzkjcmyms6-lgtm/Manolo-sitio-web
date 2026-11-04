@@ -138,7 +138,8 @@ function registro(o) {
       if (entry.notes) detalle.push(escapeHtml(String(entry.notes).length > 140 ? String(entry.notes).slice(0, 140) + "…" : entry.notes));
       const item = document.createElement("div");
       item.className = "list-item";
-      item.innerHTML = `<div>${linea}<div class="meta">${detalle.join(" · ")}</div></div>`;
+      // Tocar la actividad abre su detalle (Running al nivel de Strava, fase 2).
+      item.innerHTML = `<a class="act-abrir" href="#run-actividad/${o.coleccion}/${encodeURIComponent(entry.id)}">${linea}<div class="meta">${detalle.join(" · ")}</div></a>`;
       const del = document.createElement("button");
       del.className = "delete";
       del.setAttribute("aria-label", `Eliminar ${o.item}`);
