@@ -13,6 +13,10 @@ elimina la actividad, se borra también su recorrido. Para volver a tener GPS:
 el código está en git (commit `a66de91` y anteriores) y la tabla de límites
 de abajo sigue valiendo.
 
+Desde 2026-11 (D-062, D-068) las rutas vuelven, pero **importadas** de
+archivos (GPX, TCX, FIT, ZIP): Manolo sigue sin pedir ubicación. Leaflet
+vuelve solo para mostrarlas.
+
 ## Lo que sigue usándose (rutinas guiadas)
 
 | Capacidad | iPhone (PWA / Safari) | Consecuencia en MANOLO |

@@ -1,5 +1,92 @@
 # Running
 
+> **Plan 2026-11 · Running al nivel de Strava** (D-060 a D-069). Se hace por
+> fases (estado en `.claude/CURRENT_PHASE.md`). Lo de abajo de "Lo que ya
+> existe" sigue funcionando igual.
+
+## Diseño (fase 0)
+
+### Navegación (D-061)
+Barra inferior propia: **Actividades · Progreso · (+) · Segmentos ·
+Rutinas**; engranaje arriba → Ajustes de Running. El "+" abre una hoja con
+**Importar** · **Anotar a mano** · **Rutina guiada**.
+
+```text
+┌ ← Inicio      Running            ⚙ ┐
+│ [Todas] [Con ruta] [Rutinas] [Mes ▾]│
+│ ┌──────────────────────────────────┐│
+│ │ Carrera por la mañana            ││
+│ │ mar 4 nov · 06:42 · Sopocachi    ││
+│ │ Distancia   Ritmo      Tiempo    ││
+│ │ 10,02 km    5:32 /km   55:29     ││
+│ │ ╭─────── trazo SVG ───────╮      ││
+│ │ 🏅 2 mejores marcas · Rutina     ││
+│ └──────────────────────────────────┘│
+├─────────────────────────────────────┤
+│ Actividades  Progreso (+) Segmentos Rutinas │
+└─────────────────────────────────────┘
+```
+
+### Detalle de una actividad (`#run-actividad/{id}`)
+```text
+← Carrera por la mañana                ⋯ (Editar · GPX · Compartir · Eliminar)
+[ mapa: inicio ● fin ■, cursor del gráfico ]
+mar 4 nov 2026 · 06:42 · Sopocachi, La Paz · ☁ 9 °C
+Distancia 10,02 km │ Ritmo 5:32 /km │ En movimiento 55:29
+Desnivel 123 m     │ Tiempo total 58:10 │ Calorías 640
+FC media 152       │ Cadencia 172     │ Carga 78
+Resumen inteligente: 2–4 frases con datos reales.
+[ gráfico Ritmo / Altura / FC; cursor sincronizado con el mapa;
+  intervalos de la rutina sombreados ]
+Parciales  Km │ Ritmo │ ▬▬▬ │ Desn. │ FC   (más rápido y más lento marcados)
+Vueltas del reloj · Zonas de FC · Mejores marcas · Segmentos
+Clima · Zapatillas · RPE · Notas · Mismo recorrido (n veces)
+```
+
+### Progreso (`#run-progreso`)
+```text
+Esta semana 24,3 km · 2:15 h · 3 carreras   (semana pasada 18,1 km)
+[Semana │ Mes │ Año │ Total]  totales vs período anterior
+Últimas 12 semanas (el resumen semanal de siempre, D-035)
+Diario: calendario del mes con círculos según km
+Mejores marcas: 1 km · 5K · 10K · 21K… top 3 y su evolución
+Predicciones 5K · 10K · 21K · 42K (o "Faltan datos")
+Forma y fatiga: estado físico (42 d), fatiga (7 d), forma
+Metas semana/mes/año con anillos · racha de semanas
+Zapatillas (km, aviso de cambio, retirar) · Mapa de calor
+```
+
+### Importar (`+` → Importar)
+1. Elegir archivos (GPX, TCX, FIT, `.gz`, el ZIP de Strava o de Apple Salud;
+   el selector no filtra para que el iPhone no los deje en gris).
+2. Vista previa: cuántas, fechas, km, deporte (cambiable si no se sabe),
+   duplicadas (se saltan), a fusionar con una rutina o carrera a mano,
+   errores en español simple.
+3. Guardar con barra de avance; después, en segundo plano, clima y lugar.
+4. "Cómo traer mis carreras": pasos para pedir el archivo a Strava (web:
+   Ajustes → Mi cuenta → descargar o eliminar la cuenta → solicitar el
+   archivo; llega un correo con el ZIP), a Apple Salud (perfil → Exportar
+   todos los datos de salud) y a otras apps (exportar GPX).
+
+### Módulos
+| Archivo | Qué hace |
+|---|---|
+| `js/run-formatos.js` | Lee GPX, TCX y FIT (y gzip) → actividad normalizada |
+| `js/run-zip.js` | Lee ZIP por partes (directorio central, ZIP64) |
+| `js/run-csv.js` | `activities.csv` del export (columnas repetidas, UTC) |
+| `js/run-metricas.js` | Limpieza, tiempos, desnivel, parciales, GAP, mejores marcas, zonas, carga, mini ruta |
+| `js/run-guardar.js` | Documento + ruta, duplicados, fusión, lotes |
+| `js/run-importar.js` | Pantalla de importación (vista previa, avance) |
+| `js/run-analisis.js` | Progreso: períodos, calendario, predicciones, forma y fatiga, metas, racha, zapatillas |
+| `js/run-detalle.js`, `js/run-feed.js`, `js/run-mapa.js` | Pantallas |
+
+Todo lo que no es pantalla es UMD sin DOM con pruebas `node --test`.
+Esquema en `docs/DATABASE.md`.
+
+---
+
+## Lo que ya existe (desde 2026-10-01)
+
 Desde 2026-10-01 (D-033) Running **no usa GPS**. La página tiene, de arriba
 abajo:
 

@@ -1,5 +1,11 @@
 # Cambios
 
+## 2026-11-04 · Running al nivel de Strava: diseño (fase 0)
+- Plan por fases, pantallas con bocetos, esquema y decisiones D-060 a
+  D-069 (`docs/RUNNING.md`, `docs/DATABASE.md`). Nueva regla: imitar de
+  cerca la experiencia de Strava sin su marca (`.claude/RULES.md`).
+- Sin cambios en la app todavía.
+
 ## 2026-10-27 · Sin rebote en las hojas ni en la pantalla
 - El formulario de hábito (tipo Medible) y Ajustes de Hábitos tenían campos
   más anchos que la hoja (71–85 px): la hoja se podía arrastrar de lado y

@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-10-01 (después del plan maestro: Running/Bici sin GPS).
+Actualizado: 2026-11-04 (empieza Running al nivel de Strava, D-060 a D-069).
 
 - **App**: PWA estática + Firebase (Auth + Firestore), una sola página,
   JS puro sin build. Ver `docs/ARCHITECTURE.md`.
@@ -29,3 +29,10 @@ Actualizado: 2026-10-01 (después del plan maestro: Running/Bici sin GPS).
   de las rutinas guiadas, teclado numérico.
 - **Tests**: 221/221 (`npm test`); E2E `fase1` (39), `running` (64),
   `hojas` (21), `scalping` (75), `emojis` (10), `regresion` (39) en verde.
+- **Después (2026-10-28 a 2026-10-30)**: Inversiones aparte, Libros más
+  inteligente, Biblia, Movilidad, Medir tiempos (provisoria), tarjetas de
+  crédito (D-052 a D-059).
+- **Running al nivel de Strava (2026-11-04, en curso)**: importar
+  GPX/TCX/FIT/ZIP, motor de métricas, detalle con mapa, feed, progreso,
+  segmentos y compartir, por fases. Sin GPS en vivo (D-033 sigue).
+  Plan y estado en `CURRENT_PHASE.md`, diseño en `docs/RUNNING.md`.

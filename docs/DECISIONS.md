@@ -458,3 +458,129 @@ Solo cambian datos (`js/movilidad-rutinas.js`); el historial no se toca.
 Medir tiempos: `totalDia` y `promedioDias` en `js/tiempos-motor.js`; cada día
 muestra su total, arriba de "Tus días" los días registrados y el promedio de
 los totales, y en Promedios la fila "Tu día (todo junto)" por semana o mes.
+
+## Running al nivel de Strava (desde 2026-11-04)
+
+**D-060 (2026-11-04) · Cambio de regla: imitar de cerca, sin marca.** Pedido
+del dueño: Strava deja de ser "solo referencia". Running replica la
+estructura y el comportamiento de sus pantallas (feed de tarjetas, detalle
+con mapa, parciales, gráfico sincronizado, progreso, segmentos), pero sin su
+nombre, logo, íconos, ilustraciones, textos literales ni nombres de marca de
+funciones. Nombres propios: **Mejores marcas** (no el de la app), **Carga**
+del entrenamiento, **Forma y fatiga**, **Mismo recorrido**, **Resumen
+inteligente**, **Segmentos**, **Mapa de calor**, **Diario**. El aspecto es el
+de Manolo (variables de `css/style.css`). La investigación web de esta sesión
+solo pudo usar el buscador (las páginas de ayuda no abren desde el entorno);
+lo que no se pudo confirmar se documenta como supuesto y se valida con el
+export real del dueño.
+
+**D-061 (2026-11-04) · Navegación de Running.** Running pasa a tener su propia
+barra inferior (como Finanzas o Inversiones): **Actividades · Progreso · (+)
+· Segmentos · Rutinas**, con el "+" al centro que abre Importar · Anotar a
+mano · Rutina guiada. Hashes: `#running` (Actividades), `#run-progreso`,
+`#run-segmentos`, `#run-rutinas`, `#run-ajustes` (engranaje: FC máx/reposo,
+ritmo umbral, peso, metas, zapatillas) y `#run-actividad/{id}` (detalle; el
+id va después de la barra y `currentHash` lo ignora). Se llega igual desde la
+tarjeta de Inicio. Hasta la fase 3 la página actual sigue igual, con un botón
+"Importar" arriba. Segmentos muestra un estado vacío explicativo hasta la
+fase 6.
+
+**D-062 (2026-11-04) · Importación sin servidor.** Formatos: GPX, TCX, FIT
+(también `.gz`), varios a la vez, el ZIP del export completo de Strava
+(`activities.csv` + carpeta `activities/`) y cualquier ZIP con esos archivos
+adentro (Apple Salud trae `apple_health_export/workout-routes/*.gpx`, según
+documentación de la comunidad; adidas Running no se pudo confirmar: se leen
+los GPX/TCX/FIT que traiga y nada más). El ZIP se lee **por partes**
+(`File.slice` + directorio central, con ZIP64), solo las entradas que hacen
+falta; se descomprime con `DecompressionStream("deflate-raw")` y, si el
+navegador no lo tiene, se envuelve el bloque en un contenedor gzip con el
+CRC y el tamaño del directorio central y se usa `"gzip"` (Safari 16.4+).
+Sin librerías nuevas. El selector de archivos no filtra por extensión
+(el iPhone deja en gris los `.gpx`/`.fit` si se filtra). Con el ZIP de
+Strava, la vista previa sale del CSV (rápido) y cada archivo se lee al
+guardar; con archivos sueltos se leen todos en la vista previa. El CSV tiene
+columnas con el mismo nombre en distintas unidades (la primera "Distance" en
+km o millas, la segunda en metros) y fechas en UTC: se usan las de metros y
+segundos, se reconocen encabezados en inglés y español y la hora real sale
+del archivo. Deportes: carreras → `running`, bici → `bicicleta`, el resto se
+ignora con aviso; si el archivo no dice el deporte, se adivina por velocidad
+y se puede cambiar en la vista previa. Lotes de Firestore de ≤ 400
+operaciones y ≤ 5 MB; nada va a Storage ni se suben los archivos originales.
+
+**D-063 (2026-11-04) · Duplicados y fusión.** Una actividad importada es
+duplicada si ya hay otra con inicio a ±2 min y distancia a ±3 % (o el mismo
+id de origen); se salta por defecto. Si coincide con una **rutina guiada**
+(horarios que se cruzan en más de la mitad) o con una **carrera a mano** del
+mismo día (distancia ±3 %, o sin km), se ofrece **fusionar**: se conserva el
+documento (rutina, RPE, notas) y se le suman ruta y métricas; los
+`distance`/`duration` anteriores quedan en `previo` (nada se pierde).
+
+**D-064 (2026-11-04) · Motor de métricas (`js/run-metricas.js`).** Primero los
+valores del archivo (distancia, tiempo, desnivel, calorías y FC del resumen
+del reloj); lo que falte se calcula y nunca se inventa (sin FC no hay
+sección de FC). Limpieza: puntos (0,0) o sin hora fuera, horas repetidas,
+saltos más rápidos que 12 m/s (bici 25), FC fuera de 30–230 y picos aislados
+(mediana de 5). Pausas: huecos de más de 30 s. Tiempo en movimiento:
+intervalos con velocidad ≥ 0,5 m/s (bici 1 m/s). Desnivel: altitud suavizada
+(media móvil de 5 puntos) con histéresis de 4 m (en La Paz, ~3600 m, el
+ruido del GPS es grande); botón opcional "Corregir desnivel" con la API de
+elevación de Open-Meteo (DEM de 90 m, lotes de 100 puntos, muestreo cada
+~20 m, se guarda). Parciales por km (incluido el último parcial) con ritmo
+en movimiento, desnivel, FC media y ritmo ajustado por pendiente (GAP) con
+el costo energético de Minetti et al. (*J Appl Physiol* 2002;93:1039-1046):
+C(i) = 155,4i⁵ − 30,4i⁴ − 43,3i³ + 46,3i² + 19,5i + 3,6 J/kg/m, factor
+C(i)/3,6 con la pendiente suavizada en ~50 m y limitada a ±45 %. Mejores
+marcas: 400 m, ½ milla, 1 km, 1 milla, 2 millas, 5K, 10K, 15K, 10 millas,
+20K, media, 30K, maratón y 50K, con ventana deslizante e interpolación
+(O(n) por distancia, tiempo transcurrido dentro de la ventana). Zonas de FC:
+5 zonas por FC de reserva si hay FC de reposo (si no, % de la FC máx):
+<60, 60–70, 70–80, 80–90, >90 %.
+
+**D-065 (2026-11-04) · Carga, forma y predicciones (una sola escala).**
+"Carga" en puntos donde **100 = 1 hora al umbral**. Con FC: TRIMP de
+Banister (Σ min × r × 0,64·e^(1,92·r), r = FC de reserva) × 100 / TRIMP de
+1 h a r = 0,85. Sin FC y con ruta: rTSS = horas × IF² × 100, IF = velocidad
+GAP media / velocidad umbral (ritmo umbral editable; por defecto, el de la
+mejor marca de 10K o 5:30 /km). Manual con RPE: RPE × min × 100 / 480 (1 h a
+RPE 8 = 100). Sin nada de eso, sin carga. Forma y fatiga: estado físico =
+media exponencial de 42 días, fatiga = 7 días, forma = estado − fatiga.
+Predicciones 5K/10K/21K/42K: Riegel (T₂ = T₁ × (D₂/D₁)^1,06) desde las mejores
+marcas de las últimas 12 semanas de al menos 1 milla y ≥ 1/8 de la
+distancia objetivo; se toma la más rápida. Sin datos: "Faltan datos".
+
+**D-066 (2026-11-04) · Clima y lugar.** Clima: Open-Meteo (gratis, sin clave,
+CC BY 4.0 con atribución): pronóstico con fecha pasada para los últimos 90
+días y el archivo histórico para lo anterior; temperatura, sensación,
+humedad, viento y código del tiempo a la hora del inicio. Lugar aproximado:
+geocodificación inversa de Nominatim (OpenStreetMap, atribución, máx. 1
+pedido por segundo, nivel barrio). Solo se envían coordenadas redondeadas a
+2 decimales (~1 km), nunca la ruta ni datos del dueño. Se piden después de
+guardar, en segundo plano, y se guardan en la actividad (`clima`, `lugar`);
+además un caché en el teléfono por coordenada redondeada
+(`manolo.run.lugares`). Sin internet, se completan después.
+
+**D-067 (2026-11-04) · Guardado.** La actividad importada va en
+`running/{id}` (o `bicicleta/{id}`) con `distance` (km) y `duration` (min en
+movimiento) de siempre, más lo caro de calcular: parciales, vueltas, mejores
+marcas, zonas, carga y una **mini ruta** simplificada (Douglas-Peucker, ≤ 250
+puntos) para las tarjetas, el mapa de calor y "Mismo recorrido" sin leer la
+ruta completa. La ruta completa va en `rutas/{mismo id}` con el formato v1
+extendido de forma aditiva (`v:2`: FC, cadencia y distancia del reloj por
+punto; series sin GPS para cinta), se lee solo en el detalle y nunca pasa de
+1 MiB (si hiciera falta, se guarda un punto de cada dos). Ajustes en
+`meta/running_ajustes` (FC, umbral, peso, metas, zapatillas); segmentos en
+`run_segmentos/{id}`. Todo bajo `users/{uid}`: no hace falta tocar
+`firestore.rules`.
+
+**D-068 (2026-11-04) · Mapas.** Se recupera Leaflet 1.9.4 vendorizado (de git,
+`a66de91`) y las teselas de OpenStreetMap oscurecidas con CSS (D-009), con
+atribución, cargadas solo al abrir un detalle y liberadas al salir; sin
+conexión se ve el trazo SVG local. Se reusan del motor GPS viejo la
+distancia haversine, la polilínea codificada multicolumna, la histéresis de
+desnivel, los parciales por cruce interpolado y la proyección del trazo SVG.
+
+**D-069 (2026-11-04) · Nombres de otras apps.** En la pantalla, los nombres
+Strava, Apple Salud y adidas Running aparecen solo como **origen de los
+datos** en "Cómo traer mis carreras" y en la vista previa de importación
+(uso descriptivo, en texto simple, sin logos). En el resto de Running no
+aparecen.
