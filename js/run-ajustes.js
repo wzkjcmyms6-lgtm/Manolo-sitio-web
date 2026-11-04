@@ -59,6 +59,13 @@ function pintar() {
     </section>
 
     <section class="tmp-card">
+      <h2 class="tmp-titulo">Tus datos</h2>
+      <p class="tmp-nota">Un ZIP con un GPX por cada carrera o rodada con ruta y un archivo con todo lo demás (resúmenes, parciales, ajustes, zapatillas y segmentos). Sirve de copia de seguridad o para llevarlo a otra app.</p>
+      <button type="button" class="lib-btn-sec rd-btn" data-ra-exportar>Exportar todo (ZIP)</button>
+      <p class="tmp-nota" data-ra-exp-estado aria-live="polite"></p>
+    </section>
+
+    <section class="tmp-card">
       <h2 class="tmp-titulo">Peso</h2>
       <p class="tmp-nota">Para estimar calorías cuando el reloj no las trae, se usa tu último peso de <a href="#ej-perfil">Ejercicio › Perfil</a>.</p>
     </section>`;
@@ -127,6 +134,47 @@ function cambiarZap(id, fn) {
   guardarZaps(lista);
 }
 
+// ---- Exportar todo: ZIP con GPX + JSON (fase 8, D-077) ----
+async function exportar(boton) {
+  const estado = document.querySelector("[data-ra-exp-estado]");
+  const decir = t => { if (estado) estado.textContent = t; };
+  boton.disabled = true;
+  try {
+    decir("Leyendo tus rutas…");
+    const u = db.collection("users").doc(currentUser.uid);
+    const rutas = {};
+    (await u.collection("rutas").get()).docs.forEach(d => { rutas[d.id] = d.data(); });
+    const entradas = [];
+    const usados = new Set();
+    let n = 0;
+    ["running", "bicicleta"].forEach(col => RunDatos.lista(col).forEach(d => {
+      const r = rutas[d.id];
+      if (!r || !r.enc) return;
+      let nombre = `gpx/${V.nombreArchivo(Object.assign({ titulo: d.titulo || (col === "bicicleta" ? "rodada" : "carrera") }, d))}`;
+      for (let k = 2; usados.has(nombre); k++) nombre = nombre.replace(/(-\d+)?\.gpx$/, `-${k}.gpx`);
+      usados.add(nombre);
+      entradas.push({ nombre, datos: V.gpx(Object.assign({ deporte: col }, d), M.leerRuta(r)) });
+      n++;
+    }));
+    const json = { creado: Date.now(), version: 1, running: RunDatos.lista("running"), bicicleta: RunDatos.lista("bicicleta"), ajustes: RunDatos.ajustes(), segmentos: RunDatos.segmentos() };
+    entradas.unshift({ nombre: "manolo-running.json", datos: JSON.stringify(json, null, 1) });
+    decir(`Armando el ZIP (${n} GPX)…`);
+    const zip = await RunZip.crearZip(entradas);
+    const blob = new Blob([zip], { type: "application/zip" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `manolo-running-${M.fechaLocal(Date.now())}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    decir(`Listo: ${n} ${n === 1 ? "ruta" : "rutas"} en GPX y el resto en manolo-running.json.`);
+  } catch (e) {
+    console.error("Manolo: exportar", e);
+    decir("No se pudo exportar. Prueba con internet.");
+  }
+  boton.disabled = false;
+}
+
 document.addEventListener("submit", e => {
   if (e.target.id === "ra-form") { e.preventDefault(); guardarAjustes(e.target); }
   else if (e.target.id === "ra-zap-form") { e.preventDefault(); guardarZap(e.target); }
@@ -136,6 +184,7 @@ document.addEventListener("click", e => {
   const b = e.target.closest("button");
   if (!b) return;
   aviso = "";
+  if (b.dataset.raExportar != null) { exportar(b); return; }
   if (b.dataset.raNueva != null) { editando = "nueva"; pintar(); }
   else if (b.dataset.raCancelar != null) { editando = null; pintar(); }
   else if (b.dataset.raEditar) { editando = b.dataset.raEditar; pintar(); }

@@ -1,5 +1,11 @@
 # Cambios
 
+## 2026-11-04 · Running: QA final (fase 8)
+- Ajustes de Running › "Exportar todo (ZIP)": un GPX por carrera o rodada
+  con ruta y un JSON con todo lo demás (copia de seguridad).
+- Revisión completa en teléfono y computadora, sin internet y con 500
+  carreras. E2E nuevo `run-qa.js` (46); 382 unitarias.
+
 ## 2026-11-04 · Running: Compartir (fase 7)
 - En el detalle, "Compartir": una imagen para historias con tu ruta y
   Distancia · Ritmo · Tiempo, con fondo oscuro o transparente. Se abre el

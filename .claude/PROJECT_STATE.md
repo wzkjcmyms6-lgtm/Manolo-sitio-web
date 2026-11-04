@@ -32,7 +32,13 @@ Actualizado: 2026-11-04 (empieza Running al nivel de Strava, D-060 a D-069).
 - **Después (2026-10-28 a 2026-10-30)**: Inversiones aparte, Libros más
   inteligente, Biblia, Movilidad, Medir tiempos (provisoria), tarjetas de
   crédito (D-052 a D-059).
-- **Running al nivel de Strava (2026-11-04, en curso)**: importar
-  GPX/TCX/FIT/ZIP, motor de métricas, detalle con mapa, feed, progreso,
-  segmentos y compartir, por fases. Sin GPS en vivo (D-033 sigue).
-  Plan y estado en `CURRENT_PHASE.md`, diseño en `docs/RUNNING.md`.
+- **Running al nivel de Strava (2026-11-04, fases 0–8 hechas)**: importar
+  GPX/TCX/FIT/ZIP (también el export de Strava), motor de métricas,
+  detalle con mapa y gráfico, feed de tarjetas con barra propia, Progreso
+  y Ajustes, resumen inteligente y mismo recorrido, segmentos, mapa de
+  calor, compartir imagen y exportar todo. Sin GPS en vivo (D-033 sigue).
+  D-060 a D-077, diseño en `docs/RUNNING.md`. Falta: validar con el export
+  real del dueño y su OK para publicar en el Feed.
+- **Tests (2026-11-04)**: 382 unitarias; E2E de Running: `run-importar`,
+  `run-detalle`, `run-feed`, `run-progreso`, `run-inteligencia`,
+  `run-segmentos`, `run-compartir`, `run-qa`, además de las de siempre.

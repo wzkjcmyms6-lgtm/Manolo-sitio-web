@@ -74,6 +74,11 @@
   - `run-compartir.js` — imagen 1080 × 1920 (píxeles: fondo oscuro y
     esquina transparente), descarga del PNG sin menú de compartir, carrera
     sin ruta y el menú de compartir simulado con el archivo.
+  - `run-qa.js` — QA final: el recorrido completo a 390 y 1280 px
+    (importar FIT.gz + GPX desde el "+", tarjeta, detalle con parciales,
+    marcas, vueltas y resumen, crear un segmento, ver sin internet, eliminar,
+    exportar todo y releer el ZIP) sin errores de página ni de consola, y
+    rendimiento con 500 carreras (feed < 1,5 s, Progreso y detalle < 0,2 s).
   - `regresion.js` — las 15 pantallas en teléfono (390 px) y computadora
     (1280 px): se ven, sin errores y sin scroll de lado; acciones de siempre:
     marcar un hábito, anotar un gasto, registrar Running y Bici a mano,
@@ -143,6 +148,21 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] En Finanzas toca **+**: baja la hoja con el dedo; a mitad de camino y
   soltando vuelve; bajándola más (o con un tirón) se cierra.
 - [ ] Lo mismo en el detalle de un hábito y en el selector de categorías.
+
+**Running al nivel de Strava (2026-11)**
+- [ ] Running → **+** → Importar → elige el ZIP de Strava (o un .gpx/.fit
+  de Archivos): la vista previa muestra cuántas, cuáles ya estaban y las que
+  se unen a una rutina; Guardar.
+- [ ] En Actividades cada carrera tiene su tarjeta con el trazo; tócala.
+- [ ] En el detalle: mapa con calles (con internet), desliza el dedo sobre
+  el gráfico y mira el punto en el mapa; parciales; Resumen inteligente.
+- [ ] Compara 1–2 carreras con Strava: distancia (±2 %), tiempo en
+  movimiento (±3 %) y desnivel (±15 %).
+- [ ] ⋯ → Crear segmento; luego pestaña Segmentos.
+- [ ] Compartir → la imagen se abre en el menú de compartir del iPhone.
+- [ ] Progreso: totales, diario, mejores marcas, forma y fatiga, mapa de
+  calor; ⚙ Ajustes: FC, metas, zapatillas, "Exportar todo".
+- [ ] Modo avión: Actividades, un detalle (con el trazo) y Progreso se ven.
 
 **Scalping**
 - [ ] En Hábitos toca **Agregar** en la sugerencia de Scalping: aparece la

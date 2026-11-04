@@ -134,5 +134,53 @@ async function sinGzip(bytes) {
   return bytes.length > 2 && bytes[0] === 0x1f && bytes[1] === 0x8b ? gunzip(bytes) : bytes;
 }
 
-return { listar, extraer, gunzip, sinGzip, desdeBytes, desdeArchivo, envolverGzip, ErrorZip };
+// ---- Escribir un ZIP (exportar: GPX + JSON) ----
+// Con "deflate-raw" si el navegador lo tiene (Safari 16.4+); si no, sin comprimir.
+let TABLA_CRC = null;
+function crc32(bytes) {
+  if (!TABLA_CRC) {
+    TABLA_CRC = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; TABLA_CRC[n] = c >>> 0; }
+  }
+  let c = 0xffffffff;
+  for (let i = 0; i < bytes.length; i++) c = TABLA_CRC[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+async function comprimir(bytes) {
+  if (typeof CompressionStream === "undefined") return null;
+  try {
+    const salida = new Blob([bytes]).stream().pipeThrough(new CompressionStream("deflate-raw"));
+    return new Uint8Array(await new Response(salida).arrayBuffer());
+  } catch (e) { return null; }
+}
+// entradas: [{ nombre, datos: Uint8Array | string }] → Uint8Array del ZIP.
+async function crearZip(entradas) {
+  const enc = new TextEncoder();
+  const partes = [], central = [];
+  let off = 0;
+  const u16b = v => [v & 0xff, (v >>> 8) & 0xff];
+  const u32b = v => [v & 0xff, (v >>> 8) & 0xff, (v >>> 16) & 0xff, (v >>> 24) & 0xff];
+  for (const e of entradas) {
+    const datos = typeof e.datos === "string" ? enc.encode(e.datos) : e.datos;
+    const nombre = enc.encode(e.nombre);
+    const crc = crc32(datos);
+    const comp = await comprimir(datos);
+    const usar = comp && comp.length < datos.length ? comp : datos;
+    const metodo = usar === datos ? 0 : 8;
+    const comun = [...u16b(20), ...u16b(0x0800), ...u16b(metodo), ...u16b(0), ...u16b(0x21), ...u32b(crc), ...u32b(usar.length), ...u32b(datos.length), ...u16b(nombre.length), ...u16b(0)];
+    const local = new Uint8Array([...u32b(0x04034b50), ...comun]);
+    partes.push(local, nombre, usar);
+    central.push(new Uint8Array([...u32b(0x02014b50), ...u16b(20), ...comun, ...u16b(0), ...u16b(0), ...u16b(0), ...u32b(0), ...u32b(off)]), nombre);
+    off += local.length + nombre.length + usar.length;
+  }
+  const tamCd = central.reduce((s, x) => s + x.length, 0);
+  const fin = new Uint8Array([...u32b(0x06054b50), ...u16b(0), ...u16b(0), ...u16b(entradas.length), ...u16b(entradas.length), ...u32b(tamCd), ...u32b(off), ...u16b(0)]);
+  const todo = partes.concat(central, [fin]);
+  const out = new Uint8Array(todo.reduce((s, x) => s + x.length, 0));
+  let p = 0;
+  todo.forEach(x => { out.set(x, p); p += x.length; });
+  return out;
+}
+
+return { listar, extraer, gunzip, sinGzip, desdeBytes, desdeArchivo, envolverGzip, crearZip, crc32, ErrorZip };
 });

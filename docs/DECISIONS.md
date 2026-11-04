@@ -704,3 +704,16 @@ no se hizo: el prompt pide el OK del dueño; quedaría con una zona de
 privacidad de ~300 m en el inicio y el fin y sin coordenadas exactas (solo
 el trazo ya recortado), y habría que revisar si `firestore.rules` del Feed
 admite el campo nuevo.
+
+**D-077 (2026-11-04) · QA final de Running (fase 8).** Respaldo: en Ajustes
+de Running, "Exportar todo (ZIP)" arma un ZIP con un GPX por actividad con
+ruta (de `rutas/`, una sola consulta) y `manolo-running.json` (resúmenes,
+parciales, ajustes, zapatillas y segmentos). El ZIP se escribe sin
+librerías (`RunZip.crearZip`, CRC32 propio, "deflate-raw" si el navegador
+lo tiene; se verificó con `unzip -t`) y Manolo lo vuelve a leer. La copia
+de Ejercicio sigue igual (ya lleva los resúmenes de running y bici).
+Rendimiento con 500 carreras: el feed muestra de a 20, todas las pantallas
+se refrescan en ~12 ms al llegar datos nuevos, Progreso aparece en < 0,1 s
+y el detalle (con resumen y mismo recorrido) en < 0,15 s. Sin internet:
+listas, detalle (trazo propio en vez del mapa) y Progreso se ven con los
+datos del teléfono; Leaflet queda guardado por el service worker.

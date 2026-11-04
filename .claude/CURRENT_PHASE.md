@@ -14,7 +14,15 @@ Diseño en `docs/RUNNING.md`; decisiones D-060 a D-069; esquema en
 | 5 | Inteligencia (Resumen inteligente, Mismo recorrido) | ✅ |
 | 6 | Segmentos + mapa de calor | ✅ |
 | 7 | Compartir (imagen tipo historia; publicar en el Feed solo con OK) | ✅ imagen; Feed: esperando OK del dueño |
-| 8 | QA final (390 y 1280 px, rendimiento, offline, respaldo) | — |
+| 8 | QA final (390 y 1280 px, rendimiento, offline, respaldo) | ✅ |
+
+**Plan terminado (2026-11-04).** Queda del dueño:
+1. Mandar `activities.csv` y 1–2 archivos de `activities/` de su export de
+   Strava para validar contra la realidad (si algo se pasa de la
+   tolerancia, se ajusta el motor con una prueba nueva).
+2. Decir si quiere publicar carreras en el Feed de Ejercicio (D-076).
+3. Hacer la lista "Running al nivel de Strava" de `docs/TESTING.md` en el
+   iPhone.
 
 **Pedido al dueño (2026-11-04):** `activities.csv` y 1–2 archivos de la
 carpeta `activities/` de su export de Strava, para comparar (distancia

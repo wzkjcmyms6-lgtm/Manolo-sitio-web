@@ -72,3 +72,16 @@ test("errores en español: no es ZIP, con contraseña", async () => {
   const [e] = await Z.listar(f);
   await assert.rejects(() => Z.extraer(f, Object.assign({}, e, { cifrado: true })), /contraseña/);
 });
+
+test("escribir un ZIP (exportar) y leerlo de vuelta con el mismo lector", async () => {
+  const gpx = "<gpx>" + "<trkpt/>".repeat(2000) + "</gpx>";
+  const zipB = await Z.crearZip([{ nombre: "manolo-running.json", datos: '{"a":1}' }, { nombre: "gpx/2026-11-03-fondo ñ.gpx", datos: gpx }]);
+  const f = Z.desdeBytes(zipB);
+  const es = await Z.listar(f);
+  assert.deepEqual(es.map(e => e.nombre), ["manolo-running.json", "gpx/2026-11-03-fondo ñ.gpx"]);
+  assert.equal(es[1].metodo, 8, "el GPX va comprimido");
+  assert.equal(es[1].crc, zlib.crc32(Buffer.from(gpx)) >>> 0);
+  assert.equal(texto(await Z.extraer(f, es[1])), gpx);
+  assert.equal(texto(await Z.extraer(f, es[0])), '{"a":1}');
+  assert.equal(Z.crc32(new TextEncoder().encode("123456789")), 0xcbf43926);
+});

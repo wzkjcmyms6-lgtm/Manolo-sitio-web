@@ -138,6 +138,11 @@ Esquema en `docs/DATABASE.md`.
   Botón "Compartir" en el detalle y en el menú ⋯. D-076. Publicar en el
   Feed de Ejercicio espera el OK del dueño.
 
+### Hecho en la fase 8 (2026-11-04)
+- "Exportar todo (ZIP)" en Ajustes de Running (`RunZip.crearZip`). QA en
+  `scripts/e2e/run-qa.js`. D-077. **El plan está completo**; falta validar
+  con el export real del dueño.
+
 ---
 
 ## Lo que ya existe (desde 2026-10-01)
