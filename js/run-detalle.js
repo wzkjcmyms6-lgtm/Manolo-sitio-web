@@ -119,6 +119,7 @@ function pintar() {
         <button type="button" class="rd-menu-btn" aria-label="Más opciones" aria-haspopup="true" aria-expanded="false" data-rd="menu">⋯</button>
         <div class="rd-menu-lista" hidden role="menu">
           <button type="button" role="menuitem" data-rd="editar">Editar</button>
+          <button type="button" role="menuitem" data-rd="compartir">Compartir imagen</button>
           ${tieneRuta(d) && d.conRuta ? `<button type="button" role="menuitem" data-rd="gpx">Exportar GPX</button>` : ""}
           ${d.conRuta && !d.desnivelCorr && !bici ? `<button type="button" role="menuitem" data-rd="desnivel">Corregir desnivel</button>` : ""}
           ${d.conRuta && !bici && window.RunSegmentosUI ? `<button type="button" role="menuitem" data-rd="segmento">Crear segmento</button>` : ""}
@@ -142,6 +143,7 @@ function pintar() {
     ${extras.length ? `<section class="rd-sec"><h2>Detalles</h2><dl class="rd-detalles">${extras.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl></section>` : ""}
     <p class="rd-atribucion">${d.clima ? "Clima: Open-Meteo.com · " : ""}${d.lugar || d.conRuta ? "Mapas y lugar: © OpenStreetMap" : ""}</p>
     <div class="rd-acciones">
+      <button type="button" class="lib-btn rd-btn" data-rd="compartir">Compartir</button>
       <button type="button" class="lib-btn-sec rd-btn" data-rd="editar">Editar</button>
       ${d.conRuta ? `<button type="button" class="lib-btn-sec rd-btn" data-rd="gpx">Exportar GPX</button>` : ""}
       <button type="button" class="lib-btn-peligro rd-btn" data-rd="eliminar">Eliminar</button>
@@ -394,6 +396,68 @@ async function corregirDesnivel() {
   }
 }
 
+// ---- Compartir (imagen tipo historia, fase 7) ----
+let hojaComp = null, fondoComp = "oscuro", blobComp = null;
+function abrirCompartir() {
+  if (!window.RunCompartir) return;
+  if (!hojaComp) {
+    hojaComp = document.createElement("div");
+    hojaComp.id = "rc-compartir";
+    hojaComp.className = "js-sheet budget-sheet";
+    hojaComp.hidden = true;
+    hojaComp.innerHTML = `<div class="budget-sheet-overlay"></div>
+      <div class="budget-sheet-panel ri-panel" role="dialog" aria-modal="true" aria-labelledby="rc-comp-t">
+        <div class="budget-sheet-header"><button type="button" class="budget-sheet-close" aria-label="Cerrar"><span data-icon="close"></span></button><h3 id="rc-comp-t">Compartir</h3></div>
+        <div class="ri-cuerpo rcm-cuerpo">
+          <div class="fin-tabs rcm-fondos" role="tablist"><button type="button" role="tab" class="fin-tab" data-rcm-fondo="oscuro">Fondo oscuro</button><button type="button" role="tab" class="fin-tab" data-rcm-fondo="transparente">Transparente</button></div>
+          <div class="rcm-previa" id="rcm-previa"><p class="rd-nota">Preparando la imagen…</p></div>
+          <p class="rd-nota">Transparente: para ponerla encima de una foto en tus historias.</p>
+        </div>
+        <div class="txn-sheet-actions ri-acciones"><button type="button" class="txn-save" data-rcm="compartir" disabled>Compartir</button></div>
+      </div>`;
+    document.body.appendChild(hojaComp);
+    renderIcons(hojaComp);
+    hojaComp.addEventListener("click", e => {
+      if (e.target.closest(".budget-sheet-close") || e.target.classList.contains("budget-sheet-overlay")) return cerrarCompartir();
+      const f = e.target.closest("[data-rcm-fondo]");
+      if (f) { fondoComp = f.dataset.rcmFondo; prepararImagen(); return; }
+      if (e.target.closest('[data-rcm="compartir"]') && blobComp) {
+        RunCompartir.compartir(blobComp, RunCompartir.nombre(actual.doc)).then(r => { if (r !== "cancelado") cerrarCompartir(); });
+      }
+    });
+  }
+  hojaComp.classList.remove("is-closing");
+  hojaComp.hidden = false;
+  document.body.classList.add("sheet-open");
+  prepararImagen();
+}
+function cerrarCompartir() {
+  if (!hojaComp || hojaComp.hidden) return;
+  hojaComp.classList.add("is-closing");
+  setTimeout(() => { hojaComp.hidden = true; hojaComp.classList.remove("is-closing"); document.body.classList.toggle("sheet-open", !!document.querySelector(".js-sheet:not([hidden])")); }, 200);
+}
+async function prepararImagen() {
+  const yo = actual;
+  hojaComp.querySelectorAll("[data-rcm-fondo]").forEach(b => { const s = b.dataset.rcmFondo === fondoComp; b.classList.toggle("active", s); b.setAttribute("aria-selected", String(s)); });
+  const btn = hojaComp.querySelector('[data-rcm="compartir"]');
+  btn.disabled = true;
+  blobComp = null;
+  // La ruta completa si ya está; si no, la mini ruta del resumen.
+  const tramos = yo.tramos || (yo.doc.mini ? [M.leerMini(yo.doc.mini)] : []);
+  try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) { /* sin fuentes: la del sistema */ }
+  const canvas = RunCompartir.dibujar(document.createElement("canvas"), RunCompartir.plan(Object.assign({ deporte: yo.col }, yo.doc), tramos, { fondo: fondoComp }));
+  const blob = await RunCompartir.aBlob(canvas).catch(() => null);
+  if (actual !== yo || !blob) return;
+  blobComp = blob;
+  const prev = document.getElementById("rcm-previa");
+  const viejo = prev.querySelector("img");
+  if (viejo) URL.revokeObjectURL(viejo.src);
+  prev.innerHTML = `<img alt="Vista previa de la imagen para compartir" class="rcm-img${fondoComp === "transparente" ? " is-transparente" : ""}">`;
+  prev.querySelector("img").src = URL.createObjectURL(blob);
+  btn.disabled = false;
+  btn.textContent = navigator.canShare ? "Compartir" : "Descargar imagen";
+}
+
 // ---- Editar (hoja) ----
 let hoja = null;
 function abrirEditar() {
@@ -470,6 +534,7 @@ document.addEventListener("click", e => {
   else if (a === "gpx") exportarGpx();
   else if (a === "desnivel") corregirDesnivel();
   else if (a === "segmento") crearSegmento();
+  else if (a === "compartir") abrirCompartir();
   else if (a === "eliminar") eliminar();
   else if (a === "ampliar") {
     const grande = document.body.classList.toggle("rd-mapa-abierto");

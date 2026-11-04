@@ -1,5 +1,12 @@
 # Cambios
 
+## 2026-11-04 · Running: Compartir (fase 7)
+- En el detalle, "Compartir": una imagen para historias con tu ruta y
+  Distancia · Ritmo · Tiempo, con fondo oscuro o transparente. Se abre el
+  menú de compartir del iPhone (o se descarga la imagen).
+- Pruebas: 381 unitarias (nuevo `run-compartir.test.js`); E2E nuevo
+  `run-compartir.js` (13).
+
 ## 2026-11-04 · Running: Segmentos y mapa de calor (fase 6)
 - Segmentos: desde una carrera (⋯ → Crear segmento) eliges inicio y fin;
   Manolo lo busca en todas tus carreras y en las que importes después.

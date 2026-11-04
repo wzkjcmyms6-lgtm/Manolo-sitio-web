@@ -133,6 +133,11 @@ Esquema en `docs/DATABASE.md`.
   (`#run-calor`). `RunDatos.segmentos()` escucha `run_segmentos`. D-074,
   D-075.
 
+### Hecho en la fase 7 (2026-11-04)
+- `js/run-compartir.js`: `plan()` (sin pantalla), `dibujar()`, `compartir()`.
+  Botón "Compartir" en el detalle y en el menú ⋯. D-076. Publicar en el
+  Feed de Ejercicio espera el OK del dueño.
+
 ---
 
 ## Lo que ya existe (desde 2026-10-01)

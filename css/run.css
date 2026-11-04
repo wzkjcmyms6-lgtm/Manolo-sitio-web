@@ -425,3 +425,12 @@ body.rd-mapa-abierto .rd-ampliar { top: max(12px, env(safe-area-inset-top)); bot
 /* Leaflet pone sus controles con z-index 1000: el mapa forma su propia capa
    para no quedar encima de las hojas (z-index 900). */
 .rd-mapa, .rc-caja { position: relative; z-index: 0; isolation: isolate; }
+
+/* ---------- Compartir (fase 7) ---------- */
+.rcm-cuerpo { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
+.rcm-fondos { width: fit-content; }
+.rcm-fondos .fin-tab { font: inherit; font-size: 0.85rem; min-height: 38px; cursor: pointer; }
+.rcm-previa { width: min(240px, 60vw); aspect-ratio: 9 / 16; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+.rcm-img { display: block; width: 100%; height: 100%; object-fit: contain; }
+/* Damero para que se note lo transparente. */
+.rcm-img.is-transparente { background: repeating-conic-gradient(#2a2a28 0% 25%, #1a1a1a 0% 50%) 0 0 / 20px 20px; }

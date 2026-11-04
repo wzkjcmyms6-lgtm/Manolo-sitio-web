@@ -71,6 +71,9 @@
     medallas, lista, puesto en el detalle, detección al importar, buscar de
     nuevo, renombrar, borrar una carrera quita su tiempo, mapa de calor
     (SVG, filtros, con calles en lienzo) y eliminar el segmento.
+  - `run-compartir.js` — imagen 1080 × 1920 (píxeles: fondo oscuro y
+    esquina transparente), descarga del PNG sin menú de compartir, carrera
+    sin ruta y el menú de compartir simulado con el archivo.
   - `regresion.js` — las 15 pantallas en teléfono (390 px) y computadora
     (1280 px): se ven, sin errores y sin scroll de lado; acciones de siempre:
     marcar un hábito, anotar un gasto, registrar Running y Bici a mano,

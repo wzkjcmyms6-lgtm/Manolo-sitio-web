@@ -690,3 +690,17 @@ Leaflet con un lienzo (canvas) para dibujar cientos de rutas rápido.
 Filtros: todas, este año, últimos 90 días. Los mapas forman su propia capa
 (`isolation`) para que los controles de Leaflet no queden encima de las
 hojas.
+
+**D-076 (2026-11-04) · Compartir (fase 7).** Imagen vertical 1080 × 1920 en
+canvas (`js/run-compartir.js`): título, fecha y lugar arriba, la ruta en
+degradado naranja con inicio y fin, y Distancia · Ritmo (o Velocidad) ·
+Tiempo grandes; "Manolo" chico abajo. Fondo oscuro o **transparente**
+(PNG con alfa, para ponerla encima de una foto en las historias; con una
+sombra suave para que se lea). Sin ruta, solo las cifras. Se comparte con
+el menú del teléfono (`navigator.share` con el archivo, Web Share Level 2,
+Safari 15+); si no se puede, se descarga el PNG. Nada sale de Manolo hasta
+que el dueño elige dónde. **Publicar en el Feed de Ejercicio** (opcional)
+no se hizo: el prompt pide el OK del dueño; quedaría con una zona de
+privacidad de ~300 m en el inicio y el fin y sin coordenadas exactas (solo
+el trazo ya recortado), y habría que revisar si `firestore.rules` del Feed
+admite el campo nuevo.
