@@ -99,6 +99,16 @@ Esquema en `docs/DATABASE.md`.
 - Clima y lugar: al guardar y cada vez que llega la lista de carreras, para
   las importadas que no los tienen (una vez por sesión, máx. 60 por vez).
 
+### Hecho en la fase 2 (2026-11-04)
+- `#run-actividad/{running|bicicleta}/{id}` (`js/run-detalle.js`): se abre
+  tocando una actividad del historial. Lee el documento (escucha) y la ruta
+  (`rutas/{id}`, una vez; se guardan las 3 últimas en memoria).
+- Módulos sin pantalla: `js/run-vista.js` (formatos es-BO, trazo SVG, GPX),
+  `js/run-graficos.js` (perfil, cursor, parciales, zonas),
+  `js/run-analisis.js` (logros). Pantalla: `js/run-mapa.js` (Leaflet) y
+  `js/run-datos.js` (listas y ajustes compartidos, sin lecturas extra).
+- Decisión D-070.
+
 ---
 
 ## Lo que ya existe (desde 2026-10-01)

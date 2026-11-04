@@ -48,6 +48,12 @@
     guardado (rutas aparte), historial con título y lugar, clima y lugar en
     segundo plano (respuestas simuladas, solo coordenadas redondeadas) y
     volver a importar lo mismo (todo se salta).
+  - `run-detalle.js` — detalle de una actividad: abrir desde el historial,
+    cifras, logros, mapa Leaflet (teselas simuladas), cursor del perfil que
+    mueve un punto en el mapa, parciales, vueltas, zonas, mapa grande,
+    editar, exportar GPX (descarga), corregir desnivel (API simulada, lotes
+    ≤ 100), intervalos de la rutina sombreados, carrera a mano, sin internet
+    (trazo SVG), eliminar con su ruta y 1280 px.
   - `regresion.js` — las 15 pantallas en teléfono (390 px) y computadora
     (1280 px): se ven, sin errores y sin scroll de lado; acciones de siempre:
     marcar un hábito, anotar un gasto, registrar Running y Bici a mano,

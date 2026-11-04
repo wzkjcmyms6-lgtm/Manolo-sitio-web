@@ -1,5 +1,16 @@
 # Cambios
 
+## 2026-11-04 · Running: detalle de cada actividad (fase 2)
+- Tocar una carrera (o rodada) del historial abre su detalle: mapa con
+  inicio y fin (se amplía), cifras, logros con medallas, perfil de ritmo,
+  FC y altura con un cursor que se mueve en el mapa, parciales con barras
+  (el más rápido marcado), vueltas del reloj, zonas de FC, clima, rutina,
+  zapatillas, RPE y notas.
+- Menú ⋯: editar (título, descripción, tipo, zapatillas, RPE), exportar GPX,
+  corregir desnivel con el mapa de altura y eliminar (también su ruta).
+- Sin internet se ve el trazo propio en vez del mapa. Leaflet vuelve (D-068).
+- Pruebas: 364 unitarias; E2E nuevo `run-detalle.js` (42).
+
 ## 2026-11-04 · Running: importar carreras (fase 1)
 - Botón **Importar** en Running: GPX, TCX, FIT (también .gz), varios a la
   vez, el ZIP completo de Strava y ZIPs con GPX (Apple Salud y otros).

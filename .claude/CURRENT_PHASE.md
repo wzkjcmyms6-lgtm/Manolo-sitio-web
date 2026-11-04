@@ -8,7 +8,7 @@ Diseño en `docs/RUNNING.md`; decisiones D-060 a D-069; esquema en
 |---|---|---|
 | 0 | Diseño: auditoría dirigida, pantallas, esquema, decisiones | ✅ |
 | 1 | Importación (GPX/TCX/FIT/gz, ZIP de Strava y otros) + motor de métricas + guardado | ✅ (falta comparar con un export real) |
-| 2 | Detalle de la actividad (mapa, gráfico, parciales, editar, GPX, borrar) | — |
+| 2 | Detalle de la actividad (mapa, gráfico, parciales, editar, GPX, borrar) | ✅ |
 | 3 | Actividades (feed) + barra propia + tarjeta Running en Inicio | — |
 | 4 | Progreso (totales, diario, mejores marcas, predicciones, forma y fatiga, metas, zapatillas) | — |
 | 5 | Inteligencia (Resumen inteligente, Mismo recorrido) | — |
