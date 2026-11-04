@@ -1,0 +1,46 @@
+name: Verificar APIs (temporal)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open-Meteo elevacion (varios puntos, CORS)
+        run: |
+          curl -sS -i -H "Origin: https://example.org" "https://api.open-meteo.com/v1/elevation?latitude=-16.5,-16.51,-16.52&longitude=-68.15,-68.12,-68.08" | grep -iE "^(HTTP|access-control)|elevation" | head -20
+          echo
+          LATS=$(python3 -c "print(','.join(str(-16.5-i*0.001) for i in range(100)))")
+          LONS=$(python3 -c "print(','.join(str(-68.1) for i in range(100)))")
+          curl -sS "https://api.open-meteo.com/v1/elevation?latitude=$LATS&longitude=$LONS" | head -c 300; echo
+          LATS=$(python3 -c "print(','.join(str(-16.5-i*0.001) for i in range(101)))")
+          LONS=$(python3 -c "print(','.join(str(-68.1) for i in range(101)))")
+          curl -sS "https://api.open-meteo.com/v1/elevation?latitude=$LATS&longitude=$LONS" | head -c 300; echo
+      - name: Open-Meteo archivo historico
+        run: |
+          curl -sS -i -H "Origin: https://example.org" "https://archive-api.open-meteo.com/v1/archive?latitude=-16.5&longitude=-68.15&start_date=2025-06-01&end_date=2025-06-01&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,precipitation,weather_code&timezone=auto" | grep -iE "^(HTTP|access-control)|hourly" | head -c 900; echo
+          echo "--- archivo de hace 2 dias"
+          D=$(date -u -d "2 days ago" +%F)
+          curl -sS "https://archive-api.open-meteo.com/v1/archive?latitude=-16.5&longitude=-68.15&start_date=$D&end_date=$D&hourly=temperature_2m" | head -c 500; echo
+      - name: Open-Meteo pronostico con dias pasados
+        run: |
+          D=$(date -u -d "2 days ago" +%F)
+          curl -sS "https://api.open-meteo.com/v1/forecast?latitude=-16.5&longitude=-68.15&start_date=$D&end_date=$D&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code&timezone=auto" | head -c 700; echo
+          D=$(date -u -d "80 days ago" +%F)
+          curl -sS "https://api.open-meteo.com/v1/forecast?latitude=-16.5&longitude=-68.15&start_date=$D&end_date=$D&hourly=temperature_2m" | head -c 400; echo
+          curl -sS "https://api.open-meteo.com/v1/forecast?latitude=-16.5&longitude=-68.15&past_days=92&forecast_days=1&hourly=temperature_2m" | head -c 300; echo
+      - name: Geocodificacion inversa (Nominatim y Photon)
+        run: |
+          curl -sS -i -H "Origin: https://example.org" -H "Referer: https://example.org/" "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=-16.51&lon=-68.13&zoom=14&accept-language=es" | grep -iE "^(HTTP|access-control)|display_name|address" | head -c 1500; echo
+          echo "--- photon"
+          curl -sS -i -H "Origin: https://example.org" "https://photon.komoot.io/reverse?lat=-16.51&lon=-68.13&lang=default" | grep -iE "^(HTTP|access-control)|features" | head -c 1200; echo
+      - name: Ejemplo de activities.csv de un export real (encabezados)
+        run: |
+          curl -sS "https://huggingface.co/api/datasets/lizziepika/strava_activities_runs/tree/main" | head -c 1500; echo
+          for f in $(curl -sS "https://huggingface.co/api/datasets/lizziepika/strava_activities_runs/tree/main" | python3 -c "import sys,json; print(' '.join(x['path'] for x in json.load(sys.stdin) if x['path'].endswith('.csv')))"); do
+            echo "=== $f"; curl -sSL "https://huggingface.co/datasets/lizziepika/strava_activities_runs/resolve/main/$f" | head -c 2500; echo
+          done
