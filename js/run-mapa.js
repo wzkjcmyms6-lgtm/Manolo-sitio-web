@@ -35,6 +35,7 @@ function crear(el, tramos, opciones) {
   ctl.ocultarCursor = () => {};
   ctl.destruir = () => { ctl.destruido = true; if (ctl.mapa) { ctl.mapa.remove(); ctl.mapa = null; } };
   ctl.ampliar = () => {};
+  ctl.resaltar = () => {};
   if (!conGps.length || navigator.onLine === false) return ctl;
   cargarLeaflet().then(L => {
     if (ctl.destruido || !el.isConnected) return;
@@ -61,6 +62,12 @@ function crear(el, tramos, opciones) {
       else ctl.cursor.setLatLng([lat, lon]);
     };
     ctl.ocultarCursor = () => { if (ctl.cursor) { ctl.cursor.remove(); ctl.cursor = null; } };
+    // Un tramo resaltado encima de la ruta (vista previa de un segmento).
+    ctl.resaltar = pts => {
+      if (!ctl.mapa) return;
+      if (ctl.resalte) { ctl.resalte.remove(); ctl.resalte = null; }
+      if (pts && pts.length > 1) ctl.resalte = L.polyline(pts.map(p => [p.lat, p.lon]), { color: "#4cc38a", weight: 7, opacity: 0.95, interactive: false }).addTo(mapa);
+    };
     ctl.ampliar = grande => {
       setTimeout(() => {
         if (!ctl.mapa) return;

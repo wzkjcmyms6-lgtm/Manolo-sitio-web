@@ -8,6 +8,8 @@
 const listas = { running: [], bicicleta: [] };
 const cargadas = {};
 let ajustes = {};
+let segmentos = [];
+let segmentosCargados = false;
 const oyentes = new Set();
 const avisar = () => oyentes.forEach(fn => { try { fn(); } catch (e) { console.error(e); } });
 
@@ -21,6 +23,9 @@ window.addEventListener("manolo:actividades", e => {
 if (typeof onAuthReady === "function") onAuthReady(() => {
   db.collection("users").doc(currentUser.uid).collection("meta").doc("running_ajustes")
     .onSnapshot(s => { ajustes = s.exists ? s.data() || {} : {}; avisar(); }, () => {});
+  // Segmentos (fase 6): pocos documentos chicos; se escuchan siempre.
+  db.collection("users").doc(currentUser.uid).collection("run_segmentos")
+    .onSnapshot(s => { segmentos = s.docs.map(d => Object.assign({ id: d.id }, d.data())); segmentosCargados = true; avisar(); }, () => {});
 });
 
 window.RunDatos = {
@@ -28,6 +33,8 @@ window.RunDatos = {
   cargada: col => !!cargadas[col],
   doc: (col, id) => (listas[col] || []).find(d => d.id === id) || null,
   ajustes: () => ajustes,
+  segmentos: () => segmentos,
+  segmentosCargados: () => segmentosCargados,
   // FC máx: la de Ajustes o la más alta vista (estimada, D-065).
   fcMax: () => Number(ajustes.fcMax) || listas.running.concat(listas.bicicleta).reduce((m, d) => Math.max(m, Number(d.fcMax) || 0), 0) || null,
   al: fn => { oyentes.add(fn); return () => oyentes.delete(fn); }

@@ -121,6 +121,7 @@ function pintar() {
           <button type="button" role="menuitem" data-rd="editar">Editar</button>
           ${tieneRuta(d) && d.conRuta ? `<button type="button" role="menuitem" data-rd="gpx">Exportar GPX</button>` : ""}
           ${d.conRuta && !d.desnivelCorr && !bici ? `<button type="button" role="menuitem" data-rd="desnivel">Corregir desnivel</button>` : ""}
+          ${d.conRuta && !bici && window.RunSegmentosUI ? `<button type="button" role="menuitem" data-rd="segmento">Crear segmento</button>` : ""}
           <button type="button" role="menuitem" class="rd-peligro" data-rd="eliminar">Eliminar</button>
         </div>
       </div>
@@ -133,6 +134,7 @@ function pintar() {
     ${d.notes ? `<p class="rd-notas">${esc(d.notes)}</p>` : ""}
     ${logros.length ? `<section class="rd-sec"><h2>Logros</h2><ul class="rd-logros">${logros.map(l => `<li><span>${A.MEDALLA[l.puesto]}</span><b>${esc(l.nombre)}</b><i>${V.tiempo(l.t)}</i><small>${A.textoPuesto(l.puesto)}</small></li>`).join("")}</ul></section>` : ""}
     <div id="rd-rec-caja">${bici ? "" : recorrido(d)}</div>
+    <div id="rd-seg-caja">${bici ? "" : segmentos(d)}</div>
     <section class="rd-sec rd-perfil-sec" id="rd-perfil" hidden></section>
     ${parciales(d, bici)}
     ${vueltas(d, bici)}
@@ -171,6 +173,33 @@ function recorrido(d) {
       <b>${V.tiempo(x.t)}</b><small>${V.ritmo(x.ritmo, true)}</small></li>`).join("")}</ul>
     ${r.veces > lista.length ? `<p class="rd-nota">Y ${r.veces - lista.length} más.</p>` : ""}
   </section>`;
+}
+
+// Segmentos por los que pasó esta carrera (fase 6).
+function segmentos(d) {
+  if (!window.RunSegmentos || !window.RunDatos) return "";
+  const ss = RunSegmentos.deActividad(RunDatos.segmentos(), d.id);
+  if (!ss.length) return "";
+  const med = { 1: "🥇", 2: "🥈", 3: "🥉" };
+  return `<section class="rd-sec"><h2>Segmentos</h2><ul class="rd-segs">${ss.map(x => `<li>
+    <span class="rd-seg-med">${med[x.puesto] || ""}</span>
+    <a href="#run-segmento/${encodeURIComponent(x.seg.id)}">${esc(x.seg.nombre)}</a>
+    <b>${V.tiempo(x.t)}</b><small>${x.puesto === 1 ? "Tu mejor" : `${x.puesto}.º de ${x.total}`} · ${V.km(x.seg.distanciaM)}</small></li>`).join("")}</ul></section>`;
+}
+function crearSegmento() {
+  const yo = actual;
+  if (!yo.tramos) return alert("Espera a que cargue la ruta.");
+  RunSegmentosUI.crearDesde({
+    id: yo.id, doc: yo.doc, tramos: yo.tramos, mapa: yo.mapa,
+    alCambiar: (a, b) => {
+      if (actual !== yo || !yo.serie) return;
+      // Distancias de la ruta (GPS) llevadas a la escala del perfil.
+      const k = yo.serie.total / Math.max(1, RunSegmentos.largo(RunSegmentos.tramo(yo.tramos, 0, Infinity)));
+      yo.bandasSeg = [[a * k, b * k, "rg-banda-seg"]];
+      pintarRuta();
+    },
+    alCerrar: () => { if (actual === yo) { yo.bandasSeg = null; pintarRuta(); } }
+  });
 }
 
 function parciales(d, bici) {
@@ -238,7 +267,7 @@ function pintarRuta() {
   cont.innerHTML = `<div class="rd-perfil-cab"><h2>Análisis</h2>
       <div class="fin-tabs rd-modos" role="tablist">${modos.map(([k, t]) => `<button type="button" role="tab" class="fin-tab${actual.modo === k ? " active" : ""}" aria-selected="${actual.modo === k}" data-rd-modo="${k}">${t}</button>`).join("")}</div></div>
     <p class="rd-lectura" aria-live="polite">${lecturaTexto(null)}</p>
-    <div class="rd-perfil" data-rd-perfil>${Gr.svgPerfil(s, { ancho: ANCHO, alto: ALTO, modo: actual.modo, bandas: actual.bandas })}</div>
+    <div class="rd-perfil" data-rd-perfil>${Gr.svgPerfil(s, { ancho: ANCHO, alto: ALTO, modo: actual.modo, bandas: actual.bandas.concat(actual.bandasSeg || []) })}</div>
     ${actual.bandas.length ? `<p class="rd-nota"><span class="rd-leyenda"></span> Intervalos de correr de la rutina</p>` : ""}`;
 }
 function lecturaTexto(i) {
@@ -329,6 +358,10 @@ function eliminar() {
   const lote = db.batch();
   lote.delete(usuario().collection(yo.col).doc(yo.id));
   if (tieneRuta(d)) lote.delete(usuario().collection("rutas").doc(yo.id));
+  // Sus tiempos en los segmentos se quitan (el segmento queda).
+  (window.RunDatos ? RunDatos.segmentos() : []).forEach(s => {
+    if (s.esfuerzos && s.esfuerzos[yo.id]) lote.update(usuario().collection("run_segmentos").doc(s.id), { [`esfuerzos.${yo.id}`]: firebase.firestore.FieldValue.delete() });
+  });
   rutas.delete(yo.id);
   lote.commit().catch(err => console.error("Manolo: no se pudo eliminar", err));
   location.hash = yo.col === "bicicleta" ? "#bicicleta" : "#running";
@@ -436,6 +469,7 @@ document.addEventListener("click", e => {
   else if (a === "editar") abrirEditar();
   else if (a === "gpx") exportarGpx();
   else if (a === "desnivel") corregirDesnivel();
+  else if (a === "segmento") crearSegmento();
   else if (a === "eliminar") eliminar();
   else if (a === "ampliar") {
     const grande = document.body.classList.toggle("rd-mapa-abierto");
@@ -457,5 +491,7 @@ if (window.RunDatos) RunDatos.al(() => {
   const ia = document.getElementById("rd-ia-caja"), rec = document.getElementById("rd-rec-caja");
   if (ia) ia.innerHTML = inteligente(actual.doc, bici);
   if (rec) rec.innerHTML = bici ? "" : recorrido(actual.doc);
+  const sg = document.getElementById("rd-seg-caja");
+  if (sg) sg.innerHTML = bici ? "" : segmentos(actual.doc);
 });
 })();

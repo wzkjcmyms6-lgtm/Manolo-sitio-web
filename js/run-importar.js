@@ -433,7 +433,9 @@ async function guardar() {
       if (zap && nueva.deporte === "running" && !nueva.zapatillaId && nueva.campos.inicio >= (zap.creado || 0)) nueva.zapatillaId = zap.id;
       const o = G.operaciones(nueva, lista[i].clase, lista[i].existente, ahora);
       o.ops.forEach(op => { ops.push(op); tam += JSON.stringify(op.datos).length; });
-      guardadas.push({ id: o.id, col: o.col, doc: o.doc });
+      // La ruta se guarda en memoria solo si hay segmentos con los que compararla.
+      const conSeg = window.RunDatos && RunDatos.segmentos().length && o.col === "running" && o.doc.mini;
+      guardadas.push({ id: o.id, col: o.col, doc: o.doc, ruta: conSeg ? nueva.ruta : null });
       if (ops.length >= G.LOTE_OPS || tam >= G.LOTE_BYTES) { await aplicar(ops); ops = []; tam = 0; }
     }
     await aplicar(ops);
@@ -444,6 +446,7 @@ async function guardar() {
   }
   ocupado = false;
   pantallaListo(guardadas);
+  if (window.RunSegmentosUI) RunSegmentosUI.detectarNuevas(guardadas).catch(e => console.warn("Manolo: segmentos", e));
   completarFondo(guardadas.map(g => Object.assign({ id: g.id, col: g.col }, g.doc)));
 }
 function pantallaListo(guardadas) {

@@ -127,6 +127,12 @@ Esquema en `docs/DATABASE.md`.
   (D-073). En el detalle, debajo de las cifras y antes del perfil; se
   actualiza cuando llega la lista de carreras sin redibujar el mapa.
 
+### Hecho en la fase 6 (2026-11-04)
+- `js/run-segmentos.js` (lógica), `js/run-segmentos-ui.js` (lista,
+  `#run-segmento/{id}`, hoja de crear, búsqueda), `js/run-calor.js`
+  (`#run-calor`). `RunDatos.segmentos()` escucha `run_segmentos`. D-074,
+  D-075.
+
 ---
 
 ## Lo que ya existe (desde 2026-10-01)

@@ -66,6 +66,11 @@
   - `run-inteligencia.js` — Resumen inteligente (marca, recorrido
     repetido, sin consejos de salud, al menos dos frases) y Mismo
     recorrido (lista, mejor, puesto en otra vuelta, sin ruta no aparece).
+  - `run-segmentos.js` — crear un segmento (controles, vista previa en el
+    perfil, mínimo 100 m), búsqueda retroactiva, página con tabla y
+    medallas, lista, puesto en el detalle, detección al importar, buscar de
+    nuevo, renombrar, borrar una carrera quita su tiempo, mapa de calor
+    (SVG, filtros, con calles en lienzo) y eliminar el segmento.
   - `regresion.js` — las 15 pantallas en teléfono (390 px) y computadora
     (1280 px): se ven, sin errores y sin scroll de lado; acciones de siempre:
     marcar un hábito, anotar un gasto, registrar Running y Bici a mano,

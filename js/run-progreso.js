@@ -23,7 +23,7 @@ function pintar() {
   if (!RunDatos.cargada("running")) { arriba.innerHTML = `<p class="rd-nota">Cargando…</p>`; app.innerHTML = ""; return; }
   const docs = RunDatos.lista("running");
   arriba.innerHTML = totales(docs);
-  app.innerHTML = [rachaYMetas(docs), diario(docs), marcas(docs), predicciones(docs), forma(docs), zapatillas(docs)].join("");
+  app.innerHTML = [rachaYMetas(docs), diario(docs), marcas(docs), predicciones(docs), forma(docs), zapatillas(docs), window.RunCalor ? RunCalor.tarjeta() : ""].join("");
   renderIcons(app);
 }
 

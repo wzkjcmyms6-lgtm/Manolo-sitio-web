@@ -25,7 +25,7 @@
   <link rel="stylesheet" href="css/movilidad.css?v=202610300100">
   <link rel="stylesheet" href="css/tiempos.css?v=202610300310">
   <link rel="stylesheet" href="css/ej-calendario.css?v=202610290900">
-  <link rel="stylesheet" href="css/run.css?v=202611040600">
+  <link rel="stylesheet" href="css/run.css?v=202611040800">
 </head>
 <body>
   <!-- Degradado marfil y brillo del maniquí (mapa corporal y creador de ejercicios) -->
@@ -453,6 +453,17 @@
                 <p>Muy pronto podrás marcar un tramo de una ruta (una subida, una vuelta al parque) y Manolo lo buscará en todas tus carreras para mostrarte tus mejores tiempos.</p>
               </div>
             </div>
+          </section>
+
+          <section id="panel-run-segmento" hidden>
+            <a class="back-link" href="#run-segmentos"><span class="icon-sm" data-icon="chevronLeft"></span>Segmentos</a>
+            <div class="rd-app" id="rsg-app"></div>
+          </section>
+
+          <section id="panel-run-calor" hidden>
+            <a class="back-link" href="#run-progreso"><span class="icon-sm" data-icon="chevronLeft"></span>Progreso</a>
+            <h1 class="page-title">Mapa de calor</h1>
+            <div id="rc-app" class="rc-app"></div>
           </section>
 
           <section id="panel-run-rutinas" hidden>
@@ -1363,7 +1374,7 @@
   <script defer src="js/accesos.js?v=202610100400"></script>
   <script defer src="js/verses.js?v=202609232200"></script>
   <script defer src="js/icons.js?v=202611040400"></script>
-  <script defer src="js/modules.js?v=202611040500"></script>
+  <script defer src="js/modules.js?v=202611040700"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
   <script defer src="js/exercise-search.js?v=202609291"></script>
@@ -1410,16 +1421,19 @@
   <script defer src="js/run-metricas.js?v=202611040100"></script>
   <script defer src="js/run-guardar.js?v=202611040500"></script>
   <script defer src="js/run-enriquecer.js?v=202611040200"></script>
-  <script defer src="js/run-importar.js?v=202611040500"></script>
+  <script defer src="js/run-importar.js?v=202611040700"></script>
   <script defer src="js/run-vista.js?v=202611040200"></script>
   <script defer src="js/run-graficos.js?v=202611040200"></script>
   <script defer src="js/run-analisis.js?v=202611040500"></script>
-  <script defer src="js/run-datos.js?v=202611040400"></script>
-  <script defer src="js/run-mapa.js?v=202611040300"></script>
+  <script defer src="js/run-datos.js?v=202611040700"></script>
+  <script defer src="js/run-mapa.js?v=202611040700"></script>
   <script defer src="js/run-inteligencia.js?v=202611040600"></script>
-  <script defer src="js/run-detalle.js?v=202611040600"></script>
+  <script defer src="js/run-segmentos.js?v=202611040700"></script>
+  <script defer src="js/run-segmentos-ui.js?v=202611040700"></script>
+  <script defer src="js/run-calor.js?v=202611040700"></script>
+  <script defer src="js/run-detalle.js?v=202611040700"></script>
   <script defer src="js/run-feed.js?v=202611040400"></script>
-  <script defer src="js/run-progreso.js?v=202611040500"></script>
+  <script defer src="js/run-progreso.js?v=202611040700"></script>
   <script defer src="js/run-ajustes.js?v=202611040500"></script>
   <script defer src="js/running.js?v=202611040400"></script>
   <script defer src="js/bicicleta.js?v=202610090100"></script>

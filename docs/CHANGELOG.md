@@ -1,5 +1,15 @@
 # Cambios
 
+## 2026-11-04 · Running: Segmentos y mapa de calor (fase 6)
+- Segmentos: desde una carrera (⋯ → Crear segmento) eliges inicio y fin;
+  Manolo lo busca en todas tus carreras y en las que importes después.
+  Cada segmento tiene su página con tu tabla y medallas; en el detalle de
+  una carrera se ve su puesto. Renombrar, buscar de nuevo y eliminar.
+- Mapa de calor en Progreso: todas tus rutas en un mapa (sin internet, un
+  dibujo propio; con internet, con calles).
+- Pruebas: 378 unitarias (nuevo `run-segmentos.test.js`); E2E nuevo
+  `run-segmentos.js` (29).
+
 ## 2026-11-04 · Running: Resumen inteligente y Mismo recorrido (fase 5)
 - En el detalle de cada carrera: un "Resumen inteligente" de 2 a 4 frases
   con datos reales (marcas, recorrido repetido, ritmo contra tu promedio,

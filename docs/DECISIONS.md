@@ -664,3 +664,29 @@ más lento); desnivel ≥ 150 m con el ritmo ajustado; zona de FC con ≥ 40 %
 del tiempo; y la semana. Mira solo lo que había **hasta esa carrera** (así
 una vieja no compara con el futuro). Si hay menos de dos frases, la primera
 son las cifras de la carrera. Nunca consejos de salud ni de entrenamiento.
+
+**D-074 (2026-11-04) · Segmentos (fase 6).** Se crean desde una carrera con
+ruta (menú ⋯ → Crear segmento) eligiendo inicio y fin con dos controles
+deslizantes sobre la distancia (dedo grande, funciona sin internet), con
+vista previa en el mapa (tramo verde), en el perfil (banda verde) y en un
+trazo propio dentro de la hoja; mínimo 100 m. Se guardan en
+`run_segmentos/{id}` con su trazo simplificado (≤ 200 puntos) y una tabla
+`esfuerzos` por actividad (el mejor paso de cada carrera). Detección
+(`js/run-segmentos.js`): pasar a ≤ 35 m del inicio y después del fin
+recorriendo 85–120 % de su distancia y a ≤ 50 m de 10 puntos del trazo, en
+el mismo sentido; si pasa varias veces, el mejor tiempo. Retroactiva al
+crearlo (solo lee la ruta completa de las carreras cuya mini ruta pasa a
+≤ 100 m del inicio y del fin) y automática al importar (con la ruta en
+memoria, sin lecturas). "Buscar de nuevo" repite la búsqueda. Borrar una
+carrera quita su tiempo de los segmentos; borrar un segmento no toca las
+carreras. Tabla personal con medallas 🥇🥈🥉 y el puesto en el detalle de
+cada carrera. Sin tablas de otras personas (Manolo es personal).
+
+**D-075 (2026-11-04) · Mapa de calor.** `#run-calor` (tarjeta al final de
+Progreso): todas las mini rutas superpuestas en naranja semitransparente.
+Primero un SVG propio (sirve sin internet; se centra en donde más corres:
+rutas a < 30 km de la mediana de los inicios) y, con "Ver con calles",
+Leaflet con un lienzo (canvas) para dibujar cientos de rutas rápido.
+Filtros: todas, este año, últimos 90 días. Los mapas forman su propia capa
+(`isolation`) para que los controles de Leaflet no queden encima de las
+hojas.

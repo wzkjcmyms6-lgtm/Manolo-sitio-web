@@ -33,6 +33,8 @@ const SUB_PANELS = [
   { hash: "run-segmentos", parent: "running" },
   { hash: "run-rutinas", parent: "running" },
   { hash: "run-ajustes", parent: "running" },
+  { hash: "run-segmento", parent: "run-segmentos" },
+  { hash: "run-calor", parent: "run-progreso" },
   { hash: "bicicleta", parent: "inicio" },
   { hash: "libros", parent: "inicio" },
   { hash: "biblia", parent: "inicio" },
