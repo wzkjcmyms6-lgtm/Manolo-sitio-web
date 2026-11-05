@@ -14,7 +14,11 @@ Cada fase deja la app funcionando y publicada.
 | 5 | Página de categoría, Estadísticas por categoría, misiones y logros | ✅ |
 | 6 | Se marca solo (Running, Bici, Movilidad, Libros, Biblia, Finanzas) | ✅ |
 | 7 | Plantillas, hora opcional, aviso de pendientes | ✅ (push y Calendario: investigado, espera OK) |
-| 8 | QA final, `docs/HABITOS.md`, lista para el iPhone | — |
+| 8 | QA final, `docs/HABITOS.md`, lista para el iPhone | ✅ |
+
+**Plan terminado (2026-11-05).** Queda del dueño: elegir categorías extra
+(si quiere), decidir sobre recordatorios y hacer la lista "Hábitos:
+categorías y siguiente nivel" de `docs/TESTING.md` en el iPhone.
 
 **Pedido al dueño (fase 7):** decir si quiere recordatorios en el
 Calendario del iPhone (.ics, gratis) o push con la app cerrada (plan Blaze

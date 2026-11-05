@@ -39,7 +39,7 @@ Actualizado: 2026-11-04 (empieza Running al nivel de Strava, D-060 a D-069).
   calor, compartir imagen y exportar todo. Sin GPS en vivo (D-033 sigue).
   D-060 a D-077, diseño en `docs/RUNNING.md`. Falta: validar con el export
   real del dueño y su OK para publicar en el Feed.
-- **Hábitos: categorías y siguiente nivel (2026-11-05, en curso)**: plan
+- **Hábitos: categorías y siguiente nivel (2026-11-05, fases 0–8 hechas)**: plan
   de 9 fases en `CURRENT_PHASE.md`, diseño en `docs/HABITOS.md`, D-079 en
   adelante. Hechas: 0 (auditoría y diseño), 1 (categorías en
   `meta/habitos_juego.categorias`, migración en lectura) 2 (Temporada 2:
@@ -47,6 +47,7 @@ Actualizado: 2026-11-04 (empieza Running al nivel de Strava, D-060 a D-069).
   categoría, D-083) 5 (página de categoría y estadísticas, D-084) 6 (se marca
   solo con los demás módulos, D-085) y 7 (plantillas, hora y avisos,
   D-086; push y Calendario investigados, esperan OK).
-- **Tests (2026-11-04)**: 382 unitarias; E2E de Running: `run-importar`,
+- **Tests (2026-11-05)**: 424 unitarias; E2E de Running: `run-importar`,
   `run-detalle`, `run-feed`, `run-progreso`, `run-inteligencia`,
-  `run-segmentos`, `run-compartir`, `run-qa`, además de las de siempre.
+  `run-segmentos`, `run-compartir`, `run-qa`; de Hábitos: `habitos` (195,
+  a 390 y 1280 px); además de las de siempre (todas en verde el 2026-11-05).

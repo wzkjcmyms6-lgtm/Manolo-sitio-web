@@ -834,3 +834,11 @@ opcional; al elegirla se acomoda el momento del día y dentro del grupo se
 ordena por hora (las cadenas siguen juntas). El aviso "Te faltan N de la
 mañana" cuenta solo lo del momento actual, sin los de Evitar. Push y
 Calendario quedan investigados en `docs/NOTIFICATIONS.md`, sin implementar.
+
+**D-087 (2026-11-05) · QA final de Hábitos.** Se cerró el plan con la
+regresión completa (todas las E2E de Manolo en verde) y la E2E de Hábitos
+a 390 y 1280 px sin errores de consola, incluido exportar e importar con
+categorías (la copia ya llevaba `meta/habitos_juego` entero; importar suma
+solo las categorías que faltan). Los ocho problemas de la auditoría quedan
+resueltos (tabla en `docs/HABITOS.md`). Scalping no se tocó
+(`js/scalping-habit.js` igual; su E2E de 75 comprobaciones pasa).

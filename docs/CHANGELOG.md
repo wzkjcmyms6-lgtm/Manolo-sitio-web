@@ -1,5 +1,11 @@
 # Cambios
 
+## 2026-11-05 · Hábitos: QA final (fase 8)
+- Regresión de todo Manolo (todas las E2E) en verde; E2E `habitos.js`
+  completo a 390 y 1280 px, también exportar e importar con categorías.
+- `docs/HABITOS.md` terminado y lista de pruebas para el iPhone en
+  `docs/TESTING.md`.
+
 ## 2026-11-05 · Hábitos: plantillas, hora y aviso de pendientes (fase 7)
 - "Nuevo hábito" › Plantillas: 39 hábitos comunes por categoría (agua,
   leer, correr, anotar gastos, orar…) con tipo, meta, frecuencia, momento,

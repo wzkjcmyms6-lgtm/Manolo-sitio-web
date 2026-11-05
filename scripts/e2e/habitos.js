@@ -451,6 +451,46 @@ function conTemporadaVista(opciones) {
     await p.context().close();
   }
 
+  console.log("\n=== Copia de seguridad con categorías");
+  {
+    const e = conTemporadaVista();
+    e.__SEED__["users/test/meta"].habitos_juego.categorias = { musica: { nombre: "Música", emoji: "🎸", color: "azul", orden: 7, creada: 1 } };
+    e.__SEED__["users/test/habitos"].estirar.area = "musica";
+    const p = await abrir(browser, base, e, { hash: "#habitos", zona: ZONA, fecha: FECHA });
+    consolaLimpia(p);
+    await p.waitForTimeout(500);
+    await p.click("#hb-lista [data-ajustes]");
+    await p.waitForTimeout(250);
+    const [descarga] = await Promise.all([p.waitForEvent("download"), p.click("[data-exportar]")]);
+    const copia = JSON.parse(require("node:fs").readFileSync(await descarga.path(), "utf8"));
+    ok(copia.juego.categorias.musica.emoji === "🎸" && copia.habitos.find(h => h.id === "estirar").area === "musica", "exportar lleva las categorías y la de cada hábito");
+    await p.context().close();
+    // Importar en una cuenta vacía: aparecen la categoría y sus hábitos.
+    const q = await abrir(browser, base, { __SEED__: { "users/test/meta": { habitos_juego: { calibracion: 2 } } } }, { hash: "#habitos", zona: ZONA, fecha: FECHA });
+    consolaLimpia(q);
+    await q.waitForTimeout(500);
+    await q.click("#hb-lista [data-nuevo]").catch(() => {});
+    await q.waitForTimeout(250);
+    await q.click(".hb-sheet .muscle-sheet-close").catch(() => {});
+    await q.waitForTimeout(250);
+    await q.evaluate(() => window.HabitosApp.hojaAjustes());
+    await q.waitForTimeout(250);
+    await q.setInputFiles("[data-archivo-importar]", { name: "copia.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(copia)) });
+    await q.waitForTimeout(500);
+    ok(/categorías/.test(await texto(q, ".hb-sheet")), "la vista previa cuenta las categorías");
+    await q.click("[data-confirmar-importar]");
+    await q.waitForTimeout(800);
+    const j = await juego(q);
+    ok(j.categorias && j.categorias.musica && j.categorias.musica.nombre === "Música", "importar agrega la categoría que faltaba");
+    const est = await q.evaluate(() => window.__fakeStore.colMap("users/test/habitos").get("estirar"));
+    ok(est && est.area === "musica", "y el hábito vuelve con su categoría");
+    await q.click('[data-hoy-agrupar="categoria"]').catch(() => {});
+    await q.waitForTimeout(300);
+    ok(/🎸 Música/.test(await texto(q, "#hb-lista")), "Hoy la muestra");
+    ok(q.errores.length === 0 && q.consola.length === 0, `sin errores (${q.errores.concat(q.consola).join(" | ")})`);
+    await q.context().close();
+  }
+
   console.log("\n=== Sin historia: no hay hoja de temporada");
   const q = await abrir(browser, base, {}, { hash: "#habitos", zona: ZONA, fecha: FECHA });
   await q.waitForTimeout(500);

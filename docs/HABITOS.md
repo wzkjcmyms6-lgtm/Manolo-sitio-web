@@ -2,7 +2,10 @@
 
 Módulo de hábitos de Manolo: marcar el día, rachas, rangos por hábito, XP y
 nivel, jefe semanal, misiones, logros, tienda, estadísticas, Manolo Wrapped
-y el plan guiado de Scalping (`docs/SCALPING.md`, no se toca).
+y el plan guiado de Scalping (`docs/SCALPING.md`, no se toca). Desde
+2026-11-05 tiene categorías completas, la Temporada 2 (subir cuesta más),
+Hoy filtrado y agrupado, página por categoría, "se marca solo" con los
+demás módulos y plantillas (plan de 9 fases, D-079 a D-087).
 
 ## Archivos
 | Archivo | Qué hace |
@@ -198,3 +201,34 @@ se cumplan. Un usuario sin historia no ve la hoja.
   `p·sube / (p·sube + (1−p)·baja)`).
 - Logros: "Te faltan 340 XP para el nivel 6: a tu ritmo (~65 XP por día),
   6 días." (`HE.explicarNivel`, XP de los últimos 28 días).
+
+## Pruebas
+- Unitarias: `habitos-engine` (motor), `habitos-dificultad` (simulaciones de
+  la tabla: 100/98/95/90/80/70/50 % diarios y semanales, nivel con 5
+  hábitos al 80 %, un fallo no baja y tres sí, comodín cada 3–4 semanas),
+  `habitos-categorias` (migración desde áreas, crear, archivar, reasignar,
+  sugerir, radar con muchos ejes, misiones y logros por categoría, frases),
+  `habitos-hoy` (filtros, grupos, cadenas, hora), `habitos-auto` (se marca
+  solo, deshacer, lo manual manda, sin XP al rellenar) y
+  `habitos-plantillas` (plantillas válidas).
+- E2E: `scripts/e2e/habitos.js` (390 y 1280 px) y las de siempre
+  (`scalping`, `regresion`, `fase1`, `emojis`, `hojas`).
+- Lista para el iPhone: `docs/TESTING.md` › "Hábitos: categorías y
+  siguiente nivel".
+
+## Auditoría: qué se arregló
+| Problema (fase 0) | Arreglo |
+|---|---|
+| Demasiado fácil | Temporada 2 (fase 2) |
+| Categorías invisibles, "Sin área" sin forma rápida | Colores en Hoy, filtros, página, asignar en lote (fases 3–5) |
+| Formulario largo | "Más opciones", botones fijos, plantillas (fases 3 y 7) |
+| Sugerencia de Scalping grande | Una línea (fase 4) |
+| Pie partido en dos líneas | Una línea (fase 4) |
+| El rango no explicaba nada | Techo, constancia necesaria y días (fase 2) |
+| Parcial/saltar/nota a 2–3 toques | Mantener presionado (fase 4) |
+| Estadísticas sin filtro | Filtro de categoría (fase 5) |
+
+## Para después (no hecho)
+Push con la app cerrada; recordatorios en el Calendario (investigados en
+`docs/NOTIFICATIONS.md`); metas que agrupen hábitos ("Correr un 10K");
+más planes guiados como Scalping.

@@ -31,9 +31,17 @@
     las hojas no se salgan de ancho ni reboten (formulario Medible, Ajustes
     de Hábitos, transacción) y que la pantalla no rebote.
   - `habitos.js` — Hábitos a 390 y 1280 px con datos realistas
-    (`habitos-semilla.js`): hoja de la Temporada 2 (sin celebraciones, logros
-    conservados), detalle que explica el techo, Temporada 1 en Logros.
-    Crece con cada fase del plan de categorías.
+    (`habitos-semilla.js`), sin errores de página ni de consola: hoja de la
+    Temporada 2 (sin celebraciones, logros conservados), detalle que explica
+    el techo, Temporada 1 en Logros; gestionar categorías (crear, repetida,
+    ordenar, sugerida, eliminar, no archivar con hábitos activos, asignar en
+    lote, "+ Nueva" desde el formulario); Hoy filtrado, agrupado, ocultar
+    hechos, un toque marca y mantener presionado abre opciones; Estadísticas
+    con filtro, "Por categoría" y radar; página de categoría desde
+    Estadísticas, Logros y Hoy; se marca solo con Running (rellenar,
+    marcar, deshacer, lo manual manda), Movilidad, Libros y Finanzas;
+    plantillas, sugerencia de categoría, hora y aviso de pendientes;
+    exportar e importar con categorías.
   - `scalping.js` — hábito Scalping con fecha y huso de La Paz fijos
     (además: el plan no avanza sin día completo, reinicio automático una vez
     y botón "Reiniciar desde el día 1"):
@@ -155,6 +163,28 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] En Finanzas toca **+**: baja la hoja con el dedo; a mitad de camino y
   soltando vuelve; bajándola más (o con un tirón) se cierra.
 - [ ] Lo mismo en el detalle de un hábito y en el selector de categorías.
+
+**Hábitos: categorías y siguiente nivel (2026-11)**
+- [ ] Al abrir Hábitos aparece una vez "Temporada 2: ahora subir cuesta
+  más" con tu nivel y rangos de antes y de ahora; "Entendido". No aparecen
+  celebraciones de golpe.
+- [ ] Logros › Logros: tarjeta "Temporada 1" y tus logros de siempre como
+  conseguidos. Arriba: "Te faltan N XP para el nivel…".
+- [ ] Un hábito › detalle: debajo del rango, tu techo con tu constancia y
+  cuántos días faltan para la próxima división.
+- [ ] Ajustes › Categorías: crea una (nombre, color, emoji), ordénalas,
+  "Asignar categorías" a los que no tienen. Prueba una "Sugerida".
+- [ ] Hoy: chips de categoría arriba (con pendientes), "Categoría" para
+  agrupar, "Ocultar hechos", colores en cada fila, aviso "Te faltan N de…".
+- [ ] Mantén presionado un hábito: parcial, mínima, saltar y nota.
+- [ ] Toca el nombre de un grupo (agrupado por categoría): su página con
+  nivel, semana y mes, mapa de calor, ranking y logros. "Atrás" vuelve.
+- [ ] Estadísticas: toca una categoría arriba; "Por categoría" y el radar.
+- [ ] Vincula tu hábito de correr con Running (Editar › Más opciones › Se
+  marca solo); acepta rellenar; guarda o importa una carrera: se marca.
+- [ ] + › Plantillas: busca "agua", elige, cambia la meta y crea.
+- [ ] Ponle hora a un hábito: se ordena dentro de su momento.
+- [ ] Scalping sigue igual (tarjeta, sesiones, pantalla propia).
 
 **Running al nivel de Strava (2026-11)**
 - [ ] Running → **+** → Importar → elige el ZIP de Strava (o un .gpx/.fit
