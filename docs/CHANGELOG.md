@@ -1,5 +1,15 @@
 # Cambios
 
+## 2026-11-05 · Ejercicio: resumen inteligente, gráficos del Perfil y compartir (fase 7)
+- Al terminar un entreno, "En pocas palabras": récords, cómo te fue
+  contra la última vez, si algo sigue estancado, qué músculos quedan
+  cansados y lo próximo del plan. Y "Compartir imagen".
+- Perfil: "Tu semana" (entrenos, series, récords, atrasados, carga, racha)
+  con "Compartir mi semana", y gráficos de fuerza (1RM por ejercicio),
+  volumen por grupo, frecuencia por músculo y peso con fuerza relativa.
+- Pruebas: `tests/ej-inteligencia.test.js` (3) y el E2E `ejercicio.js`
+  (`SOLO=perfil` y el resumen en `SOLO=entreno`).
+
 ## 2026-11-05 · Ejercicio: "¿Qué entreno hoy?", recuperación y carga de la semana (fase 6)
 - La tarjeta de hoy dice qué entrenar y por qué: la rutina del plan si tus
   músculos están listos; si ayer corriste largo o están cansados, otra de

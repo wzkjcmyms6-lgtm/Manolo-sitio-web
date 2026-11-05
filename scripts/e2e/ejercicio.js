@@ -320,6 +320,14 @@ async function entrenoVivo(browser, base, ancho) {
   ok(/Series\s*3/.test(await texto(p, ".ejr-hoja .ejr-kpis")), "series de hoy");
   ok(/Sentadilla \(Barra\)\s*110 kg para 5 reps \(antes 105 kg\)/.test(await texto(p, ".ejr-hoja .ejr-recs")), "con los récords");
   ok((await p.$$('.ejr-hoja .ejr-fig .mz[data-nivel="3"]')).length > 0, "y los músculos trabajados");
+  const frases = await p.$$eval(".ejr-hoja .ejr-frases li", ls => ls.map(l => l.textContent));
+  ok(frases[0] === "¡Récord en Sentadilla (Barra)!" && frases.length >= 3 && frases.length <= 4 && frases.some(f => /^Lo próximo en tu plan: Empuje \(el sáb\)\.$|dales unas 48 h|de .* series del plan/.test(f)),
+    `«En pocas palabras»: ${frases.join(" | ")}`);
+  await compartirFalso(p);
+  await p.click(".ejr-hoja [data-ejr-compartir]");
+  let comp = "";
+  for (let i = 0; i < 30 && !comp; i++) { await avanzar(200); comp = await p.evaluate(() => window.__compartido || ""); }
+  ok(/^entreno-2026-11-05\.png:\d{5,}:image\/png$/.test(comp), `«Compartir imagen» abre el menú con la imagen (${comp})`);
   await p.click('.ejr-hoja [data-ejr-rpe="7"]');
   await avanzar(300);
   ok(/Esfuerzo 7 de 10 · carga de la sesión\s*\d+/.test(await texto(p, ".ejr-hoja .ejr-rpe-txt")), "esfuerzo de la sesión → carga");
@@ -622,6 +630,55 @@ async function hoyYRecuperacion(browser, base, ancho) {
   await p.context().close();
 }
 
+// ---------- Fase 7: Perfil (tu semana, gráficos) y compartir ----------
+// El menú de compartir del teléfono se simula: guarda el nombre y el tamaño del archivo.
+const compartirFalso = p => p.evaluate(() => {
+  navigator.canShare = () => true;
+  navigator.share = async d => { window.__compartido = `${d.files[0].name}:${d.files[0].size}:${d.files[0].type}`; };
+});
+async function perfilYCompartir(browser, base, ancho) {
+  console.log(`\nPerfil: tu semana, gráficos y compartir (${ancho} px)`);
+  const alto = ancho > 800 ? 900 : 844;
+  const p = await abrir(browser, base, SEM.estado(HOY), { hash: "#ej-perfil", zona: ZONA, fecha: FECHA, ancho, alto });
+  consolaLimpia(p);
+  await p.waitForTimeout(1500);
+  await sinAvisos(p);
+  await compartirFalso(p);
+  const sem = await p.$$eval("#ejp-semana .ejps-lineas li", ls => ls.map(l => l.textContent));
+  ok(await p.isVisible("#ejp-semana") && sem[0] === "2 de 4 entrenos del plan" && /^\d+ series · [\d.]+ kg movidos$/.test(sem[1]) && sem.some(t => /^Racha: 9 semanas seguidas entrenando$/.test(t)),
+    `«Tu semana»: ${sem.join(" | ")}`);
+  ok(/^Semana con récords|^Vas bien esta semana/.test(await texto(p, "#ejp-semana .ejps-titulo")), `título: ${await texto(p, "#ejp-semana .ejps-titulo")}`);
+  await foto(p, `perfil-semana-${ancho}.png`);
+  await p.click("#ejp-semana [data-ejps-compartir]");
+  await p.waitForTimeout(1200);
+  const c1 = await p.evaluate(() => window.__compartido || "");
+  ok(/^semana-2026-11-05\.png:\d{5,}:image\/png$/.test(c1), `«Compartir mi semana» abre el menú con la imagen (${c1})`);
+
+  // Gráficos.
+  const tabs = await p.$$eval("#ejp-graficos [data-ejpg-tab]", bs => bs.map(b => { const r = b.getBoundingClientRect(); return [b.textContent, Math.round(r.height), r.right <= window.innerWidth]; }));
+  ok(tabs.map(t => t[0]).join(",") === "Fuerza,Volumen,Frecuencia,Peso" && tabs.every(t => t[1] >= 44 && t[2]), `4 pestañas de ≥ 44 px que entran en la pantalla (${tabs.map(t => t[1]).join(",")})`);
+  ok(/^Press de banca \(Barra\)/.test(await p.$eval("#ejp-graficos [data-ejpg-ej]", s => s.selectedOptions[0].textContent)), "Fuerza: empieza por un ejercicio grande");
+  ok(/^90 kg 1RM estimado · \+6 kg en 8 semanas \(tu mejor: 91,8 kg\)$/.test(await texto(p, "#ejp-graficos .ejpg-dato")) && await p.$("#ejp-graficos .ejpg-svg path"), `1RM estimado con su línea (${await texto(p, "#ejp-graficos .ejpg-dato")})`);
+  await p.selectOption("#ejp-graficos [data-ejpg-ej]", "barbell-squat");
+  await p.waitForTimeout(200);
+  ok(/^1\d\d(,\d)? kg 1RM estimado/.test(await texto(p, "#ejp-graficos .ejpg-dato")), `cambia a Sentadilla (${await texto(p, "#ejp-graficos .ejpg-dato")})`);
+  await foto(p, `perfil-fuerza-${ancho}.png`);
+  const tab = async t => { await p.evaluate(x => document.querySelector(`[data-ejpg-tab="${x}"]`).click(), t); await p.waitForTimeout(200); };
+  await tab("volumen");
+  ok((await p.$$("#ejp-graficos .ejpg-col")).length === 8 && (await p.$$("#ejp-graficos .ejpg-col.is-hoy .ejpg-pila i")).length >= 3, "Volumen: 8 semanas con los grupos apilados");
+  await tab("frecuencia");
+  const frec = await p.$$eval("#ejp-graficos .ejpg-frec li", ls => ls.map(l => l.getAttribute("aria-label")));
+  ok(frec.length === 11 && frec.every(t => /^.+: [\d,]+ días por semana$/.test(t)), `Frecuencia: 11 músculos (${frec[0]})`);
+  await foto(p, `perfil-frecuencia-${ancho}.png`);
+  await tab("peso");
+  const rel = await p.$$eval("#ejp-graficos .ejpg-rel li", ls => ls.map(l => l.textContent.replace(/\s+/g, " ").trim()));
+  ok(/^82,5 kg tu último peso/.test(await texto(p, "#ejp-graficos .ejpg-dato")) && rel.length >= 2 && rel.some(t => /^Sentadilla\s*1,\d+ × tu peso/.test(t)), `Peso y fuerza relativa (${rel[0]})`);
+  await foto(p, `perfil-peso-${ancho}.png`);
+  ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "sin scroll de costado");
+  ok(!p.errores.length && !p.erroresConsola.length, `sin errores (${p.erroresConsola.join(" | ")})`);
+  await p.context().close();
+}
+
 // ---------- Fase 1: caché de las demos en el service worker ----------
 // Contexto aparte con service workers permitidos (las demás pruebas los bloquean).
 async function cacheDemos(browser) {
@@ -701,6 +758,7 @@ async function cacheDemos(browser) {
     if (!solo || solo === "programa") await programacion(browser, base, ancho);
     if (!solo || solo === "volumen") await volumenYGenerador(browser, base, ancho);
     if (!solo || solo === "hoy") await hoyYRecuperacion(browser, base, ancho);
+    if (!solo || solo === "perfil") await perfilYCompartir(browser, base, ancho);
   }
   if (!solo || solo === "demos") await cacheDemos(browser);
   await terminar(browser, srv);

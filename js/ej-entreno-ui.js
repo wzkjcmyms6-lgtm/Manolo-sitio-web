@@ -4,6 +4,9 @@
 // de hoy, los músculos trabajados, la duración y pide el esfuerzo de la
 // sesión (RPE 1–10): con él se guarda `rpeSesion` en el entreno y se ve la
 // carga (RPE × minutos, en la misma escala que Running; D-093).
+// Arriba, "En pocas palabras": hasta 4 frases por reglas (récords,
+// comparación, estancamiento, qué queda cansado, lo próximo del plan;
+// js/ej-inteligencia.js, D-097). Abajo, "Compartir imagen" (js/ej-compartir.js).
 (function () {
 "use strict";
 
@@ -70,6 +73,38 @@ function figuras(roles) {
   }).join("");
 }
 
+const DIAS_C = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+// Datos para "En pocas palabras".
+function frases(entreno, antes, c, recs) {
+  if (!window.EjInteligencia) return [];
+  const todos = antes.concat(entreno);
+  const estancados = [];
+  (entreno.exercises || []).forEach(ex => {
+    const f = fichaDe(ex);
+    if (!f || f.tipo !== "carga" || estancados.includes(f.nombre)) return;
+    const mismo = e => { const r = fichaDe(e); return !!r && r.id === f.id; };
+    if (EjPrograma.estancamiento(EjHistorial.sesiones(todos, mismo, { tipo: "carga" }), entreno.date)) estancados.push(f.nombre);
+  });
+  const reg = EjercicioDatos.estado.registros;
+  const fat = window.EjRecuperacion ? EjRecuperacion.fatiga({ ahora: Date.now(), entrenos: todos, carreras: reg.running || [], bicis: reg.bicicleta || [], fichaDe }) : { zonas: {} };
+  // Solo los músculos que trabajaste hoy como principales (no los de la carrera de ayer).
+  const hoyPri = new Set();
+  (entreno.exercises || []).forEach(ex => { const f = fichaDe(ex); if (f) (f.primarios || []).forEach(z => hoyPri.add(z)); });
+  const cansados = EjPrograma.MUSCULOS_OBJ.filter(m => m.regiones.some(z => hoyPri.has(z) && fat.zonas[z] && fat.zonas[z].estado === "cansado")).map(m => m.nombre.toLowerCase());
+  let planeadas = 0, proximo = null;
+  if (window.RutinasUI) {
+    const r = entreno.rutinaId && RutinasUI.rutinas().find(x => x.id === entreno.rutinaId);
+    const aj = EjercicioDatos.estado.ajustes || {};
+    if (r && !EjPrograma.descargaActiva(aj.descargas, entreno.date)) planeadas = EjRutinas.totalSeries(r);
+    for (let k = 1; k <= 7 && !proximo; k++) {
+      const f = EjPrograma.addDias(entreno.date, k);
+      const prox = EjRutinas.rutinaDelDia(RutinasUI.plan(), RutinasUI.rutinas(), f);
+      if (prox) proximo = { nombre: prox.name, cuando: k === 1 ? "mañana" : `el ${DIAS_C[new Date(f + "T12:00:00").getDay()]}` };
+    }
+  }
+  return EjInteligencia.resumenSesion({ comparacion: c, records: recs, planeadas, hechas: c.series, estancados, cansados, proximo });
+}
+
 function contenido() {
   const { entreno, antes } = actual;
   const ant = EjEntreno.anteriorComparable(antes, entreno);
@@ -79,12 +114,15 @@ function contenido() {
   const principales = Object.keys(roles).filter(m => roles[m] === "pri").map(nombreMusculo);
   const rpe = entreno.rpeSesion;
   const carga = EjEntreno.cargaSesion(rpe, entreno.durationMin);
+  const fr = frases(entreno, antes, c, recs);
+  actual.extras = { records: recs, frases: fr.map(x => x.texto) };
   return `
     <div class="muscle-sheet-head">
       <div><span class="ejf-arriba">Entreno terminado</span><h3 id="ejr-titulo">${esc(entreno.name)}</h3>
         <span class="muscle-sheet-period">${esc(entreno.durationMin)} min · ${c.series} series · ${c.reps} reps</span></div>
       <button type="button" class="muscle-sheet-close" data-cerrar aria-label="Cerrar"><span data-icon="close"></span></button>
     </div>
+    ${fr.length ? `<ul class="ejr-frases" aria-label="En pocas palabras">${fr.map(x => `<li class="is-${x.tipo}">${esc(x.texto)}</li>`).join("")}</ul>` : ""}
     <div class="ejf-kpis ejr-kpis">
       <div class="ejf-kpi"><span>Volumen</span><b>${miles(c.volumen)} kg</b>${c.anterior ? delta(c.dVolumenPct, " %") : ""}</div>
       <div class="ejf-kpi"><span>Series</span><b>${c.series}</b>${c.anterior ? delta(c.dSeries) : ""}</div>
@@ -99,7 +137,7 @@ function contenido() {
     <h4 class="ejf-sub">¿Qué tan duro fue el entreno?</h4>
     <div class="ejr-rpe" role="group" aria-label="Esfuerzo de la sesión de 1 a 10">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<button type="button" data-ejr-rpe="${n}" aria-pressed="${rpe === n}"${rpe === n ? ' class="is-on"' : ""}>${n}</button>`).join("")}</div>
     <p class="ejr-rpe-txt">${rpe ? `Esfuerzo ${rpe} de 10 · carga de la sesión <b>${carga}</b> (misma escala que Running).` : "1 = muy fácil · 10 = no podías más. Sirve para medir tu carga junto con Running."}</p>
-    <button type="button" class="ejf-btn ejr-listo" data-cerrar>Listo</button>`;
+    <div class="ejr-acciones"><button type="button" class="ejf-btn-sec" data-ejr-compartir>Compartir imagen</button><button type="button" class="ejf-btn ejr-listo" data-cerrar>Listo</button></div>`;
 }
 
 function pintar() {
@@ -119,6 +157,15 @@ function resumen(entreno, antes) {
     document.body.appendChild(hoja);
     hoja.addEventListener("click", e => {
       if (e.target.closest("[data-cerrar]")) { cerrar(); return; }
+      const comp = e.target.closest("[data-ejr-compartir]");
+      if (comp && actual && window.EjCompartir) {
+        comp.disabled = true;
+        comp.textContent = "Preparando…";
+        EjCompartir.entreno(actual.entreno, actual.extras).then(r => {
+          comp.textContent = r === "descargado" ? "Imagen descargada" : "Compartir imagen";
+        }).catch(() => { comp.textContent = "No se pudo"; }).then(() => { comp.disabled = false; });
+        return;
+      }
       const b = e.target.closest("[data-ejr-rpe]");
       if (!b || !actual) return;
       const n = Number(b.dataset.ejrRpe);

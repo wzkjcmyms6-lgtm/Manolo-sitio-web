@@ -13,7 +13,7 @@ desde D-090. Cada fase deja la app funcionando y publicada.
 | 4 | Progresión v2, estancamiento y descarga + Ajustes del gimnasio | ✅ |
 | 5 | Volumen semanal, equilibrio y generador de rutinas | ✅ |
 | 6 | Recuperación, "¿Qué entreno hoy?" y carga total con Running | ✅ |
-| 7 | Resumen inteligente, Perfil y compartir | |
+| 7 | Resumen inteligente, Perfil y compartir | ✅ |
 | 8 | QA final, docs y lista para el iPhone | |
 
 Datos de prueba: `scripts/e2e/ejercicio-semilla.js` (9 semanas realistas).

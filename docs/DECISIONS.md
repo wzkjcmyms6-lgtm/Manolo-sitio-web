@@ -1031,3 +1031,18 @@ gimnasio con session RPE (Foster et al., 2001, *J Strength Cond Res*
 15(1):109-115) en la escala de Running; si no anotaste el esfuerzo se
 estima (7) y se avisa. (6) Sin lecturas nuevas: usa los entrenos, carreras
 y salidas en bici que la app ya tiene cargados; sin campos nuevos.
+
+**D-097 (2026-11-05) · Resumen inteligente, gráficos del Perfil y compartir.**
+(1) El resumen del entreno y de la semana sale de reglas fijas con un
+orden de prioridad (récords → comparación → estancamiento → recuperación
+→ plan) y como mucho 4 frases: lo útil primero y sin frases que se
+contradigan (con récords y menos volumen: "pero con más fuerza"; entreno a
+medias: no se compara el volumen). Nada de IA paga. (2) Los gráficos del
+Perfil se dibujan solo con Perfil abierto (no suman al arranque) y con lo
+que la app ya tiene cargado. La frecuencia marca 2 días por semana, la
+que mejor resultado dio frente a 1 (Schoenfeld, Ogborn y Krieger, 2016,
+*Sports Med* 46(11):1689-1697). La fuerza relativa usa el mejor 1RM
+estimado de 12 semanas y el peso de ese día. (3) La imagen para compartir
+se arma en el teléfono (canvas 1080 × 1350) y se ofrece con el menú del
+sistema (Web Share con archivo); si el navegador no puede, se descarga.
+No se sube a ningún lado ni se guarda nada nuevo.

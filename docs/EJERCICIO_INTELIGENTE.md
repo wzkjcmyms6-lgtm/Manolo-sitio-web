@@ -23,7 +23,7 @@ sale de reglas y fórmulas documentadas (§ Fórmulas, con sus fuentes en
 | 4 | Progresión v2, estancamiento, descarga + Ajustes del gimnasio | ✅ |
 | 5 | Volumen semanal, equilibrio y generador de rutinas | ✅ |
 | 6 | Recuperación, "¿Qué entreno hoy?" y carga total con Running | ✅ |
-| 7 | Resumen inteligente, Perfil y compartir | |
+| 7 | Resumen inteligente, Perfil y compartir | ✅ |
 | 8 | QA final | |
 
 ## Auditoría (fase 0)
@@ -143,7 +143,9 @@ reescriben; los Rangos no cambian de calibración.
 | `js/ej-generador.js` | Hoja "Crear rutinas para mí" |
 | `js/ej-recuperacion.js` (UMD) | Fatiga por músculo, recomendación del día, carga total |
 | `js/ej-hoy.js` | Tarjeta "¿Qué entreno hoy?", mapa de recuperación y carga de la semana |
-| `js/ej-inteligencia.js` (UMD) | Resumen por reglas de la sesión y la semana |
+| `js/ej-inteligencia.js` (UMD) | Resumen por reglas de la sesión y la semana, frecuencia y fuerza relativa |
+| `js/ej-compartir.js` | Imagen para compartir (entreno y semana) |
+| `js/ej-graficos.js` | Perfil: "Tu semana" y gráficos |
 
 ## Demos (fase 1, D-091)
 
@@ -290,6 +292,26 @@ reescriben; los Rangos no cambian de calibración.
   Running y bici en la misma escala, el total contra tu semana típica (las
   4 anteriores) y una frase.
 
+## Resumen inteligente, Perfil y compartir (fase 7, D-097)
+
+- **En pocas palabras** (arriba del resumen al terminar): hasta 4 frases
+  por reglas, en este orden: récords, comparación con la última vez
+  (sube ≥ 5 %, baja ≥ 10 %, o parecido; con récords y menos volumen, "pero
+  con más fuerza"; a medias, no compara), un ejercicio estancado, qué
+  músculos de hoy quedan cansados, si completaste las series del plan y
+  lo próximo del plan. "Compartir imagen" abajo.
+- **Tu semana** (Perfil): entrenos hechos de los del plan, series y kg,
+  récords, músculos atrasados, carga contra tu semana típica y racha de
+  semanas seguidas; "Compartir mi semana".
+- **Gráficos** (Perfil, 4 pestañas): Fuerza (1RM estimado por sesión de un
+  ejercicio, los grandes primero, con el cambio y tu mejor marca), Volumen
+  (series por grupo de las últimas 8 semanas, apiladas), Frecuencia (días
+  por semana de cada músculo en 4 semanas, con la línea de 2) y Peso (tu
+  peso y la fuerza relativa de sentadilla, banca, peso muerto y press
+  militar).
+- **Imagen para compartir**: 1080 × 1350 en el teléfono (canvas), con el
+  menú de compartir (Web Share) o, si no se puede, se descarga.
+
 ## Fórmulas
 
 - **1RM estimado (Epley)**: kg × (1 + reps / 30); 1 rep = el peso; reps
@@ -393,5 +415,14 @@ reescriben; los Rangos no cambian de calibración.
   minutos × 100 / 480; sin esfuerzo anotado, el RPE medio de las series
   (o 10 − RIR) o 7; sin duración, 2,5 min por serie. Running y bici usan
   su carga (D-065). Semana típica = promedio de las 4 semanas anteriores.
+
+- **Récords de la semana**: un ejercicio cuenta si en algún entreno de la
+  semana superó tu mejor 1RM estimado o tu mejor peso para esas reps
+  (como el récord en vivo). **Racha**: semanas seguidas, hasta esta o la
+  anterior, con al menos un entreno.
+- **Frecuencia**: días distintos en que un músculo fue principal con al
+  menos una serie de trabajo, dividido por 4 semanas.
+- **Fuerza relativa**: mejor 1RM estimado de las últimas 12 semanas ÷ tu
+  peso del día (el último pesaje hasta esa fecha).
 
 Las siguientes se completan en cada fase (fuentes en `DECISIONS.md`).
