@@ -76,7 +76,7 @@ async function demos(browser, base, ancho) {
   await p.waitForTimeout(400);
 
   // Desde el entreno en vivo: el nombre y la miniatura.
-  await p.click("#rut-hoy [data-rut-empezar]");
+  await p.click('#rut-hoy [data-rut-empezar="pierna"]');
   await p.waitForTimeout(900);
   await p.click('#gym-active-exercises .gx-ej-nombre[data-ficha="barbell-squat"]');
   await p.waitForTimeout(600);
@@ -245,7 +245,8 @@ async function fichaCompleta(browser, base, ancho) {
 // ---------- Fase 3: entreno en vivo ----------
 async function entrenoVivo(browser, base, ancho) {
   console.log(`\nEntreno en vivo (${ancho} px)`);
-  const p = await abrir(browser, base, SEM.estado(HOY), { hash: "#ejercicio", zona: ZONA, relojFalso: FECHA, voz: true, ancho, alto: ancho > 800 ? 900 : 844 });
+  // Sin la carrera larga de ayer: hoy toca Pierna sin cambio (el cambio se prueba en SOLO=hoy).
+  const p = await abrir(browser, base, SEM.estado(HOY, { sinCarreraAyer: true }), { hash: "#ejercicio", zona: ZONA, relojFalso: FECHA, voz: true, ancho, alto: ancho > 800 ? 900 : 844 });
   consolaLimpia(p);
   const avanzar = async ms => { await p.clock.fastForward(ms); await p.waitForTimeout(80); };
   await avanzar(1500);
@@ -374,7 +375,7 @@ async function programacion(browser, base, ancho) {
   const aj = await p.evaluate(() => EjercicioDatos.meta("ajustes_ejercicio").get().then(d => d.data()));
   ok(aj.equipo && aj.equipo.perfiles.gimnasio.barra === 15 && !aj.equipo.perfiles.gimnasio.discos.includes(1.25) && aj.meta === "fuerza" && aj.nivel === "avanzado", "se guardan equipo, meta y nivel");
   ok(aj.pesoCorporal === 82.5, "sin tocar lo que ya había (peso corporal)");
-  await p.click('#rut-hoy [data-rut-empezar]');
+  await p.click('#rut-hoy [data-rut-empezar="pierna"]');
   await p.waitForTimeout(900);
   ok(/Por lado \(110 kg\):\s*25 \+ 20 \+ 2,5/.test(await texto(p, `${ej(0)} .gx-discos`)), "los discos usan tu barra de 15 kg y tus discos");
   await p.click("#gym-active-discard");
@@ -395,7 +396,7 @@ async function programacion(browser, base, ancho) {
   ok(/Semana de descarga\s*Hasta el mié 11 nov/.test(await texto(p, "#ej-coach")), "«Aplicar descarga»: una semana, hasta el mié 11");
   const d1 = await p.evaluate(() => EjercicioDatos.meta("ajustes_ejercicio").get().then(d => d.data().descargas));
   ok(d1 && d1["2026-11-05"] === "2026-11-11", "queda guardada");
-  await p.click("#ej-hoy [data-rut-empezar]");
+  await p.click('#ej-hoy [data-rut-empezar="pierna"]');
   await p.waitForTimeout(900);
   ok((await texto(p, `${ej(0)} .gx-porque`)) === "Semana de descarga: 2 × 5 con 92,5 kg · menos series y algo menos de peso", `en el entreno: ${await texto(p, `${ej(0)} .gx-porque`)}`);
   ok((await p.$$(`${ej(0)} .gx-fila`)).length === 2, "con menos series (4 → 2)");
@@ -544,6 +545,83 @@ async function volumenYGenerador(browser, base, ancho) {
   await q.context().close();
 }
 
+// ---------- Fase 6: ¿Qué entreno hoy?, recuperación y carga ----------
+async function hoyYRecuperacion(browser, base, ancho) {
+  console.log(`\n¿Qué entreno hoy?, recuperación y carga de la semana (${ancho} px)`);
+  const alto = ancho > 800 ? 900 : 844;
+  const tam = (p, sel) => p.$$eval(sel, els => els.map(e => { const r = e.getBoundingClientRect(); return Math.min(r.width, r.height); }));
+  // Jueves, toca Pierna, pero ayer corrió 18 km.
+  let p = await abrir(browser, base, SEM.estado(HOY), { hash: "#ejercicio", zona: ZONA, fecha: FECHA, ancho, alto });
+  consolaLimpia(p);
+  await p.waitForTimeout(1400);
+  await sinAvisos(p);
+  const hoy = await texto(p, "#ej-hoy");
+  ok(await p.$eval("#ej-hoy", el => el.classList.contains("is-cambio")) && /^Hoy, jueves, tocaba Pierna\s*Mejor hoy: Empuje/.test(hoy), `tras la carrera larga: «Mejor hoy: Empuje» (${hoy.slice(0, 60)}…)`);
+  ok(/Ayer corriste 18 km: tus piernas necesitan recuperarse\./.test(hoy) && /Músculos listos: pecho, hombros y tríceps\./.test(hoy), "y dice por qué");
+  const botones = await p.$$eval("#ej-hoy [data-rut-empezar]", bs => bs.map(b => `${b.dataset.rutEmpezar}:${b.textContent.trim()}`));
+  ok(botones.join("|") === "empuje:Empezar Empuje|pierna:Hacer Pierna igual", `«Empezar Empuje» o «Hacer Pierna igual» (${botones.join(" | ")})`);
+  ok((await tam(p, "#ej-hoy [data-rut-empezar]")).every(t => t >= 44), "botones de ≥ 44 px");
+  await foto(p, `hoy-cambio-${ancho}.png`);
+
+  // Recuperación.
+  ok(await p.isVisible("#ej-recuperacion"), "Entrenamiento muestra «Recuperación»");
+  const rec = await p.$$eval("#ej-recuperacion .ejrec-fig .mz", gs => {
+    const o = {};
+    gs.forEach(g => { o[g.dataset.muscle] = g.getAttribute("data-rec"); });
+    return o;
+  });
+  ok(rec.cuadriceps === "cansado" && rec.pecho_medio === "listo" && ["recuperando", "cansado"].includes(rec.pantorrillas), `figura: cuádriceps cansado, pecho listo (${rec.cuadriceps}, ${rec.pecho_medio}, ${rec.pantorrillas})`);
+  const lista = await p.$$eval("#ej-recuperacion .ejrec-lista li", ls => ls.map(l => l.getAttribute("aria-label")));
+  ok(/^Cuádriceps: cansado, listo (el sáb|mañana)/.test(lista[0]) && lista.length >= 3, `lista: ${lista.slice(0, 3).join(" | ")}`);
+  ok(/Incluye tu carrera: ayer corriste 18 km\./.test(await texto(p, "#ej-recuperacion .ejrec-nota")), "dice que incluye la carrera");
+  await (await p.$("#ej-recuperacion")).scrollIntoViewIfNeeded();
+  await foto(p, `recuperacion-${ancho}.png`);
+
+  // Carga de la semana.
+  const carga = await texto(p, "#ej-carga");
+  ok(/^Carga de la semana/.test(carga) && /Running 210/.test(carga) && /tu semana típica: \d+/.test(carga), `carga: ${carga.match(/\d+ esta semana[^G]*/)}`);
+  ok((await p.$$("#ej-carga .ejcg-dia")).length === 7 && await p.$eval("#ej-carga .ejcg-dia.is-hoy .ejcg-d", e => e.textContent) === "jue", "7 días, hoy marcado");
+  const alturaRun = await p.$eval("#ej-carga .ejcg-dia:nth-child(3) .is-run", e => parseFloat(e.style.height));
+  ok(alturaRun === 100, `el miércoles (carrera) es la barra más alta (${alturaRun} %)`);
+  await (await p.$("#ej-carga")).scrollIntoViewIfNeeded();
+  await foto(p, `carga-${ancho}.png`);
+  ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "sin scroll de costado");
+
+  // Empezar lo sugerido.
+  await ir(p, "ejercicio");
+  await p.click('#ej-hoy [data-rut-empezar="empuje"]');
+  await p.waitForTimeout(900);
+  ok(await p.isVisible("#gym-active") && /Press de banca/.test(await texto(p, '#gym-active-exercises .gx-ej[data-ex-index="0"] .gx-ej-nombre')), "«Empezar Empuje» abre Empuje");
+  await p.click("#gym-active-discard");
+  await p.waitForTimeout(400);
+  ok(/Mejor hoy: Empuje/.test(await texto(p, "#rut-hoy")), "en Gimnasio, la misma sugerencia");
+  // Perfil.
+  await ir(p, "ej-perfil", 900);
+  ok(await p.isVisible("#ejp-recuperacion .ejrec-fig") && (await p.$$("#ejp-recuperacion .mz[data-rec='cansado']")).length >= 2, "Perfil también muestra la recuperación");
+  ok(!p.errores.length && !p.erroresConsola.length, `sin errores (${p.erroresConsola.join(" | ")})`);
+  await p.context().close();
+
+  // Sin la carrera: toca Pierna y dice por qué.
+  p = await abrir(browser, base, SEM.estado(HOY, { sinCarreraAyer: true }), { hash: "#ejercicio", zona: ZONA, fecha: FECHA, ancho, alto });
+  await p.waitForTimeout(1400);
+  await sinAvisos(p);
+  const h2 = await texto(p, "#ej-hoy");
+  ok(/^Hoy, jueves, toca\s*Pierna/.test(h2) && /Músculos listos: (cuádriceps|isquios|glúteos)/.test(h2) && !(await p.$eval("#ej-hoy", el => el.classList.contains("is-cambio"))), `sin carrera: «toca Pierna» (${h2.slice(0, 70)}…)`);
+  ok(!p.errores.length, "sin errores");
+  await p.context().close();
+
+  // Sábado: toca Empuje y el domingo suele correr largo.
+  const SAB = "2026-11-07";
+  p = await abrir(browser, base, SEM.estado(SAB), { hash: "#ejercicio", zona: ZONA, fecha: `${SAB}T09:30:00-04:00`, ancho, alto });
+  await p.waitForTimeout(1400);
+  await sinAvisos(p);
+  const h3 = await texto(p, "#ej-hoy");
+  ok(/^Hoy, sábado, toca\s*Empuje/.test(h3) && /Mañana \(domingo\) sueles correr 1\d km: hoy mejor sin pierna pesada\./.test(h3), `sábado: Empuje y el aviso de la carrera de mañana (${(h3.match(/Mañana[^.]*\./) || [""])[0]})`);
+  await foto(p, `hoy-manana-${ancho}.png`);
+  ok(!p.errores.length, "sin errores");
+  await p.context().close();
+}
+
 // ---------- Fase 1: caché de las demos en el service worker ----------
 // Contexto aparte con service workers permitidos (las demás pruebas los bloquean).
 async function cacheDemos(browser) {
@@ -622,6 +700,7 @@ async function cacheDemos(browser) {
     if (!solo || solo === "entreno") await entrenoVivo(browser, base, ancho);
     if (!solo || solo === "programa") await programacion(browser, base, ancho);
     if (!solo || solo === "volumen") await volumenYGenerador(browser, base, ancho);
+    if (!solo || solo === "hoy") await hoyYRecuperacion(browser, base, ancho);
   }
   if (!solo || solo === "demos") await cacheDemos(browser);
   await terminar(browser, srv);

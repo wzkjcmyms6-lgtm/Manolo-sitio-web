@@ -1011,3 +1011,23 @@ existe), el plan solo se completa en días libres y nada se borra. (6) El
 bloque de 4–6 semanas reutiliza la descarga de la fase 4: se agenda en
 `descargas` y se guarda `bloque` (aditivo, entra en el respaldo). Una
 descarga agendada en los próximos 14 días evita que se sugiera otra.
+
+**D-096 (2026-11-05) · Recuperación por músculo y "¿Qué entreno hoy?".**
+(1) La recuperación es un modelo simple y explicable, no una medición:
+series efectivas de los últimos días que bajan con el tiempo (τ 30 h en
+músculos grandes, 22 h en chicos), calibrado para que un músculo grande
+con ~9 series duras quede "cansado" al día siguiente, "recuperándose" a
+las 48 h y listo a las ~72 h, en línea con las 48–72 h entre sesiones del
+mismo grupo que recomienda el ACSM (2009, *Med Sci Sports Exerc*
+41(3):687-708). (2) Correr y pedalear cargan las piernas en proporción a
+la carga de la actividad (la misma de Running, D-065), así que una
+carrera larga ayer deja los cuádriceps cansados hoy. (3) "¿Qué entreno
+hoy?" reemplaza la tarjeta "Hoy toca": nunca cambia el plan ni borra nada;
+solo sugiere otra rutina tuya (con "Hacer X igual" siempre a mano),
+Movilidad o descanso, y dice por qué. (4) Running no tiene días fijos
+(sus planes son "Día 1, 2…"), así que "mañana sueles correr" se deduce de
+tu costumbre (3+ de las últimas 6 semanas ese día). (5) Carga del
+gimnasio con session RPE (Foster et al., 2001, *J Strength Cond Res*
+15(1):109-115) en la escala de Running; si no anotaste el esfuerzo se
+estima (7) y se avisa. (6) Sin lecturas nuevas: usa los entrenos, carreras
+y salidas en bici que la app ya tiene cargados; sin campos nuevos.

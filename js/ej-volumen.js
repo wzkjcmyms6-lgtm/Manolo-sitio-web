@@ -134,5 +134,6 @@ function render() {
 EjercicioDatos.onCambio(render);
 document.addEventListener("ejercicio:ajustes", render);
 document.addEventListener("rutinas:cambio", render);
-window.EjVolumen = { render };
+// datos(): lo mismo que muestra la tarjeta (lo usa "¿Qué entreno hoy?").
+window.EjVolumen = { render, datos: calcular };
 })();

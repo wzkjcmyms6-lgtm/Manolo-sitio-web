@@ -22,7 +22,7 @@ sale de reglas y fórmulas documentadas (§ Fórmulas, con sus fuentes en
 | 3 | Entreno en vivo (objetivo, RIR, calentamiento, discos, superseries, descanso con aviso, récords, resumen) | ✅ |
 | 4 | Progresión v2, estancamiento, descarga + Ajustes del gimnasio | ✅ |
 | 5 | Volumen semanal, equilibrio y generador de rutinas | ✅ |
-| 6 | Recuperación, "¿Qué entreno hoy?" y carga total con Running | |
+| 6 | Recuperación, "¿Qué entreno hoy?" y carga total con Running | ✅ |
 | 7 | Resumen inteligente, Perfil y compartir | |
 | 8 | QA final | |
 
@@ -142,6 +142,7 @@ reescriben; los Rangos no cambian de calibración.
 | `js/ej-volumen.js` | Tarjeta "Series por músculo" y equilibrio (Entrenamiento) |
 | `js/ej-generador.js` | Hoja "Crear rutinas para mí" |
 | `js/ej-recuperacion.js` (UMD) | Fatiga por músculo, recomendación del día, carga total |
+| `js/ej-hoy.js` | Tarjeta "¿Qué entreno hoy?", mapa de recuperación y carga de la semana |
 | `js/ej-inteligencia.js` (UMD) | Resumen por reglas de la sesión y la semana |
 
 ## Demos (fase 1, D-091)
@@ -270,6 +271,25 @@ reescriben; los Rangos no cambian de calibración.
 - **Bloque** (opcional): 4, 5 o 6 semanas; la última es de descarga
   (agendada en `descargas`). La tarjeta muestra "Bloque: semana 2 de 5".
 
+## Recuperación, "¿Qué entreno hoy?" y carga (fase 6, D-096)
+
+- **¿Qué entreno hoy?** (arriba de Entrenamiento y de Gimnasio, en lugar
+  del "Hoy toca"): la rutina del plan con el porqué ("Músculos listos:
+  pecho, hombros y tríceps"). Si ayer (u hoy) corriste largo o duro, o si
+  sus músculos todavía se recuperan, propone otra de tus rutinas con los
+  músculos listos y que complete lo que te falta de la semana: "Hoy,
+  jueves, tocaba Pierna · Mejor hoy: Empuje", con "Empezar Empuje" y
+  "Hacer Pierna igual". Si ninguna sirve: Movilidad o descanso. Sin rutina
+  en el plan: descanso, o una rutina si algo va atrasado. Si mañana sueles
+  hacer una carrera larga, lo avisa ("hoy mejor sin pierna pesada").
+- **Recuperación** (Entrenamiento y Perfil): figura de frente y espalda con
+  cada músculo listo (verde), recuperándose (ámbar) o cansado (rojo), y la
+  lista de los que no están listos con cuándo lo estarán ("listo el sáb").
+  Cuenta tus entrenos y tus carreras y salidas en bici.
+- **Carga de la semana** (Entrenamiento): barras por día con gimnasio,
+  Running y bici en la misma escala, el total contra tu semana típica (las
+  4 anteriores) y una frase.
+
 ## Fórmulas
 
 - **1RM estimado (Epley)**: kg × (1 + reps / 30); 1 rep = el peso; reps
@@ -352,5 +372,26 @@ reescriben; los Rangos no cambian de calibración.
 - **Bloque**: empieza el lunes de esta semana (o el próximo si hoy es
   jueves o más tarde); la última semana es de descarga (series × 0,6 y
   peso × 0,9, como en la fase 4).
+
+- **Fatiga por músculo**: cada serie de trabajo suma 1 a sus músculos
+  principales y 0,5 a los que ayudan (× 1,15 con RIR ≤ 1 o esfuerzo de la
+  sesión ≥ 9; × 0,85 con RIR ≥ 3 o esfuerzo ≤ 5) y baja con el tiempo:
+  × e^(−horas / τ), τ = 30 h en músculos grandes (cuádriceps, isquios,
+  glúteos, espalda, lumbares, pecho) y 22 h en el resto. Listo < 1,5 ≤
+  recuperándose < 4 ≤ cansado. Listo en τ × ln(valor / 1,5) horas. Correr
+  suma por cada 100 de carga 5 series a cuádriceps y pantorrillas y 3,5 a
+  isquios y glúteos; la bici, 4 a cuádriceps, 2,5 a glúteos y 1,5 a
+  pantorrillas e isquios (sin RPE se supone 5).
+- **Carrera larga o dura** (ayer u hoy): ≥ 15 km, carga ≥ 120 o RPE ≥ 8.
+  **Mañana sueles correr**: corriste ese día de la semana en 3+ de las
+  últimas 6 semanas; es exigente si la mediana es ≥ 12 km o carga ≥ 100.
+- **Rutina que sirve hoy**: menos del 25 % de sus series en músculos
+  cansados y menos del 60 % recuperándose; si es de pierna (≥ 35 % de sus
+  series) y hubo o habrá carrera exigente, no. Entre las que sirven gana
+  la que más completa lo que falta de la semana y menos fatiga tiene.
+- **Carga del gimnasio** (Foster et al., 2001): esfuerzo de la sesión ×
+  minutos × 100 / 480; sin esfuerzo anotado, el RPE medio de las series
+  (o 10 − RIR) o 7; sin duración, 2,5 min por serie. Running y bici usan
+  su carga (D-065). Semana típica = promedio de las 4 semanas anteriores.
 
 Las siguientes se completan en cada fase (fuentes en `DECISIONS.md`).

@@ -1,5 +1,17 @@
 # Cambios
 
+## 2026-11-05 · Ejercicio: "¿Qué entreno hoy?", recuperación y carga de la semana (fase 6)
+- La tarjeta de hoy dice qué entrenar y por qué: la rutina del plan si tus
+  músculos están listos; si ayer corriste largo o están cansados, otra de
+  tus rutinas (con "Hacer X igual"), o Movilidad o descanso. Avisa si
+  mañana sueles hacer una carrera larga.
+- "Recuperación" en Entrenamiento y Perfil: figura con cada músculo listo,
+  recuperándose o cansado, y cuándo estará listo. Cuenta las carreras.
+- "Carga de la semana": gimnasio, Running y bici por día en la misma
+  escala, contra tu semana típica.
+- Pruebas: `tests/ej-recuperacion.test.js` (8) y el E2E `ejercicio.js`
+  (`SOLO=hoy`).
+
 ## 2026-11-05 · Ejercicio: series por músculo, equilibrio y "Crear rutinas para mí" (fase 5)
 - Entrenamiento muestra "Series por músculo": cuántas series hace cada
   músculo esta semana (con lo que te queda del plan) contra tu objetivo,

@@ -90,6 +90,8 @@ function hechaHoy(r) {
   return entrenos.some(w => w.date === hoy && (w.rutinaId === r.id || (!w.rutinaId && String(w.name || "").trim() === r.name)));
 }
 function renderHoy() {
+  // Con "¿Qué entreno hoy?" (js/ej-hoy.js) la tarjeta la arma ese módulo.
+  if (window.EjHoy) { EjHoy.render(); return; }
   const r = R.rutinaDelDia(plan, rutinas, hoyIso());
   const dia = R.DIAS.find(d => d.k === String(new Date().getDay()));
   const hecha = r && hechaHoy(r);

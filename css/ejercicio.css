@@ -287,3 +287,59 @@
 .ejgen-listo p { margin: 0; }
 .ejgen-listo-ico { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; font-size: 1.5rem; font-weight: 800; background: rgba(111, 208, 140, 0.16); color: #6fd08c; margin-bottom: 0.4rem; }
 .rut-botones { flex-wrap: wrap; justify-content: flex-end; }
+
+/* ---- ¿Qué entreno hoy? (fase 6) ---- */
+.rut-hoy.is-rico { flex-direction: column; align-items: stretch; }
+.rut-hoy.is-cambio { border-color: rgba(77, 163, 255, 0.5); background: linear-gradient(135deg, rgba(77, 163, 255, 0.16), rgba(77, 163, 255, 0.04)); }
+.rut-hoy.is-cambio .rut-hoy-eyebrow { color: #8cc4ff; }
+.rut-hoy.is-descanso { border-color: rgba(111, 208, 140, 0.45); background: linear-gradient(135deg, rgba(111, 208, 140, 0.14), rgba(111, 208, 140, 0.03)); }
+.rut-hoy.is-descanso .rut-hoy-eyebrow { color: #8fdca6; }
+.rut-hoy-razones { list-style: none; margin: 0.5rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.85rem; line-height: 1.4; }
+.rut-hoy-razones li { position: relative; padding-left: 0.95rem; }
+.rut-hoy-razones li::before { content: ""; position: absolute; left: 0.15rem; top: 0.55em; width: 5px; height: 5px; border-radius: 50%; background: var(--accent-2); }
+.rut-hoy.is-cambio .rut-hoy-razones li::before { background: #8cc4ff; }
+.rut-hoy-manana { margin: 0.5rem 0 0; padding: 0.45rem 0.6rem; border-radius: 10px; background: rgba(77, 163, 255, 0.12); color: #b9dbff; font-size: 0.82rem; line-height: 1.4; }
+.rut-hoy-acciones { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+a.rut-hoy-btn, a.rut-hoy-otra { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+a.rut-hoy-btn { color: #0a0a0a; padding: 0 1.2rem; }
+
+/* ---- Recuperación (fase 6) ---- */
+.ejrec[hidden], .ejcg[hidden] { display: none; }
+.ejrec-figs { display: flex; justify-content: center; gap: 1.6rem; margin: 0.2rem 0 0.7rem; }
+.ejrec-fig-wrap { margin: 0; text-align: center; }
+.ejrec-fig-wrap figcaption { font-size: 0.72rem; color: var(--muted); margin-top: 0.2rem; }
+.ejrec-fig { width: 112px; height: auto; display: block; overflow: visible; }
+.ejrec-fig .mz { cursor: default; }
+.ejrec-fig .mz[data-rec="listo"] .mz-tinte { fill: #6fd08c; opacity: 0.35; }
+.ejrec-fig .mz[data-rec="recuperando"] .mz-tinte { fill: #f1c27d; opacity: 0.9; }
+.ejrec-fig .mz[data-rec="cansado"] .mz-tinte { fill: #f1765d; opacity: 0.95; }
+.ejrec-leyenda { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3rem 1rem; font-size: 0.75rem; color: var(--muted); }
+.ejrec-leyenda span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.ejrec-leyenda i, .ejrec-lista i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; }
+.ejrec-leyenda .is-listo, .ejrec-lista .is-listo i { background: #6fd08c; }
+.ejrec-leyenda .is-recuperando, .ejrec-lista .is-recuperando i { background: #f1c27d; }
+.ejrec-leyenda .is-cansado, .ejrec-lista .is-cansado i { background: #f1765d; }
+.ejrec-lista { list-style: none; margin: 0.9rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.ejrec-lista li { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: 0.55rem; font-size: 0.88rem; }
+.ejrec-lista b { min-width: 0; font-weight: 600; }
+.ejrec-lista span { color: var(--muted); font-size: 0.8rem; text-align: right; white-space: nowrap; }
+.ejrec-nota { margin: 0.7rem 0 0; font-size: 0.78rem; color: var(--muted); }
+.ejrec-nota[hidden] { display: none; }
+
+/* ---- Carga de la semana (fase 6) ---- */
+.ejcg-total { margin: 0 0 0.9rem; font-size: 0.86rem; color: var(--muted); }
+.ejcg-total b { font-family: var(--font-display); font-size: 1.7rem; font-weight: 600; color: var(--ink); margin-right: 0.2rem; }
+.ejcg-barras { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.4rem; height: 150px; }
+.ejcg-dia { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; min-width: 0; }
+.ejcg-v { font-size: 0.7rem; color: var(--muted); min-height: 1.1em; font-variant-numeric: tabular-nums; }
+.ejcg-col { flex: 1; width: 100%; max-width: 34px; display: flex; flex-direction: column-reverse; border-radius: 8px; background: var(--surface-raised); overflow: hidden; }
+.ejcg-col i { display: block; width: 100%; flex: 0 0 auto; }
+.ejcg-col .is-gym, .ejcg-leyenda .is-gym { background: #ff9a3c; }
+.ejcg-col .is-run, .ejcg-leyenda .is-run { background: #4da3ff; }
+.ejcg-col .is-bici, .ejcg-leyenda .is-bici { background: #6fd08c; }
+.ejcg-d { font-size: 0.72rem; color: var(--muted); }
+.ejcg-dia.is-hoy .ejcg-d { color: var(--ink); font-weight: 700; }
+.ejcg-dia.is-futuro .ejcg-col { opacity: 0.45; }
+.ejcg-leyenda { margin-top: 0.7rem; }
+.ejcg-frase { margin: 0.8rem 0 0; }
+.ejcg-nota { margin: 0.4rem 0 0; font-size: 0.75rem; color: var(--muted); }
