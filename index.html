@@ -25,7 +25,7 @@
   <link rel="stylesheet" href="css/movilidad.css?v=202610300100">
   <link rel="stylesheet" href="css/tiempos.css?v=202610300310">
   <link rel="stylesheet" href="css/ej-calendario.css?v=202610290900">
-  <link rel="stylesheet" href="css/ejercicio.css?v=202611051500">
+  <link rel="stylesheet" href="css/ejercicio.css?v=202611051700">
   <link rel="stylesheet" href="css/run.css?v=202611040900">
 </head>
 <body>
@@ -224,6 +224,7 @@
 
           <!-- ===== Ejercicio (hub) ===== -->
           <section id="panel-ejercicio" hidden>
+            <div class="rut-hoy ej-hoy" id="ej-hoy" hidden></div>
             <a class="gym-en-curso" href="#gimnasio" data-gym-en-curso hidden><span class="gym-en-curso-punto" aria-hidden="true"></span><span>Entrenamiento en curso: <strong data-gym-en-curso-nombre></strong></span><span class="gym-en-curso-ir">Continuar</span></a>
             <div class="card-grid card-grid-1">
               <a class="card card-centered" href="#gimnasio">
@@ -1210,6 +1211,8 @@
         <button type="button" data-gx-accion="subir"><span data-icon="chevronUp"></span>Mover arriba</button>
         <button type="button" data-gx-accion="bajar"><span data-icon="chevronDown"></span>Mover abajo</button>
         <button type="button" data-gx-accion="definir"><span data-icon="edit"></span>Asignar músculos</button>
+        <button type="button" data-gx-accion="superserie"><span data-icon="plus"></span>Superserie con el siguiente</button>
+        <button type="button" data-gx-accion="sin-superserie"><span data-icon="close"></span>Quitar de la superserie</button>
         <button type="button" data-gx-accion="eliminar" class="is-peligro"><span data-icon="trash"></span>Quitar del entreno</button>
       </div>
     </div>
@@ -1390,14 +1393,17 @@
   <script defer src="js/ej-calendario.js?v=202610290800"></script>
   <script defer src="js/ej-anual.js?v=202610290900"></script>
   <script defer src="js/exercise-picker.js?v=202611051500"></script>
-  <script defer src="js/rutinas.js?v=202610020300"></script>
+  <script defer src="js/rutinas.js?v=202611051700"></script>
   <script defer src="js/progresion.js?v=202610020400"></script>
-  <script defer src="js/entreno-series.js?v=202610030100"></script>
-  <script defer src="js/gimnasio.js?v=202611051300"></script>
-  <script defer src="js/rutinas-ui.js?v=202611051500"></script>
+  <script defer src="js/entreno-series.js?v=202611051700"></script>
+  <script defer src="js/ej-equipo.js?v=202611051700"></script>
+  <script defer src="js/ej-historial.js?v=202611051700"></script>
+  <script defer src="js/ej-entreno.js?v=202611051700"></script>
+  <script defer src="js/gimnasio.js?v=202611051700"></script>
+  <script defer src="js/rutinas-ui.js?v=202611051700"></script>
+  <script defer src="js/ej-entreno-ui.js?v=202611051700"></script>
   <script defer src="js/ej-demos.js?v=202611051300"></script>
-  <script defer src="js/ej-historial.js?v=202611051500"></script>
-  <script defer src="js/ej-ficha.js?v=202611051500"></script>
+  <script defer src="js/ej-ficha.js?v=202611051700"></script>
   <script defer src="js/ej-sesiones.js?v=202610030200"></script>
   <script defer src="js/ej-vistas.js?v=202611051500"></script>
   <script defer src="js/ej-social.js?v=202610020200"></script>
@@ -1421,7 +1427,7 @@
   <script defer src="js/habitos-categorias-ui.js?v=202611051100"></script>
   <script defer src="js/habitos-categoria.js?v=202611051100"></script>
   <script defer src="js/habitos-plantillas-ui.js?v=202611050700"></script>
-  <script defer src="js/rangos.js?v=202611051500"></script>
+  <script defer src="js/rangos.js?v=202611051700"></script>
   <script defer src="js/perfil-ejercicio.js?v=202609301"></script>
   <script defer src="js/offline.js?v=202610010700"></script>
   <script defer src="js/hoja-deslizar.js?v=202610100100"></script>

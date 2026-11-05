@@ -53,6 +53,8 @@ function item(x) {
     notas: String(o.notas || "").trim().slice(0, 200),
     incremento: decimal(o.incremento, 0.25, 50)
   };
+  // Superserie o circuito con los ejercicios vecinos de la misma letra (D-093).
+  if (/^[A-Z]$/.test(String(o.grupo || ""))) out.grupo = o.grupo;
   return out;
 }
 

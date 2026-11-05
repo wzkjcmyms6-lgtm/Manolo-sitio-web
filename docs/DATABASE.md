@@ -10,7 +10,7 @@ por dueño).
 |---|---|
 | `users/{uid}/habitos/{id}` | `v:2, name, emoji, tipo, freqType, days, timesPerWeek, cadaN, timeOfDay, dificultad, area, minima, despuesDe, vinculo, meta?, unidad?, done[], registros{AAAA-MM-DD:{…, n: nota del día}}, createdAt, inicio, orden, archivado?` |
 | `users/{uid}/meta/*` | `habitos_juego`, `habitos_dias`, `perfil`, `plan_semanal`, `ajustes_ejercicio`, `ejercicios_propios`, `asignaciones_ejercicios`, `perfil_ejercicio`, `rangos_vinculos`, `rangos_snapshot`, finanzas (`presupuestos`, `finanzas_ajustes`, categorías…) |
-| `users/{uid}/entrenamientos/{id}` | gimnasio: `date, name, startedAt, durationMin, exercises[], prs, rutinaId?` |
+| `users/{uid}/entrenamientos/{id}` | gimnasio: `date, name, startedAt, durationMin, exercises[], prs, rutinaId?`; desde 2026-11 (D-093), opcionales: `rpeSesion` (1–10), `exercises[].grupo` ("A"–"Z", superserie) y `exercises[].sets[].rir` (0–4) |
 | `users/{uid}/rutinas/{id}` | rutinas de gimnasio |
 | `users/{uid}/running/{id}` · `bicicleta/{id}` | `date, distance (km), duration (min), notes, rpe?` (manual) |
 | `users/{uid}/finanzas`, `ahorros`, `carteras_movimientos`, `inversiones`, `finanzas_respaldos` | Finanzas / Inversiones |
@@ -20,6 +20,9 @@ por dueño).
 
 | Ruta | Fase | Campos | Notas |
 |---|---|---|---|
+| `users/{uid}/meta/ejercicio_fichas` ✅ | Ejercicio 2 (2026-11-05) | `{ [exerciseId]: { video (id de YouTube, 11 caracteres), nota (≤ 300) } }` | Aditivo; va en "Descargar respaldo (JSON)". D-092 |
+| `users/{uid}/rutinas/{id}.items[].grupo` ✅ | Ejercicio 3 | `"A"`–`"Z"` o sin campo | Superserie en la rutina (D-093) |
+| `users/{uid}/meta/ajustes_ejercicio.equipo` | Ejercicio 3–4 | `{ activo, perfiles: { id: { nombre, barra, barraEz, barraHex, smith, discos[], mancuernas{min,max,paso}, kettlebells{…}, pasoMaquina, pasoPolea, maquinas, poleas, barras, mancuernasSi, dominadas, bandas, kettlebellsSi } } }` | Con `merge`; sin nada se usa el perfil de fábrica (`js/ej-equipo.js`) |
 | `users/{uid}/habitos/{id}` · se marca solo ✅ | 2026-11-05 | `vinculo` (`running`, `bicicleta`, `movilidad`, `libros`, `biblia`, `finanzas`, `gasto`, `gimnasio`), `vinculoCfg { medida, rutina, categoria }`, `vinculoDesde` (fecha); en `registros.F` lo automático lleva `auto: { f, v }` | Aditivo. Editar a mano quita `auto`. D-085 |
 | `users/{uid}/habitos/{id}.hora` ✅ | 2026-11-05 | `"HH:MM"` opcional | Aditivo: ordena dentro del momento del día |
 | `users/{uid}/meta/habitos_juego.categorias` ✅ | 2026-11-05 | `{ id: { nombre, emoji, color (id de la paleta), orden, archivada, borrada, creada } }`; `habitos/{id}.area` guarda el id | Aditivo. Sin el campo, las 6 áreas se arman al leer desde `prefs.areas` (`js/habitos-categorias.js`, D-079) |

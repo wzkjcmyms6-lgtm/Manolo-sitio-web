@@ -561,6 +561,8 @@ function revisarAviso() {
   // Primera vez: se guarda el estado actual sin aviso.
   if (st.snapshotRangos === null) { guardarSnapshot(actual); st.snapshotRangos = { niveles: actual }; return; }
   if (!esperandoAviso || avisoAbierto) return;
+  // Con el resumen del entreno abierto, el aviso espera a que lo cierres.
+  if (window.EjEntrenoUI && EjEntrenoUI.abierto()) return;
   const ups = RE.subidas(st.snapshotRangos.niveles || {}, actual);
   if (ups.length) {
     esperandoAviso = 0;
@@ -575,6 +577,7 @@ document.addEventListener("entreno:guardado", () => {
   esperandoAviso = Date.now() + 6000;
   setTimeout(revisarAviso, 6100);
 });
+document.addEventListener("entreno:resumen-cerrado", () => revisarAviso());
 
 // ---------- Eventos ----------
 function onClickHoja(e) {

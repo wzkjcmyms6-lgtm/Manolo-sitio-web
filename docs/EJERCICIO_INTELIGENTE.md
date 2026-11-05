@@ -19,7 +19,7 @@ sale de reglas y fórmulas documentadas (§ Fórmulas, con sus fuentes en
 | 0 | Auditoría y diseño | ✅ |
 | 1 | Demos (WebP en el repo, caché con límite, precarga de rutinas) | ✅ |
 | 2 | Ficha del ejercicio (técnica, videos, historial, récords, alternativas) | ✅ |
-| 3 | Entreno en vivo (objetivo, RIR, calentamiento, discos, superseries, descanso con aviso, récords, resumen) | |
+| 3 | Entreno en vivo (objetivo, RIR, calentamiento, discos, superseries, descanso con aviso, récords, resumen) | ✅ |
 | 4 | Progresión v2, estancamiento, descarga + Ajustes del gimnasio | |
 | 5 | Volumen semanal, equilibrio y generador de rutinas | |
 | 6 | Recuperación, "¿Qué entreno hoy?" y carga total con Running | |
@@ -189,6 +189,40 @@ reescriben; los Rangos no cambian de calibración.
 - **Respaldo**: "Descargar respaldo (JSON)" suma `ajustesEjercicio` y
   `fichas` (notas y videos).
 
+## Entreno en vivo (fase 3, D-093)
+
+- **Empezar en 2 toques**: la pestaña Entrenamiento muestra arriba "Hoy
+  toca {rutina} · Empezar" (`#ej-hoy`, mismo contenido que `#rut-hoy`);
+  si ya la hiciste hoy, "✓ Hecho" con "Repetir".
+- **Objetivo cargado**: al empezar una rutina cada serie trae el peso de
+  la progresión y las reps objetivo como guía (ya no hay que tocar "Usar"),
+  y una línea dice el porqué: "Hoy 4 × 5 con 110 kg · la última vez 4 × 8
+  con 105 kg → sube 5 kg". ✓ completa la serie con ese objetivo.
+- **Calentamiento**: "Calentamiento: 20 × 10 · 45 × 8 · 65 × 5 · 87,5 × 3
+  · Agregar" en compuestos con peso o con barra; redondeado a tu equipo.
+- **Discos por lado** con barra: "Por lado (110 kg): 25 + 20" (se
+  actualiza al cambiar el peso). Barra y discos salen del perfil de
+  equipo (`js/ej-equipo.js`; se editan en Ajustes del gimnasio, fase 4).
+- **RIR**: al marcar una serie aparecen chips 0–4+ ("¿Cuántas reps te
+  quedaban?"); opcional, se guarda como `rir` en la serie.
+- **Superseries y circuitos**: menú del ejercicio › "Superserie con el
+  siguiente" (o en el editor de rutinas, "Superserie: A–D"). Se ven A1/A2;
+  al marcar A1 no hay descanso ("Sigue con A2") y al final de la ronda
+  descansas el mayor descanso de la ronda. Se guarda `grupo`.
+- **Descanso**: por marcas de tiempo (correcto aunque bloquees el teléfono);
+  pitidos en los últimos 3 s y al terminar pitido + voz ("Descanso
+  terminado. Siguiente: Sentadilla, serie 2.") con `js/avisos.js`, el mismo
+  de las rutinas de Running; la pantalla queda encendida (Wake Lock)
+  mientras el entreno está abierto. Sin descanso elegido, el sugerido.
+- **Récord en vivo**: "¡Récord! 1RM estimado 128 kg (antes 122 kg)" o
+  "¡Récord de 5 reps: 110 kg! (antes 105 kg)".
+- **Al terminar**: hoja de resumen con volumen, series y reps contra la
+  última vez de la misma rutina, récords, músculos, duración y "¿Qué tan
+  duro fue?" (1–10) → `rpeSesion` y la carga de la sesión. El aviso de
+  "Nuevos rangos" espera a que cierres el resumen.
+- Archivos: `js/ej-entreno.js` y `js/ej-equipo.js` (UMD, con pruebas),
+  `js/ej-entreno-ui.js` (resumen) y cambios en `js/gimnasio.js`.
+
 ## Fórmulas
 
 - **1RM estimado (Epley)**: kg × (1 + reps / 30); 1 rep = el peso; reps
@@ -203,5 +237,22 @@ reescriben; los Rangos no cambian de calibración.
   mecánica; −1 si es olímpico y el original no. Misma familia (fuerza,
   isométrico o cardio), sin movilidad; con perfil de equipo (fase 4), solo
   el equipo disponible.
+
+- **Calentamiento**: 40 % × 8, 60 % × 5 y 80 % × 3 del peso de trabajo,
+  redondeados a tu equipo; con barra, primero la barra sola × 10 si el
+  peso de trabajo es ≥ 3 veces la barra. Solo compuestos con peso o con
+  barra, y si el peso de trabajo pasa de la barra + 10 kg (o de 15 kg).
+- **Descanso sugerido** (ACSM, 2009): compuesto de músculos grandes con
+  ≤ 6 reps, 3 min; con más reps, 2:30; otro compuesto, 2 min;
+  aislamiento, 75 s; isométrico, 1 min; cardio, nada.
+- **Redondeo al equipo**: barra = barra + múltiplos de 2 × el disco más
+  chico; mancuernas y kettlebells, al peso más cercano de la lista (mín.,
+  máx., paso); máquinas de 5 en 5 y poleas de 2,5 en 2,5 (editables).
+  Discos por lado: de mayor a menor mientras entren.
+- **Récord en vivo**: si el 1RM estimado de la serie supera tu mejor
+  (historial + series ya marcadas hoy), o si el peso supera tu mejor peso
+  con al menos esas reps (hasta 12). Sin historial no hay récords.
+- **Carga de la sesión** (session RPE, Foster et al., 2001): RPE × minutos ×
+  100 / 480, la misma escala que Running (1 hora a RPE 8 = 100; D-065).
 
 Las siguientes se completan en cada fase (fuentes en `DECISIONS.md`).

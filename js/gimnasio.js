@@ -63,8 +63,10 @@ function nuevoEjercicio(ficha, nombreLibre) {
     notas: "",
     minutos: ""
   };
-  // Descanso entre series: el último que elegiste para este ejercicio.
-  ex.descansoSeg = descansoRecordado(ex) || 0;
+  // Descanso entre series: el último que elegiste para este ejercicio o, si
+  // nunca elegiste, el sugerido (compuesto pesado 3 min… aislamiento 75 s).
+  const recordado = descansoRecordado(ex);
+  ex.descansoSeg = recordado != null ? recordado : (ficha ? EjEntreno.descansoSugerido(ficha) : 90);
   return ex;
 }
 
@@ -226,14 +228,19 @@ function empezarRutina(r) {
     exercises: (r.items || []).map(it => {
       const ficha = EjercicioDatos.resolver(it.nombre, it.exerciseId);
       const ex = nuevoEjercicio(ficha, it.nombre);
-      if (ex.tipo !== "cardio") {
-        // "pre": serie precargada con el peso objetivo; si no la tocas, no se guarda.
-        const vacia = ex.tipo === "isometrico" ? { seg: "" } : { kg: it.peso != null ? it.peso : "", reps: "", pre: true };
-        ex.sets = Array.from({ length: it.series }, () => Object.assign({}, vacia));
+      const g = sugerenciaPara(it, ficha, ex.tipo);
+      if (ex.tipo === "isometrico") ex.sets = Array.from({ length: it.series }, () => ({ seg: "" }));
+      else if (ex.tipo !== "cardio") {
+        // "pre": serie precargada con el objetivo de hoy (peso de la
+        // progresión y reps como guía); si no la marcas, no se guarda.
+        ex.sets = EjEntreno.objetivoSeries(it, g).map(s => ({ kg: s.kg, reps: "", meta: s.meta, pre: true }));
       }
       if (it.descansoSeg > 0) ex.descansoSeg = it.descansoSeg;
+      if (it.grupo) ex.grupo = it.grupo;
       ex.objetivo = { series: it.series, repsMin: it.repsMin, repsMax: it.repsMax, peso: it.peso, descansoSeg: it.descansoSeg, notas: it.notas, incremento: it.incremento };
-      ex.sugerencia = sugerenciaPara(it, ficha, ex.tipo);
+      ex.sugerencia = g;
+      if (g && g.tipo !== "nuevo") g.aplicada = true;
+      ex.porque = EjEntreno.porque(g, it);
       return ex;
     })
   };
@@ -256,12 +263,13 @@ function editWorkout(w) {
         exerciseId: ex.exerciseId || (f ? f.id : null),
         tipo: f ? f.tipo : "carga",
         // Lo guardado ya se hizo: entra marcado.
-        sets: (ex.sets || []).map(s => ({
+        sets: (ex.sets || []).map(s => Object.assign({
           kg: s.asistencia != null ? s.asistencia : s.kg != null ? s.kg : "",
           reps: s.reps != null ? s.reps : "", seg: s.seg != null ? s.seg : "",
           calentamiento: !!s.calentamiento,
           hecha: true
-        })),
+        }, s.rir != null ? { rir: s.rir } : {})),
+        grupo: ex.grupo || null,
         asistencia: (ex.sets || []).some(s => s.asistencia > 0),
         rpe: ex.rpe || "",
         notas: ex.notas || "",
@@ -314,6 +322,7 @@ function pintarEnCurso() {
 function endWorkout() {
   stopTimer();
   borrarBorrador();
+  if (window.Avisos) Avisos.soltarPantalla();
   activeWorkout = null;
   pintarEnCurso();
   $("gym-active").hidden = true;
@@ -397,11 +406,51 @@ function pista(ex, campo, set, ant) {
   if (campo === "seg") return v ? String(v.seg) : "0";
   return "0";
 }
+// El objetivo de hoy con su porqué en una línea ("Hoy 4 × 5 con 110 kg ·
+// la última vez 4 × 8 con 105 kg → sube 5 kg"); sin rutina, nada.
 function objetivoHTML(ex) {
   const o = ex.objetivo;
-  if (!o) return "";
-  return `<p class="ex-objetivo"><span>Objetivo:</span> ${escapeHtml(EjRutinas.resumenItem(o))}</p>
-    ${o.notas ? `<p class="ex-objetivo-nota">${escapeHtml(o.notas)}</p>` : ""}`;
+  const partes = [];
+  if (ex.porque) partes.push(`<p class="gx-porque">${escapeHtml(ex.porque)}</p>`);
+  else if (o) partes.push(`<p class="ex-objetivo"><span>Objetivo:</span> ${escapeHtml(EjRutinas.resumenItem(o))}</p>`);
+  if (o && o.notas) partes.push(`<p class="ex-objetivo-nota">${escapeHtml(o.notas)}</p>`);
+  partes.push(`<div class="gx-ayudas">${ayudasHTML(ex)}</div>`);
+  return partes.join("");
+}
+
+// ---- Calentamiento sugerido y discos por lado (js/ej-entreno.js, js/ej-equipo.js) ----
+function perfilEquipo() {
+  return EjEquipo.perfilActivo(EjercicioDatos.estado.ajustes);
+}
+const numTxt = n => String(Math.round(Number(n) * 100) / 100).replace(".", ",");
+function pesoTrabajo(ex) {
+  const s = (ex.sets || []).find(x => !x.calentamiento && Number(x.kg) > 0);
+  return s ? Number(s.kg) : 0;
+}
+function calentamientoDe(ex) {
+  const f = fichaDe(ex);
+  if (!f || activeWorkout.editingId || ex.tipo !== "carga" || (ex.sets || []).some(s => s.calentamiento)) return [];
+  return EjEntreno.calentamiento(pesoTrabajo(ex), f, perfilEquipo());
+}
+function ayudasHTML(ex) {
+  if (!activeWorkout || activeWorkout.editingId || ex.tipo !== "carga") return "";
+  const f = fichaDe(ex);
+  const kg = pesoTrabajo(ex);
+  if (!f || !(kg > 0)) return "";
+  const out = [];
+  const cal = calentamientoDe(ex);
+  if (cal.length) out.push(`<p class="gx-cal"><span>Calentamiento:</span> ${cal.map(c => `${numTxt(c.kg)} × ${c.reps}`).join(" · ")}
+    <button type="button" class="gx-link" data-gx-cal>Agregar</button></p>`);
+  const perfil = perfilEquipo();
+  const m = EjEquipo.modo(f, perfil);
+  if (m.tipo === "barra" && kg > m.barra && perfil.discos.length) {
+    out.push(`<p class="gx-discos"><span>Por lado (${numTxt(kg)} kg):</span> ${escapeHtml(EjEquipo.textoDiscos(EjEquipo.discosPorLado(kg, m.barra, perfil.discos)))}</p>`);
+  }
+  return out.join("");
+}
+function refrescarAyudas(exCard, ex) {
+  const el = exCard && exCard.querySelector(".gx-ayudas");
+  if (el) el.innerHTML = ayudasHTML(ex);
 }
 const SUG_ICONO = { subir: "chevronUp", bajar: "chevronDown", repetir: "check" };
 function sugerenciaHTML(ex) {
@@ -508,6 +557,16 @@ function filaSerie(ex, set, i, numero, ant) {
     </div>`;
 }
 
+// RIR: cuántas reps te quedaban en reserva (0 = al fallo). Opcional; la
+// progresión y el 1RM estimado lo usan si está (D-093).
+function rirHTML(ex, set, i) {
+  if (ex.tipo !== "carga" && ex.tipo !== "peso_corporal") return "";
+  return `<div class="gx-rir" data-rir-serie="${i}" role="group" aria-label="Reps en reserva de la serie">
+      <span class="gx-rir-t">¿Cuántas reps te quedaban?</span>
+      ${[0, 1, 2, 3, 4].map(n => `<button type="button" data-rir="${n}" aria-pressed="${set.rir === n}"${set.rir === n ? ' class="is-on"' : ""}>${n === 4 ? "4+" : n}</button>`).join("")}
+    </div>`;
+}
+
 function tablaSeries(ex, exIndex) {
   const col = COLUMNAS[ex.tipo] || COLUMNAS.carga;
   const una = col.campos.length === 1 ? " cols-1" : "";
@@ -518,7 +577,9 @@ function tablaSeries(ex, exIndex) {
       <button type="button" data-modo="lastre" aria-pressed="${!ex.asistencia}"${ex.asistencia ? "" : ' class="active"'}>Lastre</button>
       <button type="button" data-modo="asistencia" aria-pressed="${!!ex.asistencia}"${ex.asistencia ? ' class="active"' : ""}>Asistencia</button>
     </div>` : "";
-  const filas = ex.sets.map((set, i) => filaSerie(ex, set, i, set.calentamiento ? "C" : ++n, anteriores[i])).join("");
+  const rirAbierto = activeWorkout.rirDe;
+  const filas = ex.sets.map((set, i) => filaSerie(ex, set, i, set.calentamiento ? "C" : ++n, anteriores[i]) +
+    (rirAbierto && rirAbierto.ex === exIndex && rirAbierto.i === i && set.hecha ? rirHTML(ex, set, i) : "")).join("");
   return `${modo}
     <div class="set-table gx-tabla">
       <div class="set-row set-row-header gx-cab${una}"><span>Serie</span><span>Anterior</span>${titulosColumnas(ex).map(t => `<span>${t}</span>`).join("")}<span class="gx-cab-check" aria-label="Hecha"><span data-icon="check"></span></span></div>
@@ -528,8 +589,10 @@ function tablaSeries(ex, exIndex) {
     ${exIndex === 0 ? `<p class="set-hint gx-pista">Toca el número para marcar calentamiento (C) · desliza una serie a la izquierda para borrarla</p>` : ""}`;
 }
 
+let gruposActuales = [];
 function bloqueEjercicio(ex, exIndex) {
   const f = fichaDe(ex);
+  const gr = gruposActuales[exIndex];
   const musculos = f
     ? `<p class="exercise-muscles">${ExercisePicker.resumenMusculos(f)}</p>`
     : `<p class="exercise-muscles sin">Sin músculos asignados · <button type="button" class="link-btn ex-definir">Definir</button></p>`;
@@ -538,17 +601,18 @@ function bloqueEjercicio(ex, exIndex) {
     : tablaSeries(ex, exIndex);
   const conDescanso = !activeWorkout.editingId && ex.tipo !== "cardio";
   return `
-    <section class="exercise-card gx-ej" data-ex-index="${exIndex}">
+    <section class="exercise-card gx-ej${gr ? ` is-grupo${gr.pos === 1 ? " is-grupo-ini" : ""}${gr.pos === gr.total ? " is-grupo-fin" : ""}` : ""}" data-ex-index="${exIndex}">
+      ${gr && gr.pos === 1 ? `<p class="gx-grupo-t">${gr.total > 2 ? "Circuito" : "Superserie"} ${gr.letra}: descansas al final de la ronda</p>` : ""}
       <div class="gx-ej-head">
         ${f ? `<button type="button" class="gx-thumb-btn" data-ficha="${escapeHtml(f.id)}" aria-label="Ver cómo se hace ${escapeHtml(ex.name)}">${miniatura(f)}</button>` : miniatura(f)}
         <div class="gx-ej-titulo">
-          <h3>${f ? `<button type="button" class="gx-ej-nombre" data-ficha="${escapeHtml(f.id)}">${escapeHtml(ex.name)}</button>` : escapeHtml(ex.name)}</h3>
+          <h3>${gr ? `<span class="gx-grupo">${gr.letra}${gr.pos}</span>` : ""}${f ? `<button type="button" class="gx-ej-nombre" data-ficha="${escapeHtml(f.id)}">${escapeHtml(ex.name)}</button>` : escapeHtml(ex.name)}</h3>
           ${musculos}
         </div>
         <button type="button" class="gx-mas" aria-label="Opciones de ${escapeHtml(ex.name)}"><span data-icon="moreV"></span></button>
       </div>
       ${objetivoHTML(ex)}
-      ${sugerenciaHTML(ex)}
+      ${ex.porque ? "" : sugerenciaHTML(ex)}
       <input type="text" class="ex-notas gx-notas" placeholder="Agregar notas aquí…" maxlength="200" value="${escapeHtml(ex.notas)}" aria-label="Notas de ${escapeHtml(ex.name)}">
       <div class="gx-ej-linea">
         ${conDescanso
@@ -567,6 +631,7 @@ function bloqueEjercicio(ex, exIndex) {
 
 function renderActiveExercises() {
   const container = $("gym-active-exercises");
+  gruposActuales = EjEntreno.grupos(activeWorkout.exercises);
   container.innerHTML = activeWorkout.exercises.map(bloqueEjercicio).join("");
   if (typeof renderIcons === "function") renderIcons(container);
   actualizarResumen();
@@ -625,11 +690,75 @@ function marcar(ex, i, fila) {
     }
     Object.assign(set, lleno, { hecha: true });
     delete set.pre;
-    iniciarDescanso(ex);
+    // El toque habilita el sonido y la voz del descanso (iPhone) y deja la
+    // pantalla encendida mientras entrenas.
+    if (window.Avisos) { Avisos.desbloquear(); Avisos.pedirPantalla(); }
+    const exIndex = activeWorkout.exercises.indexOf(ex);
+    if (!set.calentamiento) activeWorkout.rirDe = { ex: exIndex, i };
+    const r = set.calentamiento ? null : recordEnVivo(ex, set);
+    if (r) aviso(EjEntreno.textoRecord(r), "record");
+    const t = EjEntreno.trasMarcar(activeWorkout.exercises, exIndex);
+    if (t.descansar && !set.calentamiento) iniciarDescanso(ex, t.seg, siguienteTxt(ex, exIndex, i, t));
+    else if (t.siguiente != null && !set.calentamiento) irAlSiguiente(t.siguiente);
   }
+  if (!set.hecha && activeWorkout.rirDe && activeWorkout.rirDe.i === i) activeWorkout.rirDe = null;
   pintarFila(fila, set);
+  pintarRir(fila, ex, set, i);
   actualizarResumen();
   guardarBorrador();
+}
+// Chips de RIR debajo de la última serie marcada (sin redibujar todo).
+function pintarRir(fila, ex, set, i) {
+  document.querySelectorAll("#gym-active-exercises .gx-rir").forEach(el => el.remove());
+  const r = activeWorkout.rirDe;
+  if (!set.hecha || !r || r.i !== i || activeWorkout.exercises[r.ex] !== ex) return;
+  fila.insertAdjacentHTML("afterend", rirHTML(ex, set, i));
+}
+// ¿Esta serie supera tu mejor 1RM estimado o tu mejor peso para esas reps?
+// Cuentan tus entrenos anteriores y las otras series ya marcadas hoy.
+function recordEnVivo(ex, set) {
+  if (ex.tipo !== "carga" || activeWorkout.editingId) return null;
+  const f = fichaDe(ex);
+  if (!f) return null;
+  const mismo = e => { const r = EjercicioDatos.resolver(e.name, e.exerciseId); return !!r && r.id === f.id; };
+  const previas = EjHistorial.sesiones(historyCache, mismo, { tipo: "carga" });
+  const hoy = ex.sets.filter(s => s !== set && s.hecha && !s.calentamiento);
+  if (hoy.length) previas.push(EjHistorial.sesiones([{ id: "hoy", date: "9999", exercises: [{ name: ex.name, exerciseId: f.id, sets: hoy }] }], mismo, { tipo: "carga" })[0]);
+  return EjEntreno.recordEnVivo(set, EjEntreno.previoDe(previas.filter(Boolean)));
+}
+function siguienteTxt(ex, exIndex, i, t) {
+  const lista = activeWorkout.exercises;
+  const sig = t.siguiente != null ? lista[t.siguiente] : ex;
+  const pend = (sig.sets || []).findIndex(s => !s.hecha && !s.calentamiento);
+  if (pend >= 0) return `Siguiente: ${sig.name}, serie ${(sig.sets || []).slice(0, pend + 1).filter(s => !s.calentamiento).length}`;
+  const otro = lista.slice(exIndex + 1).find(e => (e.sets || []).some(s => !s.hecha));
+  return otro ? `Siguiente: ${otro.name}` : "";
+}
+// Superserie: sin descanso, pasas al siguiente ejercicio de la ronda.
+function irAlSiguiente(idx) {
+  const ex = activeWorkout.exercises[idx];
+  const gr = EjEntreno.grupos(activeWorkout.exercises)[idx];
+  aviso(`Sigue con ${gr ? gr.letra + gr.pos : ""} · ${ex.name}`, "sigue");
+  const card = document.querySelector(`#gym-active-exercises .gx-ej[data-ex-index="${idx}"]`);
+  if (card && card.scrollIntoView) card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+// Aviso breve arriba (récord, siguiente de la superserie).
+let avisoTimer = null;
+function aviso(texto, tipo) {
+  let el = $("gx-aviso");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "gx-aviso";
+    el.className = "gx-aviso";
+    el.setAttribute("role", "status");
+    el.setAttribute("aria-live", "polite");
+    document.body.appendChild(el);
+  }
+  el.textContent = texto;
+  el.className = "gx-aviso is-" + (tipo || "info");
+  el.hidden = false;
+  clearTimeout(avisoTimer);
+  avisoTimer = setTimeout(() => { el.hidden = true; }, tipo === "record" ? 4500 : 2500);
 }
 function copiarAnterior(ex, i, fila) {
   const v = S.valoresAnterior(anteriorDeSerie(ex, i), ex.tipo, ex.asistencia);
@@ -643,9 +772,11 @@ function copiarAnterior(ex, i, fila) {
 }
 
 // ---- Descanso entre series ----
-function iniciarDescanso(ex) {
-  if (!(ex.descansoSeg > 0) || activeWorkout.editingId) return;
-  activeWorkout.descanso = { fin: Date.now() + ex.descansoSeg * 1000, total: ex.descansoSeg };
+function iniciarDescanso(ex, seg, siguiente) {
+  const s = seg != null ? seg : ex.descansoSeg;
+  if (!(s > 0) || activeWorkout.editingId) return;
+  // Por marcas de tiempo: sigue siendo correcto aunque bloquees el teléfono.
+  activeWorkout.descanso = { fin: Date.now() + s * 1000, total: s, sig: siguiente || "" };
   pintarDescanso();
 }
 function pintarDescanso() {
@@ -657,6 +788,9 @@ function pintarDescanso() {
   if (resta > 0) {
     d.listoEn = null;
     barra.classList.remove("is-listo");
+    // Cuenta regresiva con pitidos cortos en los últimos 3 segundos.
+    const seg = Math.ceil(resta);
+    if (seg <= 3 && d.pitado !== seg && window.Avisos) { d.pitado = seg; Avisos.pitido("cuenta"); }
     $("gx-barra-lbl").textContent = "Descanso";
     $("gx-barra-reloj").textContent = S.reloj(resta);
     $("gx-barra-fill").style.transform = `scaleX(${Math.min(1, resta / d.total).toFixed(3)})`;
@@ -665,11 +799,16 @@ function pintarDescanso() {
   // Terminó: avisa unos segundos y se va sola.
   if (!d.listoEn) {
     d.listoEn = Date.now();
-    if (navigator.vibrate) navigator.vibrate([180, 90, 180]);
+    // Pitido y voz (js/avisos.js, los mismos de las rutinas de Running).
+    // Si terminó con la app cerrada, no suena tarde.
+    if (window.Avisos && Date.now() - d.fin < 5000) {
+      Avisos.pitido("fin");
+      Avisos.hablar(`Descanso terminado.${d.sig ? " " + d.sig + "." : ""}`);
+    } else if (navigator.vibrate) navigator.vibrate([180, 90, 180]);
   }
   barra.classList.add("is-listo");
   $("gx-barra-lbl").textContent = "¡Listo!";
-  $("gx-barra-reloj").textContent = "Siguiente serie";
+  $("gx-barra-reloj").textContent = d.sig || "Siguiente serie";
   $("gx-barra-fill").style.transform = "scaleX(0)";
   if (Date.now() - d.listoEn > 3500) {
     activeWorkout.descanso = null;
@@ -724,6 +863,9 @@ function abrirMenuEjercicio(i) {
   hoja.querySelector('[data-gx-accion="subir"]').disabled = i === 0;
   hoja.querySelector('[data-gx-accion="bajar"]').disabled = i === activeWorkout.exercises.length - 1;
   hoja.querySelector('[data-gx-accion="definir"]').hidden = !!fichaDe(ex);
+  const sig = activeWorkout.exercises[i + 1];
+  hoja.querySelector('[data-gx-accion="superserie"]').hidden = !sig || (!!ex.grupo && sig.grupo === ex.grupo);
+  hoja.querySelector('[data-gx-accion="sin-superserie"]').hidden = !EjEntreno.grupos(activeWorkout.exercises)[i];
   abrirHoja(hoja);
 }
 function definirMusculos(ex) {
@@ -755,6 +897,17 @@ $("gx-menu").addEventListener("click", e => {
     renderActiveExercises();
   } else if (accion === "definir") {
     definirMusculos(ex);
+  } else if (accion === "superserie") {
+    // Con el siguiente: misma letra (A1, A2…); descansas al final de la ronda.
+    const sig = lista[i + 1];
+    if (!sig) return;
+    const letra = ex.grupo || sig.grupo || EjEntreno.letraLibre(lista);
+    ex.grupo = letra;
+    sig.grupo = letra;
+    renderActiveExercises();
+  } else if (accion === "sin-superserie") {
+    ex.grupo = null;
+    renderActiveExercises();
   }
 });
 
@@ -835,6 +988,29 @@ contenedor.addEventListener("click", e => {
 
   if (e.target.closest(".gx-borrar")) {
     ex.sets.splice(i, 1);
+    if (activeWorkout.rirDe && activeWorkout.rirDe.ex === exIndex) activeWorkout.rirDe = null;
+    renderActiveExercises();
+    return;
+  }
+  const rir = e.target.closest("[data-rir]");
+  if (rir) {
+    const j = Number(rir.closest("[data-rir-serie]").dataset.rirSerie);
+    const set = ex.sets[j];
+    const n = Number(rir.dataset.rir);
+    set.rir = set.rir === n ? "" : n;
+    rir.parentElement.querySelectorAll("[data-rir]").forEach(b => {
+      const on = set.rir === Number(b.dataset.rir);
+      b.classList.toggle("is-on", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+    guardarBorrador();
+    return;
+  }
+  if (e.target.closest("[data-gx-cal]")) {
+    // Series de calentamiento sugeridas, arriba de todo.
+    const cal = calentamientoDe(ex).map(c => ({ kg: c.kg, reps: "", meta: c.reps, calentamiento: true, pre: true }));
+    ex.sets.unshift(...cal);
+    if (activeWorkout.rirDe && activeWorkout.rirDe.ex === exIndex) activeWorkout.rirDe.i += cal.length;
     renderActiveExercises();
     return;
   }
@@ -885,7 +1061,7 @@ function onCampo(e) {
   if (!fila) return;
   const set = ex.sets[Number(fila.dataset.setIndex)];
   delete set.pre;
-  if (t.classList.contains("set-kg")) set.kg = t.value === "" ? "" : parseFloat(t.value) || 0;
+  if (t.classList.contains("set-kg")) { set.kg = t.value === "" ? "" : parseFloat(t.value) || 0; refrescarAyudas(exCard, ex); }
   if (t.classList.contains("set-reps")) set.reps = t.value === "" ? "" : parseInt(t.value, 10) || 0;
   if (t.classList.contains("set-seg")) set.seg = t.value === "" ? "" : parseInt(t.value, 10) || 0;
   // Si borras las reps de una serie marcada, deja de contar como hecha.
@@ -1003,17 +1179,23 @@ function terminar(soloHechas) {
     return;
   }
 
-  entrenamientosCollection().add(Object.assign({
+  const datos = Object.assign({
     date,
     name,
     startedAt: activeWorkout.startedAt,
     durationMin: Math.max(1, Math.round((Date.now() - activeWorkout.startedAt) / 60000)),
     exercises,
     prs: computePRs(exercises)
-  }, activeWorkout.rutinaId ? { rutinaId: activeWorkout.rutinaId } : {}));
+  }, activeWorkout.rutinaId ? { rutinaId: activeWorkout.rutinaId } : {});
+  // Con el id antes de guardar (también sin conexión): el resumen guarda
+  // después el esfuerzo de la sesión en el mismo documento.
+  const ref = entrenamientosCollection().doc();
+  const antes = historyCache.slice();
+  ref.set(datos);
   avisarGuardado(date);
 
   endWorkout();
+  if (window.EjEntrenoUI) EjEntrenoUI.resumen(Object.assign({ id: ref.id }, datos), antes);
 }
 
 $("gym-active-discard").addEventListener("click", () => {

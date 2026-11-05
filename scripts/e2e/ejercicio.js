@@ -242,6 +242,99 @@ async function fichaCompleta(browser, base, ancho) {
   await p.context().close();
 }
 
+// ---------- Fase 3: entreno en vivo ----------
+async function entrenoVivo(browser, base, ancho) {
+  console.log(`\nEntreno en vivo (${ancho} px)`);
+  const p = await abrir(browser, base, SEM.estado(HOY), { hash: "#ejercicio", zona: ZONA, relojFalso: FECHA, voz: true, ancho, alto: ancho > 800 ? 900 : 844 });
+  consolaLimpia(p);
+  const avanzar = async ms => { await p.clock.fastForward(ms); await p.waitForTimeout(80); };
+  await avanzar(1500);
+  await sinAvisos(p);
+  const ej = i => `#gym-active-exercises .gx-ej[data-ex-index="${i}"]`;
+
+  ok(/Hoy, jueves, toca\s*Pierna/.test(await texto(p, "#ej-hoy")), "en la pestaña Entrenamiento: «Hoy toca Pierna»");
+  await p.evaluate(() => { window.__pantalla = 0; const o = Avisos.pedirPantalla; Avisos.pedirPantalla = () => { window.__pantalla++; return o(); }; });
+  await p.click("#ej-hoy [data-rut-empezar]");
+  await avanzar(900);
+  ok(await p.isVisible("#gym-active") && (await p.$$("#gym-active-exercises .gx-ej")).length === 5, "Empezar abre el entreno (2 toques desde Entrenamiento)");
+  await foto(p, `entreno-objetivo-${ancho}.png`);
+
+  // Objetivo de cada serie con su porqué.
+  ok((await texto(p, `${ej(0)} .gx-porque`)) === "Hoy 4 × 5 con 110 kg · la última vez 4 × 8 con 105 kg → sube 5 kg", `el porqué en una línea (${await texto(p, `${ej(0)} .gx-porque`)})`);
+  const kgs = await p.$$eval(`${ej(0)} .set-kg`, els => els.map(e => e.value));
+  const pl = await p.$$eval(`${ej(0)} .set-reps`, els => els.map(e => e.placeholder));
+  ok(kgs.join(",") === "110,110,110,110" && pl.join(",") === "5,5,5,5", `cada serie ya trae 110 kg × 5 (${kgs.join(",")} · ${pl.join(",")})`);
+  ok(!(await p.$(`${ej(0)} .ex-sug-usar`)), "sin el botón «Usar» (ya está aplicado)");
+
+  // Calentamiento y discos.
+  ok(/Calentamiento:\s*20 × 10 · 45 × 8 · 65 × 5 · 87,5 × 3/.test(await texto(p, `${ej(0)} .gx-cal`)), "calentamiento sugerido: barra, ~40 %, 60 % y 80 %");
+  ok(/Por lado \(110 kg\):\s*25 \+ 20/.test(await texto(p, `${ej(0)} .gx-discos`)), "discos por lado: 25 + 20");
+  await p.click(`${ej(0)} [data-gx-cal]`);
+  await avanzar(200);
+  const nums = await p.$$eval(`${ej(0)} .set-num`, els => els.map(e => e.textContent.trim()));
+  ok(nums.join(",") === "C,C,C,C,1,2,3,4" && !(await p.$(`${ej(0)} .gx-cal`)), `«Agregar» suma 4 series de calentamiento (${nums.join(",")})`);
+  await p.fill(`${ej(0)} .gx-fila[data-set-index="4"] .set-kg`, "112.5");
+  await avanzar(100);
+  ok(/Por lado \(112,5 kg\):\s*25 \+ 20 \+ 1,25/.test(await texto(p, `${ej(0)} .gx-discos`)), "al cambiar el peso, cambian los discos");
+  await p.fill(`${ej(0)} .gx-fila[data-set-index="4"] .set-kg`, "110");
+
+  // Marcar: récord, RIR y descanso con aviso.
+  await p.click(`${ej(0)} .gx-fila[data-set-index="4"] .gx-check`);
+  await avanzar(150);
+  ok((await p.$eval(`${ej(0)} .gx-fila[data-set-index="4"] .set-reps`, e => e.value)) === "5", "✓ completa la serie con el objetivo (110 × 5)");
+  ok((await texto(p, "#gx-aviso")) === "¡Récord de 5 reps: 110 kg! (antes 105 kg)" && await p.isVisible("#gx-aviso"), `récord en vivo (${await texto(p, "#gx-aviso")})`);
+  ok(await p.isVisible(`${ej(0)} .gx-rir`), "chips de RIR debajo de la serie");
+  await p.click(`${ej(0)} .gx-rir [data-rir="2"]`);
+  ok(await p.$eval(`${ej(0)} .gx-rir [data-rir="2"]`, b => b.getAttribute("aria-pressed")) === "true", "RIR 2 elegido");
+  ok(await p.isVisible("#gx-barra") && (await texto(p, "#gx-barra-reloj")) === "3:00", "descanso de 3:00 (el de la rutina)");
+  ok(await p.evaluate(() => window.__pantalla) > 0, "pide la pantalla encendida");
+  await foto(p, `entreno-marcado-${ancho}.png`);
+  await avanzar(178500);
+  await avanzar(2000);
+  ok(/¡Listo!/.test(await texto(p, "#gx-barra")) && /Siguiente: Sentadilla \(Barra\), serie 2/.test(await texto(p, "#gx-barra")), "al terminar: ¡Listo! y lo que sigue");
+  const dichos = await p.evaluate(() => window.__dichos);
+  ok(dichos.some(d => /^Descanso terminado\. Siguiente: Sentadilla \(Barra\), serie 2\.$/.test(d)), `y lo dice en voz alta (${dichos.join(" | ")})`);
+  await avanzar(4000);
+  ok(!(await p.isVisible("#gx-barra")), "la barra se va sola");
+
+  // Superserie: curl femoral + elevación de talones.
+  await p.click(`${ej(3)} .gx-mas`);
+  await avanzar(300);
+  await p.click('#gx-menu [data-gx-accion="superserie"]');
+  await avanzar(300);
+  ok((await texto(p, `${ej(3)} .gx-grupo`)) === "A1" && (await texto(p, `${ej(4)} .gx-grupo`)) === "A2" && /Superserie A/.test(await texto(p, `${ej(3)} .gx-grupo-t`)), "superserie: A1 y A2");
+  await p.click(`${ej(3)} .gx-fila[data-set-index="0"] .gx-check`);
+  await avanzar(200);
+  ok(!(await p.isVisible("#gx-barra")) && /Sigue con A2/.test(await texto(p, "#gx-aviso")), "A1 marcada: sin descanso, «Sigue con A2»");
+  await p.click(`${ej(4)} .gx-fila[data-set-index="0"] .gx-check`);
+  await avanzar(200);
+  ok(await p.isVisible("#gx-barra") && (await texto(p, "#gx-barra-reloj")) === "1:00", "al final de la ronda, el descanso");
+  await foto(p, `entreno-superserie-${ancho}.png`);
+
+  // Terminar: resumen.
+  await p.click("#gym-active-finish");
+  await avanzar(800);
+  ok(await p.isVisible(".ejr-hoja .muscle-sheet-panel"), "al terminar se abre el resumen");
+  ok(/Pierna/.test(await texto(p, "#ejr-titulo")) && /Comparado con la última vez \(29 oct\)/.test(await texto(p, ".ejr-hoja")), "comparado con la última vez de la rutina");
+  ok(/Series\s*3/.test(await texto(p, ".ejr-hoja .ejr-kpis")), "series de hoy");
+  ok(/Sentadilla \(Barra\)\s*110 kg para 5 reps \(antes 105 kg\)/.test(await texto(p, ".ejr-hoja .ejr-recs")), "con los récords");
+  ok((await p.$$('.ejr-hoja .ejr-fig .mz[data-nivel="3"]')).length > 0, "y los músculos trabajados");
+  await p.click('.ejr-hoja [data-ejr-rpe="7"]');
+  await avanzar(300);
+  ok(/Esfuerzo 7 de 10 · carga de la sesión\s*\d+/.test(await texto(p, ".ejr-hoja .ejr-rpe-txt")), "esfuerzo de la sesión → carga");
+  await foto(p, `entreno-resumen-${ancho}.png`, true);
+  const guardado = await p.evaluate(() => EjercicioDatos.coleccion("entrenamientos").get().then(s => s.docs.map(d => d.data()).find(w => w.date === "2026-11-05")));
+  const sq = guardado && guardado.exercises.find(e => e.exerciseId === "barbell-squat");
+  ok(guardado && guardado.rpeSesion === 7 && guardado.rutinaId === "pierna", "se guarda el esfuerzo en el entreno");
+  ok(sq && sq.sets.filter(s => s.calentamiento).length === 0 && sq.sets.some(s => s.rir === 2 && s.kg === 110 && s.reps === 5), "y el RIR de la serie (solo las marcadas)");
+  ok(guardado && guardado.exercises.filter(e => e.grupo === "A").length === 2, "y la superserie (grupo A)");
+  await p.click(".ejr-hoja .ejr-listo");
+  await avanzar(400);
+  ok(/Pierna\s*✓ Hecho/.test(await texto(p, "#rut-hoy")), "«Hoy toca» pasa a «✓ Hecho»");
+  ok(!p.errores.length && !p.erroresConsola.length, `sin errores (${p.erroresConsola.join(" | ")})`);
+  await p.context().close();
+}
+
 // ---------- Fase 1: caché de las demos en el service worker ----------
 // Contexto aparte con service workers permitidos (las demás pruebas los bloquean).
 async function cacheDemos(browser) {
@@ -313,7 +406,12 @@ async function cacheDemos(browser) {
   const srv = await servidor();
   const base = `http://localhost:${srv.address().port}`;
   const browser = await chromium.launch();
-  for (const ancho of [390, 1280]) { await demos(browser, base, ancho); await fichaCompleta(browser, base, ancho); }
-  await cacheDemos(browser);
+  const solo = process.env.SOLO;
+  for (const ancho of [390, 1280]) {
+    if (!solo || solo === "demos") await demos(browser, base, ancho);
+    if (!solo || solo === "ficha") await fichaCompleta(browser, base, ancho);
+    if (!solo || solo === "entreno") await entrenoVivo(browser, base, ancho);
+  }
+  if (!solo || solo === "demos") await cacheDemos(browser);
   await terminar(browser, srv);
 })();

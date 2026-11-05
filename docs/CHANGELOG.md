@@ -1,5 +1,19 @@
 # Cambios
 
+## 2026-11-05 · Ejercicio: entreno en vivo más inteligente (fase 3)
+- "Hoy toca" arriba de la pestaña Entrenamiento: empezar la rutina del
+  día cuesta 2 toques; si ya la hiciste, dice "✓ Hecho".
+- Cada serie ya trae el peso que toca hoy y una línea dice por qué ("Hoy
+  4 × 5 con 110 kg · la última vez 4 × 8 con 105 kg → sube 5 kg").
+- Calentamiento sugerido (con un toque se agrega), discos por lado,
+  RIR opcional por serie (0–4+), superseries A1/A2 con descanso al final
+  de la ronda, récord en vivo.
+- El descanso avisa con pitidos y voz y deja la pantalla encendida.
+- Al terminar, un resumen: contra la última vez, récords, músculos y
+  "¿Qué tan duro fue?" para la carga de la sesión.
+- Pruebas: `tests/ej-entreno.test.js` (10) y el E2E `ejercicio.js` con el
+  entreno completo (167 controles).
+
 ## 2026-11-05 · Ejercicio: ficha completa (fase 2)
 - La ficha tiene 3 pestañas: **Cómo se hace** (pasos en español, errores
   comunes, "Ver video" en YouTube y "Mi video" con tu propio link),

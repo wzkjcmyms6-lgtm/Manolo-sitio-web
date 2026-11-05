@@ -49,7 +49,7 @@ function precargarDemos() {
   if (!window.EjDemos || !EjercicioDatos.estado.indice) return;
   EjDemos.precargarRutinas(rutinas, it => EjercicioDatos.resolver(it.nombre, it.exerciseId));
 }
-if (window.EjercicioDatos) EjercicioDatos.onCambio(() => precargarDemos());
+if (window.EjercicioDatos) EjercicioDatos.onCambio(() => { precargarDemos(); renderHoy(); });
 
 // ---- Lista de rutinas ----
 function diasDe(id) {
@@ -82,17 +82,37 @@ function renderRutinas() {
   renderPlan();
   precargarDemos();
 }
+function hechaHoy(r) {
+  const hoy = hoyIso();
+  const entrenos = (window.EjercicioDatos && EjercicioDatos.estado.registros.gimnasio) || [];
+  return entrenos.some(w => w.date === hoy && (w.rutinaId === r.id || (!w.rutinaId && String(w.name || "").trim() === r.name)));
+}
 function renderHoy() {
-  const el = $("rut-hoy");
   const r = R.rutinaDelDia(plan, rutinas, hoyIso());
-  el.hidden = !r;
-  if (!r) { el.innerHTML = ""; return; }
   const dia = R.DIAS.find(d => d.k === String(new Date().getDay()));
-  el.innerHTML = `
+  const hecha = r && hechaHoy(r);
+  const html = !r ? "" : hecha ? `
+    <div><span class="rut-hoy-eyebrow">Hoy, ${esc(dia.nombre.toLowerCase())}</span>
+    <strong>${esc(r.name)} <span class="rut-hoy-ok">✓ Hecho</span></strong><small>Ya entrenaste lo de hoy. ¡Bien!</small></div>
+    <button type="button" class="rut-hoy-otra" data-rut-empezar="${esc(r.id)}">Repetir</button>` : `
     <div><span class="rut-hoy-eyebrow">Hoy, ${esc(dia.nombre.toLowerCase())}, toca</span>
     <strong>${esc(r.name)}</strong><small>${r.items.length} ejercicios · ${R.totalSeries(r)} series</small></div>
     <button type="button" class="rut-hoy-btn" data-rut-empezar="${esc(r.id)}">Empezar</button>`;
+  ["rut-hoy", "ej-hoy"].forEach(id => {
+    const el = $(id);
+    if (!el) return;
+    el.hidden = !r;
+    el.classList.toggle("is-hecha", !!hecha);
+    el.innerHTML = html;
+  });
 }
+// En la pestaña Entrenamiento: empezar la rutina de hoy sin pasar por la lista.
+if ($("ej-hoy")) $("ej-hoy").addEventListener("click", e => {
+  const emp = e.target.closest("[data-rut-empezar]");
+  if (!emp) return;
+  const r = rutinas.find(x => x.id === emp.dataset.rutEmpezar);
+  if (r) Gimnasio.empezarRutina(r);
+});
 function renderPlan() {
   const el = $("rut-plan");
   if (!el) return;
@@ -148,6 +168,7 @@ function itemHTML(it, i, total) {
       <div class="rut-item-sel">
         <label>Descanso<select class="rut-in" data-campo="descansoSeg">${opcionesDescanso(it.descansoSeg)}</select></label>
         <label>Subida de peso<select class="rut-in" data-campo="incremento">${opcionesSubida(it.incremento)}</select></label>
+        <label>Superserie<select class="rut-in" data-campo="grupo"><option value="">No</option>${["A", "B", "C", "D"].map(l => `<option value="${l}"${it.grupo === l ? " selected" : ""}>${l}</option>`).join("")}</select></label>
       </div>
       <label class="rut-item-notas">Notas<input type="text" class="rut-in" data-campo="notas" maxlength="200" value="${esc(it.notas)}" placeholder="Ej: pausa abajo, agarre cerrado"></label>
     </fieldset>`;

@@ -9,7 +9,7 @@ desde D-090. Cada fase deja la app funcionando y publicada.
 | 0 | Auditoría y diseño (capturas, problemas, bocetos) | ✅ |
 | 1 | Demos: script, WebP en el repo, caché con límite, precarga de rutinas | ✅ |
 | 2 | Ficha del ejercicio: técnica, videos, historial, récords, alternativas | ✅ (pasos: lote 1 de 114; faltan ~478 por lotes) |
-| 3 | Entreno en vivo: objetivos, RIR, calentamiento, discos, superseries, descanso con aviso, récords, resumen | |
+| 3 | Entreno en vivo: objetivos, RIR, calentamiento, discos, superseries, descanso con aviso, récords, resumen | ✅ |
 | 4 | Progresión v2, estancamiento y descarga + Ajustes del gimnasio | |
 | 5 | Volumen semanal, equilibrio y generador de rutinas | |
 | 6 | Recuperación, "¿Qué entreno hoy?" y carga total con Running | |

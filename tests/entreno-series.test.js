@@ -77,6 +77,10 @@ test("limpiar: todas las series con datos, o solo las marcadas", () => {
   assert.deepEqual(S.limpiar({ name: "D", tipo: "peso_corporal", asistencia: true, sets: [{ kg: 20, reps: 6, hecha: true }] }).sets, [{ asistencia: 20, reps: 6 }]);
   assert.deepEqual(S.limpiar({ name: "Correr", tipo: "cardio", minutos: 25, sets: [] }), { name: "Correr", sets: [], minutos: 25 });
   assert.equal(S.limpiar({ name: "Correr", tipo: "cardio", minutos: "", sets: [] }), null);
+  // RIR por serie y grupo de superserie (opcionales).
+  assert.deepEqual(S.limpiar({ name: "Sentadilla", tipo: "carga", grupo: "A", sets: [{ kg: 100, reps: 5, rir: 2 }, { kg: 100, reps: 5, rir: "" }, { kg: 100, reps: 4, rir: 0 }] }),
+    { name: "Sentadilla", grupo: "A", sets: [{ kg: 100, reps: 5, rir: 2 }, { kg: 100, reps: 5 }, { kg: 100, reps: 4, rir: 0 }] });
+  assert.equal(S.limpiar({ name: "X", tipo: "carga", grupo: "zz", sets: [{ kg: 1, reps: 1 }] }).grupo, undefined);
 });
 
 test("textos del descanso y del reloj", () => {

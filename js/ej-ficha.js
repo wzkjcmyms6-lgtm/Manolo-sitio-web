@@ -213,7 +213,8 @@ function seccionRecords(f, lista) {
 function seccionAlternativas(f) {
   const base = EjercicioDatos.estado.base || [];
   const destacados = new Set(base.slice(0, EjercicioDatos.estado.destacados || 0).map(e => e.id));
-  const equipos = window.EjEquipo && EjEquipo.disponibles ? EjEquipo.disponibles() : null;
+  // Solo el equipo de tu perfil activo (Ajustes del gimnasio).
+  const equipos = window.EjEquipo && EjEquipo.disponibles ? EjEquipo.disponibles(EjEquipo.perfilActivo(EjercicioDatos.estado.ajustes)) : null;
   const alt = H.alternativas(f, base, { destacados, patronDe, equipos });
   if (!alt.length) return "";
   return `<h4 class="ejf-sub">Alternativas (mismos músculos)</h4>

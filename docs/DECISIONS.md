@@ -937,3 +937,31 @@ cargados (sin lecturas por ficha). (5) La ficha va por encima de las otras
 hojas (z-index 950) para poder abrirla desde Rangos o un entreno sin
 cerrarlos. (6) En el editor de rutinas el nombre pasa a su propia línea
 (antes se cortaba).
+
+**D-093 (2026-11-05) · Entreno en vivo más inteligente.** (1) Al empezar
+una rutina, cada serie ya trae el peso de la progresión y las reps
+objetivo (antes había que tocar "Usar" y, si no, ✓ guardaba el peso viejo
+de la rutina) y una sola línea explica el porqué. (2) RIR opcional por
+serie (0–4+), con la escala de reps en reserva (Zourdos et al., 2016); se
+guarda `rir` solo si se elige. (3) Calentamiento 40/60/80 % y descanso
+sugerido por tipo de ejercicio siguiendo la recomendación del ACSM para
+entrenamiento de fuerza (2009, *Med Sci Sports Exerc* 41(3):687-708: 2–3
+min en ejercicios multiarticulares pesados, 1–2 min en los demás).
+(4) Superseries por letra (`grupo`) en el entreno y en las rutinas: el
+descanso va al final de la ronda (el mayor de la ronda). (5) El descanso
+avisa con los pitidos y la voz de `js/avisos.js` (los de las rutinas de
+Running) y mantiene la pantalla encendida; el iPhone solo suena con la
+app abierta (no hay notificaciones push, D-086). El primer ✓ desbloquea el
+audio (el iPhone lo exige tras un toque). (6) Récord en vivo por 1RM
+estimado o por mejor peso para esas reps, contra el historial y lo ya
+marcado hoy. (7) Resumen al terminar con comparación contra la última vez
+de la misma rutina y el esfuerzo de la sesión (`rpeSesion`); carga =
+RPE × minutos × 100 / 480 (session RPE, Foster et al., 2001, *J Strength
+Cond Res* 15(1):109-115), en la escala de Running (D-065). El entreno se
+guarda con un id elegido antes (`doc().set`) para poder sumar el esfuerzo
+aunque no haya conexión. (8) "Hoy toca" también arriba de la pestaña
+Entrenamiento (2 toques para empezar) y "✓ Hecho" si ya la hiciste.
+(9) Barra, discos y mancuernas vienen de un perfil de equipo
+(`js/ej-equipo.js`, por defecto 20 kg y discos de 25 a 1,25); su
+pantalla de ajustes llega en la fase 4. `js/gimnasio.js` creció a ~53 KB
+por la integración; la lógica nueva está en módulos aparte.

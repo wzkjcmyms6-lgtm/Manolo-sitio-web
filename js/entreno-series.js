@@ -128,11 +128,15 @@ function limpiar(ex, opciones) {
       const kg = num(s.kg), reps = num(s.reps);
       const serie = asistida ? { asistencia: kg, reps } : { kg, reps };
       if (s.calentamiento) serie.calentamiento = true;
+      // RIR (reps en reserva, 0–4), opcional (D-093).
+      if (s.rir !== "" && s.rir != null && num(s.rir) >= 0 && num(s.rir) <= 10) serie.rir = num(s.rir);
       return serie;
     });
     if (!out.sets.length) return null;
   }
   if (ex.rpe) out.rpe = num(ex.rpe);
+  // Superserie o circuito: los ejercicios seguidos con la misma letra.
+  if (ex.grupo && /^[A-Z]$/.test(ex.grupo)) out.grupo = ex.grupo;
   if (ex.notas && String(ex.notas).trim()) out.notas = String(ex.notas).trim();
   return out;
 }
