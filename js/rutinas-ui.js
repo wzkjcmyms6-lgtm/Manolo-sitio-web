@@ -73,6 +73,8 @@ function tarjetaRutina(r) {
     </article>`;
 }
 function renderRutinas() {
+  // La tarjeta de series por músculo cuenta lo que queda del plan de la semana.
+  document.dispatchEvent(new CustomEvent("rutinas:cambio"));
   const cont = $("gym-routines");
   if (!cont) return;
   $("gym-routines-empty").hidden = rutinas.length > 0;

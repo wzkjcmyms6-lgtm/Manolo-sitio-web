@@ -987,3 +987,27 @@ gimnasio: perfiles de equipo, meta (fuerza, músculo, general) y nivel en
 `meta/ajustes_ejercicio` (`equipo`, `meta`, `nivel`), con `merge` para no
 tocar el peso corporal ni las constantes del mapa. Los perfiles borrados
 se quitan con `FieldValue.delete()`.
+
+**D-095 (2026-11-05) · Volumen por músculo, equilibrio y generador de rutinas.**
+(1) El volumen se mide en series efectivas por músculo (principal 1,
+ayuda 0,5; cada ejercicio una vez por músculo) contra un rango semanal
+según meta y nivel: músculo 10–20 (Schoenfeld, Ogborn y Krieger, 2017,
+*J Sports Sci* 35(11):1073-1082: ≥ 10 series por músculo a la semana dan
+más hipertrofia), fuerza 6–15 y general 6–12 (ACSM, 2009, *Med Sci Sports
+Exerc* 41(3):687-708); ajustado por nivel y más bajo para músculos chicos.
+(2) Con plan semanal se juzga la semana en curso más lo que queda del
+plan (si no, un jueves sin la pierna hecha diría "faltan 10" aunque la
+tengas hoy); sin plan, los últimos 7 días. (3) Equilibrio en 4 semanas con
+límites conservadores (empuje/tirón 1,5:1, cuádriceps/isquios 2:1,
+deltoide anterior/posterior 3:1): son guías prácticas de entrenadores, no
+un número de un estudio; solo avisan con qué sumar. (4) El generador es
+por reglas, sin IA: splits clásicos según días (la frecuencia de 2 veces
+por músculo a la semana rinde más que 1; Schoenfeld et al., 2016, *Sports
+Med* 46(11):1689-1697), huecos de movimiento y dosis de ACSM 2009, ajuste
+al tiempo disponible y una revisión de la semana para que la propuesta no
+quede desequilibrada ni fuera del rango que la misma app recomienda.
+(5) Nunca pisa rutinas: se guardan como nuevas (con "(nueva)" si el nombre
+existe), el plan solo se completa en días libres y nada se borra. (6) El
+bloque de 4–6 semanas reutiliza la descarga de la fase 4: se agenda en
+`descargas` y se guarda `bloque` (aditivo, entra en el respaldo). Una
+descarga agendada en los próximos 14 días evita que se sugiera otra.

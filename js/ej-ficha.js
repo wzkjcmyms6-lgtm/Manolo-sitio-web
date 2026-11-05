@@ -361,5 +361,6 @@ document.addEventListener("click", e => {
   if (abrirPor(el.dataset.ficha, el.dataset.fichaNombre, enHoja)) { e.preventDefault(); e.stopPropagation(); }
 }, true);
 
-window.EjFicha = { abrir: (id, nombre) => abrirPor(id, nombre), cerrar, fichas: () => fichas };
+// tecnica(): promesa con { errores, ej } (el generador de rutinas usa el tipo de movimiento).
+window.EjFicha = { abrir: (id, nombre) => abrirPor(id, nombre), cerrar, fichas: () => fichas, tecnica: () => Promise.resolve(cargarTecnica()).then(() => tecnica) };
 })();

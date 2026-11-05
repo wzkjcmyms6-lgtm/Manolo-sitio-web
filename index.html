@@ -25,7 +25,7 @@
   <link rel="stylesheet" href="css/movilidad.css?v=202610300100">
   <link rel="stylesheet" href="css/tiempos.css?v=202610300310">
   <link rel="stylesheet" href="css/ej-calendario.css?v=202610290900">
-  <link rel="stylesheet" href="css/ejercicio.css?v=202611051900">
+  <link rel="stylesheet" href="css/ejercicio.css?v=202611052100">
   <link rel="stylesheet" href="css/run.css?v=202611040900">
 </head>
 <body>
@@ -259,6 +259,8 @@
               <ol class="radar-top" id="radar-top"></ol>
             </section>
 
+            <section class="radar-section ejv" id="ej-volumen" hidden aria-labelledby="ejv-titulo"></section>
+
             <section class="ej-revisar" id="ej-revisar" hidden aria-labelledby="ej-revisar-titulo">
               <h2 id="ej-revisar-titulo">Ejercicios sin reconocer</h2>
               <p class="ej-texto">Estos nombres de tus entrenos no coinciden con ningún ejercicio de la base, así que todavía no pintan el mapa. Asígnalos o créalos marcando sus músculos. Tus entrenos no se modifican.</p>
@@ -360,12 +362,13 @@
                 <h2>Rutinas</h2>
                 <div class="rut-botones">
                   <button type="button" class="link-btn" id="rut-importar">Importar</button>
+                  <button type="button" class="link-btn" data-generador>Crear para mí</button>
                   <button type="button" class="link-btn" id="rut-nueva">+ Nueva rutina</button>
                 </div>
               </div>
 
               <div id="gym-routines" class="rut-lista"></div>
-              <p class="empty-state" id="gym-routines-empty" hidden>Aún no tienes rutinas. Crea una con «+ Nueva rutina».</p>
+              <p class="empty-state" id="gym-routines-empty" hidden>Aún no tienes rutinas. Crea una con «+ Nueva rutina» o deja que te arme unas con «Crear para mí».</p>
 
               <section class="rut-plan" id="rut-plan" aria-labelledby="rut-plan-t"></section>
 
@@ -1403,14 +1406,16 @@
   <script defer src="js/ej-equipo.js?v=202611051700"></script>
   <script defer src="js/ej-historial.js?v=202611051700"></script>
   <script defer src="js/ej-entreno.js?v=202611052000"></script>
-  <script defer src="js/ej-programa.js?v=202611051900"></script>
+  <script defer src="js/ej-programa.js?v=202611052100"></script>
   <script defer src="js/gimnasio.js?v=202611051900"></script>
-  <script defer src="js/rutinas-ui.js?v=202611051700"></script>
+  <script defer src="js/rutinas-ui.js?v=202611052100"></script>
   <script defer src="js/ej-entreno-ui.js?v=202611051700"></script>
   <script defer src="js/ej-coach.js?v=202611051900"></script>
   <script defer src="js/ej-ajustes-gym.js?v=202611051900"></script>
   <script defer src="js/ej-demos.js?v=202611051300"></script>
-  <script defer src="js/ej-ficha.js?v=202611051900"></script>
+  <script defer src="js/ej-ficha.js?v=202611052100"></script>
+  <script defer src="js/ej-volumen.js?v=202611052100"></script>
+  <script defer src="js/ej-generador.js?v=202611052100"></script>
   <script defer src="js/ej-sesiones.js?v=202610030200"></script>
   <script defer src="js/ej-vistas.js?v=202611051500"></script>
   <script defer src="js/ej-social.js?v=202610020200"></script>

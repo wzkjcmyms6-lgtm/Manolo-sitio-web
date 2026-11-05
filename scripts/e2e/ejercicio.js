@@ -413,6 +413,137 @@ async function programacion(browser, base, ancho) {
   await p.context().close();
 }
 
+// ---------- Fase 5: series por músculo, equilibrio y generador ----------
+async function volumenYGenerador(browser, base, ancho) {
+  console.log(`\nSeries por músculo, equilibrio y «Crear rutinas para mí» (${ancho} px)`);
+  const alto = ancho > 800 ? 900 : 844;
+  const p = await abrir(browser, base, SEM.estado(HOY), { hash: "#ejercicio", zona: ZONA, fecha: FECHA, ancho, alto });
+  consolaLimpia(p);
+  await p.waitForTimeout(1200);
+  await sinAvisos(p);
+  const leer = col => p.evaluate(c => EjercicioDatos.coleccion(c).get().then(s => s.docs.map(d => Object.assign({ id: d.id }, d.data()))), col);
+  const metaDe = doc => p.evaluate(d => EjercicioDatos.meta(d).get().then(x => (x.exists ? x.data() : {})), doc);
+  const antes = await leer("rutinas");
+  const planAntes = (await metaDe("plan_semanal")).dias;
+
+  // Tarjeta en Entrenamiento.
+  ok(await p.isVisible("#ej-volumen"), "Entrenamiento muestra «Series por músculo»");
+  const filas = await p.$$eval("#ej-volumen .ejv-fila", els => els.map(e => ({ etq: e.getAttribute("aria-label"), clase: e.className, ancho: e.querySelector(".ejv-lleno").style.width })));
+  ok(filas.length === 11 && filas.every(f => /^.+: [\d,]+ series( y [\d,]+ más en tu plan)?; tu objetivo es de \d+ a \d+\. (Bien|Faltan [\d,]+|Mucho)\.$/.test(f.etq)), `11 músculos con su objetivo (${filas[0] && filas[0].etq})`);
+  ok(/^Esta semana, con tu plan · objetivo para músculo, intermedio$/.test(await texto(p, "#ej-volumen .radar-sub")), "dice el período y tu meta");
+  const cuad = filas.find(f => /^Cuádriceps/.test(f.etq));
+  ok(/^Cuádriceps: 0 series y 7 más en tu plan; tu objetivo es de 10 a 20\. Faltan 3\.$/.test(cuad.etq), `la pierna de hoy (aún sin hacer) cuenta como plan: «${cuad.etq}»`);
+  ok(await p.$$eval("#ej-volumen .ejv-plan", els => els.length >= 5), "la barra muestra lo que queda del plan (rayado)");
+  ok((await texto(p, "#ej-volumen .ejv-resumen")).length > 10, `resumen: «${await texto(p, "#ej-volumen .ejv-resumen")}»`);
+  const eq = await p.$$eval("#ej-volumen .ejv-eq li", els => els.map(e => e.textContent.replace(/\s+/g, " ").trim()));
+  ok(eq.length >= 2 && eq.some(t => /^✓ Empuje \/ tirón/.test(t)), `equilibrio de 4 semanas (${eq.join(" | ")})`);
+  await foto(p, `volumen-${ancho}.png`);
+  const sinDesborde = () => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
+  ok(await sinDesborde(), "sin scroll de costado");
+
+  // Generador desde la tarjeta.
+  await p.click("#ej-volumen [data-generador]");
+  await p.waitForTimeout(400);
+  ok(await p.isVisible(".ejgen-hoja .muscle-sheet-panel"), "«Crear rutinas para mí» abre la hoja");
+  ok(await p.$eval('.ejgen-hoja [data-gen-dias="4"]', b => b.classList.contains("is-on")) && await p.$eval('.ejgen-hoja [data-gen-meta="hipertrofia"]', b => b.classList.contains("is-on")),
+    "empieza con tus 4 días del plan y tu meta");
+  const chips = await p.$$eval(".ejgen-hoja .ejg-chip", els => els.map(e => e.getBoundingClientRect().height));
+  ok(chips.every(h => h >= 44), `botones de ≥ 44 px (${Math.min(...chips)})`);
+  await p.click('.ejgen-hoja [data-gen-dias="3"]');
+  await p.click('.ejgen-hoja [data-gen-min="45"]');
+  await foto(p, `generador-preguntas-${ancho}.png`);
+  await p.click(".ejgen-hoja [data-gen-ver]");
+  await p.waitForSelector(".ejgen-hoja .ejgen-rut", { timeout: 4000 });
+  const ruts = () => p.$$eval(".ejgen-hoja .ejgen-rut", els => els.map(e => ({
+    nombre: e.querySelector("[data-gen-nombre]").value,
+    dia: (e.querySelector("[data-gen-dia]") || {}).value,
+    items: [...e.querySelectorAll(".ejgen-nombre b")].map(b => b.textContent),
+    pie: e.querySelector(".ejgen-pie").textContent
+  })));
+  let r = await ruts();
+  ok(r.length === 3 && r.map(x => x.nombre).join(",") === "Cuerpo completo A,Cuerpo completo B,Cuerpo completo C", `3 rutinas de cuerpo completo (${r.map(x => x.nombre).join(", ")})`);
+  ok(r.map(x => x.dia).join(",") === "3,5,0", `solo en tus días libres: mié, vie y dom (${r.map(x => x.dia).join(",")})`);
+  ok(r.every(x => Number((x.pie.match(/~(\d+) min/) || [])[1]) <= 45 && x.items.length >= 3), `cada una entra en 45 min (${r.map(x => x.pie).join(" | ")})`);
+  ok(r[0].items[0] === "Sentadilla (Barra)" && r[0].items[1] === "Press de banca (Barra)", `empieza por lo grande (${r[0].items.slice(0, 3).join(", ")})`);
+  ok((await p.$$(".ejgen-hoja .ejgen-vol-chip")).length === 11, "y muestra las series por músculo de la propuesta");
+  ok(await p.$$eval(".ejgen-hoja .ejgen-mini", els => els.length > 10 && els.filter(e => e.tagName === "IMG").length > 10), "con la foto de cada ejercicio");
+  const ico = await p.$eval(".ejgen-hoja .ejgen-ico", b => { const r = b.getBoundingClientRect(); return [r.width, r.height]; });
+  ok(ico[0] >= 44 && ico[1] >= 44, `cambiar y quitar de ${ico.join(" × ")} px`);
+  await foto(p, `generador-propuesta-${ancho}.png`);
+  // Cambiar el primero y quitar el último.
+  await p.click('.ejgen-hoja [data-gen-cambiar="0:0"]');
+  await p.waitForTimeout(150);
+  r = await ruts();
+  ok(r[0].items[0] !== "Sentadilla (Barra)" && /Sentadilla|Prensa|Hack/i.test(r[0].items[0]), `«Cambiar»: otro parecido (${r[0].items[0]})`);
+  const n0 = r[0].items.length;
+  await p.click(`.ejgen-hoja [data-gen-quitar="0:${n0 - 1}"]`);
+  await p.waitForTimeout(150);
+  r = await ruts();
+  ok(r[0].items.length === n0 - 1, "«Quitar» lo saca");
+  // Tocar el nombre abre la ficha encima.
+  await p.click(".ejgen-hoja .ejgen-rut:nth-of-type(1) .ejgen-nombre");
+  await p.waitForTimeout(500);
+  ok(await p.isVisible(".ejf-hoja .muscle-sheet-panel"), "tocar un ejercicio abre su ficha (con la demo)");
+  await p.keyboard.press("Escape");
+  await p.waitForTimeout(400);
+  ok(await p.isVisible(".ejgen-hoja .muscle-sheet-panel"), "y al cerrarla sigue la propuesta");
+  await p.fill('.ejgen-hoja [data-gen-nombre="1"]', "Mi día B");
+  await p.check(".ejgen-hoja [data-gen-bloque]");
+  await p.waitForTimeout(150);
+  await p.click('.ejgen-hoja [data-gen-semanas="4"]');
+  ok(/Del 9 nov al 6 dic; la semana del 30 nov es de descarga\./.test(await texto(p, ".ejgen-hoja")), "bloque de 4 semanas: del 9 nov al 6 dic, la última de descarga");
+  await p.click(".ejgen-hoja [data-gen-guardar]");
+  await p.waitForTimeout(500);
+  ok(/Se guardaron 3 rutinas nuevas y 3 días de tu plan semanal, en un bloque de 4 semanas\./.test(await texto(p, ".ejgen-hoja .ejgen-listo")), "«Guardar»: listo");
+  await foto(p, `generador-listo-${ancho}.png`);
+
+  const despues = await leer("rutinas");
+  const viejas = despues.filter(x => antes.some(a => a.id === x.id));
+  ok(despues.length === antes.length + 3 && JSON.stringify(viejas) === JSON.stringify(antes), "3 rutinas nuevas; las tuyas quedan idénticas");
+  const nuevas = despues.filter(x => !antes.some(a => a.id === x.id));
+  ok(nuevas.some(x => x.name === "Mi día B") && nuevas.every(x => x.v === 2 && x.items.length >= 3 && x.items.every(i => i.exerciseId && !("hueco" in i))), "con tu nombre y en el formato de siempre");
+  const plan = (await metaDe("plan_semanal")).dias;
+  ok(["1", "2", "4", "6"].every(k => plan[k] === planAntes[k]) && ["3", "5", "0"].every(k => nuevas.some(x => x.id === plan[k])), "el plan solo cambió en los días libres");
+  const aj = await metaDe("ajustes_ejercicio");
+  ok(aj.bloque && aj.bloque.desde === "2026-11-09" && aj.bloque.semanas === 4 && aj.descargas && aj.descargas["2026-11-30"] === "2026-12-06" && aj.pesoCorporal === 82.5,
+    "el bloque y su descarga quedan guardados (sin tocar el peso corporal)");
+  await p.click(".ejgen-hoja .ejgen-listo ~ .ejg-acciones [data-cerrar]");
+  await p.waitForTimeout(400);
+  const cuad2 = await p.$eval("#ej-volumen .ejv-fila:nth-child(7)", e => e.getAttribute("aria-label"));
+  ok(cuad2 !== cuad.etq && /más en tu plan/.test(cuad2), `la tarjeta suma las rutinas nuevas del plan («${cuad2}»)`);
+
+  // Otra vez, en Casa: solo su equipo, y con nombres que no chocan.
+  await ir(p, "gimnasio");
+  ok((await p.$$("#gym-routines .rut-card, #gym-routines [data-rut-empezar]")).length >= 7, "Gimnasio › Rutinas ya las muestra");
+  await p.click("#gym-home .rut-botones [data-generador]");
+  await p.waitForTimeout(400);
+  await p.click('.ejgen-hoja [data-gen-perfil="casa"]');
+  await p.click('.ejgen-hoja [data-gen-dias="3"]');
+  await p.click(".ejgen-hoja [data-gen-ver]");
+  await p.waitForSelector(".ejgen-hoja .ejgen-rut", { timeout: 4000 });
+  r = await ruts();
+  const todos = r.flatMap(x => x.items);
+  ok(todos.length >= 9 && todos.every(n => !/\((Barra|Máquina|Polea|Smith|Barra Z)\)/.test(n)), `en Casa, sin barra, máquinas ni poleas (${todos.slice(0, 4).join(", ")}…)`);
+  ok(r[0].nombre === "Cuerpo completo A (nueva)", `nombre que no choca con el que ya tienes (${r[0].nombre})`);
+  ok(await p.$eval(".ejgen-hoja [data-gen-plan]", c => c.disabled) && /Tu plan no tiene días libres: no se toca\./.test(await texto(p, ".ejgen-hoja")), "sin días libres, el plan no se toca");
+  ok(await sinDesborde(), "sin scroll de costado");
+  await p.click(".ejgen-hoja [data-gen-atras]");
+  await p.waitForTimeout(200);
+  ok(await p.isVisible('.ejgen-hoja [data-gen-ver]'), "«Atrás» vuelve a las preguntas");
+  await p.click(".ejgen-hoja .ejg-acciones [data-cerrar]");
+  await p.waitForTimeout(400);
+  ok((await leer("rutinas")).length === antes.length + 3, "cerrar sin guardar no guarda nada");
+  ok(!p.errores.length && !p.erroresConsola.length, `sin errores (${p.erroresConsola.join(" | ")})`);
+  await p.context().close();
+
+  // Sin entrenos: la tarjeta invita a crear rutinas.
+  const q = await abrir(browser, base, SEM.estado(HOY, { sinEntrenos: true, sinRutinas: true }), { hash: "#ejercicio", zona: ZONA, fecha: FECHA, ancho, alto });
+  await q.waitForTimeout(1200);
+  ok(/Cuando entrenes, aquí verás/.test(await texto(q, "#ej-volumen")) && await q.isVisible("#ej-volumen [data-generador]"), "sin entrenos: explica y ofrece «Crear rutinas para mí»");
+  ok(!q.errores.length, "sin errores");
+  await q.context().close();
+}
+
 // ---------- Fase 1: caché de las demos en el service worker ----------
 // Contexto aparte con service workers permitidos (las demás pruebas los bloquean).
 async function cacheDemos(browser) {
@@ -490,6 +621,7 @@ async function cacheDemos(browser) {
     if (!solo || solo === "ficha") await fichaCompleta(browser, base, ancho);
     if (!solo || solo === "entreno") await entrenoVivo(browser, base, ancho);
     if (!solo || solo === "programa") await programacion(browser, base, ancho);
+    if (!solo || solo === "volumen") await volumenYGenerador(browser, base, ancho);
   }
   if (!solo || solo === "demos") await cacheDemos(browser);
   await terminar(browser, srv);

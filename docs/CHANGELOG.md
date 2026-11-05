@@ -1,5 +1,20 @@
 # Cambios
 
+## 2026-11-05 · Ejercicio: series por músculo, equilibrio y "Crear rutinas para mí" (fase 5)
+- Entrenamiento muestra "Series por músculo": cuántas series hace cada
+  músculo esta semana (con lo que te queda del plan) contra tu objetivo,
+  con "Bien", "Faltan…" o "Mucho", y el equilibrio de las últimas 4
+  semanas (empuje/tirón, cuádriceps/isquios, hombro adelante/atrás).
+- "Crear rutinas para mí" (en Gimnasio › Rutinas y en la tarjeta): eliges
+  días, minutos, meta, nivel y dónde entrenas, y te arma rutinas
+  equilibradas con foto de cada ejercicio. Cambias o quitas lo que
+  quieras antes de guardar; se guardan como nuevas y el plan solo se
+  llena en días libres. Opcional: bloque de 4–6 semanas con la última de
+  descarga.
+- Botones de las hojas del gimnasio de 44 px de alto.
+- Pruebas: `tests/ej-programa.test.js` (15) y el E2E `ejercicio.js`
+  (`SOLO=volumen`).
+
 ## 2026-11-05 · Ejercicio: progresión v2, estancamiento, descarga y Ajustes (fase 4)
 - La progresión ajusta el peso a tu equipo (discos, mancuernas, máquinas)
   y usa tu RIR: si te sobraban reps, sube más.

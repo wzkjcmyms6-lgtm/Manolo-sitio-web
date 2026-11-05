@@ -21,7 +21,7 @@ sale de reglas y fórmulas documentadas (§ Fórmulas, con sus fuentes en
 | 2 | Ficha del ejercicio (técnica, videos, historial, récords, alternativas) | ✅ |
 | 3 | Entreno en vivo (objetivo, RIR, calentamiento, discos, superseries, descanso con aviso, récords, resumen) | ✅ |
 | 4 | Progresión v2, estancamiento, descarga + Ajustes del gimnasio | ✅ |
-| 5 | Volumen semanal, equilibrio y generador de rutinas | |
+| 5 | Volumen semanal, equilibrio y generador de rutinas | ✅ |
 | 6 | Recuperación, "¿Qué entreno hoy?" y carga total con Running | |
 | 7 | Resumen inteligente, Perfil y compartir | |
 | 8 | QA final | |
@@ -119,7 +119,8 @@ Recuperación 🧍 listo / recuperándose / cansado
 | `entrenamientos/{id}` | `rpeSesion` (1–10) | Esfuerzo de la sesión → carga = RPE × min |
 | `rutinas/{id}.items[]` | `grupo` | Superserie en la rutina |
 | `meta/ajustes_ejercicio` | `equipo: { activo, perfiles: { id: { nombre, barra, discos[], mancuernas{min,max,paso}, maquinas, poleas } } }`, `meta`, `nivel` | Discos, microcargas, calentamiento, generador, alternativas |
-| `meta/ajustes_ejercicio` | `descarga: { desde, hasta }` | Semana de descarga aplicada |
+| `meta/ajustes_ejercicio` | `descargas: { desde: hasta }` | Semanas de descarga (aplicadas o del bloque) |
+| `meta/ajustes_ejercicio` | `bloque: { desde, semanas, descarga }` | Bloque de 4–6 semanas del generador |
 | `meta/ejercicio_fichas` | `{ [exerciseId]: { video, nota } }` | "Mi video" y notas por ejercicio |
 
 Todo entra en "Descargar respaldo (JSON)". Los entrenos guardados no se
@@ -138,6 +139,8 @@ reescriben; los Rangos no cambian de calibración.
 | `js/ej-entreno.js` (UMD) | Objetivo con porqué, calentamiento, discos, superseries, récords en vivo, resumen |
 | `js/progresion.js` (v2) | Doble progresión + RIR + tendencia + microcargas |
 | `js/ej-programa.js` (UMD) | Estancamiento, descarga, volumen objetivo, equilibrio, generador |
+| `js/ej-volumen.js` | Tarjeta "Series por músculo" y equilibrio (Entrenamiento) |
+| `js/ej-generador.js` | Hoja "Crear rutinas para mí" |
 | `js/ej-recuperacion.js` (UMD) | Fatiga por músculo, recomendación del día, carga total |
 | `js/ej-inteligencia.js` (UMD) | Resumen por reglas de la sesión y la semana |
 
@@ -244,6 +247,29 @@ reescriben; los Rangos no cambian de calibración.
   equipo tienes, barra, discos, mancuernas, pasos de máquinas y poleas;
   tu meta (fuerza, músculo o general) y tu nivel.
 
+## Volumen, equilibrio y generador (fase 5, D-095)
+
+- **Series por músculo** (Entrenamiento, debajo de la distribución
+  muscular): 11 músculos con una barra contra tu rango (verde), lo hecho
+  (lleno) y, si tienes plan semanal, lo que te queda del plan hasta el
+  domingo (rayado). "Bien", "Faltan 3" o "Mucho". Arriba, en una frase,
+  a qué músculos les faltan series (los 3 más atrasados) o cuáles se
+  pasan. Sin plan mira los últimos 7 días. En semana de descarga no
+  reclama series.
+- **Equilibrio** (últimas 4 semanas): empuje/tirón del torso,
+  cuádriceps/isquios y hombro de adelante/atrás, con qué sumar si está
+  desparejo.
+- **Crear rutinas para mí** (Gimnasio › Rutinas › "Crear para mí" o desde
+  la tarjeta): días (2–6), minutos (30–90), meta, nivel y perfil de
+  equipo → propuesta con el split, las series por músculo que daría, y
+  cada rutina con foto, series × reps y descanso. Se puede cambiar el
+  nombre y el día, cambiar un ejercicio por otro parecido (flechas) o
+  quitarlo, y tocarlo para ver la ficha. Se guardan como rutinas nuevas
+  (nunca pisa las tuyas; si el nombre ya existe, "(nueva)"), el plan solo
+  en días libres, y tu meta y nivel quedan en Ajustes.
+- **Bloque** (opcional): 4, 5 o 6 semanas; la última es de descarga
+  (agendada en `descargas`). La tarjeta muestra "Bloque: semana 2 de 5".
+
 ## Fórmulas
 
 - **1RM estimado (Epley)**: kg × (1 + reps / 30); 1 rep = el peso; reps
@@ -295,5 +321,36 @@ reescriben; los Rangos no cambian de calibración.
   o más entrenos desde la última descarga.
 - **Semana de descarga**: series × 0,6 (redondeado, mínimo 1) y peso × 0,9
   redondeado hacia abajo a tu equipo; 7 días.
+
+- **Series efectivas por músculo**: por cada serie de trabajo, 1 si el
+  músculo es principal y 0,5 si ayuda; cada ejercicio suma una sola vez
+  por músculo aunque toque varias zonas (pecho alto y medio = pecho).
+- **Rango por semana** (Schoenfeld et al., 2017; ACSM, 2009): músculo
+  10–20, fuerza 6–15, general 6–12. Principiante: mínimo × 0,7 y máximo ×
+  0,75; avanzado: máximo × 1,1. Músculos chicos (hombro lateral y
+  posterior, bíceps, tríceps, pantorrillas, abdominales): mínimo × 0,6
+  (al menos 3), porque ya trabajan en los ejercicios grandes.
+- **Equilibrio** (con 6+ series en el par): empuje/tirón del torso (series
+  de trabajo de ejercicios de empuje o tirón sin piernas como principal)
+  entre 1:1,5 y 1,5:1; cuádriceps/isquios hasta 2:1; deltoide
+  anterior/posterior hasta 3:1.
+- **Generador**: split por días (2–3 cuerpo completo; 4 torso/pierna; 5
+  empuje/tirón/pierna + torso/pierna; 6 empuje/tirón/pierna × 2). Cada
+  sesión tiene huecos de movimiento (sentadilla, bisagra, empuje y tirón
+  horizontal y vertical, accesorios); para cada hueco, el mejor ejercicio
+  con tu equipo y nivel (destacados y con peso primero; barra, mancuernas,
+  máquinas…; en accesorios, de aislamiento), variando entre sesiones.
+  Dosis: músculo 3 × 6–10 / 2 min (compuestos) y 3 × 10–15 / 75 s
+  (aislamiento); fuerza 4 × 3–5 / 3 min el primero, 3 × 5–8 / 2:30 otros
+  compuestos; general 3 × 8–12 / 90 s y 2 × 12–15 / 60 s. Principiante −1
+  serie (mín. 2); avanzado +1 en compuestos. Tiempo = series × (descanso
+  + 45 s). Si no entra: accesorios a 2 series y después se quitan los
+  menos importantes (mín. 3). Después se revisa la semana: equilibrio
+  (sumar del lado que falta o bajar del que sobra), músculos bajo el
+  rango (un accesorio donde haya tiempo) y sobre el rango (una serie
+  menos, accesorios primero).
+- **Bloque**: empieza el lunes de esta semana (o el próximo si hoy es
+  jueves o más tarde); la última semana es de descarga (series × 0,6 y
+  peso × 0,9, como en la fase 4).
 
 Las siguientes se completan en cada fase (fuentes en `DECISIONS.md`).
