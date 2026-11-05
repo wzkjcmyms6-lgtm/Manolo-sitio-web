@@ -1055,3 +1055,16 @@ pasos en español se escriben por lotes priorizados por uso: lote 1 los
 destacados, lote 2 todo lo que el generador puede proponer; los demás
 muestran demo, errores comunes y "Ver video" hasta su lote. (3) Al cerrar,
 regresión completa de las pruebas de pantalla de toda la app.
+
+**D-099 (2026-11-05) · Predicciones también con carreras anotadas a mano.**
+Pedido del dueño: que las predicciones salgan solo con lo que anota.
+Además de los mejores tramos de las carreras con ruta, cada carrera de
+las últimas 12 semanas cuenta entera (distancia y tiempo en movimiento, o
+la duración anotada) en la fórmula de Riegel (T2 = T1 × (D2/D1)^1,06),
+con las mismas reglas: al menos 1 milla y al menos 1/8 de la distancia a
+predecir; no cuentan las de más de 20 min por km (caminatas). Gana la
+predicción más rápida. La nota avisa que si todas fueron suaves la
+predicción sale más lenta de lo que se puede. Para tener mapas sin
+Strava: importar el GPX/FIT de cualquier app o reloj, o el ZIP que
+exporta la app Salud del iPhone (sus `workout-routes/*.gpx` ya se leen);
+Manolo sigue sin GPS propio (D-033).

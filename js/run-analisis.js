@@ -120,21 +120,27 @@ function evolucion(docs, clave) {
 }
 
 // ---- Predicciones (Riegel 1981: T2 = T1 × (D2/D1)^1,06) ----
+// Desde los mejores tramos de las carreras con ruta (d.mejores) y desde la
+// carrera entera (distancia y tiempo), así también cuentan las anotadas a
+// mano o importadas sin ruta (D-099). Gana la predicción más rápida.
 const OBJETIVOS = [[5000, "5000", "5K"], [10000, "10000", "10K"], [21097.5, "21097", "Media maratón"], [42195, "42195", "Maratón"]];
+const kmTxt = m => `${String(Math.round(m / 100) / 10).replace(".", ",")} km`;
 function predicciones(docs, hoy, semanas) {
   const desde = dia(hoy).getTime() - (semanas || 12) * 7 * 86400000;
   const fin = dia(hoy).getTime() + 86400000;
-  const recientes = (docs || []).filter(d => { const m = momento(d); return m >= desde && m <= fin && d.mejores; });
+  const recientes = (docs || []).filter(d => { const m = momento(d); return m >= desde && m <= fin; });
   return OBJETIVOS.map(([m2, clave, nombre]) => {
     let mejor = null;
-    RunMetricas.DISTANCIAS.forEach(([m1, k1, n1]) => {
-      if (m1 < 1609 || m1 < m2 / 8) return;
-      recientes.forEach(d => {
-        const t1 = d.mejores[k1];
-        if (!(t1 > 0)) return;
-        const t2 = t1 * Math.pow(m2 / m1, 1.06);
-        if (!mejor || t2 < mejor.t) mejor = { t: Math.round(t2), desde: { clave: k1, nombre: n1, t: t1, id: d.id, date: d.date } };
-      });
+    const probar = (m1, t1, de) => {
+      if (!(t1 > 0) || m1 < 1609 || m1 < m2 / 8) return;
+      const t2 = t1 * Math.pow(m2 / m1, 1.06);
+      if (!mejor || t2 < mejor.t) mejor = { t: Math.round(t2), desde: de };
+    };
+    recientes.forEach(d => {
+      if (d.mejores) RunMetricas.DISTANCIAS.forEach(([m1, k1, n1]) => probar(m1, d.mejores[k1], { clave: k1, nombre: n1, t: d.mejores[k1], id: d.id, date: d.date }));
+      // La carrera entera (más de 2 h por km, o sin datos, no cuenta).
+      const m1 = distM(d), t1 = movS(d);
+      if (m1 > 0 && t1 > 0 && t1 / (m1 / 1000) < 1200) probar(m1, t1, { clave: "carrera", nombre: `carrera de ${kmTxt(m1)}`, t: t1, id: d.id, date: d.date });
     });
     return { clave, nombre, m: m2, t: mejor ? mejor.t : null, desde: mejor ? mejor.desde : null };
   });

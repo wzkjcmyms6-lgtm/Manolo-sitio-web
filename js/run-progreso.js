@@ -137,7 +137,7 @@ function predicciones(docs) {
   return `<section class="rd-sec rp-sec">
     <h2>Predicciones</h2>
     <div class="rp-pred">${ps.map(p => `<div><span>${esc(p.nombre)}</span>${p.t ? `<b>${V.tiempo(p.t)}</b><small>${V.ritmo(p.t / (p.m / 1000))}</small>` : `<b class="rp-falta">—</b><small>Faltan datos</small>`}</div>`).join("")}</div>
-    <p class="rd-nota">Según tus mejores marcas de las últimas 12 semanas (fórmula de Riegel). Es una estimación, no una promesa.</p>
+    <p class="rd-nota">Según tus mejores carreras de las últimas 12 semanas, con ruta o anotadas a mano (fórmula de Riegel). Si todas fueron suaves, sale más lenta de lo que puedes: una carrera a fondo la afina. Es una estimación, no una promesa.</p>
   </section>`;
 }
 

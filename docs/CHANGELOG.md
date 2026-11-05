@@ -1,5 +1,10 @@
 # Cambios
 
+## 2026-11-05 · Running: predicciones con carreras anotadas a mano
+- Las predicciones de 5K, 10K, media y maratón ahora también usan tus
+  carreras anotadas a mano (km y tiempo), no solo las importadas con ruta.
+- Prueba: `tests/run-analisis.test.js`.
+
 ## 2026-11-05 · Ejercicio: QA final (fase 8)
 - Pasos de "Cómo se hace" en español para 113 ejercicios más (todos los
   que puede proponer "Crear rutinas para mí"): 227 en total.

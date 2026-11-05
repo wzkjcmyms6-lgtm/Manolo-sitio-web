@@ -47,6 +47,24 @@ test("predicciones (Riegel): desde marcas recientes de al menos 1 milla; si no, 
   assert.ok(A.predicciones([{ id: "k", date: "2026-11-01", inicio: Date.UTC(2026, 10, 1), mejores: { "1000": 240 } }], HOY).every(x => x.t == null), "con solo 1 km no se predice");
 });
 
+test("predicciones: también con carreras anotadas a mano (distancia y tiempo)", () => {
+  // 10 km en 50 min anotados a mano, sin ruta.
+  const mano = [{ id: "m", date: "2026-10-25", distance: 10, duration: 50 }];
+  const p = A.predicciones(mano, HOY);
+  assert.equal(p[1].t, 3000, "10K: el mismo tiempo");
+  assert.equal(p[0].t, Math.round(3000 * Math.pow(0.5, 1.06)));
+  assert.equal(p[3].t, Math.round(3000 * Math.pow(4.2195, 1.06)), "maratón: desde 10 km (≥ 1/8)");
+  assert.equal(p[1].desde.nombre, "carrera de 10 km");
+  // 3 km no alcanzan para el maratón (menos de 1/8), sí para 5K y 10K.
+  const corta = A.predicciones([{ id: "c", date: "2026-10-25", distance: 3, duration: 15 }], HOY);
+  assert.ok(corta[0].t > 0 && corta[1].t > 0 && corta[3].t == null);
+  // Una caminata (más de 20 min por km) no cuenta.
+  assert.ok(A.predicciones([{ id: "w", date: "2026-10-25", distance: 5, duration: 110 }], HOY).every(x => x.t == null));
+  // Con ruta y a mano: gana la más rápida.
+  const ambas = mano.concat([{ id: "g", date: "2026-10-28", distanciaM: 6000, tiempoMovS: 1800, mejores: { "5000": 1400 } }]);
+  assert.equal(A.predicciones(ambas, HOY)[0].t, 1400);
+});
+
 test("forma y fatiga: medias de 42 y 7 días; carga por RPE si no hay otra", () => {
   assert.equal(A.cargaDe({ carga: { v: 80, m: "trimp" } }), 80);
   assert.equal(A.cargaDe({ rpe: 8, duration: 60 }), 100);

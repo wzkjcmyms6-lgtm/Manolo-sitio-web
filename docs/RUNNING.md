@@ -50,7 +50,9 @@ Esta semana 24,3 km · 2:15 h · 3 carreras   (semana pasada 18,1 km)
 Últimas 12 semanas (el resumen semanal de siempre, D-035)
 Diario: calendario del mes con círculos según km
 Mejores marcas: 1 km · 5K · 10K · 21K… top 3 y su evolución
-Predicciones 5K · 10K · 21K · 42K (o "Faltan datos")
+Predicciones 5K · 10K · 21K · 42K (o "Faltan datos"): desde los mejores
+tramos de las carreras con ruta y desde la carrera entera, así también
+cuentan las anotadas a mano (D-099)
 Forma y fatiga: estado físico (42 d), fatiga (7 d), forma
 Metas semana/mes/año con anillos · racha de semanas
 Zapatillas (km, aviso de cambio, retirar) · Mapa de calor
