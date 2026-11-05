@@ -57,7 +57,7 @@ a 390 px:
 Las 6 áreas se vuelven categorías con los mismos ids (`cuerpo, mente,
 dinero, carrera, bienestar, social`) y los nombres que les puso el dueño.
 Cada una: nombre, emoji, color (paleta cerrada), orden y archivada. Límite
-12. Se guardan en `meta/habitos_juego.categorias` (el mismo documento que
+16 activas (era 12; subió al sumar 4 de fábrica, D-088). Se guardan en `meta/habitos_juego.categorias` (el mismo documento que
 ya se escucha: cero lecturas nuevas). Sin el campo, se arman al leer desde
 `prefs.areas`.
 
@@ -75,10 +75,13 @@ Lima `#a3e635` · Piedra `#a8a29e`.
 | bienestar | 🌿 | Turquesa |
 | social | 🤝 | Rosa |
 
-Propuestas extra (las decide el dueño; aparecen como "Sugeridas" para
-crearlas con un toque): **Fe** 🙏 Índigo (Biblia, orar), **Lectura** 📚
-Celeste (Libros), **Cuidado personal** 💆 Lima (Scalping, piel) y
-**Hogar** 🏠 Piedra.
+| fe | 🙏 | Índigo |
+| lectura | 📚 | Celeste |
+| cuidado | 💆 | Lima |
+| hogar | 🏠 | Piedra |
+
+Las 4 últimas las propuso la fase 0 y el dueño las eligió (D-088): vienen
+de fábrica junto a las 6 de siempre (10 en total, hasta 16 activas).
 
 ### Gestión (fase 3)
 Ajustes › Categorías: lista con su color y cuántos hábitos tiene, flechas

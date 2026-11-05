@@ -842,3 +842,17 @@ categorías (la copia ya llevaba `meta/habitos_juego` entero; importar suma
 solo las categorías que faltan). Los ocho problemas de la auditoría quedan
 resueltos (tabla en `docs/HABITOS.md`). Scalping no se tocó
 (`js/scalping-habit.js` igual; su E2E de 75 comprobaciones pasa).
+
+**D-088 (2026-11-05) · Fe, Lectura, Cuidado personal y Hogar vienen de
+fábrica; sin recordatorios por ahora.** El dueño eligió las 4 categorías
+propuestas. En vez de escribirlas en su cuenta, se suman a las 6 de siempre
+al leer (`js/habitos-categorias.js`, igual que la migración desde
+`prefs.areas`): aparecen en todos los teléfonos sin escrituras, y solo se
+guarda lo que cambie. Si alguien ya tenía una propia con el mismo nombre,
+no sale repetida; si la elimina, queda `borrada` y no vuelve. Como ahora
+son 10 de fábrica, el límite sube a 16 activas. El radar de equilibrio usa
+solo las categorías con algo que hacer en el periodo (si no, 10 ejes casi
+vacíos lo volvían barras). Al sugerir, Fe, Lectura, Cuidado personal y
+Hogar (y las propias) ganan a las generales en un empate. Sobre los
+recordatorios fuera de Manolo (push o Calendario) el dueño dijo que no por
+ahora: quedan en "Para después".

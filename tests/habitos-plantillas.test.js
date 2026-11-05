@@ -11,7 +11,7 @@ test("plantillas válidas: 30 a 40, ids y nombres únicos, tipos, metas y frecue
   assert.ok(L.length >= 30 && L.length <= 40, `${L.length} plantillas`);
   assert.equal(new Set(L.map(p => p.id)).size, L.length);
   assert.equal(new Set(L.map(p => p.nombre)).size, L.length);
-  const cats = new Set(Object.keys(C.DEFECTO).concat(C.SUGERIDAS.map(s => s.id)));
+  const cats = new Set(Object.keys(C.DEFECTO));
   L.forEach(p => {
     assert.ok(CFG.TIPOS[p.tipo], `${p.id}: tipo`);
     assert.ok(CFG.FRECUENCIAS.includes(p.freqType), `${p.id}: frecuencia`);
@@ -30,16 +30,18 @@ test("plantillas válidas: 30 a 40, ids y nombres únicos, tipos, metas y frecue
       if (p.medida) assert.ok(f.medidas.some(m => m[0] === p.medida), `${p.id}: medida`);
     }
   });
-  // Cada categoría de siempre tiene al menos 3.
-  Object.keys(C.DEFECTO).forEach(id => assert.ok(L.filter(p => p.cat === id || (p.alt === id && !C.DEFECTO[p.cat])).length >= 3, id));
+  // Cada una de las 6 áreas de siempre tiene al menos 3; las otras 4, al menos 1.
+  CFG.AREAS.forEach(a => assert.ok(L.filter(p => p.cat === a.id).length >= 3, a.id));
+  ["fe", "lectura", "cuidado", "hogar"].forEach(id => assert.ok(L.some(p => p.cat === id), id));
 });
 
 test("categoría de una plantilla: la sugerida si existe, si no su alternativa", () => {
   const base = C.leer({});
   const leer = T.LISTA.find(p => p.id === "leer");
-  assert.equal(T.categoriaDe(leer, base), "mente");
-  assert.equal(T.categoriaDe(leer, C.leer({ categorias: { lectura: { nombre: "Lectura" } } })), "lectura");
-  assert.equal(T.categoriaDe(T.LISTA.find(p => p.id === "cama"), base), null);
+  assert.equal(T.categoriaDe(leer, base), "lectura");
+  assert.equal(T.categoriaDe(leer, C.leer({ categorias: { lectura: { borrada: true } } })), "mente");
+  assert.equal(T.categoriaDe(T.LISTA.find(p => p.id === "cama"), base), "hogar");
+  assert.equal(T.categoriaDe(T.LISTA.find(p => p.id === "cama"), C.leer({ categorias: { hogar: { archivada: true } } })), null);
   assert.equal(T.categoriaDe(T.LISTA.find(p => p.id === "agua"), C.leer({ categorias: { cuerpo: { archivada: true } } })), null);
 });
 
@@ -52,7 +54,7 @@ test("buscar sin tildes, por nombre o categoría, y agrupar en tu orden", () => 
   assert.equal(T.buscar("", base).length, T.LISTA.length);
   assert.deepEqual(T.buscar("zzzz", base), []);
   const g = T.grupos(T.LISTA, base);
-  assert.deepEqual(g.map(x => x.id), ["cuerpo", "mente", "dinero", "carrera", "bienestar", "social", null]);
+  assert.deepEqual(g.map(x => x.id), ["cuerpo", "mente", "dinero", "carrera", "bienestar", "social", "fe", "lectura", "cuidado", "hogar"]);
   assert.equal(g.reduce((s, x) => s + x.items.length, 0), T.LISTA.length);
 });
 

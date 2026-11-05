@@ -1,5 +1,11 @@
 # Cambios
 
+## 2026-11-05 · Hábitos: Fe, Lectura, Cuidado personal y Hogar
+- Las 4 categorías que elegiste ya vienen en Manolo, con su emoji y color.
+  Pasa tus hábitos con Ajustes › Categorías › Asignar categorías.
+- Hasta 16 categorías activas. El radar de equilibrio muestra solo las que
+  tienen hábitos en el periodo.
+
 ## 2026-11-05 · Hábitos: QA final (fase 8)
 - Regresión de todo Manolo (todas las E2E) en verde; E2E `habitos.js`
   completo a 390 y 1280 px, también exportar e importar con categorías.

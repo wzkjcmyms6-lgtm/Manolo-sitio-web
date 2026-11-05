@@ -16,17 +16,10 @@ Cada fase deja la app funcionando y publicada.
 | 7 | Plantillas, hora opcional, aviso de pendientes | ✅ (push y Calendario: investigado, espera OK) |
 | 8 | QA final, `docs/HABITOS.md`, lista para el iPhone | ✅ |
 
-**Plan terminado (2026-11-05).** Queda del dueño: elegir categorías extra
-(si quiere), decidir sobre recordatorios y hacer la lista "Hábitos:
-categorías y siguiente nivel" de `docs/TESTING.md` en el iPhone.
-
-**Pedido al dueño (fase 7):** decir si quiere recordatorios en el
-Calendario del iPhone (.ics, gratis) o push con la app cerrada (plan Blaze
-de Firebase). Pros, contras y costos en `docs/NOTIFICATIONS.md`.
-
-**Pedido al dueño (fase 0):** elegir cuáles de las categorías extra
-propuestas crear (Fe, Lectura, Cuidado personal, Hogar). Mientras tanto
-quedan como "Sugeridas" en la gestión de categorías.
+**Plan terminado (2026-11-05).** El dueño eligió las 4 categorías extra
+(vienen de fábrica, D-088) y no quiere recordatorios fuera de Manolo por
+ahora. Queda: que haga la lista "Hábitos: categorías y siguiente nivel" de
+`docs/TESTING.md` en el iPhone y avise.
 
 ### Para después (anotado, no hacer)
 - Push con la app cerrada.

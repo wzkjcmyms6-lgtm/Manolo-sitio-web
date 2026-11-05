@@ -11,7 +11,7 @@
   else root.HabitosCategorias = factory(root.HabitosConfig);
 })(typeof self !== "undefined" ? self : this, function (CFG) {
 
-const MAX = 12;          // categorías activas a la vez
+const MAX = 16;          // categorías activas a la vez (10 vienen de fábrica)
 const NOMBRE_MAX = 20;
 
 // Paleta cerrada: colores claros que se leen sobre el fondo oscuro y no
@@ -28,21 +28,31 @@ const PALETA = [
   { id: "lima", nombre: "Lima", color: "#a3e635" },
   { id: "piedra", nombre: "Piedra", color: "#a8a29e" }
 ];
+// De fábrica: las 6 áreas de siempre y, desde 2026-11-05, las 4 que eligió
+// el dueño (D-088). Se arman al leer; solo se guarda lo que cambies.
+const EXTRAS = [
+  { id: "fe", nombre: "Fe" },
+  { id: "lectura", nombre: "Lectura" },
+  { id: "cuidado", nombre: "Cuidado personal" },
+  { id: "hogar", nombre: "Hogar" }
+];
+const BASE = CFG.AREAS.concat(EXTRAS);
 const DEFECTO = {
   cuerpo: { emoji: "💪", color: "coral" },
   mente: { emoji: "🧠", color: "violeta" },
   dinero: { emoji: "💰", color: "verde" },
   carrera: { emoji: "💼", color: "azul" },
   bienestar: { emoji: "🌿", color: "turquesa" },
-  social: { emoji: "🤝", color: "rosa" }
+  social: { emoji: "🤝", color: "rosa" },
+  fe: { emoji: "🙏", color: "indigo" },
+  lectura: { emoji: "📚", color: "celeste" },
+  cuidado: { emoji: "💆", color: "lima" },
+  hogar: { emoji: "🏠", color: "piedra" }
 };
-// Propuestas del diseño (fase 0): el dueño decide cuáles crear.
-const SUGERIDAS = [
-  { id: "fe", nombre: "Fe", emoji: "🙏", color: "indigo" },
-  { id: "lectura", nombre: "Lectura", emoji: "📚", color: "celeste" },
-  { id: "cuidado", nombre: "Cuidado personal", emoji: "💆", color: "lima" },
-  { id: "hogar", nombre: "Hogar", emoji: "🏠", color: "piedra" }
-];
+// Propuestas para crear con un toque (las de la fase 0 ya vienen de fábrica).
+const SUGERIDAS = [];
+// Categorías más específicas: ganan a las generales al sugerir (Lectura > Mente).
+const ESPECIFICAS = new Set(EXTRAS.map(e => e.id));
 
 const esObjeto = v => !!v && typeof v === "object" && !Array.isArray(v);
 const texto = v => (typeof v === "string" ? v.trim() : "");
@@ -74,7 +84,11 @@ function leer(juego) {
   const guardadas = esObjeto(j.categorias) ? j.categorias : {};
   const viejos = esObjeto(j.prefs) && esObjeto(j.prefs.areas) ? j.prefs.areas : {};
   const out = [];
-  CFG.AREAS.forEach((a, i) => {
+  // Una propia con el mismo nombre que una de fábrica nueva (p. ej. "Fe"
+  // creada a mano con otro id) evita que aparezca repetida.
+  const propias = new Set(Object.keys(guardadas).filter(id => !DEFECTO[id] && esObjeto(guardadas[id]) && !guardadas[id].borrada).map(id => sinTildes(texto(guardadas[id].nombre))));
+  BASE.forEach((a, i) => {
+    if (!guardadas[a.id] && EXTRAS.some(e => e.id === a.id) && propias.has(sinTildes(a.nombre))) return;
     const base = { nombre: texto(viejos[a.id]) || a.nombre, emoji: DEFECTO[a.id].emoji, color: DEFECTO[a.id].color, orden: i + 1 };
     const g = esObjeto(guardadas[a.id]) ? guardadas[a.id] : {};
     // Lo guardado manda campo por campo (un nombre vacío no borra el de antes).
@@ -220,19 +234,19 @@ function sugerir(nombre, emoji, lista) {
       else if (w.length >= 4 && [...claves].some(k => k.length >= 4 && (w.startsWith(k) || k.startsWith(w)))) puntos += 1;
     });
     if (e && EMOJIS[c.id] && Array.from(e).some(ch => ch.length && EMOJIS[c.id].includes(ch) && /\p{Extended_Pictographic}/u.test(ch))) puntos += 1.5;
-    // Lo específico (Fe, Lectura…) gana a lo general (Mente) en un empate.
-    const extra = DEFECTO[c.id] ? 0 : 0.5;
+    // Lo específico (Fe, Lectura… o una propia) gana a lo general (Mente) en un empate.
+    const extra = DEFECTO[c.id] && !ESPECIFICAS.has(c.id) ? 0 : 0.5;
     if (puntos > 0 && (!mejor || puntos + extra > mejor.p)) mejor = { id: c.id, p: puntos + extra, i };
   });
   return mejor ? mejor.id : null;
 }
 
-// Equilibrio entre categorías: qué ejes mostrar (las activas y las
-// archivadas que tuvieron algo en el periodo) y cómo: radar con 3 a 8 ejes;
+// Equilibrio entre categorías: qué ejes mostrar (las que tuvieron algo que
+// hacer en el periodo, activas o archivadas) y cómo: radar con 3 a 8 ejes;
 // con menos o con más, barras horizontales. filas: areasPeriodo del motor.
 const RADAR_MIN = 3, RADAR_MAX = 8;
 function equilibrio(filas) {
-  const ejes = (filas || []).filter(a => !a.archivada || a.esperados > 0);
+  const ejes = (filas || []).filter(a => a.esperados > 0);
   return { forma: ejes.length >= RADAR_MIN && ejes.length <= RADAR_MAX ? "radar" : "barras", ejes };
 }
 

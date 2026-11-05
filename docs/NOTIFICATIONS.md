@@ -71,3 +71,6 @@ en el teléfono.
 
 **Recomendación**: empezar por el `.ics` (gratis, sin servidor) y dejar el
 push para cuando Manolo tenga un servidor por otra razón.
+
+**Decisión del dueño (2026-11-05):** por ahora no (D-088). Queda anotado en
+"Para después" de `.claude/CURRENT_PHASE.md`.

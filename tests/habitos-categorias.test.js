@@ -3,15 +3,20 @@ const assert = require("node:assert/strict");
 const C = require("../js/habitos-categorias.js");
 const E = require("../js/habitos-engine.js");
 
-test("migración en lectura: sin categorías guardadas salen las 6 áreas con los nombres del dueño", () => {
+test("migración en lectura: las 6 áreas con los nombres del dueño y las 4 que eligió (Fe, Lectura, Cuidado personal, Hogar)", () => {
   const lista = C.leer({ prefs: { areas: { dinero: "Finanzas", bienestar: "Paz", mente: "  " } } });
-  assert.deepEqual(lista.map(c => c.id), ["cuerpo", "mente", "dinero", "carrera", "bienestar", "social"]);
+  assert.deepEqual(lista.map(c => c.id), ["cuerpo", "mente", "dinero", "carrera", "bienestar", "social", "fe", "lectura", "cuidado", "hogar"]);
+  assert.deepEqual(lista.slice(6).map(c => `${c.emoji} ${c.nombre}`), ["🙏 Fe", "📚 Lectura", "💆 Cuidado personal", "🏠 Hogar"]);
   assert.equal(lista.find(c => c.id === "dinero").nombre, "Finanzas");
   assert.equal(lista.find(c => c.id === "bienestar").nombre, "Paz");
   assert.equal(lista.find(c => c.id === "mente").nombre, "Mente"); // vacío = el de siempre
   assert.ok(lista.every(c => c.emoji && C.PALETA.some(p => p.id === c.color) && !c.archivada && c.defecto));
   // Sin juego también funciona.
-  assert.equal(C.leer(null).length, 6);
+  assert.equal(C.leer(null).length, 10);
+  // Si ya había creado una "Fe" propia (otro id), no sale repetida.
+  assert.deepEqual(C.leer({ categorias: { "fe-2": { nombre: "Fe", orden: 7 } } }).filter(c => c.nombre === "Fe").map(c => c.id), ["fe-2"]);
+  // Una de fábrica que borró no vuelve.
+  assert.ok(!C.leer({ categorias: { hogar: { borrada: true } } }).some(c => c.id === "hogar"));
   assert.equal(C.leer(undefined)[0].nombre, "Cuerpo");
 });
 
@@ -46,7 +51,7 @@ test("crear: valida nombre, repetidos y el límite; id sin tildes y sin chocar",
   const r = C.crear(lista, { nombre: "Música y Guitarra", emoji: "🎸" }, {}, 1000);
   assert.ok(r.ok);
   assert.equal(r.id, "musica-y-guitarra");
-  assert.equal(r.doc.orden, 7);
+  assert.equal(r.doc.orden, 11);
   assert.equal(r.doc.creada, 1000);
   assert.ok(C.PALETA.some(p => p.id === r.doc.color));
   // No reutiliza un id de una categoría borrada.
@@ -55,7 +60,7 @@ test("crear: valida nombre, repetidos y el límite; id sin tildes y sin chocar",
   // Límite de activas (las archivadas no cuentan).
   const llenas = {};
   for (let i = 0; i < 6; i++) llenas["c" + i] = { nombre: "Cat " + i };
-  assert.match(C.crear(C.leer({ categorias: llenas }), { nombre: "Otra" }).error, /hasta 12/);
+  assert.match(C.crear(C.leer({ categorias: llenas }), { nombre: "Otra" }).error, /hasta 16/);
   llenas.c0.archivada = true;
   assert.ok(C.crear(C.leer({ categorias: llenas }), { nombre: "Otra" }).ok);
 });
@@ -74,7 +79,7 @@ test("editar, reordenar, archivar y borrar", () => {
   assert.equal(C.puedeBorrar("mente", habitos), false); // tiene historia: se archiva
   assert.equal(C.puedeBorrar("social", habitos), true);
   const arch = C.leer({ categorias: { mente: { archivada: true } } });
-  assert.equal(C.activas(arch).length, 5);
+  assert.equal(C.activas(arch).length, 9);
   assert.equal(arch.find(c => c.id === "mente").archivada, true);
 });
 
@@ -85,10 +90,8 @@ test("asignar en lote: solo cambia `area` de los que cambian", () => {
   assert.deepEqual(C.asignar(habitos, [], "mente"), []);
 });
 
-test("sugeridas: solo las que faltan", () => {
-  assert.deepEqual(C.sugeridas(C.leer({})).map(s => s.id), ["fe", "lectura", "cuidado", "hogar"]);
-  const juego = { categorias: { fe: { nombre: "Fe" }, otra: { nombre: "Lectura" } } };
-  assert.deepEqual(C.sugeridas(C.leer(juego), juego).map(s => s.id), ["cuidado", "hogar"]);
+test("sugeridas: las de la fase 0 ya vienen de fábrica, no se proponen de nuevo", () => {
+  assert.deepEqual(C.sugeridas(C.leer({})), []);
 });
 
 test("sugerir categoría por nombre o emoji (reglas simples)", () => {
@@ -102,10 +105,12 @@ test("sugerir categoría por nombre o emoji (reglas simples)", () => {
   assert.equal(C.sugerir("Algo raro", "🎈", base), null);
   assert.equal(C.sugerir("", "💰", base), "dinero");
   // Lo específico gana a lo general si existe.
-  const con = C.leer({ categorias: { lectura: { nombre: "Lectura", emoji: "📚" }, fe: { nombre: "Fe" }, guitarra: { nombre: "Guitarra" } } });
-  assert.equal(C.sugerir("Leer 20 páginas", "📖", con), "lectura");
-  assert.equal(C.sugerir("Leer 20 páginas", "📖", base), "mente");
-  assert.equal(C.sugerir("Orar", "🙏", con), "fe");
+  const con = C.leer({ categorias: { guitarra: { nombre: "Guitarra" } } });
+  assert.equal(C.sugerir("Leer 20 páginas", "📖", base), "lectura");
+  assert.equal(C.sugerir("Leer 20 páginas", "📖", C.leer({ categorias: { lectura: { borrada: true } } })), "mente");
+  assert.equal(C.sugerir("Orar", "🙏", base), "fe");
+  assert.equal(C.sugerir("Usar hilo dental", "", base), "cuidado");
+  assert.equal(C.sugerir("Tender la cama", "", base), "hogar");
   assert.equal(C.sugerir("Practicar guitarra", "🎸", con), "guitarra");
   // Nunca sugiere una archivada.
   assert.equal(C.sugerir("Correr", "", C.leer({ categorias: { cuerpo: { archivada: true } } })), null);
@@ -129,7 +134,7 @@ test("el motor usa las categorías: XP, nivel y % por categoría, con las archiv
   const per = E.areasPeriodo(r, "2026-09-01", "2026-09-10", cats);
   assert.equal(per.find(a => a.id === "fe").pct, 1);
   assert.equal(per.find(a => a.id === "social").pct, 0.4);
-  assert.equal(per.length, 7);
+  assert.equal(per.length, 10);
 });
 
 test("copia de seguridad: importar agrega solo las categorías que faltan", () => {

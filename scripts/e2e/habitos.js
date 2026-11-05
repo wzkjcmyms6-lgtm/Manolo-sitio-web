@@ -89,11 +89,12 @@ function conTemporadaVista(opciones) {
     await p.waitForTimeout(500);
     await p.click("#hb-lista [data-ajustes]");
     await p.waitForTimeout(300);
-    ok((await p.$$(".hb-ajuste-emojis span")).length === 6, "Ajustes muestra las 6 categorías");
+    ok((await p.$$(".hb-ajuste-emojis span")).length === 10, "Ajustes muestra las 10 categorías");
     await p.click("[data-cat-gestionar]");
     await p.waitForTimeout(300);
     const nombres = await p.$$eval(".hb-cats .hb-nombre", els => els.map(e => e.textContent));
-    ok(nombres.join(",") === "Cuerpo,Mente,Finanzas,Carrera,Paz,Social", `con tus nombres (${nombres})`);
+    ok(nombres.join(",") === "Cuerpo,Mente,Finanzas,Carrera,Paz,Social,Fe,Lectura,Cuidado personal,Hogar", `con tus nombres y las 4 elegidas (${nombres})`);
+    ok(!(await p.$("[data-cat-sugerida]")), "ya no hay «Sugeridas»: vienen de fábrica");
     ok(/2 sin categoría/.test(await texto(p, "[data-cat-asignar]")), "avisa de 2 hábitos sin categoría");
     await captura(p, `hab-cats-${ancho}.png`);
     // Crear
@@ -107,8 +108,8 @@ function conTemporadaVista(opciones) {
     await p.click('.hb-cat-form [type="submit"]');
     await p.waitForTimeout(400);
     let j = await juego(p);
-    ok(j.categorias && j.categorias.musica && j.categorias.musica.emoji === "🎸" && j.categorias.musica.color === "azul" && j.categorias.musica.orden === 7, "crea «Música» 🎸 azul al final");
-    ok((await p.$$(".hb-cats .hb-orden-item")).length === 7, "aparece en la lista");
+    ok(j.categorias && j.categorias.musica && j.categorias.musica.emoji === "🎸" && j.categorias.musica.color === "azul" && j.categorias.musica.orden === 11, "crea «Música» 🎸 azul al final");
+    ok((await p.$$(".hb-cats .hb-orden-item")).length === 11, "aparece en la lista");
     // Repetido
     await p.click('[data-cat-nueva="lista"]');
     await p.fill('[name="catNombre"]', "mente");
@@ -120,15 +121,7 @@ function conTemporadaVista(opciones) {
     // Ordenar
     await p.click('[data-cat-id="musica"] [data-cat-mover="-1"]');
     await p.waitForTimeout(250);
-    ok((await p.$$eval(".hb-cats .hb-nombre", els => els.map(e => e.textContent))).join(",") === "Cuerpo,Mente,Finanzas,Carrera,Paz,Música,Social", "se mueve con las flechas");
-    // Sugerida
-    await p.click('[data-cat-sugerida="fe"]');
-    await p.waitForTimeout(250);
-    ok((await p.inputValue('[name="catNombre"]')) === "Fe", "una sugerida abre el editor ya lleno");
-    await p.click('.hb-cat-form [type="submit"]');
-    await p.waitForTimeout(300);
-    j = await juego(p);
-    ok(j.categorias.fe && j.categorias.fe.emoji === "🙏", "crea la sugerida «Fe»");
+    ok((await p.$$eval(".hb-cats .hb-nombre", els => els.map(e => e.textContent))).join(",") === "Cuerpo,Mente,Finanzas,Carrera,Paz,Social,Fe,Lectura,Cuidado personal,Música,Hogar", "se mueve con las flechas");
     // Eliminar una sin historia; no archivar una con hábitos activos
     await p.click('[data-cat-editar="carrera"]');
     await p.waitForTimeout(250);
@@ -257,7 +250,7 @@ function conTemporadaVista(opciones) {
     ok(chips[0] === "Todas" && chips.length === 6, `filtro de categorías arriba (${chips.join(" | ")})`);
     const porCat = await p.$$eval(".hb-porcat-fila", els => els.map(e => e.textContent.replace(/\s+/g, " ").trim()));
     ok(porCat.length === 5 && /%/.test(porCat[0]), `tarjeta «Por categoría» ordenada (${porCat[0]} … ${porCat[porCat.length - 1]})`);
-    ok(await p.$(".hb-card .hbg-eje-radar") !== null && (await p.$$(".hbg-eje-radar")).length === 6, "radar de equilibrio con 6 ejes");
+    ok(await p.$(".hb-card .hbg-eje-radar") !== null && (await p.$$(".hbg-eje-radar")).length === 5, "radar de equilibrio con las 5 categorías que tienen datos");
     ok(/fue tu mejor categoría en este periodo/.test(await texto(p, "#hb-stats")), "«Lo que dicen tus datos» habla de categorías");
     await captura(p, `hab-stats-${ancho}.png`);
     const pctTodas = await texto(p, ".hb-kpi-grande");
