@@ -307,22 +307,7 @@ test("curva de niveles y títulos", () => {
   assert.equal(E.titulo(10), "Constante");
 });
 
-test("calibración: nivel 2 el primer día, ~10 al mes y ~30 al año (5 hábitos, 85 %)", () => {
-  function simular(n, adherencia) {
-    let s = 7;
-    const rnd = () => (s = (s * 1103515245 + 12345) % 2147483648) / 2147483648;
-    const docs = [1, 2, 3, 4, 5].map(i => hab("h" + i, { inicio: "2026-01-05" }));
-    for (let k = 0; k < n; k++) {
-      const f = E.addDias("2026-01-05", k);
-      docs.forEach(d => { if (rnd() < adherencia) d.registros[f] = hecho(); });
-    }
-    return E.evaluar(docs, { hoy: E.addDias("2026-01-05", n - 1) }).nivel.nivel;
-  }
-  assert.ok(simular(1, 1) >= 2);
-  const mes = simular(30, 0.85), anio = simular(365, 0.85);
-  assert.ok(mes >= 8 && mes <= 12, `mes: nivel ${mes}`);
-  assert.ok(anio >= 26 && anio <= 34, `año: nivel ${anio}`);
-});
+// La calibración (rangos, techo, nivel) se prueba en tests/habitos-dificultad.test.js.
 
 test("rinde con 20 hábitos y 3 años de historial", () => {
   const docs = Array.from({ length: 20 }, (_, i) => hab("h" + i, { inicio: "2023-10-01", registros: dias("2023-10-01", 1096, j => (j % 5 ? hecho() : undefined)) }));
@@ -343,16 +328,6 @@ test("rango: 25 divisiones con nombre propio en Hábitos (Ejercicio no cambia)",
   assert.equal(E.NIVELES.length, 25);
   assert.equal(E.NIVELES[24].nombre, "Inquebrantable");
   assert.equal(RC.RANGOS[RC.RANGOS.length - 1].nombre, "Simétrico");
-});
-
-test("rango calibrado: semana ≈ Bronce, mes ≈ Oro, 3 meses ≈ Diamante, 1 año al 95 % ≈ máximo", () => {
-  assert.match(nivelNombre(perfectoN(7).rango), /^Bronce/);
-  assert.match(nivelNombre(perfectoN(30).rango), /^Oro/);
-  assert.match(nivelNombre(perfectoN(90).rango), /^Diamante/);
-  // 5 meses perfectos no bastan: el máximo pide casi un año de historia.
-  assert.notEqual(nivelNombre(perfectoN(160).rango), "Inquebrantable");
-  const anio = uno(hab("a", { inicio: "2025-01-01", registros: dias("2025-01-01", 365, i => (i % 20 === 19 ? undefined : hecho())) }), "2026-01-01");
-  assert.equal(nivelNombre(anio.rango), "Inquebrantable");
 });
 
 test("rango: un fallo aislado nunca baja de división", () => {

@@ -73,11 +73,13 @@ const XP = {
 };
 
 // XP total para llegar al nivel n = A × (n − 1)^B.
-// Calibrado (ver tests) para: nivel 2 el primer día, ~10 al mes y ~30 al año
-// con 5 hábitos y una constancia realista.
+// Temporada 2 (D-080, ver tests y tests/habitos-sim.js): con 5 hábitos al
+// ~80 % (con misiones y jefes) nivel 2 a los ~3 días, ~5 al mes, ~10 a los
+// 6 meses, ~15 al año y ~20 a los 2 años. Los títulos altos son de años.
+// Antes (temporada 1): A 16, B 2,14 (nivel 10 al mes, 31 al año).
 const NIVEL = {
-  A: 16,
-  B: 2.14,
+  A: 95,
+  B: 2.08,
   // Un título nuevo cada 5 niveles: TITULOS[floor(nivel / 5)].
   TITULOS: ["Principiante", "Aprendiz", "Constante", "Disciplinado", "Imparable",
     "Maestro", "Leyenda", "Mítico", "Inmortal", "Eterno", "Trascendente"]
@@ -94,27 +96,42 @@ const AREAS = [
 
 // ---------- Rango por hábito (fuerza de 0 a 100, estilo Loop) ----------
 // Cada día que toca, la fuerza se acerca a 100 si cumples (ALFA_SUBE) y a 0 si
-// fallas (ALFA_BAJA, más lento: un fallo pesa poco). Los hábitos que no son
-// diarios usan un alfa proporcional a los días entre una vez y la siguiente,
-// así el tiempo pesa igual. La fuerza pasa a un "percentil" con CURVA y de ahí
-// a las 25 divisiones de RANGOS (js/rangos-config.js).
-// Calibrado (ver tests): 1 semana perfecta ≈ Bronce, 1 mes ≈ Oro, 3 meses ≈
-// Diamante, 1 año al 95 % ≈ el máximo. Un fallo aislado no baja de división.
+// fallas (ALFA_BAJA: un fallo pesa ~4,6 veces más que un día cumplido). Los
+// hábitos que no son diarios usan un alfa proporcional a los días entre una
+// vez y la siguiente, así el tiempo pesa igual. La fuerza pasa a un
+// "percentil" con CURVA y de ahí a las 25 divisiones de RANGOS
+// (js/rangos-config.js).
+// Temporada 2 (D-080, ver tests): un diario perfecto llega a Bronce al mes,
+// Oro a los 3 meses, Esmeralda a los 6, Diamante al año y al máximo a los
+// ~1,5 años. Techo según constancia: 50 % Bronce · 70 % Plata · 80 % Oro ·
+// 90 % Rubí · 95 % Esmeralda · 98 % Diamante. Un fallo aislado nunca baja
+// de división; tres seguidos sí. Antes: 0,021 / 0,0126 / 300 días.
+// (Con 4× exacto, el 98 % llegaba a Campeón; 4,6× lo deja en Diamante.)
 const FUERZA = {
-  ALFA_SUBE: 0.021,
-  ALFA_BAJA: 0.0126,
-  MINIMA: 0.7,                // la versión mínima cuenta como un 70 %
+  ALFA_SUBE: 0.007,
+  ALFA_BAJA: 0.032,
+  MINIMA: 0.5,                // la versión mínima cuenta como un 50 %
+  PARCIAL: 0.8,               // un parcial cuenta el 80 % de lo que hiciste
   CURVA: [[0, 0], [85, 85], [96.5, 99], [100, 99.9]], // fuerza → percentil
-  MIN_DIAS_MAXIMO: 300,       // días de historia para llegar al último rango
-  HISTERESIS: 2,              // puntos bajo el mínimo antes de bajar de división
-  ESCUDO: 3                   // días evaluados protegidos tras subir de división
+  MIN_DIAS_MAXIMO: 540,       // días de historia para llegar al último rango
+  // Se baja de división solo si la fuerza cae más de lo que quita un fallo
+  // desde el piso (histéresis = ALFA_BAJA, relativa a la fuerza).
+  FALLOS_BAJAN: 3,            // tantos fallos seguidos bajan al menos una división
+  ESCUDO: 0                   // días protegidos tras subir (ya no hace falta)
 };
+// Versión de la calibración. Al cambiarla, la app recalcula todo desde el
+// historial y muestra una sola vez "Temporada N" (sin celebraciones).
+const CALIBRACION = 2;
 // Nombres propios de Hábitos (Ejercicio no cambia).
 const RANGO_NOMBRES = { simetrico: "Inquebrantable" };
 
 // ---------- Áreas, monedas, tienda y misiones ----------
-const AREA_NIVEL = { A: 8, B: 2 };   // XP del área para su nivel n = A × (n − 1)^B
-const TIENDA = { COMODIN: 80 };      // precio de un comodín de racha
+// XP de la categoría para su nivel n = A × (n − 1)^B: con 2 hábitos al ~85 %,
+// nivel ~5 a los 2–3 meses y ~10 al año (antes: A 8).
+const AREA_NIVEL = { A: 80, B: 2 };
+// Precio de un comodín de racha: con constancia normal (~100 monedas por
+// semana) alcanza para uno cada 3–4 semanas (antes: 80).
+const TIENDA = { COMODIN: 350 };
 const MISIONES = {
   POR_SEMANA: 3,
   XP: 60,
@@ -163,7 +180,9 @@ const LOGROS = [
   L("nunca_dos", "Nunca dos veces", "Cumple justo al día siguiente de un fallo, 5 veces.", "nuncaDos", 5),
   L("madrugador", "Madrugador", "Marca 10 hábitos antes de las 7:00.", "madrugador", 10),
   L("coleccion", "Coleccionista", "Ten 5 hábitos activos.", "habitos", 5),
-  L("equilibrio", "Equilibrio", "Cumple hábitos de 4 áreas distintas en una semana.", "equilibrio", 4),
+  L("equilibrio", "Equilibrio", "Cumple hábitos de 4 categorías distintas en una semana.", "equilibrio", 4),
+  L("categoria_5", "Especialista", "Lleva una categoría al nivel 5.", "categoria", 5),
+  L("categoria_10", "Maestría", "Lleva una categoría al nivel 10.", "categoria", 10),
   L("nivel_5", "Nivel 5", "Llega al nivel 5.", "nivel", 5),
   L("nivel_10", "Nivel 10", "Llega al nivel 10.", "nivel", 10),
   L("nivel_25", "Nivel 25", "Llega al nivel 25.", "nivel", 25),
@@ -185,5 +204,5 @@ const LOGROS = [
 ];
 
 return { CONST, TIPOS, FRECUENCIAS, MOMENTOS, ESTADOS, MOTIVOS_SALTO, DIFICULTADES, XP, NIVEL, AREAS,
-  FUERZA, RANGO_NOMBRES, AREA_NIVEL, TIENDA, MISIONES, JEFE, LOGROS };
+  FUERZA, CALIBRACION, RANGO_NOMBRES, AREA_NIVEL, TIENDA, MISIONES, JEFE, LOGROS };
 });

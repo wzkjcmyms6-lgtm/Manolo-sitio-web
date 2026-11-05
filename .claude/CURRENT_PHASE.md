@@ -8,7 +8,7 @@ Cada fase deja la app funcionando y publicada.
 |---|---|---|
 | 0 | Auditoría y diseño (capturas, categorías, tabla de dificultad) | ✅ |
 | 1 | Motor y modelo de categorías (migración en lectura) | ✅ |
-| 2 | Nueva dificultad + Temporada 2 | — |
+| 2 | Nueva dificultad + Temporada 2 | ✅ |
 | 3 | Gestión de categorías (Ajustes, formulario, asignar en lote) | — |
 | 4 | Hoy: filtros, agrupar, colores, ocultar hechos, arreglos | — |
 | 5 | Página de categoría, Estadísticas por categoría, misiones y logros | — |

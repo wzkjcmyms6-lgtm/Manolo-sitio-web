@@ -458,11 +458,12 @@ function percentilFuerza(f) {
   }
   return c[c.length - 1][1];
 }
-// Días promedio entre una vez que toca y la siguiente.
+// Días promedio entre una vez que toca y la siguiente (en los semanales,
+// entre una sesión y otra: 3 por semana = cada 7/3 días).
 function intervalo(h) {
   if (h.freqType === "dias") return 7 / Math.max(1, h.days.filter(Boolean).length);
   if (h.freqType === "cadaN") return h.cadaN;
-  if (h.freqType === "semana") return 7;
+  if (h.freqType === "semana") return 7 / Math.max(1, h.timesPerWeek);
   return 1;
 }
 function alfas(h) {
@@ -473,40 +474,72 @@ function percentilConTope(f, evaluados) {
   const P = percentilFuerza(f);
   return evaluados < CFG.FUERZA.MIN_DIAS_MAXIMO ? Math.min(P, NIVELES[ULTIMO].min - 0.01) : P;
 }
+// Fuerza necesaria para un percentil (inversa de CURVA).
+function fuerzaPara(P) {
+  const c = CFG.FUERZA.CURVA;
+  for (let i = 1; i < c.length; i++) {
+    const [x0, y0] = c[i - 1], [x1, y1] = c[i];
+    if (P <= y1) return x0 + (x1 - x0) * (P - y0) / (y1 - y0);
+  }
+  return 100;
+}
 
 // Recorre los días (o semanas) evaluados del hábito. Solo cuentan los días que
 // tocaban; saltados y pausas no mueven la fuerza; un comodín protege la
 // racha, no la fuerza.
+// Bajar de división: un fallo suelto nunca baja (se tolera lo que quita un
+// fallo desde el piso de la división); FALLOS_BAJAN fallos seguidos bajan al
+// menos una, y la fuerza queda donde hacen falta otros FALLOS_BAJAN días
+// cumplidos para recuperarla (no "vuelve a subir" sola con un día).
 function fuerzaHabito(h, rh, hoy) {
   const F = CFG.FUERZA;
   const a = alfas(h);
-  let f = 0, P = 0, nivel = null, escudo = 0, evaluados = 0;
+  let f = 0, P = 0, nivel = null, escudo = 0, evaluados = 0, seguidos = 0;
   const serie = [];
-  const paso = (fecha, x) => {
-    f = x >= f ? f + a.sube * (x - f) : f + a.baja * (x - f);
-    evaluados += a.k;
+  // pasos: cada vez que tocaba, { x: lo que valió (0–100), fallo }. Un día es
+  // un paso; en los semanales, cada sesión de la semana (las hechas valen 100
+  // y las que faltaron 0), así una semana incompleta pesa igual que los días
+  // fallados de un diario. La división se decide al final del día o semana.
+  const paso = (fecha, pasos) => {
+    const antes = nivel;
+    let forzado = false;
+    pasos.forEach(({ x, fallo }) => {
+      f = x >= f ? f + a.sube * (x - f) : f + a.baja * (x - f);
+      evaluados += a.k;
+      seguidos = fallo ? seguidos + 1 : 0;
+      // Tres fallos seguidos: queda bajo el piso de su división, donde hacen
+      // falta otros tantos cumplidos seguidos para volver.
+      if (fallo && seguidos === F.FALLOS_BAJAN && antes != null && antes > 0) {
+        f = Math.min(f, 100 - (100 - fuerzaPara(NIVELES[antes].min)) / Math.pow(1 - a.sube, F.FALLOS_BAJAN));
+        forzado = true;
+      }
+    });
     P = percentilConTope(f, evaluados);
     const protegido = escudo > 0;
     if (protegido) escudo--;
     let nuevo = nivelPorP(P);
-    if (nivel != null && nuevo < nivel && (protegido || P >= NIVELES[nivel].min - F.HISTERESIS)) nuevo = nivel;
-    if (nivel != null && nuevo > nivel) escudo = F.ESCUDO;
+    if (forzado) nuevo = Math.min(nuevo, antes - 1);
+    else if (antes != null && nuevo < antes && (protegido || f >= fuerzaPara(NIVELES[antes].min) * (1 - a.baja) - 1e-9)) nuevo = antes;
+    if (antes != null && nuevo > antes) escudo = F.ESCUDO;
     nivel = nuevo;
     serie.push({ fecha, fuerza: f, P, nivel });
   };
-  const valor = d => 100 * (d.estado === "minima" ? F.MINIMA : Math.min(1, d.fraccion || 0));
+  const valor = d => 100 * (d.estado === "minima" ? F.MINIMA
+    : d.estado === "parcial" ? Math.min(1, d.fraccion || 0) * F.PARCIAL
+    : Math.min(1, d.fraccion || 0));
 
   if (porSemana(h)) {
     rh.semanas.forEach(s => {
       const evaluable = s.estado === "cumple" || s.estado === "fallo" || s.protegido;
       if (!evaluable || s.meta === 0) return;
-      paso(s.domingo <= hoy ? s.domingo : hoy, 100 * Math.min(1, s.hechas / s.meta));
+      const hechas = Math.min(s.hechas, s.meta);
+      paso(s.domingo <= hoy ? s.domingo : hoy, Array.from({ length: s.meta }, (_, i) => (i < hechas ? { x: 100, fallo: false } : { x: 0, fallo: true })));
     });
   } else {
     Object.keys(rh.dias).forEach(fe => {
       const d = rh.dias[fe];
       if (h.tipo === "evitar" && fe >= hoy) return;
-      if (d.clase === "cumple" || d.clase === "fallo" || d.protegido) paso(fe, valor(d));
+      if (d.clase === "cumple" || d.clase === "fallo" || d.protegido) paso(fe, [{ x: valor(d), fallo: d.clase !== "cumple" }]);
     });
   }
   if (nivel == null) return { tieneRango: false, fuerza: 0, P: 0, nivel: null, escudo: 0, serie, evaluados };
@@ -519,6 +552,80 @@ function fuerzaHabito(h, rh, hoy) {
     tendencia: hace14 ? f - hace14.fuerza : null,
     faltaHistoria: sig && sig.idx === ULTIMO && percentilFuerza(f) >= sig.min && evaluados < F.MIN_DIAS_MAXIMO
   };
+}
+
+// ---------- Por qué cuesta: techo, constancia necesaria y días ----------
+// Fuerza a la que se llega sosteniendo una constancia p (0–1): donde lo que
+// suben los días cumplidos iguala lo que bajan los fallos.
+function fuerzaSostenida(h, p) {
+  const a = alfas(h);
+  if (p >= 1) return 100;
+  if (p <= 0) return 0;
+  return 100 * p * a.sube / (p * a.sube + (1 - p) * a.baja);
+}
+// División máxima sosteniendo p (sin el tope de historia del último rango).
+function techoRango(h, p) {
+  return nivelPorP(percentilFuerza(fuerzaSostenida(h, p)));
+}
+// Constancia que hace falta para sostener una división.
+function constanciaPara(h, idx) {
+  const a = alfas(h);
+  const fz = fuerzaPara(NIVELES[idx].min);
+  if (fz <= 0) return 0;
+  if (fz >= 100) return 1;
+  return fz * a.baja / (a.sube * (100 - fz) + fz * a.baja);
+}
+// Días (de calendario) cumpliendo todo lo que toque para llegar a la división idx.
+function diasParaDivision(h, rh, idx) {
+  const F = CFG.FUERZA, a = alfas(h), r = rh.rango;
+  const f = r.tieneRango ? r.fuerza : 0;
+  const meta = fuerzaPara(NIVELES[idx].min);
+  let pasos = 0;
+  if (f < meta) pasos = meta >= 100 ? Infinity : Math.ceil(Math.log((100 - meta) / (100 - f)) / Math.log(1 - a.sube));
+  let dias = pasos * a.k;
+  if (idx === ULTIMO) dias = Math.max(dias, F.MIN_DIAS_MAXIMO - (r.evaluados || 0));
+  return Math.max(0, Math.ceil(dias));
+}
+// Todo junto para el detalle: constancia de los últimos 90 días, techo, la
+// próxima división y el próximo rango con la constancia que piden.
+// Constancia de los últimos 90 días: días cumplidos (o, en los semanales,
+// sesiones hechas de las que pedía cada semana).
+function constanciaReciente(rh, hoy) {
+  const desde = addDias(hoy, -89);
+  if (!porSemana(rh.habito)) return cumplimiento(rh, desde, hoy);
+  let h = 0, e = 0;
+  rh.semanas.forEach(s => {
+    if (s.domingo < desde || s.lunes > hoy || (s.estado !== "cumple" && s.estado !== "fallo")) return;
+    h += Math.min(s.hechas, s.meta); e += s.meta;
+  });
+  return e ? h / e : null;
+}
+function explicarRango(rh, hoy) {
+  const h = rh.habito, r = rh.rango;
+  const p = constanciaReciente(rh, hoy);
+  const out = { constancia: p, techo: p == null ? null : techoRango(h, p) };
+  if (r.tieneRango && r.siguiente) out.diasSiguiente = diasParaDivision(h, rh, r.siguiente.idx);
+  const actual = r.tieneRango ? r.nivel : -1;
+  const base = Math.max(actual, out.techo == null ? -1 : out.techo);
+  const rangoBase = base >= 0 ? NIVELES[base].rango.id : null;
+  const proximo = NIVELES.find(n => n.idx > base && n.division <= 1 && n.rango.id !== rangoBase);
+  if (proximo) out.proximoRango = { idx: proximo.idx, nombre: proximo.rango.nombre, constancia: constanciaPara(h, proximo.idx) };
+  return out;
+}
+
+// XP por día en los últimos `dias` (para "a tu ritmo, ~N días").
+function ritmoXP(res, dias) {
+  const n = dias || 28;
+  const ix = indice(res);
+  const desde = addDias(res.hoy, -(n - 1));
+  const real = Math.min(n, diasEntre(ix.desde, res.hoy) + 1);
+  return real > 0 ? sumaRango(ix, ix.X, desde, res.hoy) / real : 0;
+}
+function explicarNivel(res, dias) {
+  const n = res.nivel;
+  const falta = Math.max(0, n.hasta - n.xp);
+  const ritmo = ritmoXP(res, dias);
+  return { falta, ritmo, dias: ritmo > 0 ? Math.ceil(falta / ritmo) : null, siguiente: n.nivel + 1 };
 }
 
 // Nivel del rango en una fecha (el último evaluado hasta ese día).
@@ -766,6 +873,7 @@ function calcularLogros(res, extra) {
     limpios: lista.filter(rh => rh.habito.tipo === "evitar").reduce((m, rh) => Math.max(m, rh.racha.mejor), 0),
     semanal: lista.filter(rh => rh.racha.unidad === "semanas").reduce((m, rh) => Math.max(m, rh.racha.mejor), 0),
     regreso,
+    categoria: (res.areas || []).reduce((m, a) => Math.max(m, a.nivel.nivel), 0),
     // Minutos reales de Scalping (js/scalping-habit.js). Sin el hábito, sus logros no aparecen.
     scalping: extra.scalpingMinutos || 0
   };
@@ -1369,7 +1477,8 @@ return {
   PERIODOS, indice, periodo, cumplimientoGlobal, kpis, serieSemanal, porDiaSemana, porMomento, areasPeriodo,
   ranking, enRiesgo, correlaciones, insights, resumenSemana, aniosWrapped, wrapped,
   generarJefe, evaluarJefes, rival, copiaDeSeguridad, planImportacion,
-  NIVELES, percentilFuerza, intervalo, fuerzaHabito, rangoEn, subiriaConSemanaPerfecta, calcularAreas,
+  NIVELES, percentilFuerza, fuerzaPara, intervalo, fuerzaHabito, rangoEn, subiriaConSemanaPerfecta, calcularAreas,
+  fuerzaSostenida, techoRango, constanciaPara, diasParaDivision, constanciaReciente, explicarRango, ritmoXP, explicarNivel,
   generarMisiones, evaluarMisiones, calcularLogros, snapshot, novedades, fusionarSnapshot,
   cumplimiento, resumenDia, xpDelDiaTotal, formaCiclo, ordenarConCadenas, mesCalendario,
   CFG, isoDate, addDias, diasEntre, diaSemana, lunesDe, semanaId, fechaLogica, finDelDiaMs,

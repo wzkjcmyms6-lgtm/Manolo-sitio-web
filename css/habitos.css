@@ -367,6 +367,25 @@
 .hb-rango-txt b { color: var(--ink); font-size: 1.05rem; }
 .hb-rango-barra { margin-top: 0.2rem; }
 .hb-rango-escudo { color: var(--accent-2); }
+/* Por qué el rango está donde está (Temporada 2) */
+.hb-rango-porque { margin: 0.55rem 0 0; font-size: 0.82rem; line-height: 1.45; color: var(--muted); }
+.hb-rango-porque b { color: var(--ink); }
+.hb-nivel-ritmo { margin: 0.6rem 0 0; font-size: 0.82rem; color: var(--muted); }
+.hb-nivel-ritmo b { color: var(--ink); }
+/* Temporada 1 en Logros y hoja de la Temporada 2 */
+.hb-temporada { padding: 0.9rem 1rem; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); margin-bottom: 0.8rem; }
+.hb-temporada-top { display: flex; flex-direction: column; gap: 0.15rem; }
+.hb-temporada-top b { font-size: 1.05rem; }
+.hb-temporada-rangos { list-style: none; margin: 0.6rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+.hb-temporada-rangos li { display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; }
+.hb-temporada-rangos li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hb-temporada-rangos small { color: var(--muted); }
+.hb-temp-nivel { display: flex; align-items: center; gap: 0.6rem; margin: 0.4rem 0 0.6rem; }
+.hb-temp-nivel .hb-stat { flex: 1; }
+.hb-temp-flecha { font-size: 1.4rem; color: var(--accent-2); }
+.hb-temp-rangos li { gap: 0.5rem; }
+.hb-temp-cambio { font-size: 0.82rem; color: var(--muted); text-align: right; }
+.hb-temp-cambio b { color: var(--ink); }
 .hb-btn:disabled, .hb-btn-sec:disabled { opacity: 0.45; cursor: default; }
 
 .hb-resumen { padding: 1rem 1.1rem; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); margin-bottom: 1rem; }

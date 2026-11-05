@@ -753,3 +753,18 @@ constancia: 50 % Bronce, 70 % Plata, 80 % Oro, 90 % Rubí, 95 % Esmeralda,
 98 % Diamante. El XP por registro y las monedas por XP no cambian, para que
 el saldo de monedas que ya tiene el dueño no baje; lo que sube es la curva
 de nivel, la fuerza del rango y el precio del comodín.
+
+**D-081 (2026-11-05) · Reglas finas de la dificultad.** (1) `ALFA_BAJA` es
+4,6 × `ALFA_SUBE` y no 4 ×: con 4 × exacto, quien cumple el 98 % tocaba
+Campeón en sus mejores semanas y la histéresis lo dejaba ahí. (2) La
+histéresis es relativa: se baja de división solo si la fuerza cae más de
+lo que quita un fallo desde el piso; así ningún fallo suelto baja en ningún
+rango (antes eran 2 puntos de percentil, poco en los rangos altos). (3) Tres
+fallos seguidos bajan al menos una división y dejan la fuerza donde hacen
+falta tres cumplidos seguidos para volver (si no, volvía a subir al día
+siguiente). Se quita el "escudo" de 3 días tras subir, que chocaba con
+esta regla. (4) En los semanales cada sesión es un paso (3 por semana =
+cada 7/3 días): antes una semana de 2 de 3 contaba como un 67 % que
+igual subía. (5) La transición conserva los logros (unión con el
+snapshot) y muestra los ganados como conseguidos aunque hoy ya no se
+cumplan; el nivel y los rangos de antes quedan como Temporada 1.

@@ -93,12 +93,16 @@ Techo según constancia (lo máximo al que se llega sosteniéndola):
 
 | Constancia | Antes | Después |
 |---|---|---|
-| 50 % | Rubí II | Bronce III |
-| 70 % | Esmeralda III | Plata III |
-| 80 % | Diamante I | Oro III |
+| 50 % | Rubí II | Bronce II |
+| 70 % | Esmeralda III | Plata II |
+| 80 % | Diamante I | Oro II |
 | 90 % | Campeón I | Rubí III |
 | 95 % | Inquebrantable | Esmeralda III |
 | 98 % | Inquebrantable | Diamante III |
+| 99 % | Inquebrantable | Inquebrantable (con ~1,5 años) |
+
+(Fallos repartidos parejo. Si al 50 % los fallos vienen de a tres
+seguidos, se queda en Hierro: tres seguidos bajan una división.)
 
 Nivel del jugador con 5 hábitos al 80 % (con misiones y jefes):
 
@@ -110,6 +114,35 @@ Nivel del jugador con 5 hábitos al 80 % (con misiones y jefes):
 | 1 año | 31 | ~15 |
 | 2 años | 43 | ~20 |
 
-Cómo: `ALFA_SUBE` 0,021 → 0,007, `ALFA_BAJA` = 4 × `ALFA_SUBE`,
-`MIN_DIAS_MAXIMO` 300 → 540, curva de nivel `95 × (n − 1)^2,08`. El XP de
-cada registro no cambia (las monedas ganadas quedan igual).
+Cómo (fase 2, `js/habitos-config.js`):
+- Fuerza: `ALFA_SUBE` 0,021 → 0,007; `ALFA_BAJA` 0,0126 → 0,032 (un fallo
+  pesa ~4,6 veces un día cumplido; con 4× exacto el 98 % llegaba a
+  Campeón); `MIN_DIAS_MAXIMO` 300 → 540; la versión mínima vale 50 % (antes
+  70 %) y un parcial, el 80 % de lo hecho.
+- Bajar de división: un fallo suelto nunca baja (se tolera lo que quita un
+  fallo desde el piso); **3 fallos seguidos bajan una división** y hacen
+  falta 3 cumplidos seguidos para recuperarla. Sin "escudo" tras subir.
+- Semanales: cada sesión cuenta como un paso (3 por semana = cada 7/3
+  días); una semana incompleta pesa como los días fallados de un diario.
+- Nivel del jugador: `95 × (n − 1)^2,08` (antes `16 × (n − 1)^2,14`).
+  Nivel de categoría: `80 × (n − 1)^2` (antes 8). Comodín: 350 monedas
+  (antes 80): uno cada ~3,3 semanas con constancia normal.
+- El XP de cada registro no cambia, así que las monedas ganadas quedan igual.
+
+### Temporada 2 (transición)
+`meta/habitos_juego.calibracion` guarda la versión (2). La primera vez que
+se abre la versión nueva: el snapshot se reemplaza en silencio por el de
+ahora (sin celebrar ni avisar bajadas), conservando los logros ganados;
+el nivel y los mejores rangos de antes quedan en `temporada1 { nivel,
+rangos, logros, hasta, nivelNuevo, visto }` y se ve la hoja "Temporada 2:
+ahora subir cuesta más" hasta tocar "Entendido". En Logros: tarjeta
+"Temporada 1", y los logros ganados siguen como conseguidos aunque hoy no
+se cumplan. Un usuario sin historia no ve la hoja.
+
+### Por qué cuesta (en pantalla)
+- Detalle del hábito: "Con tu 82 % de los últimos 90 días, tu techo es Oro;
+  para Rubí necesitas ~85 %. Cumpliendo todo lo que toca, llegas a Oro III
+  en 12 días." (`HE.explicarRango`, fórmula del estado estable
+  `p·sube / (p·sube + (1−p)·baja)`).
+- Logros: "Te faltan 340 XP para el nivel 6: a tu ritmo (~65 XP por día),
+  6 días." (`HE.explicarNivel`, XP de los últimos 28 días).

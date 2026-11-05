@@ -1,5 +1,20 @@
 # Cambios
 
+## 2026-11-05 · Hábitos: Temporada 2, subir cuesta más (fase 2)
+- Rangos: un hábito diario perfecto llega a Bronce al mes, Oro a los 3
+  meses, Esmeralda a los 6, Diamante al año y al máximo a los ~1,5 años.
+  Un fallo suelto no baja; tres seguidos sí. La versión mínima y los
+  parciales suman menos.
+- Nivel: ~5 al mes, ~15 al año con 5 hábitos al 80 %. Categorías: ~5 a los
+  2–3 meses. Comodín: 350 monedas. Logros nuevos: Especialista y Maestría
+  (categoría al nivel 5 y 10).
+- La primera vez, la hoja "Temporada 2" muestra tu nivel y rangos de antes
+  y de ahora; tu Temporada 1 queda en Logros y los logros ganados se
+  quedan. El detalle explica tu techo y cuánto falta; Logros, el XP que
+  falta y cuánto tardarías.
+- Pruebas: `habitos-dificultad.test.js` (9 simulaciones) reemplaza las dos
+  de calibración viejas; E2E nuevo `habitos.js`.
+
 ## 2026-11-05 · Hábitos: categorías (fases 0 y 1)
 - Las áreas de vida ahora son categorías con emoji y color (las 6 de
   siempre, con los nombres que les pusiste). Se ven en el formulario, en

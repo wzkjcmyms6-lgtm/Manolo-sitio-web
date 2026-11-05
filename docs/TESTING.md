@@ -30,6 +30,10 @@
     en Finanzas, el selector de categorías, Hábitos y Running. Además, que
     las hojas no se salgan de ancho ni reboten (formulario Medible, Ajustes
     de Hábitos, transacción) y que la pantalla no rebote.
+  - `habitos.js` — Hábitos a 390 y 1280 px con datos realistas
+    (`habitos-semilla.js`): hoja de la Temporada 2 (sin celebraciones, logros
+    conservados), detalle que explica el techo, Temporada 1 en Logros.
+    Crece con cada fase del plan de categorías.
   - `scalping.js` — hábito Scalping con fecha y huso de La Paz fijos
     (además: el plan no avanza sin día completo, reinicio automático una vez
     y botón "Reiniciar desde el día 1"):

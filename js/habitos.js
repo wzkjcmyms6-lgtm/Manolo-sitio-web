@@ -613,6 +613,7 @@ function abrirHoja(html, actual) {
 }
 function cerrarHoja() {
   if (!hoja || hoja.hidden) return;
+  if (hojaActual && hojaActual.tipo === "temporada") temporadaVista();
   hojaActual = null;
   hoja.classList.add("closing");
   document.body.classList.remove("sheet-open");
@@ -1295,11 +1296,41 @@ function insigniaFila(rh) {
   const n = nivelHab(rh.rango.nivel);
   return `<span class="hb-insignia" title="${escapeHtml(n.nombre)}">${RangosInsignias.svg(n, { tam: 28 })}</span>`;
 }
+// Días en palabras: "3 días", "~5 semanas", "~4 meses", "~1,5 años".
+function enTiempo(d) {
+  if (d == null || !isFinite(d)) return "";
+  if (d <= 13) return plural(Math.max(1, Math.round(d)), "día", "días");
+  if (d <= 60) return `~${Math.round(d / 7)} semanas`;
+  if (d <= 540) return `~${Math.round(d / 30)} meses`;
+  const a = Math.round(d / 182.5) / 2;
+  return `~${String(a).replace(".", ",")} ${a === 1 ? "año" : "años"}`;
+}
+// Por qué está donde está: techo con tu constancia, cuánto pide el próximo
+// rango y cuántos días cumpliendo faltan para la próxima división.
+function porQueRango(rh) {
+  const r = rh.rango, x = HE.explicarRango(rh, res.hoy);
+  const semanal = rh.habito.freqType === "semana";
+  const partes = [];
+  if (x.constancia != null && x.techo != null) {
+    const techo = nivelHab(x.techo).rango.nombre;
+    let t = `Con tu ${pctTexto(x.constancia)} de ${semanal ? "las últimas 13 semanas" : "los últimos 90 días"}, tu techo es <b>${escapeHtml(techo)}</b>`;
+    if (x.proximoRango) t += `; para ${escapeHtml(x.proximoRango.nombre)} necesitas ~${Math.ceil(x.proximoRango.constancia * 100)} %`;
+    partes.push(t + ".");
+  }
+  if (r.tieneRango && r.siguiente && x.diasSiguiente) {
+    const sig = r.siguiente;
+    partes.push(r.faltaHistoria || sig.idx === HE.NIVELES.length - 1
+      ? `${escapeHtml(sig.nombre)} pide ~1,5 años de constancia: cumpliendo todo, te faltan ${enTiempo(x.diasSiguiente)}.`
+      : `Cumpliendo todo lo que toca, llegas a ${escapeHtml(sig.nombre)} en ${enTiempo(x.diasSiguiente)}.`);
+  }
+  partes.push(`Un fallo suelto no te baja; ${HC.FUERZA.FALLOS_BAJAN} seguidos sí.`);
+  return `<p class="hb-rango-porque">${partes.join(" ")}</p>`;
+}
 function rangoHtml(rh) {
   const r = rh.rango;
   if (!r.tieneRango) {
     return `<div class="hb-rango">${RangosInsignias.svg(null, { tam: 56 })}<div class="hb-rango-txt"><b>Sin rango todavía</b>
-      <span>Cumple este hábito los días que toca y en una semana tendrás tu primer rango.</span></div></div>`;
+      <span>Cumple este hábito los días que toca y pronto tendrás tu primer rango.</span></div></div>`;
   }
   const n = nivelHab(r.nivel), sig = r.siguiente;
   const tendencia = r.tendencia == null ? "" : r.tendencia > 0.5 ? " · subiendo" : r.tendencia < -0.5 ? " · bajando" : " · estable";
@@ -1309,10 +1340,11 @@ function rangoHtml(rh) {
       <b>${escapeHtml(n.nombre)}</b>
       <span>Fuerza ${Math.round(r.fuerza)} de 100${tendencia}</span>
       <div class="hb-xp hb-rango-barra" role="progressbar" aria-label="Avance hacia la siguiente división" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(r.avance * 100)}"><span style="width:${(r.avance * 100).toFixed(1)}%"></span></div>
-      <span class="hb-rango-sig">${!sig ? "Estás en la cima." : r.faltaHistoria ? `Para ${escapeHtml(sig.nombre)} necesitas casi un año de constancia.` : `Siguiente: ${escapeHtml(sig.nombre)}`}</span>
+      <span class="hb-rango-sig">${!sig ? "Estás en la cima." : `Siguiente: ${escapeHtml(sig.nombre)}`}</span>
       ${r.escudo > 0 ? `<span class="hb-rango-escudo">Protegido: ${plural(r.escudo, "día más", "días más")} sin bajar de división.</span>` : ""}
     </div>
-  </div>`;
+  </div>
+  ${porQueRango(rh)}`;
 }
 
 // ---------- Pestaña Logros: misiones, logros, tienda y áreas ----------
@@ -1323,7 +1355,8 @@ function renderLogros() {
   if (!cargado || !res || !panelLogros || panelLogros.hidden) return;
   const el = document.getElementById("hb-logros");
   const n = res.nivel;
-  const hechos = res.logros.filter(l => l.desbloqueado).length;
+  const hechos = logrosConGanados().filter(l => l.desbloqueado).length;
+  const xn = HE.explicarNivel(res);
   const tabs = [["misiones", "Misiones"], ["logros", "Logros"], ["tienda", "Tienda"], ["areas", "Categorías"]];
   el.innerHTML = `
     <div class="hb-resumen">
@@ -1335,6 +1368,7 @@ function renderLogros() {
         <span class="hb-dato">${plural(res.comodines.guardados, "comodín", "comodines")}</span>
         <span class="hb-dato"><span class="hb-ico" data-icon="trophy"></span>${hechos}/${res.logros.length}</span>
       </div>
+      <p class="hb-nivel-ritmo">Te faltan <b>${fmtNum(xn.falta)} XP</b> para el nivel ${xn.siguiente}${xn.dias ? `: a tu ritmo (~${fmtNum(xn.ritmo)} XP por día), ${enTiempo(xn.dias)}` : ""}.</p>
     </div>
     <div class="fin-tabs hb-tabs" role="tablist">${tabs.map(([id, t]) =>
       `<button type="button" class="fin-tab${logrosTab === id ? " active" : ""}" role="tab" aria-selected="${logrosTab === id}" data-hb-tab="${id}">${t}</button>`).join("")}</div>
@@ -1406,9 +1440,26 @@ function jefeHtml() {
   </section>`;
 }
 
+// Los logros ya ganados se quedan aunque hoy no se cumplan (p. ej. tras la
+// Temporada 2): el snapshot guarda todos los que se celebraron.
+function logrosConGanados() {
+  const ganados = new Set(((juego.snapshot && juego.snapshot.logros) || []).concat((juego.temporada1 && juego.temporada1.logros) || []));
+  return res.logros.map(l => (!l.desbloqueado && ganados.has(l.id) ? Object.assign({}, l, { desbloqueado: true, actual: l.metaProgreso, progreso: 1 }) : l));
+}
+function temporada1Html() {
+  const t = juego.temporada1;
+  if (!t || !t.nivel) return "";
+  const mejores = Object.keys(t.rangos || {}).filter(id => normal[id]).sort((a, b) => t.rangos[b] - t.rangos[a]).slice(0, 3);
+  return `<section class="hb-temporada" aria-label="Temporada 1">
+    <div class="hb-temporada-top"><span class="hb-jefe-eyebrow">Temporada 1${t.hasta ? ` · hasta el ${fechaCorta(t.hasta)}` : ""}</span>
+      <b>Nivel ${t.nivel} · ${escapeHtml(HE.titulo(t.nivel))}</b></div>
+    ${mejores.length ? `<ul class="hb-temporada-rangos">${mejores.map(id => `<li>${RangosInsignias.svg(nivelHab(t.rangos[id]), { tam: 26 })}<span>${escapeHtml(normal[id].emoji)} ${escapeHtml(normal[id].name)}</span><small>${escapeHtml(nivelHab(t.rangos[id]).nombre)}</small></li>`).join("")}</ul>` : ""}
+    <p class="hb-card-sub">Tus marcas con las reglas de antes. Desde la Temporada 2 subir cuesta más; los logros que ganaste se quedan.</p>
+  </section>`;
+}
 function logrosHtml() {
-  const lista = res.logros.slice().sort((a, b) => b.desbloqueado - a.desbloqueado || b.progreso - a.progreso);
-  return `<ul class="hb-logros">${lista.map(l => {
+  const lista = logrosConGanados().sort((a, b) => b.desbloqueado - a.desbloqueado || b.progreso - a.progreso);
+  return `${temporada1Html()}<ul class="hb-logros">${lista.map(l => {
     const oculto = l.secreto && !l.desbloqueado;
     return `<li class="hb-logro${l.desbloqueado ? " is-on" : ""}">
       <span class="hb-logro-ico" aria-hidden="true"><span data-icon="${oculto ? "star" : "trophy"}"></span></span>
@@ -1542,8 +1593,71 @@ function guardarSnapshot(snap) {
   const ref = metaJuego();
   (juegoExiste ? ref.update({ snapshot: snap }) : ref.set({ snapshot: snap }, { merge: true })).catch(errorGuardar);
 }
+// ---------- Temporada 2: la dificultad nueva (D-080) ----------
+// La primera vez con la calibración nueva todo se recalcula desde el
+// historial: el snapshot se actualiza en silencio (sin celebrar ni avisar de
+// bajadas), los logros ganados se conservan y el nivel y los mejores rangos de
+// antes quedan como "Temporada 1".
+function nuevaTemporada() {
+  const anterior = juego.snapshot;
+  // Si los hábitos todavía no llegaron, se espera (no se compara contra nada).
+  if (anterior && Object.keys(anterior.rangos || {}).length && !Object.keys(normal).length) return;
+  const nuevo = HE.snapshot(res);
+  const union = (a, b) => Array.from(new Set((a || []).concat(b || []))).sort();
+  const snap = Object.assign({}, nuevo, {
+    logros: union(anterior && anterior.logros, nuevo.logros),
+    misiones: union(anterior && anterior.misiones, nuevo.misiones),
+    perfectos: union(anterior && anterior.perfectos, nuevo.perfectos),
+    jefes: union(anterior && anterior.jefes, nuevo.jefes)
+  });
+  const campos = { calibracion: HC.CALIBRACION, snapshot: snap };
+  const habia = !!anterior && ((anterior.nivel || 1) > 1 || Object.keys(anterior.rangos || {}).length > 0);
+  if (habia) campos.temporada1 = { nivel: anterior.nivel || 1, rangos: anterior.rangos || {}, logros: anterior.logros || [], hasta: res.hoy, nivelNuevo: res.nivel.nivel, visto: false };
+  juego = Object.assign({}, juego, campos);
+  const ref = metaJuego();
+  (juegoExiste ? ref.update(campos) : ref.set(campos, { merge: true })).catch(errorGuardar);
+}
+let temporadaMostrada = false;
+function hojaTemporada() {
+  const t = juego.temporada1;
+  temporadaMostrada = true;
+  const ahora = res.nivel;
+  const filas = Object.keys(t.rangos || {}).filter(id => normal[id] && !normal[id].archivado)
+    .sort((a, b) => t.rangos[b] - t.rangos[a]).slice(0, 6).map(id => {
+      const r = res.habitos[id] && res.habitos[id].rango;
+      const nuevo = r && r.tieneRango ? nivelHab(r.nivel).nombre : "Sin rango";
+      return `<li><span>${escapeHtml(normal[id].emoji)} ${escapeHtml(normal[id].name)}</span><span class="hb-temp-cambio">${escapeHtml(nivelHab(t.rangos[id]).nombre)} → <b>${escapeHtml(nuevo)}</b></span></li>`;
+    }).join("");
+  abrirHoja(cabecera("Hábitos", "Temporada 2: ahora subir cuesta más") + `
+    <div class="hb-temp-nivel">
+      <div class="hb-stat"><span class="hb-num">${t.nivel}</span><span>Antes · ${escapeHtml(HE.titulo(t.nivel))}</span></div>
+      <span class="hb-temp-flecha" aria-hidden="true">→</span>
+      <div class="hb-stat"><span class="hb-num">${ahora.nivel}</span><span>Ahora · ${escapeHtml(ahora.titulo)}</span></div>
+    </div>
+    ${filas ? `<h4 class="hb-sub-t">Tus rangos</h4><ul class="hb-pausas hb-temp-rangos">${filas}</ul>` : ""}
+    <ul class="hb-lista-texto">
+      <li>Un hábito diario perfecto llega a Bronce al mes, a Oro a los 3 meses y a Diamante al año. El máximo pide ~1,5 años.</li>
+      <li>Fallar pesa unas 4 veces más que cumplir: un fallo suelto no te baja, ${HC.FUERZA.FALLOS_BAJAN} seguidos sí.</li>
+      <li>Tu historial, rachas, monedas y logros ganados se quedan igual. Tu Temporada 1 queda guardada en Logros.</li>
+      <li>En el detalle de cada hábito verás tu techo y cuánto te falta para subir.</li>
+    </ul>
+    <div class="hb-acciones"><button type="button" class="hb-btn" data-temporada-visto>Entendido</button></div>`, { tipo: "temporada" });
+}
+function temporadaVista() {
+  if (!juego.temporada1) return;
+  juego = Object.assign({}, juego, { temporada1: Object.assign({}, juego.temporada1, { visto: true }) });
+  metaJuego().update(FP("temporada1", "visto"), true).catch(errorGuardar);
+}
+
 function revisarCelebraciones() {
-  if (!juegoCargado || !res || celebrando || deshacerPendiente || wrapped) return;
+  if (!juegoCargado || !cargado || !res || celebrando || deshacerPendiente || wrapped) return;
+  if ((juego.calibracion || 1) < HC.CALIBRACION) { nuevaTemporada(); return; }
+  if (juego.temporada1 && !juego.temporada1.visto && !temporadaMostrada) {
+    const visibleT = !document.hidden && [panelHoy, panelStats, panelLogros].some(p => p && !p.hidden);
+    if (visibleT && !(hoja && !hoja.hidden)) hojaTemporada();
+    return;
+  }
+  if (hojaActual && hojaActual.tipo === "temporada") return;
   const anterior = juego.snapshot;
   if (!anterior) { guardarSnapshot(HE.snapshot(res)); return; }
   const snap = HE.fusionarSnapshot(anterior, HE.snapshot(res), res.hoy);
@@ -1661,6 +1775,7 @@ function sonar(tipo) {
 // ---------- Eventos ----------
 function onClickHoja(e) {
   const t = e.target;
+  if (t.closest("[data-temporada-visto]")) { cerrarHoja(); return; }
   if (t.closest("[data-cerrar]")) { cerrarHoja(); return; }
   const q = sel => t.closest(sel);
   const fechaDe = el => el.dataset.fecha || res.hoy;
@@ -1857,14 +1972,7 @@ function graficosDetalle(h, rh) {
   return html;
 }
 // Fuerza necesaria para un percentil (inversa de la curva), para dibujar la guía.
-function fuerzaPara(P) {
-  const c = HC.FUERZA.CURVA;
-  for (let i = 1; i < c.length; i++) {
-    const [x0, y0] = c[i - 1], [x1, y1] = c[i];
-    if (P <= y1) return x0 + (x1 - x0) * (P - y0) / (y1 - y0);
-  }
-  return 100;
-}
+const fuerzaPara = P => HE.fuerzaPara(P);
 function notasHtml(h) {
   const regs = (docs[h.id] && docs[h.id].registros) || {};
   const notas = Object.keys(regs).filter(f => regs[f] && regs[f].n).sort().reverse().slice(0, 10);
