@@ -874,3 +874,25 @@ rachas del pasado, `CFG.RECALCULO` guarda el resultado en el snapshot sin
 celebrar (sin tocar la Temporada 1). Se ve en el detalle ("Racha que
 perdona" con 2 escudos), en el calendario (día perdonado, borde ámbar sólido)
 y en Hoy ("🔥 9 días · 🛡 salvada ayer", junto a la racha).
+
+**D-090 (2026-11-05) · Ejercicio inteligente: plan y reglas de juego.**
+Pedido del dueño: ficha con demo de cada ejercicio, entreno que dice qué
+peso usar y por qué, estancamiento, descarga, volumen por músculo,
+generador de rutinas, recuperación y "¿Qué entreno hoy?" con Running.
+Reglas: (1) **sin IA de pago**: todo por reglas y fórmulas con su fuente
+(cada fórmula de la literatura se cita aquí al implementarla); (2) **solo
+aditivo**: `rir` por serie, `grupo` de superserie, `rpeSesion`, perfiles
+de equipo, meta y nivel en `meta/ajustes_ejercicio`, videos y notas en
+`meta/ejercicio_fichas`; los entrenos guardados no se reescriben y los
+Rangos no cambian de calibración; (3) **lógica nueva en módulos UMD sin
+DOM** con pruebas y pantallas nuevas en archivos nuevos (`gimnasio.js` ya
+pesa ~43 KB); (4) **arranque igual**: demos e instrucciones se cargan al
+abrir una ficha; todo se calcula en el teléfono con los entrenos que ya se
+escuchan (sin lecturas nuevas por ficha); (5) demos: las 2 fotos de
+free-exercise-db (dominio público, commit `f00c92c`) en WebP de ~480 px
+dentro del repo, fuera del precache del service worker, en una caché con
+límite; se precargan las de las rutinas. La base trae además
+`mechanic` (compuesto/aislamiento), `force` (empuje/tirón) y `level`: se
+agregan a `data/ejercicios.json` como campos nuevos para el descanso
+sugerido, el equilibrio y el generador. Auditoría y bocetos en
+`docs/EJERCICIO_INTELIGENTE.md`.

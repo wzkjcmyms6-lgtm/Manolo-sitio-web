@@ -1,5 +1,13 @@
 # Cambios
 
+## 2026-11-05 · Ejercicio inteligente: auditoría y diseño (fase 0)
+- Revisión a 390 px con 9 semanas de entrenos de prueba: 7 problemas
+  (empezar la rutina de hoy cuesta 4 toques, kg viejos precargados, el
+  descanso no avisa en el iPhone, sin resumen al terminar, sin ficha del
+  ejercicio…). Bocetos de la ficha, el entreno en vivo, el resumen y "¿Qué
+  entreno hoy?" en `docs/EJERCICIO_INTELIGENTE.md` (D-090).
+- Datos de prueba nuevos: `scripts/e2e/ejercicio-semilla.js`.
+
 ## 2026-11-05 · Hábitos: revisión de pantallas
 - Se compararon, captura por captura (390 y 1280 px), todas las pantallas
   de antes y después de los cambios de Hábitos. Running, Bici, Movilidad,

@@ -1,5 +1,28 @@
 # Fase actual
 
+## Ejercicio: mucho más inteligente y con demo (pedido del dueño, 2026-11-05)
+Diseño, auditoría y bocetos en `docs/EJERCICIO_INTELIGENTE.md`; decisiones
+desde D-090. Cada fase deja la app funcionando y publicada.
+
+| Fase | Qué | Estado |
+|---|---|---|
+| 0 | Auditoría y diseño (capturas, problemas, bocetos) | ✅ |
+| 1 | Demos: script, WebP en el repo, caché con límite, precarga de rutinas | |
+| 2 | Ficha del ejercicio: técnica, videos, historial, récords, alternativas | |
+| 3 | Entreno en vivo: objetivos, RIR, calentamiento, discos, superseries, descanso con aviso, récords, resumen | |
+| 4 | Progresión v2, estancamiento y descarga + Ajustes del gimnasio | |
+| 5 | Volumen semanal, equilibrio y generador de rutinas | |
+| 6 | Recuperación, "¿Qué entreno hoy?" y carga total con Running | |
+| 7 | Resumen inteligente, Perfil y compartir | |
+| 8 | QA final, docs y lista para el iPhone | |
+
+Datos de prueba: `scripts/e2e/ejercicio-semilla.js` (9 semanas realistas).
+
+### Para después (anotado, no hacer)
+- Videos propios grabados con el teléfono por ejercicio.
+- Datos de relojes o Apple Salud.
+- Retos de fuerza en el Feed.
+
 ## Hábitos: categorías y siguiente nivel (pedido del dueño, 2026-11-05)
 Diseño, auditoría y tablas en `docs/HABITOS.md`; decisiones desde D-079.
 Cada fase deja la app funcionando y publicada.

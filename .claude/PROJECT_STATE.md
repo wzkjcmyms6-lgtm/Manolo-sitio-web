@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-04 (empieza Running al nivel de Strava, D-060 a D-069).
+Actualizado: 2026-11-05 (empieza Ejercicio inteligente, D-090).
 
 - **App**: PWA estática + Firebase (Auth + Firestore), una sola página,
   JS puro sin build. Ver `docs/ARCHITECTURE.md`.
@@ -47,6 +47,11 @@ Actualizado: 2026-11-04 (empieza Running al nivel de Strava, D-060 a D-069).
   aviso de pendientes. D-079 a D-087, todo en `docs/HABITOS.md`. Fe, Lectura,
   Cuidado personal y Hogar vienen de fábrica (D-088); sin recordatorios
   fuera de Manolo por ahora. Falta: la lista del iPhone (`docs/TESTING.md`).
+- **Ejercicio inteligente (2026-11-05, en curso)**: ficha con demo,
+  entreno que dice qué peso usar y por qué, progresión v2, estancamiento y
+  descarga, volumen y equilibrio, generador, recuperación y "¿Qué entreno
+  hoy?" con Running. Plan y auditoría en `docs/EJERCICIO_INTELIGENTE.md`,
+  D-090 en adelante.
 - **Tests (2026-11-05)**: 430 unitarias; E2E de Running: `run-importar`,
   `run-detalle`, `run-feed`, `run-progreso`, `run-inteligencia`,
   `run-segmentos`, `run-compartir`, `run-qa`; de Hábitos: `habitos` (205,
