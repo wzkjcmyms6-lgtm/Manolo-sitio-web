@@ -730,3 +730,26 @@ nueva `tests/sw-version.test.js` (nada obligatorio falta) y E2E
 `scripts/e2e/sw-instala.js`, que instala y actualiza el service worker de
 verdad (las demás E2E lo bloquean, por eso no se vio). Con el `sw.js`
 publicado antes, esa prueba falla; con el arreglo, pasa.
+
+## 2026-11-05 · Hábitos: categorías y siguiente nivel
+
+**D-079 (2026-11-05) · Las áreas de vida se vuelven categorías, en el mismo
+documento.** No se crea un concepto paralelo: los 6 ids de siempre
+(`cuerpo … social`) siguen siendo los de `habitos/{id}.area`, así XP,
+niveles por área, el radar y el logro "Equilibrio" no cambian. Las
+categorías (nombre, emoji, color de una paleta cerrada, orden, archivada)
+viven en `meta/habitos_juego.categorias`: ese documento ya se escucha, así
+que no hay lecturas ni escuchas nuevas. Sin ese campo se arman al leer
+desde `prefs.areas` (los nombres que puso el dueño). Con historial no se
+borran: se archivan. Las 2–4 categorías extra propuestas (Fe, Lectura,
+Cuidado personal, Hogar) no se crean solas: quedan como "Sugeridas" para
+que el dueño las cree con un toque.
+
+**D-080 (2026-11-05) · Dificultad nueva: se endurece la progresión, no el
+XP de cada registro.** Simulado con el motor real (`tests/habitos-sim.js`):
+un hábito diario perfecto llega a Bronce al mes, Oro a los 3 meses,
+Esmeralda a los 6 y Diamante al año; el máximo pide ~1,5 años. Techo por
+constancia: 50 % Bronce, 70 % Plata, 80 % Oro, 90 % Rubí, 95 % Esmeralda,
+98 % Diamante. El XP por registro y las monedas por XP no cambian, para que
+el saldo de monedas que ya tiene el dueño no baje; lo que sube es la curva
+de nivel, la fuerza del rango y el precio del comodín.

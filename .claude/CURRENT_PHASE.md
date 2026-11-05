@@ -1,5 +1,31 @@
 # Fase actual
 
+## Hábitos: categorías y siguiente nivel (pedido del dueño, 2026-11-05)
+Diseño, auditoría y tablas en `docs/HABITOS.md`; decisiones desde D-079.
+Cada fase deja la app funcionando y publicada.
+
+| Fase | Qué | Estado |
+|---|---|---|
+| 0 | Auditoría y diseño (capturas, categorías, tabla de dificultad) | ✅ |
+| 1 | Motor y modelo de categorías (migración en lectura) | — |
+| 2 | Nueva dificultad + Temporada 2 | — |
+| 3 | Gestión de categorías (Ajustes, formulario, asignar en lote) | — |
+| 4 | Hoy: filtros, agrupar, colores, ocultar hechos, arreglos | — |
+| 5 | Página de categoría, Estadísticas por categoría, misiones y logros | — |
+| 6 | Se marca solo (Running, Bici, Movilidad, Libros, Biblia, Finanzas) | — |
+| 7 | Plantillas, hora opcional, aviso de pendientes | — |
+| 8 | QA final, `docs/HABITOS.md`, lista para el iPhone | — |
+
+**Pedido al dueño (fase 0):** elegir cuáles de las categorías extra
+propuestas crear (Fe, Lectura, Cuidado personal, Hogar). Mientras tanto
+quedan como "Sugeridas" en la gestión de categorías.
+
+### Para después (anotado, no hacer)
+- Push con la app cerrada.
+- Recordatorios en el Calendario del iPhone (.ics con alarmas).
+- Metas que agrupen hábitos (p. ej. "Correr un 10K" con sus hábitos).
+- Más planes guiados como Scalping.
+
 ## Running al nivel de Strava (pedido del dueño, 2026-11-04)
 Diseño en `docs/RUNNING.md`; decisiones D-060 a D-069; esquema en
 `docs/DATABASE.md`. Cada fase deja la app funcionando y publicada.
