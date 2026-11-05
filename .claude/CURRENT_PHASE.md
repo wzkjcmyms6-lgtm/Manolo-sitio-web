@@ -21,6 +21,10 @@ Cada fase deja la app funcionando y publicada.
 ahora. Queda: que haga la lista "Hábitos: categorías y siguiente nivel" de
 `docs/TESTING.md` en el iPhone y avise.
 
+Después: racha que perdona (D-089) y revisión de pantallas antes/después
+(otros módulos idénticos; 9 detalles visuales de Hábitos corregidos, ver
+`docs/CHANGELOG.md`).
+
 ### Para después (anotado, no hacer)
 - Push con la app cerrada.
 - Recordatorios en el Calendario del iPhone (.ics con alarmas).

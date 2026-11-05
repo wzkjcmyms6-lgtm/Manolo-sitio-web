@@ -1,10 +1,22 @@
 # Cambios
 
+## 2026-11-05 · Hábitos: revisión de pantallas
+- Se compararon, captura por captura (390 y 1280 px), todas las pantallas
+  de antes y después de los cambios de Hábitos. Running, Bici, Movilidad,
+  Libros, Biblia, Finanzas, Ejercicio y Scalping quedaron idénticos.
+- Arreglos: el botón "+1" de los hábitos medibles volvió a su lugar (un
+  nombre de estilo repetido lo había movido); el aviso "Te faltan N" ya no
+  tiene huecos; la tarjeta de Hábitos en Inicio vuelve a ocupar dos líneas;
+  "🛡 salvada ayer" va junto a la racha; el día perdonado del calendario
+  ya no se confunde con "hoy"; títulos de "Asignar categorías" con estilo;
+  la página de categoría muestra "8 semanas" en una línea; el reloj del
+  campo Hora se ve; las pestañas de Logros caben en pantallas de 320 px.
+
 ## 2026-11-05 · Hábitos: la racha perdona
 - Si fallas un día o dos, la racha no se pierde: cada racha empieza con 1
   perdón y ganas otro por cada semana cumplida (guardas hasta 2). Si fallas
   seguido, se acaban y se corta. No cambia tu rango ni tu cumplimiento.
-- En el detalle ves tus perdones; en Hoy, "🛡 ayer se salvó tu racha"; en
+- En el detalle ves tus perdones; en Hoy, "🛡 salvada ayer"; en
   el calendario, el día perdonado. Las rachas del pasado se recalcularon
   sin celebraciones.
 - Pruebas: `habitos-racha.test.js` (6) y 7 pruebas viejas al día.

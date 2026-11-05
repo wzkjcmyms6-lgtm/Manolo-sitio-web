@@ -872,5 +872,5 @@ perfectos: solo la racha lo trata como neutral. Va antes que los
 comodines (un día salvado por un perdón no gasta comodín). Como alarga
 rachas del pasado, `CFG.RECALCULO` guarda el resultado en el snapshot sin
 celebrar (sin tocar la Temporada 1). Se ve en el detalle ("Racha que
-perdona" con 2 escudos), en el calendario (día perdonado, borde punteado)
-y en Hoy ("🛡 ayer se salvó tu racha").
+perdona" con 2 escudos), en el calendario (día perdonado, borde ámbar sólido)
+y en Hoy ("🔥 9 días · 🛡 salvada ayer", junto a la racha).

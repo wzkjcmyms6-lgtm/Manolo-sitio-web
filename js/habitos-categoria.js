@@ -35,8 +35,8 @@ function render() {
   const ritmo = HE.ritmoXP(r.sub, 28);
   const dias = ritmo > 0 ? Math.ceil(falta / ritmo) : null;
   const pct = v => A.pctTexto(v);
-  const racha = x => (x ? `${A.escapeHtml(st.normal[x.id] ? st.normal[x.id].emoji : "")} ${x.n} ${x.unidad === "semanas" ? (x.n === 1 ? "semana" : "semanas") : x.n === 1 ? "día" : "días"}` : "—");
-  const nombreHab = x => (x && st.normal[x.id] ? esc(st.normal[x.id].name) : "");
+  const racha = x => (x ? `${x.n} ${x.unidad === "semanas" ? (x.n === 1 ? "semana" : "semanas") : x.n === 1 ? "día" : "días"}` : "—");
+  const nombreHab = x => (x && st.normal[x.id] ? `${esc(st.normal[x.id].emoji)} ${esc(st.normal[x.id].name)}` : "");
 
   let html = `<header class="hb-cat-head" style="--cat:${color}">
       <span class="hb-cat-head-emoji" aria-hidden="true">${esc(cat.emoji)}</span>
@@ -72,7 +72,7 @@ function render() {
     const ok = nv.nivel >= n;
     const fr = Math.min(1, area.xp / HE.xpParaNivel(n, HC.AREA_NIVEL));
     return `<li class="hb-logro${ok ? " is-on" : ""}"><span class="hb-logro-ico" aria-hidden="true"><span data-icon="trophy"></span></span>
-      <span class="hb-logro-txt"><b>${esc(cat.nombre)} nivel ${n}</b><span>${n === 5 ? "Especialista" : n === 10 ? "Maestría" : "Leyenda de la categoría"}</span>
+      <span class="hb-logro-txt"><b>${esc(cat.nombre)} nivel ${n}</b><span>${n === 5 ? "Especialista" : n === 10 ? "Maestría" : n === 15 ? "Referente" : "Leyenda de la categoría"}</span>
       ${ok ? `<span class="hb-tag">Conseguido</span>` : `${A.barra(fr, `${cat.nombre} nivel ${n}`)}<span class="hb-logro-prog">${A.fmtNum(area.xp)} de ${A.fmtNum(HE.xpParaNivel(n, HC.AREA_NIVEL))} XP</span>`}</span></li>`;
   }).join("")}</ul>`);
   html += `<div class="hb-acciones hb-cat-pie"><button type="button" class="hb-btn-sec" data-catpag-stats>Ver en Estadísticas</button>

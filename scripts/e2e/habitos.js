@@ -459,7 +459,7 @@ function conTemporadaVista(opciones) {
     const j = await juego(p);
     ok(j.recalculo === 1 && j.snapshot.logros.includes("racha_7"), "el recálculo se guarda en silencio (logros incluidos)");
     const fila = await texto(p, '#hb-lista [data-detalle="diario"]');
-    ok(/🛡 ayer se salvó tu racha/.test(fila) && /20 días/.test(fila), `Hoy: «ayer se salvó tu racha» y la racha sigue (${fila})`);
+    ok(/20 días · 🛡 salvada ayer/.test(fila), `Hoy: la racha sigue y dice «salvada ayer» (${fila})`);
     await p.click('#hb-lista [data-detalle="diario"]');
     await p.waitForTimeout(400);
     ok(/Racha que perdona\. Tienes 1 perdón\. Cumple 7 días más para ganar otro\./.test(await texto(p, ".hb-perdones")), `detalle: perdones (${await texto(p, ".hb-perdones")})`);

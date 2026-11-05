@@ -193,7 +193,7 @@ function hojaAsignar() {
   const n = a.ids.size;
   const destino = a.area === undefined ? null : a.area ? act.find(c => c.id === a.area) : { nombre: "Sin categoría" };
   A.abrirHoja(A.cabecera("Categorías", "Asignar categorías", "Elige hábitos y una categoría") + `
-    <span class="hb-label">1. Hábitos</span>
+    <span class="hb-paso">1. Hábitos</span>
     <ul class="hb-asignar">${hs.map(h => {
       const c = HCat.deHabito(h, act);
       const on = a.ids.has(h.id);
@@ -203,7 +203,7 @@ function hojaAsignar() {
         <span class="hb-orden-txt"><span class="hb-nombre">${esc(h.name)}</span><span class="hb-sub">${c ? `${esc(c.emoji)} ${esc(c.nombre)}` : "Sin categoría"}</span></span>
       </button></li>`;
     }).join("")}</ul>
-    <span class="hb-label">2. Categoría</span>
+    <span class="hb-paso">2. Categoría</span>
     <div class="hb-chips">${act.map(c => `<button type="button" class="hb-chip hb-chip-cat${a.area === c.id ? " is-on" : ""}" style="--cat:${HCat.colorDe(c)}" data-asig-cat="${c.id}" aria-pressed="${a.area === c.id}">${esc(c.emoji)} ${esc(c.nombre)}</button>`).join("")}
       <button type="button" class="hb-chip${a.area === null ? " is-on" : ""}" data-asig-cat="" aria-pressed="${a.area === null}">Sin categoría</button></div>
     <p class="hb-texto">Solo cambia la categoría: el historial, las rachas y el XP de cada hábito no se tocan.</p>

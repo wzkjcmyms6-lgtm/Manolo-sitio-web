@@ -397,6 +397,8 @@
 .hb-resumen .hb-pj-datos { color: var(--muted); }
 .hb-tabs { display: flex; margin-bottom: 1rem; }
 .hb-tabs .fin-tab { flex: 1; padding-left: 0.4rem; padding-right: 0.4rem; min-height: 40px; }
+/* En pantallas muy angostas, "Categorías" no cabe con la letra normal. */
+@media (max-width: 359px) { .hb-tabs { gap: 0.1rem; } .hb-tabs .fin-tab { font-size: 0.8rem; padding-left: 0.25rem; padding-right: 0.25rem; } }
 .hb-tab-cuerpo .hb-xp, .hb-area .hb-xp, .hb-mision .hb-xp, .hb-logro .hb-xp { background: var(--bg-soft); height: 6px; }
 .hb-tag { display: inline-flex; align-self: flex-start; font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.55rem; border-radius: 999px; color: #0a0a0a; background: var(--accent-grad); }
 
@@ -880,12 +882,13 @@ body.sc-en-guia { overflow: hidden; }
 .hb-chip-cat.is-on { background: var(--cat); color: #0a0a0a; border-color: transparent; }
 .hb-chip-nueva { border-style: dashed; color: var(--muted); }
 /* Formulario: "Más opciones" y botones siempre a mano */
-.hb-mas {
+/* (.hb-mas ya era el "+1" de los medibles: este botón usa otro nombre) */
+.hb-mas-opciones {
   display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 1.2rem;
   min-height: 44px; padding: 0 0.95rem; border-radius: 14px; cursor: pointer;
   border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; font-size: 0.9rem; font-weight: 700;
 }
-.hb-mas span { color: var(--muted); }
+.hb-mas-opciones span { color: var(--muted); }
 .hb-mas-cuerpo { padding-bottom: 0.2rem; }
 .hb-acciones-fijas {
   position: sticky; bottom: 0; z-index: 2; margin: 1.2rem -1.2rem -1.2rem; padding: 0.75rem 1.2rem calc(0.75rem + env(safe-area-inset-bottom));
@@ -924,6 +927,7 @@ body.sc-en-guia { overflow: hidden; }
   display: flex; align-items: center; gap: 0.6rem; width: 100%; min-height: 52px; padding: 0.35rem 0.7rem; cursor: pointer; text-align: left;
   border-radius: 14px; border: 1px solid var(--border); border-left: 4px solid var(--cat, var(--border)); background: var(--surface); color: var(--ink); font: inherit;
 }
+.hb-paso { display: block; margin: 1.1rem 0 0.5rem; font-size: 0.88rem; font-weight: 700; color: var(--ink); }
 .hb-asignar-item.is-on { border-color: var(--accent-1); background: rgba(255, 122, 48, 0.1); border-left-color: var(--cat, var(--accent-1)); }
 .hb-asignar-check { width: 24px; height: 24px; flex-shrink: 0; display: grid; place-items: center; border-radius: 7px; border: 2px solid var(--border); font-size: 0.8rem; font-weight: 800; color: #0a0a0a; }
 .hb-asignar-item.is-on .hb-asignar-check { background: var(--accent-2); border-color: var(--accent-2); }
@@ -1021,9 +1025,9 @@ body.sc-en-guia { overflow: hidden; }
 .hb-plant:active { background: var(--surface-raised); }
 .hb-cat-sugerida { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; font-size: 0.82rem; color: var(--muted); }
 .hb-cat-sugerida .hb-chip { min-height: 36px; }
-.hb-hora input { max-width: 9rem; }
+.hb-hora input { max-width: 9rem; color-scheme: dark; }
 .hb-aviso-momento {
-  display: flex; align-items: center; gap: 0.45rem; margin: 0 0 0.9rem; padding: 0.6rem 0.85rem; border-radius: 14px;
+  display: flex; align-items: baseline; gap: 0.45rem; margin: 0 0 0.9rem; padding: 0.6rem 0.85rem; border-radius: 14px;
   font-size: 0.88rem; background: rgba(255, 184, 77, 0.1); border: 1px solid rgba(255, 184, 77, 0.3);
 }
 
@@ -1034,5 +1038,5 @@ body.sc-en-guia { overflow: hidden; }
 .hb-perdones-iconos { display: flex; gap: 0.25rem; padding-top: 0.1rem; flex-shrink: 0; }
 .hb-perdon { width: 18px; height: 21px; background: var(--border); clip-path: polygon(50% 0, 100% 18%, 100% 55%, 50% 100%, 0 55%, 0 18%); }
 .hb-perdon.is-on { background: var(--accent-2); }
-.c-fallo.c-perdon { background: rgba(255, 184, 77, 0.08); border-style: dashed; border-color: rgba(255, 184, 77, 0.55); color: var(--accent-2); }
-.hb-salvada { color: var(--accent-2); font-weight: 600; }
+.c-fallo.c-perdon { background: rgba(255, 184, 77, 0.08); border-style: solid; border-color: rgba(255, 184, 77, 0.55); color: var(--accent-2); }
+.hb-salvada { color: var(--accent-2); font-weight: 600; white-space: pre; }

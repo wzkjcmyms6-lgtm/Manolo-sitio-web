@@ -364,12 +364,15 @@ function subtitulo(h, x, f) {
   const auto = h.vinculo && HA.fuente(h.vinculo);
   if (auto) partes.push(`<span class="hb-auto" title="Se marca solo">⚡ ${escapeHtml(auto.nombre)}</span>`);
   const racha = textoRacha(x.rh && x.rh.racha);
-  // Si ayer (o la semana pasada) un perdón salvó la racha, se dice.
+  // Si ayer (o la semana pasada) un perdón salvó la racha, se dice junto a la
+  // racha (corto, para que la fila no crezca).
+  let salvada = "";
   if (x.rh) {
-    const salvada = x.semanal ? (x.rh.semanas[x.rh.semanas.length - 2] || {}).perdonado : (x.rh.dias[HE.addDias(f, -1)] || {}).perdonado;
-    if (salvada) partes.push(`<span class="hb-salvada">🛡 ${x.semanal ? "semana pasada" : "ayer"} se salvó tu racha</span>`);
+    const si = x.semanal ? (x.rh.semanas[x.rh.semanas.length - 2] || {}).perdonado : (x.rh.dias[HE.addDias(f, -1)] || {}).perdonado;
+    if (si) salvada = `🛡 salvada ${x.semanal ? "la semana pasada" : "ayer"}`;
   }
-  return { texto: partes.join(" · "), racha };
+  if (salvada && !racha) partes.push(`<span class="hb-salvada">${salvada}</span>`);
+  return { texto: partes.join(" · "), racha, salvada: racha ? salvada : "" };
 }
 
 function filaHtml(h, f, encadenado) {
@@ -386,7 +389,7 @@ function filaHtml(h, f, encadenado) {
       <span class="hb-fila-txt">
         <span class="hb-nombre">${escapeHtml(h.name)}</span>
         ${h.descripcion ? `<span class="hb-desc-fila">${escapeHtml(h.descripcion)}</span>` : ""}
-        <span class="hb-sub">${crono ? `<span class="hb-crono-fila"><span class="hb-crono" data-inicio="${crono}">${textoCrono(crono)}</span> en curso</span>` : ""}${sub.texto ? `<span>${sub.texto}</span>` : ""}${sub.racha ? `<span class="hb-racha"><span class="hb-ico" data-icon="flame"></span>${escapeHtml(sub.racha)}</span>` : ""}</span>
+        <span class="hb-sub">${crono ? `<span class="hb-crono-fila"><span class="hb-crono" data-inicio="${crono}">${textoCrono(crono)}</span> en curso</span>` : ""}${sub.texto ? `<span>${sub.texto}</span>` : ""}${sub.racha ? `<span class="hb-racha"><span class="hb-ico" data-icon="flame"></span>${escapeHtml(sub.racha)}${sub.salvada ? `<span class="hb-salvada"> · ${sub.salvada}</span>` : ""}</span>` : ""}</span>
       </span>
     </button>
     ${insigniaFila(x.rh)}
@@ -422,7 +425,7 @@ function renderHoy() {
   const grupos = HH.grupos(items, { agrupar: hoyAgrupar, filtro, ocultarHechos: hoyOcultar, momento: actual, categorias: cats });
   let html = barraHoyHtml(chips, filtro, items.length);
   const faltan = HH.pendientesMomento(items, actual);
-  if (faltan && items.length) html += `<p class="hb-aviso-momento" role="status"><span aria-hidden="true">⏰</span> Te ${faltan === 1 ? "falta" : "faltan"} <b>${faltan}</b> ${MOMENTO_DE[actual]}</p>`;
+  if (faltan && items.length) html += `<p class="hb-aviso-momento" role="status"><span aria-hidden="true">⏰</span><span>Te ${faltan === 1 ? "falta" : "faltan"} <b>${faltan}</b> ${MOMENTO_DE[actual]}</span></p>`;
   const catFiltro = filtro && filtro !== HH.SIN ? cats.find(c => c.id === filtro) : null;
   if (catFiltro) html += `<a class="hb-ver-cat" href="#hab-categoria/${catFiltro.id}" style="--cat:${HCat.colorDe(catFiltro)}"><span aria-hidden="true">${escapeHtml(catFiltro.emoji)}</span> Ver la página de ${escapeHtml(catFiltro.nombre)}<span aria-hidden="true">›</span></a>`;
   html += grupos.map(g => {
@@ -1079,7 +1082,7 @@ function hojaForm(id) {
         <input type="time" name="hora" value="${escapeHtml(f.hora || "")}">
         <span class="hb-ayuda">Ordena el hábito dentro de su momento (y sirve para avisos más adelante).</span></label>
 
-      <button type="button" class="hb-mas" data-mas-opciones aria-expanded="${!!f._mas}">${f._mas ? "Menos opciones" : "Más opciones"}<span aria-hidden="true">${f._mas ? "▴" : "▾"}</span></button>
+      <button type="button" class="hb-mas-opciones" data-mas-opciones aria-expanded="${!!f._mas}">${f._mas ? "Menos opciones" : "Más opciones"}<span aria-hidden="true">${f._mas ? "▴" : "▾"}</span></button>
       ${f._mas ? `<div class="hb-mas-cuerpo">
       <label class="hb-campo"><span>Nota <span class="hb-opcional">(opcional)</span></span>
         <textarea name="descripcion" rows="3" maxlength="${HC.CONST.DESCRIPCION_MAX}" placeholder="Ej: Agradecer por mi familia, por mi salud y por mi trabajo.">${escapeHtml(f.descripcion)}</textarea>
@@ -2356,7 +2359,9 @@ function renderInicio() {
   const p = progresoHoy(res.hoy);
   const racha = mejorRachaActiva();
   const faltan = pendientesAhora();
-  el.innerHTML = `${p.total ? `Hoy: ${p.hechos} de ${p.total}` : "Nada pendiente hoy"}${faltan ? ` · ⏰ ${faltan === 1 ? "falta" : "faltan"} ${faltan} ${MOMENTO_DE[momentoActual()]}` : ""} · Nivel ${res.nivel.nivel}${racha ? ` · ${escapeHtml(textoRacha(racha))} de racha` : ""}
+  // Con algo pendiente del momento, el aviso ocupa el lugar del nivel y la
+  // racha (la tarjeta queda de dos líneas, como antes).
+  el.innerHTML = `${p.total ? `Hoy: ${p.hechos} de ${p.total}` : "Nada pendiente hoy"}${faltan ? ` · ⏰ ${faltan === 1 ? "falta" : "faltan"} ${faltan} ${MOMENTO_DE[momentoActual()]}` : ` · Nivel ${res.nivel.nivel}${racha ? ` · ${escapeHtml(textoRacha(racha))} de racha` : ""}`}
     <span class="hb-inicio-barra" aria-hidden="true"><span style="width:${p.total ? (p.hechos / p.total * 100).toFixed(1) : 0}%"></span></span>`;
 }
 
