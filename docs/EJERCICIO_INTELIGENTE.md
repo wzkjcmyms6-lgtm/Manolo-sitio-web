@@ -18,7 +18,7 @@ sale de reglas y fórmulas documentadas (§ Fórmulas, con sus fuentes en
 |---|---|---|
 | 0 | Auditoría y diseño | ✅ |
 | 1 | Demos (WebP en el repo, caché con límite, precarga de rutinas) | ✅ |
-| 2 | Ficha del ejercicio (técnica, videos, historial, récords, alternativas) | |
+| 2 | Ficha del ejercicio (técnica, videos, historial, récords, alternativas) | ✅ |
 | 3 | Entreno en vivo (objetivo, RIR, calentamiento, discos, superseries, descanso con aviso, récords, resumen) | |
 | 4 | Progresión v2, estancamiento, descarga + Ajustes del gimnasio | |
 | 5 | Volumen semanal, equilibrio y generador de rutinas | |
@@ -158,6 +158,50 @@ reescriben; los Rangos no cambian de calibración.
 - `data/ejercicios.json` suma `mec` (`c` compuesto, `a` aislamiento), `fz`
   (`e` empuje, `t` tirón, `s` estático), `niv` (1–3) y `demo: 1`.
 
+## Ficha del ejercicio (fase 2, D-092)
+
+- `js/ej-ficha.js`: hoja con la demo, los músculos y 3 pestañas: **Cómo se
+  hace** (pasos, errores comunes, "Ver video" y "Mi video"), **Historial**
+  (última vez, mejor serie, 1RM estimado, gráficos de 1RM y volumen por
+  sesión, últimas 6 sesiones) y **Récords** (1RM a 12RM real y estimado,
+  y el rango con enlace a Rangos). Debajo: mis notas y 5 alternativas
+  (tocar una abre su ficha, con "‹ volver").
+- Se abre desde: el entreno en vivo (nombre y miniatura), la lista de
+  rutinas (nombre), el editor de rutinas ("?"), el buscador ("?" en cada
+  opción, sin agregar el ejercicio), Rangos ("Cómo se hace") y el detalle
+  de una sesión (nombre).
+- `js/ej-historial.js` (UMD, sin DOM): sesiones del ejercicio, 1RM,
+  récords por reps, resumen, alternativas y enlaces de YouTube.
+- **Técnica**: `data/ejercicios-tecnica.json` (56 KB) lo arma
+  `npm run tecnica` (`scripts/build-tecnica.mjs`) con los pasos de
+  `scripts/tecnica/pasos-*.mjs` y los errores por tipo de movimiento de
+  `scripts/tecnica/patrones.mjs` (25 tipos; los 592 ejercicios tienen
+  tipo y errores). Lote 1: 114 con pasos (los 85 destacados y los
+  agregados por Manolo). Los demás muestran "llegan pronto" y el video;
+  se completan por lotes en las fases siguientes. La app lo pide al abrir
+  la primera ficha; el service worker lo guarda para usarlo sin señal.
+- **Videos**: "Ver video" abre YouTube con la búsqueda "cómo hacer
+  {ejercicio sin el equipo entre paréntesis} {con el equipo} técnica" (sin
+  peso). "Mi video": pegas un link de YouTube (watch, youtu.be, shorts o
+  embed); se guarda solo el id en `meta/ejercicio_fichas.{id}.video`; se ve
+  la miniatura (`i.ytimg.com`) y el reproductor de
+  `youtube-nocookie.com` carga recién al tocarla.
+- **Respaldo**: "Descargar respaldo (JSON)" suma `ajustesEjercicio` y
+  `fichas` (notas y videos).
+
 ## Fórmulas
 
-Se completan en cada fase (fuentes en `DECISIONS.md`).
+- **1RM estimado (Epley)**: kg × (1 + reps / 30); 1 rep = el peso; reps
+  topadas en 12 (igual que Rangos). Con RIR: reps + RIR. En peso
+  corporal: carga = tu peso de ese día × factor del ejercicio + lastre −
+  asistencia. Peso para n reps: 1RM / (1 + n / 30).
+- **Récords por reps**: "tu mejor" n RM = el mayor peso con el que hiciste
+  al menos n reps; "estimado" = el de tu mejor 1RM con Epley.
+- **Alternativas**: comparten al menos un músculo principal; puntaje =
+  2 × Jaccard(principales) + 0,5 × Jaccard(los que ayudan) + 0,6 si es el
+  mismo tipo de movimiento + 0,3 si es destacado + 0,1 si tiene la misma
+  mecánica; −1 si es olímpico y el original no. Misma familia (fuerza,
+  isométrico o cardio), sin movilidad; con perfil de equipo (fase 4), solo
+  el equipo disponible.
+
+Las siguientes se completan en cada fase (fuentes en `DECISIONS.md`).

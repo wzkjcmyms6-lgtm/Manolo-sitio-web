@@ -1,5 +1,19 @@
 # Cambios
 
+## 2026-11-05 · Ejercicio: ficha completa (fase 2)
+- La ficha tiene 3 pestañas: **Cómo se hace** (pasos en español, errores
+  comunes, "Ver video" en YouTube y "Mi video" con tu propio link),
+  **Historial** (última vez, mejor serie, 1RM estimado, gráficos y
+  últimas sesiones) y **Récords** (1RM a 12RM y tu rango). Debajo, tus
+  notas y alternativas con los mismos músculos.
+- Se abre desde el entreno, las rutinas (también el editor), el buscador,
+  Rangos y el detalle de una sesión.
+- Pasos en español para 114 ejercicios (los destacados y los de Manolo);
+  el resto, por lotes. Errores comunes para los 592.
+- En el editor de rutinas el nombre del ejercicio ya no se corta.
+- Pruebas: `tests/ej-historial.test.js` (8) y el E2E `ejercicio.js` con la
+  ficha completa a 390 y 1280 px.
+
 ## 2026-11-05 · Ejercicio: demos de cada ejercicio (fase 1)
 - 557 ejercicios con demo: las 2 fotos (inicio y final) en WebP, que se
   alternan con un fundido como un video corto; botón de pausa y, con

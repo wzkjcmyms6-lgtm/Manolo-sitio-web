@@ -52,3 +52,86 @@
   .ejd-demo-etq.is-b { grid-column: 2; }
   .ejd-demo-pausa { display: none; }
 }
+
+/* ---- Ficha completa (fase 2) ---- */
+.ejf-hoja { z-index: 950; } /* encima de las hojas de Rangos o del entreno */
+.ejf-volver { display: inline-flex; align-items: center; min-height: 32px; padding: 0; border: 0; background: none; color: var(--accent-2); font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+.ejf-tabs { display: flex; width: 100%; margin: 1rem 0 0.8rem; }
+.ejf-tabs .fin-tab { flex: 1; padding-left: 0.3rem; padding-right: 0.3rem; min-height: 40px; }
+.ejf-panel { min-height: 6rem; }
+.ejf-cargando, .ejf-vacio, .ejf-texto { margin: 0.4rem 0; color: var(--muted); font-size: 0.9rem; line-height: 1.45; }
+.ejf-pasos { margin: 0; padding: 0; list-style: none; counter-reset: paso; display: flex; flex-direction: column; gap: 0.55rem; }
+.ejf-pasos li { counter-increment: paso; display: grid; grid-template-columns: 26px 1fr; gap: 0.6rem; font-size: 0.95rem; line-height: 1.4; }
+.ejf-pasos li::before { content: counter(paso); width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 0.78rem; font-weight: 700; background: rgba(255, 122, 48, 0.16); color: var(--accent-2); }
+.ejf-sub { margin: 1.1rem 0 0.5rem; font-size: 0.9rem; font-weight: 700; }
+.ejf-errores { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
+.ejf-errores li { position: relative; padding-left: 1.5rem; font-size: 0.88rem; line-height: 1.4; color: var(--ink); }
+.ejf-errores li::before { content: "!"; position: absolute; left: 0; top: 0.05rem; width: 1.05rem; height: 1.05rem; border-radius: 50%; display: grid; place-items: center; font-size: 0.7rem; font-weight: 800; background: rgba(226, 89, 63, 0.18); color: #f1a193; }
+.ejf-videos { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem; }
+.ejf-btn, .ejf-btn-sec {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; min-height: 44px; padding: 0 1rem;
+  border-radius: 999px; font: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer; text-decoration: none;
+}
+.ejf-btn { background: var(--accent-grad); color: #0a0a0a; border: 0; align-self: flex-start; }
+.ejf-btn-sec { background: var(--surface-raised); color: var(--ink); border: 1px solid var(--border); flex-shrink: 0; }
+.ejf-play-chico { width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent currentColor; }
+.ejf-mi-video { display: flex; flex-direction: column; gap: 0.35rem; }
+.ejf-label { font-size: 0.8rem; color: var(--muted); }
+.ejf-fila { display: flex; gap: 0.5rem; }
+.ejf-fila input { flex: 1; min-width: 0; min-height: 44px; padding: 0 0.8rem; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; font-size: 16px; }
+.ejf-error { margin: 0; font-size: 0.8rem; color: #f1a193; }
+.ejf-error[hidden] { display: none; }
+.ejf-video { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: #000; border: 0; padding: 0; }
+.ejf-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.ejf-video-mini { cursor: pointer; }
+.ejf-video-mini img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ejf-play { position: absolute; left: 50%; top: 50%; width: 64px; height: 44px; margin: -22px 0 0 -32px; border-radius: 12px; background: rgba(10, 10, 10, 0.72); }
+.ejf-play::after { content: ""; position: absolute; left: 26px; top: 13px; border-style: solid; border-width: 9px 0 9px 15px; border-color: transparent transparent transparent #fff; }
+.ejf-video-acc { display: flex; gap: 1rem; }
+.ejf-link { min-height: 36px; padding: 0; border: 0; background: none; color: var(--accent-2); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+.ejf-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.8rem; }
+.ejf-kpi { display: flex; flex-direction: column; gap: 0.15rem; padding: 0.7rem 0.8rem; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); min-width: 0; }
+.ejf-kpi span { font-size: 0.74rem; color: var(--muted); }
+.ejf-kpi b { font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; }
+.ejf-kpi small { font-size: 0.74rem; color: var(--muted); }
+.ejf-graf { margin: 0 0 0.8rem; padding: 0.7rem 0.8rem 0.4rem; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); }
+.ejf-graf figcaption { font-size: 0.8rem; font-weight: 600; margin-bottom: 0.3rem; }
+.ejf-tip { margin: 0.1rem 0 0.2rem; font-size: 0.76rem; color: var(--muted); min-height: 1.1em; }
+.ejf-sesiones { margin: 0; padding: 0; list-style: none; }
+.ejf-sesiones li { display: grid; grid-template-columns: 3.4rem 1fr auto; gap: 0.6rem; align-items: baseline; padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-size: 0.86rem; }
+.ejf-sesiones li span:first-child { color: var(--muted); }
+.ejf-sesiones small { color: var(--muted); font-size: 0.76rem; }
+.ejf-recs { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.ejf-recs th, .ejf-recs td { padding: 0.45rem 0.3rem; text-align: left; border-bottom: 1px solid var(--border); }
+.ejf-recs thead th { font-size: 0.74rem; color: var(--muted); font-weight: 600; }
+.ejf-recs tbody th { font-weight: 700; width: 3.4rem; }
+.ejf-recs td small { color: var(--muted); font-size: 0.74rem; margin-left: 0.2rem; }
+.ejf-recs tr.is-est td:nth-child(2) { color: var(--muted); }
+.ejf-recs td:last-child { color: var(--muted); }
+.ejf-nota-chica { margin: 0.5rem 0 0; font-size: 0.74rem; color: var(--muted); line-height: 1.4; }
+.ejf-rango { display: flex; align-items: center; gap: 0.7rem; width: 100%; margin-bottom: 0.8rem; padding: 0.6rem 0.8rem; min-height: 56px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.ejf-rango > span:nth-child(2) { flex: 1; display: flex; flex-direction: column; }
+.ejf-rango small { font-size: 0.72rem; color: var(--muted); }
+.ejf-rango em { font-style: normal; font-size: 0.78rem; color: var(--muted); }
+.ejf-ir { color: var(--muted); font-size: 1.2rem; }
+.ejf-nota { width: 100%; min-height: 64px; padding: 0.6rem 0.8rem; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; font-size: 16px; resize: vertical; box-sizing: border-box; }
+.ejf-alts { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.4rem; padding-bottom: 0.5rem; }
+.ejf-alts button { display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; column-gap: 0.5rem; width: 100%; min-height: 52px; padding: 0.5rem 0.8rem; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.ejf-alts button span:first-child { font-size: 0.9rem; font-weight: 600; }
+.ejf-alts button small { grid-column: 1; font-size: 0.74rem; color: var(--muted); }
+.ejf-alts .ejf-ir { grid-column: 2; grid-row: 1 / 3; align-self: center; }
+
+/* ---- Accesos a la ficha desde otras pantallas ---- */
+.ex-sug-fila { display: flex; align-items: stretch; gap: 0.2rem; }
+.ex-sug-fila .ex-sug { flex: 1; min-width: 0; }
+.ex-sug-info, .rut-item-ficha {
+  width: 44px; min-height: 44px; flex-shrink: 0; display: grid; place-items: center; border-radius: 10px;
+  border: 0; background: none; color: var(--accent-2); font: inherit; font-weight: 800; font-size: 0.95rem; cursor: pointer;
+}
+.ex-sug-info:hover, .ex-sug-info:focus-visible { background: rgba(255, 255, 255, 0.06); outline: none; }
+.rut-item-mover .rut-item-ficha { width: 36px; color: var(--accent-2); }
+.rut-item-top { flex-wrap: wrap; }
+.rut-item-nombre { order: 3; flex: 1 1 100%; }
+.rut-item-mover { margin-left: auto; }
+.ejs-ej-nombre { padding: 0; min-height: 32px; border: 0; background: none; color: inherit; font: inherit; font-weight: inherit; text-align: left; cursor: pointer; }
+.rk-ver-ficha { margin: 0.2rem 0 0.8rem; }

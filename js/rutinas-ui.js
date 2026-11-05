@@ -133,6 +133,7 @@ function itemHTML(it, i, total) {
           <input type="text" class="rut-in-nombre" value="${esc(it.nombre)}" placeholder="Buscar ejercicio" aria-label="Ejercicio ${n}" maxlength="80">
         </div>
         <div class="rut-item-mover">
+          ${it.nombre && window.EjFicha ? `<button type="button" class="rut-item-ficha" data-ficha-nombre="${esc(it.nombre)}"${it.exerciseId ? ` data-ficha="${esc(it.exerciseId)}"` : ""} aria-label="Cómo se hace ${esc(it.nombre)}">?</button>` : ""}
           <button type="button" data-rut-mover="-1" aria-label="Subir ejercicio ${n}"${i === 0 ? " disabled" : ""}><span data-icon="chevronUp"></span></button>
           <button type="button" data-rut-mover="1" aria-label="Bajar ejercicio ${n}"${i === total - 1 ? " disabled" : ""}><span data-icon="chevronDown"></span></button>
           <button type="button" data-rut-quitar aria-label="Quitar ejercicio ${n}"><span data-icon="close"></span></button>

@@ -106,6 +106,142 @@ async function demos(browser, base, ancho) {
   await q.context().close();
 }
 
+// ---------- Fase 2: ficha completa ----------
+async function fichaCompleta(browser, base, ancho) {
+  console.log(`\nFicha completa (${ancho} px)`);
+  const p = await abrir(browser, base, SEM.estado(HOY), { hash: "#gimnasio", zona: ZONA, fecha: FECHA, ancho, alto: ancho > 800 ? 900 : 844 });
+  consolaLimpia(p);
+  // YouTube no se usa de verdad en la prueba (sin red externa): páginas vacías.
+  await p.route(/youtube-nocookie\.com|ytimg\.com/, r => r.fulfill({ status: 200, contentType: r.request().url().includes("ytimg") ? "image/png" : "text/html", body: "" }));
+  const pedidos = [];
+  p.on("request", r => pedidos.push(r.url()));
+  await p.waitForTimeout(1200);
+  await sinAvisos(p);
+  ok(!pedidos.some(u => u.includes("ejercicios-tecnica.json")), "al arrancar no se baja la técnica (carga diferida)");
+
+  await p.click('#gym-routines .rut-ej-nombre[data-ficha="barbell-squat"]');
+  await p.waitForTimeout(900);
+  ok(pedidos.some(u => u.includes("ejercicios-tecnica.json")), "se baja al abrir la primera ficha");
+  const pasos = await p.$$eval(".ejf-hoja .ejf-pasos li", els => els.map(e => e.textContent));
+  ok(pasos.length >= 3 && pasos.length <= 5 && /espalda/.test(pasos.join(" ")), `«Cómo se hace»: ${pasos.length} pasos en español`);
+  ok((await p.$$(".ejf-hoja .ejf-errores li")).length >= 2 && /Rodillas/.test(await texto(p, ".ejf-hoja .ejf-errores")), "y errores comunes");
+  const href = await p.$eval('.ejf-hoja a.ejf-btn', a => a.href);
+  ok(/youtube\.com\/results\?search_query=/.test(href) && /sentadilla con barra/.test(decodeURIComponent(href)), "«Ver video» busca en YouTube «cómo hacer sentadilla con barra»");
+  ok(await p.$eval('.ejf-hoja a.ejf-btn', a => a.target === "_blank"), "en otra pestaña");
+  await foto(p, `ficha-como-${ancho}.png`);
+
+  // Mi video
+  await p.fill("#ejf-video-in", "https://vimeo.com/123");
+  await p.click('.ejf-hoja [data-ejf-form="video"] button[type="submit"]');
+  await p.waitForTimeout(200);
+  ok(await p.isVisible(".ejf-hoja .ejf-error"), "un link que no es de YouTube avisa");
+  await p.fill("#ejf-video-in", "https://youtu.be/dQw4w9WgXcQ");
+  await p.click('.ejf-hoja [data-ejf-form="video"] button[type="submit"]');
+  await p.waitForTimeout(400);
+  const mini = await p.$eval(".ejf-hoja .ejf-video-mini img", i => i.getAttribute("src")).catch(() => "");
+  ok(mini === "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg" && !(await p.$(".ejf-hoja iframe")), "«Mi video»: se ve la miniatura y el reproductor todavía no carga");
+  await p.click(".ejf-hoja [data-ejf='ver-video']");
+  await p.waitForTimeout(300);
+  ok(/^https:\/\/www\.youtube-nocookie\.com\/embed\/dQw4w9WgXcQ/.test(await p.$eval(".ejf-hoja iframe", f => f.getAttribute("src")).catch(() => "")), "al tocar, carga el reproductor sin cookies");
+  const guardado = await p.evaluate(() => EjercicioDatos.meta("ejercicio_fichas").get().then(d => d.data()));
+  ok(guardado && guardado["barbell-squat"] && guardado["barbell-squat"].video === "dQw4w9WgXcQ", "queda guardado en meta/ejercicio_fichas");
+
+  // Historial
+  await p.click('.ejf-hoja [data-ejf-tab="historial"]');
+  await p.waitForTimeout(300);
+  const kpis = await texto(p, ".ejf-hoja .ejf-kpis");
+  ok(/Última vez\s*hace 7 días\s*29 oct/.test(kpis), `historial: última vez (${kpis})`);
+  ok(/Mejor serie\s*105 kg × 8/.test(kpis) && /1RM estimado\s*133 kg/.test(kpis), "mejor serie (105 kg × 8) y 1RM estimado (133 kg)");
+  ok((await p.$$(".ejf-hoja .ejf-graf svg")).length === 2, "gráficos de 1RM estimado y volumen por sesión");
+  await p.click(".ejf-hoja .ejf-graf >> nth=0 >> .hbg-hit >> nth=-1");
+  await p.waitForTimeout(150);
+  ok(/29 oct: 133 kg/.test(await texto(p, ".ejf-hoja .ejf-graf .ejf-tip")), "tocar el gráfico muestra la sesión");
+  ok((await p.$$(".ejf-hoja .ejf-sesiones li")).length === 6 && /29 oct\s*4 × 8 · 8 · 8 · \d con 105 kg/.test(await texto(p, ".ejf-hoja .ejf-sesiones li:first-child")), `últimas sesiones (${await texto(p, ".ejf-hoja .ejf-sesiones li:first-child")})`);
+  await foto(p, `ficha-historial-${ancho}.png`);
+
+  // Récords y rango
+  await p.click('.ejf-hoja [data-ejf-tab="records"]');
+  await p.waitForTimeout(300);
+  ok((await p.$$(".ejf-hoja .ejf-recs tbody tr")).length === 12, "récords de 1RM a 12RM");
+  ok(/8RM\s*105 kg/.test(await texto(p, ".ejf-hoja .ejf-recs tbody tr:nth-child(8)")), "8RM real: 105 kg");
+  ok(await p.$(".ejf-hoja .ejf-rango"), "su rango, con enlace a Rangos");
+  await foto(p, `ficha-records-${ancho}.png`);
+
+  // Notas
+  await p.fill(".ejf-hoja [data-ejf-nota]", "Barra baja, pies 30°");
+  await p.$eval(".ejf-hoja [data-ejf-nota]", t => t.dispatchEvent(new Event("change", { bubbles: true })));
+  await p.waitForTimeout(300);
+  const nota = await p.evaluate(() => EjercicioDatos.meta("ejercicio_fichas").get().then(d => d.data()["barbell-squat"].nota));
+  ok(nota === "Barra baja, pies 30°", "mis notas se guardan");
+
+  // Alternativas: abrir una y volver.
+  const alts = await p.$$eval(".ejf-hoja .ejf-alts button span:first-child", els => els.map(e => e.textContent));
+  ok(alts.length >= 3 && alts.some(a => /Prensa|Sentadilla/.test(a)), `alternativas: ${alts.join(", ")}`);
+  await p.click(".ejf-hoja .ejf-alts button >> nth=0");
+  await p.waitForTimeout(400);
+  ok((await texto(p, "#ejf-titulo")) === alts[0] && /Sentadilla \(Barra\)/.test(await texto(p, ".ejf-hoja .ejf-volver")), "tocar una alternativa abre su ficha (con ‹ volver)");
+  await p.click(".ejf-hoja .ejf-volver");
+  await p.waitForTimeout(300);
+  ok(/Sentadilla \(Barra\)/.test(await texto(p, "#ejf-titulo")), "‹ vuelve a la anterior");
+
+  // Rango ›
+  await p.click(".ejf-hoja .ejf-rango").catch(() => {});
+  await p.waitForTimeout(900);
+  ok(await p.evaluate(() => location.hash) === "#ej-rangos" && await p.isVisible(".rk-ver-ficha"), "«Rango ›» abre el ejercicio en Rangos");
+  // Desde Rangos: «Cómo se hace»
+  await p.click(".rk-ver-ficha");
+  await p.waitForTimeout(500);
+  ok(await p.isVisible(".ejf-hoja .muscle-sheet-panel") && /Sentadilla/.test(await texto(p, "#ejf-titulo")), "en Rangos, «Cómo se hace» abre la ficha encima");
+  await p.keyboard.press("Escape");
+  await p.waitForTimeout(400);
+  await p.keyboard.press("Escape");
+  await p.waitForTimeout(300);
+
+  // Desde el detalle de una sesión (Perfil › Tus sesiones).
+  await ir(p, "ej-perfil", 900);
+  await p.click("#ejp-historial .ejf-tarjeta, #ejp-historial article >> nth=0").catch(() => {});
+  await p.waitForTimeout(500);
+  const nombreSes = await p.$("#ejs-hoja .ejs-ej-nombre");
+  if (nombreSes) { await nombreSes.click(); await p.waitForTimeout(500); }
+  ok(!!nombreSes && await p.isVisible(".ejf-hoja .muscle-sheet-panel"), "en el detalle de una sesión, el nombre abre la ficha");
+  await p.keyboard.press("Escape");
+  await p.waitForTimeout(400);
+  const cerrarSes = await p.$("#ejs-cerrar");
+  if (cerrarSes && await cerrarSes.isVisible()) { await cerrarSes.click(); await p.waitForTimeout(300); }
+
+  // Desde el buscador (agregar ejercicio en un entreno vacío).
+  await ir(p, "gimnasio", 700);
+  await p.click("#gym-start-empty");
+  await p.waitForTimeout(600);
+  await p.fill("#gym-active-exercise-name", "press militar");
+  await p.waitForTimeout(400);
+  const info = await p.$(".ex-sug-info");
+  ok(!!info, "el buscador muestra «?» en cada opción");
+  if (info) { await info.click(); await p.waitForTimeout(500); }
+  ok(await p.isVisible(".ejf-hoja .muscle-sheet-panel") && /Press militar/.test(await texto(p, "#ejf-titulo")), "«?» abre la ficha sin agregar el ejercicio");
+  ok((await p.$$("#gym-active-exercises .gx-ej")).length === 0, "el entreno sigue vacío");
+  await p.keyboard.press("Escape");
+  await p.waitForTimeout(400);
+  await p.evaluate(() => { const d = document.getElementById("gym-active-discard"); d.click(); });
+  await p.waitForTimeout(400);
+
+  // Editor de rutinas: «?» junto al nombre, que ya no se corta.
+  await p.click('[data-rut-menu="empuje"]');
+  await p.waitForTimeout(300);
+  await p.click('[data-rut-accion="editar"]');
+  await p.waitForTimeout(500);
+  const ancho1 = await p.$eval('#rut-items [data-rut-item="1"] .rut-in-nombre', i => i.scrollWidth <= i.clientWidth + 1);
+  ok(ancho1, "en el editor, «Press de banca inclinado (Mancuerna)» entra completo");
+  await p.click('#rut-items [data-rut-item="0"] .rut-item-ficha');
+  await p.waitForTimeout(500);
+  ok(/Press de banca \(Barra\)/.test(await texto(p, "#ejf-titulo")), "y «?» abre su ficha");
+  await p.keyboard.press("Escape");
+  await p.waitForTimeout(400);
+  await foto(p, `rut-editor-${ancho}.png`);
+  ok(!p.errores.length && !p.erroresConsola.length, `sin errores (${p.erroresConsola.join(" | ")})`);
+  await p.context().close();
+}
+
 // ---------- Fase 1: caché de las demos en el service worker ----------
 // Contexto aparte con service workers permitidos (las demás pruebas los bloquean).
 async function cacheDemos(browser) {
@@ -177,7 +313,7 @@ async function cacheDemos(browser) {
   const srv = await servidor();
   const base = `http://localhost:${srv.address().port}`;
   const browser = await chromium.launch();
-  for (const ancho of [390, 1280]) await demos(browser, base, ancho);
+  for (const ancho of [390, 1280]) { await demos(browser, base, ancho); await fichaCompleta(browser, base, ancho); }
   await cacheDemos(browser);
   await terminar(browser, srv);
 })();

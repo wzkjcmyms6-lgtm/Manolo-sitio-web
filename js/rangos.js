@@ -428,6 +428,7 @@ function graficoHtml(e) {
 }
 
 function hojaEjercicio(id) {
+  if (!res) calcular();
   const e = res.ejercicios[id];
   if (!e) return;
   const def = e.def;
@@ -451,10 +452,27 @@ function hojaEjercicio(id) {
     : `<span class="rk-estado">En margen (${e.diasMargen} ${e.diasMargen === 1 ? "día" : "días"})</span>`;
   abrirHoja(cabeceraHoja(grupo ? grupo.nombre : "", def.nombre, e.nombresUsados.length && e.nombresUsados[0] !== def.nombre ? `Registrado como: ${escapeHtml(e.nombresUsados.join(", "))}` : "") + `
     <div class="rk-hoja-top">${insignia(e.nivel, 96)}<div><b>${n.nombre}</b><span>Percentil ${fmt(e.P)} · ${RE.textoPercentil(e.P)}</span>${estado}</div></div>
+    ${botonFicha(def)}
     <p class="rk-texto">${score}</p>
     ${meta}
     ${graficoHtml(e)}
     ${sospechosasHtml(e)}`);
+}
+
+// "Cómo se hace": abre la ficha del ejercicio (js/ej-ficha.js).
+function botonFicha(def) {
+  const base = (def.baseIds || []).find(b => EjercicioDatos.ficha(b));
+  return base && window.EjFicha ? `<button type="button" class="rk-btn-sec rk-ver-ficha" data-ficha="${escapeHtml(base)}">Cómo se hace</button>` : "";
+}
+
+// Rango de un ejercicio de la base, para su ficha: { id, nombre, texto, insignia } o null.
+function deFicha(f) {
+  const v = vincular({ name: f.nombre, exerciseId: f.id });
+  if (!v.id) return null;
+  if (!res) calcular();
+  const e = res.ejercicios[v.id];
+  if (!e || !e.tieneRango) return { id: v.id, nombre: "Sin rango todavía", texto: "", insignia: insignia(null, 40) };
+  return { id: v.id, nombre: nivel(e.nivel).nombre, texto: `Percentil ${fmt(e.P)}`, insignia: insignia(e.nivel, 40) };
 }
 
 function sospechosasHtml(e) {
@@ -609,5 +627,5 @@ if (panel) {
     .observe(panel, { attributes: true, attributeFilter: ["hidden"] });
 }
 
-window.Rangos = { calcular: () => res || calcular(), render, pesoEn };
+window.Rangos = { calcular: () => res || calcular(), render, pesoEn, deFicha, abrirEjercicio: hojaEjercicio };
 })();

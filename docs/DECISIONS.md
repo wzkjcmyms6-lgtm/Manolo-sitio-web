@@ -914,3 +914,26 @@ haya conexión". Los 35 ejercicios sin fotos (casi todos agregados por Manolo) m
 ficha el mapa con sus músculos. Para el descanso sugerido, el
 equilibrio y el generador, `data/ejercicios.json` suma `mec`, `fz`, `niv`
 y `demo` (solo aditivo; el resto de cada ficha queda idéntico).
+
+**D-092 (2026-11-05) · Ficha del ejercicio.** (1) **Técnica sin IA**: los
+pasos (3 a 5) los escribe el equipo traduciendo y resumiendo las
+instrucciones de free-exercise-db; los errores comunes no se escriben por
+ejercicio sino por tipo de movimiento (25 tipos, generales y prudentes,
+sin consejos médicos), así los 592 ejercicios los tienen desde el primer
+día. Lote 1: 114 ejercicios con pasos (85 destacados + los de Manolo); el
+resto llega por lotes. Archivo aparte (`data/ejercicios-tecnica.json`),
+pedido al abrir la primera ficha; como lo nombra un JS con `?v=`, el
+service worker lo guarda y funciona sin señal. (2) **1RM estimado con
+Epley** (Epley, 1985), reps topadas en 12 como en Rangos; con RIR se usan
+reps + RIR, que es lo que propone la escala de esfuerzo por reps en
+reserva (Zourdos et al., 2016, *J Strength Cond Res* 30(1):267-275).
+(3) **Videos**: no hay fuente libre para todos, así que "Ver video" abre la
+búsqueda de YouTube (sin peso) y "Mi video" guarda solo el id de 11
+caracteres de un link de YouTube validado; el reproductor es
+`youtube-nocookie.com` y carga solo al tocar la miniatura. (4) Notas y
+videos en `meta/ejercicio_fichas` (un documento, una escucha que empieza
+al abrir la primera ficha); historial y récords salen de los entrenos ya
+cargados (sin lecturas por ficha). (5) La ficha va por encima de las otras
+hojas (z-index 950) para poder abrirla desde Rangos o un entreno sin
+cerrarlos. (6) En el editor de rutinas el nombre pasa a su propia línea
+(antes se cortaba).

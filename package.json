@@ -5,6 +5,8 @@
   "scripts": {
     "test": "node --test",
     "ejercicios": "node scripts/build-exercises.mjs",
+    "demos": "node scripts/build-demos.mjs",
+    "tecnica": "node scripts/build-tecnica.mjs",
     "sw": "node scripts/version-sw.js"
   }
 }

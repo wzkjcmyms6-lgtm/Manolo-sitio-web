@@ -46,10 +46,13 @@ function adjuntar(input, opciones) {
     resultados = EjercicioDatos.buscar(q, op.limite).map(r => r.ejercicio);
     const exacto = resultados.some(f => ExerciseSearch.clave(f.nombre) === ExerciseSearch.clave(q));
     caja.innerHTML = resultados.map((f, i) => `
-        <button type="button" class="ex-sug" data-i="${i}" role="option">
-          <span class="n">${escapeHtml(f.nombre)}</span>
-          <span class="m">${resumenMusculos(f)}</span>
-        </button>`).join("") +
+        <div class="ex-sug-fila">
+          <button type="button" class="ex-sug" data-i="${i}" role="option">
+            <span class="n">${escapeHtml(f.nombre)}</span>
+            <span class="m">${resumenMusculos(f)}</span>
+          </button>
+          ${window.EjFicha ? `<button type="button" class="ex-sug-info" data-ficha="${escapeHtml(f.id)}" aria-label="Cómo se hace ${escapeHtml(f.nombre)}">?</button>` : ""}
+        </div>`).join("") +
       (op.alCrear && !exacto ? `
         <button type="button" class="ex-sug crear" data-crear role="option">
           <span class="n">+ Crear «${escapeHtml(q)}»</span>

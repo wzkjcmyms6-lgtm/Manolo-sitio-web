@@ -247,7 +247,7 @@ function abrirDetalle(ses, opciones) {
       let n = 0;
       const sets = ex.sets || [];
       return `<section class="ejs-ej">
-        <h4>${escapeHtml(ex.name || ex.nombre || "Ejercicio")}</h4>
+        <h4><button type="button" class="ejs-ej-nombre" data-ficha-nombre="${escapeHtml(ex.name || ex.nombre || "")}"${ex.exerciseId ? ` data-ficha="${escapeHtml(ex.exerciseId)}"` : ""}>${escapeHtml(ex.name || ex.nombre || "Ejercicio")}</button></h4>
         ${ex.minutos && !sets.length ? `<p class="ejs-nota">${numero(ex.minutos, 0)} min</p>` : ""}
         <ol class="ejs-series">${sets.map(s => serieTxt(s, s.calentamiento ? 0 : ++n)).join("")}</ol>
         ${ex.rpe ? `<p class="ejs-nota">RPE ${escapeHtml(ex.rpe)}</p>` : ""}

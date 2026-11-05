@@ -204,10 +204,16 @@ function renderRespaldo(st) {
     : "Se creará una copia de seguridad de tus entrenos en cuanto haya conexión.";
 }
 
-document.getElementById("aj-descargar").addEventListener("click", () => {
-  // El archivo también lleva tus rutinas y tu plan semanal.
+document.getElementById("aj-descargar").addEventListener("click", async () => {
+  // El archivo también lleva tus rutinas, tu plan semanal, tus ajustes
+  // (equipo, meta) y tus notas y videos de cada ejercicio.
   const datos = respaldo(EjercicioDatos.estado);
   if (window.RutinasUI) { datos.rutinas = RutinasUI.crudas(); datos.planSemanal = RutinasUI.plan(); }
+  datos.ajustesEjercicio = EjercicioDatos.estado.ajustes || {};
+  try {
+    const doc = await EjercicioDatos.meta("ejercicio_fichas").get();
+    datos.fichas = (doc && doc.exists && doc.data()) || {};
+  } catch (e) { datos.fichas = window.EjFicha ? EjFicha.fichas() : {}; }
   const blob = new Blob([JSON.stringify(datos, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
