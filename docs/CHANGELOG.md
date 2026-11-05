@@ -1,5 +1,16 @@
 # Cambios
 
+## 2026-11-05 · Ejercicio: demos de cada ejercicio (fase 1)
+- 557 ejercicios con demo: las 2 fotos (inicio y final) en WebP, que se
+  alternan con un fundido como un video corto; botón de pausa y, con
+  "reducir movimiento", quietas.
+- Tocar el nombre de un ejercicio (en el entreno o en una rutina) abre su
+  ficha: demo, músculos en el mapa, equipo y créditos.
+- Las imágenes no se bajan al instalar la app: se guardan al verlas (con
+  límite) y las de tus rutinas quedan en el teléfono para el gimnasio sin
+  señal.
+- Pruebas: `tests/ej-demos.test.js` (6) y E2E nuevo `scripts/e2e/ejercicio.js`.
+
 ## 2026-11-05 · Ejercicio inteligente: auditoría y diseño (fase 0)
 - Revisión a 390 px con 9 semanas de entrenos de prueba: 7 problemas
   (empezar la rutina de hoy cuesta 4 toques, kg viejos precargados, el

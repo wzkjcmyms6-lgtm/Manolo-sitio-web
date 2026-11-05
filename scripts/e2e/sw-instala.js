@@ -17,7 +17,7 @@ const VERSION = /const VERSION = "([^"]+)"/.exec(SW)[1];
 // Servidor propio: sirve el repo, pero sw.js sale de una variable para poder
 // "publicar" una versión nueva en medio de la prueba (el navegador baja el
 // service worker por su cuenta, sin pasar por las rutas de Playwright).
-const TIPOS = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2" };
+const TIPOS = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".webp": "image/webp" };
 let swActual = SW;
 function servidorPropio() {
   return new Promise(res => {

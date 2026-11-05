@@ -540,9 +540,9 @@ function bloqueEjercicio(ex, exIndex) {
   return `
     <section class="exercise-card gx-ej" data-ex-index="${exIndex}">
       <div class="gx-ej-head">
-        ${miniatura(f)}
+        ${f ? `<button type="button" class="gx-thumb-btn" data-ficha="${escapeHtml(f.id)}" aria-label="Ver cómo se hace ${escapeHtml(ex.name)}">${miniatura(f)}</button>` : miniatura(f)}
         <div class="gx-ej-titulo">
-          <h3>${escapeHtml(ex.name)}</h3>
+          <h3>${f ? `<button type="button" class="gx-ej-nombre" data-ficha="${escapeHtml(f.id)}">${escapeHtml(ex.name)}</button>` : escapeHtml(ex.name)}</h3>
           ${musculos}
         </div>
         <button type="button" class="gx-mas" aria-label="Opciones de ${escapeHtml(ex.name)}"><span data-icon="moreV"></span></button>

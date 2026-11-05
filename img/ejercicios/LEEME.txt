@@ -1,0 +1,3 @@
+Demos de ejercicios: 2 fotos por ejercicio (inicio y final), en WebP de 480 px.
+Origen: free-exercise-db (https://github.com/yuhonas/free-exercise-db), commit f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5,
+licencia Unlicense (dominio público). Generadas con: node scripts/build-demos.mjs

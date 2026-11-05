@@ -67,6 +67,11 @@ curl y usar `--local archivo.json`. El resultado es determinista.
 
 Campos de cada ejercicio: `id, nombre, alias[], tipo (carga | peso_corporal |
 cardio | isometrico), equipo, primarios[], secundarios[], factorPesoCorporal`.
+Desde 2026-11 (D-091), opcionales: `mec` (`c` compuesto, `a` aislamiento),
+`fz` (`e` empuje, `t` tirón, `s` estático), `niv` (1 principiante, 2
+intermedio, 3 experto) y `demo: 1` si tiene sus 2 fotos en
+`img/ejercicios/{id}/` (`node scripts/build-demos.mjs`, ver
+`docs/EJERCICIO_INTELIGENTE.md`).
 
 ## Músculos (22 regiones → 6 grupos)
 

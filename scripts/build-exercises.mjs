@@ -15,6 +15,10 @@
 //   5. Asigna tipo (carga | peso_corporal | cardio | isometrico) y factor de
 //      peso corporal.
 //   6. Suma unos pocos ejercicios que el dataset no trae (correr, natación…).
+//   7. (2026-11) Campos nuevos del dataset, solo aditivos: mec ("c" compuesto,
+//      "a" aislamiento), fz ("e" empuje, "t" tirón, "s" estático), niv (1
+//      principiante, 2 intermedio, 3 experto) y demo: 1 si trae sus 2 fotos
+//      (las demos WebP las genera scripts/build-demos.mjs).
 //
 // Uso:
 //   node scripts/build-exercises.mjs                  descarga y genera
@@ -1314,12 +1318,39 @@ function construir(e) {
       equipo,
       primarios,
       secundarios,
-      factorPesoCorporal: aj.factorPesoCorporal != null ? aj.factorPesoCorporal : factorDe(tipo, t.n)
+      factorPesoCorporal: aj.factorPesoCorporal != null ? aj.factorPesoCorporal : factorDe(tipo, t.n),
+      ...extras(e, aj)
     },
     destacado: !!aj.destacado,
     sobrantes: aj.nombre ? [] : t.sobrantes
   };
 }
+
+// Campos nuevos (D-090): mecánica, fuerza, nivel y si trae sus 2 fotos.
+const MEC = { compound: "c", isolation: "a" };
+const FZ = { push: "e", pull: "t", static: "s" };
+const NIV = { beginner: 1, intermediate: 2, expert: 3 };
+function extras(e, aj) {
+  const out = {};
+  const mec = aj.mec || MEC[e.mechanic];
+  const fz = aj.fz || FZ[e.force];
+  if (mec) out.mec = mec;
+  if (fz) out.fz = fz;
+  if (NIV[e.level]) out.niv = NIV[e.level];
+  if (Array.isArray(e.images) && e.images.length >= 2) out.demo = 1;
+  return out;
+}
+// Lo mismo para los ejercicios propios de Manolo (no tienen fotos).
+const EXTRA_CAMPOS = {
+  "manolo-remo-pendlay": { mec: "c", fz: "t" }, "manolo-hip-thrust-maquina": { mec: "c", fz: "e" },
+  "manolo-peso-muerto-rumano-mancuerna": { mec: "c", fz: "t" }, "manolo-elevacion-lateral-maquina": { mec: "a", fz: "e" },
+  "manolo-elevacion-lateral-polea": { mec: "a", fz: "e" }, "manolo-flexion-normal": { mec: "c", fz: "e" },
+  "manolo-flexion-rodillas": { mec: "c", fz: "e" }, "manolo-flexion-pausa": { mec: "c", fz: "e" },
+  "manolo-negativa-controlada": { mec: "c", fz: "t" }, "manolo-zancada-asistida": { mec: "c", fz: "e" },
+  "manolo-elevacion-talones": { mec: "a", fz: "e" }, "manolo-burpees": { mec: "c", fz: "e" },
+  "manolo-extension-cuello-maquina": { mec: "a", fz: "e" }, "manolo-flexion-extension-cervical": { mec: "a", fz: "e" },
+  "manolo-puente-luchador": { mec: "c", fz: "s" }
+};
 
 // ---------------------------------------------------------------------------
 
@@ -1361,6 +1392,7 @@ for (const x of EXTRA) {
   const { destacado, ...ficha } = x;
   ficha.alias = ficha.alias || [];
   if (ficha.factorPesoCorporal == null) ficha.factorPesoCorporal = 0;
+  Object.assign(ficha, EXTRA_CAMPOS[ficha.id] || {});
   const err = validar(ficha);
   if (err.length) { problemas.push(`${x.nombre}: ${err.join(", ")}`); continue; }
   const clave = slug(ficha.nombre);

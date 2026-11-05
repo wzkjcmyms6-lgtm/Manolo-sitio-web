@@ -1,0 +1,54 @@
+/* ---------- Ejercicio inteligente (D-090): ficha, demos y extras ---------- */
+
+/* Nombres que abren la ficha: se ven igual que antes, pero se tocan. */
+.gx-thumb-btn { padding: 0; border: 0; background: none; border-radius: 50%; cursor: pointer; flex-shrink: 0; }
+.gx-thumb-btn:focus-visible, .gx-ej-nombre:focus-visible, .rut-ej-nombre:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.gx-ej-nombre {
+  display: inline-flex; align-items: center; min-height: 44px; margin: -10px 0; padding: 0;
+  border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; overflow-wrap: anywhere;
+}
+.rut-ej-nombre {
+  display: block; width: 100%; padding: 6px 0 2px; margin: -6px 0 0; border: 0; background: none;
+  color: var(--ink); font: inherit; text-align: left; cursor: pointer;
+}
+
+/* ---- Hoja de la ficha ---- */
+.ejf-hoja .muscle-sheet-panel { max-height: 92dvh; }
+.ejf-arriba { display: block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-2); }
+.ejf-sin-demo { margin: 0 0 0.9rem; padding: 0.8rem 0.9rem; border-radius: 14px; background: var(--surface-raised); color: var(--muted); font-size: 0.86rem; }
+.ejf-musculos { display: flex; align-items: center; gap: 0.9rem; padding: 0.8rem 0.9rem; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); }
+.ejf-figs { display: flex; gap: 0.2rem; flex-shrink: 0; }
+.ejf-fig { width: 58px; height: 124px; }
+.ejf-musc-txt p { margin: 0 0 0.5rem; font-size: 0.88rem; line-height: 1.35; }
+.ejf-musc-txt p:last-child { margin-bottom: 0; }
+.ejf-musc-txt b { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* ---- Demo: 2 fotos que se alternan con un fundido, como un video en bucle ---- */
+.ejd-demo { margin: 0 0 0.9rem; }
+.ejd-demo-marco { position: relative; aspect-ratio: 3 / 2; border-radius: 16px; overflow: hidden; background: var(--surface-raised); }
+.ejd-demo-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.ejd-demo-img.is-b { animation: ejd-alterna 2.8s ease-in-out infinite; }
+@keyframes ejd-alterna { 0%, 32% { opacity: 0; } 50%, 82% { opacity: 1; } 100% { opacity: 0; } }
+.ejd-demo.is-pausada .ejd-demo-img.is-b { animation-play-state: paused; }
+.ejd-demo-etq { display: none; }
+.ejd-demo-pausa {
+  position: absolute; right: 8px; bottom: 8px; width: 44px; height: 44px; border-radius: 50%;
+  border: 0; background: rgba(10, 10, 10, 0.62); color: #fff; display: grid; place-items: center; cursor: pointer;
+}
+.ejd-ico-pausa { width: 12px; height: 14px; border-left: 4px solid currentColor; border-right: 4px solid currentColor; }
+.ejd-demo.is-pausada .ejd-ico-pausa { width: 0; height: 0; border-style: solid; border-width: 8px 0 8px 13px; border-color: transparent transparent transparent currentColor; margin-left: 3px; }
+.ejd-demo-sinred { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; padding: 1rem; text-align: center; color: var(--muted); font-size: 0.86rem; }
+.ejd-demo-sinred[hidden] { display: none; }
+.ejd-demo.is-sinred .ejd-demo-img, .ejd-demo.is-sinred .ejd-demo-pausa { display: none; }
+.ejd-credito { margin-top: 0.35rem; font-size: 0.72rem; color: var(--muted); }
+.ejd-demo.is-chica .ejd-demo-marco { border-radius: 12px; }
+
+/* "Reducir movimiento": quietas, una al lado de la otra, con su etiqueta. */
+@media (prefers-reduced-motion: reduce) {
+  .ejd-demo-marco { aspect-ratio: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: none; overflow: visible; }
+  .ejd-demo-img { position: static; aspect-ratio: 3 / 2; height: auto; border-radius: 12px; }
+  .ejd-demo-img.is-b { animation: none; opacity: 1; grid-column: 2; grid-row: 1; }
+  .ejd-demo-etq { display: block; grid-row: 2; font-size: 0.72rem; color: var(--muted); text-align: center; }
+  .ejd-demo-etq.is-b { grid-column: 2; }
+  .ejd-demo-pausa { display: none; }
+}

@@ -10,18 +10,27 @@
 //   publica una versión nueva (VERSION distinta), el teléfono la descarga en
 //   segundo plano y Manolo muestra "Nueva versión disponible · Actualizar".
 // - Al activarse una versión, se borran los cachés viejos.
+// - Las demos de los ejercicios (img/ejercicios/…) NO van en ese caché: se
+//   descargan al abrir una ficha y quedan en "manolo-demos" (con límite: las
+//   más viejas se borran). Las de los ejercicios de tus rutinas se guardan
+//   aparte, en "manolo-demos-rutinas", para verlas sin señal (D-091).
 // - El tipo de cambio (data/tipo-cambio.json) y los precios de Inversiones
 //   (data/precios.json) van primero a la red y, sin conexión, usan la
 //   última copia.
 //
 // IMPORTANTE: cada entrega que cambie la app debe subir VERSION y HUELLA con
 // `npm run sw` (el test tests/sw-version.test.js falla si alguien lo olvida).
-const VERSION = "2026-11-05.12";
-const HUELLA = "679402abbae7";
+const VERSION = "2026-11-05.13";
+const HUELLA = "044c5c538456";
 const PREFIJO = "manolo-app-";
 const CACHE = PREFIJO + VERSION;
 const DATOS = "manolo-datos"; // copias de respaldo de datos que cambian solos (tipo de cambio, precios)
 const DATOS_VIVOS = /\/data\/(tipo-cambio|precios)\.json/;
+const DEMOS = "manolo-demos";                 // demos vistas (con límite)
+const DEMOS_RUTINAS = "manolo-demos-rutinas"; // demos de tus rutinas (sin señal en el gimnasio)
+const DEMOS_MAX = 240;                        // imágenes (~3,4 MB)
+const DEMOS_RUTINAS_MAX = 240;
+const ES_DEMO = /\/img\/ejercicios\//;
 
 // Archivos que no aparecen en index.html pero la app necesita.
 const EXTRAS = ["./", "manifest.json", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "js/importar-rutinas.js", "js/importar-ui.js", "vendor/leaflet-1.9.4/leaflet.js", "vendor/leaflet-1.9.4/leaflet.css"];
@@ -124,6 +133,7 @@ self.addEventListener("message", e => {
   if (d.tipo === "activar") self.skipWaiting();
   else if (d.tipo === "guardar") e.waitUntil(guardarLista(d.urls));
   else if (d.tipo === "version" && e.source) e.source.postMessage({ tipo: "version", version: VERSION });
+  else if (d.tipo === "demos") e.waitUntil(precargarDemos(d.urls));
 });
 
 async function desdeCache(req) {
@@ -166,10 +176,47 @@ async function redPrimero(req) {
   }
 }
 
+// Demos: primero la copia (de tus rutinas o de las vistas); si no, la red, y
+// se guarda. Al pasar el límite se borran las más viejas.
+async function demo(req) {
+  const clave = req.url;
+  const fija = await (await caches.open(DEMOS_RUTINAS)).match(clave);
+  if (fija) return fija;
+  const cache = await caches.open(DEMOS);
+  const copia = await cache.match(clave);
+  if (copia) return copia;
+  const res = await fetch(req);
+  if (res.ok) { await cache.put(clave, res.clone()); await recortar(cache, DEMOS_MAX); }
+  return res;
+}
+async function recortar(cache, max) {
+  const claves = await cache.keys();
+  for (let i = 0; i < claves.length - max; i++) await cache.delete(claves[i]);
+}
+// La página manda las demos de los ejercicios de tus rutinas: se guardan
+// (las que ya estaban se reusan) y se borran las que ya no están en ninguna.
+async function precargarDemos(urls) {
+  const quiero = new Set((urls || []).map(u => new URL(u, self.location.href).href)
+    .filter(u => propio(u) && ES_DEMO.test(new URL(u).pathname)).slice(0, DEMOS_RUTINAS_MAX));
+  const cache = await caches.open(DEMOS_RUTINAS);
+  for (const k of await cache.keys()) if (!quiero.has(k.url)) await cache.delete(k);
+  const vistas = await caches.open(DEMOS);
+  for (const url of quiero) {
+    if (await cache.match(url)) continue;
+    const ya = await vistas.match(url);
+    if (ya) { await cache.put(url, ya); continue; }
+    try {
+      const res = await fetch(url);
+      if (res.ok) await cache.put(url, res);
+    } catch (err) { return; } // sin conexión: se completa la próxima vez
+  }
+}
+
 self.addEventListener("fetch", e => {
   const req = e.request;
   if (req.method !== "GET" || !propio(req.url)) return; // Firebase (red) pasa directo
   if (req.mode === "navigate") { e.respondWith(pagina(req)); return; }
   if (DATOS_VIVOS.test(new URL(req.url).pathname)) { e.respondWith(redPrimero(req)); return; }
+  if (ES_DEMO.test(new URL(req.url).pathname)) { e.respondWith(demo(req)); return; }
   e.respondWith(desdeCache(req));
 });

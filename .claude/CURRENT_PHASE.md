@@ -7,7 +7,7 @@ desde D-090. Cada fase deja la app funcionando y publicada.
 | Fase | Qué | Estado |
 |---|---|---|
 | 0 | Auditoría y diseño (capturas, problemas, bocetos) | ✅ |
-| 1 | Demos: script, WebP en el repo, caché con límite, precarga de rutinas | |
+| 1 | Demos: script, WebP en el repo, caché con límite, precarga de rutinas | ✅ |
 | 2 | Ficha del ejercicio: técnica, videos, historial, récords, alternativas | |
 | 3 | Entreno en vivo: objetivos, RIR, calentamiento, discos, superseries, descanso con aviso, récords, resumen | |
 | 4 | Progresión v2, estancamiento y descarga + Ajustes del gimnasio | |

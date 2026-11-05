@@ -17,7 +17,7 @@ sale de reglas y fórmulas documentadas (§ Fórmulas, con sus fuentes en
 | Fase | Qué | Estado |
 |---|---|---|
 | 0 | Auditoría y diseño | ✅ |
-| 1 | Demos (WebP en el repo, caché con límite, precarga de rutinas) | |
+| 1 | Demos (WebP en el repo, caché con límite, precarga de rutinas) | ✅ |
 | 2 | Ficha del ejercicio (técnica, videos, historial, récords, alternativas) | |
 | 3 | Entreno en vivo (objetivo, RIR, calentamiento, discos, superseries, descanso con aviso, récords, resumen) | |
 | 4 | Progresión v2, estancamiento, descarga + Ajustes del gimnasio | |
@@ -140,6 +140,23 @@ reescriben; los Rangos no cambian de calibración.
 | `js/ej-programa.js` (UMD) | Estancamiento, descarga, volumen objetivo, equilibrio, generador |
 | `js/ej-recuperacion.js` (UMD) | Fatiga por músculo, recomendación del día, carga total |
 | `js/ej-inteligencia.js` (UMD) | Resumen por reglas de la sesión y la semana |
+
+## Demos (fase 1, D-091)
+
+- `scripts/build-demos.mjs` baja las 2 fotos de cada ejercicio con
+  `demo: 1` desde el commit fijado de free-exercise-db y las pasa a WebP
+  de 480 px con ffmpeg (calidad 75). Incremental; `--forzar` las rehace.
+  Resultado: 557 ejercicios, 1114 imágenes, 15,4 MB (~14 KB cada una).
+- `js/ej-demos.js`: marcado de la demo (fundido en bucle por CSS, pausa,
+  quietas con "reducir movimiento", aviso sin conexión) y precarga de las
+  demos de tus rutinas (mensaje `demos` al service worker).
+- `sw.js`: `img/ejercicios/…` va a `manolo-demos` (máx. 240, se borran las
+  más viejas) o sale de `manolo-demos-rutinas`; nunca al precache.
+- `js/ej-ficha.js` (primera versión): hoja con la demo, los músculos en el
+  mapa (frente y espalda), equipo, mecánica y créditos. Se abre tocando el
+  nombre (o la miniatura) en el entreno y el nombre en las rutinas.
+- `data/ejercicios.json` suma `mec` (`c` compuesto, `a` aislamiento), `fz`
+  (`e` empuje, `t` tirón, `s` estático), `niv` (1–3) y `demo: 1`.
 
 ## Fórmulas
 

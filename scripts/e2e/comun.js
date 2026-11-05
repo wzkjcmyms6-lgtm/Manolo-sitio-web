@@ -14,7 +14,7 @@ if (!chromium) { console.error("Falta Playwright (npm i -g playwright)."); proce
 
 const RAIZ = path.resolve(__dirname, "../..");
 const FAKE = fs.readFileSync(path.join(__dirname, "fake-firebase.js"), "utf8");
-const TIPOS = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2" };
+const TIPOS = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".webp": "image/webp" };
 // Reloj simulado: window.__adelantar(ms) adelanta Date.now();
 // window.__congelar() detiene el reloj real. Sobrevive a las recargas
 // (sessionStorage), así el tiempo real de la prueba no se cuela en los números.

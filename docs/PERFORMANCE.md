@@ -13,6 +13,14 @@
 El service worker guarda todo en el teléfono: desde la segunda apertura la
 app carga sin red.
 
+## Demos de los ejercicios (2026-11-05, D-091)
+
+1114 imágenes WebP (15,4 MB en el repo, ~14 KB cada una) que **no** entran
+en el precache: el teléfono baja solo las que ves (máx. 240 guardadas,
+~3,4 MB) y las de tus rutinas (~30 KB por ejercicio). La base de
+ejercicios pasa de 156 KB a 180 KB por los campos nuevos (`mec`, `fz`,
+`niv`, `demo`).
+
 ## Decisiones
 
 - **No se carga el deporte "por partes"** (D-030): ahorraría ~44 KB

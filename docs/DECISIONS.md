@@ -896,3 +896,21 @@ límite; se precargan las de las rutinas. La base trae además
 agregan a `data/ejercicios.json` como campos nuevos para el descanso
 sugerido, el equilibrio y el generador. Auditoría y bocetos en
 `docs/EJERCICIO_INTELIGENTE.md`.
+
+**D-091 (2026-11-05) · Demos de los ejercicios.** Las 2 fotos (inicio y
+final) de cada ejercicio de free-exercise-db, en el mismo commit fijado
+que la base, pasan a WebP de 480 px, calidad 75 (ffmpeg/libwebp; 1114
+imágenes, 15,4 MB, ~14 KB cada una) en `img/ejercicios/{id}/0.webp` y
+`1.webp` (`scripts/build-demos.mjs`, incremental). Se ven una sobre otra y
+se alternan con un fundido de CSS (2,8 s en bucle) con botón de pausa; con
+"reducir movimiento" quedan quietas, una al lado de la otra. **No van en
+el precache**: el service worker las guarda al verlas en `manolo-demos`
+(máx. 240 imágenes ≈ 3,4 MB; se borran las más viejas) y las de los
+ejercicios de tus rutinas en `manolo-demos-rutinas` (se reemplaza en cada
+precarga; no se precarga con "ahorro de datos"). Las URL llevan `?v=1`
+(`EjDemos.VERSION`): si se regeneran, se sube y el teléfono baja las
+nuevas. Sin conexión y sin copia, la ficha dice "La demo se verá cuando
+haya conexión". Los 35 ejercicios sin fotos (casi todos agregados por Manolo) muestran en la
+ficha el mapa con sus músculos. Para el descanso sugerido, el
+equilibrio y el generador, `data/ejercicios.json` suma `mec`, `fz`, `niv`
+y `demo` (solo aditivo; el resto de cada ficha queda idéntico).

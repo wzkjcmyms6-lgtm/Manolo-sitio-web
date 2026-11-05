@@ -43,6 +43,14 @@ function cerrarHoja(el) {
   }, 200);
 }
 
+// Las demos de los ejercicios de tus rutinas quedan en el teléfono para
+// verlas sin señal en el gimnasio (js/ej-demos.js, D-091).
+function precargarDemos() {
+  if (!window.EjDemos || !EjercicioDatos.estado.indice) return;
+  EjDemos.precargarRutinas(rutinas, it => EjercicioDatos.resolver(it.nombre, it.exerciseId));
+}
+if (window.EjercicioDatos) EjercicioDatos.onCambio(() => precargarDemos());
+
 // ---- Lista de rutinas ----
 function diasDe(id) {
   return R.DIAS.filter(d => plan.dias && plan.dias[d.k] === id).map(d => d.corto);
@@ -59,7 +67,7 @@ function tarjetaRutina(r) {
         </div>
         <button type="button" class="rut-mas" data-rut-menu="${esc(r.id)}" aria-label="Opciones de ${esc(r.name)}"><span data-icon="menu"></span></button>
       </div>
-      <ul class="rut-card-items">${primeros.map(it => `<li><span>${esc(it.nombre)}</span><small>${esc(R.resumenItem(it))}</small></li>`).join("")}</ul>
+      <ul class="rut-card-items">${primeros.map(it => `<li><button type="button" class="rut-ej-nombre" data-ficha-nombre="${esc(it.nombre)}"${it.exerciseId ? ` data-ficha="${esc(it.exerciseId)}"` : ""}>${esc(it.nombre)}</button><small>${esc(R.resumenItem(it))}</small></li>`).join("")}</ul>
       ${r.items.length > primeros.length ? `<p class="rut-card-mas">y ${r.items.length - primeros.length} más</p>` : ""}
       <button type="button" class="start-routine-btn" data-rut-empezar="${esc(r.id)}">Empezar rutina</button>
     </article>`;
@@ -72,6 +80,7 @@ function renderRutinas() {
   renderIcons(cont);
   renderHoy();
   renderPlan();
+  precargarDemos();
 }
 function renderHoy() {
   const el = $("rut-hoy");
