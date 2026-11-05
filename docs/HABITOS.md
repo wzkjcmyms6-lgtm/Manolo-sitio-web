@@ -10,6 +10,7 @@ y el plan guiado de Scalping (`docs/SCALPING.md`, no se toca).
 | `js/habitos-config.js` | **Única** fuente de constantes (tipos, estados, XP, NIVEL, FUERZA, misiones, jefe, logros) |
 | `js/habitos-engine.js` | Motor puro: todo se recalcula desde el historial (rachas, XP, rango, misiones, jefes, logros, estadísticas, copia) |
 | `js/habitos-categorias.js` | Categorías (antes "áreas de vida"): modelo, migración en lectura, paleta, sugerencias (fase 1) |
+| `js/habitos-hoy.js` | Lista de Hoy: filtros, grupos (momento o categoría), cadenas, hora y pendientes (fase 4) |
 | `js/habitos-graficos.js` | Gráficos SVG (líneas, columnas, radar) |
 | `js/habitos.js` | Pantallas Hoy, detalle, formulario, Estadísticas, Logros y Firestore; expone `window.HabitosApp` para las pantallas en archivos aparte |
 | `js/habitos-categorias-ui.js` | Hojas de categorías: lista, crear/editar, sugeridas, archivar, asignar en lote (fase 3) |
@@ -80,11 +81,14 @@ uno propio; Archivar (con historial y sin hábitos activos) o Eliminar
 (nunca usada). Formulario del hábito: chips de categoría con su color,
 "Sin categoría" y "+ Nueva".
 
-### Hoy
-Fila de filtros (Todas · cada categoría con sus pendientes), "Agrupar por"
-Momento o Categoría, color de la categoría en cada fila, progreso por grupo
-y "Ocultar hechos". Un toque marca; mantener presionado abre las opciones
-del día. Boceto en el checkpoint de la fase 0.
+### Hoy (fase 4)
+Fila de filtros (Todas · cada categoría con sus pendientes, y "Sin
+categoría" si hay), "Momento | Categoría" para agrupar, "Ocultar hechos",
+color de la categoría en cada fila y progreso por grupo. Un toque marca;
+mantener presionado (o clic derecho) abre las opciones del día (valor,
+mínima, parcial, saltar con motivo, nota, cronómetro). Lógica:
+`js/habitos-hoy.js` (`filtros`, `grupos`, `ordenarGrupo` con la hora
+opcional, `pendientesMomento`).
 
 ### Dificultad: antes y después (simulación con el motor real)
 Hábito diario cumplido el 100 %:

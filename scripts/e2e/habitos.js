@@ -180,6 +180,74 @@ function conTemporadaVista(opciones) {
     await p.context().close();
   }
 
+  for (const ancho of [390, 1280]) {
+    console.log(`\n=== Hoy: filtros, agrupar y opciones a ${ancho} px`);
+    const p = await abrir(browser, base, conTemporadaVista(), { hash: "#habitos", zona: ZONA, fecha: FECHA, ancho, alto: ancho > 800 ? 900 : 844 });
+    consolaLimpia(p);
+    await p.waitForTimeout(500);
+    const chips = await p.$$eval(".hb-filtro", els => els.map(e => e.textContent.replace(/\s+/g, " ").trim()));
+    ok(chips[0] === "Todas6" && chips.includes("💪Cuerpo2") && chips.includes("Sin categoría2"), `chips con pendientes (${chips.join(" | ")})`);
+    ok((await p.$$('.hb-fila[data-cat="cuerpo"]')).length === 3, "cada fila lleva el color de su categoría");
+    ok(/^Mañana Ahora ?1\/3$/.test(await texto(p, '.hb-grupo[aria-label="Mañana"] .hb-grupo-t')), "progreso del grupo «Mañana 1/3»");
+    await captura(p, `hab-hoy-${ancho}.png`);
+    // Filtrar
+    await p.click('[data-hoy-filtro="cuerpo"]');
+    await p.waitForTimeout(250);
+    let visibles = await p.$$eval("#hb-lista .hb-grupo:not(.hb-notoca) .hb-nombre", els => els.map(e => e.textContent));
+    ok(visibles.join(",") === "Tomar agua,Sin azúcar,Correr", `solo Cuerpo (${visibles})`);
+    await p.reload();
+    await p.waitForTimeout(800);
+    ok(await p.$('[data-hoy-filtro="cuerpo"].is-on') !== null, "recuerda el último filtro");
+    await p.click('[data-hoy-filtro=""]');
+    await p.waitForTimeout(200);
+    // Agrupar por categoría (las cadenas van con su primer eslabón)
+    await p.click('[data-hoy-agrupar="categoria"]');
+    await p.waitForTimeout(250);
+    const grupos = await p.$$eval("#hb-lista .hb-grupo:not(.hb-notoca) .hb-grupo-t", els => els.map(e => e.textContent.replace(/\s+/g, " ").trim()));
+    ok(grupos.join(" | ") === "💪 Cuerpo0/2 | 🧠 Mente0/1 | 💰 Finanzas0/1 | 🌿 Paz1/2 | Sin categoría0/1", `grupos por categoría (${grupos.join(" | ")})`);
+    // Orar (sin categoría) va después de Meditar: su cadena manda el grupo.
+    const paz = await p.$$eval('#hb-lista .hb-grupo[aria-label="Paz"] .hb-nombre', els => els.map(e => e.textContent));
+    ok(paz.join(",") === "Meditar,Orar" && await p.$('#hb-lista .hb-grupo[aria-label="Paz"] .is-encadenado') !== null, `las cadenas van en el grupo de su primer eslabón (${paz})`);
+    await captura(p, `hab-hoy-categoria-${ancho}.png`);
+    // Ocultar hechos
+    await p.click("[data-hoy-ocultar]");
+    await p.waitForTimeout(250);
+    ok(!(await p.$('#hb-lista [data-detalle="meditar"]')) && await p.$('#hb-lista [data-detalle="orar"]') !== null && /Paz1\/2/.test(await texto(p, '#hb-lista .hb-grupo[aria-label="Paz"] .hb-grupo-t')), "ocultar hechos: se va Meditar y el progreso sigue 1/2");
+    await p.click("[data-hoy-ocultar]");
+    await p.click('[data-hoy-agrupar="momento"]');
+    await p.waitForTimeout(250);
+    // Un toque marca
+    await p.click('#hb-lista [data-marcar="gastos"]');
+    await p.waitForTimeout(400);
+    let hs = await p.evaluate(() => window.__fakeStore.colMap("users/test/habitos").get("gastos").registros["2026-11-05"]);
+    ok(hs && hs.e === "hecho", "un toque sigue marcando");
+    for (let i = 0; i < 6 && await p.$(".hb-celebra [data-continuar]"); i++) { await p.click(".hb-celebra [data-continuar]"); await p.waitForTimeout(400); }
+    // Mantener presionado abre las opciones del día (clic derecho en la compu)
+    if (ancho < 800) {
+      const caja = await (await p.$('#hb-lista [data-marcar="leer"]')).boundingBox();
+      await p.dispatchEvent('#hb-lista [data-marcar="leer"]', "pointerdown", { clientX: caja.x + 5, clientY: caja.y + 5, button: 0, pointerType: "touch" });
+      await p.waitForTimeout(650);
+      await p.dispatchEvent('#hb-lista [data-marcar="leer"]', "pointerup", { clientX: caja.x + 5, clientY: caja.y + 5 });
+      await p.dispatchEvent('#hb-lista [data-marcar="leer"]', "click");
+    } else {
+      await p.click('#hb-lista [data-marcar="leer"]', { button: "right" });
+    }
+    await p.waitForTimeout(400);
+    ok(await p.isVisible('.hb-sheet [data-estado="saltado"]'), "mantener presionado abre parcial, mínima, saltar y nota");
+    hs = await p.evaluate(() => window.__fakeStore.colMap("users/test/habitos").get("leer").registros["2026-11-05"]);
+    ok(!hs, "y no marca el hábito");
+    await captura(p, `hab-hoy-opciones-${ancho}.png`);
+    await p.click('.hb-sheet [data-estado="saltado"]');
+    await p.waitForTimeout(400);
+    hs = await p.evaluate(() => window.__fakeStore.colMap("users/test/habitos").get("leer").registros["2026-11-05"]);
+    ok(hs && hs.e === "saltado", "saltar desde ahí");
+    await p.click(".hb-sheet [data-cerrar].hb-btn");
+    await p.waitForTimeout(300);
+    ok(/Saltado/.test(await texto(p, '#hb-lista [data-detalle="leer"]')), "la fila dice «Saltado»");
+    ok(p.errores.length === 0 && p.consola.length === 0, `sin errores (${p.errores.concat(p.consola).join(" | ")})`);
+    await p.context().close();
+  }
+
   console.log("\n=== Sin historia: no hay hoja de temporada");
   const q = await abrir(browser, base, {}, { hash: "#habitos", zona: ZONA, fecha: FECHA });
   await q.waitForTimeout(500);

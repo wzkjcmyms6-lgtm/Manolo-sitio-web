@@ -1,5 +1,17 @@
 # Cambios
 
+## 2026-11-05 · Hábitos: Hoy por categoría (fase 4)
+- Arriba de Hoy: Todas · cada categoría con cuántos le quedan hoy (se
+  recuerda la última). "Momento | Categoría" para agrupar (las cadenas van
+  con su primer eslabón) y "Ocultar hechos".
+- Cada fila lleva el color de su categoría y cada grupo su progreso
+  ("Mañana 1/3" con una barrita).
+- Mantener presionado un hábito (o clic derecho en la compu) abre parcial,
+  mínima, saltar y nota; un toque sigue marcando.
+- Arreglos de la auditoría: la sugerencia de Scalping ocupa una línea y el
+  pie (Cerrar el día · Ordenar · Ajustes) también.
+- Motor nuevo `js/habitos-hoy.js` (7 pruebas); E2E `habitos.js`: 95.
+
 ## 2026-11-05 · Hábitos: gestionar categorías (fase 3)
 - Ajustes de Hábitos › Categorías: crear (nombre, emoji, color), editar,
   ordenar con flechas, archivar (si tiene historial) o eliminar (si nunca

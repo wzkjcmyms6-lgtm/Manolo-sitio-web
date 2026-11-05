@@ -781,3 +781,13 @@ un lote de Firestore que solo escribe `area`. En el formulario, lo que se
 usa poco (nota, dificultad, "después de", se marca solo, versión mínima)
 pasa a "Más opciones", que se abre solo si el hábito ya usa alguna; los
 botones Cancelar/Crear quedan fijos abajo.
+
+**D-083 (2026-11-05) · Hoy filtrado y agrupado.** La lógica está en
+`js/habitos-hoy.js` (sin DOM, con pruebas). El filtro usa la categoría del
+propio hábito; al agrupar por categoría manda la del primer eslabón de su
+cadena ("Después de…"), así una cadena nunca se parte. Los de Evitar no
+cuentan en el progreso de un grupo ni en los pendientes (se cumplen solos).
+Filtro, agrupación y "ocultar hechos" son preferencias del teléfono
+(`localStorage hb-hoy-*`), no de la cuenta. Mantener presionado ~0,5 s
+(pointer events, se cancela si el dedo se mueve) abre las opciones del día
+sin marcar; en la computadora, el clic derecho.

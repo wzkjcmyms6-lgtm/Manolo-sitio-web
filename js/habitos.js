@@ -9,6 +9,7 @@
 const HE = HabitosEngine;
 const HC = HabitosConfig;
 const HCat = HabitosCategorias;
+const HH = HabitosHoy;
 
 // Emojis del formulario, por categorías (como en otras apps de hábitos).
 // Están todos los de antes; además se puede escribir cualquiera del teclado.
@@ -237,6 +238,13 @@ function escenaSVG(momento) {
 }
 
 // ---------- Pantalla Hoy ----------
+// Filtro, agrupación y "ocultar hechos" se recuerdan en el teléfono.
+function prefLocal(k, def) { try { const v = localStorage.getItem("hb-hoy-" + k); return v == null ? def : v; } catch (e) { return def; } }
+function guardarPrefLocal(k, v) { try { if (v == null) localStorage.removeItem("hb-hoy-" + k); else localStorage.setItem("hb-hoy-" + k, v); } catch (e) { /* sin almacenamiento */ } }
+let hoyFiltro = prefLocal("filtro", null);
+let hoyAgrupar = prefLocal("agrupar", "momento") === "categoria" ? "categoria" : "momento";
+let hoyOcultar = prefLocal("ocultar", "0") === "1";
+
 function anilloSVG(hechos, total) {
   const r = 27, c = 2 * Math.PI * r;
   const fr = total ? hechos / total : 0;
@@ -362,7 +370,8 @@ function filaHtml(h, f, encadenado) {
   const sub = subtitulo(h, x, f);
   const clases = ["hb-fila", x.hecho && h.tipo !== "evitar" ? "is-hecho" : "", !x.toca ? "is-apagada" : "", encadenado ? "is-encadenado" : ""].filter(Boolean).join(" ");
   const crono = cronoInicio(h.id);
-  return `<li class="${clases}">
+  const cat = HCat.deHabito(h, areasDef());
+  return `<li class="${clases}"${cat ? ` style="--cat:${HCat.colorDe(cat)}" data-cat="${cat.id}"` : ""}>
     <button type="button" class="hb-fila-info" data-detalle="${h.id}" aria-label="Ver detalle de ${escapeHtml(h.name)}">
       <span class="hb-emoji" aria-hidden="true">${escapeHtml(h.emoji)}</span>
       <span class="hb-fila-txt">
@@ -391,28 +400,33 @@ function renderHoy() {
     return;
   }
   const actual = momentoActual();
-  const orden = [actual, "cualquiera"].concat(["manana", "tarde", "noche"].filter(m => m !== actual));
   const hoyToca = [], noToca = [];
   todos.forEach(h => (filaHoy(h, f).toca ? hoyToca : noToca).push(h));
-  // Un hábito encadenado va en el grupo de su primer eslabón que toque hoy.
-  const enHoy = new Map(hoyToca.map(h => [h.id, h]));
-  const raiz = h => {
-    let r = h;
-    const vistos = new Set([h.id]);
-    while (r.despuesDe && enHoy.has(r.despuesDe) && !vistos.has(r.despuesDe)) { r = enHoy.get(r.despuesDe); vistos.add(r.id); }
-    return r;
-  };
-  let html = orden.map(m => {
-    const hs = HE.ordenarConCadenas(hoyToca.filter(h => raiz(h).timeOfDay === m));
-    if (!hs.length) return "";
-    const nombre = HC.MOMENTOS.find(x => x.id === m).nombre;
-    return `<section class="hb-grupo" aria-label="${nombre}">
-      <h2 class="hb-grupo-t">${nombre}${m === actual ? ` <span class="hb-ahora">Ahora</span>` : ""}</h2>
-      <ul class="hb-filas">${hs.map(h => filaHtml(h, f, raiz(h) !== h)).join("")}</ul></section>`;
+  const cats = areasDef();
+  const items = hoyToca.map(h => {
+    const x = filaHoy(h, f);
+    return { id: h.id, area: h.area, timeOfDay: h.timeOfDay, despuesDe: h.despuesDe, hora: h.hora, hecho: h.tipo !== "evitar" && (x.hecho || (x.semanal && x.semanaOk)), cuenta: h.tipo !== "evitar" };
+  });
+  const chips = HH.filtros(items, cats);
+  // Un filtro que ya no existe (o sin hábitos hoy) muestra todo.
+  const filtro = chips.some(c => c.id === hoyFiltro) ? hoyFiltro : null;
+  const grupos = HH.grupos(items, { agrupar: hoyAgrupar, filtro, ocultarHechos: hoyOcultar, momento: actual, categorias: cats });
+  let html = barraHoyHtml(chips, filtro, items.length);
+  html += grupos.map(g => {
+    const enGrupo = new Set(g.items.map(x => x.id));
+    const color = g.color ? HCat.colorDe(g.color) : null;
+    const pct = g.total ? (g.hechos / g.total) * 100 : 0;
+    const cab = `${g.emoji ? `<span aria-hidden="true">${escapeHtml(g.emoji)}</span> ` : ""}${escapeHtml(g.nombre)}${g.ahora ? ` <span class="hb-ahora">Ahora</span>` : ""}`;
+    return `<section class="hb-grupo" aria-label="${escapeHtml(g.nombre)}"${color ? ` style="--cat:${color}"` : ""}>
+      <h2 class="hb-grupo-t">${cab}${g.total ? `<span class="hb-grupo-prog" aria-label="${g.hechos} de ${g.total} hechos">${g.hechos}/${g.total}</span><span class="hb-grupo-barra" aria-hidden="true"><span style="width:${pct.toFixed(0)}%"></span></span>` : ""}</h2>
+      ${g.items.length ? `<ul class="hb-filas">${g.items.map(x => filaHtml(normal[x.id], f, !!(x.despuesDe && enGrupo.has(x.despuesDe)))).join("")}</ul>`
+        : `<p class="hb-grupo-listo"><span data-icon="check"></span>Todo hecho</p>`}</section>`;
   }).join("");
-  if (noToca.length) {
-    html += `<details class="hb-grupo hb-notoca"><summary class="hb-grupo-t">No tocan hoy (${noToca.length})</summary>
-      <ul class="hb-filas">${noToca.map(h => filaHtml(h, f)).join("")}</ul></details>`;
+  if (!grupos.length && items.length) html += `<p class="hb-texto hb-filtro-vacio">No hay hábitos de esta categoría hoy.</p>`;
+  const noTocaVer = noToca.filter(h => !filtro || (filtro === HH.SIN ? !HCat.deHabito(h, cats) : h.area === filtro));
+  if (noTocaVer.length) {
+    html += `<details class="hb-grupo hb-notoca"><summary class="hb-grupo-t">No tocan hoy (${noTocaVer.length})</summary>
+      <ul class="hb-filas">${noTocaVer.map(h => filaHtml(h, f)).join("")}</ul></details>`;
   }
   const tarde = new Date().getHours() >= 18 || new Date().getHours() < finDia();
   html += `<div class="hb-pie">
@@ -421,7 +435,8 @@ function renderHoy() {
       ${!tarde ? `<button type="button" class="hb-btn-sec" data-cerrar-dia>Cerrar el día</button>` : ""}
       <button type="button" class="hb-btn-sec" data-ordenar><span data-icon="grip"></span>Ordenar</button>
       <button type="button" class="hb-btn-sec" data-ajustes><span data-icon="tools"></span>Ajustes</button>
-    </div></div>`;
+    </div>
+    <p class="hb-pie-ayuda">Mantén presionado un hábito para parcial, mínima, saltar o nota.</p></div>`;
   const semanaPasada = HE.semanaId(HE.addDias(HE.lunesDe(f), -7));
   let visto = null;
   try { visto = localStorage.getItem("hb-resumen-visto"); } catch (e) { /* sin almacenamiento */ }
@@ -435,6 +450,96 @@ function renderHoy() {
   renderIcons(document.getElementById("hb-personaje"));
   ultimoMarcado = null;
 }
+
+// Filtros por categoría, agrupar y ocultar hechos (arriba de la lista).
+function barraHoyHtml(chips, filtro, n) {
+  if (n < 2) return "";
+  const conCats = chips.length > 1;
+  return `<div class="hb-hoy-barra">
+    ${conCats ? `<div class="hb-filtros" role="group" aria-label="Filtrar por categoría">${chips.map(c => {
+      const on = c.id === filtro;
+      const color = c.color ? HCat.colorDe(c.color) : null;
+      return `<button type="button" class="hb-filtro${on ? " is-on" : ""}" data-hoy-filtro="${c.id || ""}" aria-pressed="${on}"${color ? ` style="--cat:${color}"` : ""}>${c.emoji ? `<span aria-hidden="true">${escapeHtml(c.emoji)}</span>` : ""}${escapeHtml(c.nombre)}${c.pendientes ? `<b aria-label="${c.pendientes} pendientes">${c.pendientes}</b>` : `<span class="hb-filtro-ok" aria-label="sin pendientes">✓</span>`}</button>`;
+    }).join("")}</div>` : ""}
+    <div class="hb-hoy-opciones">
+      <span class="hb-seg" role="group" aria-label="Agrupar por">
+        <button type="button" data-hoy-agrupar="momento" aria-pressed="${hoyAgrupar === "momento"}" class="${hoyAgrupar === "momento" ? "is-on" : ""}">Momento</button>
+        <button type="button" data-hoy-agrupar="categoria" aria-pressed="${hoyAgrupar === "categoria"}" class="${hoyAgrupar === "categoria" ? "is-on" : ""}">Categoría</button>
+      </span>
+      <button type="button" class="hb-ocultar${hoyOcultar ? " is-on" : ""}" data-hoy-ocultar aria-pressed="${hoyOcultar}">${hoyOcultar ? "Mostrar hechos" : "Ocultar hechos"}</button>
+    </div>
+  </div>`;
+}
+function onBarraHoy(t) {
+  let b;
+  if ((b = t.closest("[data-hoy-filtro]"))) {
+    hoyFiltro = b.dataset.hoyFiltro || null;
+    guardarPrefLocal("filtro", hoyFiltro);
+    renderHoy();
+    return true;
+  }
+  if ((b = t.closest("[data-hoy-agrupar]"))) {
+    hoyAgrupar = b.dataset.hoyAgrupar === "categoria" ? "categoria" : "momento";
+    guardarPrefLocal("agrupar", hoyAgrupar);
+    renderHoy();
+    return true;
+  }
+  if (t.closest("[data-hoy-ocultar]")) {
+    hoyOcultar = !hoyOcultar;
+    guardarPrefLocal("ocultar", hoyOcultar ? "1" : "0");
+    renderHoy();
+    return true;
+  }
+  return false;
+}
+
+// ---------- Opciones del día (mantener presionado) ----------
+function hojaOpciones(id) {
+  const h = normal[id], rh = res && res.habitos[id];
+  if (!h || !rh || (window.HabitoScalping && HabitoScalping.es(h))) return;
+  const f = res.hoy;
+  abrirHoja(cabecera(`Hoy · ${fechaCorta(f)}`, `${escapeHtml(h.emoji)} ${escapeHtml(h.name)}`) + `
+    ${editorDia(h, rh, f)}
+    ${h.tipo === "tiempo" ? cronometroHtml(h) : ""}
+    <div class="hb-acciones"><button type="button" class="hb-btn-sec" data-detalle="${id}">Ver detalle</button><button type="button" class="hb-btn" data-cerrar>Listo</button></div>`, { tipo: "opciones", id });
+}
+// Mantener presionado ~0,5 s una fila abre sus opciones; un toque sigue marcando.
+const PRESION_MS = 500;
+let presion = null, sinClick = false;
+function empezarPresion(e) {
+  const fila = e.target.closest && e.target.closest(".hb-fila");
+  const btn = e.target.closest && e.target.closest("[data-marcar], [data-detalle]");
+  if (!fila || !btn || fila.closest(".sc-fila") || (e.button != null && e.button !== 0)) return;
+  const id = btn.dataset.marcar || btn.dataset.detalle;
+  cancelarPresion();
+  presion = { id, x: e.clientX, y: e.clientY, t: setTimeout(() => {
+    presion = null;
+    sinClick = true;
+    setTimeout(() => { sinClick = false; }, 700);
+    if (navigator.vibrate) navigator.vibrate(12);
+    hojaOpciones(id);
+  }, PRESION_MS) };
+}
+function moverPresion(e) {
+  if (presion && Math.hypot(e.clientX - presion.x, e.clientY - presion.y) > 10) cancelarPresion();
+}
+function cancelarPresion() {
+  if (presion) { clearTimeout(presion.t); presion = null; }
+}
+(function () {
+  const lista = document.getElementById("hb-lista");
+  lista.addEventListener("pointerdown", empezarPresion);
+  lista.addEventListener("pointermove", moverPresion);
+  ["pointerup", "pointercancel", "pointerleave"].forEach(ev => lista.addEventListener(ev, cancelarPresion));
+  // En la computadora, clic derecho también abre las opciones.
+  lista.addEventListener("contextmenu", e => {
+    const btn = e.target.closest(".hb-fila:not(.sc-fila) [data-marcar], .hb-fila:not(.sc-fila) [data-detalle]");
+    if (!btn) return;
+    e.preventDefault();
+    cancelarPresion();
+    hojaOpciones(btn.dataset.marcar || btn.dataset.detalle);
+  });
+})();
 
 // ---------- Jefe semanal en Hoy ----------
 function vidaPct(j) {
@@ -1931,6 +2036,8 @@ function crearScalping() {
 document.addEventListener("scalping:crear", crearScalping);
 
 document.getElementById("hb-lista").addEventListener("click", e => {
+  if (sinClick) { sinClick = false; e.preventDefault(); e.stopPropagation(); return; }
+  if (onBarraHoy(e.target)) return;
   const sc = e.target.closest("[data-sc-sesion]");
   if (sc) { alternarScalping(sc.dataset.scSesion); return; }
   if (e.target.closest("[data-sc-crear]")) { crearScalping(); return; }
@@ -2517,6 +2624,7 @@ function actualizar() {
   if (hojaActual && hojaActual.tipo === "detalle") hojaDetalle(hojaActual.id);
   else if (hojaActual && hojaActual.tipo === "cierre") hojaCierre();
   else if (hojaActual && hojaActual.tipo === "dia") hojaDia(hojaActual.id);
+  else if (hojaActual && hojaActual.tipo === "opciones") hojaOpciones(hojaActual.id);
   if (pendienteXP) {
     const ganado = res.xp - pendienteXP.xp;
     if (ganado > 0 && !reducirMovimiento()) mostrarXP(pendienteXP.id, ganado);
