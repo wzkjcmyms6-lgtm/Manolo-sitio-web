@@ -203,7 +203,7 @@ function conTemporadaVista(opciones) {
     // Agrupar por categoría (las cadenas van con su primer eslabón)
     await p.click('[data-hoy-agrupar="categoria"]');
     await p.waitForTimeout(250);
-    const grupos = await p.$$eval("#hb-lista .hb-grupo:not(.hb-notoca) .hb-grupo-t", els => els.map(e => e.textContent.replace(/\s+/g, " ").trim()));
+    const grupos = await p.$$eval("#hb-lista .hb-grupo:not(.hb-notoca) .hb-grupo-t", els => els.map(e => e.textContent.replace(/›/g, "").replace(/\s+/g, " ").trim()));
     ok(grupos.join(" | ") === "💪 Cuerpo0/2 | 🧠 Mente0/1 | 💰 Finanzas0/1 | 🌿 Paz1/2 | Sin categoría0/1", `grupos por categoría (${grupos.join(" | ")})`);
     // Orar (sin categoría) va después de Meditar: su cadena manda el grupo.
     const paz = await p.$$eval('#hb-lista .hb-grupo[aria-label="Paz"] .hb-nombre', els => els.map(e => e.textContent));
@@ -212,7 +212,7 @@ function conTemporadaVista(opciones) {
     // Ocultar hechos
     await p.click("[data-hoy-ocultar]");
     await p.waitForTimeout(250);
-    ok(!(await p.$('#hb-lista [data-detalle="meditar"]')) && await p.$('#hb-lista [data-detalle="orar"]') !== null && /Paz1\/2/.test(await texto(p, '#hb-lista .hb-grupo[aria-label="Paz"] .hb-grupo-t')), "ocultar hechos: se va Meditar y el progreso sigue 1/2");
+    ok(!(await p.$('#hb-lista [data-detalle="meditar"]')) && await p.$('#hb-lista [data-detalle="orar"]') !== null && /Paz›?1\/2/.test(await texto(p, '#hb-lista .hb-grupo[aria-label="Paz"] .hb-grupo-t')), "ocultar hechos: se va Meditar y el progreso sigue 1/2");
     await p.click("[data-hoy-ocultar]");
     await p.click('[data-hoy-agrupar="momento"]');
     await p.waitForTimeout(250);
@@ -244,6 +244,70 @@ function conTemporadaVista(opciones) {
     await p.click(".hb-sheet [data-cerrar].hb-btn");
     await p.waitForTimeout(300);
     ok(/Saltado/.test(await texto(p, '#hb-lista [data-detalle="leer"]')), "la fila dice «Saltado»");
+    ok(p.errores.length === 0 && p.consola.length === 0, `sin errores (${p.errores.concat(p.consola).join(" | ")})`);
+    await p.context().close();
+  }
+
+  for (const ancho of [390, 1280]) {
+    console.log(`\n=== Estadísticas y página de categoría a ${ancho} px`);
+    const p = await abrir(browser, base, conTemporadaVista(), { hash: "#hab-stats", zona: ZONA, fecha: FECHA, ancho, alto: ancho > 800 ? 900 : 844 });
+    consolaLimpia(p);
+    await p.waitForTimeout(700);
+    const chips = await p.$$eval(".hb-filtros-stats .hb-filtro", els => els.map(e => e.textContent.trim()));
+    ok(chips[0] === "Todas" && chips.length === 6, `filtro de categorías arriba (${chips.join(" | ")})`);
+    const porCat = await p.$$eval(".hb-porcat-fila", els => els.map(e => e.textContent.replace(/\s+/g, " ").trim()));
+    ok(porCat.length === 5 && /%/.test(porCat[0]), `tarjeta «Por categoría» ordenada (${porCat[0]} … ${porCat[porCat.length - 1]})`);
+    ok(await p.$(".hb-card .hbg-eje-radar") !== null && (await p.$$(".hbg-eje-radar")).length === 6, "radar de equilibrio con 6 ejes");
+    ok(/fue tu mejor categoría en este periodo/.test(await texto(p, "#hb-stats")), "«Lo que dicen tus datos» habla de categorías");
+    await captura(p, `hab-stats-${ancho}.png`);
+    const pctTodas = await texto(p, ".hb-kpi-grande");
+    await p.click('[data-stats-filtro="mente"]');
+    await p.waitForTimeout(400);
+    const pctMente = await texto(p, ".hb-kpi-grande");
+    ok(pctMente !== pctTodas && !(await p.$(".hb-porcat")) && /Ver la página de Mente/.test(await texto(p, ".hb-ver-cat")), `filtrar por Mente cambia todas las tarjetas (${pctTodas} → ${pctMente})`);
+    const rank = await p.$$eval(".hb-ranking .hb-nombre", els => els.map(e => e.textContent.trim()));
+    ok(rank.length === 1 && /Leer/.test(rank[0]), `el ranking solo trae los de Mente (${rank})`);
+    await p.click('[data-stats-filtro=""]');
+    await p.waitForTimeout(300);
+    // Página de una categoría desde «Por categoría»
+    await p.click('.hb-porcat-fila[href="#hab-categoria/cuerpo"]');
+    await p.waitForTimeout(500);
+    ok(/^#hab-categoria\/cuerpo$/.test(await p.evaluate(() => location.hash)) && await p.isVisible("#panel-hab-categoria"), "abre la página de Cuerpo");
+    ok((await texto(p, "#hb-categoria .page-title")) === "Cuerpo" && /2 hábitos activos|3 hábitos activos/.test(await texto(p, ".hb-cat-head-txt")), "cabecera con nombre y hábitos");
+    ok(/^\d+ ?Nivel/.test(await texto(p, ".hb-cat-nivel .hb-pj-nivel")) && /Te faltan [\d.]+ XP para el nivel \d+/.test(await texto(p, ".hb-cat-nivel")), "nivel y XP que falta de la categoría");
+    const kpis = await p.$$eval(".hb-cat-kpis .hb-kpi-label", els => els.map(e => e.textContent));
+    ok(kpis.join(",") === "Esta semana,Últimos 30 días,Racha activa,Mejor racha", "semana y mes contra el anterior, y rachas");
+    ok(await p.$("#hb-categoria .hb-heat-scroll") !== null && await p.$("#hb-categoria .hb-ranking") !== null, "mapa de calor y ranking de sus hábitos");
+    const suyos = await p.$$eval("#hb-categoria .hb-ranking .hb-nombre", els => els.map(e => e.textContent.trim()).join(","));
+    ok(/Tomar agua/.test(suyos) && /Correr/.test(suyos) && !/Leer/.test(suyos), `solo sus hábitos (${suyos})`);
+    ok((await p.$$("#hb-categoria .hb-cat-logros li")).length === 4, "sus logros (niveles 5, 10, 15 y 20)");
+    ok((await texto(p, "#panel-hab-categoria .back-link")) === "Estadísticas", "«atrás» vuelve a Estadísticas");
+    await captura(p, `hab-categoria-${ancho}.png`);
+    // Desde Logros › Categorías
+    await p.evaluate(() => { location.hash = "hab-logros"; });
+    await p.waitForTimeout(400);
+    await p.click('[data-hb-tab="areas"]');
+    await p.waitForTimeout(200);
+    await p.click('.hb-area-a[href="#hab-categoria/mente"]');
+    await p.waitForTimeout(400);
+    ok((await texto(p, "#hb-categoria .page-title")) === "Mente" && (await texto(p, "#panel-hab-categoria .back-link")) === "Logros", "Logros › Categorías abre su página");
+    // Una categoría vacía: crear un hábito ya con esa categoría
+    await p.evaluate(() => { location.hash = "hab-categoria/carrera"; });
+    await p.waitForTimeout(400);
+    ok(/Todavía no tienes hábitos en Carrera/.test(await texto(p, "#hb-categoria")), "categoría vacía con estado útil");
+    await p.click("#hb-categoria [data-catpag-nuevo]");
+    await p.waitForTimeout(300);
+    ok(/Carrera/.test(await texto(p, '.hb-form .hb-chip-cat[aria-pressed="true"]')), "«Crear un hábito» ya trae la categoría elegida");
+    await p.click(".hb-sheet .muscle-sheet-close");
+    await p.waitForTimeout(300);
+    // Desde Hoy agrupado por categoría
+    await p.evaluate(() => { location.hash = "habitos"; });
+    await p.waitForTimeout(400);
+    await p.click('[data-hoy-agrupar="categoria"]');
+    await p.waitForTimeout(250);
+    await p.click('#hb-lista .hb-grupo-link[href="#hab-categoria/dinero"]');
+    await p.waitForTimeout(400);
+    ok((await texto(p, "#hb-categoria .page-title")) === "Finanzas" && (await texto(p, "#panel-hab-categoria .back-link")) === "Hoy", "Hoy › grupo de categoría abre su página");
     ok(p.errores.length === 0 && p.consola.length === 0, `sin errores (${p.errores.concat(p.consola).join(" | ")})`);
     await p.context().close();
   }

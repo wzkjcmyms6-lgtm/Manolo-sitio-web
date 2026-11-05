@@ -680,7 +680,20 @@ function contarEn(rh, desde, hasta) {
   return n;
 }
 
-function generarMisiones(res, lunes) {
+// Días distintos (entre desde y hasta) con algo cumplido de una categoría.
+function diasDeCategoria(res, area, desde, hasta) {
+  const dias = new Set();
+  Object.keys(res.habitos).forEach(id => {
+    const rh = res.habitos[id];
+    if (rh.habito.area !== area || rh.habito.tipo === "evitar") return;
+    Object.keys(rh.dias).forEach(f => { if (f >= desde && f <= hasta && (rh.dias[f].clase === "cumple" || rh.dias[f].clase === "extra")) dias.add(f); });
+  });
+  return dias.size;
+}
+
+// categorias (opcional): la lista de js/habitos-categorias.js. Una semana de
+// cada dos, la tercera misión apunta a una categoría ("🧠 3 días de Mente").
+function generarMisiones(res, lunes, categorias) {
   const M = CFG.MISIONES;
   const semana = semanaId(lunes);
   const desde = addDias(lunes, -7 * M.SEMANAS_BASE), hasta = addDias(lunes, -1);
@@ -710,7 +723,9 @@ function generarMisiones(res, lunes) {
   const nPerf = Math.min(5, Math.max(1, Math.ceil(perfectosAntes * M.EXIGENCIA)));
   out.push(Object.assign({ id: `${semana}-perfectos`, tipo: "perfectos", meta: nPerf,
     titulo: `Logra ${nPerf} ${nPerf === 1 ? "día perfecto" : "días perfectos"}` }, base));
-  // 3) Subir un hábito de división (o, si ninguno puede, sumar registros)
+  // 3) Una categoría (semanas pares), o subir un hábito de división, o sumar registros
+  const cat = semilla % 2 === 0 ? misionCategoria(res, lunes, categorias, candidatos, semilla) : null;
+  if (cat) { out.push(Object.assign(cat, base)); return out.slice(0, M.POR_SEMANA); }
   const usado = out[0] && out[0].habito;
   const subibles = candidatos.map(rh => ({ rh, a: subiriaConSemanaPerfecta(rh) })).filter(x => x.a != null)
     .sort((a, b) => (a.rh.habito.id === usado) - (b.rh.habito.id === usado) || b.a - a.a);
@@ -726,6 +741,22 @@ function generarMisiones(res, lunes) {
   return out.slice(0, M.POR_SEMANA);
 }
 
+function misionCategoria(res, lunes, categorias, candidatos, semilla) {
+  const M = CFG.MISIONES;
+  if (!Array.isArray(categorias) || !categorias.length) return null;
+  const semana = semanaId(lunes);
+  const desde = addDias(lunes, -7 * M.SEMANAS_BASE), hasta = addDias(lunes, -1);
+  const opciones = categorias.filter(c => !c.archivada && candidatos.some(rh => rh.habito.area === c.id)).map(c => {
+    const promedio = diasDeCategoria(res, c.id, desde, hasta) / M.SEMANAS_BASE;
+    return { c, promedio, meta: Math.min(7, Math.max(2, Math.ceil(promedio * M.EXIGENCIA))) };
+  }).filter(x => x.promedio < 7).sort((a, b) => a.promedio - b.promedio || a.c.orden - b.c.orden);
+  if (!opciones.length) return null;
+  const top = opciones.slice(0, 3);
+  const x = top[Math.floor(semilla / 2) % top.length];
+  return { id: `${semana}-categoria`, tipo: "categoria", categoria: x.c.id, meta: x.meta,
+    titulo: `${x.c.emoji ? x.c.emoji + " " : ""}${x.meta} días de ${x.c.nombre}` };
+}
+
 function progresoMision(res, m) {
   const hasta = addDias(m.lunes, 6) < res.hoy ? addDias(m.lunes, 6) : res.hoy;
   const rh = m.habito && res.habitos[m.habito];
@@ -733,6 +764,7 @@ function progresoMision(res, m) {
   if (m.tipo === "perfectos") return res.diasPerfectos.filter(p => p.fecha >= m.lunes && p.fecha <= hasta).length;
   if (m.tipo === "total") return Object.keys(res.habitos).reduce((s, id) => s + contarEn(res.habitos[id], m.lunes, hasta), 0);
   if (m.tipo === "rango") { const n = rh ? rangoEn(rh, hasta) : null; return n != null && n >= m.meta ? 1 : 0; }
+  if (m.tipo === "categoria") return diasDeCategoria(res, m.categoria, m.lunes, hasta);
   return 0;
 }
 // misiones: { "2026-W40": [definiciones] }
@@ -1105,6 +1137,51 @@ function areasPeriodo(res, desde, hasta, defs) {
   });
 }
 
+// Los mismos cálculos, solo con algunos hábitos (p. ej. una categoría): días
+// perfectos de ese grupo (sin bonus de XP), sin misiones ni jefes.
+function subconjunto(res, filtro) {
+  const habitos = {};
+  Object.keys(res.habitos).forEach(id => { if (filtro(res.habitos[id])) habitos[id] = res.habitos[id]; });
+  const lista = Object.keys(habitos).map(id => habitos[id].habito);
+  const inicios = lista.map(h => h.inicio).filter(f => f && f <= res.hoy).sort();
+  const perfectos = lista.length ? diasPerfectos(lista, habitos, calendario(lunesDe(inicios[0] || res.hoy), res.hoy), res.finDia).map(p => ({ fecha: p.fecha, xp: 0 })) : [];
+  return Object.assign({}, res, { habitos, diasPerfectos: perfectos, misiones: [], jefes: [], _indice: null, subconjunto: true });
+}
+const deCategoria = (res, id) => subconjunto(res, rh => rh.habito.area === id);
+
+// Para la página de una categoría: esta semana y los últimos 30 días contra
+// el periodo anterior, la mejor racha (activa y de siempre) y sus hábitos.
+function resumenCategoria(res, id) {
+  const sub = deCategoria(res, id);
+  const hoy = res.hoy, lunes = lunesDe(hoy);
+  const pct = (a, b) => cumplimientoGlobal(sub, a, b).pct;
+  const lista = Object.keys(sub.habitos).map(k => sub.habitos[k]);
+  let actual = null, mejor = null;
+  lista.forEach(rh => {
+    if (rh.racha.unidad === "limpios") return;
+    const dias = r => (rh.racha.unidad === "semanas" ? r * 7 : r);
+    if (!rh.habito.archivado && rh.racha.actual && (!actual || dias(rh.racha.actual) > actual.dias)) actual = { id: rh.habito.id, n: rh.racha.actual, unidad: rh.racha.unidad, dias: dias(rh.racha.actual) };
+    if (rh.racha.mejor && (!mejor || dias(rh.racha.mejor) > mejor.dias)) mejor = { id: rh.habito.id, n: rh.racha.mejor, unidad: rh.racha.unidad, dias: dias(rh.racha.mejor) };
+  });
+  return {
+    sub,
+    semana: { pct: pct(lunes, hoy), previo: pct(addDias(lunes, -7), addDias(lunes, -1)) },
+    mes: { pct: pct(addDias(hoy, -29), hoy), previo: pct(addDias(hoy, -59), addDias(hoy, -30)) },
+    racha: actual, mejorRacha: mejor,
+    activos: lista.filter(rh => !rh.habito.archivado).length,
+    total: lista.length
+  };
+}
+
+// % de cada categoría en un periodo contra el anterior, de mejor a peor
+// (solo las que tuvieron algo que hacer).
+function porCategoria(res, per, defs) {
+  const act = areasPeriodo(res, per.desde, per.hasta, defs);
+  const prev = per.previo ? areasPeriodo(res, per.previo.desde, per.previo.hasta, defs) : null;
+  return act.map((a, i) => Object.assign({}, a, { previo: prev && prev[i].esperados ? prev[i].pct : null }))
+    .filter(a => a.esperados > 0).sort((a, b) => b.pct - a.pct || b.esperados - a.esperados);
+}
+
 function ranking(res) {
   return Object.keys(res.habitos).map(id => res.habitos[id]).filter(rh => !rh.habito.archivado)
     .map(rh => ({ id: rh.habito.id, fuerza: rh.rango.fuerza, nivel: rh.rango.nivel, tieneRango: rh.rango.tieneRango, tendencia: rh.rango.tendencia }))
@@ -1231,11 +1308,21 @@ function insights(res, per, extra) {
     out.push({ peso: 2.6, texto: x.diferencia > 0 ? `Los días que cumples ${nombre(x.id)}, tu ánimo suele ser ${d} puntos más alto (es una coincidencia, no necesariamente la causa).` : `Los días que cumples ${nombre(x.id)}, tu ánimo suele ser ${d} puntos más bajo (coincidencia, no causa).` });
   }
   if (k.actual.perfectos >= 3) out.push({ peso: 1.2, texto: `Lograste ${k.actual.perfectos} días perfectos en este periodo.` });
+  // Categorías: la mejor y la que más cuesta.
+  if (Array.isArray(e.categorias)) {
+    const cs = areasPeriodo(res, per.desde, per.hasta, e.categorias).filter(a => a.esperados >= 7).sort((a, b) => b.pct - a.pct);
+    if (cs.length >= 2 && cs[0].pct - cs[cs.length - 1].pct >= 0.1) {
+      const a = cs[0], b = cs[cs.length - 1];
+      out.push({ peso: 2.7 + (a.pct - b.pct) * 3, texto: `${a.nombre} fue tu mejor categoría en este periodo (${pctTxt(a.pct)}); la que más te cuesta, ${b.nombre} (${pctTxt(b.pct)}).` });
+    } else if (cs.length === 1 && cs[0].pct >= 0.8) {
+      out.push({ peso: 1.5, texto: `${cs[0].nombre} va muy bien: ${pctTxt(cs[0].pct)} en este periodo.` });
+    }
+  }
   return out.sort((a, b) => b.peso - a.peso).slice(0, 5).map(x => x.texto);
 }
 
 // Resumen de la semana pasada (para el lunes).
-function resumenSemana(res, lunes) {
+function resumenSemana(res, lunes, categorias) {
   const domingo = addDias(lunes, 6);
   const ix = indice(res);
   const act = cumplimientoGlobal(res, lunes, domingo), prev = cumplimientoGlobal(res, addDias(lunes, -7), addDias(lunes, -1));
@@ -1249,7 +1336,9 @@ function resumenSemana(res, lunes) {
     xp: Math.round(sumaRango(ix, ix.X, lunes, domingo)),
     perfectos: res.diasPerfectos.filter(p => p.fecha >= lunes && p.fecha <= domingo).length,
     mejor: habs[0] || null,
-    peor: habs.length > 1 ? habs[habs.length - 1] : null
+    peor: habs.length > 1 ? habs[habs.length - 1] : null,
+    mejorCategoria: Array.isArray(categorias)
+      ? (areasPeriodo(res, lunes, domingo, categorias).filter(a => a.esperados >= 3).sort((a, b) => b.pct - a.pct)[0] || null) : null
   };
 }
 
@@ -1262,7 +1351,7 @@ function aniosWrapped(res) {
   for (let y = Number(res.hoy.slice(0, 4)); y >= Number(inicios[0].slice(0, 4)); y--) out.push(y);
   return out;
 }
-function wrapped(res, anio) {
+function wrapped(res, anio, categorias) {
   const desde = `${anio}-01-01`, fin = `${anio}-12-31`;
   const hasta = fin < res.hoy ? fin : res.hoy;
   const ix = indice(res);
@@ -1324,7 +1413,10 @@ function wrapped(res, anio) {
     jefesTotal: (res.jefes || []).filter(j => dentro(j.lunes) && j.estado !== "enCurso").length,
     xp: Math.round(xpAnio),
     nivelInicio: nivelDeXP(xpAntes).nivel,
-    nivelFin: nivelDeXP(xpAntes + xpAnio).nivel
+    nivelFin: nivelDeXP(xpAntes + xpAnio).nivel,
+    // La categoría del año: la de mejor cumplimiento con al menos 4 semanas de datos.
+    categoria: Array.isArray(categorias)
+      ? (areasPeriodo(res, desde, hasta, categorias).filter(a => a.esperados >= 28).sort((a, b) => b.pct - a.pct)[0] || null) : null
   };
 }
 
@@ -1475,6 +1567,7 @@ function mesCalendario(anio, mes) {
 
 return {
   PERIODOS, indice, periodo, cumplimientoGlobal, kpis, serieSemanal, porDiaSemana, porMomento, areasPeriodo,
+  subconjunto, deCategoria, resumenCategoria, porCategoria, diasDeCategoria,
   ranking, enRiesgo, correlaciones, insights, resumenSemana, aniosWrapped, wrapped,
   generarJefe, evaluarJefes, rival, copiaDeSeguridad, planImportacion,
   NIVELES, percentilFuerza, fuerzaPara, intervalo, fuerzaHabito, rangoEn, subiriaConSemanaPerfecta, calcularAreas,

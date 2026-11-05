@@ -146,6 +146,7 @@ function salir(id) {
   const volver = edicion ? edicion.volverA : "lista";
   edicion = null;
   if (volver === "form") A.volverAlForm(id);
+  else if (volver === "pagina") A.cerrarHoja();
   else hojaLista();
 }
 function archivar(id) {
@@ -154,8 +155,9 @@ function archivar(id) {
   A.guardarCategorias({ [id]: { archivada: true } });
   A.toast(`Archivaste «${c.nombre}». Su historial se conserva.`, () => { A.guardarCategorias({ [id]: { archivada: false } }); A.actualizar(); });
   A.actualizar();
+  const pag = edicion && edicion.volverA === "pagina";
   edicion = null;
-  hojaLista();
+  if (pag) A.cerrarHoja(); else hojaLista();
 }
 function borrar(id) {
   if (!HCat.puedeBorrar(id, habitos())) return;
@@ -179,8 +181,9 @@ function abrirAsignar(opciones) {
   const act = HCat.activas(A.areasDef());
   const hs = A.activos();
   // Por defecto, marcados los que no tienen categoría (o los de una categoría).
-  const ids = o.de ? hs.filter(h => h.area === o.de).map(h => h.id) : hs.filter(h => !HCat.deHabito(h, act)).map(h => h.id);
-  asignacion = { ids: new Set(ids), area: o.de ? null : undefined, volverA: o.volverA || "lista", de: o.de || null };
+  // Desde la página de una categoría (hacia), ya viene elegida esa categoría.
+  const ids = o.de ? hs.filter(h => h.area === o.de).map(h => h.id) : o.hacia ? [] : hs.filter(h => !HCat.deHabito(h, act)).map(h => h.id);
+  asignacion = { ids: new Set(ids), area: o.hacia ? o.hacia : o.de ? null : undefined, volverA: o.hacia ? "pagina" : o.volverA || "lista", de: o.de || null };
   hojaAsignar();
 }
 function hojaAsignar() {
@@ -224,6 +227,7 @@ function guardarAsignar() {
   const de = a.de;
   asignacion = null;
   if (volver === "editor" && de) setTimeout(() => abrirEditor(de, "lista"), 50);
+  else if (volver === "pagina") A.cerrarHoja();
   else hojaLista();
 }
 
@@ -255,7 +259,7 @@ A.alClick((e, t) => {
     hojaEditor();
     return true;
   }
-  if (q("[data-cat-cancelar]")) { salir(edicion && edicion.volverA === "form" ? undefined : null); return true; }
+  if (q("[data-cat-cancelar]")) { salir(undefined); return true; }
   if ((b = q("[data-cat-archivar]"))) { archivar(b.dataset.catArchivar); return true; }
   if ((b = q("[data-cat-borrar]"))) { borrar(b.dataset.catBorrar); return true; }
   if ((b = q("[data-cat-asignar-de]"))) { abrirAsignar({ de: b.dataset.catAsignarDe }); return true; }
@@ -267,7 +271,12 @@ A.alClick((e, t) => {
     return true;
   }
   if ((b = q("[data-asig-cat]"))) { asignacion.area = b.dataset.asigCat || null; hojaAsignar(); return true; }
-  if (q("[data-asig-cancelar]")) { const de = asignacion && asignacion.de; asignacion = null; if (de) abrirEditor(de, "lista"); else hojaLista(); return true; }
+  if (q("[data-asig-cancelar]")) {
+    const a = asignacion || {};
+    asignacion = null;
+    if (a.de) abrirEditor(a.de, "lista"); else if (a.volverA === "pagina") A.cerrarHoja(); else hojaLista();
+    return true;
+  }
   if (q("[data-asig-guardar]")) { guardarAsignar(); return true; }
   return false;
 });

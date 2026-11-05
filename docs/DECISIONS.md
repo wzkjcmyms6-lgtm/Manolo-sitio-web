@@ -791,3 +791,17 @@ Filtro, agrupación y "ocultar hechos" son preferencias del teléfono
 (`localStorage hb-hoy-*`), no de la cuenta. Mantener presionado ~0,5 s
 (pointer events, se cancela si el dedo se mueve) abre las opciones del día
 sin marcar; en la computadora, el clic derecho.
+
+**D-084 (2026-11-05) · Página de categoría y estadísticas por categoría.**
+`HE.subconjunto(res, filtro)` repite los cálculos solo con algunos hábitos
+(sin misiones ni jefes; los días perfectos del grupo no dan XP extra), así
+la página de una categoría y el filtro de Estadísticas reutilizan las
+mismas tarjetas que ya existían (`HabitosApp.conRes` cambia el resultado
+mientras se dibujan). Con un filtro puesto se ocultan las tarjetas que
+comparan categorías (Por categoría y Equilibrio). El radar muestra las
+categorías activas más las archivadas con datos en el periodo; con menos de
+3 o más de 8, barras (`HCat.equilibrio`). La misión de categoría aparece en
+las semanas pares (según la semilla de la semana) en lugar de la de rango o
+total, y cuenta días distintos con algo cumplido de esa categoría; meta =
+promedio de las 4 semanas anteriores × 1,2 (entre 2 y 7). El filtro de
+Estadísticas se recuerda en el teléfono (`hb-stats-filtro`).

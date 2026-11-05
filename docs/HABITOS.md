@@ -14,6 +14,7 @@ y el plan guiado de Scalping (`docs/SCALPING.md`, no se toca).
 | `js/habitos-graficos.js` | Gráficos SVG (líneas, columnas, radar) |
 | `js/habitos.js` | Pantallas Hoy, detalle, formulario, Estadísticas, Logros y Firestore; expone `window.HabitosApp` para las pantallas en archivos aparte |
 | `js/habitos-categorias-ui.js` | Hojas de categorías: lista, crear/editar, sugeridas, archivar, asignar en lote (fase 3) |
+| `js/habitos-categoria.js` | Página de una categoría `#hab-categoria/{id}` (fase 5) |
 | `js/habito-scalping.js` | Tarjeta y pantalla de Scalping |
 | `tests/habitos-engine.test.js` | Pruebas del motor; `tests/habitos-sim.js` simula la dificultad |
 
@@ -89,6 +90,20 @@ mantener presionado (o clic derecho) abre las opciones del día (valor,
 mínima, parcial, saltar con motivo, nota, cronómetro). Lógica:
 `js/habitos-hoy.js` (`filtros`, `grupos`, `ordenarGrupo` con la hora
 opcional, `pendientesMomento`).
+
+### Página de categoría y estadísticas (fase 5)
+- `#hab-categoria/{id}`: cabecera con emoji y color, nivel y XP de la
+  categoría ("Te faltan 153 XP para el nivel 6: a tu ritmo, 10 días"),
+  Esta semana y Últimos 30 días contra el periodo anterior, racha activa y
+  mejor racha, mapa de calor, tendencia, ranking por fuerza, en riesgo y
+  logros (niveles 5, 10, 15, 20). Vacía: "Crear un hábito" (ya con la
+  categoría) y "Asignar hábitos". "Atrás" vuelve a Hoy, Estadísticas o
+  Logros según de dónde viniste.
+- Estadísticas: filtro de categoría arriba (aplica a todas las tarjetas),
+  "Por categoría" y "Equilibrio entre categorías" (radar 3–8 ejes, si no
+  barras).
+- Gamificación: misión de categoría en semanas pares; logros Especialista
+  (nivel 5) y Maestría (nivel 10) de una categoría.
 
 ### Dificultad: antes y después (simulación con el motor real)
 Hábito diario cumplido el 100 %:

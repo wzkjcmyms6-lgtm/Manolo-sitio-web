@@ -227,6 +227,15 @@ function sugerir(nombre, emoji, lista) {
   return mejor ? mejor.id : null;
 }
 
+// Equilibrio entre categorías: qué ejes mostrar (las activas y las
+// archivadas que tuvieron algo en el periodo) y cómo: radar con 3 a 8 ejes;
+// con menos o con más, barras horizontales. filas: areasPeriodo del motor.
+const RADAR_MIN = 3, RADAR_MAX = 8;
+function equilibrio(filas) {
+  const ejes = (filas || []).filter(a => !a.archivada || a.esperados > 0);
+  return { forma: ejes.length >= RADAR_MIN && ejes.length <= RADAR_MAX ? "radar" : "barras", ejes };
+}
+
 return { MAX, NOMBRE_MAX, PALETA, DEFECTO, SUGERIDAS, colorDe, leer, activas, porId, deHabito, usos, crear, editar,
-  reordenar, puedeBorrar, asignar, sugeridas, sugerir, siguienteColor, slug };
+  reordenar, puedeBorrar, asignar, sugeridas, sugerir, siguienteColor, slug, equilibrio, RADAR_MIN, RADAR_MAX };
 });

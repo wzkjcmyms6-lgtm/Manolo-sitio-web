@@ -4,7 +4,11 @@
 // que lo que se ve. Especificaciones: barras de 24 px como máximo con la punta
 // redondeada de 4 px, líneas de 2 px, puntos de 8 px con anillo del color del
 // fondo, grilla de 1 px. El texto nunca va del color de la serie.
-(function () {
+// UMD: en Node se puede probar (tests/habitos-categorias.test.js).
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.HabitosGraficos = factory();
+})(typeof self !== "undefined" ? self : this, function () {
 
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const n1 = v => Math.round(v * 10) / 10;
@@ -72,17 +76,24 @@ function barrasH(items) {
 }
 
 // ---- Radar (0–1) con serie actual y anterior ----
+// Etiqueta de un eje: con muchos ejes (o nombres largos) se acorta para que
+// no se salga del dibujo; el nombre completo queda en el globo (tip).
+function etiquetaRadar(nombre, n) {
+  const max = n > 6 ? 9 : 12;
+  const t = String(nombre || "");
+  return t.length > max ? t.slice(0, max - 1).trim() + "…" : t;
+}
 function radar(ejes, actual, anterior) {
-  const W = 320, H = 250, cx = 160, cy = 125, R = 84;
+  const W = 340, H = 250, cx = 170, cy = 125, R = 84;
   const ang = i => -Math.PI / 2 + (2 * Math.PI * i) / ejes.length;
   const pt = (i, v) => [cx + Math.cos(ang(i)) * R * v, cy + Math.sin(ang(i)) * R * v];
   const poli = vals => vals.map((v, i) => pt(i, v == null ? 0 : v).map(n1).join(",")).join(" ");
-  let out = `<svg class="hbg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumplimiento por área">`;
+  let out = `<svg class="hbg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumplimiento por categoría">`;
   [0.25, 0.5, 0.75, 1].forEach(k => { out += `<polygon class="hbg-grid" points="${poli(ejes.map(() => k))}" fill="none"/>`; });
   ejes.forEach((e, i) => {
     const [x, y] = pt(i, 1), [lx, ly] = pt(i, 1.2);
     out += `<line class="hbg-grid" x1="${cx}" y1="${cy}" x2="${n1(x)}" y2="${n1(y)}"/>`;
-    out += `<text class="hbg-eje hbg-eje-radar" x="${n1(lx)}" y="${n1(ly + 4)}" text-anchor="${Math.abs(lx - cx) < 8 ? "middle" : lx > cx ? "start" : "end"}">${esc(e.nombre)}</text>`;
+    out += `<text class="hbg-eje hbg-eje-radar" x="${n1(lx)}" y="${n1(ly + 4)}" text-anchor="${Math.abs(lx - cx) < 8 ? "middle" : lx > cx ? "start" : "end"}">${esc(etiquetaRadar(e.nombre, ejes.length))}</text>`;
   });
   if (anterior) out += `<polygon class="hbg-radar-prev" points="${poli(anterior)}"/>`;
   out += `<polygon class="hbg-radar" points="${poli(actual)}"/>`;
@@ -137,5 +148,5 @@ function pesas(items) {
   }).join("")}</ul>`;
 }
 
-window.HabitosGraficos = { heatmap, columnas, barrasH, radar, linea, pesas, esc };
-})();
+return { heatmap, columnas, barrasH, radar, linea, pesas, esc, etiquetaRadar };
+});

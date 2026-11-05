@@ -964,3 +964,41 @@ body.sc-en-guia { overflow: hidden; }
 .hb-fila { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 .hb-filtro-vacio { text-align: center; }
 @media (prefers-reduced-motion: reduce) { .hb-grupo-barra > span { transition: none; } }
+
+/* ---------- Página de categoría y estadísticas por categoría (fase 5) ---------- */
+.hb-cat-head { display: flex; align-items: center; gap: 0.8rem; margin: 0.4rem 0 1rem; }
+.hb-cat-head-emoji { width: 56px; height: 56px; flex-shrink: 0; display: grid; place-items: center; border-radius: 18px; font-size: 1.8rem; background: color-mix(in srgb, var(--cat) 22%, var(--surface)); border: 1px solid color-mix(in srgb, var(--cat) 55%, transparent); }
+.hb-cat-head-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+.hb-cat-head-txt .page-title { margin: 0; overflow-wrap: anywhere; }
+.hb-cat-head-txt > span { font-size: 0.82rem; color: var(--muted); }
+.hb-cat-nivel { border-left: 4px solid var(--cat); }
+.hb-cat-nivel .hb-pj-nivel .hb-num { font-size: 2.2rem; }
+.hb-cat-nivel .hb-pj-t { color: var(--muted); }
+.hb-cat-nivel .hb-xp { margin-top: 0.6rem; background: var(--bg-soft); height: 8px; }
+.hb-cat-nivel .hb-xp > span { background: var(--cat); }
+.hb-cat-kpis .hb-num { font-size: 1.35rem; }
+.hb-cat-logros .hb-logro.is-on .hb-logro-ico { color: var(--cat, var(--accent-2)); }
+.hb-cat-pie { justify-content: flex-start; }
+#panel-hab-categoria .hb-card-t, #panel-hab-categoria .hbg-barras-valor { --accent-1: var(--cat-pag, var(--accent-1)); }
+/* Enlace a la página de una categoría (Hoy filtrado, Estadísticas, resumen) */
+.hb-ver-cat {
+  display: flex; align-items: center; gap: 0.45rem; margin: 0 0 0.9rem; min-height: 44px; padding: 0 0.9rem; border-radius: 14px;
+  background: color-mix(in srgb, var(--cat) 12%, var(--surface)); border: 1px solid color-mix(in srgb, var(--cat) 45%, var(--border));
+  color: var(--ink); font-size: 0.88rem; font-weight: 600; text-decoration: none;
+}
+.hb-ver-cat > span:last-child { margin-left: auto; color: var(--muted); font-size: 1.2rem; }
+.hb-link-cat { color: var(--ink); font-weight: 700; text-decoration: underline; text-decoration-color: var(--cat); text-underline-offset: 3px; }
+.hb-grupo-link { display: inline-flex; align-items: center; gap: 0.35rem; min-height: 32px; color: inherit; text-decoration: none; }
+.hb-grupo-ir { color: var(--muted); font-size: 1.1rem; }
+.hb-filtros-stats { margin-bottom: 0.9rem; }
+/* Tarjeta "Por categoría" */
+.hb-porcat { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.hb-porcat-fila { display: grid; grid-template-columns: minmax(0, 7.5rem) 1fr auto; align-items: center; gap: 0.6rem; min-height: 44px; color: var(--ink); text-decoration: none; }
+.hb-porcat-nombre { font-size: 0.86rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hb-porcat-fila .hbg-barras-valor { background: var(--cat); }
+.hb-porcat-num { display: flex; flex-direction: column; align-items: flex-end; font-size: 0.82rem; font-weight: 700; min-width: 3.4rem; }
+.hb-porcat-num .hb-delta { font-size: 0.7rem; font-weight: 600; }
+/* Logros › Categorías: toda la tarjeta abre la página */
+.hb-area-link { position: relative; }
+.hb-area-a { position: absolute; inset: 0; border-radius: 16px; }
+.hb-area-a:focus-visible { outline: 2px solid var(--accent-1); outline-offset: 2px; }

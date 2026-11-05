@@ -151,7 +151,7 @@ function asegurarMisiones() {
   if ((juego.misiones || {})[sem] || misionGenerada === sem) return;
   if (!activos().some(h => h.tipo !== "evitar")) return;
   misionGenerada = sem;
-  const nuevas = HE.generarMisiones(res, lunes);
+  const nuevas = HE.generarMisiones(res, lunes, areasDef());
   juego = Object.assign({}, juego, { misiones: Object.assign({}, juego.misiones, { [sem]: nuevas }) });
   metaJuego().set({ misiones: { [sem]: nuevas } }, { merge: true }).catch(errorGuardar);
   recalcular();
@@ -412,11 +412,14 @@ function renderHoy() {
   const filtro = chips.some(c => c.id === hoyFiltro) ? hoyFiltro : null;
   const grupos = HH.grupos(items, { agrupar: hoyAgrupar, filtro, ocultarHechos: hoyOcultar, momento: actual, categorias: cats });
   let html = barraHoyHtml(chips, filtro, items.length);
+  const catFiltro = filtro && filtro !== HH.SIN ? cats.find(c => c.id === filtro) : null;
+  if (catFiltro) html += `<a class="hb-ver-cat" href="#hab-categoria/${catFiltro.id}" style="--cat:${HCat.colorDe(catFiltro)}"><span aria-hidden="true">${escapeHtml(catFiltro.emoji)}</span> Ver la página de ${escapeHtml(catFiltro.nombre)}<span aria-hidden="true">›</span></a>`;
   html += grupos.map(g => {
     const enGrupo = new Set(g.items.map(x => x.id));
     const color = g.color ? HCat.colorDe(g.color) : null;
     const pct = g.total ? (g.hechos / g.total) * 100 : 0;
-    const cab = `${g.emoji ? `<span aria-hidden="true">${escapeHtml(g.emoji)}</span> ` : ""}${escapeHtml(g.nombre)}${g.ahora ? ` <span class="hb-ahora">Ahora</span>` : ""}`;
+    let cab = `${g.emoji ? `<span aria-hidden="true">${escapeHtml(g.emoji)}</span> ` : ""}${escapeHtml(g.nombre)}${g.ahora ? ` <span class="hb-ahora">Ahora</span>` : ""}`;
+    if (g.tipo === "categoria" && g.id !== HH.SIN) cab = `<a class="hb-grupo-link" href="#hab-categoria/${g.id}">${cab}<span class="hb-grupo-ir" aria-hidden="true">›</span></a>`;
     return `<section class="hb-grupo" aria-label="${escapeHtml(g.nombre)}"${color ? ` style="--cat:${color}"` : ""}>
       <h2 class="hb-grupo-t">${cab}${g.total ? `<span class="hb-grupo-prog" aria-label="${g.hechos} de ${g.total} hechos">${g.hechos}/${g.total}</span><span class="hb-grupo-barra" aria-hidden="true"><span style="width:${pct.toFixed(0)}%"></span></span>` : ""}</h2>
       ${g.items.length ? `<ul class="hb-filas">${g.items.map(x => filaHtml(normal[x.id], f, !!(x.despuesDe && enGrupo.has(x.despuesDe)))).join("")}</ul>`
@@ -1631,8 +1634,8 @@ function tiendaHtml() {
 }
 
 function areasHtml() {
-  return `<p class="hb-texto">Cada hábito suma XP a su categoría. Cámbialas en Ajustes.</p>
-    <ul class="hb-areas">${res.areas.filter(a => !a.archivada || a.xp > 0).map(a => `<li class="hb-area" style="--cat:${HCat.colorDe(a)}">
+  return `<p class="hb-texto">Cada hábito suma XP a su categoría. Toca una para ver su página; cámbialas en Ajustes.</p>
+    <ul class="hb-areas">${res.areas.filter(a => !a.archivada || a.xp > 0).map(a => `<li class="hb-area hb-area-link" style="--cat:${HCat.colorDe(a)}"><a class="hb-area-a" href="#hab-categoria/${a.id}" aria-label="Ver ${escapeHtml(a.nombre)}"></a>
       <div class="hb-area-top"><b><span aria-hidden="true">${escapeHtml(a.emoji || "")}</span> ${escapeHtml(a.nombre)}${a.archivada ? ` <span class="hb-opcional">(archivada)</span>` : ""}</b><span><span class="hb-num">${a.nivel.nivel}</span> nivel</span></div>
       ${barra(a.nivel.progreso, a.nombre)}
       <span class="hb-area-pie">${plural(a.habitos, "hábito", "hábitos")} · ${fmtNum(a.xp)} XP</span></li>`).join("")}</ul>`;
@@ -2224,14 +2227,43 @@ function momentoHtml(per) {
   return tarjeta("Por momento del día", HG.barrasH(items));
 }
 
+// Equilibrio entre categorías: radar con 3 a 8; con más (o menos), barras.
 function radarHtml(per) {
   const defs = areasDef();
   const act = HE.areasPeriodo(res, per.desde, per.hasta, defs);
-  if (!act.some(a => a.esperados > 0)) return tarjeta("Áreas de vida", `<p class="empty-state">Asigna un área a tus hábitos (al editarlos) para ver tu equilibrio.</p>`);
-  const prev = per.previo ? HE.areasPeriodo(res, per.previo.desde, per.previo.hasta, defs) : null;
-  const ejes = act.map((a, i) => ({ nombre: a.nombre, tip: `${a.nombre}: ${a.esperados ? pctTexto(a.pct) : "sin hábitos"}${prev && prev[i].esperados ? ` (antes ${pctTexto(prev[i].pct)})` : ""}` }));
-  return tarjeta("Áreas de vida", `<div class="hb-chart">${HG.radar(ejes, act.map(a => a.pct), prev ? prev.map(a => a.pct) : null)}</div>
+  if (!act.some(a => a.esperados > 0)) return tarjeta("Equilibrio entre categorías", `<p class="empty-state">Ponle categoría a tus hábitos (Ajustes › Categorías › Asignar) para ver tu equilibrio.</p>`);
+  const prevTodo = per.previo ? HE.areasPeriodo(res, per.previo.desde, per.previo.hasta, defs) : null;
+  const eq = HCat.equilibrio(act);
+  const prev = prevTodo ? eq.ejes.map(a => prevTodo.find(x => x.id === a.id)) : null;
+  const tip = (a, i) => `${a.nombre}: ${a.esperados ? pctTexto(a.pct) : "sin hábitos"}${prev && prev[i] && prev[i].esperados ? ` (antes ${pctTexto(prev[i].pct)})` : ""}`;
+  if (eq.forma === "barras") {
+    return tarjeta("Equilibrio entre categorías", HG.barrasH(eq.ejes.map((a, i) => ({ etiqueta: `${a.emoji || ""} ${a.nombre}`.trim(), valor: a.esperados ? a.pct : null, texto: a.esperados ? pctTexto(a.pct) : "—", tip: tip(a, i) }))));
+  }
+  const ejes = eq.ejes.map((a, i) => ({ nombre: a.nombre, tip: tip(a, i) }));
+  return tarjeta("Equilibrio entre categorías", `<div class="hb-chart">${HG.radar(ejes, eq.ejes.map(a => a.pct), prev ? prev.map(a => (a ? a.pct : null)) : null)}</div>
     <div class="hb-leyenda"><span><i class="k-area"></i>Este periodo</span>${prev ? `<span><i class="k-prev"></i>Periodo anterior</span>` : ""}</div>`);
+}
+
+// Tarjeta "Por categoría": cumplimiento y tendencia de cada una, ordenadas.
+function porCategoriaHtml(per) {
+  const filas = HE.porCategoria(res, per, areasDef());
+  if (filas.length < 1) return "";
+  return tarjeta("Por categoría", `<ul class="hb-porcat">${filas.map(a => `<li><a class="hb-porcat-fila" href="#hab-categoria/${a.id}" style="--cat:${HCat.colorDe(a)}">
+      <span class="hb-porcat-nombre"><span aria-hidden="true">${escapeHtml(a.emoji || "")}</span> ${escapeHtml(a.nombre)}</span>
+      <span class="hbg-barras-pista"><span class="hbg-barras-valor" style="width:${Math.max(2, (a.pct || 0) * 100).toFixed(1)}%"></span></span>
+      <span class="hb-porcat-num">${pctTexto(a.pct)}${per.previo ? delta(a.pct, a.previo, "pts") : ""}</span></a></li>`).join("")}</ul>`,
+    per.previo ? `Contra ${NOMBRE_PERIODO[per.clave]}. Toca una para ver su página.` : "Toca una para ver su página.");
+}
+
+// Filtro de categoría de Estadísticas (se recuerda en el teléfono).
+let statsFiltro = (() => { try { return localStorage.getItem("hb-stats-filtro") || null; } catch (e) { return null; } })();
+function filtroStatsHtml(opciones, actual) {
+  if (opciones.length < 2) return "";
+  return `<div class="hb-filtros hb-filtros-stats" role="group" aria-label="Categoría">${[{ id: null, nombre: "Todas" }].concat(opciones).map(c => {
+    const on = (c.id || null) === actual;
+    const color = c.color ? HCat.colorDe(c) : null;
+    return `<button type="button" class="hb-filtro${on ? " is-on" : ""}" data-stats-filtro="${c.id || ""}" aria-pressed="${on}"${color ? ` style="--cat:${color}"` : ""}>${c.emoji ? `<span aria-hidden="true">${escapeHtml(c.emoji)}</span>` : ""}${escapeHtml(c.nombre)}</button>`;
+  }).join("")}</div>`;
 }
 
 function rankingHtml() {
@@ -2283,7 +2315,7 @@ function correlacionesHtml(c) {
 
 function resumenSemanaHtml(conCerrar) {
   const lunes = HE.addDias(HE.lunesDe(res.hoy), -7);
-  const r = HE.resumenSemana(res, lunes);
+  const r = HE.resumenSemana(res, lunes, res.subconjunto ? null : areasDef());
   if (r.pct == null) return "";
   const nom = x => (x && normal[x.id] ? `${escapeHtml(normal[x.id].emoji)} ${escapeHtml(normal[x.id].name)} (${pctTexto(x.pct)})` : "—");
   return `<section class="hb-card hb-resumen-semana" aria-label="Tu semana pasada">
@@ -2294,6 +2326,7 @@ function resumenSemanaHtml(conCerrar) {
       <div><span class="hb-num">${r.perfectos}</span><span>${r.perfectos === 1 ? "día perfecto" : "días perfectos"}</span></div>
     </div>
     <p class="hb-texto">Mejor: ${nom(r.mejor)}${r.peor && r.peor.pct < 1 ? ` · A cuidar: ${nom(r.peor)}` : ""}</p>
+    ${r.mejorCategoria ? `<p class="hb-texto">Tu mejor categoría: <a class="hb-link-cat" href="#hab-categoria/${r.mejorCategoria.id}" style="--cat:${HCat.colorDe(r.mejorCategoria)}">${escapeHtml(r.mejorCategoria.emoji || "")} ${escapeHtml(r.mejorCategoria.nombre)}</a> (${pctTexto(r.mejorCategoria.pct)})</p>` : ""}
   </section>`;
 }
 
@@ -2301,18 +2334,27 @@ function renderStats() {
   if (!cargado || !res || !panelStats || panelStats.hidden) return;
   const el = document.getElementById("hb-stats");
   if (!activos().length) { el.innerHTML = `<p class="empty-state">Crea un hábito en Hoy y aquí verás tus estadísticas.</p>`; return; }
-  const inicio = activos().map(h => h.inicio).filter(Boolean).sort()[0];
+  // Categorías que se pueden filtrar: las que tienen (o tuvieron) hábitos.
+  const opciones = areasDef().filter(c => Object.keys(normal).some(id => normal[id].area === c.id) && (!c.archivada || res.areas.some(a => a.id === c.id && a.xp > 0)));
+  const filtro = opciones.some(c => c.id === statsFiltro) ? statsFiltro : null;
+  const resTotal = res;
+  if (filtro) res = HE.deCategoria(resTotal, filtro);
+  try {
+  const cat = filtro ? opciones.find(c => c.id === filtro) : null;
+  const inicio = activos().filter(h => !filtro || h.area === filtro).map(h => h.inicio).filter(Boolean).sort()[0] || activos().map(h => h.inicio).filter(Boolean).sort()[0];
   const per = HE.periodo(periodoStats, res.hoy, inicio);
   const k = HE.kpis(res, per);
   const corr = HE.correlaciones(res, diasMeta);
-  const frases = HE.insights(res, per, { correlaciones: corr });
+  const frases = HE.insights(res, per, { correlaciones: corr, categorias: filtro ? null : areasDef() });
   const cambio = periodoPrevio && periodoPrevio !== periodoStats;
   const scroll = el.querySelector(".hb-heat-scroll");
   const scrollHeat = scroll ? scroll.scrollLeft : null;
   const mes = Number(res.hoy.slice(5, 7));
   const wrappedArriba = mes === 12 || mes === 1;
   el.innerHTML = `
-    ${wrappedArriba ? wrappedEntradaHtml() : ""}
+    ${filtroStatsHtml(opciones, filtro)}
+    ${cat ? `<a class="hb-ver-cat" href="#hab-categoria/${cat.id}" style="--cat:${HCat.colorDe(cat)}"><span aria-hidden="true">${escapeHtml(cat.emoji)}</span> Ver la página de ${escapeHtml(cat.nombre)}<span aria-hidden="true">›</span></a>` : ""}
+    ${wrappedArriba && !filtro ? wrappedEntradaHtml() : ""}
     ${heatmapHtml()}
     ${resumenSemanaHtml(false)}
     <div class="fin-tabs hb-periodos" role="tablist" aria-label="Periodo">${PERIODOS_UI.map(([id, t]) =>
@@ -2323,17 +2365,19 @@ function renderStats() {
       ${tendenciaHtml(per)}
       ${diaSemanaHtml(per)}
       ${momentoHtml(per)}
-      ${radarHtml(per)}
+      ${filtro ? "" : porCategoriaHtml(per)}
+      ${filtro ? "" : radarHtml(per)}
       ${riesgoHtml()}
       ${rankingHtml()}
       ${correlacionesHtml(corr)}
     </div>
-    ${wrappedArriba ? "" : wrappedEntradaHtml()}`;
+    ${wrappedArriba || filtro ? "" : wrappedEntradaHtml()}`;
   const s = el.querySelector(".hb-heat-scroll");
   if (s) s.scrollLeft = scrollHeat != null ? scrollHeat : s.scrollWidth;
   renderIcons(el);
   if (cambio && !reducirMovimiento()) contar(el.querySelector("[data-contar]"));
   periodoPrevio = periodoStats;
+  } finally { res = resTotal; }
 }
 
 // El número principal cuenta hasta su valor al cambiar de periodo.
@@ -2348,6 +2392,13 @@ function contar(el) {
   requestAnimationFrame(paso);
 }
 
+document.getElementById("hb-stats").addEventListener("click", e => {
+  const b = e.target.closest("[data-stats-filtro]");
+  if (!b) return;
+  statsFiltro = b.dataset.statsFiltro || null;
+  try { if (statsFiltro) localStorage.setItem("hb-stats-filtro", statsFiltro); else localStorage.removeItem("hb-stats-filtro"); } catch (err) { /* sin almacenamiento */ }
+  renderStats();
+});
 function cambiarPeriodo(paso) {
   const i = PERIODOS_UI.findIndex(p => p[0] === periodoStats);
   const j = Math.min(PERIODOS_UI.length - 1, Math.max(0, i + paso));
@@ -2424,6 +2475,12 @@ function slidesWrapped(w) {
           <p class="hb-wr-p">Cumpliste el ${pctTexto(w.mejorDia.pct)} de lo que tocaba.</p>` : ""}
         ${mom ? `<p class="hb-wr-p">Tu momento fuerte fue la ${mom}: ${plural(w.momento.hechos, "hábito cumplido", "hábitos cumplidos")}.</p>` : ""}` });
     }
+    if (w.categoria) {
+      s.push({ tema: "oro", html: `<p class="hb-wr-eyebrow">Tu categoría del año</p>
+        <p class="hb-wr-emoji" aria-hidden="true">${escapeHtml(w.categoria.emoji || "🏷️")}</p>
+        <h2 class="hb-wr-t">${escapeHtml(w.categoria.nombre)}</h2>
+        <p class="hb-wr-p">Cumpliste el ${pctTexto(w.categoria.pct)} de lo que te propusiste en ${escapeHtml(w.categoria.nombre)}.</p>` });
+    }
     const juegoTxt = [];
     if (w.jefesTotal) juegoTxt.push(`derrotaste ${w.jefes} de ${plural(w.jefesTotal, "jefe", "jefes")}`);
     if (w.misiones) juegoTxt.push(`cumpliste ${plural(w.misiones, "misión", "misiones")}`);
@@ -2444,7 +2501,7 @@ function slidesWrapped(w) {
 
 let wrapped = null; // { el, slides, i, anterior (foco) }
 function abrirWrapped(anio) {
-  const w = HE.wrapped(res, anio);
+  const w = HE.wrapped(res, anio, areasDef());
   if (!w) return;
   const slides = slidesWrapped(w);
   const el = document.createElement("div");
@@ -2631,6 +2688,7 @@ function actualizar() {
     pendienteXP = null;
   }
   revisarCelebraciones();
+  document.dispatchEvent(new CustomEvent("habitos:actualizado"));
 }
 
 // Si cambia el día (o el momento del día) con la app abierta, se redibuja.
@@ -2687,6 +2745,14 @@ window.HabitosApp = {
   },
   leerForm() { leerCampos(); return form; },
   hojaAjustes: () => hojaAjustes(),
+  // Corre fn con otro resultado (p. ej. solo una categoría) y devuelve lo que dé.
+  conRes(otro, fn) { const antes = res; res = otro; try { return fn(); } finally { res = antes; } },
+  tarjeta: (t, c, sub) => tarjeta(t, c, sub), heatmapHtml: () => heatmapHtml(), tendenciaHtml: per => tendenciaHtml(per),
+  rankingHtml: () => rankingHtml(), riesgoHtml: () => riesgoHtml(), delta: (a, b, u) => delta(a, b, u), barra: (fr, t) => barra(fr, t),
+  insigniaNivel: idx => nivelHab(idx), textoRacha: r => textoRacha(r), hojaDia: f => hojaDia(f), hojaDetalle: id => hojaDetalle(id),
+  renderIcons: el => renderIcons(el), fmtNum: n => fmtNum(n),
+  nuevoHabito(area) { hojaForm(null); if (area) { form.area = area; hojaForm(); } },
+  filtrarStats(id) { statsFiltro = id || null; },
   alClick: fn => plugins.click.push(fn), alCambiar: fn => plugins.cambio.push(fn), alEnviar: fn => plugins.submit.push(fn)
 };
 })();

@@ -1,5 +1,19 @@
 # Cambios
 
+## 2026-11-05 · Hábitos: página de cada categoría y estadísticas (fase 5)
+- Página de categoría (`#hab-categoria/id`): nivel y XP con lo que falta a
+  tu ritmo, esta semana y los últimos 30 días contra el periodo anterior,
+  racha activa y mejor racha, mapa de calor, tendencia, sus hábitos por
+  fuerza, en riesgo y sus logros (niveles 5, 10, 15 y 20). Se abre desde
+  Hoy (grupo o filtro), Logros › Categorías y Estadísticas.
+- Estadísticas: filtro de categoría arriba que cambia todas las tarjetas;
+  tarjeta nueva "Por categoría" (cumplimiento y tendencia, ordenadas);
+  "Equilibrio entre categorías": radar con 3 a 8, barras con más.
+- "Lo que dicen tus datos", el resumen del domingo y Manolo Wrapped
+  nombran tu mejor categoría. Una semana de cada dos, una misión apunta a
+  una categoría ("🧠 3 días de Mente").
+- Pruebas: 413 unitarias; E2E `habitos.js`: 133.
+
 ## 2026-11-05 · Hábitos: Hoy por categoría (fase 4)
 - Arriba de Hoy: Todas · cada categoría con cuántos le quedan hoy (se
   recuerda la última). "Momento | Categoría" para agrupar (las cadenas van
