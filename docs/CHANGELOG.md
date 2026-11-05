@@ -1,5 +1,16 @@
 # Cambios
 
+## 2026-11-05 · Hábitos: gestionar categorías (fase 3)
+- Ajustes de Hábitos › Categorías: crear (nombre, emoji, color), editar,
+  ordenar con flechas, archivar (si tiene historial) o eliminar (si nunca
+  se usó). "Sugeridas": Fe, Lectura, Cuidado personal y Hogar, con un toque.
+- "Asignar categorías": marcas varios hábitos (vienen marcados los que no
+  tienen) y eliges la categoría; solo cambia la categoría.
+- Formulario más corto: categoría con chips de color y "+ Nueva" (vuelve al
+  formulario con la nueva elegida); nota, dificultad, cadena, se marca solo
+  y versión mínima en "Más opciones"; Cancelar y Crear siempre a la vista.
+- E2E `habitos.js`: 69 comprobaciones.
+
 ## 2026-11-05 · Hábitos: Temporada 2, subir cuesta más (fase 2)
 - Rangos: un hábito diario perfecto llega a Bronce al mes, Oro a los 3
   meses, Esmeralda a los 6, Diamante al año y al máximo a los ~1,5 años.

@@ -855,8 +855,20 @@ function formDesde(h) {
     minima: h ? h.minima : "",
     descripcion: h ? h.descripcion || "" : "",
     despuesDe: h ? h.despuesDe || "" : "",
-    vinculo: h ? h.vinculo || "" : ""
+    vinculo: h ? h.vinculo || "" : "",
+    // "Más opciones" abierto si el hábito ya usa alguna.
+    _mas: !!(h && (h.descripcion || h.minima || h.despuesDe || h.vinculo || h.dificultad !== "media"))
   };
+}
+// Categorías como chips con su color, "Sin categoría" y "+ Nueva".
+function categoriaChipsHtml(f) {
+  const lista = areasDef().filter(a => !a.archivada || a.id === f.area);
+  return `<div class="hb-chips" role="group" aria-label="Categoría">${lista.map(a => {
+    const on = f.area === a.id;
+    return `<button type="button" class="hb-chip hb-chip-cat${on ? " is-on" : ""}" data-campo="area" data-v="${a.id}" aria-pressed="${on}" style="--cat:${HCat.colorDe(a)}"><span aria-hidden="true">${escapeHtml(a.emoji)}</span> ${escapeHtml(a.nombre)}</button>`;
+  }).join("")}
+    <button type="button" class="hb-chip${!f.area ? " is-on" : ""}" data-campo="area" data-v="" aria-pressed="${!f.area}">Sin categoría</button>
+    <button type="button" class="hb-chip hb-chip-nueva" data-cat-nueva="form">+ Nueva</button></div>`;
 }
 
 function chips(nombre, opciones, actual) {
@@ -874,10 +886,10 @@ function hojaForm(id) {
       <label class="hb-campo">Nombre
         <input type="text" name="name" maxlength="60" required value="${escapeHtml(f.name)}" placeholder="Ej: Tomar agua" autocomplete="off">
       </label>
-      <label class="hb-campo"><span>Nota <span class="hb-opcional">(opcional)</span></span>
-        <textarea name="descripcion" rows="3" maxlength="${HC.CONST.DESCRIPCION_MAX}" placeholder="Ej: Agradecer por mi familia, por mi salud y por mi trabajo.">${escapeHtml(f.descripcion)}</textarea>
-        <span class="hb-ayuda">Para recordar el porqué o el cómo. Se ve debajo del nombre.</span></label>
       ${emojisHtml(f)}
+
+      <span class="hb-label">Categoría</span>
+      ${categoriaChipsHtml(f)}
 
       <span class="hb-label">Tipo</span>
       ${chips("tipo", Object.keys(HC.TIPOS).map(k => [k, HC.TIPOS[k].nombre]), f.tipo)}
@@ -898,11 +910,14 @@ function hojaForm(id) {
       <span class="hb-label">Momento del día</span>
       ${chips("timeOfDay", HC.MOMENTOS.map(m => [m.id, m.nombre]), f.timeOfDay)}
 
+      <button type="button" class="hb-mas" data-mas-opciones aria-expanded="${!!f._mas}">${f._mas ? "Menos opciones" : "Más opciones"}<span aria-hidden="true">${f._mas ? "▴" : "▾"}</span></button>
+      ${f._mas ? `<div class="hb-mas-cuerpo">
+      <label class="hb-campo"><span>Nota <span class="hb-opcional">(opcional)</span></span>
+        <textarea name="descripcion" rows="3" maxlength="${HC.CONST.DESCRIPCION_MAX}" placeholder="Ej: Agradecer por mi familia, por mi salud y por mi trabajo.">${escapeHtml(f.descripcion)}</textarea>
+        <span class="hb-ayuda">Para recordar el porqué o el cómo. Se ve debajo del nombre.</span></label>
+
       <span class="hb-label">Dificultad</span>
       ${chips("dificultad", Object.keys(HC.DIFICULTADES).map(k => [k, `${HC.DIFICULTADES[k].nombre} · ${HC.DIFICULTADES[k].xp} XP`]), f.dificultad)}
-
-      <span class="hb-label">Categoría</span>
-      ${chips("area", areasDef().filter(a => !a.archivada || a.id === f.area).map(a => [a.id, `${escapeHtml(a.emoji)} ${escapeHtml(a.nombre)}`]).concat([["", "Sin categoría"]]), f.area || "")}
 
       <label class="hb-campo"><span>Después de <span class="hb-opcional">(opcional)</span></span>
         <select name="despuesDe">${opcionesCadena(f)}</select>
@@ -914,9 +929,10 @@ function hojaForm(id) {
       ${evitar ? "" : `<label class="hb-campo"><span>Versión mínima <span class="hb-opcional">(opcional)</span></span>
         <input type="text" name="minima" maxlength="60" value="${escapeHtml(f.minima)}" placeholder="Ej: leer 1 página">
         <span class="hb-ayuda">Para los días difíciles: mantiene tu racha con menos XP.</span></label>`}
+      </div>` : ""}
 
       <p class="hb-error" hidden></p>
-      <div class="hb-acciones">
+      <div class="hb-acciones hb-acciones-fijas">
         <button type="button" class="hb-btn-sec" data-cerrar>Cancelar</button>
         <button type="submit" class="hb-btn">${f.id ? "Guardar cambios" : "Crear hábito"}</button>
       </div>
@@ -1108,9 +1124,11 @@ function hojaAjustes() {
       <button type="button" class="hb-chip${conSonido() ? " is-on" : ""}" data-sonidos="1" aria-pressed="${conSonido()}">Encendidos</button>
     </div>
     <p class="hb-texto">Un toque suave al marcar y una melodía corta en los logros. Respetan el modo silencio del iPhone.</p>
-    <h4 class="hb-sub-t">Tus categorías</h4>
-    <div class="hb-areas-nombres">${categoriasActivas().map(a =>
-      `<label class="hb-campo"><span class="hb-sr">${escapeHtml(a.nombre)}</span><input type="text" maxlength="${HCat.NOMBRE_MAX}" data-area-nombre="${a.id}" value="${escapeHtml(a.nombre)}" aria-label="Nombre de la categoría ${escapeHtml(a.nombre)}"></label>`).join("")}</div>
+    <h4 class="hb-sub-t">Categorías</h4>
+    <button type="button" class="hb-ajuste-fila" data-cat-gestionar>
+      <span class="hb-ajuste-emojis" aria-hidden="true">${categoriasActivas().map(a => `<span style="--cat:${HCat.colorDe(a)}">${escapeHtml(a.emoji)}</span>`).join("")}</span>
+      <span class="hb-ajuste-txt">Crear, editar, ordenar y asignar</span><span class="hb-ajuste-ir" aria-hidden="true">›</span>
+    </button>
     <h4 class="hb-sub-t">Archivados</h4>
     ${archivados.length ? `<ul class="hb-pausas">${archivados.map(h => `<li><span>${escapeHtml(h.emoji)} ${escapeHtml(h.name)}${h.archivadoEn ? ` · desde el ${fechaCorta(h.archivadoEn)}` : ""}</span>
       <span class="hb-chips"><button type="button" class="hb-btn-sec" data-restaurar="${h.id}">Restaurar</button>
@@ -1773,10 +1791,14 @@ function sonar(tipo) {
 }
 
 // ---------- Eventos ----------
+// Pantallas de otros archivos (js/habitos-categorias-ui.js…) atienden sus
+// propios botones dentro de la hoja: si una devuelve true, ya está.
+const plugins = { click: [], cambio: [], submit: [] };
 function onClickHoja(e) {
   const t = e.target;
   if (t.closest("[data-temporada-visto]")) { cerrarHoja(); return; }
   if (t.closest("[data-cerrar]")) { cerrarHoja(); return; }
+  if (plugins.click.some(fn => fn(e, t))) return;
   const q = sel => t.closest(sel);
   const fechaDe = el => el.dataset.fecha || res.hoy;
   let b;
@@ -1828,6 +1850,7 @@ function onClickHoja(e) {
   if ((b = q("[data-sonidos]"))) { guardarPref({ sonidos: b.dataset.sonidos === "1" }); if (b.dataset.sonidos === "1") sonar("moneda"); hojaAjustes(); return; }
   if ((b = q("[data-animo]"))) { guardarDiaMeta({ animo: Number(b.dataset.animo) }); hojaCierre(); return; }
   // Formulario: botones que cambian un campo y redibujan.
+  if (q("[data-mas-opciones]")) { leerCampos(); form._mas = !form._mas; hojaForm(); return; }
   if ((b = q("[data-emoji-grupo]"))) {
     leerCampos();
     emojiGrupo = b.dataset.emojiGrupo;
@@ -1865,6 +1888,7 @@ function cambiarEstado(id, estado, f) {
 
 function onCambioHoja(e) {
   const t = e.target;
+  if (plugins.cambio.some(fn => fn(e, t))) return;
   if (t.hasAttribute("data-archivo-importar")) { leerCopia(t.files && t.files[0]); return; }
   const f = t.dataset.fecha || res.hoy;
   if (t.dataset.nota) {
@@ -1888,6 +1912,7 @@ function onCambioHoja(e) {
 
 function onSubmitHoja(e) {
   e.preventDefault();
+  if (plugins.submit.some(fn => fn(e, e.target))) return;
   if (e.target.classList.contains("hb-form")) guardarForm();
 }
 
@@ -2538,4 +2563,22 @@ onAuthReady(() => {
 
 // Para otros módulos y para probar desde la consola.
 window.Habitos = { evaluar: () => res, recalcular: actualizar };
+// Para las pantallas en archivos aparte (categorías, Hoy por categoría…).
+window.HabitosApp = {
+  estado: () => ({ docs, normal, res, juego, cargado: cargado && juegoCargado }),
+  areasDef, categoriasActivas, guardarCategorias, activos, coleccion, metaJuego,
+  abrirHoja, cerrarHoja, cabecera, hojaActual: () => hojaActual, toast, errorGuardar, actualizar,
+  escapeHtml, plural, fmtNum, fechaCorta, pctTexto: v => pctTexto(v), enTiempo,
+  // Vuelve al formulario del hábito con esta categoría elegida (tras "+ Nueva").
+  volverAlForm(area) {
+    if (!form) return;
+    if (area !== undefined) form.area = area;
+    hojaForm();
+    const chip = hoja && hoja.querySelector('.hb-form [data-campo="area"].is-on');
+    if (chip && chip.scrollIntoView) chip.scrollIntoView({ block: "center" });
+  },
+  leerForm() { leerCampos(); return form; },
+  hojaAjustes: () => hojaAjustes(),
+  alClick: fn => plugins.click.push(fn), alCambiar: fn => plugins.cambio.push(fn), alEnviar: fn => plugins.submit.push(fn)
+};
 })();

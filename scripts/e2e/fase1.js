@@ -90,6 +90,9 @@ const captura = (p, nombre) => capturar(p, CAPTURAS, nombre);
   await sinFestejos(p);
   await p.click("#hb-nuevo"); await p.waitForTimeout(400);
   await p.fill('.hb-form input[name="name"]', "Agradecimiento");
+  // Desde 2026-11 la nota está en "Más opciones" (al editar se abre sola si hay nota).
+  await p.click("[data-mas-opciones]"); await p.waitForTimeout(200);
+  ok((await p.inputValue('.hb-form input[name="name"]')) === "Agradecimiento", "abrir «Más opciones» conserva lo escrito");
   await p.fill('.hb-form textarea[name="descripcion"]', "Agradecer por mi familia, por mi salud, por mi trabajo y por las oportunidades que tengo.");
   await captura(p, "f1-habito-form.png");
   await p.click('.hb-form button[type="submit"]'); await p.waitForTimeout(600);

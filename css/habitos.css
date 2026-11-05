@@ -870,3 +870,57 @@ body.sc-en-guia { overflow: hidden; }
 @media (min-width: 769px) {
   .sc-app { max-width: 640px; }
 }
+
+/* ---------- Categorías (2026-11, D-079) ---------- */
+.hb-chip-cat { display: inline-flex; align-items: center; gap: 0.35rem; border-color: color-mix(in srgb, var(--cat) 45%, var(--border)); }
+.hb-chip-cat.is-on { background: var(--cat); color: #0a0a0a; border-color: transparent; }
+.hb-chip-nueva { border-style: dashed; color: var(--muted); }
+/* Formulario: "Más opciones" y botones siempre a mano */
+.hb-mas {
+  display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 1.2rem;
+  min-height: 44px; padding: 0 0.95rem; border-radius: 14px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; font-size: 0.9rem; font-weight: 700;
+}
+.hb-mas span { color: var(--muted); }
+.hb-mas-cuerpo { padding-bottom: 0.2rem; }
+.hb-acciones-fijas {
+  position: sticky; bottom: 0; z-index: 2; margin: 1.2rem -1.2rem -1.2rem; padding: 0.75rem 1.2rem calc(0.75rem + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--bg-soft) 75%, transparent);
+}
+/* Ajustes: acceso a categorías */
+.hb-ajuste-fila {
+  display: flex; align-items: center; gap: 0.6rem; width: 100%; min-height: 52px; padding: 0.5rem 0.85rem; cursor: pointer;
+  border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; text-align: left;
+}
+.hb-ajuste-emojis { display: flex; flex-shrink: 0; }
+.hb-ajuste-emojis span { width: 28px; height: 28px; display: grid; place-items: center; margin-left: -6px; border-radius: 50%; font-size: 0.9rem; background: color-mix(in srgb, var(--cat) 30%, var(--surface)); border: 2px solid var(--surface); }
+.hb-ajuste-emojis span:first-child { margin-left: 0; }
+.hb-ajuste-txt { flex: 1; min-width: 0; font-size: 0.9rem; font-weight: 600; }
+.hb-ajuste-ir { color: var(--muted); font-size: 1.3rem; }
+/* Lista de categorías */
+.hb-cats .hb-orden-item { border-left: 4px solid var(--cat); }
+.hb-cat-fila { flex: 1; min-width: 0; display: flex; align-items: center; gap: 0.6rem; min-height: 44px; padding: 0 0.3rem; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.hb-cat-emoji { width: 36px; height: 36px; flex-shrink: 0; display: grid; place-items: center; border-radius: 12px; font-size: 1.2rem; background: color-mix(in srgb, var(--cat) 22%, transparent); }
+.hb-orden-flecha:disabled { opacity: 0.35; cursor: default; }
+.hb-cats-acciones { margin-top: 0.9rem; }
+.hb-cats-acciones .hb-btn:disabled { opacity: 0.5; }
+.hb-pausas li[style*="--cat"] { border-left: 4px solid var(--cat); }
+/* Editor de categoría */
+.hb-cat-vista { display: flex; align-items: center; gap: 0.7rem; padding: 0.8rem 0.95rem; border-radius: 16px; background: color-mix(in srgb, var(--cat) 16%, var(--surface)); border: 1px solid color-mix(in srgb, var(--cat) 55%, transparent); }
+.hb-cat-vista span { font-size: 1.7rem; }
+.hb-cat-vista b { font-size: 1.1rem; overflow-wrap: anywhere; }
+.hb-colores { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
+.hb-color { height: 44px; border-radius: 12px; border: 2px solid transparent; background: var(--cat); cursor: pointer; }
+.hb-color.is-on { border-color: var(--ink); box-shadow: 0 0 0 2px var(--bg-soft) inset; }
+.hb-cat-peligro { margin-top: 1.2rem; padding-top: 0.9rem; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.hb-cat-peligro .hb-texto { flex-basis: 100%; margin: 0; }
+/* Asignar en lote */
+.hb-asignar { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.hb-asignar-item {
+  display: flex; align-items: center; gap: 0.6rem; width: 100%; min-height: 52px; padding: 0.35rem 0.7rem; cursor: pointer; text-align: left;
+  border-radius: 14px; border: 1px solid var(--border); border-left: 4px solid var(--cat, var(--border)); background: var(--surface); color: var(--ink); font: inherit;
+}
+.hb-asignar-item.is-on { border-color: var(--accent-1); background: rgba(255, 122, 48, 0.1); border-left-color: var(--cat, var(--accent-1)); }
+.hb-asignar-check { width: 24px; height: 24px; flex-shrink: 0; display: grid; place-items: center; border-radius: 7px; border: 2px solid var(--border); font-size: 0.8rem; font-weight: 800; color: #0a0a0a; }
+.hb-asignar-item.is-on .hb-asignar-check { background: var(--accent-2); border-color: var(--accent-2); }
+.hb-acciones-fijas .hb-btn:disabled { opacity: 0.5; cursor: default; }

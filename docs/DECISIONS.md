@@ -768,3 +768,16 @@ cada 7/3 días): antes una semana de 2 de 3 contaba como un 67 % que
 igual subía. (5) La transición conserva los logros (unión con el
 snapshot) y muestra los ganados como conseguidos aunque hoy ya no se
 cumplan; el nivel y los rangos de antes quedan como Temporada 1.
+
+**D-082 (2026-11-05) · Gestión de categorías y formulario corto.** Las
+pantallas nuevas viven en `js/habitos-categorias-ui.js` y usan
+`window.HabitosApp` (puente con `js/habitos.js`: estado, hojas, toasts y
+"plugins" de clic/envío en la hoja), así `habitos.js` no sigue creciendo.
+Archivar una categoría con hábitos activos no se permite: primero se pasan
+a otra (botón "Cambiar sus hábitos"), para que ningún hábito activo quede
+en una categoría invisible. Eliminar solo si ningún hábito (ni archivado)
+la usó: queda `borrada: true` y su id no se reutiliza. Asignar en lote es
+un lote de Firestore que solo escribe `area`. En el formulario, lo que se
+usa poco (nota, dificultad, "después de", se marca solo, versión mínima)
+pasa a "Más opciones", que se abre solo si el hábito ya usa alguna; los
+botones Cancelar/Crear quedan fijos abajo.

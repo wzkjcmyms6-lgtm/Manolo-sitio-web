@@ -11,7 +11,8 @@ y el plan guiado de Scalping (`docs/SCALPING.md`, no se toca).
 | `js/habitos-engine.js` | Motor puro: todo se recalcula desde el historial (rachas, XP, rango, misiones, jefes, logros, estadísticas, copia) |
 | `js/habitos-categorias.js` | Categorías (antes "áreas de vida"): modelo, migración en lectura, paleta, sugerencias (fase 1) |
 | `js/habitos-graficos.js` | Gráficos SVG (líneas, columnas, radar) |
-| `js/habitos.js` | Pantallas Hoy, detalle, formulario, Estadísticas, Logros y Firestore |
+| `js/habitos.js` | Pantallas Hoy, detalle, formulario, Estadísticas, Logros y Firestore; expone `window.HabitosApp` para las pantallas en archivos aparte |
+| `js/habitos-categorias-ui.js` | Hojas de categorías: lista, crear/editar, sugeridas, archivar, asignar en lote (fase 3) |
 | `js/habito-scalping.js` | Tarjeta y pantalla de Scalping |
 | `tests/habitos-engine.test.js` | Pruebas del motor; `tests/habitos-sim.js` simula la dificultad |
 
@@ -70,6 +71,14 @@ Propuestas extra (las decide el dueño; aparecen como "Sugeridas" para
 crearlas con un toque): **Fe** 🙏 Índigo (Biblia, orar), **Lectura** 📚
 Celeste (Libros), **Cuidado personal** 💆 Lima (Scalping, piel) y
 **Hogar** 🏠 Piedra.
+
+### Gestión (fase 3)
+Ajustes › Categorías: lista con su color y cuántos hábitos tiene, flechas
+para ordenar, "+ Nueva categoría", "Asignar categorías · N sin categoría",
+Sugeridas y Archivadas (Restaurar). Editar: nombre, 10 colores, emojis o
+uno propio; Archivar (con historial y sin hábitos activos) o Eliminar
+(nunca usada). Formulario del hábito: chips de categoría con su color,
+"Sin categoría" y "+ Nueva".
 
 ### Hoy
 Fila de filtros (Todas · cada categoría con sus pendientes), "Agrupar por"
