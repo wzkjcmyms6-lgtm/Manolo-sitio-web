@@ -8,13 +8,13 @@ desde D-090. Cada fase deja la app funcionando y publicada.
 |---|---|---|
 | 0 | Auditoría y diseño (capturas, problemas, bocetos) | ✅ |
 | 1 | Demos: script, WebP en el repo, caché con límite, precarga de rutinas | ✅ |
-| 2 | Ficha del ejercicio: técnica, videos, historial, récords, alternativas | ✅ (pasos: lote 1 de 114; faltan ~478 por lotes) |
+| 2 | Ficha del ejercicio: técnica, videos, historial, récords, alternativas | ✅ (pasos: lotes 1 y 2, 227 de 592) |
 | 3 | Entreno en vivo: objetivos, RIR, calentamiento, discos, superseries, descanso con aviso, récords, resumen | ✅ |
 | 4 | Progresión v2, estancamiento y descarga + Ajustes del gimnasio | ✅ |
 | 5 | Volumen semanal, equilibrio y generador de rutinas | ✅ |
 | 6 | Recuperación, "¿Qué entreno hoy?" y carga total con Running | ✅ |
 | 7 | Resumen inteligente, Perfil y compartir | ✅ |
-| 8 | QA final, docs y lista para el iPhone | |
+| 8 | QA final, docs y lista para el iPhone | ✅ |
 
 Datos de prueba: `scripts/e2e/ejercicio-semilla.js` (9 semanas realistas).
 
@@ -22,6 +22,9 @@ Datos de prueba: `scripts/e2e/ejercicio-semilla.js` (9 semanas realistas).
 - Videos propios grabados con el teléfono por ejercicio.
 - Datos de relojes o Apple Salud.
 - Retos de fuerza en el Feed.
+- Pasos en español del resto de los ejercicios (365), por lotes en
+  `scripts/tecnica/pasos-3.mjs`, … y `npm run tecnica` (subir el `?v=` de
+  `RUTA_TECNICA` en `js/ej-ficha.js`).
 
 ## Hábitos: categorías y siguiente nivel (pedido del dueño, 2026-11-05)
 Diseño, auditoría y tablas en `docs/HABITOS.md`; decisiones desde D-079.

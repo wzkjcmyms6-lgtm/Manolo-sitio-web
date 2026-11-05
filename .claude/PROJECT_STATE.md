@@ -47,12 +47,14 @@ Actualizado: 2026-11-05 (empieza Ejercicio inteligente, D-090).
   aviso de pendientes. D-079 a D-087, todo en `docs/HABITOS.md`. Fe, Lectura,
   Cuidado personal y Hogar vienen de fábrica (D-088); sin recordatorios
   fuera de Manolo por ahora. Falta: la lista del iPhone (`docs/TESTING.md`).
-- **Ejercicio inteligente (2026-11-05, en curso)**: ficha con demo,
+- **Ejercicio inteligente (2026-11-05, terminado, fases 0–8)**: ficha con demo,
   entreno que dice qué peso usar y por qué, progresión v2, estancamiento y
   descarga, volumen y equilibrio, generador, recuperación y "¿Qué entreno
   hoy?" con Running. Plan y auditoría en `docs/EJERCICIO_INTELIGENTE.md`,
   D-090 en adelante.
-- **Tests (2026-11-05)**: 430 unitarias; E2E de Running: `run-importar`,
+- **Tests (2026-11-05)**: 480 unitarias; E2E de Ejercicio: `ejercicio`
+  (ficha, demos, entreno en vivo, progresión, descarga, volumen,
+  generador, "¿Qué entreno hoy?", Perfil y compartir, a 390 y 1280 px); E2E de Running: `run-importar`,
   `run-detalle`, `run-feed`, `run-progreso`, `run-inteligencia`,
   `run-segmentos`, `run-compartir`, `run-qa`; de Hábitos: `habitos` (205,
   a 390 y 1280 px); además de las de siempre (todas en verde el 2026-11-05).

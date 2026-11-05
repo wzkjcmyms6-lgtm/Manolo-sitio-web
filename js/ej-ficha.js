@@ -16,7 +16,7 @@
 "use strict";
 
 const NS = "http://www.w3.org/2000/svg";
-const RUTA_TECNICA = "data/ejercicios-tecnica.json?v=202611051500";
+const RUTA_TECNICA = "data/ejercicios-tecnica.json?v=202611060300";
 const H = EjHistorial;
 let hoja = null;
 let actual = null;      // ficha abierta

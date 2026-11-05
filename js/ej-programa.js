@@ -348,6 +348,8 @@ function candidatos(h, base, o) {
     // Sin barra de dominadas ni paralelas: nada que se haga colgado o en paralelas.
     if (o.dominadas === false && f.tipo === "peso_corporal" && /dominad|en barra|colgad|negativa|muscle up|fondos|paralelas/i.test(f.nombre)) return false;
     if (f.niv && f.niv > tope) return false;
+    // Tras nuca: exige mucha movilidad de hombro; el generador no lo propone (D-098).
+    if (/tras nuca/i.test(f.nombre)) return false;
     return true;
   });
 }

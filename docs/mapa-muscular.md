@@ -356,3 +356,22 @@ más de 60 semanas se agrupa por mes), barras azules por semana con su eje
 (`EjSesiones.escalaY`, probado en `tests/ej-sesiones.test.js`) y las
 pastillas Duración · Volumen · Repeticiones. Tocar una barra muestra esa
 semana arriba; tocarla otra vez vuelve a esta semana.
+
+## Ejercicio inteligente (nov 2026)
+
+El motor muscular ahora alimenta más cosas. El detalle, las fórmulas y las
+fuentes están en `docs/EJERCICIO_INTELIGENTE.md` (decisiones D-090 a D-098).
+
+| Qué | Archivo | Usa del motor |
+|---|---|---|
+| Ficha de cada ejercicio (demo, pasos, historial, récords, alternativas) | `js/ej-ficha.js`, `js/ej-historial.js`, `js/ej-demos.js` | primarios y secundarios de la ficha |
+| Series por músculo de la semana contra tu objetivo y equilibrio | `js/ej-programa.js`, `js/ej-volumen.js` | series efectivas (principal 1, ayuda 0,5) y `calcularMusculos` |
+| Generador "Crear rutinas para mí" | `js/ej-programa.js`, `js/ej-generador.js` | primarios, mecánica (`mec`), fuerza (`fz`), nivel (`niv`) |
+| Recuperación por músculo y "¿Qué entreno hoy?" | `js/ej-recuperacion.js`, `js/ej-hoy.js` | series por zona que bajan con el tiempo; figuras de `js/body-figures.js` |
+| Frecuencia por músculo y volumen por grupo (Perfil) | `js/ej-inteligencia.js`, `js/ej-graficos.js` | `calcularGrupos` y principales por día |
+
+Los campos `mec`, `fz`, `niv` y `demo` de `data/ejercicios.json` salen de
+free-exercise-db (`mechanic`, `force`, `level`) en `scripts/build-exercises.mjs`.
+El tipo de movimiento de cada ejercicio (para el generador, las
+alternativas y los errores comunes) está en `data/ejercicios-tecnica.json`
+(`scripts/build-tecnica.mjs`).

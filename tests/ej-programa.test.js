@@ -246,3 +246,10 @@ test("volumen con plan: lo hecho + lo que queda del plan de la semana", () => {
   const sinPlan = P.volumenConPlan([press(4)], [], "hipertrofia", "intermedio").find(x => x.id === "pecho");
   assert.deepEqual([sinPlan.plan, sinPlan.total, sinPlan.estado], [0, 4, "bajo"]);
 });
+
+test("generador: nunca propone ejercicios tras nuca", () => {
+  const o = { nivel: "avanzado", equipos: EQ.disponibles(null), patronDe, destacados, base };
+  const todos = Object.keys(P.HUECOS).flatMap(h => P.alternativasHueco(h, o).map(f => f.nombre));
+  assert.ok(todos.length > 100);
+  assert.ok(!todos.some(n => /tras nuca/i.test(n)), "sin tras nuca");
+});

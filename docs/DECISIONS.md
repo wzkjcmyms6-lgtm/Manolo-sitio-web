@@ -1046,3 +1046,12 @@ estimado de 12 semanas y el peso de ese día. (3) La imagen para compartir
 se arma en el teléfono (canvas 1080 × 1350) y se ofrece con el menú del
 sistema (Web Share con archivo); si el navegador no puede, se descarga.
 No se sube a ningún lado ni se guarda nada nuevo.
+
+**D-098 (2026-11-05) · Cierre de Ejercicio inteligente.** (1) El
+generador excluye los ejercicios "tras nuca": piden mucha rotación externa
+del hombro y no suman nada que el press por delante no dé; quedan en la
+base, en la ficha (con el aviso en sus pasos) y en el registro. (2) Los
+pasos en español se escriben por lotes priorizados por uso: lote 1 los
+destacados, lote 2 todo lo que el generador puede proponer; los demás
+muestran demo, errores comunes y "Ver video" hasta su lote. (3) Al cerrar,
+regresión completa de las pruebas de pantalla de toda la app.

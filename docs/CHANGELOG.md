@@ -1,5 +1,11 @@
 # Cambios
 
+## 2026-11-05 · Ejercicio: QA final (fase 8)
+- Pasos de "Cómo se hace" en español para 113 ejercicios más (todos los
+  que puede proponer "Crear rutinas para mí"): 227 en total.
+- "Crear rutinas para mí" ya no propone ejercicios tras nuca.
+- Regresión completa en verde; lista para el iPhone en `docs/TESTING.md`.
+
 ## 2026-11-05 · Ejercicio: resumen inteligente, gráficos del Perfil y compartir (fase 7)
 - Al terminar un entreno, "En pocas palabras": récords, cómo te fue
   contra la última vez, si algo sigue estancado, qué músculos quedan

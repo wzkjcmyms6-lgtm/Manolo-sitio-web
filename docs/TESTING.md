@@ -1,6 +1,13 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-05 (Ejercicio inteligente, fases 0–8): `npm test` → **480
+  pruebas**. Nuevas: `ej-historial`, `ej-equipo`, `ej-entreno`,
+  `ej-programa` (progresión v2, estancamiento, descarga, volumen,
+  equilibrio, generador), `ej-recuperacion` y `ej-inteligencia`. E2E
+  `scripts/e2e/ejercicio.js` (9 semanas de entrenos realistas en
+  `ejercicio-semilla.js`, a 390 y 1280 px; por partes con `SOLO=demos`,
+  `ficha`, `entreno`, `programa`, `volumen`, `hoy` o `perfil`).
 - 2026-11-04 (Running fase 1): `npm test` → **356 pruebas**. Nuevas:
   `run-formatos` (GPX, TCX, FIT armado byte a byte en
   `tests/run-fixtures.js`: big-endian, horas comprimidas, campos de
@@ -141,6 +148,18 @@ Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
   reales, teclado del iPhone, reglas publicadas en Firebase. Va en la lista
   de abajo.
 
+## Resultado del QA final de Ejercicio inteligente (fase 8, 2026-11-05)
+- Unitarias: 481/481. E2E, las 24 suites de `scripts/e2e/` (1.578
+  comprobaciones, 0 fallas): ejercicio 349, habitos 205, inversiones 137,
+  lectura 98, scalping 75, run-importar 70, running 64, tarjetas 56,
+  tiempos 56, movilidad 55, libros-progreso 52, run-feed 48, run-qa 46,
+  run-detalle 42, fase1 40, regresion 39, run-progreso 36, run-segmentos
+  29, hojas 21, ej-calendario 18, run-inteligencia 14, run-compartir 13,
+  emojis 10, sw-instala 5.
+- Lo que no se puede probar aquí: voz, pitidos y pantalla encendida
+  reales, el menú de compartir del iPhone y las demos sin conexión en el
+  teléfono. Van en la lista de abajo ("Ejercicio inteligente").
+
 ## Pruebas en el iPhone (las hace el dueño)
 Abrir Manolo **desde el ícono de la pantalla de inicio** (no desde Safari),
 con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
@@ -211,6 +230,32 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] Abre la tarjeta › **Iniciar guiado**: la pantalla no se apaga, suena un
   pitido en cada paso y al final la sesión queda hecha.
 - [ ] Revisa Progreso, Semana, Guía y Ajustes.
+
+**Ejercicio inteligente (2026-11)**
+- [ ] Abre una rutina y toca el nombre de un ejercicio: la ficha muestra la
+  demo (2 fotos que se alternan; ⏸ la pausa), "Cómo se hace", "Ver video",
+  Historial, Récords y alternativas. Con modo avión, las demos de tus
+  rutinas se siguen viendo.
+- [ ] Empieza la rutina de hoy: cada ejercicio dice qué peso usar y por qué
+  ("Subes: la última vez…"); toca "Calentamiento" y "Discos".
+- [ ] Marca una serie: arranca el descanso; con la pantalla encendida
+  suenan 3-2-1 y la voz dice "Descanso terminado. Siguiente: …".
+- [ ] Anota el RIR en una serie; prueba una superserie (⋯ › Superserie).
+- [ ] Termina: el resumen dice "En pocas palabras" (récords, comparación,
+  qué queda cansado), elige el esfuerzo y toca "Compartir imagen".
+- [ ] Gimnasio › Ajustes del gimnasio: cambia tu barra o tus discos; el
+  entreno muestra los discos por lado con tu equipo.
+- [ ] Entrenamiento: la tarjeta de arriba dice qué entrenar hoy. El día
+  después de una carrera larga debería proponer otra rutina ("Hacer X
+  igual" sigue a mano).
+- [ ] Baja: "Recuperación" (figura con colores), "Carga de la semana" y
+  "Series por músculo" (con lo que te queda del plan).
+- [ ] "Crear rutinas para mí": 3 días, 45 min → Ver propuesta; cambia y
+  quita un ejercicio; Guardar. Tus rutinas de antes siguen igual y el plan
+  solo se llenó en días libres.
+- [ ] Perfil: "Tu semana" (Compartir mi semana) y los gráficos Fuerza,
+  Volumen, Frecuencia y Peso.
+- [ ] Rangos, Feed y el calendario siguen como antes.
 
 **Hábitos, Ejercicio, Finanzas (como antes)**
 - [ ] Marcar y desmarcar un hábito; crear uno con nota y ver la nota.

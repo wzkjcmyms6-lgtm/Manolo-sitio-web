@@ -24,7 +24,7 @@ sale de reglas y fórmulas documentadas (§ Fórmulas, con sus fuentes en
 | 5 | Volumen semanal, equilibrio y generador de rutinas | ✅ |
 | 6 | Recuperación, "¿Qué entreno hoy?" y carga total con Running | ✅ |
 | 7 | Resumen inteligente, Perfil y compartir | ✅ |
-| 8 | QA final | |
+| 8 | QA final | ✅ |
 
 ## Auditoría (fase 0)
 
@@ -126,7 +126,7 @@ Recuperación 🧍 listo / recuperándose / cansado
 Todo entra en "Descargar respaldo (JSON)". Los entrenos guardados no se
 reescriben; los Rangos no cambian de calibración.
 
-## Archivos (planeados)
+## Archivos
 
 | Archivo | Qué |
 |---|---|
@@ -311,6 +311,20 @@ reescriben; los Rangos no cambian de calibración.
   militar).
 - **Imagen para compartir**: 1080 × 1350 en el teléfono (canvas), con el
   menú de compartir (Web Share) o, si no se puede, se descarga.
+
+## QA final (fase 8, D-098)
+
+- Regresión completa de Manolo (todas las pruebas de pantalla de
+  `scripts/e2e/` y las unitarias) en verde; resultado en `docs/TESTING.md`.
+- **Pasos en español, lote 2** (`scripts/tecnica/pasos-2.mjs`): los 113
+  ejercicios que "Crear rutinas para mí" puede proponer (Gimnasio y Casa,
+  con "Cambiar") y no estaban en el lote 1. En total 227 de 592 tienen
+  pasos; el resto muestra demo, errores comunes y "Ver video" (los lotes
+  que faltan quedan anotados en `.claude/CURRENT_PHASE.md`).
+- El generador ya no propone ejercicios "tras nuca" (exigen mucha
+  movilidad de hombro); siguen en la base y en la ficha, con su aviso.
+- Lista para probar en el iPhone en `docs/TESTING.md` ("Ejercicio
+  inteligente").
 
 ## Fórmulas
 
