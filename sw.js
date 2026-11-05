@@ -63,6 +63,11 @@ async function precargar() {
   const pendientes = recursosDe(html, base);
   EXTRAS.forEach(r => pendientes.add(new URL(r, self.location.href).href));
   pendientes.delete(base);
+  // Lo que pide index.html (y EXTRAS) es obligatorio; lo que aparece dentro de
+  // un CSS o un JS (fuentes, imágenes, datos) no: si falta uno, la versión
+  // nueva igual se instala (antes, una imagen de Leaflet que no está en el
+  // repo frenaba todas las actualizaciones).
+  const obligatorios = new Set(pendientes);
   const hechos = new Set([base]);
   // Los CSS pueden traer fuentes y los JS, datos: se revisan también.
   while (pendientes.size) {
@@ -71,10 +76,12 @@ async function precargar() {
     await Promise.all(lote.map(async url => {
       if (hechos.has(url)) return;
       hechos.add(url);
-      const res = await fetch(url, { cache: "reload" });
-      if (!res.ok) throw new Error("No se pudo descargar " + url);
+      let res = null;
+      try { res = await fetch(url, { cache: "reload" }); } catch (err) { if (obligatorios.has(url)) throw err; return; }
+      if (!res.ok) { if (obligatorios.has(url)) throw new Error("No se pudo descargar " + url); return; }
       const ruta = new URL(url).pathname;
-      if (/\.css$/.test(ruta)) recursosDe(await res.clone().text(), url).forEach(u => pendientes.add(u));
+      // El CSS de librerías (vendor) no se revisa: trae imágenes que no se usan.
+      if (/\.css$/.test(ruta) && !/\/vendor\//.test(ruta)) recursosDe(await res.clone().text(), url).forEach(u => pendientes.add(u));
       else if (/\.js$/.test(ruta) && !/\/vendor\//.test(ruta)) datosDeJs(await res.clone().text()).forEach(u => pendientes.add(u));
       await cache.put(url, res);
     }));

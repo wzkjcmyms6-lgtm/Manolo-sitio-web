@@ -42,7 +42,7 @@ function archivosDeLaApp() {
     vistos.add(rel);
     const abs = path.join(RAIZ, rel);
     if (!fs.existsSync(abs) || fs.statSync(abs).isDirectory()) continue;
-    if (rel.endsWith(".css")) pendientes.push(...rutasDe(fs.readFileSync(abs, "utf8"), rel));
+    if (rel.endsWith(".css") && !rel.startsWith("vendor")) pendientes.push(...rutasDe(fs.readFileSync(abs, "utf8"), rel));
     else if (rel.endsWith(".js") && !rel.startsWith("vendor")) pendientes.push(...datosDeJs(fs.readFileSync(abs, "utf8")));
   }
   return [...vistos].filter(rel => fs.existsSync(path.join(RAIZ, rel)) && fs.statSync(path.join(RAIZ, rel)).isFile()).sort();
@@ -80,4 +80,21 @@ function escribir() {
 }
 
 if (require.main === module) escribir();
-module.exports = { huella, leerSw, archivosDeLaApp };
+// Lo que el service worker DEBE descargar (index.html y EXTRAS) y no está en
+// el repo: si hay algo aquí, la versión nueva no se instala en los teléfonos.
+// Las referencias dentro de CSS propios también se revisan (fuentes).
+function faltantes() {
+  const html = fs.readFileSync(path.join(RAIZ, "index.html"), "utf8");
+  const directos = [...rutasDe(html, "index.html"), ...EXTRAS];
+  const out = [];
+  directos.forEach(rel => {
+    const abs = path.join(RAIZ, rel);
+    if (!fs.existsSync(abs) || fs.statSync(abs).isDirectory()) { out.push(rel); return; }
+    if (rel.endsWith(".css") && !rel.startsWith("vendor")) {
+      rutasDe(fs.readFileSync(abs, "utf8"), rel).forEach(r => { if (!fs.existsSync(path.join(RAIZ, r))) out.push(`${r} (desde ${rel})`); });
+    }
+  });
+  return out;
+}
+
+module.exports = { huella, leerSw, archivosDeLaApp, faltantes };

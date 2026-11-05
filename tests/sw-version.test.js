@@ -2,7 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("fs");
 const path = require("path");
-const { huella, leerSw, archivosDeLaApp } = require("../scripts/version-sw.js");
+const { huella, leerSw, archivosDeLaApp, faltantes } = require("../scripts/version-sw.js");
 
 const RAIZ = path.join(__dirname, "..");
 
@@ -28,4 +28,11 @@ test("manifest con rutas relativas (el sitio vive en /Manolo-sitio-web/)", () =>
   [m.start_url, m.scope, m.id].concat(m.icons.map(i => i.src)).forEach(r => {
     assert.ok(r && !r.startsWith("/") && !/^https?:/.test(r), `ruta no relativa: ${r}`);
   });
+});
+
+test("el service worker puede descargar todo lo obligatorio (si falta algo, los teléfonos no se actualizan)", () => {
+  assert.deepEqual(faltantes(), []);
+  const sw = fs.readFileSync(path.join(RAIZ, "sw.js"), "utf8");
+  assert.match(sw, /obligatorios\.has\(url\)/, "lo que sale de un CSS o JS no debe frenar la instalación");
+  assert.match(sw, /!\/\\\/vendor\\\//, "el CSS de vendor (Leaflet) no se revisa");
 });

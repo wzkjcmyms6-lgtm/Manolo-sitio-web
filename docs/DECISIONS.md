@@ -717,3 +717,16 @@ se refrescan en ~12 ms al llegar datos nuevos, Progreso aparece en < 0,1 s
 y el detalle (con resumen y mismo recorrido) en < 0,15 s. Sin internet:
 listas, detalle (trazo propio en vez del mapa) y Progreso se ven con los
 datos del teléfono; Leaflet queda guardado por el service worker.
+
+**D-078 (2026-11-05) · Arreglo: los teléfonos no se actualizaban.** Desde la
+fase 2 (D-068) el service worker guardaba Leaflet (`EXTRAS`) y revisaba su
+CSS, que pide imágenes (`images/layers.png`, `marker-icon.png`) que no
+están en el repo: esa descarga fallaba y **toda la instalación de la
+versión nueva se cancelaba**, así que el iPhone del dueño siguió con la
+versión vieja (sin la barra nueva de Running). Arreglo: el CSS de `vendor/`
+no se revisa, y solo lo que pide `index.html` (y `EXTRAS`) es obligatorio;
+lo que aparece dentro de un CSS o JS ya no frena la instalación. Prueba
+nueva `tests/sw-version.test.js` (nada obligatorio falta) y E2E
+`scripts/e2e/sw-instala.js`, que instala y actualiza el service worker de
+verdad (las demás E2E lo bloquean, por eso no se vio). Con el `sw.js`
+publicado antes, esa prueba falla; con el arreglo, pasa.

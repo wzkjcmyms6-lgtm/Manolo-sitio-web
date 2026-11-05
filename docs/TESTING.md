@@ -79,6 +79,9 @@
     marcas, vueltas y resumen, crear un segmento, ver sin internet, eliminar,
     exportar todo y releer el ZIP) sin errores de página ni de consola, y
     rendimiento con 500 carreras (feed < 1,5 s, Progreso y detalle < 0,2 s).
+  - `sw-instala.js` — el service worker de verdad (las demás E2E lo
+    bloquean): se instala, guarda la app y Leaflet, y una versión nueva
+    muestra "Actualizar" y la activa (D-078).
   - `regresion.js` — las 15 pantallas en teléfono (390 px) y computadora
     (1280 px): se ven, sin errores y sin scroll de lado; acciones de siempre:
     marcar un hábito, anotar un gasto, registrar Running y Bici a mano,

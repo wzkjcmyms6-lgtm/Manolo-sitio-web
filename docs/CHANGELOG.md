@@ -1,5 +1,12 @@
 # Cambios
 
+## 2026-11-05 · Arreglo: la app no se actualizaba en el teléfono
+- La copia sin internet intentaba guardar imágenes de Leaflet que no
+  existen y eso cancelaba la actualización: el iPhone seguía con la versión
+  vieja. Ahora se instala y aparece "Nueva versión disponible · Actualizar".
+- Pruebas: una nueva en `sw-version.test.js` y la E2E `sw-instala.js`, que
+  instala y actualiza el service worker de verdad.
+
 ## 2026-11-04 · Running: QA final (fase 8)
 - Ajustes de Running › "Exportar todo (ZIP)": un GPX por carrera o rodada
   con ruta y un JSON con todo lo demás (copia de seguridad).
