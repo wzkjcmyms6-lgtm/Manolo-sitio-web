@@ -39,14 +39,14 @@ Actualizado: 2026-11-04 (empieza Running al nivel de Strava, D-060 a D-069).
   calor, compartir imagen y exportar todo. Sin GPS en vivo (D-033 sigue).
   D-060 a D-077, diseño en `docs/RUNNING.md`. Falta: validar con el export
   real del dueño y su OK para publicar en el Feed.
-- **Hábitos: categorías y siguiente nivel (2026-11-05, fases 0–8 hechas)**: plan
-  de 9 fases en `CURRENT_PHASE.md`, diseño en `docs/HABITOS.md`, D-079 en
-  adelante. Hechas: 0 (auditoría y diseño), 1 (categorías en
-  `meta/habitos_juego.categorias`, migración en lectura) 2 (Temporada 2:
-  dificultad nueva, D-080/D-081) 3 (gestión de categorías, D-082) 4 (Hoy por
-  categoría, D-083) 5 (página de categoría y estadísticas, D-084) 6 (se marca
-  solo con los demás módulos, D-085) y 7 (plantillas, hora y avisos,
-  D-086; push y Calendario investigados, esperan OK).
+- **Hábitos: categorías y siguiente nivel (2026-11-05, fases 0–8 hechas)**:
+  categorías completas en `meta/habitos_juego.categorias` (migración en
+  lectura), Temporada 2 (subir cuesta más), Hoy filtrado y agrupado,
+  página por categoría y Estadísticas por categoría, se marca solo con
+  Running, Bici, Movilidad, Libros, Biblia y Finanzas, plantillas, hora y
+  aviso de pendientes. D-079 a D-087, todo en `docs/HABITOS.md`. Falta del
+  dueño: elegir categorías extra, decidir push o Calendario
+  (`docs/NOTIFICATIONS.md`) y hacer la lista del iPhone (`docs/TESTING.md`).
 - **Tests (2026-11-05)**: 424 unitarias; E2E de Running: `run-importar`,
   `run-detalle`, `run-feed`, `run-progreso`, `run-inteligencia`,
   `run-segmentos`, `run-compartir`, `run-qa`; de Hábitos: `habitos` (195,
