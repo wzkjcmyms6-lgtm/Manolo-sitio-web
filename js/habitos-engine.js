@@ -537,12 +537,20 @@ function subiriaConSemanaPerfecta(rh) {
 }
 
 // ---------- Áreas de vida ----------
+// defs: las categorías (js/habitos-categorias.js), también las archivadas:
+// su historial sigue contando. Se copian emoji, color y archivada si vienen.
 function calcularAreas(res, defs) {
+  const lista = Object.keys(res.habitos).map(id => res.habitos[id]);
   return defs.map(a => {
-    const hs = Object.keys(res.habitos).map(id => res.habitos[id]).filter(rh => rh.habito.area === a.id);
+    const hs = lista.filter(rh => rh.habito.area === a.id);
     const xp = hs.reduce((s, rh) => s + rh.xp, 0);
-    return Object.assign({ id: a.id, nombre: a.nombre, habitos: hs.filter(rh => !rh.habito.archivado).length, xp }, { nivel: nivelDeXP(xp, CFG.AREA_NIVEL) });
+    return Object.assign(extraCategoria(a), { id: a.id, nombre: a.nombre, habitos: hs.filter(rh => !rh.habito.archivado).length, xp, nivel: nivelDeXP(xp, CFG.AREA_NIVEL) });
   });
+}
+function extraCategoria(a) {
+  const out = {};
+  ["emoji", "color", "archivada"].forEach(k => { if (a[k] != null) out[k] = a[k]; });
+  return out;
 }
 
 // ---------- Misiones semanales ----------
@@ -985,7 +993,7 @@ function areasPeriodo(res, desde, hasta, defs) {
         if (c === "cumple") { h++; e++; } else if (c === "fallo") e++;
       });
     });
-    return { id: a.id, nombre: a.nombre, hechos: h, esperados: e, pct: e ? h / e : null };
+    return Object.assign(extraCategoria(a), { id: a.id, nombre: a.nombre, hechos: h, esperados: e, pct: e ? h / e : null });
   });
 }
 
@@ -1255,7 +1263,7 @@ function planImportacion(datos, actual) {
   });
   const aj = a.juego || {}, dj = esObjeto(datos.juego) ? datos.juego : {};
   const juego = {};
-  ["recompensas", "compras", "misiones", "jefes"].forEach(k => {
+  ["recompensas", "compras", "misiones", "jefes", "categorias"].forEach(k => {
     if (!esObjeto(dj[k])) return;
     const falta = {};
     Object.keys(dj[k]).forEach(id => { if (idValido(id) && dj[k][id] != null && !(esObjeto(aj[k]) && aj[k][id] != null)) falta[id] = dj[k][id]; });

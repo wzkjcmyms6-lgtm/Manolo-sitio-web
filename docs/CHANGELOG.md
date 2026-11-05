@@ -1,5 +1,13 @@
 # Cambios
 
+## 2026-11-05 · Hábitos: categorías (fases 0 y 1)
+- Las áreas de vida ahora son categorías con emoji y color (las 6 de
+  siempre, con los nombres que les pusiste). Se ven en el formulario, en
+  Logros › Categorías y se renombran en Ajustes.
+- Motor nuevo `js/habitos-categorias.js` (crear, editar, ordenar, archivar,
+  asignar en lote, sugerir por nombre) con 9 pruebas; la copia de seguridad
+  también trae las categorías (importar solo agrega las que faltan).
+
 ## 2026-11-05 · Arreglo: la app no se actualizaba en el teléfono
 - La copia sin internet intentaba guardar imágenes de Leaflet que no
   existen y eso cancelaba la actualización: el iPhone seguía con la versión

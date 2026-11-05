@@ -39,6 +39,10 @@ Actualizado: 2026-11-04 (empieza Running al nivel de Strava, D-060 a D-069).
   calor, compartir imagen y exportar todo. Sin GPS en vivo (D-033 sigue).
   D-060 a D-077, diseño en `docs/RUNNING.md`. Falta: validar con el export
   real del dueño y su OK para publicar en el Feed.
+- **Hábitos: categorías y siguiente nivel (2026-11-05, en curso)**: plan
+  de 9 fases en `CURRENT_PHASE.md`, diseño en `docs/HABITOS.md`, D-079 en
+  adelante. Hechas: 0 (auditoría y diseño) y 1 (categorías en
+  `meta/habitos_juego.categorias`, migración en lectura).
 - **Tests (2026-11-04)**: 382 unitarias; E2E de Running: `run-importar`,
   `run-detalle`, `run-feed`, `run-progreso`, `run-inteligencia`,
   `run-segmentos`, `run-compartir`, `run-qa`, además de las de siempre.

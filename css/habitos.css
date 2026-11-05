@@ -403,7 +403,8 @@
 .hb-recompensa-form .hb-btn { grid-column: 1 / -1; margin-top: 0.7rem; }
 .hb-pausas li b { color: var(--ink); }
 
-.hb-area { padding: 0.85rem 0.95rem; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.5rem; }
+.hb-area { padding: 0.85rem 0.95rem; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--cat, var(--border)); display: flex; flex-direction: column; gap: 0.5rem; }
+.hb-area .hb-xp > span { background: var(--cat, var(--accent-grad)); }
 .hb-area-top { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; font-size: 0.8rem; color: var(--muted); }
 .hb-area-top b { color: var(--ink); font-size: 1rem; }
 .hb-area-top .hb-num { font-size: 1.4rem; color: var(--ink); }

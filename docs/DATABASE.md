@@ -20,6 +20,7 @@ por dueño).
 
 | Ruta | Fase | Campos | Notas |
 |---|---|---|---|
+| `users/{uid}/meta/habitos_juego.categorias` ✅ | 2026-11-05 | `{ id: { nombre, emoji, color (id de la paleta), orden, archivada, borrada, creada } }`; `habitos/{id}.area` guarda el id | Aditivo. Sin el campo, las 6 áreas se arman al leer desde `prefs.areas` (`js/habitos-categorias.js`, D-079) |
 | `users/{uid}/habitos/{id}.descripcion` ✅ | 1 | string ≤ 300, opcional | Aditivo; hábitos viejos sin campo = sin nota |
 | `users/{uid}/habitos/scalping` ✅ | 2026-10-21 | Hábito Medible (`meta: 2`, `unidad: "sesiones"`, `especial: "scalping"`) con `registros.{fecha}.v` = sesiones del día y el campo `scalping: { version, habitId, settings, logs, fotos }` ; `scalpingReinicio` (fecha del último reinicio al día 1) | Id fijo. Lo crea el dueño desde la sugerencia en Hoy. Formato del estado: `js/scalping-habit.js`; uso: `docs/SCALPING.md` |
 | `accesos/{uid}_{loginMs}` ✅ | 1 | `uid, usuario, tipo:"login", creado: serverTimestamp, leido:false` | Id determinista = **idempotente** (un login, un documento). Sin IP, dispositivo ni ubicación |

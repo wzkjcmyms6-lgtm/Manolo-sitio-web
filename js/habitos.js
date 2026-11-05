@@ -8,6 +8,7 @@
 
 const HE = HabitosEngine;
 const HC = HabitosConfig;
+const HCat = HabitosCategorias;
 
 // Emojis del formulario, por categorías (como en otras apps de hábitos).
 // Están todos los de antes; además se puede escribir cualquiera del teclado.
@@ -120,10 +121,13 @@ function compras() {
   return Object.keys(juego.compras || {}).map(id => Object.assign({ id }, juego.compras[id])).filter(c => c && c.t)
     .sort((a, b) => a.t - b.t);
 }
-// Áreas por defecto con los nombres que hayas elegido en Ajustes.
+// Categorías (antes "áreas de vida"), también las archivadas: su historial
+// sigue contando. Ver js/habitos-categorias.js.
 function areasDef() {
-  const nombres = (juego.prefs && juego.prefs.areas) || {};
-  return HC.AREAS.map(a => ({ id: a.id, nombre: String(nombres[a.id] || "").trim() || a.nombre }));
+  return HCat.leer(juego);
+}
+function categoriasActivas() {
+  return HCat.activas(areasDef());
 }
 function nombreArea(id) {
   const a = areasDef().find(x => x.id === id);
@@ -896,8 +900,8 @@ function hojaForm(id) {
       <span class="hb-label">Dificultad</span>
       ${chips("dificultad", Object.keys(HC.DIFICULTADES).map(k => [k, `${HC.DIFICULTADES[k].nombre} · ${HC.DIFICULTADES[k].xp} XP`]), f.dificultad)}
 
-      <span class="hb-label">Área de vida</span>
-      ${chips("area", areasDef().map(a => [a.id, a.nombre]).concat([["", "Sin área"]]), f.area || "")}
+      <span class="hb-label">Categoría</span>
+      ${chips("area", areasDef().filter(a => !a.archivada || a.id === f.area).map(a => [a.id, `${escapeHtml(a.emoji)} ${escapeHtml(a.nombre)}`]).concat([["", "Sin categoría"]]), f.area || "")}
 
       <label class="hb-campo"><span>Después de <span class="hb-opcional">(opcional)</span></span>
         <select name="despuesDe">${opcionesCadena(f)}</select>
@@ -1103,9 +1107,9 @@ function hojaAjustes() {
       <button type="button" class="hb-chip${conSonido() ? " is-on" : ""}" data-sonidos="1" aria-pressed="${conSonido()}">Encendidos</button>
     </div>
     <p class="hb-texto">Un toque suave al marcar y una melodía corta en los logros. Respetan el modo silencio del iPhone.</p>
-    <h4 class="hb-sub-t">Tus áreas de vida</h4>
-    <div class="hb-areas-nombres">${areasDef().map(a =>
-      `<label class="hb-campo"><span class="hb-sr">${escapeHtml(a.nombre)}</span><input type="text" maxlength="20" data-area-nombre="${a.id}" value="${escapeHtml(a.nombre)}" aria-label="Nombre del área ${escapeHtml(a.nombre)}"></label>`).join("")}</div>
+    <h4 class="hb-sub-t">Tus categorías</h4>
+    <div class="hb-areas-nombres">${categoriasActivas().map(a =>
+      `<label class="hb-campo"><span class="hb-sr">${escapeHtml(a.nombre)}</span><input type="text" maxlength="${HCat.NOMBRE_MAX}" data-area-nombre="${a.id}" value="${escapeHtml(a.nombre)}" aria-label="Nombre de la categoría ${escapeHtml(a.nombre)}"></label>`).join("")}</div>
     <h4 class="hb-sub-t">Archivados</h4>
     ${archivados.length ? `<ul class="hb-pausas">${archivados.map(h => `<li><span>${escapeHtml(h.emoji)} ${escapeHtml(h.name)}${h.archivadoEn ? ` · desde el ${fechaCorta(h.archivadoEn)}` : ""}</span>
       <span class="hb-chips"><button type="button" class="hb-btn-sec" data-restaurar="${h.id}">Restaurar</button>
@@ -1153,7 +1157,9 @@ function leerCopia(archivo) {
   archivo.text().then(texto => {
     let datos;
     try { datos = JSON.parse(texto); } catch (e) { toast("No se pudo leer el archivo. Elige la copia que exportaste desde Manolo."); return; }
-    const plan = HE.planImportacion(datos, { docs, juego, dias: diasMeta });
+    const cats = {};
+    areasDef().forEach(c => { cats[c.id] = c; });
+    const plan = HE.planImportacion(datos, { docs, juego: Object.assign({}, juego, { categorias: Object.assign(cats, juego.categorias) }), dias: diasMeta });
     if (!plan.valido) { toast(plan.error); return; }
     hojaImportar(plan);
   }).catch(() => toast("No se pudo abrir el archivo."));
@@ -1169,7 +1175,7 @@ function hojaImportar(plan) {
   if (r.actualizados) items.push(`Días que faltaban en ${plural(r.actualizados, "hábito que ya tienes", "hábitos que ya tienes")}`);
   if (r.registros) items.push(`${plural(r.registros, "registro", "registros")} en total`);
   if (r.dias) items.push(`Ánimo y notas de ${plural(r.dias, "día", "días")}`);
-  if (r.juego) items.push(`${plural(r.juego, "elemento", "elementos")} de misiones, jefes, recompensas y canjes`);
+  if (r.juego) items.push(`${plural(r.juego, "elemento", "elementos")} de misiones, jefes, recompensas, canjes y categorías`);
   abrirHoja(cabecera("", "Importar una copia", `${cuando}${plural(r.enArchivo, "hábito", "hábitos")} en el archivo`) + (plan.vacio
     ? `<p class="hb-texto">Ya tienes todo lo que trae esta copia. No hay nada que agregar.</p>
       <div class="hb-acciones"><button type="button" class="hb-btn" data-cerrar>Entendido</button></div>`
@@ -1206,6 +1212,14 @@ function aplicarImportacion() {
   toast(`Copia importada: ${plural(r.registros, "registro", "registros")}${r.nuevos ? ` y ${plural(r.nuevos, "hábito nuevo", "hábitos nuevos")}` : ""}.`);
 }
 
+// Categorías: cambios parciales { id: { campo: valor } } en meta/habitos_juego.
+function guardarCategorias(cambios) {
+  if (!Object.keys(cambios).length) return;
+  const todas = Object.assign({}, juego.categorias);
+  Object.keys(cambios).forEach(id => { todas[id] = Object.assign({}, todas[id], cambios[id]); });
+  juego = Object.assign({}, juego, { categorias: todas });
+  metaJuego().set({ categorias: cambios }, { merge: true }).catch(errorGuardar);
+}
 function guardarPref(campos) {
   juego = Object.assign({}, juego, { prefs: Object.assign({}, juego.prefs, campos) });
   metaJuego().set({ prefs: campos }, { merge: true }).catch(errorGuardar);
@@ -1310,7 +1324,7 @@ function renderLogros() {
   const el = document.getElementById("hb-logros");
   const n = res.nivel;
   const hechos = res.logros.filter(l => l.desbloqueado).length;
-  const tabs = [["misiones", "Misiones"], ["logros", "Logros"], ["tienda", "Tienda"], ["areas", "Áreas"]];
+  const tabs = [["misiones", "Misiones"], ["logros", "Logros"], ["tienda", "Tienda"], ["areas", "Categorías"]];
   el.innerHTML = `
     <div class="hb-resumen">
       <div class="hb-pj-nivel"><span class="hb-num">${n.nivel}</span><span><span class="hb-pj-t">Nivel</span><span class="hb-pj-titulo">${escapeHtml(n.titulo)}</span></span></div>
@@ -1443,9 +1457,9 @@ function tiendaHtml() {
 }
 
 function areasHtml() {
-  return `<p class="hb-texto">Cada hábito suma XP a su área. Cambia los nombres de las áreas en Ajustes.</p>
-    <ul class="hb-areas">${res.areas.map(a => `<li class="hb-area">
-      <div class="hb-area-top"><b>${escapeHtml(a.nombre)}</b><span><span class="hb-num">${a.nivel.nivel}</span> nivel</span></div>
+  return `<p class="hb-texto">Cada hábito suma XP a su categoría. Cámbialas en Ajustes.</p>
+    <ul class="hb-areas">${res.areas.filter(a => !a.archivada || a.xp > 0).map(a => `<li class="hb-area" style="--cat:${HCat.colorDe(a)}">
+      <div class="hb-area-top"><b><span aria-hidden="true">${escapeHtml(a.emoji || "")}</span> ${escapeHtml(a.nombre)}${a.archivada ? ` <span class="hb-opcional">(archivada)</span>` : ""}</b><span><span class="hb-num">${a.nivel.nivel}</span> nivel</span></div>
       ${barra(a.nivel.progreso, a.nombre)}
       <span class="hb-area-pie">${plural(a.habitos, "hábito", "hábitos")} · ${fmtNum(a.xp)} XP</span></li>`).join("")}</ul>`;
 }
@@ -1750,8 +1764,9 @@ function onCambioHoja(e) {
   }
   if (t.hasAttribute("data-nota-dia")) { guardarDiaMeta({ nota: t.value.trim().slice(0, 200) }); return; }
   if (t.dataset.areaNombre) {
-    const nombres = Object.assign({}, juego.prefs && juego.prefs.areas, { [t.dataset.areaNombre]: t.value.trim().slice(0, 20) });
-    guardarPref({ areas: nombres });
+    const r = HCat.editar(areasDef(), t.dataset.areaNombre, { nombre: t.value });
+    if (!r.ok) { toast(r.error); t.value = (areasDef().find(c => c.id === t.dataset.areaNombre) || {}).nombre || ""; return; }
+    guardarCategorias({ [t.dataset.areaNombre]: r.cambios });
     actualizar();
   }
 }
