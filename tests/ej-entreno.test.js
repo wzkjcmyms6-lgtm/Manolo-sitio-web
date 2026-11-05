@@ -59,6 +59,9 @@ test("porqué del objetivo en una línea", () => {
   assert.match(E.porque({ tipo: "nuevo" }, it), /Primera vez.*4 × 5-8 con 90 kg/);
   assert.deepStrictEqual(E.objetivoSeries(it, { tipo: "subir", kg: 110, reps: [5, 5, 5, 5] }), [{ kg: 110, meta: 5 }, { kg: 110, meta: 5 }, { kg: 110, meta: 5 }, { kg: 110, meta: 5 }]);
   assert.deepStrictEqual(E.objetivoSeries({ series: 2, repsMin: 8, peso: null }, { tipo: "nuevo" }), [{ kg: "", meta: 8 }, { kg: "", meta: 8 }]);
+  // Descarga: las series de la sugerencia (menos que las de la rutina).
+  assert.deepStrictEqual(E.objetivoSeries(it, { tipo: "descarga", kg: 92.5, reps: [5, 5] }), [{ kg: 92.5, meta: 5 }, { kg: 92.5, meta: 5 }]);
+  assert.strictEqual(E.porque({ tipo: "descarga", kg: 92.5, reps: [5, 5] }, it), "Semana de descarga: 2 × 5 con 92,5 kg · menos series y algo menos de peso");
 });
 
 test("calentamiento: ~40/60/80 % redondeado a tu equipo", () => {

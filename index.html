@@ -25,7 +25,7 @@
   <link rel="stylesheet" href="css/movilidad.css?v=202610300100">
   <link rel="stylesheet" href="css/tiempos.css?v=202610300310">
   <link rel="stylesheet" href="css/ej-calendario.css?v=202610290900">
-  <link rel="stylesheet" href="css/ejercicio.css?v=202611051700">
+  <link rel="stylesheet" href="css/ejercicio.css?v=202611051900">
   <link rel="stylesheet" href="css/run.css?v=202611040900">
 </head>
 <body>
@@ -225,6 +225,7 @@
           <!-- ===== Ejercicio (hub) ===== -->
           <section id="panel-ejercicio" hidden>
             <div class="rut-hoy ej-hoy" id="ej-hoy" hidden></div>
+            <div class="ej-coach" id="ej-coach" hidden></div>
             <a class="gym-en-curso" href="#gimnasio" data-gym-en-curso hidden><span class="gym-en-curso-punto" aria-hidden="true"></span><span>Entrenamiento en curso: <strong data-gym-en-curso-nombre></strong></span><span class="gym-en-curso-ir">Continuar</span></a>
             <div class="card-grid card-grid-1">
               <a class="card card-centered" href="#gimnasio">
@@ -294,6 +295,7 @@
             <details class="ejp-ajustes">
               <summary>Ajustes y datos <small>Tu cuerpo, pesajes, mapa muscular y respaldo</small></summary>
             <div class="ej-ajustes pf-perfil">
+              <button type="button" class="ejg-abrir" data-ajustes-gym><span class="icon-sm" data-icon="gear"></span>Ajustes del gimnasio <small>Equipo (barra, discos, mancuernas), meta y nivel</small></button>
               <h2>Tu cuerpo</h2>
               <p class="ej-texto">Tus rangos se ajustan a tu peso: para cada entreno se usa tu último pesaje de ese día o anterior. La altura se guarda, pero no cambia el cálculo.</p>
               <form id="pf-altura-form" class="pf-fila" novalidate>
@@ -352,6 +354,7 @@
               </button>
 
               <div class="rut-hoy" id="rut-hoy" hidden></div>
+              <div class="ej-coach" id="gym-coach" hidden></div>
 
               <div class="gym-section-header">
                 <h2>Rutinas</h2>
@@ -366,6 +369,7 @@
 
               <section class="rut-plan" id="rut-plan" aria-labelledby="rut-plan-t"></section>
 
+              <button type="button" class="ejg-abrir" data-ajustes-gym><span class="icon-sm" data-icon="gear"></span>Ajustes del gimnasio <small>Equipo, meta y nivel</small></button>
             </div>
 
             <div id="gym-active" hidden>
@@ -1394,16 +1398,19 @@
   <script defer src="js/ej-anual.js?v=202610290900"></script>
   <script defer src="js/exercise-picker.js?v=202611051500"></script>
   <script defer src="js/rutinas.js?v=202611051700"></script>
-  <script defer src="js/progresion.js?v=202610020400"></script>
+  <script defer src="js/progresion.js?v=202611051900"></script>
   <script defer src="js/entreno-series.js?v=202611051700"></script>
   <script defer src="js/ej-equipo.js?v=202611051700"></script>
   <script defer src="js/ej-historial.js?v=202611051700"></script>
-  <script defer src="js/ej-entreno.js?v=202611051700"></script>
-  <script defer src="js/gimnasio.js?v=202611051700"></script>
+  <script defer src="js/ej-entreno.js?v=202611052000"></script>
+  <script defer src="js/ej-programa.js?v=202611051900"></script>
+  <script defer src="js/gimnasio.js?v=202611051900"></script>
   <script defer src="js/rutinas-ui.js?v=202611051700"></script>
   <script defer src="js/ej-entreno-ui.js?v=202611051700"></script>
+  <script defer src="js/ej-coach.js?v=202611051900"></script>
+  <script defer src="js/ej-ajustes-gym.js?v=202611051900"></script>
   <script defer src="js/ej-demos.js?v=202611051300"></script>
-  <script defer src="js/ej-ficha.js?v=202611051700"></script>
+  <script defer src="js/ej-ficha.js?v=202611051900"></script>
   <script defer src="js/ej-sesiones.js?v=202610030200"></script>
   <script defer src="js/ej-vistas.js?v=202611051500"></script>
   <script defer src="js/ej-social.js?v=202610020200"></script>

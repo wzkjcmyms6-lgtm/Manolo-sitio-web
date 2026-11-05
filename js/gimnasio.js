@@ -208,12 +208,34 @@ function sugerenciaPara(it, ficha, tipo) {
   const id = it.exerciseId || (ficha && ficha.id);
   const mismo = e => (id && e.exerciseId === id) || ExerciseSearch.clave(e.name || "") === clave;
   const historial = historyCache.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.startedAt || 0) - (a.startedAt || 0));
+  // v2 (D-094): el peso se ajusta a tu equipo y, en semana de descarga,
+  // menos series y algo menos de peso.
+  const perfil = perfilEquipo();
+  const st = EjercicioDatos.estado;
+  const descarga = !!EjPrograma.descargaActiva((st.ajustes && st.ajustes.descargas) || {}, isoHoy());
+  const op = { ficha, tipo, descarga };
+  if (ficha && tipo === "carga") {
+    op.micro = EjEquipo.microcarga(ficha, perfil);
+    op.redondear = (kg, hacia) => EjEquipo.redondear(kg, ficha, perfil, hacia);
+  }
   try {
-    return EjProgresion.sugerir(it, historial, mismo, { ficha, tipo });
+    return EjProgresion.sugerir(it, historial, mismo, op);
   } catch (e) {
     console.error("Manolo: no se pudo calcular la sugerencia", e);
     return null;
   }
+}
+
+// ¿Está estancado este ejercicio? → { texto, sugerencias } o null (D-094).
+function estancamientoDe(ficha, it) {
+  if (!ficha || ficha.tipo !== "carga") return null;
+  const mismo = e => { const r = EjercicioDatos.resolver(e.name, e.exerciseId); return !!r && r.id === ficha.id; };
+  const e = EjPrograma.estancamiento(EjHistorial.sesiones(historyCache, mismo, { tipo: "carga" }), isoHoy());
+  if (!e) return null;
+  const base = EjercicioDatos.estado.base || [];
+  const destacados = new Set(base.slice(0, EjercicioDatos.estado.destacados || 0).map(x => x.id));
+  const alt = EjHistorial.alternativas(ficha, base, { destacados, equipos: EjEquipo.disponibles(perfilEquipo()), limite: 1 })[0];
+  return { texto: EjPrograma.textoEstancamiento(e), sugerencias: EjPrograma.sugerenciasEstancamiento(it, alt ? alt.nombre : "") };
 }
 
 // Empieza una rutina: cada ejercicio con sus series listas y su objetivo
@@ -241,6 +263,7 @@ function empezarRutina(r) {
       ex.sugerencia = g;
       if (g && g.tipo !== "nuevo") g.aplicada = true;
       ex.porque = EjEntreno.porque(g, it);
+      ex.estanca = estancamientoDe(ficha, it);
       return ex;
     })
   };
@@ -412,6 +435,8 @@ function objetivoHTML(ex) {
   const o = ex.objetivo;
   const partes = [];
   if (ex.porque) partes.push(`<p class="gx-porque">${escapeHtml(ex.porque)}</p>`);
+  if (ex.estanca) partes.push(`<details class="gx-estanca"><summary>Estancado: ${escapeHtml(ex.estanca.texto)}</summary>
+    <ul>${ex.estanca.sugerencias.map(t => `<li>${escapeHtml(t)}</li>`).join("")}</ul></details>`);
   else if (o) partes.push(`<p class="ex-objetivo"><span>Objetivo:</span> ${escapeHtml(EjRutinas.resumenItem(o))}</p>`);
   if (o && o.notas) partes.push(`<p class="ex-objetivo-nota">${escapeHtml(o.notas)}</p>`);
   partes.push(`<div class="gx-ayudas">${ayudasHTML(ex)}</div>`);

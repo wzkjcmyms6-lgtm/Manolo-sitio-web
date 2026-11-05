@@ -965,3 +965,25 @@ Entrenamiento (2 toques para empezar) y "✓ Hecho" si ya la hiciste.
 (`js/ej-equipo.js`, por defecto 20 kg y discos de 25 a 1,25); su
 pantalla de ajustes llega en la fase 4. `js/gimnasio.js` creció a ~53 KB
 por la integración; la lógica nueva está en módulos aparte.
+
+**D-094 (2026-11-05) · Progresión v2, estancamiento, descarga y equipo.**
+(1) La progresión sigue siendo doble progresión (la de siempre, mismas
+pruebas) y suma, solo si hay datos: el peso redondeado a tu equipo y una
+subida de al menos la microcarga posible, el RIR (con reps de sobra sube
+más) y la tendencia del 1RM estimado. (2) Estancamiento por ejercicio con
+una regla propia y simple (3 sesiones o 4 semanas sin superar el mejor
+1RM estimado); se sugiere cambiar el rango de reps, una variante con tu
+equipo (alternativas de la ficha) o una descarga. (3) La descarga se
+sugiere solo cuando coinciden 2 o más señales (rendimiento que cae en 2+
+ejercicios, esfuerzo que sube, 6+ semanas seguidas sin descarga) y se
+aplica con un toque: ~40 % menos series y ~10 % menos peso durante 7
+días. Va en la línea del consenso Delphi sobre descargas en deportes de
+fuerza (Bell et al., 2023, *Sports Med Open* 9:87: bajar sobre todo el
+volumen y algo la intensidad, ~1 semana, cada 4–8 semanas o por señales
+de fatiga). Se guarda en `meta/ajustes_ejercicio.descargas`
+(`{ desde: hasta }`); "Terminar" la acorta a ayer (o la borra si empezó
+hoy); "Ahora no" se recuerda 7 días en el teléfono. (4) Ajustes del
+gimnasio: perfiles de equipo, meta (fuerza, músculo, general) y nivel en
+`meta/ajustes_ejercicio` (`equipo`, `meta`, `nivel`), con `merge` para no
+tocar el peso corporal ni las constantes del mapa. Los perfiles borrados
+se quitan con `FieldValue.delete()`.

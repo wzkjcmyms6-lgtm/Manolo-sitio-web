@@ -20,7 +20,7 @@ sale de reglas y fórmulas documentadas (§ Fórmulas, con sus fuentes en
 | 1 | Demos (WebP en el repo, caché con límite, precarga de rutinas) | ✅ |
 | 2 | Ficha del ejercicio (técnica, videos, historial, récords, alternativas) | ✅ |
 | 3 | Entreno en vivo (objetivo, RIR, calentamiento, discos, superseries, descanso con aviso, récords, resumen) | ✅ |
-| 4 | Progresión v2, estancamiento, descarga + Ajustes del gimnasio | |
+| 4 | Progresión v2, estancamiento, descarga + Ajustes del gimnasio | ✅ |
 | 5 | Volumen semanal, equilibrio y generador de rutinas | |
 | 6 | Recuperación, "¿Qué entreno hoy?" y carga total con Running | |
 | 7 | Resumen inteligente, Perfil y compartir | |
@@ -223,6 +223,27 @@ reescriben; los Rangos no cambian de calibración.
 - Archivos: `js/ej-entreno.js` y `js/ej-equipo.js` (UMD, con pruebas),
   `js/ej-entreno-ui.js` (resumen) y cambios en `js/gimnasio.js`.
 
+## Progresión v2, estancamiento, descarga y Ajustes (fase 4, D-094)
+
+- **Progresión v2** (`js/progresion.js`, compatible con la anterior):
+  doble progresión de siempre + el peso ajustado a tu equipo (la subida es
+  al menos la microcarga posible) + RIR (si te sobraban reps, sube el
+  doble o suma 2 reps) + la tendencia del 1RM estimado de las últimas 6
+  sesiones + semana de descarga.
+- **Estancamiento** (`js/ej-programa.js`): en el entreno, debajo del
+  porqué, "Estancado: sin mejorar en 5 semanas (tu mejor 1RM estimado:
+  91,8 kg)" con qué hacer (otro rango de reps, una variante con tu equipo
+  o una descarga). También en la ficha (Historial).
+- **Descarga**: tarjeta arriba de Entrenamiento y de Gimnasio cuando
+  coinciden 2 o más señales, con el porqué; "Aplicar descarga" (7 días
+  desde hoy), "Ahora no" (7 días sin preguntar, en el teléfono). Durante
+  la descarga las rutinas vienen con ~40 % menos series y ~10 % menos peso
+  y la tarjeta dice "Semana de descarga · hasta el …" con "Terminar".
+- **Ajustes del gimnasio** (`js/ej-ajustes-gym.js`, en Gimnasio y en
+  Perfil › Ajustes y datos): perfiles (Gimnasio, Casa, + Nuevo), qué
+  equipo tienes, barra, discos, mancuernas, pasos de máquinas y poleas;
+  tu meta (fuerza, músculo o general) y tu nivel.
+
 ## Fórmulas
 
 - **1RM estimado (Epley)**: kg × (1 + reps / 30); 1 rep = el peso; reps
@@ -254,5 +275,25 @@ reescriben; los Rangos no cambian de calibración.
   con al menos esas reps (hasta 12). Sin historial no hay récords.
 - **Carga de la sesión** (session RPE, Foster et al., 2001): RPE × minutos ×
   100 / 480, la misma escala que Running (1 hora a RPE 8 = 100; D-065).
+
+- **Progresión v2**: al tope del rango en todas las series → +2,5 kg
+  (tren superior) o +5 kg (inferior), redondeado a tu equipo y nunca
+  menos que la microcarga (2 × el disco más chico, el paso de mancuernas o
+  de la máquina); con RIR medio ≥ 3, el doble. Sin llegar al tope → mismo
+  peso y +1 rep por serie (+2 con RIR ≥ 2). Dos veces seguidas bajo el
+  mínimo → −10 %. El RIR medio cuenta si se anotó en al menos la mitad de
+  las series. Tendencia: pendiente de mínimos cuadrados del mejor 1RM
+  estimado de cada sesión (kg por semana).
+- **Estancamiento**: con 4+ sesiones, si el mejor 1RM estimado no se
+  superó (por más de 0,5 %) en las 3 sesiones siguientes, o en 4 semanas
+  con al menos 2 sesiones.
+- **Señales de descarga** (se sugiere con 2+; nunca dentro de las 4
+  semanas siguientes a otra): (1) en 2+ ejercicios la última sesión de las
+  últimas 5 semanas quedó ≥ 3 % bajo el promedio de las 2 anteriores; (2)
+  RPE medio de las últimas 2 semanas ≥ 1 punto sobre las 2 anteriores (con
+  3+ datos en cada una) o RIR medio ≤ 0,5; (3) 6+ semanas seguidas con 2
+  o más entrenos desde la última descarga.
+- **Semana de descarga**: series × 0,6 (redondeado, mínimo 1) y peso × 0,9
+  redondeado hacia abajo a tu equipo; 7 días.
 
 Las siguientes se completan en cada fase (fuentes en `DECISIONS.md`).

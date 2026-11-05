@@ -29,14 +29,17 @@ function porque(g, item) {
   if (!g || g.tipo === "nuevo") return it.series ? `Primera vez: empieza con el objetivo de la rutina (${it.series} × ${rango}${it.peso != null ? ` con ${kgTxt(it.peso)}` : ""}).` : "";
   const hoy = g.kg > 0 ? `Hoy ${repsTxt(g.reps)} con ${kgTxt(g.kg)}` : `Hoy ${repsTxt(g.reps)} reps`;
   const antes = `la última vez ${repsTxt(g.repsAnteriores)}${g.kgAnterior > 0 ? ` con ${kgTxt(g.kgAnterior)}` : ""}`;
-  if (g.tipo === "subir") return `${hoy} · ${antes} → sube ${kgTxt(g.kg - g.kgAnterior)}`;
+  const nota = g.nota ? ` (${g.nota})` : "";
+  if (g.tipo === "descarga") return `Semana de descarga: ${repsTxt(g.reps)}${g.kg > 0 ? ` con ${kgTxt(g.kg)}` : " reps"} · menos series y algo menos de peso`;
+  if (g.tipo === "subir") return `${hoy} · ${antes} → sube ${kgTxt(g.kg - g.kgAnterior)}${nota}`;
   if (g.tipo === "bajar") return `${hoy} · las 2 últimas veces quedaste bajo ${it.repsMin} reps → baja ${kgTxt(g.kgAnterior - g.kg)}`;
-  return `${hoy} · ${antes} → +1 rep`;
+  return `${hoy} · ${antes} → +${g.masReps || 1} rep${nota}`;
 }
 
 // Series precargadas con el objetivo: [{ kg, meta }] (meta = reps objetivo).
 function objetivoSeries(item, g) {
-  const n = Math.max(1, num(item.series) || 1);
+  // En semana de descarga, menos series (las que trae la sugerencia).
+  const n = g && g.tipo === "descarga" && g.reps && g.reps.length ? g.reps.length : Math.max(1, num(item.series) || 1);
   const out = [];
   for (let i = 0; i < n; i++) {
     if (g && g.tipo !== "nuevo") out.push({ kg: g.kg > 0 ? g.kg : (item.peso != null ? item.peso : ""), meta: g.reps[Math.min(i, g.reps.length - 1)] });

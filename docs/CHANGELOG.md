@@ -1,5 +1,17 @@
 # Cambios
 
+## 2026-11-05 · Ejercicio: progresión v2, estancamiento, descarga y Ajustes (fase 4)
+- La progresión ajusta el peso a tu equipo (discos, mancuernas, máquinas)
+  y usa tu RIR: si te sobraban reps, sube más.
+- Si un ejercicio no mejora en 3 sesiones o 4 semanas, el entreno avisa
+  "Estancado" y propone otro rango de reps, una variante o una descarga.
+- Si coinciden señales de cansancio, sugiere una semana de descarga y la
+  aplica con un toque (menos series y algo menos de peso).
+- Ajustes del gimnasio: perfiles de equipo (Gimnasio, Casa), barra,
+  discos, mancuernas, máquinas y poleas; tu meta y tu nivel.
+- Pruebas: `tests/ej-programa.test.js` (7) y el E2E `ejercicio.js` con
+  estancamiento, descarga y Ajustes.
+
 ## 2026-11-05 · Ejercicio: entreno en vivo más inteligente (fase 3)
 - "Hoy toca" arriba de la pestaña Entrenamiento: empezar la rutina del
   día cuesta 2 toques; si ya la hiciste, dice "✓ Hecho".

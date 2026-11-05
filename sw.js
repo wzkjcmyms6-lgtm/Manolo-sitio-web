@@ -20,8 +20,8 @@
 //
 // IMPORTANTE: cada entrega que cambie la app debe subir VERSION y HUELLA con
 // `npm run sw` (el test tests/sw-version.test.js falla si alguien lo olvida).
-const VERSION = "2026-11-05.17";
-const HUELLA = "4fd0cf9edbaf";
+const VERSION = "2026-11-05.19";
+const HUELLA = "36e8cf4c4d1e";
 const PREFIJO = "manolo-app-";
 const CACHE = PREFIJO + VERSION;
 const DATOS = "manolo-datos"; // copias de respaldo de datos que cambian solos (tipo de cambio, precios)

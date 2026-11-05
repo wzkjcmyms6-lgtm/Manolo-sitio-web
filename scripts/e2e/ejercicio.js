@@ -335,6 +335,84 @@ async function entrenoVivo(browser, base, ancho) {
   await p.context().close();
 }
 
+// ---------- Fase 4: progresión v2, estancamiento, descarga y Ajustes ----------
+async function programacion(browser, base, ancho) {
+  console.log(`\nProgresión, estancamiento, descarga y Ajustes (${ancho} px)`);
+  const alto = ancho > 800 ? 900 : 844;
+  const ej = i => `#gym-active-exercises .gx-ej[data-ex-index="${i}"]`;
+  let p = await abrir(browser, base, SEM.estado(HOY), { hash: "#ejercicio", zona: ZONA, fecha: FECHA, ancho, alto });
+  consolaLimpia(p);
+  await p.waitForTimeout(1200);
+  await sinAvisos(p);
+  ok(!(await p.isVisible("#ej-coach")), "con entrenos normales no sugiere descarga");
+  // Empuje: la banca está estancada.
+  await ir(p, "gimnasio");
+  await p.click('#gym-routines [data-rut-empezar="empuje"]');
+  await p.waitForTimeout(900);
+  ok(/^Estancado: Sin mejorar en \d+ semanas \(tu mejor 1RM estimado: 91,8 kg\)\.$/.test(await texto(p, `${ej(0)} .gx-estanca summary`)), `banca: «${await texto(p, `${ej(0)} .gx-estanca summary`)}»`);
+  await p.click(`${ej(0)} .gx-estanca summary`);
+  const sug = await texto(p, `${ej(0)} .gx-estanca ul`);
+  ok(/rango de reps a 10–12/.test(sug) && /Prueba una variante: /.test(sug) && /descarga/.test(sug), "con qué hacer: otro rango, una variante o una descarga");
+  ok(!(await p.$(`${ej(2)} .gx-estanca`)), "el press militar, que sigue subiendo, no");
+  const kgMancuerna = await p.$$eval(`${ej(1)} .set-kg`, els => els.map(e => Number(e.value)));
+  ok(kgMancuerna.every(k => k > 0 && k % 2 === 0), `press inclinado con mancuernas: pesos que existen (${kgMancuerna.join(", ")} kg)`);
+  await foto(p, `estancado-${ancho}.png`);
+  await p.click("#gym-active-discard");
+  await p.waitForTimeout(400);
+
+  // Ajustes del gimnasio.
+  await p.click("#gym-home [data-ajustes-gym]");
+  await p.waitForTimeout(400);
+  ok(await p.isVisible(".ejg-hoja .muscle-sheet-panel") && /Gimnasio/.test(await texto(p, ".ejg-hoja .ejg-chips")), "Ajustes del gimnasio: perfiles Gimnasio y Casa");
+  await p.fill('.ejg-hoja [data-ejg="barra"]', "15");
+  await p.click('.ejg-hoja [data-ejg-disco="1.25"]');
+  await p.click('.ejg-hoja [data-ejg-meta="fuerza"]');
+  await p.click('.ejg-hoja [data-ejg-nivel="avanzado"]');
+  await foto(p, `ajustes-gym-${ancho}.png`);
+  await p.click(".ejg-hoja [data-ejg-guardar]");
+  await p.waitForTimeout(400);
+  const aj = await p.evaluate(() => EjercicioDatos.meta("ajustes_ejercicio").get().then(d => d.data()));
+  ok(aj.equipo && aj.equipo.perfiles.gimnasio.barra === 15 && !aj.equipo.perfiles.gimnasio.discos.includes(1.25) && aj.meta === "fuerza" && aj.nivel === "avanzado", "se guardan equipo, meta y nivel");
+  ok(aj.pesoCorporal === 82.5, "sin tocar lo que ya había (peso corporal)");
+  await p.click('#rut-hoy [data-rut-empezar]');
+  await p.waitForTimeout(900);
+  ok(/Por lado \(110 kg\):\s*25 \+ 20 \+ 2,5/.test(await texto(p, `${ej(0)} .gx-discos`)), "los discos usan tu barra de 15 kg y tus discos");
+  await p.click("#gym-active-discard");
+  await p.waitForTimeout(300);
+  ok(!p.errores.length && !p.erroresConsola.length, `sin errores (${p.erroresConsola.join(" | ")})`);
+  await p.context().close();
+
+  // Cansado: sugiere la descarga y se aplica con un toque.
+  p = await abrir(browser, base, SEM.estado(HOY, { cansado: true }), { hash: "#ejercicio", zona: ZONA, fecha: FECHA, ancho, alto });
+  consolaLimpia(p);
+  await p.waitForTimeout(1200);
+  await sinAvisos(p);
+  const coach = await texto(p, "#ej-coach");
+  ok(/Te conviene una semana de descarga/.test(coach) && /Tu fuerza bajó en/.test(coach) && /Tu esfuerzo subió/.test(coach) && /semanas seguidas/.test(coach), "con señales de cansancio sugiere una descarga y dice por qué");
+  await foto(p, `descarga-sugerida-${ancho}.png`);
+  await p.click('#ej-coach [data-ejc="aplicar-descarga"]');
+  await p.waitForTimeout(400);
+  ok(/Semana de descarga\s*Hasta el mié 11 nov/.test(await texto(p, "#ej-coach")), "«Aplicar descarga»: una semana, hasta el mié 11");
+  const d1 = await p.evaluate(() => EjercicioDatos.meta("ajustes_ejercicio").get().then(d => d.data().descargas));
+  ok(d1 && d1["2026-11-05"] === "2026-11-11", "queda guardada");
+  await p.click("#ej-hoy [data-rut-empezar]");
+  await p.waitForTimeout(900);
+  ok((await texto(p, `${ej(0)} .gx-porque`)) === "Semana de descarga: 2 × 5 con 92,5 kg · menos series y algo menos de peso", `en el entreno: ${await texto(p, `${ej(0)} .gx-porque`)}`);
+  ok((await p.$$(`${ej(0)} .gx-fila`)).length === 2, "con menos series (4 → 2)");
+  await p.click("#gym-active-discard");
+  await p.waitForTimeout(300);
+  await ir(p, "ejercicio");
+  await p.click('#ej-coach [data-ejc="terminar-descarga"]');
+  await p.waitForTimeout(400);
+  const d2 = await p.evaluate(() => EjercicioDatos.meta("ajustes_ejercicio").get().then(d => d.data().descargas || {}));
+  ok(!d2["2026-11-05"] && /Te conviene/.test(await texto(p, "#ej-coach")), "«Terminar» la quita (y vuelve la sugerencia)");
+  await p.click('#ej-coach [data-ejc="ahora-no"]');
+  await p.waitForTimeout(300);
+  ok(!(await p.isVisible("#ej-coach")), "«Ahora no» la calla");
+  ok(!p.errores.length && !p.erroresConsola.length, `sin errores (${p.erroresConsola.join(" | ")})`);
+  await p.context().close();
+}
+
 // ---------- Fase 1: caché de las demos en el service worker ----------
 // Contexto aparte con service workers permitidos (las demás pruebas los bloquean).
 async function cacheDemos(browser) {
@@ -411,6 +489,7 @@ async function cacheDemos(browser) {
     if (!solo || solo === "demos") await demos(browser, base, ancho);
     if (!solo || solo === "ficha") await fichaCompleta(browser, base, ancho);
     if (!solo || solo === "entreno") await entrenoVivo(browser, base, ancho);
+    if (!solo || solo === "programa") await programacion(browser, base, ancho);
   }
   if (!solo || solo === "demos") await cacheDemos(browser);
   await terminar(browser, srv);

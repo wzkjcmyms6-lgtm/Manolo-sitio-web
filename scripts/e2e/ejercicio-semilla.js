@@ -4,7 +4,8 @@
 // carreras (una larga ayer). Todo determinista.
 //
 // estado(hoy, opciones) → { __SEED__ } para comun.abrir(); hoy = "AAAA-MM-DD".
-// opciones: { semanas (9), sinCarreraAyer, sinEntrenos, sinRutinas }.
+// opciones: { semanas (9), sinCarreraAyer, sinEntrenos, sinRutinas,
+//   cansado (las 2 últimas semanas: menos fuerza en 2 ejercicios y más esfuerzo) }.
 
 const R = (nombre, exerciseId, series, repsMin, repsMax, descansoSeg, peso) =>
   ({ nombre, exerciseId, series, repsMin, repsMax, peso: peso == null ? null : peso, descansoSeg, notas: "", incremento: null });
@@ -53,7 +54,7 @@ function pesoSemana(id, s, base) {
   return base + sube[0] * pasos;
 }
 
-function entreno(fecha, clave, s, n) {
+function entreno(fecha, clave, s, n, cansado) {
   const r = RUTINAS[clave];
   const inicio = Date.parse(`${fecha}T19:00:00-04:00`);
   const exercises = r.items.map((it, k) => {
@@ -68,13 +69,15 @@ function entreno(fecha, clave, s, n) {
       // Reps: arriba del rango la semana impar (justo antes de subir), abajo al subir.
       const estancada = it.exerciseId === "barbell-bench-press-medium-grip" && s >= 5;
       const reps = estancada ? [6, 6, 5, 5][i] || 5 : (s % 2 ? it.repsMax : it.repsMin) - (i === it.series - 1 && (n + i) % 3 === 0 ? 1 : 0);
-      sets.push({ kg, reps: Math.max(1, reps) });
+      sets.push({ kg, reps: Math.max(1, reps - (cansado === 2 && k < 2 ? 3 : 0)) });
     }
     const ex = { name: it.nombre, exerciseId: it.exerciseId, sets };
-    if (k < 2) ex.rpe = 7 + ((s + k) % 3);
+    if (k < 2) ex.rpe = cansado ? 9 + (k % 2) : 7 + ((s + k) % 3);
     return ex;
   });
-  return { date: fecha, name: r.name, startedAt: inicio, durationMin: 52 + ((s * 7 + n) % 15), exercises, prs: 0, rutinaId: clave };
+  const w = { date: fecha, name: r.name, startedAt: inicio, durationMin: 52 + ((s * 7 + n) % 15), exercises, prs: 0, rutinaId: clave };
+  if (cansado) w.rpeSesion = 9;
+  return w;
 }
 
 function estado(hoy, opciones) {
@@ -92,7 +95,9 @@ function estado(hoy, opciones) {
         if (d === 5 && s % 2) return;
         const f = addDias(lun, d);
         if (f >= hoy) return;           // hoy todavía no entrenó
-        entrenos[`w${String(++n).padStart(3, "0")}`] = entreno(f, clave, s, n);
+        // Cansado: la semana pasada con más esfuerzo; esta, además, con menos fuerza.
+        const cansado = o.cansado && s >= o.semanas - 2 ? (s === o.semanas - 1 ? 2 : 1) : 0;
+        entrenos[`w${String(++n).padStart(3, "0")}`] = entreno(f, clave, s, n, cansado);
       });
     }
     // Un entreno libre sin rutina, con un ejercicio sin reconocer.

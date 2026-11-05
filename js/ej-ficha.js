@@ -174,7 +174,10 @@ function seccionHistorial(f, lista) {
   }
   kpis.push(["Sesiones", String(r.sesiones), ""]);
   const ultimas = lista.slice(-6).reverse();
-  return `<div class="ejf-kpis">${kpis.slice(0, 4).map(([t, v, s]) => `<div class="ejf-kpi"><span>${esc(t)}</span><b>${esc(v)}</b>${s ? `<small>${esc(s)}</small>` : ""}</div>`).join("")}</div>
+  const est = f.tipo === "carga" && window.EjPrograma ? EjPrograma.estancamiento(lista, hoyIso()) : null;
+  const estHtml = est ? `<div class="ejf-estanca"><b>Estancado</b><span>${esc(EjPrograma.textoEstancamiento(est))}</span>
+      <ul>${EjPrograma.sugerenciasEstancamiento(null, (H.alternativas(f, EjercicioDatos.estado.base || [], { patronDe, limite: 1 })[0] || {}).nombre || "").map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>` : "";
+  return `${estHtml}<div class="ejf-kpis">${kpis.slice(0, 4).map(([t, v, s]) => `<div class="ejf-kpi"><span>${esc(t)}</span><b>${esc(v)}</b>${s ? `<small>${esc(s)}</small>` : ""}</div>`).join("")}</div>
     ${f.tipo === "isometrico" ? grafico(lista, "maxSeg", "Mejor tiempo por sesión (s)", v => `${v} s`)
       : f.tipo === "cardio" ? grafico(lista, "minutos", "Minutos por sesión", v => `${v} min`)
       : grafico(lista, "e1rm", "1RM estimado por sesión (kg)", kg) + (conPeso ? grafico(lista, "volumen", "Volumen por sesión (kg)", kg) : "")}
