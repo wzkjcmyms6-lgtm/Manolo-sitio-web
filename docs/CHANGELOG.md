@@ -1,5 +1,19 @@
 # Cambios
 
+## 2026-11-05 · Hábitos: plantillas, hora y aviso de pendientes (fase 7)
+- "Nuevo hábito" › Plantillas: 39 hábitos comunes por categoría (agua,
+  leer, correr, anotar gastos, orar…) con tipo, meta, frecuencia, momento,
+  versión mínima y "se marca solo" sugeridos. Se busca sin tildes; al
+  tocar una se llena el formulario y se puede cambiar antes de crear.
+- Al escribir el nombre de un hábito nuevo, Manolo sugiere la categoría
+  (por palabras y emoji, sin IA).
+- Hora opcional por hábito: ordena dentro de su momento (y elige el
+  momento solo); la fila la muestra.
+- Inicio y Hoy avisan lo pendiente del momento: "Te faltan 2 de la mañana".
+- Push con la app cerrada y recordatorios en el Calendario: investigados en
+  `docs/NOTIFICATIONS.md`, sin implementar (esperan el OK).
+- Pruebas: `habitos-plantillas.test.js` (4); E2E `habitos.js`.
+
 ## 2026-11-05 · Hábitos: se marca solo (fase 6)
 - "Se marca solo" (en Más opciones del hábito): Running, Bici, Movilidad
   (eligiendo la rutina), Libros, Biblia, Finanzas y Gimnasio. Un Sí/No se

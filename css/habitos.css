@@ -1005,3 +1005,24 @@ body.sc-en-guia { overflow: hidden; }
 
 /* ---------- Se marca solo (fase 6) ---------- */
 .hb-auto { color: var(--accent-2); font-weight: 600; white-space: nowrap; }
+
+/* ---------- Plantillas, hora y aviso de pendientes (fase 7) ---------- */
+.hb-plant-abrir {
+  display: flex; align-items: center; gap: 0.7rem; width: 100%; margin: 0.2rem 0 0.5rem; padding: 0.7rem 0.85rem; cursor: pointer; text-align: left;
+  border-radius: 16px; background: var(--surface); border: 1px solid var(--border); color: var(--ink); font: inherit;
+}
+.hb-plant-ir { margin-left: auto; color: var(--muted); font-size: 1.3rem; }
+.hb-plant-buscar input { -webkit-appearance: none; appearance: none; }
+.hb-plant-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.hb-plant {
+  display: flex; align-items: center; gap: 0.6rem; width: 100%; min-height: 52px; padding: 0.35rem 0.7rem; cursor: pointer; text-align: left;
+  border-radius: 14px; border: 1px solid var(--border); border-left: 4px solid var(--cat); background: var(--surface); color: var(--ink); font: inherit;
+}
+.hb-plant:active { background: var(--surface-raised); }
+.hb-cat-sugerida { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; font-size: 0.82rem; color: var(--muted); }
+.hb-cat-sugerida .hb-chip { min-height: 36px; }
+.hb-hora input { max-width: 9rem; }
+.hb-aviso-momento {
+  display: flex; align-items: center; gap: 0.45rem; margin: 0 0 0.9rem; padding: 0.6rem 0.85rem; border-radius: 14px;
+  font-size: 0.88rem; background: rgba(255, 184, 77, 0.1); border: 1px solid rgba(255, 184, 77, 0.3);
+}

@@ -339,6 +339,7 @@ function botonCheck(h, x) {
 function subtitulo(h, x, f) {
   const partes = [];
   const reg = h.registros[f];
+  if (h.hora && x.toca && !x.hecho) partes.push(h.hora);
   if (x.pausa) {
     const p = h.pausas.find(q => f >= q.desde && f <= q.hasta);
     partes.push(`En pausa hasta el ${fechaCorta(p.hasta)}`);
@@ -415,6 +416,8 @@ function renderHoy() {
   const filtro = chips.some(c => c.id === hoyFiltro) ? hoyFiltro : null;
   const grupos = HH.grupos(items, { agrupar: hoyAgrupar, filtro, ocultarHechos: hoyOcultar, momento: actual, categorias: cats });
   let html = barraHoyHtml(chips, filtro, items.length);
+  const faltan = HH.pendientesMomento(items, actual);
+  if (faltan && items.length) html += `<p class="hb-aviso-momento" role="status"><span aria-hidden="true">⏰</span> Te ${faltan === 1 ? "falta" : "faltan"} <b>${faltan}</b> ${MOMENTO_DE[actual]}</p>`;
   const catFiltro = filtro && filtro !== HH.SIN ? cats.find(c => c.id === filtro) : null;
   if (catFiltro) html += `<a class="hb-ver-cat" href="#hab-categoria/${catFiltro.id}" style="--cat:${HCat.colorDe(catFiltro)}"><span aria-hidden="true">${escapeHtml(catFiltro.emoji)}</span> Ver la página de ${escapeHtml(catFiltro.nombre)}<span aria-hidden="true">›</span></a>`;
   html += grupos.map(g => {
@@ -457,6 +460,16 @@ function renderHoy() {
   ultimoMarcado = null;
 }
 
+const MOMENTO_DE = { manana: "de la mañana", tarde: "de la tarde", noche: "de la noche" };
+// Pendientes del momento actual (para Hoy e Inicio).
+function pendientesAhora() {
+  const f = res.hoy;
+  const items = activos().filter(h => HE.activoEn(h, f)).map(h => {
+    const x = filaHoy(h, f);
+    return x.toca ? { id: h.id, timeOfDay: h.timeOfDay, despuesDe: h.despuesDe, hecho: h.tipo !== "evitar" && (x.hecho || (x.semanal && x.semanaOk)), cuenta: h.tipo !== "evitar" } : null;
+  }).filter(Boolean);
+  return HH.pendientesMomento(items, momentoActual());
+}
 // Filtros por categoría, agrupar y ocultar hechos (arriba de la lista).
 function barraHoyHtml(chips, filtro, n) {
   if (n < 2) return "";
@@ -698,6 +711,8 @@ function abrirHoja(html, actual) {
     hoja.addEventListener("click", onClickHoja);
     hoja.addEventListener("change", onCambioHoja);
     hoja.addEventListener("input", e => {
+      if (plugins.input.some(fn => fn(e, e.target))) return;
+      if (e.target.name === "name" && form && !form.id) { form.name = e.target.value; pintarSugerencia(); return; }
       if (e.target.name !== "emojiPropio" || !form) return;
       const propio = primerGrafema(e.target.value);
       const prev = hoja.querySelector("[data-emoji-actual]");
@@ -967,6 +982,7 @@ function formDesde(h) {
     minima: h ? h.minima : "",
     descripcion: h ? h.descripcion || "" : "",
     despuesDe: h ? h.despuesDe || "" : "",
+    hora: h ? h.hora || "" : "",
     vinculo: h ? h.vinculo || "" : "",
     vinculoMedida: h && h.vinculoCfg ? h.vinculoCfg.medida || "" : "",
     vinculoRutina: h && h.vinculoCfg ? h.vinculoCfg.rutina || "" : "",
@@ -976,6 +992,17 @@ function formDesde(h) {
   };
 }
 // Categorías como chips con su color, "Sin categoría" y "+ Nueva".
+// Al crear: sugiere la categoría según el nombre o el emoji (reglas simples).
+function sugerenciaCatHtml(f) {
+  if (f.id || f.areaElegida) return "";
+  const id = HCat.sugerir(f.name, primerGrafema(f.emojiPropio) || f.emoji, areasDef());
+  const c = id && id !== f.area && areasDef().find(x => x.id === id);
+  return c ? `<span class="hb-cat-sugerida">Sugerida: <button type="button" class="hb-chip hb-chip-cat" data-campo="area" data-v="${c.id}" style="--cat:${HCat.colorDe(c)}">${escapeHtml(c.emoji)} ${escapeHtml(c.nombre)}</button></span>` : "";
+}
+function pintarSugerencia() {
+  const el = hoja && hoja.querySelector("[data-cat-sugerencia]");
+  if (el) el.innerHTML = sugerenciaCatHtml(form);
+}
 function categoriaChipsHtml(f) {
   const lista = areasDef().filter(a => !a.archivada || a.id === f.area);
   return `<div class="hb-chips" role="group" aria-label="Categoría">${lista.map(a => {
@@ -1005,6 +1032,7 @@ function hojaForm(id) {
 
       <span class="hb-label">Categoría</span>
       ${categoriaChipsHtml(f)}
+      <div data-cat-sugerencia>${sugerenciaCatHtml(f)}</div>
 
       <span class="hb-label">Tipo</span>
       ${chips("tipo", Object.keys(HC.TIPOS).map(k => [k, HC.TIPOS[k].nombre]), f.tipo)}
@@ -1024,6 +1052,9 @@ function hojaForm(id) {
 
       <span class="hb-label">Momento del día</span>
       ${chips("timeOfDay", HC.MOMENTOS.map(m => [m.id, m.nombre]), f.timeOfDay)}
+      <label class="hb-campo hb-hora"><span>Hora <span class="hb-opcional">(opcional)</span></span>
+        <input type="time" name="hora" value="${escapeHtml(f.hora || "")}">
+        <span class="hb-ayuda">Ordena el hábito dentro de su momento (y sirve para avisos más adelante).</span></label>
 
       <button type="button" class="hb-mas" data-mas-opciones aria-expanded="${!!f._mas}">${f._mas ? "Menos opciones" : "Más opciones"}<span aria-hidden="true">${f._mas ? "▴" : "▾"}</span></button>
       ${f._mas ? `<div class="hb-mas-cuerpo">
@@ -1065,9 +1096,13 @@ function opcionesCadena(f) {
 // Planes guiados al crear un hábito (siempre a mano, aunque se haya
 // descartado la sugerencia de Hoy): Scalping se agrega o se abre desde aquí.
 function planesGuiadosHtml() {
-  if (!window.HabitoScalping) return "";
+  const plantillas = window.HabitosPlantillas ? `<button type="button" class="hb-plant-abrir" data-plant-abrir>
+      <span class="hb-plan-emoji" aria-hidden="true">📋</span>
+      <span class="hb-plan-txt"><b>Plantillas</b><span>Elige entre ${HabitosPlantillas.LISTA.length} hábitos comunes y ajústalo</span></span>
+      <span class="hb-plant-ir" aria-hidden="true">›</span></button>` : "";
+  if (!window.HabitoScalping) return plantillas;
   const existe = !!docs[HabitoScalping.ID];
-  return `<div class="hb-plan-guiado">
+  return plantillas + `<div class="hb-plan-guiado">
       <span class="hb-plan-emoji" aria-hidden="true">💆</span>
       <span class="hb-plan-txt"><b>Plan guiado: Scalping</b><span>Masaje del cuero cabelludo · 180 días</span></span>
       <button type="button" class="${existe ? "hb-btn-sec" : "hb-btn"}" ${existe ? "data-sc-abrir" : "data-sc-crear"}>${existe ? "Abrir" : "Agregar"}</button>
@@ -1117,6 +1152,9 @@ function guardarForm() {
     despuesDe: f.despuesDe || null,
     vinculo: vinculoValido(f) || null
   };
+  const hora = HH.hora(f.hora);
+  if (hora) datos.hora = hora;
+  else if (f.id) datos.hora = FV().delete();
   const anterior = f.id ? normal[f.id] : null;
   if (datos.vinculo) {
     datos.vinculoCfg = { medida: f.tipo === "medible" ? f.vinculoMedida || medidaDefecto(datos.vinculo) : null, rutina: datos.vinculo === "movilidad" ? f.vinculoRutina || null : null, categoria: datos.vinculo === "gasto" ? f.vinculoCategoria || null : null };
@@ -2052,7 +2090,7 @@ function sonar(tipo) {
 // ---------- Eventos ----------
 // Pantallas de otros archivos (js/habitos-categorias-ui.js…) atienden sus
 // propios botones dentro de la hoja: si una devuelve true, ya está.
-const plugins = { click: [], cambio: [], submit: [] };
+const plugins = { click: [], cambio: [], submit: [], input: [] };
 function onClickHoja(e) {
   const t = e.target;
   if (t.closest("[data-temporada-visto]")) { cerrarHoja(); return; }
@@ -2121,6 +2159,7 @@ function onClickHoja(e) {
     leerCampos();
     form[b.dataset.campo] = b.dataset.v;
     if (b.dataset.campo === "emoji") form.emojiPropio = "";
+    if (b.dataset.campo === "area") form.areaElegida = true;
     hojaForm();
     return;
   }
@@ -2149,6 +2188,14 @@ function cambiarEstado(id, estado, f) {
 function onCambioHoja(e) {
   const t = e.target;
   if (plugins.cambio.some(fn => fn(e, t))) return;
+  // Elegir una hora acomoda el momento del día (se puede cambiar después).
+  if (t.name === "hora" && t.closest(".hb-form") && form) {
+    leerCampos();
+    const hh = Number(String(form.hora || "").slice(0, 2));
+    if (HH.hora(form.hora)) form.timeOfDay = hh >= 5 && hh < 12 ? "manana" : hh >= 12 && hh < 19 ? "tarde" : "noche";
+    hojaForm();
+    return;
+  }
   if (t.hasAttribute("data-archivo-importar")) { leerCopia(t.files && t.files[0]); return; }
   const f = t.dataset.fecha || res.hoy;
   if (t.dataset.nota) {
@@ -2274,7 +2321,8 @@ function renderInicio() {
   if (!el || !res) return;
   const p = progresoHoy(res.hoy);
   const racha = mejorRachaActiva();
-  el.innerHTML = `${p.total ? `Hoy: ${p.hechos} de ${p.total}` : "Nada pendiente hoy"} · Nivel ${res.nivel.nivel}${racha ? ` · ${escapeHtml(textoRacha(racha))} de racha` : ""}
+  const faltan = pendientesAhora();
+  el.innerHTML = `${p.total ? `Hoy: ${p.hechos} de ${p.total}` : "Nada pendiente hoy"}${faltan ? ` · ⏰ ${faltan === 1 ? "falta" : "faltan"} ${faltan} ${MOMENTO_DE[momentoActual()]}` : ""} · Nivel ${res.nivel.nivel}${racha ? ` · ${escapeHtml(textoRacha(racha))} de racha` : ""}
     <span class="hb-inicio-barra" aria-hidden="true"><span style="width:${p.total ? (p.hechos / p.total * 100).toFixed(1) : 0}%"></span></span>`;
 }
 
@@ -2907,6 +2955,14 @@ window.HabitosApp = {
   renderIcons: el => renderIcons(el), fmtNum: n => fmtNum(n),
   nuevoHabito(area) { hojaForm(null); if (area) { form.area = area; hojaForm(); } },
   filtrarStats(id) { statsFiltro = id || null; },
-  alClick: fn => plugins.click.push(fn), alCambiar: fn => plugins.cambio.push(fn), alEnviar: fn => plugins.submit.push(fn)
+  alClick: fn => plugins.click.push(fn), alCambiar: fn => plugins.cambio.push(fn), alEnviar: fn => plugins.submit.push(fn),
+  alEscribir: fn => plugins.input.push(fn),
+  // Llena el formulario con una plantilla (js/habitos-plantillas.js).
+  desdePlantilla(campos) {
+    form = Object.assign(formDesde(null), campos, { areaElegida: true });
+    form._mas = !!(form.vinculo || form.minima || form.dificultad !== "media");
+    emojiGrupo = null;
+    hojaForm();
+  }
 };
 })();

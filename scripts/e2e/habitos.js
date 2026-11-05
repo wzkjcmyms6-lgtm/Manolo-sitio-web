@@ -394,6 +394,63 @@ function conTemporadaVista(opciones) {
     await p.context().close();
   }
 
+  for (const ancho of [390, 1280]) {
+    console.log(`\n=== Plantillas, hora y aviso de pendientes a ${ancho} px`);
+    const p = await abrir(browser, base, conTemporadaVista(), { hash: "#inicio", zona: ZONA, fecha: FECHA, ancho, alto: ancho > 800 ? 900 : 844 });
+    consolaLimpia(p);
+    await p.waitForTimeout(700);
+    ok(/⏰ faltan 2 de la mañana/.test(await texto(p, "#hb-inicio")), `Inicio avisa lo pendiente del momento (${await texto(p, "#hb-inicio")})`);
+    await p.evaluate(() => { location.hash = "habitos"; });
+    await p.waitForTimeout(400);
+    ok(/Te faltan 2 de la mañana/.test(await texto(p, ".hb-aviso-momento")), "Hoy: «Te faltan 2 de la mañana»");
+    // Plantillas
+    await p.click("#hb-nuevo");
+    await p.waitForTimeout(300);
+    await p.click("[data-plant-abrir]");
+    await p.waitForTimeout(300);
+    ok((await p.$$(".hb-plant")).length >= 30, `hoja de plantillas (${(await p.$$(".hb-plant")).length})`);
+    await p.fill("[data-plant-buscar]", "agua");
+    await p.waitForTimeout(200);
+    const encontradas = await p.$$eval(".hb-plant .hb-nombre", els => els.map(e => e.textContent));
+    ok(encontradas.join(",") === "Tomar agua", `buscar «agua» (${encontradas})`);
+    await captura(p, `hab-plantillas-${ancho}.png`);
+    await p.click('[data-plantilla="agua"]');
+    await p.waitForTimeout(300);
+    ok((await p.inputValue('.hb-form [name="name"]')) === "Tomar agua" && (await p.inputValue('.hb-form [name="meta"]')) === "8" && /Cuerpo/.test(await texto(p, '.hb-chip-cat[aria-pressed="true"]')), "el formulario se llena (8 vasos, Cuerpo) y se puede editar");
+    await p.fill('.hb-form [name="meta"]', "10");
+    await p.click('.hb-acciones-fijas [type="submit"]');
+    await p.waitForTimeout(500);
+    const nueva = await p.evaluate(() => [...window.__fakeStore.colMap("users/test/habitos").values()].filter(h => h.name === "Tomar agua").sort((a, b) => b.createdAt - a.createdAt)[0]);
+    ok(nueva.meta === 10 && nueva.unidad === "vasos" && nueva.area === "cuerpo" && nueva.tipo === "medible", "crea el hábito con lo editado");
+    // Sugerir categoría al escribir
+    await p.click("#hb-nuevo");
+    await p.waitForTimeout(300);
+    await p.fill('.hb-form [name="name"]', "Estudiar inglés");
+    await p.waitForTimeout(150);
+    ok(/Sugerida: 🧠 Mente/.test(await texto(p, "[data-cat-sugerencia]")), "sugiere «Mente» por el nombre");
+    await p.click('[data-cat-sugerencia] [data-campo="area"]');
+    await p.waitForTimeout(200);
+    ok(/Mente/.test(await texto(p, '.hb-chip-cat[aria-pressed="true"]')) && (await texto(p, "[data-cat-sugerencia]")) === "" && (await p.inputValue('.hb-form [name="name"]')) === "Estudiar inglés", "un toque la elige");
+    await p.click(".hb-sheet .muscle-sheet-close");
+    await p.waitForTimeout(300);
+    // Hora opcional: ordena dentro del momento
+    await p.click('#hb-lista [data-detalle="orar"]');
+    await p.waitForTimeout(300);
+    await p.click('.hb-sheet [data-editar="orar"]');
+    await p.waitForTimeout(300);
+    await p.fill('.hb-form [name="hora"]', "06:15");
+    await p.dispatchEvent('.hb-form [name="hora"]', "change");
+    await p.waitForTimeout(200);
+    ok(/Mañana/.test(await texto(p, '[data-campo="timeOfDay"][aria-pressed="true"]')), "elegir 06:15 pone «Mañana»");
+    await p.click('.hb-acciones-fijas [type="submit"]');
+    await p.waitForTimeout(500);
+    const orar = await p.evaluate(() => window.__fakeStore.colMap("users/test/habitos").get("orar"));
+    ok(orar.hora === "06:15", "guarda la hora");
+    ok(/06:15/.test(await texto(p, '#hb-lista [data-detalle="orar"]')), "la fila muestra la hora");
+    ok(p.errores.length === 0 && p.consola.length === 0, `sin errores (${p.errores.concat(p.consola).join(" | ")})`);
+    await p.context().close();
+  }
+
   console.log("\n=== Sin historia: no hay hoja de temporada");
   const q = await abrir(browser, base, {}, { hash: "#habitos", zona: ZONA, fecha: FECHA });
   await q.waitForTimeout(500);

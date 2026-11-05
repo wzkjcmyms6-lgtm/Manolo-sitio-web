@@ -44,8 +44,9 @@ Actualizado: 2026-11-04 (empieza Running al nivel de Strava, D-060 a D-069).
   adelante. Hechas: 0 (auditoría y diseño), 1 (categorías en
   `meta/habitos_juego.categorias`, migración en lectura) 2 (Temporada 2:
   dificultad nueva, D-080/D-081) 3 (gestión de categorías, D-082) 4 (Hoy por
-  categoría, D-083) 5 (página de categoría y estadísticas, D-084) y 6 (se marca
-  solo con los demás módulos, D-085).
+  categoría, D-083) 5 (página de categoría y estadísticas, D-084) 6 (se marca
+  solo con los demás módulos, D-085) y 7 (plantillas, hora y avisos,
+  D-086; push y Calendario investigados, esperan OK).
 - **Tests (2026-11-04)**: 382 unitarias; E2E de Running: `run-importar`,
   `run-detalle`, `run-feed`, `run-progreso`, `run-inteligencia`,
   `run-segmentos`, `run-compartir`, `run-qa`, además de las de siempre.

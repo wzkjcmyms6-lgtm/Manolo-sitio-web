@@ -13,8 +13,12 @@ Cada fase deja la app funcionando y publicada.
 | 4 | Hoy: filtros, agrupar, colores, ocultar hechos, arreglos | ✅ |
 | 5 | Página de categoría, Estadísticas por categoría, misiones y logros | ✅ |
 | 6 | Se marca solo (Running, Bici, Movilidad, Libros, Biblia, Finanzas) | ✅ |
-| 7 | Plantillas, hora opcional, aviso de pendientes | — |
+| 7 | Plantillas, hora opcional, aviso de pendientes | ✅ (push y Calendario: investigado, espera OK) |
 | 8 | QA final, `docs/HABITOS.md`, lista para el iPhone | — |
+
+**Pedido al dueño (fase 7):** decir si quiere recordatorios en el
+Calendario del iPhone (.ics, gratis) o push con la app cerrada (plan Blaze
+de Firebase). Pros, contras y costos en `docs/NOTIFICATIONS.md`.
 
 **Pedido al dueño (fase 0):** elegir cuáles de las categorías extra
 propuestas crear (Fe, Lectura, Cuidado personal, Hogar). Mientras tanto

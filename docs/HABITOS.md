@@ -16,6 +16,8 @@ y el plan guiado de Scalping (`docs/SCALPING.md`, no se toca).
 | `js/habitos-categorias-ui.js` | Hojas de categorías: lista, crear/editar, sugeridas, archivar, asignar en lote (fase 3) |
 | `js/habitos-categoria.js` | Página de una categoría `#hab-categoria/{id}` (fase 5) |
 | `js/habitos-auto.js` | Se marca solo: fuentes, valor de cada día, qué poner y qué deshacer (fase 6) |
+| `js/habitos-plantillas.js` | 39 plantillas de hábitos, búsqueda y paso al formulario (fase 7) |
+| `js/habitos-plantillas-ui.js` | Hoja de plantillas (fase 7) |
 | `js/habito-scalping.js` | Tarjeta y pantalla de Scalping |
 | `tests/habitos-engine.test.js` | Pruebas del motor; `tests/habitos-sim.js` simula la dificultad |
 
@@ -119,6 +121,13 @@ opcional, `pendientesMomento`).
 
 Datos nuevos del hábito: `vinculo`, `vinculoCfg { medida, rutina,
 categoria }`, `vinculoDesde`; en el registro, `auto: { f, v }`.
+
+### Crear más rápido y avisos (fase 7)
+- Plantillas (📋 arriba de "Nuevo hábito"): por categoría, con buscador.
+- Sugerencia de categoría al escribir el nombre.
+- Hora opcional (`hora`), que ordena dentro del momento.
+- Aviso de pendientes del momento en Inicio y en Hoy. Push y Calendario:
+  ver `docs/NOTIFICATIONS.md` (esperan el OK del dueño).
 
 ### Dificultad: antes y después (simulación con el motor real)
 Hábito diario cumplido el 100 %:

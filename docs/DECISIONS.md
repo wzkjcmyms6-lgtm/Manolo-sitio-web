@@ -822,3 +822,15 @@ es la de hoy (ventana de 48 h). Gimnasio sigue con su evento
 `entreno:guardado` (sin deshacer: no hay lista). Los hábitos nuevos se
 crean con id del teléfono (`doc().set`) para poder ofrecer rellenar sin
 esperar al servidor.
+
+**D-086 (2026-11-05) · Plantillas, hora y avisos.** Las plantillas son
+datos en `js/habitos-plantillas.js` (39, con pruebas de que cada una es
+válida para el motor y para "se marca solo"); la categoría sugerida (Fe,
+Lectura, Cuidado personal, Hogar) cae en su alternativa (Bienestar, Mente,
+Cuerpo) si no existe. Tocar una plantilla llena el formulario: no crea nada
+sin "Crear hábito". La sugerencia de categoría usa `HCat.sugerir` (palabras
+y emoji) y desaparece si eliges una a mano. La hora (`hora: "HH:MM"`) es
+opcional; al elegirla se acomoda el momento del día y dentro del grupo se
+ordena por hora (las cadenas siguen juntas). El aviso "Te faltan N de la
+mañana" cuenta solo lo del momento actual, sin los de Evitar. Push y
+Calendario quedan investigados en `docs/NOTIFICATIONS.md`, sin implementar.
