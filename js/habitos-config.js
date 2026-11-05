@@ -122,6 +122,27 @@ const FUERZA = {
 // Versión de la calibración. Al cambiarla, la app recalcula todo desde el
 // historial y muestra una sola vez "Temporada N" (sin celebraciones).
 const CALIBRACION = 2;
+// Cambios de reglas que no son de dificultad (p. ej. la racha que perdona):
+// al subirlo, lo nuevo que salga del historial se guarda sin celebrar.
+const RECALCULO = 1;
+
+// ---------- Racha que perdona (D-089) ----------
+// Cada racha empieza con PERDON_INICIAL perdón y por cada PERDON_CADA días
+// cumplidos ganas otro (guardas hasta PERDON_MAX). Un día fallado usa uno y
+// la racha sigue (ese día no suma);
+// sin perdones, la racha se corta y vuelves a juntarlos desde cero. Así se
+// adapta a cómo te comportas: con ~1 fallo por semana cumplida la racha
+// aguanta; si fallas más seguido, se acaban y se corta. No cuenta para el
+// rango ni para el cumplimiento (el día sigue siendo un fallo), no da XP y
+// no aplica a los hábitos de Evitar (una recaída corta los días limpios).
+// En los semanales: un perdón por cada 4 semanas cumplidas, hasta 1.
+const RACHA = {
+  PERDON_INICIAL: 1,
+  PERDON_CADA: 7,
+  PERDON_MAX: 2,
+  PERDON_CADA_SEMANAS: 4,
+  PERDON_MAX_SEMANAS: 1
+};
 // Nombres propios de Hábitos (Ejercicio no cambia).
 const RANGO_NOMBRES = { simetrico: "Inquebrantable" };
 
@@ -204,5 +225,5 @@ const LOGROS = [
 ];
 
 return { CONST, TIPOS, FRECUENCIAS, MOMENTOS, ESTADOS, MOTIVOS_SALTO, DIFICULTADES, XP, NIVEL, AREAS,
-  FUERZA, CALIBRACION, RANGO_NOMBRES, AREA_NIVEL, TIENDA, MISIONES, JEFE, LOGROS };
+  FUERZA, CALIBRACION, RECALCULO, RACHA, RANGO_NOMBRES, AREA_NIVEL, TIENDA, MISIONES, JEFE, LOGROS };
 });

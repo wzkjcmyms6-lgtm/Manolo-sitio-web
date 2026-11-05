@@ -310,6 +310,37 @@ function clasificar(h, hoy, cal) {
   return { dias, semanas };
 }
 
+// Paso A2: la racha que perdona (CFG.RACHA). Marca `perdonado` en los días
+// (o semanas) fallados que se salvan con un perdón ganado cumpliendo. El día
+// sigue siendo un fallo para el rango, el cumplimiento y los días perfectos;
+// solo la racha lo trata como neutral. Devuelve los perdones guardados y
+// cuánto falta para el próximo.
+function perdonar(h, base) {
+  const R = CFG.RACHA;
+  const semanal = porSemana(h);
+  const cada = semanal ? R.PERDON_CADA_SEMANAS : R.PERDON_CADA;
+  const max = semanal ? R.PERDON_MAX_SEMANAS : R.PERDON_MAX;
+  let guardados = 0, cuenta = 0, usados = 0, nueva = true;
+  if (h.tipo !== "evitar") {
+    const paso = (cumple, fallo, marcar) => {
+      if (cumple) {
+        // Cada racha empieza con un perdón de regalo (al primer día cumplido).
+        if (nueva) { nueva = false; guardados = Math.max(guardados, Math.min(max, R.PERDON_INICIAL)); }
+        // Con los perdones al máximo no se adelanta nada: tras usar uno hacen
+        // falta otros `cada` días cumplidos para reponerlo.
+        if (guardados >= max) cuenta = 0;
+        else if (++cuenta >= cada) { cuenta = 0; guardados++; }
+      } else if (fallo) {
+        if (guardados > 0) { guardados--; usados++; marcar(); }
+        else { cuenta = 0; nueva = true; } // se corta: los perdones se vuelven a ganar desde cero
+      }
+    };
+    if (semanal) base.semanas.forEach(s => paso(s.estado === "cumple", s.estado === "fallo", () => { s.perdonado = true; }));
+    else Object.keys(base.dias).forEach(f => { const d = base.dias[f]; paso(d.clase === "cumple", d.clase === "fallo", () => { d.perdonado = true; }); });
+  }
+  return { guardados, max, cada, faltan: guardados >= max ? 0 : cada - cuenta, usados, semanal, aplica: h.tipo !== "evitar" };
+}
+
 // Paso B: rachas y XP, con los días cubiertos por comodines como neutrales.
 function rachasYXP(h, base, protegidos, hoy, finDia) {
   let actual = 0, mejor = 0, xp = 0;
@@ -321,7 +352,7 @@ function rachasYXP(h, base, protegidos, hoy, finDia) {
       if (s.estado === "fallo" && protegidos.has(s.domingo)) { s.estado = "neutral"; s.protegido = true; }
       s.rachaAntes = actual;
       if (s.estado === "cumple") actual++;
-      else if (s.estado === "fallo") actual = 0;
+      else if (s.estado === "fallo" && !s.perdonado) actual = 0;
       s.racha = actual;
       mejor = Math.max(mejor, actual);
       semanaDe[s.lunes] = si;
@@ -343,7 +374,7 @@ function rachasYXP(h, base, protegidos, hoy, finDia) {
     const d = base.dias[f];
     if (d.clase === "fallo" && protegidos.has(f)) { d.clase = "neutral"; d.protegido = true; }
     if (d.clase === "cumple") actual++;
-    else if (d.clase === "fallo") actual = 0;
+    else if (d.clase === "fallo" && !d.perdonado) actual = 0;
     d.racha = actual;
     mejor = Math.max(mejor, actual);
     const cuenta = d.clase === "cumple" || d.clase === "extra";
@@ -388,13 +419,15 @@ function evaluar(docs, opciones) {
   const inicios = habitos.map(h => h.inicio).filter(f => f && f <= hoy).sort();
   const cal = calendario(lunesDe(inicios[0] || hoy), hoy);
   const base = {};
-  habitos.forEach(h => { base[h.id] = clasificar(h, hoy, cal); });
+  const perdones = {};
+  habitos.forEach(h => { base[h.id] = clasificar(h, hoy, cal); perdones[h.id] = perdonar(h, base[h.id]); });
 
   const fallos = [];
   habitos.forEach(h => {
     const b = base[h.id];
-    if (porSemana(h)) b.semanas.forEach(s => { if (s.estado === "fallo") fallos.push(s.domingo); });
-    else Object.keys(b.dias).forEach(f => { if (b.dias[f].clase === "fallo" && f < hoy) fallos.push(f); });
+    // Lo que ya salvó un perdón no gasta un comodín.
+    if (porSemana(h)) b.semanas.forEach(s => { if (s.estado === "fallo" && !s.perdonado) fallos.push(s.domingo); });
+    else Object.keys(b.dias).forEach(f => { if (b.dias[f].clase === "fallo" && !b.dias[f].perdonado && f < hoy) fallos.push(f); });
   });
   const compras = Array.isArray(o.compras) ? o.compras : [];
   const comodines = o.comodines || compras.filter(c => c && c.que === "comodin" && c.t).map(c => fechaLogica(c.t, finDia));
@@ -407,7 +440,7 @@ function evaluar(docs, opciones) {
     const r = rachasYXP(h, b, com.protegidos, hoy, finDia);
     xpHabitos += r.xp;
     const semanaActual = porSemana(h) ? b.semanas[b.semanas.length - 1] || null : null;
-    porId[h.id] = { habito: h, dias: b.dias, semanas: b.semanas, racha: r.racha, xp: r.xp, hoy: b.dias[hoy] || null, semanaActual };
+    porId[h.id] = { habito: h, dias: b.dias, semanas: b.semanas, racha: r.racha, xp: r.xp, hoy: b.dias[hoy] || null, semanaActual, perdones: perdones[h.id] };
     porId[h.id].rango = fuerzaHabito(h, porId[h.id], hoy);
   });
 

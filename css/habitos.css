@@ -1026,3 +1026,13 @@ body.sc-en-guia { overflow: hidden; }
   display: flex; align-items: center; gap: 0.45rem; margin: 0 0 0.9rem; padding: 0.6rem 0.85rem; border-radius: 14px;
   font-size: 0.88rem; background: rgba(255, 184, 77, 0.1); border: 1px solid rgba(255, 184, 77, 0.3);
 }
+
+/* ---------- Racha que perdona (D-089) ---------- */
+.hb-perdones { display: flex; align-items: flex-start; gap: 0.7rem; margin: 0.2rem 0 0.9rem; padding: 0.7rem 0.85rem; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); }
+.hb-perdones p { margin: 0; font-size: 0.84rem; line-height: 1.45; color: var(--ink); }
+.hb-perdones .hb-ayuda { display: block; margin-top: 0.15rem; }
+.hb-perdones-iconos { display: flex; gap: 0.25rem; padding-top: 0.1rem; flex-shrink: 0; }
+.hb-perdon { width: 18px; height: 21px; background: var(--border); clip-path: polygon(50% 0, 100% 18%, 100% 55%, 50% 100%, 0 55%, 0 18%); }
+.hb-perdon.is-on { background: var(--accent-2); }
+.c-fallo.c-perdon { background: rgba(255, 184, 77, 0.08); border-style: dashed; border-color: rgba(255, 184, 77, 0.55); color: var(--accent-2); }
+.hb-salvada { color: var(--accent-2); font-weight: 600; }

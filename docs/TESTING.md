@@ -177,6 +177,9 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] Hoy: chips de categoría arriba (con pendientes), "Categoría" para
   agrupar, "Ocultar hechos", colores en cada fila, aviso "Te faltan N de…".
 - [ ] Mantén presionado un hábito: parcial, mínima, saltar y nota.
+- [ ] Racha que perdona: en el detalle de un hábito, "Racha que perdona"
+  con tus perdones; si ayer se te pasó, en Hoy dice "🛡 ayer se salvó tu
+  racha" y el número sigue.
 - [ ] Toca el nombre de un grupo (agrupado por categoría): su página con
   nivel, semana y mes, mapa de calor, ranking y logros. "Atrás" vuelve.
 - [ ] Estadísticas: toca una categoría arriba; "Por categoría" y el radar.

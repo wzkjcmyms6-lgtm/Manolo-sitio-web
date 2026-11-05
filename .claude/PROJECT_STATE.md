@@ -47,7 +47,7 @@ Actualizado: 2026-11-04 (empieza Running al nivel de Strava, D-060 a D-069).
   aviso de pendientes. D-079 a D-087, todo en `docs/HABITOS.md`. Fe, Lectura,
   Cuidado personal y Hogar vienen de fábrica (D-088); sin recordatorios
   fuera de Manolo por ahora. Falta: la lista del iPhone (`docs/TESTING.md`).
-- **Tests (2026-11-05)**: 424 unitarias; E2E de Running: `run-importar`,
+- **Tests (2026-11-05)**: 430 unitarias; E2E de Running: `run-importar`,
   `run-detalle`, `run-feed`, `run-progreso`, `run-inteligencia`,
-  `run-segmentos`, `run-compartir`, `run-qa`; de Hábitos: `habitos` (193,
+  `run-segmentos`, `run-compartir`, `run-qa`; de Hábitos: `habitos` (205,
   a 390 y 1280 px); además de las de siempre (todas en verde el 2026-11-05).

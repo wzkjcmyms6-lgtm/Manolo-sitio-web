@@ -1,5 +1,14 @@
 # Cambios
 
+## 2026-11-05 · Hábitos: la racha perdona
+- Si fallas un día o dos, la racha no se pierde: cada racha empieza con 1
+  perdón y ganas otro por cada semana cumplida (guardas hasta 2). Si fallas
+  seguido, se acaban y se corta. No cambia tu rango ni tu cumplimiento.
+- En el detalle ves tus perdones; en Hoy, "🛡 ayer se salvó tu racha"; en
+  el calendario, el día perdonado. Las rachas del pasado se recalcularon
+  sin celebraciones.
+- Pruebas: `habitos-racha.test.js` (6) y 7 pruebas viejas al día.
+
 ## 2026-11-05 · Hábitos: Fe, Lectura, Cuidado personal y Hogar
 - Las 4 categorías que elegiste ya vienen en Manolo, con su emoji y color.
   Pasa tus hábitos con Ajustes › Categorías › Asignar categorías.

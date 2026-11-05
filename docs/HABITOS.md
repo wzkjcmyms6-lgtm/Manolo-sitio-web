@@ -83,6 +83,14 @@ Lima `#a3e635` · Piedra `#a8a29e`.
 Las 4 últimas las propuso la fase 0 y el dueño las eligió (D-088): vienen
 de fábrica junto a las 6 de siempre (10 en total, hasta 16 activas).
 
+### Racha que perdona (D-089, después del plan)
+Cada racha empieza con 1 perdón y gana otro por cada 7 días cumplidos
+(hasta 2; en semanales, 1 por cada 4 semanas, hasta 1). Un fallo usa uno y
+la racha sigue; sin perdones se corta. 1 o 2 fallos seguidos se salvan; 3
+no. No aplica a Evitar. El día sigue contando como fallo para el rango y
+el cumplimiento. Lógica: `perdonar()` en `js/habitos-engine.js`; pruebas:
+`tests/habitos-racha.test.js`.
+
 ### Gestión (fase 3)
 Ajustes › Categorías: lista con su color y cuántos hábitos tiene, flechas
 para ordenar, "+ Nueva categoría", "Asignar categorías · N sin categoría",

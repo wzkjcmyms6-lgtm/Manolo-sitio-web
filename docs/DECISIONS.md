@@ -856,3 +856,21 @@ vacíos lo volvían barras). Al sugerir, Fe, Lectura, Cuidado personal y
 Hogar (y las propias) ganan a las generales en un empate. Sobre los
 recordatorios fuera de Manolo (push o Calendario) el dueño dijo que no por
 ahora: quedan en "Para después".
+
+**D-089 (2026-11-05) · Racha que perdona.** Pedido: "si falló un día o dos,
+que no se pierda la racha; que sea inteligente según cómo me comporto".
+Regla (`CFG.RACHA`, `perdonar()` en el motor): cada racha empieza con 1
+perdón y gana otro por cada 7 días cumplidos (guarda hasta 2). Un día
+fallado usa uno y la racha sigue (ese día no suma); sin perdones se corta y
+se vuelven a juntar desde cero. Así se adapta al comportamiento: con ~1
+fallo por semana cumplida la racha no se corta nunca; fallando 1 de cada 4
+días se corta seguido; 1 o 2 fallos seguidos se salvan y 3 no (igual que
+el rango). Semanales: 1 perdón por cada 4 semanas cumplidas (hasta 1).
+Evitar no perdona (una recaída corta los días limpios). El día perdonado
+sigue siendo un fallo para el rango, el cumplimiento, el XP y los días
+perfectos: solo la racha lo trata como neutral. Va antes que los
+comodines (un día salvado por un perdón no gasta comodín). Como alarga
+rachas del pasado, `CFG.RECALCULO` guarda el resultado en el snapshot sin
+celebrar (sin tocar la Temporada 1). Se ve en el detalle ("Racha que
+perdona" con 2 escudos), en el calendario (día perdonado, borde punteado)
+y en Hoy ("🛡 ayer se salvó tu racha").

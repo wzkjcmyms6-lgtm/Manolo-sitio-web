@@ -364,6 +364,11 @@ function subtitulo(h, x, f) {
   const auto = h.vinculo && HA.fuente(h.vinculo);
   if (auto) partes.push(`<span class="hb-auto" title="Se marca solo">⚡ ${escapeHtml(auto.nombre)}</span>`);
   const racha = textoRacha(x.rh && x.rh.racha);
+  // Si ayer (o la semana pasada) un perdón salvó la racha, se dice.
+  if (x.rh) {
+    const salvada = x.semanal ? (x.rh.semanas[x.rh.semanas.length - 2] || {}).perdonado : (x.rh.dias[HE.addDias(f, -1)] || {}).perdonado;
+    if (salvada) partes.push(`<span class="hb-salvada">🛡 ${x.semanal ? "semana pasada" : "ayer"} se salvó tu racha</span>`);
+  }
   return { texto: partes.join(" · "), racha };
 }
 
@@ -792,6 +797,7 @@ function hojaDetalle(id, fecha) {
       <div class="hb-stat"><span class="hb-num">${pct(cTotal)}</span><span>desde que empezaste</span></div>
       <div class="hb-stat"><span class="hb-num">${fmtNum(totalHechos)}</span><span>${totalHechos === 1 ? "vez en total" : "veces en total"}</span></div>
     </div>
+    ${perdonesHtml(rh)}
     ${rangoHtml(rh)}
     ${calendarioHtml(h, rh)}
     ${editorDia(h, rh, diaSel)}
@@ -804,6 +810,21 @@ function hojaDetalle(id, fecha) {
       <button type="button" class="hb-btn-sec" data-archivar="${id}">Archivar</button>
       <button type="button" class="hb-btn-sec is-peligro" data-eliminar="${id}"><span data-icon="trash"></span>Eliminar</button>
     </div>`, { tipo: "detalle", id });
+}
+
+// Racha que perdona (D-089): cuántos perdones tienes y cuánto falta para otro.
+function perdonesHtml(rh) {
+  const p = rh.perdones;
+  if (!p || !p.aplica) return "";
+  const u = p.semanal ? ["semana", "semanas"] : ["día", "días"];
+  const escudos = Array.from({ length: p.max }, (_, i) => `<span class="hb-perdon${i < p.guardados ? " is-on" : ""}"></span>`).join("");
+  const estado = p.guardados >= p.max
+    ? `Tienes ${plural(p.guardados, "perdón", "perdones")}: si fallas ${p.max === 1 ? `una ${u[0]}` : `uno o dos ${u[1]}`}, tu racha sigue.`
+    : `${p.guardados ? `Tienes ${plural(p.guardados, "perdón", "perdones")}.` : "Sin perdones: si fallas ahora, la racha se corta."} Cumple ${plural(p.faltan, `${u[0]} más`, `${u[1]} más`)} para ganar otro.`;
+  return `<div class="hb-perdones" role="note" aria-label="Perdones de racha: ${p.guardados} de ${p.max}">
+    <span class="hb-perdones-iconos" aria-hidden="true">${escudos}</span>
+    <p><b>Racha que perdona.</b> ${estado}<span class="hb-ayuda"> Ganas uno por cada ${p.cada === 7 ? "semana cumplida" : `${p.cada} ${u[1]} cumplidas`} (guardas hasta ${p.max}).${p.usados ? ` Ya te salvó ${plural(p.usados, "vez", "veces")}.` : ""}</span></p>
+  </div>`;
 }
 
 // Calendario del mes: cada día con su estado; tocar uno lo abre para corregirlo.
@@ -822,7 +843,9 @@ function calendarioHtml(h, rh) {
     else if (d) {
       c = { cumple: "c-cumple", extra: "c-cumple", fallo: "c-fallo", pendiente: "c-pend", neutral: d.protegido ? "c-comodin" : "c-neutral", noToca: "c-notoca", fuera: "c-fuera" }[d.clase] || "c-fuera";
       if (d.estado === "parcial" || d.estado === "minima") c += " c-parcial";
+      if (d.perdonado) c += " c-perdon";
       txt = d.protegido ? "cubierto por un comodín" : d.estado ? HC.ESTADOS[d.estado].nombre.toLowerCase() : { fallo: "no hecho", pendiente: "pendiente", noToca: "no tocaba", neutral: "en pausa", fuera: "sin datos" }[d.clase] || "";
+      if (d.perdonado) txt += " · la racha siguió (perdón)";
     }
     const clases = ["hb-cal-dia", c, fe === diaSel ? "is-sel" : "", fe === f ? "is-hoy" : ""].filter(Boolean).join(" ");
     return `<button type="button" class="${clases}" data-dia-cal="${fe}" ${futuro ? "disabled" : ""} aria-label="${fechaCorta(fe)}: ${txt}" aria-pressed="${fe === diaSel}">
@@ -835,7 +858,7 @@ function calendarioHtml(h, rh) {
       <button type="button" class="hb-cal-flecha" data-mes="1" ${mesSel >= f.slice(0, 7) ? "disabled" : ""} aria-label="Mes siguiente"><span data-icon="chevronRight"></span></button>
     </div>
     <div class="hb-cal-grid">${DIAS_CORTOS.map(l => `<span class="hb-cal-wd">${l}</span>`).join("")}${semanas.flat().map(celda).join("")}</div>
-    <div class="hb-cal-leyenda"><span><i class="c-cumple"></i>Hecho</span><span><i class="c-cumple c-parcial"></i>Parcial o mínima</span><span><i class="c-neutral"></i>Saltado o pausa</span><span><i class="c-fallo"></i>No hecho</span></div>
+    <div class="hb-cal-leyenda"><span><i class="c-cumple"></i>Hecho</span><span><i class="c-cumple c-parcial"></i>Parcial o mínima</span><span><i class="c-neutral"></i>Saltado o pausa</span><span><i class="c-fallo"></i>No hecho</span><span><i class="c-fallo c-perdon"></i>Perdonado</span></div>
   </div>`;
 }
 
@@ -1801,7 +1824,7 @@ function tiendaHtml() {
     <p class="hb-texto">Ganas 1 moneda por cada 10 XP, y más con las misiones.</p>
     <section class="hb-tienda-bloque">
       <h3 class="hb-sub-t">Comodines de racha</h3>
-      <p class="hb-texto">Si fallas un día que tocaba, se usa uno solo y tus rachas siguen. Puedes guardar hasta ${HC.CONST.COMODINES_MAX}.
+      <p class="hb-texto">Tus rachas ya perdonan 1 o 2 fallos si vienes cumpliendo. Si fallas un día y no te quedan perdones, se usa un comodín y tus rachas siguen. Puedes guardar hasta ${HC.CONST.COMODINES_MAX}.
         ${res.comodines.protegidos.length ? `Ya te salvaron ${plural(res.comodines.protegidos.length, "día", "días")}.` : ""}</p>
       <div class="hb-tienda-fila"><span>Guardados: <b>${guardados} de ${HC.CONST.COMODINES_MAX}</b></span>
         <button type="button" class="hb-btn" data-comprar-comodin ${guardados >= HC.CONST.COMODINES_MAX ? "disabled" : ""}>Comprar · ${precio}</button></div>
@@ -1925,9 +1948,19 @@ function nuevaTemporada() {
     perfectos: union(anterior && anterior.perfectos, nuevo.perfectos),
     jefes: union(anterior && anterior.jefes, nuevo.jefes)
   });
-  const campos = { calibracion: HC.CALIBRACION, snapshot: snap };
+  const campos = { calibracion: HC.CALIBRACION, recalculo: HC.RECALCULO, snapshot: snap };
   const habia = !!anterior && ((anterior.nivel || 1) > 1 || Object.keys(anterior.rangos || {}).length > 0);
   if (habia) campos.temporada1 = { nivel: anterior.nivel || 1, rangos: anterior.rangos || {}, logros: anterior.logros || [], hasta: res.hoy, nivelNuevo: res.nivel.nivel, visto: false };
+  juego = Object.assign({}, juego, campos);
+  const ref = metaJuego();
+  (juegoExiste ? ref.update(campos) : ref.set(campos, { merge: true })).catch(errorGuardar);
+}
+// Reglas nuevas (p. ej. la racha que perdona) pueden alargar rachas y
+// desbloquear logros del pasado: se guardan en el snapshot sin celebrar.
+function recalculoSilencioso() {
+  if (juego.snapshot && Object.keys(juego.snapshot.rangos || {}).length && !Object.keys(normal).length) return;
+  const snap = juego.snapshot ? HE.fusionarSnapshot(juego.snapshot, HE.snapshot(res), res.hoy) : HE.snapshot(res);
+  const campos = { recalculo: HC.RECALCULO, snapshot: snap };
   juego = Object.assign({}, juego, campos);
   const ref = metaJuego();
   (juegoExiste ? ref.update(campos) : ref.set(campos, { merge: true })).catch(errorGuardar);
@@ -1967,6 +2000,7 @@ function temporadaVista() {
 function revisarCelebraciones() {
   if (!juegoCargado || !cargado || !res || celebrando || deshacerPendiente || wrapped) return;
   if ((juego.calibracion || 1) < HC.CALIBRACION) { nuevaTemporada(); return; }
+  if ((juego.recalculo || 0) < HC.RECALCULO) { recalculoSilencioso(); return; }
   if (juego.temporada1 && !juego.temporada1.visto && !temporadaMostrada) {
     const visibleT = !document.hidden && [panelHoy, panelStats, panelLogros].some(p => p && !p.hidden);
     if (visibleT && !(hoja && !hoja.hidden)) hojaTemporada();
@@ -2484,7 +2518,11 @@ function riesgoHtml() {
   const lista = HE.enRiesgo(res).slice(0, 5);
   const txt = x => {
     const h = normal[x.id];
-    if (x.tipo === "nuncaDos") return `Ayer se te pasó. Hoy es el día: nunca dos veces.`;
+    if (x.tipo === "nuncaDos") {
+      const p = res.habitos[x.id] && res.habitos[x.id].perdones;
+      const salvada = res.habitos[x.id] && (res.habitos[x.id].dias[HE.addDias(res.hoy, -1)] || {}).perdonado;
+      return salvada ? `Ayer se te pasó y un perdón salvó tu racha${p && !p.guardados ? "; no te quedan más" : ""}. Hoy es el día.` : `Ayer se te pasó. Hoy es el día: nunca dos veces.`;
+    }
     if (x.tipo === "racha") return `Hoy toca: tu racha de ${x.racha} días está en juego.`;
     if (x.tipo === "semana") return x.faltan > x.quedan ? `Esta semana ya no alcanza: faltan ${x.faltan} y quedan ${x.quedan} días.` : `Te ${x.faltan === 1 ? "falta 1 vez" : `faltan ${x.faltan} veces`} y quedan justo ${x.quedan} días.`;
     return `Su fuerza bajó ${Math.round(x.caida)} puntos en 2 semanas.`;

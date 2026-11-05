@@ -83,14 +83,20 @@ test("migración: registros (formato nuevo) manda sobre done; datos raros se cor
 });
 
 // ---------- Rachas diarias ----------
-test("racha diaria: hoy sin marcar no la corta; un fallo sí", () => {
+test("racha diaria: hoy sin marcar no la corta; un fallo se perdona y dos seguidos de cerca la cortan", () => {
   const r = uno(hab("a", { registros: dias("2026-09-01", 10) }), "2026-09-11");
   assert.equal(r.racha.actual, 10);
   assert.equal(r.hoy.clase, "pendiente");
+  // Un fallo: lo salva el perdón con el que empieza la racha (el día no suma).
   const conFallo = uno(hab("a", { registros: Object.assign(dias("2026-09-01", 4), dias("2026-09-06", 5)) }), "2026-09-10");
   assert.equal(conFallo.dias["2026-09-05"].clase, "fallo");
-  assert.equal(conFallo.racha.actual, 5);
-  assert.equal(conFallo.racha.mejor, 5);
+  assert.equal(conFallo.dias["2026-09-05"].perdonado, true);
+  assert.equal(conFallo.racha.actual, 9);
+  // Otro fallo antes de juntar 7 días: ya no quedan perdones y se corta.
+  const dos = uno(hab("a", { registros: Object.assign(dias("2026-09-01", 3), dias("2026-09-05", 2), dias("2026-09-08", 3)) }), "2026-09-11");
+  assert.equal(dos.dias["2026-09-07"].perdonado, undefined);
+  assert.equal(dos.racha.actual, 3);
+  assert.equal(dos.racha.mejor, 5);
 });
 
 test("racha cruza cambio de mes y de año", () => {
@@ -120,7 +126,8 @@ test("cada N días: toca cada 3 días desde el inicio", () => {
   assert.equal(r.dias["2026-09-02"].clase, "noToca");
   assert.equal(r.dias["2026-09-07"].clase, "cumple");
   assert.equal(r.racha.actual, 3);
-  assert.equal(uno(h, "2026-09-11").racha.actual, 0); // el 10 tocaba y no se hizo
+  assert.equal(uno(h, "2026-09-11").racha.actual, 3); // el 10 tocaba y no se hizo: lo salva el perdón
+  assert.equal(uno(h, "2026-09-14").racha.actual, 0); // el 13 tampoco: se corta
 });
 
 // ---------- Semanales ----------
@@ -176,7 +183,8 @@ test("medible: XP proporcional; la racha se mantiene desde el 50 % de la meta", 
   assert.equal(medio.racha.actual, 2);
   const poco = uno(h(2), "2026-09-03");
   assert.equal(poco.dias["2026-09-02"].clase, "fallo");
-  assert.equal(poco.racha.actual, 0);
+  assert.equal(poco.dias["2026-09-02"].perdonado, true); // el perdón inicial lo salva, pero no suma
+  assert.equal(poco.racha.actual, 1);
   assert.ok(poco.dias["2026-09-02"].xp === 0 && medio.dias["2026-09-02"].xp > 0);
   // Hoy a medias todavía está pendiente, no es un fallo.
   const hoy = uno(hab("a", { tipo: "medible", meta: 8, registros: { "2026-09-03": { v: 2 } } }), "2026-09-03");
@@ -208,29 +216,32 @@ test("archivado: deja de tocar desde la fecha en que se archivó", () => {
 });
 
 // ---------- Comodines ----------
-test("comodines: cubren un día fallado si ya los tenías; máximo 2 guardados", () => {
-  const registros = Object.assign(dias("2026-09-01", 4), dias("2026-09-06", 4)); // falla el 5
+test("comodines: cubren un día fallado si ya los tenías (cuando no quedan perdones); máximo 2 guardados", () => {
+  // Falla el 3 (lo salva el perdón de la racha) y el 6 (ya no quedan perdones).
+  const registros = Object.assign(dias("2026-09-01", 2), dias("2026-09-04", 2), dias("2026-09-07", 3));
   const sin = uno(hab("a", { registros }), "2026-09-10");
-  assert.equal(sin.racha.actual, 4);
+  assert.equal(sin.racha.actual, 3);
   const con = E.evaluar([hab("a", { registros })], { hoy: "2026-09-10", comodines: ["2026-09-02"] });
-  assert.equal(con.habitos.a.racha.actual, 8);
-  assert.equal(con.habitos.a.dias["2026-09-05"].protegido, true);
-  assert.deepEqual(con.comodines.protegidos, ["2026-09-05"]);
+  assert.equal(con.habitos.a.racha.actual, 7);
+  assert.equal(con.habitos.a.dias["2026-09-03"].perdonado, true);
+  assert.equal(con.habitos.a.dias["2026-09-06"].protegido, true);
+  assert.deepEqual(con.comodines.protegidos, ["2026-09-06"]); // el perdón no gastó comodín
   assert.equal(con.comodines.guardados, 0);
   // Comprado después del fallo no lo cubre (y queda guardado).
   const tarde = E.evaluar([hab("a", { registros })], { hoy: "2026-09-10", comodines: ["2026-09-07"] });
-  assert.equal(tarde.habitos.a.racha.actual, 4);
+  assert.equal(tarde.habitos.a.racha.actual, 3);
   assert.equal(tarde.comodines.guardados, 1);
   // Tope de 2 guardados.
   assert.equal(E.asignarComodines([], ["2026-09-01", "2026-09-02", "2026-09-03"]).guardados, 2);
 });
 
 test("un comodín cubre el día entero, aunque fallen varios hábitos", () => {
-  const regs = Object.assign(dias("2026-09-01", 2), dias("2026-09-04", 2)); // fallan el 3
-  const r = E.evaluar([hab("a", { registros: regs }), hab("b", { registros: regs })], { hoy: "2026-09-06", comodines: ["2026-09-01"] });
-  assert.equal(r.habitos.a.racha.actual, 4);
-  assert.equal(r.habitos.b.racha.actual, 4);
-  assert.equal(r.comodines.protegidos.length, 1);
+  // Fallan el 3 (perdón de cada racha) y el 6 (un solo comodín para los dos).
+  const regs = Object.assign(dias("2026-09-01", 2), dias("2026-09-04", 2), dias("2026-09-07", 1));
+  const r = E.evaluar([hab("a", { registros: regs }), hab("b", { registros: regs })], { hoy: "2026-09-08", comodines: ["2026-09-01"] });
+  assert.equal(r.habitos.a.racha.actual, 5);
+  assert.equal(r.habitos.b.racha.actual, 5);
+  assert.deepEqual(r.comodines.protegidos, ["2026-09-06"]);
 });
 
 // ---------- XP, nivel y monedas ----------
@@ -240,7 +251,8 @@ test("desmarcar un día recalcula el XP y la racha", () => {
   delete registros["2026-09-05"];
   const despues = E.evaluar([hab("a", { registros })], { hoy: "2026-09-06" });
   assert.ok(despues.xp < antes.xp);
-  assert.equal(despues.habitos.a.racha.actual, 0);
+  assert.equal(despues.habitos.a.racha.actual, 4); // el día desmarcado se perdona: no suma ni corta
+  assert.equal(despues.habitos.a.dias["2026-09-05"].perdonado, true);
   assert.ok(despues.monedasGanadas <= antes.monedasGanadas);
 });
 
@@ -463,7 +475,7 @@ test("kpis: comparación contra el periodo anterior", () => {
   assert.equal(k.actual.pct, 1);
   assert.ok(Math.abs(k.previo.pct - 3 / 7) < 1e-9);
   assert.ok(k.actual.xp > k.previo.xp);
-  assert.equal(k.mejorRacha.racha, 7);
+  assert.equal(k.mejorRacha.racha, 8); // el 15 y del 17 al 23 (el 16 se perdona)
 });
 
 test("serie semanal con media móvil", () => {

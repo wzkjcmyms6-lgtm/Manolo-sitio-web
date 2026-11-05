@@ -444,6 +444,31 @@ function conTemporadaVista(opciones) {
     await p.context().close();
   }
 
+  for (const ancho of [390, 1280]) {
+    console.log(`\n=== Racha que perdona a ${ancho} px`);
+    const e = conTemporadaVista();
+    // 20 días seguidos y ayer se le pasó: la racha sigue.
+    const regs = {};
+    for (let i = 1; i <= 21; i++) { const f = new Date(Date.UTC(2026, 9, 14 + i)).toISOString().slice(0, 10); if (f !== "2026-11-04" && f < HOY) regs[f] = { e: "hecho", t: 1 }; }
+    e.__SEED__["users/test/habitos"].diario = { v: 2, name: "Vitaminas", emoji: "💊", tipo: "sino", freqType: "diario", days: [true, true, true, true, true, true, true], done: Object.keys(regs), registros: regs, createdAt: Date.UTC(2026, 9, 15), inicio: "2026-10-15", orden: 0, timeOfDay: "manana", area: "cuerpo" };
+    e.__SEED__["users/test/meta"].habitos_juego.snapshot = { nivel: 1, rangos: {}, logros: [], misiones: [], perfectos: [], jefes: [] };
+    const p = await abrir(browser, base, e, { hash: "#habitos", zona: ZONA, fecha: FECHA, ancho, alto: ancho > 800 ? 900 : 844 });
+    consolaLimpia(p);
+    await p.waitForTimeout(800);
+    ok(!(await p.$(".hb-celebra")), "las rachas más largas no disparan celebraciones al actualizar");
+    const j = await juego(p);
+    ok(j.recalculo === 1 && j.snapshot.logros.includes("racha_7"), "el recálculo se guarda en silencio (logros incluidos)");
+    const fila = await texto(p, '#hb-lista [data-detalle="diario"]');
+    ok(/🛡 ayer se salvó tu racha/.test(fila) && /20 días/.test(fila), `Hoy: «ayer se salvó tu racha» y la racha sigue (${fila})`);
+    await p.click('#hb-lista [data-detalle="diario"]');
+    await p.waitForTimeout(400);
+    ok(/Racha que perdona\. Tienes 1 perdón\. Cumple 7 días más para ganar otro\./.test(await texto(p, ".hb-perdones")), `detalle: perdones (${await texto(p, ".hb-perdones")})`);
+    ok(await p.$('.hb-cal-dia.c-perdon[data-dia-cal="2026-11-04"]') !== null, "el calendario marca el día perdonado");
+    await captura(p, `hab-perdon-${ancho}.png`);
+    ok(p.errores.length === 0 && p.consola.length === 0, `sin errores (${p.errores.concat(p.consola).join(" | ")})`);
+    await p.context().close();
+  }
+
   console.log("\n=== Copia de seguridad con categorías");
   {
     const e = conTemporadaVista();
