@@ -220,6 +220,8 @@ onAuthReady(() => {
     snap.docs.forEach(d => { docs[d.id] = d.data(); });
     lista = Object.keys(docs).map(id => B.normalizarDoc(id, docs[id]));
     cargado = true;
+    // Hábitos: "se marca solo" al anotar una lectura (js/habitos-auto.js).
+    window.dispatchEvent(new CustomEvent("manolo:fuente", { detail: { fuente: "biblia", datos: lista, servidor: !(snap.metadata && snap.metadata.fromCache) } }));
     render();
   }, err => console.warn("Biblia:", err));
 });

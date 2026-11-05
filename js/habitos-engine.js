@@ -126,6 +126,11 @@ function normalizar(doc, id) {
     pausas: (Array.isArray(d.pausas) ? d.pausas : []).filter(p => p && esFecha(p.desde) && esFecha(p.hasta) && p.desde <= p.hasta),
     despuesDe: texto(d.despuesDe) || null,
     vinculo: texto(d.vinculo) || null,
+    // "Se marca solo" (js/habitos-auto.js): medida, rutina o categoría de gasto, y desde cuándo.
+    vinculoCfg: d.vinculoCfg && typeof d.vinculoCfg === "object" ? { medida: texto(d.vinculoCfg.medida) || null, rutina: texto(d.vinculoCfg.rutina) || null, categoria: texto(d.vinculoCfg.categoria) || null } : null,
+    vinculoDesde: esFecha(d.vinculoDesde) ? d.vinculoDesde : null,
+    // Hora opcional "HH:MM" para ordenar dentro de su momento.
+    hora: typeof d.hora === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(d.hora) ? d.hora : "",
     minima: texto(d.minima),
     // Nota o descripción del hábito (opcional; los hábitos viejos no la tienen).
     descripcion: texto(d.descripcion).trim().slice(0, C.DESCRIPCION_MAX),

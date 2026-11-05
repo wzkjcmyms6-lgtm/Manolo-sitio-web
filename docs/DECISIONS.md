@@ -805,3 +805,20 @@ las semanas pares (según la semilla de la semana) en lugar de la de rango o
 total, y cuenta días distintos con algo cumplido de esa categoría; meta =
 promedio de las 4 semanas anteriores × 1,2 (entre 2 y 7). El filtro de
 Estadísticas se recuerda en el teléfono (`hb-stats-filtro`).
+
+**D-085 (2026-11-05) · Se marca solo, sin lecturas nuevas.** Cada módulo ya
+escucha su colección; ahora avisa con un evento (`manolo:actividades` de
+Running/Bici, ya existía; `manolo:fuente` de Movilidad, Libros con las
+páginas por día, Biblia y Finanzas con fecha, tipo y categoría) y Hábitos
+decide con `js/habitos-auto.js` (puro, con pruebas). El registro automático
+lleva `auto: { f, v }`; editarlo a mano (marcar, sumar, cambiar estado) lo
+reemplaza sin `auto`, y desde ahí manda lo manual. Si el día ya no tiene
+actividad en el módulo, el registro automático se borra, pero solo con
+datos del servidor (una caché vacía en un teléfono nuevo no borra nada).
+Se escribe una vez por hábito (todos los días que cambian en un `update`).
+`vinculoDesde` marca desde cuándo sincroniza; "rellenar" lo lleva al primer
+día del historial (hasta un año) y esos registros no dan XP porque su hora
+es la de hoy (ventana de 48 h). Gimnasio sigue con su evento
+`entreno:guardado` (sin deshacer: no hay lista). Los hábitos nuevos se
+crean con id del teléfono (`doc().set`) para poder ofrecer rellenar sin
+esperar al servidor.

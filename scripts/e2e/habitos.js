@@ -312,6 +312,88 @@ function conTemporadaVista(opciones) {
     await p.context().close();
   }
 
+  for (const ancho of [390, 1280]) {
+    console.log(`\n=== Se marca solo a ${ancho} px`);
+    const e = conTemporadaVista();
+    Object.assign(e.__SEED__, {
+      "users/test/running": { r1: { date: "2026-11-03", distance: 5.2, duration: 31 }, r2: { date: "2026-10-30", distance: 8, duration: 45 }, r3: { date: "2026-10-21", distance: 4, duration: 25 }, r4: { date: "2026-11-02", distance: 3, duration: 20 } },
+      "users/test/movilidad": { m1: { v: 1, rutinaId: "liberar-el-cuerpo", nombre: "Todo el cuerpo", fecha: "2026-11-05", completada: 1, duracionSeg: 180 }, m2: { v: 1, rutinaId: "despues-de-correr", nombre: "Después de correr", fecha: "2026-11-04", completada: 1, duracionSeg: 300 } },
+      "users/test/libros": { l1: { v: 1, titulo: "El libro", autor: "A", paginas: 300, estado: "leyendo", fechaRegistro: "2026-10-01", fechaInicio: "2026-10-01", paginaBase: 0, progreso: { "2026-11-04": 10, "2026-11-05": 25 }, creado: 1 } },
+      "users/test/finanzas": { f1: { date: "2026-11-05", type: "gasto", category: "comida", amount: 20, desc: "Almuerzo" } }
+    });
+    e.__SEED__["users/test/habitos"].correr.registros["2026-11-02"] = { e: "hecho", t: 1 }; // marcado a mano
+    const p = await abrir(browser, base, e, { hash: "#habitos", zona: ZONA, fecha: FECHA, ancho, alto: ancho > 800 ? 900 : 844 });
+    consolaLimpia(p);
+    await p.waitForTimeout(700);
+    const hab = id => p.evaluate(i => window.__fakeStore.colMap("users/test/habitos").get(i), id);
+    // Vincular «Correr» con Running desde el formulario
+    await p.click('#hb-lista [data-detalle="correr"]');
+    await p.waitForTimeout(300);
+    await p.click('.hb-sheet [data-editar="correr"]');
+    await p.waitForTimeout(300);
+    ok(await p.isVisible('[data-campo="vinculo"][data-v="running"]'), "«Se marca solo» ofrece Running, Bici, Movilidad, Libros, Biblia y Finanzas");
+    const fuentesForm = await p.$$eval('[data-campo="vinculo"]', els => els.map(x => x.textContent.trim()));
+    ok(fuentesForm.join(",") === "No,Running,Bici,Movilidad,Libros,Biblia,Finanzas,Gimnasio", `opciones (${fuentesForm})`);
+    await p.click('[data-campo="vinculo"][data-v="running"]');
+    await p.waitForTimeout(200);
+    await p.click('.hb-acciones-fijas [type="submit"]');
+    await p.waitForTimeout(700);
+    let h = await hab("correr");
+    ok(h.vinculo === "running" && h.vinculoDesde === HOY, "se guarda el vínculo desde hoy");
+    // Días con carrera que todavía no tenían registro (el 2 de nov ya estaba marcado a mano).
+    const libres = ["2026-10-21", "2026-10-30", "2026-11-03"].filter(f => !e.__SEED__["users/test/habitos"].correr.registros[f]);
+    const txtRellenar = await texto(p, ".hb-sheet");
+    ok(await p.isVisible("[data-rellenar]") && txtRellenar.includes(`Encontré ${libres.length} ${libres.length === 1 ? "día" : "días"} desde el`) && /No dan XP/.test(txtRellenar), `ofrece rellenar ${libres.length} días del historial, sin XP (${txtRellenar.slice(0, 120)})`);
+    await captura(p, `hab-rellenar-${ancho}.png`);
+    await p.click("[data-rellenar]");
+    await p.waitForTimeout(600);
+    h = await hab("correr");
+    ok(libres.every(f => h.registros[f] && h.registros[f].auto && h.registros[f].e === "hecho") && !h.registros["2026-11-02"].auto, `rellena ${libres.join(", ")} y respeta lo marcado a mano`);
+    ok(h.vinculoDesde === libres[0] && libres.every(f => h.done.includes(f)), "y guarda desde cuándo (y el «done» de siempre)");
+    // Una carrera nueva hoy lo marca; borrarla lo desmarca
+    await p.evaluate(() => { window.__fakeStore.colMap("users/test/running").set("hoy", { date: "2026-11-05", distance: 6, duration: 35 }); window.__fakeStore.notify(); });
+    await p.waitForTimeout(900);
+    h = await hab("correr");
+    ok(h.registros["2026-11-05"] && h.registros["2026-11-05"].auto && h.registros["2026-11-05"].t > 0, "una carrera de hoy marca «Correr» solo");
+    ok(/Marcado solo: «Correr»/.test(await texto(p, ".hb-toast")), "y avisa «Marcado solo»");
+    ok(/⚡ Running/.test(await texto(p, '#hb-lista [data-detalle="correr"]')), "la fila muestra que se marca solo");
+    await p.evaluate(() => { window.__fakeStore.colMap("users/test/running").delete("hoy"); window.__fakeStore.colMap("users/test/running").delete("r4"); window.__fakeStore.notify(); });
+    await p.waitForTimeout(900);
+    h = await hab("correr");
+    ok(!h.registros["2026-11-05"] && !h.done.includes("2026-11-05"), "al borrar la carrera se deshace");
+    ok(h.registros["2026-11-02"] && h.registros["2026-11-02"].e === "hecho", "lo marcado a mano no se toca");
+    // Movilidad (eligiendo la rutina), Libros (páginas) y Finanzas
+    const crear = async (nombre, tipo, vinculo, extra) => {
+      await p.click("#hb-nuevo");
+      await p.waitForTimeout(300);
+      await p.fill('.hb-form [name="name"]', nombre);
+      if (tipo !== "sino") { await p.click(`[data-campo="tipo"][data-v="${tipo}"]`); await p.waitForTimeout(150); }
+      if (extra && extra.meta) await p.fill('.hb-form [name="meta"]', String(extra.meta));
+      await p.click("[data-mas-opciones]");
+      await p.waitForTimeout(150);
+      await p.click(`[data-campo="vinculo"][data-v="${vinculo}"]`);
+      await p.waitForTimeout(150);
+      if (extra && extra.rutina) await p.selectOption('[name="vinculoRutina"]', extra.rutina);
+      await p.click('.hb-acciones-fijas [type="submit"]');
+      await p.waitForTimeout(700);
+      return p.evaluate(n => { const m = window.__fakeStore.colMap("users/test/habitos"); for (const [id, d] of m) if (d.name === n) return Object.assign({ id }, d); return null; }, nombre);
+    };
+    let mov = await crear("Estirar después de correr", "sino", "movilidad", { rutina: "despues-de-correr" });
+    ok(mov && mov.vinculoCfg.rutina === "despues-de-correr" && !mov.registros[HOY], "Movilidad con su rutina: otra rutina hoy no lo marca");
+    if (await p.$("[data-rellenar]")) { await p.click("[data-rellenar]"); await p.waitForTimeout(500); }
+    mov = await hab(mov.id);
+    ok(mov.registros["2026-11-04"] && mov.registros["2026-11-04"].auto, "rellena el día que hiciste esa rutina");
+    let leer = await crear("Leer páginas", "medible", "libros", { meta: 20 });
+    await p.waitForTimeout(300);
+    if (await p.$(".hb-sheet [data-cerrar].hb-btn-sec")) { await p.click(".hb-sheet .hb-acciones [data-cerrar]"); await p.waitForTimeout(300); }
+    leer = await hab(leer.id);
+    ok(leer.vinculoCfg.medida === "paginas" && leer.registros[HOY] && leer.registros[HOY].v === 15, `Libros suma las páginas de hoy (${leer.registros[HOY] && leer.registros[HOY].v})`);
+    const gastos = await crear("Anotar todo", "sino", "finanzas");
+    ok(gastos.registros[HOY] && gastos.registros[HOY].e === "hecho" && gastos.registros[HOY].auto.f === "finanzas", "Finanzas: un movimiento de hoy lo marca");
+    ok(p.errores.length === 0 && p.consola.length === 0, `sin errores (${p.errores.concat(p.consola).join(" | ")})`);
+    await p.context().close();
+  }
+
   console.log("\n=== Sin historia: no hay hoja de temporada");
   const q = await abrir(browser, base, {}, { hash: "#habitos", zona: ZONA, fecha: FECHA });
   await q.waitForTimeout(500);

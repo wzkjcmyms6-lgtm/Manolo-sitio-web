@@ -15,6 +15,7 @@ y el plan guiado de Scalping (`docs/SCALPING.md`, no se toca).
 | `js/habitos.js` | Pantallas Hoy, detalle, formulario, Estadísticas, Logros y Firestore; expone `window.HabitosApp` para las pantallas en archivos aparte |
 | `js/habitos-categorias-ui.js` | Hojas de categorías: lista, crear/editar, sugeridas, archivar, asignar en lote (fase 3) |
 | `js/habitos-categoria.js` | Página de una categoría `#hab-categoria/{id}` (fase 5) |
+| `js/habitos-auto.js` | Se marca solo: fuentes, valor de cada día, qué poner y qué deshacer (fase 6) |
 | `js/habito-scalping.js` | Tarjeta y pantalla de Scalping |
 | `tests/habitos-engine.test.js` | Pruebas del motor; `tests/habitos-sim.js` simula la dificultad |
 
@@ -104,6 +105,20 @@ opcional, `pendientesMomento`).
   barras).
 - Gamificación: misión de categoría en semanas pares; logros Especialista
   (nivel 5) y Maestría (nivel 10) de una categoría.
+
+### Se marca solo (fase 6)
+| Fuente | Sí/No | Medible / Tiempo | Notas |
+|---|---|---|---|
+| Running, Bici | hubo carrera/rodada | km, minutos o cuántas | `manolo:actividades` |
+| Movilidad | completaste una rutina (o una en particular) | minutos o cuántas | `manolo:fuente` |
+| Libros | leíste ese día | páginas del día | `LibrosProgreso.paginasPorDia` |
+| Biblia | anotaste una lectura | cuántas | |
+| Finanzas | anotaste un movimiento | cuántos | |
+| Gasto (Evitar) | un gasto en la categoría = recaída | — | |
+| Gimnasio | al guardar un entreno | meta | evento `entreno:guardado` |
+
+Datos nuevos del hábito: `vinculo`, `vinculoCfg { medida, rutina,
+categoria }`, `vinculoDesde`; en el registro, `auto: { f, v }`.
 
 ### Dificultad: antes y después (simulación con el motor real)
 Hábito diario cumplido el 100 %:

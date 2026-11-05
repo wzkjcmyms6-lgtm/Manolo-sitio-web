@@ -10,6 +10,7 @@ const HE = HabitosEngine;
 const HC = HabitosConfig;
 const HCat = HabitosCategorias;
 const HH = HabitosHoy;
+const HA = HabitosAuto;
 
 // Emojis del formulario, por categorías (como en otras apps de hábitos).
 // Están todos los de antes; además se puede escribir cualquiera del teclado.
@@ -359,6 +360,8 @@ function subtitulo(h, x, f) {
   }
   const padre = h.despuesDe && normal[h.despuesDe];
   if (padre && !padre.archivado) partes.unshift(`Después de ${escapeHtml(padre.name)}`);
+  const auto = h.vinculo && HA.fuente(h.vinculo);
+  if (auto) partes.push(`<span class="hb-auto" title="Se marca solo">⚡ ${escapeHtml(auto.nombre)}</span>`);
   const racha = textoRacha(x.rh && x.rh.racha);
   return { texto: partes.join(" · "), racha };
 }
@@ -626,7 +629,8 @@ function sumarValor(id, f, delta) {
   coleccion().doc(id).update(
     FP("registros", f, "v"), FV().increment(delta),
     FP("registros", f, "t"), Date.now(),
-    FP("registros", f, "e"), FV().delete()
+    FP("registros", f, "e"), FV().delete(),
+    FP("registros", f, "auto"), FV().delete() // editado a mano: ya no es automático
   ).catch(errorGuardar);
 }
 
@@ -964,6 +968,9 @@ function formDesde(h) {
     descripcion: h ? h.descripcion || "" : "",
     despuesDe: h ? h.despuesDe || "" : "",
     vinculo: h ? h.vinculo || "" : "",
+    vinculoMedida: h && h.vinculoCfg ? h.vinculoCfg.medida || "" : "",
+    vinculoRutina: h && h.vinculoCfg ? h.vinculoCfg.rutina || "" : "",
+    vinculoCategoria: h && h.vinculoCfg ? h.vinculoCfg.categoria || "" : "",
     // "Más opciones" abierto si el hábito ya usa alguna.
     _mas: !!(h && (h.descripcion || h.minima || h.despuesDe || h.vinculo || h.dificultad !== "media"))
   };
@@ -1032,7 +1039,7 @@ function hojaForm(id) {
         <span class="hb-ayuda">Encadénalo a otro hábito: “Después de meditar, leeré”. Se muestran en secuencia.</span></label>
 
       <span class="hb-label">Se marca solo</span>
-      ${chips("vinculo", [["", "No"], ["gimnasio", "Al guardar un entreno"]], f.vinculo)}
+      ${vinculoHtml(f)}
 
       ${evitar ? "" : `<label class="hb-campo"><span>Versión mínima <span class="hb-opcional">(opcional)</span></span>
         <input type="text" name="minima" maxlength="60" value="${escapeHtml(f.minima)}" placeholder="Ej: leer 1 página">
@@ -1108,8 +1115,18 @@ function guardarForm() {
     area: f.area || null,
     minima: f.tipo === "evitar" ? "" : String(f.minima || "").trim(),
     despuesDe: f.despuesDe || null,
-    vinculo: f.vinculo || null
+    vinculo: vinculoValido(f) || null
   };
+  const anterior = f.id ? normal[f.id] : null;
+  if (datos.vinculo) {
+    datos.vinculoCfg = { medida: f.tipo === "medible" ? f.vinculoMedida || medidaDefecto(datos.vinculo) : null, rutina: datos.vinculo === "movilidad" ? f.vinculoRutina || null : null, categoria: datos.vinculo === "gasto" ? f.vinculoCategoria || null : null };
+    // Desde cuándo se marca solo: hoy, salvo que ya estuviera vinculado igual.
+    const igual = anterior && anterior.vinculo === datos.vinculo && JSON.stringify(anterior.vinculoCfg || {}) === JSON.stringify(datos.vinculoCfg);
+    datos.vinculoDesde = igual && anterior.vinculoDesde ? anterior.vinculoDesde : hoy();
+  } else if (f.id) {
+    datos.vinculoCfg = FV().delete();
+    datos.vinculoDesde = FV().delete();
+  }
   if (medible) {
     datos.meta = Math.max(1, Number(String(f.meta).replace(",", ".")) || HC.CONST.META_DEFECTO[f.tipo]);
     datos.unidad = f.tipo === "tiempo" ? "min" : String(f.unidad || "").trim();
@@ -1118,17 +1135,23 @@ function guardarForm() {
   const descripcion = String(f.descripcion || "").trim().slice(0, HC.CONST.DESCRIPCION_MAX);
   if (descripcion) datos.descripcion = descripcion;
   else if (f.id) datos.descripcion = FV().delete();
+  const nuevoVinculo = datos.vinculo && datos.vinculoDesde === hoy() && !(anterior && anterior.vinculoDesde === hoy());
+  let id = f.id;
   if (f.id) {
     coleccion().doc(f.id).update(datos).catch(errorGuardar);
     cerrarHoja();
     toast("Cambios guardados.");
   } else {
-    const orden = Object.keys(normal).reduce((m, id) => Math.max(m, normal[id].orden || 0), 0) + 1;
+    const orden = Object.keys(normal).reduce((m, k) => Math.max(m, normal[k].orden || 0), 0) + 1;
     Object.assign(datos, { done: [], registros: {}, createdAt: Date.now(), inicio: hoy(), orden });
-    coleccion().add(datos).catch(errorGuardar);
+    // Con el id ya elegido (sin esperar al servidor) se puede ofrecer rellenar.
+    const ref = coleccion().doc();
+    id = ref.id;
+    ref.set(datos).catch(errorGuardar);
     cerrarHoja();
     toast(`Creaste «${name}». ¡A por el primer día!`);
   }
+  if (nuevoVinculo) setTimeout(() => ofrecerRellenar(id), 350);
 }
 
 // ---------- Archivar y eliminar ----------
@@ -1394,6 +1417,134 @@ function guardarDiaMeta(campos) {
   const f = res.hoy;
   diasMeta[f] = Object.assign({}, diasMeta[f], campos);
   metaDias().set({ dias: { [f]: campos } }, { merge: true }).catch(errorGuardar);
+}
+
+// ---------- Se marca solo con Running, Bici, Movilidad, Libros, Biblia y Finanzas ----------
+// Cada módulo avisa con sus datos (sin lecturas nuevas: son las listas que
+// ya escucha). La regla de qué toca cada día está en js/habitos-auto.js.
+const fuentes = {}; // id → { datos, servidor, categorias }
+let timerAuto = null;
+function recibirFuente(id, datos, servidor, extra) {
+  fuentes[id] = Object.assign({ datos, servidor: servidor !== false }, extra);
+  clearTimeout(timerAuto);
+  timerAuto = setTimeout(sincronizarAuto, 250);
+}
+window.addEventListener("manolo:actividades", e => { const d = e.detail || {}; if (d.coleccion === "running" || d.coleccion === "bicicleta") recibirFuente(d.coleccion, d.docs || [], d.servidor); });
+window.addEventListener("manolo:fuente", e => { const d = e.detail || {}; if (d.fuente) recibirFuente(d.fuente, d.datos, d.servidor, d.categorias ? { categorias: d.categorias } : null); });
+const origenDe = vinculo => (vinculo === "gasto" ? "finanzas" : vinculo);
+function aggDe(h) {
+  const src = fuentes[origenDe(h.vinculo)];
+  return src ? HA.porDia(h.vinculo, src.datos, h.vinculoCfg || {}) : null;
+}
+function sincronizarAuto() {
+  if (!cargado) return;
+  const f = hoy(), ahora = Date.now();
+  const nuevos = [], quitados = [];
+  Object.keys(normal).forEach(id => {
+    const h = normal[id];
+    const def = h.vinculo && HA.fuente(h.vinculo);
+    if (!def || def.soloEvento || h.archivado) return;
+    const agg = aggDe(h);
+    if (!agg) return;
+    const p = HA.plan(h, agg, (docs[id] && docs[id].registros) || {}, { hoy: f, ahora, servidor: fuentes[origenDe(h.vinculo)].servidor });
+    if (escribirAuto(h, p)) {
+      Object.keys(p.poner).forEach(fe => { if (!(docs[id].registros || {})[fe] && fe >= HE.addDias(f, -1)) nuevos.push(`«${h.name}»`); });
+      if (p.quitar.length) quitados.push(`«${h.name}»`);
+    }
+  });
+  if (nuevos.length) toast(`Marcado solo: ${Array.from(new Set(nuevos)).join(", ")}.`);
+  else if (quitados.length) toast(`Se quitó lo marcado solo en ${Array.from(new Set(quitados)).join(", ")}: ya no está en su módulo.`);
+}
+// Una escritura por hábito (atómica): los días que se ponen y los que se quitan.
+function escribirAuto(h, p) {
+  const fechas = Object.keys(p.poner);
+  if (!fechas.length && !p.quitar.length) return false;
+  const args = [];
+  fechas.forEach(fe => args.push(FP("registros", fe), p.poner[fe]));
+  p.quitar.forEach(fe => args.push(FP("registros", fe), FV().delete()));
+  if (h.tipo === "sino") {
+    const hechos = fechas.filter(fe => p.poner[fe].e === "hecho");
+    if (hechos.length) args.push("done", FV().arrayUnion(...hechos));
+    else if (p.quitar.length) args.push("done", FV().arrayRemove(...p.quitar));
+  }
+  coleccion().doc(h.id).update(...args).catch(errorGuardar);
+  // Sí/No con días puestos y quitados a la vez: el "done" de los quitados va aparte.
+  if (h.tipo === "sino" && fechas.some(fe => p.poner[fe].e === "hecho") && p.quitar.length) {
+    coleccion().doc(h.id).update("done", FV().arrayRemove(...p.quitar)).catch(errorGuardar);
+  }
+  return true;
+}
+// Al vincular: ofrecer rellenar los días que ya tiene el módulo (sin XP).
+let rellenarPendiente = null;
+function ofrecerRellenar(id) {
+  const h = normal[id];
+  if (!h || !h.vinculo) return;
+  const agg = aggDe(h);
+  const dias = agg ? HA.rellenables(h, agg, (docs[id] && docs[id].registros) || {}, hoy(), 365) : [];
+  if (!dias.length) return;
+  const def = HA.fuente(h.vinculo);
+  rellenarPendiente = { id, desde: dias[0], n: dias.length };
+  abrirHoja(cabecera("Se marca solo", `¿Rellenar con tu historial de ${escapeHtml(def.nombre)}?`) + `
+    <p class="hb-texto">Encontré <b>${plural(dias.length, "día", "días")}</b> desde el ${fechaCorta(dias[0])} en ${escapeHtml(def.nombre)}. Puedo marcarlos en <b>${escapeHtml(h.emoji)} ${escapeHtml(h.name)}</b>.</p>
+    <ul class="hb-lista-texto">
+      <li>No dan XP ni monedas (pasaron más de 48 horas).</li>
+      <li>Sí cuentan para tu racha, tu rango y tus estadísticas. Los días sin actividad desde entonces cuentan como no hechos.</li>
+      <li>Lo que ya marcaste a mano se queda como está.</li>
+    </ul>
+    <div class="hb-acciones"><button type="button" class="hb-btn-sec" data-cerrar>Ahora no</button>
+      <button type="button" class="hb-btn" data-rellenar>Marcar ${plural(dias.length, "día", "días")}</button></div>`, { tipo: "rellenar", id });
+}
+function rellenar() {
+  const r = rellenarPendiente;
+  rellenarPendiente = null;
+  cerrarHoja();
+  const h = r && normal[r.id];
+  if (!h) return;
+  const agg = aggDe(h);
+  const p = HA.plan(h, agg, (docs[r.id] && docs[r.id].registros) || {}, { hoy: hoy(), ahora: Date.now(), desde: r.desde, servidor: false });
+  silencioHasta = Date.now() + SILENCIO_IMPORTAR_MS; // es historia: no se celebra
+  escribirAuto(h, p);
+  coleccion().doc(r.id).update({ vinculoDesde: r.desde }).catch(errorGuardar);
+  toast(`Listo: ${plural(Object.keys(p.poner).length, "día marcado", "días marcados")} desde el ${fechaCorta(r.desde)}.`);
+}
+
+// Opciones del vínculo en el formulario: fuente, medida (Medible), rutina
+// (Movilidad) o categoría de gasto (Evitar).
+function vinculoValido(f) {
+  if (!f.vinculo) return "";
+  const def = HA.fuente(f.vinculo);
+  if (!def) return "";
+  if (f.tipo === "evitar") return def.evitar ? f.vinculo : "";
+  return def.evitar ? "" : f.vinculo;
+}
+function medidaDefecto(v) {
+  const def = HA.fuente(v);
+  const m = def && def.medidas.find(x => x[0] !== "n");
+  return m ? m[0] : "n";
+}
+function vinculoHtml(f) {
+  const evitar = f.tipo === "evitar";
+  const opciones = HA.FUENTES.filter(d => (evitar ? d.evitar : !d.evitar));
+  const actual = vinculoValido(f);
+  let html = chips("vinculo", [["", "No"]].concat(opciones.map(d => [d.id, escapeHtml(evitar ? "Gasto en una categoría" : d.nombre)])), actual);
+  const def = actual && HA.fuente(actual);
+  if (def) {
+    html += `<p class="hb-texto">${escapeHtml(def.accion)}${evitar ? "" : f.tipo === "medible" ? ": suma lo del día." : f.tipo === "tiempo" ? ": suma los minutos del día." : ": lo marca como hecho."} Si borras la actividad, se desmarca (salvo que lo hayas cambiado a mano).</p>`;
+    if (f.tipo === "medible") {
+      const medidas = def.medidas.filter(m => m[0] !== "n").concat(def.medidas.filter(m => m[0] === "n").map(m => [m[0], m[1], `Cuántas ${m[1]}`]));
+      html += `<span class="hb-label">Suma</span>${chips("vinculoMedida", medidas.map(m => [m[0], m[2]]), f.vinculoMedida || medidaDefecto(actual))}`;
+    }
+    if (def.rutina && window.MovilidadRutinas) {
+      html += `<label class="hb-campo"><span>Rutina</span><select name="vinculoRutina"><option value="">Cualquier rutina</option>${MovilidadRutinas.map(r =>
+        `<option value="${escapeHtml(r.id)}"${r.id === f.vinculoRutina ? " selected" : ""}>${escapeHtml(r.nombre)}</option>`).join("")}</select></label>`;
+    }
+    if (def.categoria) {
+      const cats = (fuentes.finanzas && fuentes.finanzas.categorias) || [];
+      html += `<label class="hb-campo"><span>Categoría de gasto</span><select name="vinculoCategoria"><option value="">Cualquier gasto</option>${cats.map(c =>
+        `<option value="${escapeHtml(c.id)}"${c.id === f.vinculoCategoria ? " selected" : ""}>${escapeHtml(c.label)}</option>`).join("")}</select></label>`;
+    }
+  }
+  return html;
 }
 
 // ---------- Marcado automático desde otros módulos ----------
@@ -1905,6 +2056,7 @@ const plugins = { click: [], cambio: [], submit: [] };
 function onClickHoja(e) {
   const t = e.target;
   if (t.closest("[data-temporada-visto]")) { cerrarHoja(); return; }
+  if (t.closest("[data-rellenar]")) { rellenar(); return; }
   if (t.closest("[data-cerrar]")) { cerrarHoja(); return; }
   if (plugins.click.some(fn => fn(e, t))) return;
   const q = sel => t.closest(sel);
@@ -2713,6 +2865,8 @@ onAuthReady(() => {
     ultimoMomento = momentoActual();
     actualizar();
     while (pendientesAuto.length) autoMarcar(...pendientesAuto.shift());
+    clearTimeout(timerAuto);
+    timerAuto = setTimeout(sincronizarAuto, 250);
   }, err => console.error("No se pudieron leer los hábitos", err));
 
   metaDias().onSnapshot(doc => {

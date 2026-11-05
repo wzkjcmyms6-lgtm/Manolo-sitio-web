@@ -12,7 +12,7 @@ Cada fase deja la app funcionando y publicada.
 | 3 | Gestión de categorías (Ajustes, formulario, asignar en lote) | ✅ |
 | 4 | Hoy: filtros, agrupar, colores, ocultar hechos, arreglos | ✅ |
 | 5 | Página de categoría, Estadísticas por categoría, misiones y logros | ✅ |
-| 6 | Se marca solo (Running, Bici, Movilidad, Libros, Biblia, Finanzas) | — |
+| 6 | Se marca solo (Running, Bici, Movilidad, Libros, Biblia, Finanzas) | ✅ |
 | 7 | Plantillas, hora opcional, aviso de pendientes | — |
 | 8 | QA final, `docs/HABITOS.md`, lista para el iPhone | — |
 

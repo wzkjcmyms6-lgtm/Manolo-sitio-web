@@ -872,6 +872,8 @@ onAuthReady(() => {
     librosDocs = {};
     snap.docs.forEach(d => { librosDocs[d.id] = d.data(); });
     libros = Object.keys(librosDocs).map(id => L.normalizarLibro(id, librosDocs[id]));
+    // Hábitos: "se marca solo" con las páginas leídas de cada día (js/habitos-auto.js).
+    if (window.LibrosProgreso) window.dispatchEvent(new CustomEvent("manolo:fuente", { detail: { fuente: "libros", datos: LibrosProgreso.paginasPorDia(libros), servidor: !(snap.metadata && snap.metadata.fromCache) } }));
     listo("libros");
   }, err => console.warn("Libros:", err));
   ref("libros_frases").onSnapshot(snap => {

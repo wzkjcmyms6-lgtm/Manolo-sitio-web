@@ -5364,6 +5364,16 @@ function pintarEstadoDatos(el) {
   renderIcons(el);
 }
 
+// Hábitos: "se marca solo" al anotar un movimiento, o una recaída al gastar
+// en una categoría (js/habitos-auto.js). Solo fecha, tipo y categoría.
+function avisarHabitos(servidor) {
+  window.dispatchEvent(new CustomEvent("manolo:fuente", { detail: {
+    fuente: "finanzas", servidor,
+    datos: financeCache.map(m => ({ date: m.date, type: m.type, category: m.category })),
+    categorias: gastoCategoriesCache.map(c => ({ id: c.id, label: c.label }))
+  } }));
+}
+
 onAuthReady(() => {
   // includeMetadataChanges: para saber cuándo los datos ya vienen del
   // servidor (completos) y recién ahí hacer el respaldo.
@@ -5375,6 +5385,7 @@ onAuthReady(() => {
       financeCache = crudos.finanzas.map(d => FD.adaptarMovimiento(d.id, d));
       pedirRender();
     }
+    avisarHabitos(!(snap.metadata && snap.metadata.fromCache));
     intentarRespaldo();
   });
   recDocRef().onSnapshot(doc => {

@@ -174,7 +174,8 @@ function registro(o) {
       cache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderList();
       // Running al nivel de Strava: otros módulos (clima y lugar pendientes) usan la misma lista.
-      window.dispatchEvent(new CustomEvent("manolo:actividades", { detail: { coleccion: o.coleccion, docs: cache } }));
+      // Hábitos también los usa para "se marca solo" (servidor: datos completos).
+      window.dispatchEvent(new CustomEvent("manolo:actividades", { detail: { coleccion: o.coleccion, docs: cache, servidor: !(snap.metadata && snap.metadata.fromCache) } }));
     });
   });
 }

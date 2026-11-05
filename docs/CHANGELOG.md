@@ -1,5 +1,16 @@
 # Cambios
 
+## 2026-11-05 · Hábitos: se marca solo (fase 6)
+- "Se marca solo" (en Más opciones del hábito): Running, Bici, Movilidad
+  (eligiendo la rutina), Libros, Biblia, Finanzas y Gimnasio. Un Sí/No se
+  marca si hubo algo ese día; un Medible suma los km, minutos o páginas del
+  día. Un hábito Evitar puede ligarse a una categoría de gasto: gastar en
+  ella es una recaída.
+- Si borras la actividad, se desmarca (salvo que lo hayas cambiado a mano:
+  lo manual siempre manda). La fila muestra "⚡ Running".
+- Al vincular, ofrece rellenar los días del historial del módulo (sin XP).
+- Motor nuevo `js/habitos-auto.js` (7 pruebas); E2E `habitos.js`.
+
 ## 2026-11-05 · Hábitos: página de cada categoría y estadísticas (fase 5)
 - Página de categoría (`#hab-categoria/id`): nivel y XP con lo que falta a
   tu ritmo, esta semana y los últimos 30 días contra el periodo anterior,

@@ -1002,3 +1002,6 @@ body.sc-en-guia { overflow: hidden; }
 .hb-area-link { position: relative; }
 .hb-area-a { position: absolute; inset: 0; border-radius: 16px; }
 .hb-area-a:focus-visible { outline: 2px solid var(--accent-1); outline-offset: 2px; }
+
+/* ---------- Se marca solo (fase 6) ---------- */
+.hb-auto { color: var(--accent-2); font-weight: 600; white-space: nowrap; }

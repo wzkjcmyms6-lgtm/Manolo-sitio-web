@@ -261,6 +261,8 @@ onAuthReady(() => {
   coleccion().onSnapshot(snap => {
     sesiones = snap.docs.map(d => M.normalizarSesion(d.id, d.data()));
     cargado = true;
+    // Hábitos: "se marca solo" al completar una rutina (js/habitos-auto.js).
+    window.dispatchEvent(new CustomEvent("manolo:fuente", { detail: { fuente: "movilidad", datos: sesiones, servidor: !(snap.metadata && snap.metadata.fromCache) } }));
     if (!guia) render();
   }, err => console.warn("Movilidad:", err));
 });
