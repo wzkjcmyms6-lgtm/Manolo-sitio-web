@@ -2363,6 +2363,8 @@ function renderInicio() {
   // racha (la tarjeta queda de dos líneas, como antes).
   el.innerHTML = `${p.total ? `Hoy: ${p.hechos} de ${p.total}` : "Nada pendiente hoy"}${faltan ? ` · ⏰ ${faltan === 1 ? "falta" : "faltan"} ${faltan} ${MOMENTO_DE[momentoActual()]}` : ` · Nivel ${res.nivel.nivel}${racha ? ` · ${escapeHtml(textoRacha(racha))} de racha` : ""}`}
     <span class="hb-inicio-barra" aria-hidden="true"><span style="width:${p.total ? (p.hechos / p.total * 100).toFixed(1) : 0}%"></span></span>`;
+  // "Mi día" (js/mi-dia.js) se actualiza con los hábitos.
+  window.dispatchEvent(new CustomEvent("manolo:inicio"));
 }
 
 // ---------- Estadísticas ----------
@@ -2972,8 +2974,21 @@ onAuthReady(() => {
   }, err => console.error("No se pudo leer meta/habitos_juego", err));
 });
 
+// Para "Mi día" en Inicio (js/mi-dia.js): cuántos van hoy y cuáles faltan.
+// Solo lee; no cambia nada.
+function resumenHoy() {
+  if (!res) return null;
+  const f = res.hoy;
+  const p = progresoHoy(f);
+  const pendientes = activos().filter(h => h.tipo !== "evitar" && HE.activoEn(h, f)).filter(h => {
+    const x = filaHoy(h, f);
+    return x.toca && !x.hecho && !(x.semanal && x.semanaOk);
+  }).map(h => ({ id: h.id, nombre: h.name, emoji: h.emoji }));
+  return { hechos: p.hechos, total: p.total, pendientes };
+}
+
 // Para otros módulos y para probar desde la consola.
-window.Habitos = { evaluar: () => res, recalcular: actualizar };
+window.Habitos = { evaluar: () => res, recalcular: actualizar, resumenHoy };
 // Para las pantallas en archivos aparte (categorías, Hoy por categoría…).
 window.HabitosApp = {
   estado: () => ({ docs, normal, res, juego, cargado: cargado && juegoCargado }),

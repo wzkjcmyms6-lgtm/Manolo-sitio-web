@@ -231,6 +231,15 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
   pitido en cada paso y al final la sesión queda hecha.
 - [ ] Revisa Progreso, Semana, Guía y Ajustes.
 
+**Mi día (2026-11)**
+- [ ] Abre Manolo: arriba de Inicio está "Mi día" con la fecha y cuántas
+  cosas te quedan. Revisa que cada fila diga lo correcto (entreno,
+  hábitos, versículo, para gastar hoy, Running) y que al tocarla te lleve
+  a su sección.
+- [ ] Marca un hábito y vuelve a Inicio: el número cambia.
+- [ ] "Ocultar «Mi día»" la quita; ciérrala y ábrela: sigue oculta.
+  "Mostrar «Mi día»" (al pie) la trae.
+
 **Ejercicio inteligente (2026-11)**
 - [ ] Abre una rutina y toca el nombre de un ejercicio: la ficha muestra la
   demo (2 fotos que se alternan; ⏸ la pausa), "Cómo se hace", "Ver video",

@@ -17,7 +17,7 @@
   <!-- Fuentes guardadas en el repo: la app no depende de internet para verse bien -->
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
-  <link rel="stylesheet" href="css/style.css?v=202611040500">
+  <link rel="stylesheet" href="css/style.css?v=202611060700">
   <link rel="stylesheet" href="css/finanzas.css?v=202610291300">
   <link rel="stylesheet" href="css/habitos.css?v=202611051100">
   <link rel="stylesheet" href="css/inversiones.css?v=202610291000">
@@ -133,6 +133,7 @@
               </div>
             </div>
             <p class="panel-sub">Tu panel de control personal. Elige una sección para empezar.</p>
+            <section class="mi-dia" id="mi-dia" hidden aria-labelledby="mi-dia-t"></section>
 
             <a class="gym-en-curso act-en-curso-aviso" href="#run-rutinas" data-act-en-curso="run-rutinas" hidden><span class="gym-en-curso-punto" aria-hidden="true"></span><span>Tienes una <strong>rutina</strong> sin terminar</span><span class="gym-en-curso-ir">Continuar</span></a>
             <div class="card-grid card-grid-home">
@@ -187,6 +188,7 @@
                 <p>Cuánto tardas en tu rutina de cada día.</p>
               </a>
             </div>
+            <button type="button" class="link-btn md-mostrar" id="mi-dia-mostrar" hidden>Mostrar «Mi día»</button>
             <button type="button" class="link-btn cuenta-estado-btn" id="cuenta-estado-btn">Estado de la cuenta</button>
           </section>
 
@@ -1446,7 +1448,7 @@
   <script defer src="js/scalping-avance.js?v=202610230100"></script>
   <script defer src="js/habito-scalping.js?v=202610230100"></script>
   <script defer src="js/habitos-graficos.js?v=202611050500"></script>
-  <script defer src="js/habitos.js?v=202611051100"></script>
+  <script defer src="js/habitos.js?v=202611060700"></script>
   <script defer src="js/habitos-categorias-ui.js?v=202611051100"></script>
   <script defer src="js/habitos-categoria.js?v=202611051100"></script>
   <script defer src="js/habitos-plantillas-ui.js?v=202611050700"></script>
@@ -1489,7 +1491,7 @@
   <script defer src="js/finanzas/analisis.js?v=202610011500"></script>
   <script defer src="js/finanzas/presupuesto.js?v=202610011600"></script>
   <script defer src="js/finanzas/tarjetas.js?v=202610291310"></script>
-  <script defer src="js/finanzas/app.js?v=202611050600"></script>
+  <script defer src="js/finanzas/app.js?v=202611060700"></script>
   <script defer src="js/inversiones-motor.js?v=202610280600"></script>
   <script defer src="js/inversiones-series.js?v=202610280400"></script>
   <script defer src="js/inversiones-graficos.js?v=202610280400"></script>
@@ -1505,5 +1507,7 @@
   <script defer src="js/movilidad.js?v=202611050600"></script>
   <script defer src="js/tiempos-motor.js?v=202610300300"></script>
   <script defer src="js/tiempos.js?v=202610300300"></script>
+  <script defer src="js/mi-dia-motor.js?v=202611060700"></script>
+  <script defer src="js/mi-dia.js?v=202611060700"></script>
 </body>
 </html>

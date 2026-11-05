@@ -52,6 +52,9 @@ Actualizado: 2026-11-05 (empieza Ejercicio inteligente, D-090).
   descarga, volumen y equilibrio, generador, recuperación y "¿Qué entreno
   hoy?" con Running. Plan y auditoría en `docs/EJERCICIO_INTELIGENTE.md`,
   D-090 en adelante.
+- **Mi día (2026-11-05)**: tarjeta arriba de Inicio con entrenar, hábitos,
+  Biblia, para gastar hoy y Running; se oculta y se vuelve a mostrar
+  (D-100, `js/mi-dia.js`, `js/mi-dia-motor.js`).
 - **Tests (2026-11-05)**: 480 unitarias; E2E de Ejercicio: `ejercicio`
   (ficha, demos, entreno en vivo, progresión, descarga, volumen,
   generador, "¿Qué entreno hoy?", Perfil y compartir, a 390 y 1280 px); E2E de Running: `run-importar`,

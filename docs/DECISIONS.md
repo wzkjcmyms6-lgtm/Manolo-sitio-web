@@ -1068,3 +1068,19 @@ predicción sale más lenta de lo que se puede. Para tener mapas sin
 Strava: importar el GPX/FIT de cualquier app o reloj, o el ZIP que
 exporta la app Salud del iPhone (sus `workout-routes/*.gpx` ya se leen);
 Manolo sigue sin GPS propio (D-033).
+
+**D-100 (2026-11-05) · "Mi día" en Inicio.** Pedido del dueño: una
+pantalla que junte lo de hoy. (1) Una tarjeta arriba de Inicio con hasta 5
+filas, cada una lleva a su sección: entrenar (la recomendación de
+"¿Qué entreno hoy?", D-096), hábitos (cuántos van y cuáles faltan),
+Biblia (versículo de hoy y racha), para gastar hoy (el presupuesto diario
+de Finanzas, la misma cuenta de Presupuesto › Información, siempre del
+periodo de hoy) y Running (km de la semana, meta, carrera de mañana o la
+última). Una fila sin datos no aparece; sin nada, la tarjeta tampoco.
+(2) Sin lecturas nuevas: usa lo que cada sección ya carga (Hábitos y
+Finanzas exponen `Habitos.resumenHoy()` y `FinanzasResumen.hoy()`, que
+solo leen; Biblia llega por el aviso `manolo:fuente`). (3) Fácil de
+quitar: "Ocultar «Mi día»" la esconde (se recuerda en el teléfono) y
+"Mostrar «Mi día»" al pie de Inicio la trae; no guarda nada en la cuenta
+ni cambia datos. Quitarla del todo es borrar `js/mi-dia*.js` y su
+`<section>`.

@@ -5246,6 +5246,8 @@ window.addEventListener("hashchange", pedirAjusteNumeros);
 new MutationObserver(pedirAjusteNumeros).observe(document.getElementById("app-content") || document.body, { childList: true, subtree: true });
 
 function pedirRender() {
+  // "Mi día" en Inicio (js/mi-dia.js) muestra cuánto queda para gastar hoy.
+  window.dispatchEvent(new CustomEvent("manolo:inicio"));
   if (!finanzasVisible()) { renderPendiente = true; return; }
   if (renderProgramado) return;
   renderProgramado = true;
@@ -5373,6 +5375,23 @@ function avisarHabitos(servidor) {
     categorias: gastoCategoriesCache.map(c => ({ id: c.id, label: c.label }))
   } }));
 }
+
+// Para "Mi día" en Inicio (js/mi-dia.js): lo que queda para gastar por día
+// en el periodo de hoy, con la misma cuenta que Presupuesto › Información
+// (aunque estés mirando otro mes). Solo lee; no cambia nada.
+window.FinanzasResumen = {
+  hoy() {
+    if (!financeCache.length && !delServidor.finanzas) return null;
+    const antes = budgetsCache;
+    budgetsCache = catsEnBs(FP.delPeriodo(presupuestoDoc, presupuestoBase, claveActual()).cats);
+    try {
+      const { days, result, daily } = budgetProjection(budgetPeriodAt(0));
+      return { dias: days, resultado: result, texto: formatBsShort(Math.round(daily)), conPresupuesto: Object.keys(budgetsCache).some(id => budgetsCache[id] > 0) };
+    } finally {
+      budgetsCache = antes;
+    }
+  }
+};
 
 onAuthReady(() => {
   // includeMetadataChanges: para saber cuándo los datos ya vienen del

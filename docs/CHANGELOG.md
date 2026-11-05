@@ -1,5 +1,13 @@
 # Cambios
 
+## 2026-11-05 · Inicio: "Mi día"
+- Arriba de Inicio, una tarjeta con lo de hoy: qué entrenar y por qué,
+  los hábitos que faltan, el versículo de hoy, cuánto queda para gastar
+  hoy y cómo va Running. Cada fila lleva a su sección.
+- "Ocultar «Mi día»" la quita; "Mostrar «Mi día»" (al pie de Inicio) la
+  trae de vuelta. No cambia ningún dato.
+- Pruebas: `tests/mi-dia.test.js` y `scripts/e2e/mi-dia.js`.
+
 ## 2026-11-05 · Running: predicciones con carreras anotadas a mano
 - Las predicciones de 5K, 10K, media y maratón ahora también usan tus
   carreras anotadas a mano (km y tiempo), no solo las importadas con ruta.
