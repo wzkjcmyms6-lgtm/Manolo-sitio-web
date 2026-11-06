@@ -1,0 +1,102 @@
+/* ---------- Biblia: lector y lo nuevo de la sección (D-102) ----------
+   Clases .bbl-; reutiliza .lib-btn, .lib-input y las hojas de lectura-comun. */
+
+/* Tarjeta "Leer la Biblia" arriba de la sección */
+.bbl-entrar {
+  display: flex; align-items: center; gap: 0.85rem; width: 100%; min-height: 64px; margin: 0.2rem 0 0.9rem;
+  padding: 0.8rem 0.95rem; border: 1px solid rgba(255, 122, 48, 0.35); border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255, 122, 48, 0.16), rgba(255, 184, 77, 0.06)); color: var(--ink);
+  font: inherit; text-align: left; cursor: pointer;
+}
+.bbl-entrar-ic { flex: 0 0 auto; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; background: var(--accent-grad); color: #1a0f05; font-size: 1.3rem; }
+.bbl-entrar-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.bbl-entrar-t b { font-size: 1.02rem; }
+.bbl-entrar-t small { color: var(--muted); font-size: 0.82rem; overflow-wrap: anywhere; }
+.bbl-entrar-flecha { color: var(--accent-2); font-size: 1.3rem; }
+
+/* Lector a pantalla completa */
+body.bbl-leyendo { overflow: hidden; }
+.bbl-lector {
+  position: fixed; inset: 0; z-index: 850; display: flex; flex-direction: column;
+  background: var(--bg); color: var(--ink);
+}
+.bbl-lector[hidden] { display: none; }
+.bbl-barra {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 0.5rem;
+  padding: calc(env(safe-area-inset-top) + 0.45rem) 0.75rem 0.45rem; border-bottom: 1px solid var(--border);
+  background: rgba(10, 10, 10, 0.92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.bbl-icono {
+  flex: 0 0 auto; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 12px;
+  background: transparent; color: var(--ink); font: inherit; cursor: pointer;
+}
+.bbl-icono .icon-sm { width: 20px; height: 20px; display: inline-flex; }
+.bbl-aa { font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; }
+.bbl-donde {
+  flex: 1 1 auto; min-width: 0; max-width: 420px; margin: 0 auto; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;
+  border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--ink);
+  font: inherit; font-weight: 700; font-size: 1rem; cursor: pointer; padding: 0 1rem;
+}
+.bbl-donde span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bbl-flecha { color: var(--muted); font-size: 0.8rem; }
+.bbl-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.bbl-texto {
+  --bbl-tam: 1.15rem;
+  max-width: 38em; margin: 0 auto; padding: 1.6rem 1.3rem calc(env(safe-area-inset-bottom) + 3rem);
+  font-family: var(--font-display); font-size: var(--bbl-tam); line-height: 1.72; color: #ece9e2;
+}
+.bbl-libro { margin: 0; text-align: center; color: var(--muted); font-family: var(--font-body); font-size: 0.85rem; letter-spacing: 0.12em; text-transform: uppercase; }
+.bbl-cap { margin: 0.1rem 0 1.2rem; text-align: center; font-size: 2.6em; line-height: 1.1; font-weight: 600; color: var(--accent-2); }
+.bbl-versos { hyphens: auto; -webkit-hyphens: auto; }
+.bbl-versos.is-poesia .bbl-v { display: block; margin-bottom: 0.35em; padding-left: 1.1em; text-indent: -1.1em; }
+.bbl-v { border-radius: 4px; transition: background-color 0.2s; }
+.bbl-v.is-marcado { background: rgba(255, 184, 77, 0.18); box-shadow: 0 0 0 2px rgba(255, 184, 77, 0.18); }
+.bbl-n { font-family: var(--font-body); font-size: 0.62em; font-weight: 700; color: var(--accent-1); margin-right: 0.22em; vertical-align: 0.45em; line-height: 0; }
+.bbl-cargando, .bbl-error { font-family: var(--font-body); font-size: 1rem; color: var(--muted); text-align: center; padding: 2rem 0; }
+.bbl-error b { color: var(--ink); }
+.bbl-fin { margin-top: 2.2rem; padding-top: 1.2rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.8rem; font-family: var(--font-body); font-size: 1rem; line-height: 1.4; }
+.bbl-leido {
+  min-height: 48px; border: 1px solid rgba(70, 200, 120, 0.45); border-radius: 999px; background: rgba(70, 200, 120, 0.12);
+  color: #7fe0a6; font: inherit; font-weight: 700; cursor: pointer;
+}
+.bbl-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.bbl-nav > * { min-height: 46px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bbl-nav > :last-child { text-align: right; }
+.bbl-otra { color: var(--accent-2); font-weight: 600; text-decoration: none; padding: 0.5rem 0; min-height: 44px; display: inline-flex; align-items: center; }
+.bbl-fuente { margin: 0; color: var(--muted); font-size: 0.78rem; }
+
+/* Hoja: elegir libro y capítulo */
+.bbl-sel-buscar { margin-bottom: 0.6rem; }
+.bbl-sel-t { margin: 0.9rem 0 0.45rem; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.bbl-libros { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem; }
+.bbl-libro-b {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; min-height: 44px; padding: 0.4rem 0.7rem;
+  border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; font-size: 0.92rem; text-align: left; cursor: pointer;
+}
+.bbl-libro-b span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bbl-libro-b small { color: var(--muted); font-size: 0.75rem; flex-shrink: 0; }
+.bbl-libro-b.is-actual { border-color: var(--accent-1); }
+.bbl-sel-volver { min-height: 44px; border: 0; background: none; color: var(--accent-2); font: inherit; font-weight: 700; cursor: pointer; padding: 0 0.2rem; margin-bottom: 0.4rem; }
+.bbl-caps { display: grid; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); gap: 0.4rem; }
+.bbl-cap-b {
+  min-height: 48px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--ink);
+  font: inherit; font-weight: 600; cursor: pointer; position: relative;
+}
+.bbl-cap-b.is-leido { background: rgba(70, 200, 120, 0.14); border-color: rgba(70, 200, 120, 0.4); color: #7fe0a6; }
+.bbl-cap-b.is-leido::after { content: "✓"; position: absolute; top: 2px; right: 5px; font-size: 0.62rem; }
+.bbl-cap-b.is-actual { border-color: var(--accent-1); box-shadow: 0 0 0 1px var(--accent-1) inset; }
+
+/* Hoja: letra, ortografía y descarga */
+.bbl-aa-fila { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; min-height: 52px; padding: 0.4rem 0; border-bottom: 1px solid var(--border); }
+.bbl-aa-fila > span { display: flex; flex-direction: column; font-weight: 600; }
+.bbl-aa-fila small { color: var(--muted); font-weight: 400; font-size: 0.8rem; }
+.bbl-aa-tam { display: flex; gap: 0.4rem; }
+.bbl-aa-tam button { min-width: 52px; min-height: 44px; }
+.bbl-switch input { width: 24px; height: 24px; accent-color: var(--accent-1); flex-shrink: 0; }
+.bbl-descarga { margin-top: 0.9rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.bbl-desc-estado { margin: 0; color: var(--muted); }
+.bbl-desc-estado.is-hecho { color: #7fe0a6; font-weight: 600; }
+
+@media (min-width: 900px) {
+  .bbl-texto { padding-top: 2.4rem; }
+}

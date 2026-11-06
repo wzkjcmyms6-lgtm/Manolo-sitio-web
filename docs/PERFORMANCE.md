@@ -21,6 +21,15 @@ en el precache: el teléfono baja solo las que ves (máx. 240 guardadas,
 ejercicios pasa de 156 KB a 180 KB por los campos nuevos (`mec`, `fz`,
 `niv`, `demo`).
 
+## Biblia (2026-11-06, D-102)
+
+El texto de la Reina-Valera 1909 son 66 archivos JSON (3,8 MB; 1,26 MB
+comprimido) que **no** entran en el precache: cada libro se baja al
+abrirlo (Salmos, el más grande, ~250 KB) y queda en la caché
+`manolo-biblia`; "Descargar la Biblia" guarda los 66. El arranque suma
+solo el código y los estilos del lector (~36 KB sin comprimir). En memoria quedan los 8
+últimos libros abiertos.
+
 ## Decisiones
 
 - **No se carga el deporte "por partes"** (D-030): ahorraría ~44 KB

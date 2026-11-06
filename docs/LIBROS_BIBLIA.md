@@ -54,6 +54,14 @@ nuevos (antes de que `renderIcons()` corra al cargar), sin tocar
 - Sin internet funciona igual (Firestore guarda los cambios y los sube al
   volver la conexión).
 
+## Leer la Biblia (2026-11-06, D-102)
+
+Arriba de Biblia, **Leer la Biblia** (o **Seguir leyendo · Juan 3**) abre
+la Reina-Valera 1909 completa a pantalla completa: libro y capítulo,
+tamaño de letra, ortografía actual, deslizar para cambiar de capítulo,
+"Marcar como leído", "Abrir en otra versión" y "Descargar la Biblia" para
+leerla sin internet. Detalle en `docs/LECTURA_NIVEL2.md`.
+
 ## Libros (fase 3)
 
 - **Agregar o editar**: título (obligatorio), autor, páginas, estado (Por

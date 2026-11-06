@@ -1,5 +1,33 @@
 # Fase actual
 
+## Libros, Biblia y Medir tiempos: siguiente nivel (pedido del dueño, 2026-11-06)
+Diseño, auditoría y bitácora en `docs/LECTURA_NIVEL2.md`; decisiones desde
+D-102. Cada fase deja la app funcionando y publicada.
+
+| Fase | Qué | Estado |
+|---|---|---|
+| 0 | Auditoría y diseño (capturas, preguntas al dueño) | ✅ |
+| 1 | Biblia: texto RV1909, lector y descarga sin internet | ✅ |
+| 2 | Biblia: anotar desde el lector, resaltados, notas, favoritos, búsqueda, compartir | ⏳ |
+| 3 | Biblia: planes, progreso de capítulos, memorización, temas, racha | |
+| 4 | Libros: "Leer ahora", velocidad, estados y formatos | |
+| 5 | Libros: ISBN, importar, frases, notas, "¿Qué leo después?", estadísticas | |
+| 6 | Medir tiempos: definitiva, actividades, cronómetro, "Mi mañana", autollenado | |
+| 7 | Medir tiempos: plan de la mañana, estadísticas, experimentos; "Mi día" y Hábitos | |
+| 8 | QA final, docs y lista para el iPhone | |
+
+Preguntas al dueño (fase 0): ¿diario de oración? (sin respuesta = no) y
+versión para "Abrir en otra versión" (sin respuesta = RVR1960 en
+BibleGateway; se cambia en «Aa»).
+
+Datos de prueba: `scripts/e2e/lectura-semilla.js`.
+
+### Para después (anotado, no hacer)
+- Biblia en audio.
+- Otras versiones en español con licencia libre del mismo repositorio
+  (`spa-bes`, `spa-pddpt`, `spa-vbl`).
+- Clubes de lectura con otros usuarios de Manolo.
+
 ## Ejercicio: mucho más inteligente y con demo (pedido del dueño, 2026-11-05)
 Diseño, auditoría y bocetos en `docs/EJERCICIO_INTELIGENTE.md`; decisiones
 desde D-090. Cada fase deja la app funcionando y publicada.

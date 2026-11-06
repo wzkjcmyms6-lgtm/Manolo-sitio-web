@@ -1,6 +1,7 @@
 // Pruebas de pantalla de Libros y Biblia (sub-paneles de Inicio).
 // Uso: node scripts/e2e/lectura.js [carpeta-para-capturas]
 const { chromium, servidor, abrir, ok, captura: capturar, terminar } = require("./comun.js");
+const N2 = require("./lectura-n2.js");
 
 const CAPTURAS = process.argv[2] || null;
 const captura = (p, n) => capturar(p, CAPTURAS, n);
@@ -13,6 +14,9 @@ const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
   const srv = await servidor();
   const base = `http://localhost:${srv.address().port}`;
   const browser = await chromium.launch();
+  // SOLO=biblia|… corre solo una parte nueva (scripts/e2e/lectura-n2.js).
+  const SOLO = process.env.SOLO;
+  if (!SOLO) {
   const p = await abrir(browser, base, {}, { hash: "#inicio", zona: ZONA, fecha: HOY });
 
   console.log("\nFase 1: tarjetas en Inicio y secciones");
@@ -435,5 +439,11 @@ const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
   ok(!z.errores.length, "sin errores de página");
   await z.context().close();
 
+  }
+
+  // ---------- Siguiente nivel (docs/LECTURA_NIVEL2.md) ----------
+  for (const ancho of [390, 1280]) {
+    if (!SOLO || SOLO === "biblia") await N2.bibliaLector(browser, base, ancho, captura);
+  }
   await terminar(browser, srv);
 })();

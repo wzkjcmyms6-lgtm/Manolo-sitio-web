@@ -14,14 +14,17 @@
 //   descargan al abrir una ficha y quedan en "manolo-demos" (con límite: las
 //   más viejas se borran). Las de los ejercicios de tus rutinas se guardan
 //   aparte, en "manolo-demos-rutinas", para verlas sin señal (D-091).
+// - El texto de la Biblia (data/biblia/…, ~4 MB) tampoco va en el precache:
+//   cada libro se guarda en "manolo-biblia" al abrirlo (o todos con
+//   "Descargar la Biblia") y no se borra al actualizar la app (D-102).
 // - El tipo de cambio (data/tipo-cambio.json) y los precios de Inversiones
 //   (data/precios.json) van primero a la red y, sin conexión, usan la
 //   última copia.
 //
 // IMPORTANTE: cada entrega que cambie la app debe subir VERSION y HUELLA con
 // `npm run sw` (el test tests/sw-version.test.js falla si alguien lo olvida).
-const VERSION = "2026-11-06.3";
-const HUELLA = "41d44e5bc0c2";
+const VERSION = "2026-11-06.5";
+const HUELLA = "659d983af640";
 const PREFIJO = "manolo-app-";
 const CACHE = PREFIJO + VERSION;
 const DATOS = "manolo-datos"; // copias de respaldo de datos que cambian solos (tipo de cambio, precios)
@@ -31,6 +34,8 @@ const DEMOS_RUTINAS = "manolo-demos-rutinas"; // demos de tus rutinas (sin seña
 const DEMOS_MAX = 240;                        // imágenes (~3,4 MB)
 const DEMOS_RUTINAS_MAX = 240;
 const ES_DEMO = /\/img\/ejercicios\//;
+const BIBLIA = "manolo-biblia";               // libros de la Biblia abiertos o descargados
+const ES_BIBLIA = /\/data\/biblia\//;
 
 // Archivos que no aparecen en index.html pero la app necesita.
 const EXTRAS = ["./", "manifest.json", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "js/importar-rutinas.js", "js/importar-ui.js", "vendor/leaflet-1.9.4/leaflet.js", "vendor/leaflet-1.9.4/leaflet.css"];
@@ -189,6 +194,16 @@ async function demo(req) {
   if (res.ok) { await cache.put(clave, res.clone()); await recortar(cache, DEMOS_MAX); }
   return res;
 }
+// Biblia: primero la copia guardada; si no, la red, y se guarda (sin límite:
+// son 66 archivos y los pide la persona).
+async function biblia(req) {
+  const cache = await caches.open(BIBLIA);
+  const copia = await cache.match(req.url);
+  if (copia) return copia;
+  const res = await fetch(req);
+  if (res.ok) await cache.put(req.url, res.clone());
+  return res;
+}
 async function recortar(cache, max) {
   const claves = await cache.keys();
   for (let i = 0; i < claves.length - max; i++) await cache.delete(claves[i]);
@@ -218,5 +233,6 @@ self.addEventListener("fetch", e => {
   if (req.mode === "navigate") { e.respondWith(pagina(req)); return; }
   if (DATOS_VIVOS.test(new URL(req.url).pathname)) { e.respondWith(redPrimero(req)); return; }
   if (ES_DEMO.test(new URL(req.url).pathname)) { e.respondWith(demo(req)); return; }
+  if (ES_BIBLIA.test(new URL(req.url).pathname)) { e.respondWith(biblia(req)); return; }
   e.respondWith(desdeCache(req));
 });

@@ -7,6 +7,7 @@
     "ejercicios": "node scripts/build-exercises.mjs",
     "demos": "node scripts/build-demos.mjs",
     "tecnica": "node scripts/build-tecnica.mjs",
+    "biblia": "node scripts/build-biblia.mjs",
     "sw": "node scripts/version-sw.js"
   }
 }

@@ -231,6 +231,18 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
   pitido en cada paso y al final la sesión queda hecha.
 - [ ] Revisa Progreso, Semana, Guía y Ajustes.
 
+**Biblia: leer dentro de Manolo (2026-11)**
+- [ ] Biblia › "Leer la Biblia": abre Mateo 1. Toca "Mateo 1 ▾", busca
+  "juan", elige Juan y el capítulo 3.
+- [ ] Desliza el dedo a la izquierda: pasa a Juan 4 (a la derecha vuelve).
+- [ ] «Aa»: agranda la letra; apaga "Ortografía actual" y mira "á su
+  Hijo"; vuelve a prenderla.
+- [ ] Al final del capítulo, "Marcar como leído" → "✓ Leído hoy".
+- [ ] Cierra con la ✕ (o el gesto de volver): la tarjeta dice "Seguir
+  leyendo · Juan …".
+- [ ] «Aa» › "Descargar la Biblia" (con wifi). Pon modo avión y abre otro
+  libro: se lee igual.
+
 **Reconocer ejercicios (2026-11)**
 - [ ] Ejercicio → si hay "Ejercicios sin reconocer", mira si aparece
   «¿Es …?» con el ejercicio correcto; tócalo y el nombre desaparece de la

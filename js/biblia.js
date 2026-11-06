@@ -61,8 +61,22 @@ function renderResumen() {
       <div><b>${r.mejor}</b><span>mejor racha</span></div>
       <div><b>${r.esteMes}</b><span>${r.esteMes === 1 ? "día" : "días"} en ${mesNombre}</span></div>
     </div>
+    ${tarjetaLeer()}
     <p class="bib-hoy ${r.hoyHecho ? "is-hecho" : ""}">${r.hoyHecho ? "✓ Hoy ya anotaste tu versículo." : r.actual > 0 ? "Anota el de hoy para seguir la racha." : "¿Qué versículo leíste hoy?"}</p>
     <button type="button" class="lib-btn lib-btn-ancho" data-bib="nuevo">＋ ${r.hoyHecho ? "Otro versículo" : "Anotar versículo"}</button>`;
+}
+
+// "Leer la Biblia" / "Seguir leyendo": abre el lector (js/biblia-lector.js).
+function tarjetaLeer() {
+  const L = window.BibliaLector;
+  if (!L) return "";
+  const u = L.ultimo();
+  const donde = u ? `${B.libro(u.libro).nombre} ${u.cap}` : "";
+  return `<button type="button" class="bbl-entrar" data-bib="leer">
+      <span class="bbl-entrar-ic" aria-hidden="true">📖</span>
+      <span class="bbl-entrar-t"><b>${u ? "Seguir leyendo" : "Leer la Biblia"}</b><small>${u ? `${esc(donde)} · Reina-Valera 1909` : "Reina-Valera 1909, también sin internet"}</small></span>
+      <span class="bbl-entrar-flecha" aria-hidden="true">›</span>
+    </button>`;
 }
 
 function renderFiltroLibros() {
@@ -206,10 +220,12 @@ app.addEventListener("click", e => {
   if (m) { mes = B.mesSiguiente(mes, Number(m.dataset.bibMes)); renderCalendario(); return; }
   const b = e.target.closest("[data-bib]");
   if (!b) return;
-  if (b.dataset.bib === "nuevo") abrirHoja(null);
+  if (b.dataset.bib === "leer") { const u = window.BibliaLector.ultimo(); window.BibliaLector.abrir(u ? u.libro : null, u ? u.cap : null); }
+  else if (b.dataset.bib === "nuevo") abrirHoja(null);
   else if (b.dataset.bib === "nuevo-dia") abrirHoja(null, diaElegido);
   else if (b.dataset.bib === "exportar") window.Lectura.descargar(`manolo-biblia-${hoyLocal()}.json`, B.exportarJson(docs, new Date().toISOString()), "application/json");
 });
+window.addEventListener("biblia:lector", () => { if (cargado) renderResumen(); });
 $("bib-buscar").addEventListener("input", e => { filtro.texto = e.target.value; renderLista(); });
 $("bib-libro").addEventListener("change", e => { filtro.libro = e.target.value; renderLista(); });
 

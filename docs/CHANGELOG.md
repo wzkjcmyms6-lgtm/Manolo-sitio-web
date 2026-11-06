@@ -1,5 +1,17 @@
 # Cambios
 
+## 2026-11-06 · Biblia: leerla dentro de Manolo
+- Biblia › "Leer la Biblia": la Reina-Valera 1909 completa, con selector
+  de libro y capítulo, números de versículo, tamaño de letra y
+  "Ortografía actual" ("vino á Jesús" → "vino a Jesús").
+- Pasa de capítulo deslizando o con ‹ ›, "Marcar como leído" y "Seguir
+  leyendo" donde quedaste.
+- "Descargar la Biblia" (~4 MB) para leerla sin internet; si no, cada
+  libro se guarda al abrirlo.
+- "Abrir en otra versión" abre el pasaje en BibleGateway (RVR1960 u otra).
+- Pruebas: `tests/biblia-texto.test.js` y `scripts/e2e/lectura.js`
+  (`SOLO=biblia`).
+
 ## 2026-11-06 · Ejercicio: reconoce y busca ejercicios por cualquier nombre
 - Reconoce nombres como los dices en el gimnasio ("press plano con
   mancuernas", "jalón al pecho", "cristos", "serrucho", "multipower"),

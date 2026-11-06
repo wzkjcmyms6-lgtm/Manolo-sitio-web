@@ -117,7 +117,11 @@
     Object.keys(b).forEach(k => {
       const v = b[k];
       if (v && v.__del) delete a[k];
-      else if (v && typeof v === "object" && !Array.isArray(v) && !v.__hora && v.__suma == null && !v.__union && !v.__quitar && a[k] && typeof a[k] === "object" && !Array.isArray(a[k])) merge(a[k], v);
+      else if (v && typeof v === "object" && !Array.isArray(v) && !v.__hora && v.__suma == null && !v.__union && !v.__quitar) {
+        // Como Firestore: un mapa nuevo también resuelve arrayUnion, increment… adentro.
+        if (!a[k] || typeof a[k] !== "object" || Array.isArray(a[k])) a[k] = {};
+        merge(a[k], v);
+      }
       else a[k] = valor(v, a[k]);
     });
     return a;

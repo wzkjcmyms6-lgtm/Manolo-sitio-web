@@ -1113,3 +1113,30 @@ buscador, lo que empieza como lo que escribes sube ("hip th" → Hip thrust),
 la última palabra a medio escribir puede ser el equipo ("remo maq") y los
 típicos van antes. Rápido: ~0,5 ms por nombre (las palabras se comparan
 una vez por búsqueda y se recuerdan).
+
+**D-102 (2026-11-06) · La Biblia se lee dentro de Manolo (RV1909).** Pedido
+del dueño ("Libros, Biblia y Medir tiempos: siguiente nivel", diseño en
+`docs/LECTURA_NIVEL2.md`). (1) Texto completo de la Reina-Valera 1909
+(dominio público) de `seven1m/open-bibles`, archivo
+`spa-rv1909.usfx.xml` en el commit fijo `008faa9f…`, convertido por
+`scripts/build-biblia.mjs` (`npm run biblia -- archivo.xml`) a un JSON por
+libro en `data/biblia/rv1909/` (66 libros, 1.189 capítulos, 31.102
+versículos, 3,8 MB; 1,26 MB comprimido), sin notas al pie; 18 versículos
+quedan vacíos porque esa edición los une al anterior o al siguiente (p. ej.
+Jonás 1:17 está en 2:1) y el lector no los muestra. (2) **No va en el
+precache**: cada libro se baja al abrirlo y queda en la caché
+`manolo-biblia` (no se borra al actualizar la app); "Descargar la Biblia"
+guarda los 66 y pide almacenamiento persistente; "Quitar la descarga" la
+borra. El arranque no crece (solo ~36 KB de código y estilos nuevos). (3)
+**Ortografía actual** (activada por defecto, se apaga en «Aa»): al mostrar,
+"á/é/ó/ú" sueltas, "fué, dió, vió, fuí, dí, sólo, éste…" pasan a la forma
+de hoy y la primera palabra en mayúsculas del capítulo ("EN el principio")
+se escribe normal; el texto guardado no cambia. (4) La RVR1960 y otras
+versiones modernas tienen derechos: no se incluyen; "Abrir en otra versión"
+es solo un link a BibleGateway con la versión elegida (RVR1960 por
+defecto). (5) Lector a pantalla completa con selector de libro y capítulo
+(buscador, capítulos leídos marcados), tamaño de letra, deslizar o ‹ › para
+cambiar de capítulo, "Marcar como leído" y "seguir donde quedé" (también
+entre aparatos). Datos nuevos: `meta/biblia_lector` y `meta/biblia_leidos`
+(capítulos leídos por día). El "Fake Firebase" de las pruebas ahora
+resuelve `arrayUnion` dentro de un mapa nuevo, como Firestore.
