@@ -1084,3 +1084,32 @@ quitar: "Ocultar «Mi día»" la esconde (se recuerda en el teléfono) y
 "Mostrar «Mi día»" al pie de Inicio la trae; no guarda nada en la cuenta
 ni cambia datos. Quitarla del todo es borrar `js/mi-dia*.js` y su
 `<section>`.
+
+**D-101 (2026-11-06) · Reconocer y buscar ejercicios "por cualquier nombre".**
+Pedido del dueño: que la app reconozca la mayor cantidad de ejercicios.
+(1) Se armó una lista de 331 nombres reales (gimnasio en español de varios
+países, nombres de Strong/Hevy en inglés con el equipo entre paréntesis,
+abreviaturas como DB/BB/KB/OHP/RDL y errores de tipeo) con el ejercicio que
+les corresponde: `tests/nombres-ejercicios.js`. El motor anterior acertaba
+79 % (17 equivocados, 51 sin reconocer); el nuevo, 100 %, sin equivocados.
+(2) Cómo: el nombre se lleva a una "forma común" (frases y sinónimos de
+gimnasio e inglés → una sola palabra: "cristos" = aperturas, "multipower" =
+Smith, "gemelos" = talones, "Hip Thrust" = hipthrust…); el equipo se separa
+y se respeta ("con mancuernas", "(Barbell)", "en polea"); si no se dice
+equipo, va la variante de siempre (barra recta antes que EZ o hexagonal;
+sin banda antes que con banda). Tolera ortografía (ll/y, v/b, z/s, c/s, h)
+y tipeos; las palabras raras pesan más que las comunes ("femoral" más que
+"curl"). Alias extra por ejercicio en `js/ejercicios-alias.js` (solo para
+buscar; no se guardan). (3) Seguridad: un nombre vago ("Remo", "Press",
+"Pecho", "Máquina") sigue sin adivinarse; una palabra que ya existe no se
+"corrige" a otra ("cadera" no es "carrera"). `clave()` no cambió, así que
+las asignaciones guardadas siguen valiendo, y los entrenos con
+`exerciseId` no se tocan. Comparado con el motor anterior sobre los 1828
+nombres y alias de la base: 0 que se dejen de reconocer, 41 nuevos, 10 que
+cambian y todos para bien (p. ej. "peso muerto" iba a barra hexagonal,
+"press militar" a mancuerna). (4) En "Ejercicios sin reconocer" aparecen
+hasta 2 botones «¿Es …?» para asignar con un toque (`sugerir()`). (5) En el
+buscador, lo que empieza como lo que escribes sube ("hip th" → Hip thrust),
+la última palabra a medio escribir puede ser el equipo ("remo maq") y los
+típicos van antes. Rápido: ~0,5 ms por nombre (las palabras se comparan
+una vez por búsqueda y se recuerdan).

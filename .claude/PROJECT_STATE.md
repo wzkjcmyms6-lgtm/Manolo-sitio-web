@@ -52,6 +52,10 @@ Actualizado: 2026-11-05 (empieza Ejercicio inteligente, D-090).
   descarga, volumen y equilibrio, generador, recuperación y "¿Qué entreno
   hoy?" con Running. Plan y auditoría en `docs/EJERCICIO_INTELIGENTE.md`,
   D-090 en adelante.
+- **Reconocer ejercicios (2026-11-06)**: motor nuevo de búsqueda y
+  reconocimiento (331/331 nombres reales, antes 79 %), alias extra y
+  «¿Es …?» en no reconocidos (D-101, `js/exercise-search.js`,
+  `js/ejercicios-alias.js`).
 - **Mi día (2026-11-05)**: tarjeta arriba de Inicio con entrenar, hábitos,
   Biblia, para gastar hoy y Running; se oculta y se vuelve a mostrar
   (D-100, `js/mi-dia.js`, `js/mi-dia-motor.js`).

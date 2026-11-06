@@ -231,6 +231,14 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
   pitido en cada paso y al final la sesión queda hecha.
 - [ ] Revisa Progreso, Semana, Guía y Ajustes.
 
+**Reconocer ejercicios (2026-11)**
+- [ ] Ejercicio → si hay "Ejercicios sin reconocer", mira si aparece
+  «¿Es …?» con el ejercicio correcto; tócalo y el nombre desaparece de la
+  lista (y empieza a pintar el mapa).
+- [ ] Al agregar un ejercicio, escribe "press plano manc", "jalon",
+  "hip th", "remo maq", "rdl": el que buscas sale primero.
+- [ ] Escribe con errores ("sentadiya", "press vanca"): igual lo encuentra.
+
 **Mi día (2026-11)**
 - [ ] Abre Manolo: arriba de Inicio está "Mi día" con la fecha y cuántas
   cosas te quedan. Revisa que cada fila diga lo correcto (entreno,

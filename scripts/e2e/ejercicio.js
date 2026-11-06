@@ -681,6 +681,33 @@ async function perfilYCompartir(browser, base, ancho) {
 
 // ---------- Fase 1: caché de las demos en el service worker ----------
 // Contexto aparte con service workers permitidos (las demás pruebas los bloquean).
+// ---------- Reconocimiento: "¿Es…?" en Ejercicios sin reconocer (D-101) ----------
+async function sinReconocer(browser, base, ancho) {
+  console.log(`\nEjercicios sin reconocer con «¿Es…?» (${ancho} px)`);
+  const p = await abrir(browser, base, SEM.estado(HOY), { hash: "#ejercicio", zona: ZONA, fecha: FECHA, ancho, alto: ancho > 800 ? 900 : 844 });
+  consolaLimpia(p);
+  await p.waitForTimeout(1200);
+  await sinAvisos(p);
+  ok(await p.isVisible("#ej-revisar"), "«Remo» a secas no se adivina: aparece en Ejercicios sin reconocer");
+  ok(/1 ejercicio sin reconocer/.test(await texto(p, "#ej-revisar-titulo")), "solo ese (los demás nombres se reconocen)");
+  const chips = await p.$$eval("#ej-revisar-lista [data-accion=es]", bs => bs.map(b => b.textContent.trim()));
+  ok(chips.length >= 1 && chips.length <= 2 && /^¿Es «Remo/.test(chips[0]), `sugiere: ${chips.join(" / ")}`);
+  const tam = await p.$eval("#ej-revisar-lista [data-accion=es]", b => b.getBoundingClientRect().height);
+  ok(tam >= 32, `el botón se puede tocar (${Math.round(tam)} px de alto)`);
+  const sinDesborde = await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
+  ok(sinDesborde, "sin desborde horizontal");
+  await p.$eval("#ej-revisar", el => el.scrollIntoView({ block: "center" }));
+  await foto(p, `sin-reconocer-${ancho}.png`);
+  const id = await p.$eval("#ej-revisar-lista [data-accion=es]", b => b.dataset.id);
+  await p.click("#ej-revisar-lista [data-accion=es]");
+  await p.waitForTimeout(900);
+  const asig = await p.evaluate(() => EjercicioDatos.meta("asignaciones_ejercicios").get().then(x => (x.exists ? x.data() : {})));
+  ok(asig.remo === id, `un toque lo asigna (remo → ${asig.remo})`);
+  ok(!(await p.isVisible("#ej-revisar")), "y la lista desaparece");
+  ok(!p.erroresConsola.length, "sin errores en la consola" + (p.erroresConsola.length ? ": " + p.erroresConsola.join(" | ") : ""));
+  await p.context().close();
+}
+
 async function cacheDemos(browser) {
   console.log("\nService worker: demos fuera del precache y con caché propia");
   const TIPOS = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".webp": "image/webp" };
@@ -759,6 +786,7 @@ async function cacheDemos(browser) {
     if (!solo || solo === "volumen") await volumenYGenerador(browser, base, ancho);
     if (!solo || solo === "hoy") await hoyYRecuperacion(browser, base, ancho);
     if (!solo || solo === "perfil") await perfilYCompartir(browser, base, ancho);
+    if (!solo || solo === "reconocer") await sinReconocer(browser, base, ancho);
   }
   if (!solo || solo === "demos") await cacheDemos(browser);
   await terminar(browser, srv);

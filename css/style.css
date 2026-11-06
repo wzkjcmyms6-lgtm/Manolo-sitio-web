@@ -468,6 +468,8 @@ body.sheet-open { overflow: hidden; }
   border-radius: 999px; padding: 0.45rem 0.85rem; font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer;
 }
 .ej-chip .icon-sm { width: 15px; height: 15px; display: inline-flex; }
+.ej-chip-es { background: var(--accent-grad); color: #1a0f05; border-color: transparent; text-align: left; }
+.ej-chip-es:disabled { opacity: 0.7; cursor: default; }
 .ej-ajustes > summary, .ej-avanzado > summary { cursor: pointer; font-weight: 700; list-style: none; display: flex; align-items: center; justify-content: space-between; }
 .ej-ajustes > summary, .ej-ajustes > h2 { font-size: 1.05rem; }
 .ej-ajustes > h2 { margin: 0; }

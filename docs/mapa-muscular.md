@@ -123,10 +123,22 @@ intermedio, 3 experto) y `demo: 1` si tiene sus 2 fotos en
 - Tolera 1 error en palabras de 4–7 letras y 2 en las de 8+; también
   coincide mientras escribes ("sentad", "press incl").
 - `resolver(nombre)` para entrenos ya guardados: asignación manual → nombre o
-  alias exacto → búsqueda con todas las palabras encontradas y ≥ 60 % del
-  nombre cubierto. Si es ambiguo ("Remo", "Pecho") devuelve `null` y la app lo
-  pedirá en la lista de no reconocidos. Los 22 nombres que sugería la versión
-  anterior se reconocen todos (test).
+  alias exacto → misma "forma común" que un nombre o alias → puntaje (las
+  palabras raras pesan más; tiene que cubrir casi todo el nombre y ganarle
+  con margen al segundo). Si es ambiguo ("Remo", "Pecho") devuelve `null` y
+  la app lo pide en la lista de no reconocidos, con `sugerir()` para los
+  botones «¿Es …?».
+- Forma común (D-101): frases e inglés → una palabra (`FRASES`, `SINON`),
+  equipo aparte (`EQ_PALABRA`; si no se dice, `PRIOR` elige la variante de
+  siempre), palabras de relleno fuera (`SUAVES`), ortografía con
+  `fonetica()` (ll/y, v/b, z/s, c/s, h, letras dobles).
+- Alias extra (cómo lo llama la gente, Strong/Hevy, abreviaturas):
+  `js/ejercicios-alias.js`, por id. Solo sirven para buscar.
+- Medida: `tests/nombres-ejercicios.js` (331 nombres reales con su
+  ejercicio). `tests/reconocer-ejercicios.test.js` exige 100 % y ninguno
+  equivocado. Si un nombre real no se reconoce: agrégalo a esa lista, luego
+  un alias en `js/ejercicios-alias.js` (o un sinónimo en `SINON` si vale
+  para muchos ejercicios) y corre `npm test`.
 
 ## Mapa corporal (Fase 2)
 

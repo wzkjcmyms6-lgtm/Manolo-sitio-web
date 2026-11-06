@@ -42,6 +42,12 @@ function asignar(nombre, id) {
     .catch(err => console.error("No se pudo guardar la asignación", err));
 }
 
+// Hasta 2 ejercicios de la base que probablemente son ese nombre ("¿Es…?").
+function sugeridos(st, nombre) {
+  if (!st.indice || !ExerciseSearch.sugerir) return [];
+  return ExerciseSearch.sugerir(st.indice, nombre, 2).filter(s => s.probable);
+}
+
 function renderRevisar(st) {
   const caja = document.getElementById("ej-revisar");
   const faltan = (st.datos && st.datos.noReconocidos) || [];
@@ -56,6 +62,7 @@ function renderRevisar(st) {
     <li data-i="${i}">
       <div class="ej-revisar-nombre"><span>${escapeHtml(f.nombre)}</span><span class="veces">${f.veces} ${f.veces === 1 ? "vez" : "veces"}</span></div>
       <div class="ej-revisar-acciones">
+        ${sugeridos(st, f.nombre).map(s => `<button type="button" class="ej-chip ej-chip-es" data-accion="es" data-id="${escapeHtml(s.ejercicio.id)}">¿Es «${escapeHtml(s.ejercicio.nombre)}»?</button>`).join("")}
         <button type="button" class="ej-chip" data-accion="asignar">Asignar a un ejercicio</button>
         <button type="button" class="ej-chip" data-accion="crear">Crear nuevo</button>
       </div>
@@ -79,6 +86,12 @@ document.getElementById("ej-revisar-lista").addEventListener("click", e => {
   const li = b.closest("li");
   const faltan = EjercicioDatos.estado.datos.noReconocidos;
   const nombre = faltan[Number(li.dataset.i)].nombre;
+  if (b.dataset.accion === "es") {
+    asignar(nombre, b.dataset.id);
+    b.disabled = true;
+    b.textContent = "Listo ✓";
+    return;
+  }
   if (b.dataset.accion === "crear") {
     ExerciseCreator.abrir({ nombre, alGuardar: f => asignar(nombre, f.id) });
   } else {

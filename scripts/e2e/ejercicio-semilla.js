@@ -105,7 +105,7 @@ function estado(hoy, opciones) {
     entrenos.libre = { date: libre, name: "Brazos en casa", startedAt: Date.parse(`${libre}T08:00:00-04:00`), durationMin: 30, prs: 0,
       exercises: [{ name: "Curl de bíceps (Mancuerna)", exerciseId: "dumbbell-bicep-curl", sets: [{ kg: 12, reps: 12 }, { kg: 12, reps: 10 }] },
         { name: "Fondos en paralelas", exerciseId: "parallel-bar-dip", sets: [{ kg: 0, reps: 12 }, { kg: 0, reps: 10 }] },
-        { name: "Curl martillo raro", sets: [{ kg: 10, reps: 10 }] }] };
+        { name: "Remo", sets: [{ kg: 10, reps: 10 }] }] };
     // Carreras: miércoles (fácil) y domingo (larga); ayer, una larga.
     for (let s = 0; s < o.semanas; s++) {
       const lun = addDias(lunes, -7 * (o.semanas - 1 - s));

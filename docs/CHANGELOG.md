@@ -1,5 +1,18 @@
 # Cambios
 
+## 2026-11-06 · Ejercicio: reconoce y busca ejercicios por cualquier nombre
+- Reconoce nombres como los dices en el gimnasio ("press plano con
+  mancuernas", "jalón al pecho", "cristos", "serrucho", "multipower"),
+  como los exportan Strong o Hevy ("Bench Press (Dumbbell)", "Lat
+  Pulldown (Cable)"), abreviaturas (DB, BB, OHP, RDL) y errores de tipeo
+  ("sentadiya", "press vanca"). En 331 nombres reales: antes 79 %, ahora
+  100 %.
+- Respeta el equipo que dices y, si no lo dices, elige el de siempre.
+- "Ejercicios sin reconocer" sugiere «¿Es …?» para asignarlo con un toque.
+- El buscador entiende mejor lo que vas escribiendo ("hip th", "remo maq").
+- Pruebas: `tests/reconocer-ejercicios.test.js` y la sección `reconocer`
+  de `scripts/e2e/ejercicio.js`.
+
 ## 2026-11-05 · Inicio: "Mi día"
 - Arriba de Inicio, una tarjeta con lo de hoy: qué entrenar y por qué,
   los hábitos que faltan, el versículo de hoy, cuánto queda para gastar
