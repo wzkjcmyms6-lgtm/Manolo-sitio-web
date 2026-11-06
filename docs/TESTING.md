@@ -231,6 +231,14 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
   pitido en cada paso y al final la sesión queda hecha.
 - [ ] Revisa Progreso, Semana, Guía y Ajustes.
 
+**Hábitos: "¿Que se marque solo?" (2026-11)**
+- [ ] Abre Hábitos › Hoy: si "Correr" no estaba vinculado, arriba dice
+  "Correr puede marcarse solo…". Toca "Que se marque solo".
+- [ ] Si hoy registraste una carrera, "Correr" queda hecho al instante;
+  si te ofrece marcar días anteriores, acepta.
+- [ ] Mañana, guarda o importa una carrera en Running y vuelve a Hábitos:
+  "Correr" ya está marcado (con ⚡ Running).
+
 **Medir tiempos: promedio por día (2026-11)**
 - [ ] Medir tiempos › Promedios › "Por día": siete barras de lunes a
   domingo. Toca "Lu": la tabla dice cuánto tardas en promedio cada lunes.

@@ -136,6 +136,16 @@ opcional, `pendientesMomento`).
 Datos nuevos del hábito: `vinculo`, `vinculoCfg { medida, rutina,
 categoria }`, `vinculoDesde`; en el registro, `auto: { f, v }`.
 
+**"¿Que se marque solo?" (2026-11-06, D-103)**: un hábito **sin vínculo**
+nunca se marca solo (era el caso de "Correr" creado antes del 5 de
+noviembre). Ahora, si su nombre dice de qué módulo es ("Correr", "Trotar",
+"Leer 30 páginas", "Leer la Biblia", "Estirar", "Bici", "Gimnasio"), Hoy
+muestra arriba "… puede marcarse solo" con **Que se marque solo** (lo
+vincula desde hoy: la carrera de hoy lo marca enseguida y ofrece marcar
+los días anteriores) o **No, gracias** (se guarda `vinculoNo: true` en el
+hábito y no vuelve a preguntar). Una sugerencia a la vez. Lógica:
+`HabitosAuto.sugerirVinculo`.
+
 ### Crear más rápido y avisos (fase 7)
 - Plantillas (📋 arriba de "Nuevo hábito"): por categoría, con buscador.
 - Sugerencia de categoría al escribir el nombre.

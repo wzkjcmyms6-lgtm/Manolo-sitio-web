@@ -99,3 +99,26 @@ test("el motor lee los registros automáticos como cualquier otro (y rellenar no
   assert.equal(r2.habitos.h.dias["2026-10-20"].clase, "cumple");
   assert.equal(r2.habitos.h.dias["2026-10-20"].xp, 0);
 });
+
+test("sugiere vincular un hábito por su nombre (Correr → Running…)", () => {
+  const s = (name, extra) => A.sugerirVinculo(Object.assign({ name, tipo: "sino" }, extra));
+  assert.equal(s("Correr").fuente, "running");
+  assert.equal(s("Salir a correr 🏃").fuente, "running");
+  assert.equal(s("Trotar en la mañana").fuente, "running");
+  assert.equal(s("Leer la Biblia").fuente, "biblia", "la Biblia antes que Libros");
+  assert.equal(s("Leer 30 páginas").fuente, "libros");
+  assert.equal(s("Versículo del día").fuente, "biblia");
+  assert.equal(s("Estiramientos").fuente, "movilidad");
+  assert.equal(s("Ir al gimnasio").fuente, "gimnasio");
+  assert.equal(s("Bici").fuente, "bicicleta");
+  assert.equal(s("Meditar"), null);
+  assert.equal(s("Correr", { vinculo: "running" }), null, "ya vinculado");
+  assert.equal(s("Correr", { archivado: true }), null);
+  assert.equal(s("No correr riesgos", { tipo: "evitar" }), null, "Evitar no");
+  assert.equal(s("Scalping", { id: "scalping" }), null);
+  assert.deepEqual(s("Correr", { tipo: "medible", unidad: "km" }).cfg, { medida: "km", rutina: null, categoria: null });
+  assert.equal(s("Leer", { tipo: "medible", unidad: "páginas" }).cfg.medida, "paginas");
+  assert.equal(s("Correr", { tipo: "medible", unidad: "veces" }).cfg.medida, "n");
+  assert.equal(s("Leer", { tipo: "tiempo" }), null, "Libros no da minutos");
+  assert.equal(s("Correr", { tipo: "tiempo" }).fuente, "running");
+});

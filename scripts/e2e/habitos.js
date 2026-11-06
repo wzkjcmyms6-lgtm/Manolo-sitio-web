@@ -305,6 +305,39 @@ function conTemporadaVista(opciones) {
     await p.context().close();
   }
 
+  {
+    // Pedido del dueño 2026-11-06: "¿por qué correr no se marca solo cuando voy a correr?"
+    console.log("\n=== «¿Que se marque solo?»: hábitos sin vínculo con nombre claro");
+    const e = conTemporadaVista();
+    Object.assign(e.__SEED__, { "users/test/running": { r1: { date: HOY, distance: 5, duration: 30 }, r2: { date: "2026-11-01", distance: 7, duration: 42 } } });
+    delete e.__SEED__["users/test/habitos"].correr.registros[HOY];
+    delete e.__SEED__["users/test/habitos"].correr.registros["2026-11-01"];
+    e.__SEED__["users/test/habitos"].correr.done = e.__SEED__["users/test/habitos"].correr.done.filter(f => f !== HOY && f !== "2026-11-01");
+    const p = await abrir(browser, base, e, { hash: "#habitos", zona: ZONA, fecha: FECHA, ancho: 390, alto: 844 });
+    consolaLimpia(p);
+    await p.waitForTimeout(800);
+    const hab = id => p.evaluate(i => window.__fakeStore.colMap("users/test/habitos").get(i), id);
+    ok(/Estirar.*puede marcarse solo.*Movilidad/.test(await texto(p, ".hb-sug-vinc")), "«Estirar» (sin vínculo) ofrece marcarse solo con Movilidad");
+    ok(!(await hab("correr")).registros[HOY], "antes, la carrera de hoy no marca «Correr» (no está vinculado)");
+    await p.click(".hb-sug-vinc [data-vinc-no]");
+    await p.waitForTimeout(500);
+    ok((await hab("estirar")).vinculoNo === true, "«No, gracias» lo recuerda en el hábito");
+    ok(/Correr.*puede marcarse solo.*carrera en Running/.test(await texto(p, ".hb-sug-vinc")), "después ofrece «Correr» con Running");
+    await captura(p, "hab-sug-vinculo-390.png");
+    await p.click(".hb-sug-vinc [data-vinc-si]");
+    await p.waitForTimeout(1200);
+    const h = await hab("correr");
+    ok(h.vinculo === "running" && h.vinculoDesde === HOY, "«Que se marque solo» lo vincula con Running desde hoy");
+    ok(h.registros[HOY] && h.registros[HOY].auto && h.registros[HOY].e === "hecho" && h.done.includes(HOY), "y la carrera de hoy lo marca enseguida");
+    ok(await p.isVisible("[data-rellenar]") && /Encontré 1 día/.test(await texto(p, ".hb-sheet")), "ofrece marcar la carrera del 1 de noviembre");
+    await p.click("[data-rellenar]");
+    await p.waitForTimeout(600);
+    ok((await hab("correr")).registros["2026-11-01"].auto, "y la marca si aceptas");
+    ok(!(await p.$(".hb-sug-vinc")), "sin más sugerencias");
+    ok(p.errores.length === 0 && p.consola.length === 0, `sin errores (${p.errores.concat(p.consola).join(" | ")})`);
+    await p.context().close();
+  }
+
   for (const ancho of [390, 1280]) {
     console.log(`\n=== Se marca solo a ${ancho} px`);
     const e = conTemporadaVista();

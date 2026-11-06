@@ -1040,3 +1040,12 @@ body.sc-en-guia { overflow: hidden; }
 .hb-perdon.is-on { background: var(--accent-2); }
 .c-fallo.c-perdon { background: rgba(255, 184, 77, 0.08); border-style: solid; border-color: rgba(255, 184, 77, 0.55); color: var(--accent-2); }
 .hb-salvada { color: var(--accent-2); font-weight: 600; white-space: pre; }
+
+/* "¿Que se marque solo?" (hábito sin vínculo con nombre claro, 2026-11-06) */
+.hb-sug-vinc {
+  margin-bottom: 0.8rem; padding: 0.75rem 0.85rem; border-radius: 16px; background: var(--surface);
+  border: 1px solid rgba(255, 122, 48, 0.45); display: flex; flex-direction: column; gap: 0.55rem;
+}
+.hb-sug-vinc p { margin: 0; font-size: 0.9rem; color: var(--muted); line-height: 1.4; }
+.hb-sug-vinc b { color: var(--ink); }
+.hb-sug-vinc .hb-acciones { margin: 0; }

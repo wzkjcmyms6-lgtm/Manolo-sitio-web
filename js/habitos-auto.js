@@ -120,5 +120,37 @@ function rellenables(h, agg, crudos, hoy, maxDias) {
   return Object.keys(agg || {}).filter(f => f >= limite && f < hoy && !regs[f] && valorDia(h, agg[f]) > 0).sort();
 }
 
-return { FUENTES, fuente, porDia, medidaDe, valorDia, registro, esAuto, plan, rellenables };
+// Hábitos sin vínculo cuyo nombre dice claramente de qué módulo son
+// ("Correr", "Salir a trotar", "Leer 30 páginas", "Leer la Biblia"…): se
+// ofrece que se marquen solos con un toque (pedido del dueño, 2026-11-06:
+// "¿por qué correr no se marca solo cuando voy a correr?"). El orden
+// importa: "Leer la Biblia" es Biblia, no Libros.
+const PISTAS = [
+  ["biblia", /\b(biblia|versicul\w*|devocional|evangelio|salmos?)\b/],
+  ["running", /\b(correr|corro|trotar|trote|running|run|jogging|footing)\b/],
+  ["bicicleta", /\b(bici|bicicleta|ciclismo|pedalear|rodar en bici)\b/],
+  ["movilidad", /\b(movilidad|estirar|estiramientos?|elongar|elongacion|flexibilidad)\b/],
+  ["libros", /\b(leer|lectura|libros?|paginas)\b/],
+  ["gimnasio", /\b(gimnasio|gym|pesas|entrenar|entreno|musculacion)\b/]
+];
+const sinTildes = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+// h: hábito normalizado (con name, tipo, unidad, vinculo, archivado).
+// → { fuente, cfg: { medida, rutina, categoria } } o null.
+function sugerirVinculo(h) {
+  if (!h || h.vinculo || h.archivado || h.tipo === "evitar" || h.especial || h.id === "scalping") return null;
+  const n = sinTildes(h.name);
+  const pista = PISTAS.find(p => p[1].test(n));
+  if (!pista) return null;
+  const def = fuente(pista[0]);
+  const tiene = m => def.medidas.some(x => x[0] === m);
+  if (h.tipo === "tiempo" && !def.soloEvento && !tiene("min")) return null;
+  let medida = null;
+  if (h.tipo === "medible") {
+    const u = sinTildes(h.unidad);
+    medida = /\bkm|kilometro/.test(u) && tiene("km") ? "km" : /\bmin/.test(u) && tiene("min") ? "min" : /pag/.test(u) && tiene("paginas") ? "paginas" : "n";
+  }
+  return { fuente: def.id, cfg: { medida, rutina: null, categoria: null } };
+}
+
+return { FUENTES, fuente, porDia, medidaDe, valorDia, registro, esAuto, plan, rellenables, sugerirVinculo };
 });

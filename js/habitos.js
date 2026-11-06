@@ -457,7 +457,7 @@ function renderHoy() {
   const semanaPasada = HE.semanaId(HE.addDias(HE.lunesDe(f), -7));
   let visto = null;
   try { visto = localStorage.getItem("hb-resumen-visto"); } catch (e) { /* sin almacenamiento */ }
-  html = (window.HabitoScalping ? HabitoScalping.sugerenciaHtml() : "") + jefeMiniHtml() + html;
+  html = sugVinculoHtml() + (window.HabitoScalping ? HabitoScalping.sugerenciaHtml() : "") + jefeMiniHtml() + html;
   if (HE.diaSemana(f) === 0 && visto !== semanaPasada) html = resumenSemanaHtml(true) + html;
   const abierto = lista.querySelector(".hb-notoca") && lista.querySelector(".hb-notoca").open;
   lista.innerHTML = html;
@@ -1572,6 +1572,40 @@ function rellenar() {
   toast(`Listo: ${plural(Object.keys(p.poner).length, "día marcado", "días marcados")} desde el ${fechaCorta(r.desde)}.`);
 }
 
+// "¿Que se marque solo?": un hábito sin vínculo cuyo nombre dice de qué
+// módulo es ("Correr" → Running). Pedido del dueño 2026-11-06: "¿por qué
+// correr no se marca solo cuando voy a correr?". "No, gracias" lo guarda
+// en el hábito (vinculoNo) para no volver a preguntar.
+function sugVinculo() {
+  const ids = Object.keys(normal).sort((a, b) => (normal[a].orden || 0) - (normal[b].orden || 0));
+  for (const id of ids) {
+    if (docs[id] && docs[id].vinculoNo) continue;
+    const s = HA.sugerirVinculo(Object.assign({}, normal[id], { especial: docs[id] && docs[id].especial }));
+    if (s) return { h: normal[id], s };
+  }
+  return null;
+}
+function sugVinculoHtml() {
+  const x = cargado ? sugVinculo() : null;
+  if (!x) return "";
+  const def = HA.fuente(x.s.fuente);
+  return `<section class="hb-sug-vinc" aria-label="Que se marque solo">
+    <p><b>${escapeHtml(x.h.emoji)} ${escapeHtml(x.h.name)}</b> puede marcarse solo: ${escapeHtml(def.accion.charAt(0).toLowerCase() + def.accion.slice(1))} en ${escapeHtml(def.nombre)}, queda hecho ese día. Hoy no está vinculado.</p>
+    <div class="hb-acciones"><button type="button" class="hb-btn-sec" data-vinc-no="${escapeHtml(x.h.id)}">No, gracias</button>
+      <button type="button" class="hb-btn" data-vinc-si="${escapeHtml(x.h.id)}">Que se marque solo</button></div>
+  </section>`;
+}
+function aceptarVinculo(id) {
+  const h = normal[id];
+  const s = h && HA.sugerirVinculo(Object.assign({}, h, { especial: docs[id] && docs[id].especial }));
+  if (!s) return;
+  const def = HA.fuente(s.fuente);
+  coleccion().doc(id).update({ vinculo: s.fuente, vinculoCfg: s.cfg, vinculoDesde: hoy() }).catch(errorGuardar);
+  toast(`Listo: «${h.name}» se marca solo con ${def.nombre}.`);
+  // Lo de hoy se marca enseguida; los días anteriores, si quieres.
+  setTimeout(() => ofrecerRellenar(id), 600);
+}
+
 // Opciones del vínculo en el formulario: fuente, medida (Medible), rutina
 // (Movilidad) o categoría de gasto (Evitar).
 function vinculoValido(f) {
@@ -2281,6 +2315,10 @@ document.getElementById("hb-lista").addEventListener("click", e => {
   if (sc) { alternarScalping(sc.dataset.scSesion); return; }
   if (e.target.closest("[data-sc-crear]")) { crearScalping(); return; }
   if (e.target.closest("[data-sc-descartar]")) { HabitoScalping.descartarSugerencia(); renderHoy(); return; }
+  const vs = e.target.closest("[data-vinc-si]");
+  if (vs) { aceptarVinculo(vs.dataset.vincSi); return; }
+  const vn = e.target.closest("[data-vinc-no]");
+  if (vn) { coleccion().doc(vn.dataset.vincNo).update({ vinculoNo: true }).catch(errorGuardar); return; }
   const m = e.target.closest("[data-marcar]");
   if (m) { marcar(m.dataset.marcar); return; }
   const d = e.target.closest("[data-detalle]");

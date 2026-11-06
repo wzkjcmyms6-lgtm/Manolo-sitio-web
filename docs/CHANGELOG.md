@@ -1,5 +1,13 @@
 # Cambios
 
+## 2026-11-06 · Hábitos: "¿Que se marque solo?"
+- Si tienes un hábito como "Correr" que no está vinculado con Running, Hoy
+  te lo dice arriba: "Que se marque solo" lo vincula con un toque, marca la
+  carrera de hoy y ofrece marcar las de días anteriores.
+- Funciona igual con Leer (Libros), Leer la Biblia (Biblia), Estirar
+  (Movilidad), Bici y Gimnasio. "No, gracias" no vuelve a preguntar.
+- Pruebas: `tests/habitos-auto.test.js` y `scripts/e2e/habitos.js`.
+
 ## 2026-11-06 · Medir tiempos: promedio por día de la semana
 - Promedios › "Por día": barras de lunes a domingo con tu día en promedio;
   toca un día y ves el promedio de cada actividad de todos tus lunes (o

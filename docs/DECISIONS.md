@@ -1140,3 +1140,15 @@ cambiar de capítulo, "Marcar como leído" y "seguir donde quedé" (también
 entre aparatos). Datos nuevos: `meta/biblia_lector` y `meta/biblia_leidos`
 (capítulos leídos por día). El "Fake Firebase" de las pruebas ahora
 resuelve `arrayUnion` dentro de un mapa nuevo, como Firestore.
+
+**D-103 (2026-11-06) · "¿Que se marque solo?" para hábitos sin vínculo.**
+El dueño preguntó por qué "Correr" no se marcaba solo al ir a correr. El
+mecanismo (D-085) solo marca hábitos **vinculados** a un módulo, y un
+hábito creado antes del 5 de noviembre (o sin plantilla) no lo está. Se
+revisó también el orden de carga (las carreras pueden llegar antes que los
+hábitos): está cubierto, porque al llegar los hábitos se vuelve a revisar.
+Solución: si el nombre del hábito dice claramente de qué módulo es,
+Hábitos › Hoy lo sugiere arriba y un toque lo vincula (desde hoy; la
+carrera de hoy lo marca al instante y se ofrece marcar los días
+anteriores, sin XP como siempre). "No, gracias" guarda `vinculoNo` en el
+hábito (aditivo). No se vincula nada sin el toque del dueño.
