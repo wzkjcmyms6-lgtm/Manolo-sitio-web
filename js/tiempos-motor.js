@@ -165,11 +165,49 @@ function periodo(ds, tipo, ref, hoy) {
   };
 }
 
+// Promedio por día de la semana (pedido del dueño, 2026-11-06: "que tome
+// un promedio de lo registrado en lunes y así"): todos los lunes
+// registrados, todos los martes… De lunes a domingo, con cada actividad y
+// el día todo junto. → [{ dow, nombre, corto, act: { id: { n, promedio } }, total: { dias, promedio } }]
+const NOMBRES_DIA = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+const CORTOS_DIA = ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sá"];
+const diaSemana = f => fechaUtc(f).getUTCDay();
+function porDiaSemana(ds) {
+  return [1, 2, 3, 4, 5, 6, 0].map(dow => {
+    const delDia = (ds || []).filter(d => diaSemana(d.fecha) === dow);
+    const act = {};
+    ACTIVIDADES.forEach(a => {
+      const rs = delDia.filter(d => d.seg[a.id]).map(d => ({ fecha: d.fecha, seg: d.seg[a.id] }));
+      act[a.id] = { n: rs.length, promedio: promedio(rs) };
+    });
+    const conAlgo = delDia.filter(d => totalDia(d) > 0);
+    const total = { dias: conAlgo.length, promedio: conAlgo.length ? Math.round(conAlgo.reduce((s2, d) => s2 + totalDia(d), 0) / conAlgo.length) : null };
+    return { dow, nombre: NOMBRES_DIA[dow], corto: CORTOS_DIA[dow], act, total };
+  });
+}
+// El día más largo y el más corto (con al menos 2 registros cada uno).
+function extremosSemana(pd) {
+  const con = (pd || []).filter(d => d.total.dias >= 2);
+  if (con.length < 2) return null;
+  const orden = con.slice().sort((a, b) => b.total.promedio - a.total.promedio);
+  const largo = orden[0], corto = orden[orden.length - 1];
+  if (largo.total.promedio === corto.total.promedio) return null;
+  return { largo, corto, diferencia: largo.total.promedio - corto.total.promedio };
+}
+// 7500 → "2h05"; 2700 → "45m" (para las barras, donde no entra más).
+function corto(s) {
+  if (!segOk(s)) return "—";
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m}m`;
+  return `${Math.floor(m / 60)}h${String(m % 60).padStart(2, "0")}`;
+}
+
 function fechaLarga(f) {
   if (!fechaOk(f)) return f || "";
   const d = fechaUtc(f);
   return `${DIAS[d.getUTCDay()]} ${d.getUTCDate()} de ${MESES[d.getUTCMonth()]}`;
 }
 
-return { ACTIVIDADES, LIMITE, dias, contados, totalDia, promedioDias, estado, bloqueada, leer, campos, texto, lunes, rango, mover, periodo, fechaLarga };
+return { ACTIVIDADES, LIMITE, dias, contados, totalDia, promedioDias, estado, bloqueada, leer, campos, texto, lunes, rango, mover, periodo, fechaLarga,
+  NOMBRES_DIA, diaSemana, porDiaSemana, extremosSemana, corto };
 });

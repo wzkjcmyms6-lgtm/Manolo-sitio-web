@@ -231,6 +231,11 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
   pitido en cada paso y al final la sesión queda hecha.
 - [ ] Revisa Progreso, Semana, Guía y Ajustes.
 
+**Medir tiempos: promedio por día (2026-11)**
+- [ ] Medir tiempos › Promedios › "Por día": siete barras de lunes a
+  domingo. Toca "Lu": la tabla dice cuánto tardas en promedio cada lunes.
+  Con ‹ › pasas de día.
+
 **Biblia: leer dentro de Manolo (2026-11)**
 - [ ] Biblia › "Leer la Biblia": abre Mateo 1. Toca "Mateo 1 ▾", busca
   "juan", elige Juan y el capítulo 3.

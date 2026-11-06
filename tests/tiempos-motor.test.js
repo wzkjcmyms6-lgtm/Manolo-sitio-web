@@ -138,3 +138,32 @@ test("total de cada día y promedio de los días", () => {
   assert.deepEqual(T.periodo(ds, "semana", "2026-10-19", "2026-10-28").dias, { dias: 0, promedio: null });
 });
 
+
+test("promedio por día de la semana: todos los lunes, todos los martes…", () => {
+  // 2026-11-02 y 2026-10-26 son lunes; 2026-11-03 martes; 2026-11-08 domingo.
+  const ds = T.dias(docsDe({
+    "2026-10-26": { manana: 1200, leer: 1800 },
+    "2026-11-02": { manana: 1500, leer: 2400, ejercicio: 3600 },
+    "2026-11-03": { manana: 1000 },
+    "2026-11-08": { banarse: 600 }
+  }));
+  const pd = T.porDiaSemana(ds);
+  assert.deepStrictEqual(pd.map(d => d.nombre), ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]);
+  const lun = pd[0];
+  assert.deepStrictEqual(lun.act.manana, { n: 2, promedio: 1350 }, "los dos lunes");
+  assert.deepStrictEqual(lun.act.leer, { n: 2, promedio: 2100 });
+  assert.deepStrictEqual(lun.act.ejercicio, { n: 1, promedio: 3600 }, "solo cuenta el lunes que lo tuvo");
+  assert.deepStrictEqual(lun.total, { dias: 2, promedio: Math.round((3000 + 7500) / 2) }, "el lunes todo junto");
+  assert.deepStrictEqual(pd[1].act.manana, { n: 1, promedio: 1000 });
+  assert.deepStrictEqual(pd[2].total, { dias: 0, promedio: null }, "miércoles sin datos");
+  assert.strictEqual(pd[6].act.banarse.promedio, 600);
+  assert.strictEqual(T.extremosSemana(pd), null, "hace falta al menos 2 registros en 2 días distintos");
+  const mas = T.dias(docsDe({ "2026-10-26": { manana: 1200 }, "2026-11-02": { manana: 1800 }, "2026-10-27": { manana: 600 }, "2026-11-03": { manana: 600 } }));
+  const ex = T.extremosSemana(T.porDiaSemana(mas));
+  assert.strictEqual(ex.largo.nombre, "Lunes");
+  assert.strictEqual(ex.corto.nombre, "Martes");
+  assert.strictEqual(ex.diferencia, 900);
+  assert.strictEqual(T.corto(7500), "2h05");
+  assert.strictEqual(T.corto(2700), "45m");
+  assert.strictEqual(T.corto(null), "—");
+});

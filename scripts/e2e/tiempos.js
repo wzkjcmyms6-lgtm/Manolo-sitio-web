@@ -132,6 +132,27 @@ async function elegirDia(p, f) {
   ok((await texto(p, "#tmp-periodo")) === "Septiembre 2026" && (await fila(p, '[data-tmp-prom="manana"]')) === "Rutina de la mañana 25 min 10 s 3", "septiembre: 3 días, 25 min 10 s");
   await captura(p, "tiempos-promedios.png");
 
+  console.log("\nPromedio por día de la semana (todos los lunes, todos los martes…)");
+  await p.click('[data-tmp-tipo="dia"]');
+  await p.waitForTimeout(150);
+  const pd = T.porDiaSemana(ds);
+  const mie = pd.find(d => d.dow === 3), lun = pd.find(d => d.dow === 1);
+  ok((await p.$$("[data-tmp-dow]")).length === 7, "siete barras, de lunes a domingo");
+  ok((await texto(p, "#tmp-periodo")) === `Tus miércoles · ${mie.total.dias} días`, "empieza en el día de hoy (miércoles)");
+  ok((await fila(p, '[data-tmp-prom="manana"]')) === `Rutina de la mañana ${T.texto(mie.act.manana.promedio)} ${mie.act.manana.n}`, `mañana los miércoles: ${T.texto(mie.act.manana.promedio)} en ${mie.act.manana.n}`);
+  await p.click('[data-tmp-dow="1"]');
+  await p.waitForTimeout(150);
+  ok((await texto(p, "#tmp-periodo")) === `Tus lunes · ${lun.total.dias} días` && await p.$eval('[data-tmp-dow="1"]', b => b.getAttribute("aria-pressed") === "true"), "tocar la barra del lunes muestra tus lunes");
+  ok((await fila(p, '[data-tmp-prom="correr"]')) === `Correr ${T.texto(lun.act.correr.promedio)} ${lun.act.correr.n}`, "correr los lunes (solo el lunes que corrió)");
+  ok((await fila(p, '[data-tmp-prom="dia"]')) === `Tu día (todo junto) ${T.texto(lun.total.promedio)} ${lun.total.dias}`, `tu lunes todo junto: ${T.texto(lun.total.promedio)}`);
+  await p.click('[data-tmp-dow-mover="-1"]');
+  await p.waitForTimeout(150);
+  ok(/^Tus domingos/.test(await texto(p, "#tmp-periodo")), "‹ del lunes va al domingo");
+  ok((await sobra(p, "html")) <= 0, "sin desborde a 390 px");
+  await captura(p, "tiempos-por-dia.png");
+  await p.click('[data-tmp-tipo="semana"]');
+  await p.waitForTimeout(150);
+
   console.log("\nTus días: corregir y quitar");
   ok((await p.$$eval("[data-tmp-dia]", els => els.map(e => e.dataset.tmpDia))).slice(0, 3).join(",") === "2026-10-28,2026-10-27,2026-10-26", "lista con el más nuevo primero");
   const todosDias = T.promedioDias(ds);

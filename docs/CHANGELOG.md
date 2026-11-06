@@ -1,5 +1,11 @@
 # Cambios
 
+## 2026-11-06 · Medir tiempos: promedio por día de la semana
+- Promedios › "Por día": barras de lunes a domingo con tu día en promedio;
+  toca un día y ves el promedio de cada actividad de todos tus lunes (o
+  martes, o …). Abajo, tu día más largo y el más corto.
+- Pruebas: `tests/tiempos-motor.test.js` y `scripts/e2e/tiempos.js`.
+
 ## 2026-11-06 · Biblia: leerla dentro de Manolo
 - Biblia › "Leer la Biblia": la Reina-Valera 1909 completa, con selector
   de libro y capítulo, números de versículo, tamaño de letra y

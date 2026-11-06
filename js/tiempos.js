@@ -14,7 +14,8 @@ let docs = {};            // id (fecha) → datos tal como están en Firestore
 let ds = [];              // días normalizados
 let cargado = false;
 let fecha = hoyLocal();   // día que se está anotando
-let tipo = "semana";      // promedios: "semana" | "mes"
+let tipo = "semana";      // promedios: "semana" | "mes" | "dia" (por día de la semana)
+let dow = new Date().getDay(); // día de la semana elegido en "Por día" (0 = domingo)
 let ref = hoyLocal();     // semana o mes que se ve
 let borradores = {};      // id → { min, seg } escritos y todavía sin guardar (del día elegido)
 let aviso = null;         // { id, texto }: "✓ Guardado" junto a esa actividad
@@ -127,17 +128,60 @@ anotar.addEventListener("click", e => {
 });
 
 // ---------- Promedios por semana y por mes ----------
+const ORDEN_DIAS = [1, 2, 3, 4, 5, 6, 0];
+// "lunes" → "tus lunes"; "Sábado" → "tus sábados".
+const plural = d => (d.dow === 6 || d.dow === 0 ? `${d.nombre.toLowerCase()}s` : d.nombre.toLowerCase());
+const pestanas = () => `
+    <div class="fin-tabs tmp-tabs" role="tablist" aria-label="Promedio por">
+      <button type="button" class="fin-tab${tipo === "semana" ? " active" : ""}" role="tab" aria-selected="${tipo === "semana"}" data-tmp-tipo="semana">Semana</button>
+      <button type="button" class="fin-tab${tipo === "mes" ? " active" : ""}" role="tab" aria-selected="${tipo === "mes"}" data-tmp-tipo="mes">Mes</button>
+      <button type="button" class="fin-tab${tipo === "dia" ? " active" : ""}" role="tab" aria-selected="${tipo === "dia"}" data-tmp-tipo="dia">Por día</button>
+    </div>`;
+
+// Promedio por día de la semana: todos los lunes, todos los martes…
+function renderPorDia(el) {
+  const pd = T.porDiaSemana(ds);
+  const d = pd.find(x => x.dow === dow) || pd[0];
+  const max = Math.max(1, ...pd.map(x => x.total.promedio || 0));
+  const ex = T.extremosSemana(pd);
+  const hay = pd.some(x => x.total.dias);
+  el.innerHTML = `
+    <h2 class="tmp-titulo" id="tmp-prom-t">Promedios</h2>
+    ${pestanas()}
+    ${cargado && !hay ? `<p class="empty-state">Todavía no hay tiempos anotados.</p>` : `
+    <p class="tmp-nota tmp-nota-arriba">Tu día todo junto, en promedio, según el día de la semana. Toca un día para ver cada actividad.</p>
+    <div class="tmp-sem" role="group" aria-label="Tu día en promedio, de lunes a domingo">
+      ${pd.map(x => `<button type="button" class="tmp-sem-b${x.dow === d.dow ? " is-elegida" : ""}" data-tmp-dow="${x.dow}" aria-pressed="${x.dow === d.dow}" aria-label="${x.nombre}: ${T.texto(x.total.promedio)} en promedio (${x.total.dias} ${x.total.dias === 1 ? "día" : "días"})">
+        <span class="tmp-sem-v">${x.total.dias ? T.corto(x.total.promedio) : "—"}</span>
+        <span class="tmp-sem-col"><span style="height:${x.total.promedio ? Math.max(4, Math.round(x.total.promedio / max * 100)) : 0}%"></span></span>
+        <span class="tmp-sem-d">${x.corto}</span>
+      </button>`).join("")}
+    </div>
+    <div class="tmp-nav">
+      <button type="button" data-tmp-dow-mover="-1" aria-label="Día anterior">‹</button>
+      <b id="tmp-periodo">Tus ${esc(plural(d))} · ${d.total.dias} ${d.total.dias === 1 ? "día" : "días"}</b>
+      <button type="button" data-tmp-dow-mover="1" aria-label="Día siguiente">›</button>
+    </div>
+    ${d.total.dias ? `
+    <table class="tmp-tabla">
+      <thead><tr><th scope="col">Actividad</th><th scope="col">Promedio</th><th scope="col">Días</th></tr></thead>
+      <tbody>${T.ACTIVIDADES.map(a => `
+        <tr data-tmp-prom="${a.id}"><td>${esc(a.nombre)}</td><td>${T.texto(d.act[a.id].promedio)}</td><td>${d.act[a.id].n}</td></tr>`).join("")}
+      </tbody>
+      <tfoot><tr data-tmp-prom="dia"><th scope="row">Tu día (todo junto)</th><td>${T.texto(d.total.promedio)}</td><td>${d.total.dias}</td></tr></tfoot>
+    </table>` : `<p class="empty-state">No tienes ${esc(plural(d))} anotados todavía.</p>`}
+    ${ex ? `<p class="tmp-nota">Tus ${esc(plural(ex.largo))} son los más largos (${T.texto(ex.largo.total.promedio)}) y tus ${esc(plural(ex.corto))} los más cortos (${T.texto(ex.corto.total.promedio)}): ${T.texto(ex.diferencia)} de diferencia.</p>` : ""}`}`;
+}
+
 function renderPromedios() {
   const el = $("tmp-promedios");
+  if (tipo === "dia") { renderPorDia(el); return; }
   const hoy = hoyLocal();
   const p = T.periodo(ds, tipo, ref, hoy);
   const ahora = tipo === "semana" ? "Esta semana" : "Este mes";
   el.innerHTML = `
     <h2 class="tmp-titulo" id="tmp-prom-t">Promedios</h2>
-    <div class="fin-tabs tmp-tabs" role="tablist" aria-label="Promedio por">
-      <button type="button" class="fin-tab${tipo === "semana" ? " active" : ""}" role="tab" aria-selected="${tipo === "semana"}" data-tmp-tipo="semana">Semana</button>
-      <button type="button" class="fin-tab${tipo === "mes" ? " active" : ""}" role="tab" aria-selected="${tipo === "mes"}" data-tmp-tipo="mes">Mes</button>
-    </div>
+    ${pestanas()}
     <div class="tmp-nav">
       <button type="button" data-tmp-mover="-1" aria-label="${tipo === "semana" ? "Semana anterior" : "Mes anterior"}">‹</button>
       <b id="tmp-periodo">${p.enCurso ? `${ahora} · ` : ""}${esc(p.titulo)}</b>
@@ -195,6 +239,10 @@ function renderDias() {
 app.addEventListener("click", e => {
   const t = e.target.closest("[data-tmp-tipo]");
   if (t) { tipo = t.dataset.tmpTipo; ref = hoyLocal(); renderPromedios(); return; }
+  const bd = e.target.closest("[data-tmp-dow]");
+  if (bd) { dow = Number(bd.dataset.tmpDow); renderPromedios(); return; }
+  const dm = e.target.closest("[data-tmp-dow-mover]");
+  if (dm) { const i = ORDEN_DIAS.indexOf(dow); dow = ORDEN_DIAS[(i + Number(dm.dataset.tmpDowMover) + 7) % 7]; renderPromedios(); return; }
   const m = e.target.closest("[data-tmp-mover]");
   if (m) { ref = T.mover(tipo, ref, Number(m.dataset.tmpMover)); renderPromedios(); return; }
   const d = e.target.closest("[data-tmp-dia]");

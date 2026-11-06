@@ -74,3 +74,18 @@
 .tmp-dia-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
 .tmp-dia-total { flex-shrink: 0; color: var(--accent-2); font-variant-numeric: tabular-nums; }
 
+
+/* Promedio por día de la semana (2026-11-06) */
+.tmp-nota-arriba { margin: 0.6rem 0 0.2rem; }
+.tmp-sem { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.3rem; margin: 0.6rem 0 0.2rem; }
+.tmp-sem-b {
+  display: flex; flex-direction: column; align-items: center; gap: 0.25rem; min-width: 0; min-height: 44px; padding: 0.3rem 0.1rem;
+  border: 1px solid transparent; border-radius: 12px; background: transparent; color: var(--ink); font: inherit; cursor: pointer;
+}
+.tmp-sem-v { font-size: 0.68rem; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tmp-sem-col { display: flex; flex: none; align-items: flex-end; width: 100%; max-width: 30px; height: 96px; min-height: 96px; border-radius: 8px; background: var(--bg-soft); overflow: hidden; }
+.tmp-sem-col > span { display: block; width: 100%; border-radius: 8px; background: rgba(255, 154, 60, 0.45); }
+.tmp-sem-d { font-size: 0.78rem; font-weight: 600; color: var(--muted); }
+.tmp-sem-b.is-elegida { border-color: rgba(255, 122, 48, 0.45); background: rgba(255, 122, 48, 0.08); }
+.tmp-sem-b.is-elegida .tmp-sem-col > span { background: var(--accent-grad); }
+.tmp-sem-b.is-elegida .tmp-sem-v, .tmp-sem-b.is-elegida .tmp-sem-d { color: var(--ink); }

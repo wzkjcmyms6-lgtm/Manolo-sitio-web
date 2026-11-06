@@ -28,6 +28,13 @@ borraremos más adelante" para medir cuánto tarda cada día en:
   por mes, con flechas para ver las anteriores. Columna "Días" = cuántos
   registros entraron en el promedio. La semana o el mes en curso dicen que
   el promedio todavía se está armando.
+- **Por día** (tercera pestaña de Promedios; pedido del dueño 2026-11-06:
+  "que tome un promedio de lo registrado en lunes y así"): siete barras de
+  lunes a domingo con tu día todo junto en promedio (todos tus lunes, todos
+  tus martes…); al tocar un día (o con ‹ ›) la tabla muestra el promedio de
+  cada actividad en ese día de la semana y cuántos días entran. Abajo, cuál
+  es tu día más largo y el más corto. Usa todo lo registrado; no guarda
+  nada nuevo (`TiemposMotor.porDiaSemana`).
 - **Promedio final**: cada actividad cuenta hasta **30 registros** (uno por
   día). Al llegar a 30 se cierra: en días nuevos ya no aparece el campo,
   sino "✅ 30 de 30 · promedio final …". Los 30 que cuentan se pueden
