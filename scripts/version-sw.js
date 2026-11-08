@@ -27,7 +27,7 @@ function rutasDe(texto, desde) {
 }
 function datosDeJs(texto) {
   const out = new Set();
-  const re = /["'](data\/[\w.-]+\.json)\?v=[\w.-]+["']/g;
+  const re = /["'](data\/[\w.\/-]+\.json)\?v=[\w.-]+["']/g;
   let m;
   while ((m = re.exec(texto))) out.add(path.normalize(m[1]));
   return out;

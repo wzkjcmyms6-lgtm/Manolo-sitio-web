@@ -25,6 +25,7 @@ const SUB_PANELS = [
   { hash: "hab-scalping", parent: "habitos" },
   { hash: "hab-categoria", parent: "habitos" },
   { hash: "gimnasio", parent: "ejercicio" },
+  { hash: "rutina-lista", parent: "gimnasio" },
   { hash: "ej-feed", parent: "ejercicio" },
   { hash: "ej-rangos", parent: "ejercicio" },
   { hash: "ej-perfil", parent: "ejercicio" },

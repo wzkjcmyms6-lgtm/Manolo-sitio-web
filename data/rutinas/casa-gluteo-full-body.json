@@ -1,0 +1,287 @@
+{
+ "id": "casa-gluteo-full-body",
+ "version": 1,
+ "nombre": "Rutina en casa — Glúteo & Full Body",
+ "nivel": "Intermedia",
+ "dias_por_semana": 3,
+ "duracion_min": "25-30",
+ "equipo": [
+  "Peso corporal",
+  "Silla firme o sofá",
+  "Escalón o escalera"
+ ],
+ "descanso_entre_series": "45-60 s (30 s en el cardio)",
+ "dias": [
+  {
+   "id": "A",
+   "dia_sugerido": "Lunes",
+   "titulo": "Glúteo y piernas (fuerza)",
+   "calentamiento": "4 min: 15 puentes de glúteo, 10 sentadillas lentas, 10 patadas de burro por lado, 10 círculos de cadera por lado.",
+   "ejercicios": [
+    {
+     "id": "casa-bulgara-silla",
+     "nombre": "Sentadilla búlgara (pie de atrás en la silla)",
+     "series": 3,
+     "reps": "10-12 por pierna",
+     "musculos": [
+      "Glúteos",
+      "Cuádriceps"
+     ],
+     "tip": "Torso un poco inclinado hacia adelante para cargar más el glúteo. Baja en 3 segundos.",
+     "factor": 0.6
+    },
+    {
+     "id": "casa-hip-thrust-una-pierna",
+     "nombre": "Hip thrust a una pierna (espalda en el sofá)",
+     "series": 3,
+     "reps": "10-12 por pierna",
+     "musculos": [
+      "Glúteos",
+      "Isquiotibiales"
+     ],
+     "tip": "Mentón al pecho, empuja con el talón y aprieta 2 segundos arriba.",
+     "factor": 0.5
+    },
+    {
+     "id": "casa-step-up",
+     "nombre": "Step-up al escalón o silla",
+     "series": 3,
+     "reps": "10 por pierna",
+     "musculos": [
+      "Glúteos",
+      "Cuádriceps"
+     ],
+     "tip": "Sube empujando solo con la pierna de arriba, sin impulsarte con la de abajo.",
+     "factor": 0.6
+    },
+    {
+     "id": "casa-peso-muerto-una-pierna",
+     "nombre": "Peso muerto rumano a una pierna",
+     "series": 3,
+     "reps": "10 por pierna",
+     "musculos": [
+      "Isquiotibiales",
+      "Glúteos"
+     ],
+     "tip": "Cadera hacia atrás, espalda recta; siente el estiramiento detrás del muslo.",
+     "factor": 0.5
+    },
+    {
+     "id": "casa-plancha-frontal",
+     "nombre": "Plancha frontal",
+     "series": 3,
+     "reps": "40 s",
+     "musculos": [
+      "Abdomen"
+     ],
+     "tip": "Aprieta glúteos y abdomen; no dejes caer la cadera."
+    }
+   ]
+  },
+  {
+   "id": "B",
+   "dia_sugerido": "Miércoles",
+   "titulo": "Tren superior + core + cardio",
+   "calentamiento": "4 min: 30 s jumping jacks, 10 círculos de brazos adelante y atrás, 10 gatos-vaca, 5 flexiones fáciles.",
+   "ejercicios": [
+    {
+     "id": "casa-flexiones",
+     "nombre": "Flexiones (rodillas o completas)",
+     "series": 3,
+     "reps": "8-15",
+     "musculos": [
+      "Pecho",
+      "Tríceps",
+      "Hombros"
+     ],
+     "tip": "Si haces más de 15 completas, baja en 3 segundos.",
+     "factor": 0.55
+    },
+    {
+     "id": "casa-fondos-silla",
+     "nombre": "Fondos de tríceps en la silla",
+     "series": 3,
+     "reps": "10-12",
+     "musculos": [
+      "Tríceps"
+     ],
+     "tip": "Codos hacia atrás, no hacia los lados. Espalda pegada a la silla.",
+     "factor": 0.5
+    },
+    {
+     "id": "casa-y-t-w",
+     "nombre": "Y-T-W boca abajo",
+     "series": 3,
+     "reps": "8 de cada letra",
+     "musculos": [
+      "Espalda",
+      "Hombros"
+     ],
+     "tip": "Levanta los brazos juntando omóplatos; sostén 1 segundo arriba.",
+     "factor": 0.1,
+     "mapa": {
+      "primarios": [
+       "espalda_media",
+       "trapecio"
+      ],
+      "secundarios": [
+       "deltoide_posterior"
+      ]
+     }
+    },
+    {
+     "id": "casa-pike-push-up",
+     "nombre": "Pike push-up (flexión en V)",
+     "series": 3,
+     "reps": "8-10",
+     "musculos": [
+      "Hombros",
+      "Tríceps"
+     ],
+     "tip": "Cadera bien arriba; la cabeza baja entre las manos.",
+     "factor": 0.5
+    },
+    {
+     "id": "casa-plancha-toque-hombro",
+     "nombre": "Plancha con toque de hombro",
+     "series": 3,
+     "reps": "20 toques",
+     "musculos": [
+      "Abdomen",
+      "Hombros"
+     ],
+     "tip": "Pies separados y cadera quieta, sin balancearte.",
+     "factor": 0.3
+    },
+    {
+     "id": "casa-crunch-inverso",
+     "nombre": "Crunch inverso",
+     "series": 3,
+     "reps": "12-15",
+     "musculos": [
+      "Abdomen"
+     ],
+     "tip": "Sube la cadera del piso con el abdomen, no con impulso.",
+     "factor": 0.3
+    },
+    {
+     "id": "casa-tabata-jj-mc",
+     "nombre": "Finisher Tabata: jumping jacks / mountain climbers alternados",
+     "series": 8,
+     "reps": "20 s trabajo / 10 s descanso",
+     "musculos": [
+      "Cardio",
+      "Abdomen"
+     ],
+     "tip": "4 minutos a fondo. Es el cierre de la sesión."
+    }
+   ]
+  },
+  {
+   "id": "C",
+   "dia_sugerido": "Viernes",
+   "titulo": "Glúteo (énfasis) + cardio",
+   "calentamiento": "4 min: 15 puentes de glúteo, 10 fire hydrants por lado, 10 sentadillas, 30 s subiendo escalones suave.",
+   "ejercicios": [
+    {
+     "id": "casa-puente-pies-sofa",
+     "nombre": "Puente de glúteo con pies en el sofá",
+     "series": 3,
+     "reps": "15 + 2 s de pausa arriba",
+     "musculos": [
+      "Glúteos",
+      "Isquiotibiales"
+     ],
+     "tip": "Talones en el borde del sofá; empuja la cadera lo más alto posible.",
+     "factor": 0.5
+    },
+    {
+     "id": "casa-sentadilla-sumo-pausa",
+     "nombre": "Sentadilla sumo con pausa abajo",
+     "series": 3,
+     "reps": "15-20",
+     "musculos": [
+      "Glúteos",
+      "Aductores",
+      "Cuádriceps"
+     ],
+     "tip": "Pies abiertos, puntas afuera; pausa de 2 s abajo.",
+     "factor": 0.65
+    },
+    {
+     "id": "casa-zancada-reversa-deficit",
+     "nombre": "Zancada reversa desde el escalón (déficit)",
+     "series": 3,
+     "reps": "10 por pierna",
+     "musculos": [
+      "Glúteos",
+      "Cuádriceps"
+     ],
+     "tip": "Párate en el escalón y da el paso atrás hacia el piso: más recorrido = más glúteo.",
+     "factor": 0.6
+    },
+    {
+     "id": "casa-patada-fire-hydrant",
+     "nombre": "Patada de glúteo + fire hydrant (cuadrupedia)",
+     "series": 3,
+     "reps": "15 + 15 por lado",
+     "musculos": [
+      "Glúteo medio",
+      "Glúteos"
+     ],
+     "tip": "Movimiento lento y controlado, sin arquear la espalda baja.",
+     "factor": 0.2
+    },
+    {
+     "id": "casa-plancha-lateral",
+     "nombre": "Plancha lateral",
+     "series": 3,
+     "reps": "30 s por lado",
+     "musculos": [
+      "Oblicuos",
+      "Glúteo medio"
+     ],
+     "tip": "Cuerpo en línea recta, cadera arriba."
+    },
+    {
+     "id": "casa-escaleras",
+     "nombre": "Escaleras: subir rápido / bajar caminando",
+     "series": 6,
+     "reps": "30 s rápido / 30 s descanso",
+     "musculos": [
+      "Cardio",
+      "Glúteos",
+      "Piernas"
+     ],
+     "tip": "Si son pocos escalones, sube y baja el mismo escalón rápido."
+    }
+   ]
+  }
+ ],
+ "progresion": [
+  {
+   "semanas": "1-2",
+   "que_hacer": "Aprender la técnica. Quedarse con 2-3 repeticiones en reserva."
+  },
+  {
+   "semanas": "3-4",
+   "que_hacer": "Sumar 2 repeticiones por serie o bajar más lento (3-4 s)."
+  },
+  {
+   "semanas": "5-6",
+   "que_hacer": "Agregar pausas o '1 y media' (bajar, subir a la mitad, bajar de nuevo, subir)."
+  },
+  {
+   "semanas": "7-8",
+   "que_hacer": "Hacer 4 series en los ejercicios de glúteo. Luego semana suave y repetir el ciclo."
+  }
+ ],
+ "consejos": [
+  "Para que crezca el glúteo hay que ir haciéndolo más difícil semana a semana; si siempre es igual, el cuerpo deja de cambiar.",
+  "Las últimas 2-3 repeticiones de cada serie deben costar de verdad.",
+  "Comer suficiente proteína en cada comida y dormir bien hacen tanto como el entrenamiento.",
+  "Con el tiempo, una mini band o una mochila con peso le darán mucho más estímulo al glúteo.",
+  "Si algo duele (no cansancio, dolor), parar y cambiar el ejercicio.",
+  "Los resultados visibles suelen llegar entre las 8 y 12 semanas de constancia."
+ ]
+}

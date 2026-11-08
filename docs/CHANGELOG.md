@@ -1,5 +1,16 @@
 # Cambios
 
+## 2026-11-08 · Ejercicio: "Rutina en casa — Glúteo & Full Body"
+- Entrenamiento › "Rutinas listas": la rutina en casa de 3 días (A, B, C)
+  con calentamiento, ejercicios (series, reps, músculos y la clave
+  técnica), "Cómo progresar" y "Consejos".
+- El día de hoy se destaca (lunes A, miércoles B, viernes C).
+- Cada serie se marca con un toque; "Terminar el día y guardar" la pasa al
+  historial de Ejercicio y pinta el mapa muscular con sus músculos.
+- Funciona sin internet. Para sumar otra rutina: `docs/RUTINAS_LISTAS.md`.
+- Pruebas: `tests/rutinas-listas.test.js` y `scripts/e2e/ejercicio.js`
+  (`SOLO=rutina`).
+
 ## 2026-11-06 · Hábitos: "¿Que se marque solo?"
 - Si tienes un hábito como "Correr" que no está vinculado con Running, Hoy
   te lo dice arriba: "Que se marque solo" lo vincula con un toque, marca la

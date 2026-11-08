@@ -52,6 +52,10 @@ Actualizado: 2026-11-05 (empieza Ejercicio inteligente, D-090).
   descarga, volumen y equilibrio, generador, recuperación y "¿Qué entreno
   hoy?" con Running. Plan y auditoría en `docs/EJERCICIO_INTELIGENTE.md`,
   D-090 en adelante.
+- **Rutinas listas (2026-11-08)**: "Rutina en casa — Glúteo & Full Body"
+  en Entrenamiento (días A/B/C, series para marcar, guardar en el
+  historial con sus músculos, progresión y consejos). D-104,
+  `docs/RUTINAS_LISTAS.md`.
 - **Libros, Biblia y Medir tiempos: siguiente nivel (2026-11-06, en curso)**:
   plan y auditoría en `docs/LECTURA_NIVEL2.md`, D-102 en adelante. Fase 1
   hecha: la Biblia RV1909 se lee dentro de Manolo (lector, ortografía

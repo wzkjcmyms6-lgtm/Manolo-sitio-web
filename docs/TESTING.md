@@ -231,6 +231,16 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
   pitido en cada paso y al final la sesión queda hecha.
 - [ ] Revisa Progreso, Semana, Guía y Ajustes.
 
+**Ejercicio: Rutina en casa (2026-11)**
+- [ ] Ejercicio › Entrenamiento: abajo de tus rutinas, "Rutinas listas" ›
+  "Rutina en casa — Glúteo & Full Body" (un lunes dice "Hoy: Día A").
+- [ ] Ábrela: el día de hoy está destacado; cambia entre A, B y C.
+- [ ] Marca algunas series, cierra Manolo y vuelve: siguen marcadas.
+- [ ] "Terminar el día y guardar": aparece en Perfil (historial) y el
+  mapa muscular pinta glúteos.
+- [ ] Con modo avión, la rutina se abre igual.
+- [ ] En el teléfono de tu novia, con su cuenta: la ve y la sigue igual.
+
 **Hábitos: "¿Que se marque solo?" (2026-11)**
 - [ ] Abre Hábitos › Hoy: si "Correr" no estaba vinculado, arriba dice
   "Correr puede marcarse solo…". Toca "Que se marque solo".

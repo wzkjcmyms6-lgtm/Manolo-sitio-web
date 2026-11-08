@@ -1152,3 +1152,23 @@ Hábitos › Hoy lo sugiere arriba y un toque lo vincula (desde hoy; la
 carrera de hoy lo marca al instante y se ofrece marcar los días
 anteriores, sin XP como siempre). "No, gracias" guarda `vinculoNo` en el
 hábito (aditivo). No se vincula nada sin el toque del dueño.
+
+**D-104 (2026-11-08) · Rutinas listas en Ejercicio ("Rutina en casa —
+Glúteo & Full Body").** Pedido del dueño: una rutina predefinida que su
+novia pueda ver y seguir desde su celular. (1) Cada rutina es un archivo
+JSON en `data/rutinas/` con el formato que mandó el dueño, más un `id`
+fijo por rutina y por ejercicio (para que el historial no dependa del
+nombre) y, opcionales, `factor` y `mapa`; agregar otra = otro archivo y
+una línea en `ARCHIVOS` (`docs/RUTINAS_LISTAS.md`). (2) Va en
+Entrenamiento › "Rutinas listas" y abre su página con los días como
+pestañas; el de hoy se destaca según `dia_sugerido`. (3) Una casilla por
+serie; lo marcado vive en el teléfono hasta "Terminar el día y guardar",
+que guarda un entreno **con el formato de siempre** en
+`users/{uid}/entrenamientos` (más `plantilla`, aditivo). (4) Mapa muscular
+con los músculos de la rutina: sus ejercicios se cargan como fichas propias
+(el primer músculo es el principal) que se encuentran por id, así el mapa,
+el volumen, la recuperación, los gráficos y editar desde Perfil funcionan
+sin cambios; no entran en el buscador para no cambiar cómo se reconocen
+los nombres de siempre. (5) Sin internet: el archivo entra en el precache
+(el service worker ahora también encuentra datos en subcarpetas de
+`data/`). Nada de lo guardado cambia de estructura.

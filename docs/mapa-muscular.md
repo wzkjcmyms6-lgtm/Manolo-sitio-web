@@ -200,6 +200,12 @@ intermedio, 3 experto) y `demo: 1` si tiene sus 2 fotos en
 - Se guardan en `users/{uid}/meta/ejercicios_propios` (un mapa id → ficha) y
   se listan en Ajustes → Mis ejercicios (se pueden borrar).
 
+### Rutinas listas (D-104)
+Los ejercicios de `data/rutinas/*.json` se cargan como fichas propias con
+los músculos que dice la rutina (el primero es el principal) y se
+encuentran por id (`casa-…`); no aparecen en el buscador. Ver
+`docs/RUTINAS_LISTAS.md`.
+
 ### Entrenos ya registrados
 - No se modifican: cada nombre guardado se resuelve contra la base al leerlo
   (`ExerciseSearch.resolver`). Lo que no se reconoce aparece en Ejercicio →

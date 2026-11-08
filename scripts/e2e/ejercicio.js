@@ -708,6 +708,84 @@ async function sinReconocer(browser, base, ancho) {
   await p.context().close();
 }
 
+// ---------- Rutinas listas: "Rutina en casa — Glúteo & Full Body" ----------
+async function rutinaLista(browser, base, ancho) {
+  console.log(`\nRutina lista en casa (${ancho} px)`);
+  const LUNES = "2026-11-09T18:00:00-04:00";
+  const p = await abrir(browser, base, SEM.estado("2026-11-09", { sinRutinas: true }), { hash: "#gimnasio", zona: ZONA, fecha: LUNES, ancho, alto: ancho > 800 ? 900 : 844 });
+  consolaLimpia(p);
+  await p.waitForTimeout(1300);
+  await sinAvisos(p);
+  ok(/Rutina en casa — Glúteo & Full Body/.test(await texto(p, "#rl-tarjetas")), "Entrenamiento › «Rutinas listas» muestra la rutina en casa");
+  ok((await texto(p, ".rl-tarjeta-cuando")) === "Hoy: Día A", "el lunes dice «Hoy: Día A»");
+  await p.click(".rl-tarjeta");
+  await p.waitForTimeout(500);
+  ok(await p.isVisible("#panel-rutina-lista") && /Día A/.test(await texto(p, ".rl-dia-tab.is-activo")) && /Hoy/.test(await texto(p, ".rl-dia-tab.is-hoy")), "abre en el Día A, destacado como el de hoy");
+  ok((await p.$$(".rl-dia-tab")).length === 3, "tres días (A, B, C) como pestañas");
+  ok(/Calentamiento.*4 min: 15 puentes/.test(await texto(p, ".rl-calent")), "con su calentamiento");
+  const ejA = await p.$$eval(".rl-ej h3", hs => hs.map(h => h.textContent));
+  ok(ejA.length === 5 && ejA[0] === "Sentadilla búlgara (pie de atrás en la silla)", "y sus 5 ejercicios");
+  const primero = await texto(p, ".rl-ej");
+  ok(/3 × 10-12 por pierna/.test(primero) && /Glúteos/.test(primero) && /Cuádriceps/.test(primero) && /Torso un poco inclinado/.test(primero), "cada uno con series, reps, músculos y la clave técnica");
+  ok((await p.$$('[data-rl-ej="casa-bulgara-silla"]')).length === 3, "una casilla por serie");
+  const tam = await p.$eval(".rl-serie", b => { const r = b.getBoundingClientRect(); return Math.min(r.width, r.height); });
+  ok(tam >= 44, `casillas de ${Math.round(tam)} px (≥ 44)`);
+  ok(/Cómo progresar/.test(await texto(p, "#rl-app")) && (await p.$$(".rl-progresion li")).length === 4, "al final, «Cómo progresar» (4 etapas)");
+  ok(/Consejos/.test(await texto(p, "#rl-app")) && (await p.$$(".rl-consejos li")).length === 6, "y «Consejos» (6)");
+  ok(await p.$eval('[data-rl="terminar"]', b => b.disabled), "sin series marcadas no se puede terminar");
+  await foto(p, `rutina-lista-${ancho}.png`);
+
+  // Marcar series: quedan guardadas en el teléfono aunque se cierre la app.
+  for (let i = 0; i < 3; i++) await p.click(`[data-rl-ej="casa-bulgara-silla"][data-rl-serie="${i}"]`);
+  for (let i = 0; i < 2; i++) await p.click(`[data-rl-ej="casa-hip-thrust-una-pierna"][data-rl-serie="${i}"]`);
+  await p.click('[data-rl-ej="casa-plancha-frontal"][data-rl-serie="0"]');
+  ok((await texto(p, ".rl-progreso span")) === "6 de 15 series", "marcar series suma el avance (6 de 15)");
+  ok(await p.$eval('[data-rl-ej="casa-bulgara-silla"][data-rl-serie="2"]', b => b.getAttribute("aria-checked") === "true"), "la casilla queda marcada");
+  await p.reload();
+  await p.waitForTimeout(1300);
+  ok((await texto(p, ".rl-progreso span")) === "6 de 15 series", "al volver a abrir, siguen marcadas");
+  await p.click('[data-rl-ej="casa-plancha-frontal"][data-rl-serie="0"]');
+  ok((await texto(p, ".rl-progreso span")) === "5 de 15 series", "tocar otra vez la desmarca");
+
+  // Terminar: se guarda en el historial con los músculos de la rutina.
+  const antes = await p.evaluate(() => window.__fakeStore.colMap("users/test/entrenamientos").size);
+  await p.click('[data-rl="terminar"]');
+  await p.waitForTimeout(800);
+  const ws = await p.evaluate(() => Array.from(window.__fakeStore.colMap("users/test/entrenamientos").values()));
+  const w = ws.find(x => x.plantilla && x.plantilla.id === "casa-gluteo-full-body");
+  ok(ws.length === antes + 1 && w && w.date === "2026-11-09" && w.name === "Rutina en casa · Día A: Glúteo y piernas (fuerza)", "«Terminar el día y guardar» lo guarda en el historial de Ejercicio");
+  ok(w && w.exercises.length === 2 && w.exercises[0].exerciseId === "casa-bulgara-silla" && w.exercises[0].sets.length === 3 && w.exercises[1].sets.length === 2, "con las series marcadas (3 y 2)");
+  ok(/Guardado en tu historial/.test(await texto(p, ".rl-guardado")) && (await texto(p, ".rl-progreso span")) === "0 de 15 series", "avisa que se guardó y deja el día limpio");
+  ok(/✓/.test(await texto(p, '.rl-dia-tab[data-rl-dia="A"]')), "el Día A queda con ✓ esta semana");
+  const datos = await p.evaluate(() => {
+    const e = EjercicioDatos.estado.datos;
+    const mias = e.entradas.filter(x => String(x.ejercicio.id).startsWith("casa-"));
+    return { noRec: e.noReconocidos.map(n => n.nombre), zonas: mias.map(x => x.ejercicio.primarios.join("+")) };
+  });
+  ok(!datos.noRec.some(n => /búlgara|Hip thrust a una pierna/.test(n)), "sus ejercicios no quedan «sin reconocer»");
+  ok(datos.zonas.join() === "gluteos,gluteos", "y pintan el mapa muscular con sus propios músculos (glúteos)");
+
+  // Otro día: el miércoles destaca el Día B.
+  await p.click('[data-rl-dia="B"]');
+  await p.waitForTimeout(200);
+  ok((await p.$$eval(".rl-ej h3", hs => hs.length)) === 7 && (await p.$$('[data-rl-ej="casa-tabata-jj-mc"]')).length === 8, "Día B: 7 ejercicios; el Tabata con 8 series");
+  ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "sin desborde horizontal");
+  await p.evaluate(() => { location.hash = "gimnasio"; });
+  await p.waitForTimeout(400);
+  ok(/✓/.test(await texto(p, ".rl-semana")), "la tarjeta muestra el Día A hecho esta semana");
+  ok(!p.erroresConsola.length && !p.errores.length, "sin errores" + (p.erroresConsola.length ? `: ${p.erroresConsola.join(" | ")}` : ""));
+  await p.context().close();
+
+  const q = await abrir(browser, base, SEM.estado("2026-11-11", { sinRutinas: true }), { hash: "#rutina-lista/casa-gluteo-full-body", zona: ZONA, fecha: "2026-11-11T07:00:00-04:00", ancho, alto: 844 });
+  await q.waitForTimeout(1300);
+  ok(/Día B/.test(await texto(q, ".rl-dia-tab.is-activo")) && /toca el Día B/.test(await texto(q, ".rl-aviso")), "el miércoles abre y destaca el Día B");
+  await q.context().close();
+  const d = await abrir(browser, base, SEM.estado("2026-11-08", { sinRutinas: true }), { hash: "#rutina-lista/casa-gluteo-full-body", zona: ZONA, fecha: "2026-11-08T07:00:00-04:00", ancho, alto: 844 });
+  await d.waitForTimeout(1300);
+  ok(/descanso.*Día A.*mañana/.test(await texto(d, ".rl-aviso")) && !(await d.$(".rl-dia-tab.is-hoy")), "el domingo dice que es descanso y que mañana toca el Día A");
+  await d.context().close();
+}
+
 async function cacheDemos(browser) {
   console.log("\nService worker: demos fuera del precache y con caché propia");
   const TIPOS = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".webp": "image/webp" };
@@ -742,6 +820,11 @@ async function cacheDemos(browser) {
     return { enApp, vistas };
   });
   ok(c1.enApp === 0, "las demos no entran en la caché de la app (precache)");
+  const rutinaEnApp = await p.evaluate(async () => {
+    const app = (await caches.keys()).find(n => n.startsWith("manolo-app-"));
+    return (await (await caches.open(app)).keys()).some(r => r.url.includes("data/rutinas/casa-gluteo-full-body.json"));
+  });
+  ok(rutinaEnApp, "la rutina en casa queda guardada para usarla sin internet");
   ok(c1.vistas.length === 2 && c1.vistas.every(v => v.includes("barbell-squat")), "quedan en la caché de demos");
   // Sin red, la misma demo sigue saliendo de la copia.
   const antes = pedidos.length;
@@ -787,6 +870,7 @@ async function cacheDemos(browser) {
     if (!solo || solo === "hoy") await hoyYRecuperacion(browser, base, ancho);
     if (!solo || solo === "perfil") await perfilYCompartir(browser, base, ancho);
     if (!solo || solo === "reconocer") await sinReconocer(browser, base, ancho);
+    if (!solo || solo === "rutina") await rutinaLista(browser, base, ancho);
   }
   if (!solo || solo === "demos") await cacheDemos(browser);
   await terminar(browser, srv);

@@ -23,8 +23,8 @@
 //
 // IMPORTANTE: cada entrega que cambie la app debe subir VERSION y HUELLA con
 // `npm run sw` (el test tests/sw-version.test.js falla si alguien lo olvida).
-const VERSION = "2026-11-06.8";
-const HUELLA = "eb4cb7e16185";
+const VERSION = "2026-11-08.1";
+const HUELLA = "11743968b11e";
 const PREFIJO = "manolo-app-";
 const CACHE = PREFIJO + VERSION;
 const DATOS = "manolo-datos"; // copias de respaldo de datos que cambian solos (tipo de cambio, precios)
@@ -60,7 +60,7 @@ function recursosDe(texto, base) {
 // Datos con versión que pide el JS (ej. data/ejercicios.json?v=…).
 function datosDeJs(texto) {
   const out = new Set();
-  const re = /["'](data\/[\w.-]+\.json\?v=[\w.-]+)["']/g;
+  const re = /["'](data\/[\w.\/-]+\.json\?v=[\w.-]+)["']/g;
   let m;
   while ((m = re.exec(texto))) out.add(new URL(m[1], self.location.href).href);
   return out;

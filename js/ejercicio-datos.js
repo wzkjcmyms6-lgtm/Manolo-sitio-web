@@ -19,7 +19,11 @@ const estado = {
   registros: { gimnasio: [], running: [], bicicleta: [] },
   // true cuando llegó una lectura confirmada por el servidor (no del caché)
   cargado: { base: false, gimnasio: false, running: false, bicicleta: false, ajustes: false },
-  indice: null, datos: null, version: 0
+  indice: null, datos: null, version: 0,
+  // Rutinas listas (data/rutinas/, js/rutinas-listas-motor.js): las rutinas
+  // y las fichas de sus ejercicios (con sus propios músculos). Las fichas se
+  // encuentran por id (los entrenos las guardan así), no en el buscador.
+  rutinasListas: [], fichasRutinas: new Map()
 };
 const oyentes = [];
 let cacheResolver = new Map();
@@ -39,7 +43,16 @@ function reconstruirIndice() {
 }
 
 function ficha(id) {
-  return (estado.indice && id && estado.indice.porId.get(id)) || null;
+  return (estado.indice && id && estado.indice.porId.get(id)) || (id && estado.fichasRutinas.get(id)) || null;
+}
+
+// Las rutinas listas se leen junto con la base (vienen con la app, también
+// sin internet). Si una no se puede leer, las demás siguen.
+function cargarRutinasListas() {
+  const RLM = window.RutinasListasMotor;
+  if (!RLM) return Promise.resolve([]);
+  return Promise.all(RLM.ARCHIVOS.map(url => fetch(url).then(r => (r.ok ? r.json() : null)).catch(() => null)))
+    .then(js => js.map(RLM.normalizar).filter(Boolean));
 }
 
 function resolver(nombre, id) {
@@ -89,9 +102,11 @@ function buscar(consulta, limite) {
 onAuthReady(() => {
   // La base de ejercicios (y su índice de búsqueda, que cuesta armar) solo
   // hace falta con la sesión iniciada: así no frena la pantalla de ingreso.
-  fetch(RUTA_BASE)
-    .then(r => r.json())
-    .then(json => {
+  Promise.all([fetch(RUTA_BASE).then(r => r.json()), cargarRutinasListas()])
+    .then(([json, rutinas]) => {
+      estado.rutinasListas = rutinas;
+      estado.fichasRutinas = new Map();
+      rutinas.forEach(r => window.RutinasListasMotor.fichas(r).forEach(f => estado.fichasRutinas.set(f.id, f)));
       estado.base = json.ejercicios || [];
       estado.destacados = json.destacados || 0;
       estado.cargado.base = true;
