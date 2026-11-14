@@ -1172,3 +1172,31 @@ sin cambios; no entran en el buscador para no cambiar cómo se reconocen
 los nombres de siempre. (5) Sin internet: el archivo entra en el precache
 (el service worker ahora también encuentra datos en subcarpetas de
 `data/`). Nada de lo guardado cambia de estructura.
+
+**D-105 (2026-11-14) · Biblia fase 2: tocar versículos, anotar, buscar y
+compartir.** (1) En el lector, tocar uno o varios versículos los elige y
+aparece una barra: 5 colores para resaltar (y ⊘ para quitar), ★ Favorito,
+✎ Nota, ＋ Anotar, Compartir (imagen) y Copiar. (2) Datos: un documento
+por libro en `users/{uid}/biblia_marcas/{libro}` (máximo 66: nunca se
+acerca al límite de 1 MB, y se escuchan ≤ 66 documentos): `col` (color por
+versículo) e `it` (favorito y nota en el primer versículo de lo elegido,
+con `r` = los versículos y `t` = el texto original para listarlos sin
+abrir el libro). Claves `cap_v` (sin puntos, por Firestore). Se guarda con
+`merge`; quitar usa `FieldValue.delete()`. (3) "Anotar" abre el formulario
+de siempre con la cita y el texto puestos; el registro lleva `version`
+(aditivo: "RV1909", la que elijas o ninguna en los viejos). En el
+formulario, al poner libro, capítulo y versículo el texto se completa solo
+con la RV1909 (si el campo está vacío o tiene el automático); si pegas tu
+texto, propone tu versión de "Abrir en otra versión" (RVR1960 por
+defecto). (4) Búsqueda en toda la Biblia en un Worker
+(`js/biblia-buscar-worker.js`, en el precache): la primera vez lee los 66
+libros (de la caché o de internet, y quedan guardados) y sus textos sin
+tildes; cada palabra cuenta desde el comienzo de una palabra ("amo" está
+en "amó", no en "digamos"); con varias palabras, primero la frase exacta;
+máximo 200 resultados a la vista; filtros AT, NT o el libro abierto. (5)
+Compartir: imagen 1080 × 1350 estilo Manolo (canvas; Web Share en el
+iPhone, descarga en la compu). (6) Pestaña "Marcados" en Biblia con
+filtros (favoritos, notas, colores); "Exportar (JSON)" suma marcas,
+capítulos leídos y ajustes del lector. Sin respuesta del dueño a las
+preguntas de la fase 0: no hay diario de oración y "Abrir en otra versión"
+sigue en RVR1960.

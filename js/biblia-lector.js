@@ -143,6 +143,7 @@ el.innerHTML = `
   <header class="bbl-barra">
     <button type="button" class="bbl-icono" data-bbl="cerrar" aria-label="Cerrar el lector"><span class="icon-sm" data-icon="close"></span></button>
     <button type="button" class="bbl-donde" data-bbl="elegir" aria-haspopup="dialog"><span id="bbl-donde-t">Biblia</span><span class="bbl-flecha" aria-hidden="true">▾</span></button>
+    <button type="button" class="bbl-icono" data-bbl="buscar" aria-label="Buscar en la Biblia"><span class="icon-sm" data-icon="search"></span></button>
     <button type="button" class="bbl-icono bbl-aa" data-bbl="aa" aria-label="Letra, ortografía y descarga">Aa</button>
   </header>
   <div class="bbl-scroll" id="bbl-scroll">
@@ -167,7 +168,9 @@ function abrir(libro, cap, opciones) {
     history.pushState({ bblLector: true }, "");
   }
   aplicarTam();
-  irA(l, c, { y: o.y != null ? o.y : (ult && ult.libro === l && ult.cap === c ? ult.y : 0), marcar: o.marcar });
+  // Con versículos para marcar (búsqueda, Marcados, un registro), se va a ellos.
+  const y = o.marcar && o.marcar.length ? 0 : o.y != null ? o.y : (ult && ult.libro === l && ult.cap === c ? ult.y : 0);
+  irA(l, c, { y, marcar: o.marcar });
 }
 function cerrar(desdeHistoria) {
   if (el.hidden) return;
@@ -176,6 +179,7 @@ function cerrar(desdeHistoria) {
   hojaSel.cerrar();
   hojaAa.cerrar();
   recordarScroll(true);
+  window.dispatchEvent(new CustomEvent("biblia:lector-cerrado"));
   if (!desdeHistoria && history.state && history.state.bblLector) history.back();
 }
 window.addEventListener("popstate", () => { if (!el.hidden) cerrar(true); });
@@ -237,6 +241,8 @@ function pintar(marcar) {
     const v = el.querySelector(`#bbl-v${marcar[0]}`);
     if (v) requestAnimationFrame(() => { scroll.scrollTop = Math.max(0, v.offsetTop - 90); });
   }
+  // Resaltados, favoritos, notas y selección (js/biblia-seleccion.js).
+  window.dispatchEvent(new CustomEvent("biblia:pintado", { detail: { libro, cap, marcar: marcar || null } }));
 }
 
 function recordarScroll(ya) {
@@ -384,6 +390,7 @@ el.addEventListener("click", e => {
   if (a === "cerrar") cerrar();
   else if (a === "elegir") abrirSelector();
   else if (a === "aa") abrirAa();
+  else if (a === "buscar" && window.BibliaBuscar) BibliaBuscar.abrir();
   else if (a === "reintentar" && lugar) irA(lugar.libro, lugar.cap);
   else if (a === "leido" && lugar) { marcarLeido(lugar.libro, lugar.cap, true); pintar(); }
   else if (a === "desmarcar" && lugar) { marcarLeido(lugar.libro, lugar.cap, false); pintar(); }
@@ -423,6 +430,9 @@ onAuthReady(() => {
 window.BibliaLector = {
   abrir, cerrar, cargarLibro, descargados,
   ultimo: () => (ajustes.ultimo && B.libro(ajustes.ultimo.libro) ? ajustes.ultimo : null),
+  lugar: () => (lugar && !el.hidden ? Object.assign({}, lugar) : null),
+  datos: () => datos,
+  el,
   ajustes: () => Object.assign({}, ajustes),
   leidos: () => leidos,
   leidosSet,

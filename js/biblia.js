@@ -33,6 +33,7 @@ app.innerHTML = `
   <div class="fin-tabs bib-tabs" role="tablist" aria-label="Biblia">
     <button type="button" class="fin-tab active" role="tab" data-bib-vista="lista" aria-selected="true">Lista</button>
     <button type="button" class="fin-tab" role="tab" data-bib-vista="calendario" aria-selected="false">Calendario</button>
+    <button type="button" class="fin-tab" role="tab" data-bib-vista="marcados" aria-selected="false">Marcados</button>
   </div>
   <div id="bib-lista-vista">
     <div class="bib-filtros">
@@ -42,12 +43,15 @@ app.innerHTML = `
     <div id="bib-lista"></div>
   </div>
   <div id="bib-cal-vista" hidden></div>
+  <div id="bib-marcas-vista" hidden></div>
   <button type="button" class="lib-btn-sec lib-exportar" data-bib="exportar">Exportar (JSON)</button>`;
 const $ = id => document.getElementById(id);
 
 function render() {
   renderResumen();
-  if (vista === "lista") { renderFiltroLibros(); renderLista(); } else renderCalendario();
+  if (vista === "lista") { renderFiltroLibros(); renderLista(); }
+  else if (vista === "calendario") renderCalendario();
+  else if (window.BibliaSel) BibliaSel.renderMarcados($("bib-marcas-vista"));
 }
 
 function renderResumen() {
@@ -90,7 +94,7 @@ function renderFiltroLibros() {
 
 const tarjeta = e => `
       <button type="button" class="bib-item" data-bib-editar="${esc(e.id)}">
-        <span class="bib-item-arriba"><b>${esc(e.cita)}</b><small>${esc(B.fechaLarga(e.fecha))}</small></span>
+        <span class="bib-item-arriba"><b>${esc(e.cita)}${e.version ? ` <i class="bib-version-tag">${esc(e.version)}</i>` : ""}</b><small>${esc(B.fechaLarga(e.fecha))}</small></span>
         <span class="bib-texto">${esc(e.texto)}</span>
         ${e.nota ? `<span class="bib-nota">✍️ ${esc(e.nota)}</span>` : ""}
       </button>`;
@@ -140,12 +144,21 @@ const opcionesLibros = elegido => ["AT", "NT"].map(t => `
           </optgroup>`).join("");
 const etiquetaCap = id => (B.libro(id) ? `Capítulo (1 a ${B.libro(id).capitulos})` : "Capítulo");
 
-function abrirHoja(id, fecha) {
+// Versiones para el campo "Versión del texto" (D-105).
+const VERSIONES = [["RV1909", "Reina-Valera 1909"]].concat((window.BibliaTexto ? BibliaTexto.OTRAS : []).map(o => [o.id, o.nombre]), [["Otra", "Otra"]]);
+const preferida = () => (window.BibliaLector ? BibliaLector.ajustes().version : "") || "RVR1960";
+let auto = { texto: "", timer: null, yo: 0 };   // el último texto que puso Manolo solo
+
+// pre (desde el lector): { libro, capitulo, versiculo, texto, version }.
+function abrirHoja(id, fecha, pre) {
   editando = id || null;
   const e = id ? lista.find(x => x.id === id) : null;
   if (id && !e) return;
   const ultimo = B.ordenar(lista)[0];
-  const v = e || { fecha: fecha || hoyLocal(), libro: ultimo ? ultimo.libro : "", capitulo: "", versiculo: "", texto: "", nota: "" };
+  const v = e || Object.assign({ fecha: fecha || hoyLocal(), libro: ultimo ? ultimo.libro : "", capitulo: "", versiculo: "", texto: "", nota: "", version: "RV1909" }, pre || {});
+  auto = { texto: pre && pre.texto ? pre.texto : "", timer: null, yo: 0 };
+  const opciones = (e && !e.version ? [["", "Sin indicar"]] : []).concat(VERSIONES);
+  if (v.version && !opciones.some(o => o[0] === v.version)) opciones.push([v.version, v.version]);
   hoja.abrir(e ? "Editar versículo" : "Anotar versículo", `
       <form class="lib-form bib-form" novalidate>
         <label class="lib-campo"><span>Fecha</span><input type="date" name="fecha" max="${hoyLocal()}" value="${esc(v.fecha)}" class="lib-input"></label>
@@ -159,9 +172,14 @@ function abrirHoja(id, fecha) {
           <label class="lib-campo"><span data-bib-cap>${esc(etiquetaCap(v.libro))}</span><input type="text" inputmode="numeric" name="capitulo" autocomplete="off" placeholder="3" value="${esc(v.capitulo || "")}" class="lib-input"></label>
           <label class="lib-campo"><span>Versículo</span><input type="text" name="versiculo" autocomplete="off" placeholder="16 o 16-18" value="${esc(v.versiculo)}" class="lib-input"></label>
         </div>
-        <label class="lib-campo"><span>Texto del versículo</span><textarea name="texto" rows="4" class="lib-input" placeholder="Escríbelo o pégalo">${esc(v.texto)}</textarea></label>
+        <label class="lib-campo"><span>Texto del versículo</span><textarea name="texto" rows="4" class="lib-input" placeholder="Se completa solo al poner la cita; también puedes pegar el tuyo">${esc(v.texto)}</textarea></label>
+        <p class="bib-auto" data-bib-auto${pre && pre.texto ? "" : " hidden"}>${pre && pre.texto ? "✓ Texto de la Reina-Valera 1909." : ""}</p>
+        <label class="lib-campo"><span>Versión del texto</span>
+          <select name="version" class="lib-input">${opciones.map(o => `<option value="${esc(o[0])}"${o[0] === (v.version || "") ? " selected" : ""}>${esc(o[1])}</option>`).join("")}</select>
+        </label>
         <label class="lib-campo"><span>Nota personal (opcional)</span><textarea name="nota" rows="2" class="lib-input" placeholder="Lo que te dejó este versículo">${esc(v.nota)}</textarea></label>
         <p class="lib-error" role="alert" hidden></p>
+        ${window.BibliaLector ? `<button type="button" class="bib-leer-cita" data-bib="leer-cita">📖 Leer en la Biblia</button>` : ""}
         <div class="lib-acciones">
           ${e ? `<button type="button" class="lib-btn-peligro" data-bib="borrar">Eliminar</button>` : ""}
           <button type="submit" class="lib-btn">Guardar</button>
@@ -171,9 +189,55 @@ function abrirHoja(id, fecha) {
 
 hoja.el.addEventListener("change", e => {
   if (e.target.name === "libro") hoja.el.querySelector("[data-bib-cap]").textContent = etiquetaCap(e.target.value);
+  if (["libro", "capitulo", "versiculo"].includes(e.target.name)) textoAuto();
 });
+// El texto se completa solo con la RV1909 al poner libro, capítulo y
+// versículo (si el campo está vacío o tiene el que puso Manolo antes).
+function textoAuto() {
+  clearTimeout(auto.timer);
+  auto.timer = setTimeout(() => {
+    const f = hoja.el.querySelector(".bib-form");
+    const T = window.BibliaTexto, L = window.BibliaLector;
+    if (!f || !T || !L) return;
+    const l = B.libro(f.elements.libro.value);
+    const cap = Number(f.elements.capitulo.value);
+    const vers = B.versiculoNormal(f.elements.versiculo.value);
+    const aviso = f.querySelector("[data-bib-auto]");
+    if (!l || !(cap >= 1 && cap <= l.capitulos) || !vers) return;
+    const yo = ++auto.yo;
+    L.cargarLibro(l.id).then(datos => {
+      if (yo !== auto.yo || !f.isConnected) return;
+      const ta = f.elements.texto;
+      const t = T.textoCita(datos, cap, vers, { actual: L.ajustes().actual });
+      if (!t) {
+        const n = (datos.caps[cap - 1] || []).length;
+        aviso.textContent = `${l.nombre} ${cap} tiene ${n} versículos.`;
+        aviso.classList.add("is-aviso");
+        aviso.hidden = false;
+        return;
+      }
+      if (ta.value.trim() && ta.value !== auto.texto) return;   // lo escribiste tú: no se toca
+      ta.value = t;
+      auto.texto = t;
+      f.elements.version.value = "RV1909";
+      aviso.textContent = "✓ Texto de la Reina-Valera 1909. Puedes cambiarlo o pegar el de tu versión.";
+      aviso.classList.remove("is-aviso");
+      aviso.hidden = false;
+      if (ta.classList.contains("is-error")) { ta.classList.remove("is-error"); ta.removeAttribute("aria-invalid"); }
+    }).catch(() => { /* sin internet y sin descargar: se escribe a mano */ });
+  }, 250);
+}
 // Al corregir un campo marcado, se le quita la marca; sin marcas, se va el aviso.
 hoja.el.addEventListener("input", e => {
+  if (["capitulo", "versiculo"].includes(e.target.name)) textoAuto();
+  // Texto propio (pegado de otra Biblia): se propone tu versión de siempre.
+  if (e.target.name === "texto" && e.target.value !== auto.texto && e.target.form.elements.version.value === "RV1909") {
+    e.target.form.elements.version.value = preferida();
+    const aviso = e.target.form.querySelector("[data-bib-auto]");
+    aviso.textContent = "Texto tuyo: elige de qué versión es.";
+    aviso.classList.add("is-aviso");
+    aviso.hidden = false;
+  }
   if (!e.target.classList.contains("is-error")) return;
   e.target.classList.remove("is-error");
   e.target.removeAttribute("aria-invalid");
@@ -194,6 +258,16 @@ hoja.el.addEventListener("submit", e => {
   hoja.cerrar();
 });
 hoja.el.addEventListener("click", e => {
+  if (e.target.closest('[data-bib="leer-cita"]')) {
+    const f = hoja.el.querySelector(".bib-form");
+    const l = B.libro(f.elements.libro.value);
+    const cap = Number(f.elements.capitulo.value);
+    if (!l || !(cap >= 1 && cap <= l.capitulos)) { window.Lectura.errores(f, [{ campo: l ? "capitulo" : "libro", texto: "Elige el libro y el capítulo para leerlo." }]); return; }
+    const nums = window.BibliaTexto.numeros(f.elements.versiculo.value) || [];
+    hoja.cerrar();
+    window.BibliaLector.abrir(l.id, cap, { marcar: nums });
+    return;
+  }
   if (!e.target.closest('[data-bib="borrar"]') || !editando) return;
   const reg = lista.find(x => x.id === editando);
   if (!confirm(`¿Eliminar ${reg ? reg.cita : "este versículo"}${reg ? ` del ${B.fechaLarga(reg.fecha)}` : ""}? No se puede deshacer.`)) return;
@@ -209,6 +283,7 @@ app.addEventListener("click", e => {
     app.querySelectorAll("[data-bib-vista]").forEach(b => { const on = b === t; b.classList.toggle("active", on); b.setAttribute("aria-selected", String(on)); });
     $("bib-lista-vista").hidden = vista !== "lista";
     $("bib-cal-vista").hidden = vista !== "calendario";
+    $("bib-marcas-vista").hidden = vista !== "marcados";
     render();
     return;
   }
@@ -223,9 +298,19 @@ app.addEventListener("click", e => {
   if (b.dataset.bib === "leer") { const u = window.BibliaLector.ultimo(); window.BibliaLector.abrir(u ? u.libro : null, u ? u.cap : null); }
   else if (b.dataset.bib === "nuevo") abrirHoja(null);
   else if (b.dataset.bib === "nuevo-dia") abrirHoja(null, diaElegido);
-  else if (b.dataset.bib === "exportar") window.Lectura.descargar(`manolo-biblia-${hoyLocal()}.json`, B.exportarJson(docs, new Date().toISOString()), "application/json");
+  else if (b.dataset.bib === "exportar") {
+    // Con lo del lector: resaltados, favoritos, notas y capítulos leídos.
+    const extras = {
+      marcas: window.BibliaSel ? BibliaSel.crudos() : {},
+      leidos: window.BibliaLector ? BibliaLector.leidos() : {},
+      lector: window.BibliaLector ? BibliaLector.ajustes() : null
+    };
+    window.Lectura.descargar(`manolo-biblia-${hoyLocal()}.json`, B.exportarJson(docs, new Date().toISOString(), extras), "application/json");
+  }
 });
 window.addEventListener("biblia:lector", () => { if (cargado) renderResumen(); });
+// "Anotar" desde el lector: el formulario de siempre con la cita y el texto puestos.
+window.BibliaAnotar = { abrir: pre => abrirHoja(null, null, pre) };
 $("bib-buscar").addEventListener("input", e => { filtro.texto = e.target.value; renderLista(); });
 $("bib-libro").addEventListener("change", e => { filtro.libro = e.target.value; renderLista(); });
 

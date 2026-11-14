@@ -30,6 +30,14 @@ abrirlo (Salmos, el más grande, ~250 KB) y queda en la caché
 solo el código y los estilos del lector (~36 KB sin comprimir). En memoria quedan los 8
 últimos libros abiertos.
 
+## Búsqueda en la Biblia (2026-11-14, D-105)
+
+Corre en un Worker: la pantalla no se traba. La primera búsqueda lee los
+66 libros (de la caché o de internet: ~1,3 MB comprimidos) y guarda en la
+memoria del Worker los textos y su versión sin tildes (unos 20 MB en
+total); después cada búsqueda recorre los 31.102 versículos en memoria
+(medido en la compu: entre 6 y 17 ms). El Worker se crea solo al buscar.
+
 ## Decisiones
 
 - **No se carga el deporte "por partes"** (D-030): ahorraría ~44 KB

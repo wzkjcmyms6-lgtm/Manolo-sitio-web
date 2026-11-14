@@ -100,3 +100,100 @@ body.bbl-leyendo { overflow: hidden; }
 @media (min-width: 900px) {
   .bbl-texto { padding-top: 2.4rem; }
 }
+
+/* ---------- Fase 2: tocar versículos, marcas, búsqueda (D-105) ---------- */
+.bbl-versos .bbl-v { cursor: pointer; -webkit-tap-highlight-color: transparent; padding: 0.05em 0; }
+.bbl-v.c-amarillo { background: rgba(255, 209, 102, 0.28); }
+.bbl-v.c-naranja { background: rgba(255, 154, 60, 0.3); }
+.bbl-v.c-verde { background: rgba(76, 195, 138, 0.28); }
+.bbl-v.c-azul { background: rgba(90, 169, 255, 0.28); }
+.bbl-v.c-rosa { background: rgba(255, 122, 168, 0.28); }
+.bbl-v.is-sel { text-decoration: underline dotted rgba(255, 184, 77, 0.95); text-decoration-thickness: 2px; text-underline-offset: 0.25em; box-shadow: 0 0 0 1px rgba(255, 184, 77, 0.35); }
+.bbl-v.is-fav .bbl-n::after { content: "★"; margin-left: 0.12em; color: #ffd166; }
+.bbl-nota-ic {
+  display: inline-grid; place-items: center; width: 1.6em; height: 1.6em; margin: 0 0.15em; vertical-align: 0.05em;
+  border: 1px solid rgba(255, 184, 77, 0.5); border-radius: 50%; background: rgba(255, 184, 77, 0.12); color: var(--accent-2);
+  font: 700 0.62em var(--font-body); cursor: pointer; line-height: 1;
+}
+.bbl-lector.con-sel .bbl-texto { padding-bottom: 300px; }
+
+.bbl-selbar {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; display: flex; flex-direction: column; gap: 0.55rem;
+  padding: 0.7rem 0.85rem calc(env(safe-area-inset-bottom) + 0.7rem); border-top: 1px solid var(--border);
+  background: rgba(22, 22, 22, 0.97); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.45);
+}
+.bbl-selbar[hidden] { display: none; }
+.bbl-sel-cab { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.bbl-sel-cab b { font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bbl-sel-x { flex: 0 0 auto; display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 50%; background: var(--bg-soft); color: var(--ink); cursor: pointer; }
+.bbl-sel-x .icon-sm { width: 18px; height: 18px; display: inline-flex; }
+.bbl-colores { display: flex; gap: 0.55rem; flex-wrap: wrap; }
+.bbl-color {
+  width: 44px; height: 44px; border-radius: 50%; border: 2px solid transparent; background: var(--c); cursor: pointer;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.25);
+}
+.bbl-color.is-activo { border-color: var(--ink); box-shadow: 0 0 0 2px var(--c); }
+.bbl-color.is-quitar { background: var(--bg-soft); border-color: var(--border); color: var(--muted); font-size: 1.2rem; box-shadow: none; }
+.bbl-sel-acciones { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.35rem; }
+.bbl-sel-acciones button {
+  min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem;
+  border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--ink); font: inherit; cursor: pointer;
+}
+.bbl-sel-acciones button .icon-sm { width: 20px; height: 20px; display: inline-flex; }
+.bbl-sel-acciones small { font-size: 0.7rem; color: var(--muted); }
+.bbl-sel-acciones button.is-activo { border-color: rgba(255, 209, 102, 0.6); color: #ffd166; }
+.bbl-toast {
+  position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 18px); transform: translateX(-50%); z-index: 3;
+  padding: 0.6rem 1rem; border-radius: 999px; background: var(--surface-raised); border: 1px solid var(--border); color: var(--ink);
+  font-size: 0.88rem; font-weight: 600; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); white-space: nowrap; max-width: calc(100% - 32px); overflow: hidden; text-overflow: ellipsis;
+}
+.bbl-lector.con-sel .bbl-toast { bottom: calc(env(safe-area-inset-bottom) + 230px); }
+.bbl-toast[hidden] { display: none; }
+.bbl-nota-texto { margin: 0 0 0.8rem; font-family: var(--font-display); line-height: 1.5; color: var(--muted); border-left: 3px solid var(--accent-1); padding-left: 0.65rem; max-height: 8.5em; overflow: auto; }
+
+/* Filtros (Marcados y búsqueda) */
+.bbl-filtros { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.7rem 0; }
+.bbl-chip {
+  min-height: 40px; display: inline-flex; align-items: center; gap: 0.35rem; padding: 0 0.85rem; border: 1px solid var(--border);
+  border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit; font-size: 0.85rem; cursor: pointer;
+}
+.bbl-chip span { color: var(--muted); font-size: 0.78rem; }
+.bbl-chip i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); display: inline-block; }
+.bbl-chip.is-activo { background: var(--accent-grad); border-color: transparent; color: #1a0f05; }
+.bbl-chip.is-activo span { color: #3a2410; }
+
+/* Pestaña Marcados */
+.bbl-marcados { display: flex; flex-direction: column; gap: 0.55rem; }
+.bbl-marcado {
+  display: flex; flex-direction: column; gap: 0.35rem; width: 100%; padding: 0.75rem 0.85rem; text-align: left;
+  border: 1px solid var(--border); border-radius: 16px; background: var(--surface); color: var(--ink); font: inherit; cursor: pointer;
+}
+.bbl-marcado-cab { display: flex; align-items: center; gap: 0.45rem; }
+.bbl-punto { width: 12px; height: 12px; border-radius: 50%; background: var(--c); flex: 0 0 auto; }
+.bbl-estrella { color: #ffd166; }
+.bbl-lapiz { color: var(--accent-2); }
+.bbl-marcado-t { font-family: var(--font-display); font-size: 0.98rem; line-height: 1.45; color: #ece9e2; }
+.bbl-marcado-t:empty { display: none; }
+
+/* Búsqueda */
+.bbl-buscar-form { margin-bottom: 0.2rem; }
+.bbl-buscar-estado { min-height: 1.4em; }
+.bbl-resultados { display: flex; flex-direction: column; gap: 0.45rem; }
+.bbl-res {
+  display: flex; flex-direction: column; gap: 0.25rem; width: 100%; padding: 0.65rem 0.8rem; text-align: left; min-height: 48px;
+  border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--ink); font: inherit; cursor: pointer;
+}
+.bbl-res span { font-family: var(--font-display); font-size: 0.95rem; line-height: 1.45; color: #ece9e2; }
+.bbl-res mark { background: rgba(255, 184, 77, 0.3); color: inherit; border-radius: 3px; padding: 0 1px; }
+
+/* Formulario de siempre: texto automático, versión y "Leer en la Biblia" */
+.bib-auto { margin: -0.3rem 0 0.2rem; font-size: 0.8rem; color: #7fe0a6; }
+.bib-auto[hidden] { display: none; }
+.bib-auto.is-aviso { color: var(--accent-2); }
+.bib-version-tag { font-style: normal; font-size: 0.7rem; font-weight: 600; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 0.05rem 0.4rem; margin-left: 0.3rem; vertical-align: 0.1em; }
+.bib-leer-cita { min-height: 44px; border: 0; background: none; color: var(--accent-2); font: inherit; font-weight: 700; cursor: pointer; text-align: left; padding: 0.2rem 0; }
+
+/* Tres pestañas (Lista · Calendario · Marcados): columnas iguales que entran hasta en 320 px. */
+.bib-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; max-width: 440px; }
+.bib-tabs .fin-tab { min-width: 0; padding-left: 0.35rem; padding-right: 0.35rem; text-align: center; white-space: nowrap; }

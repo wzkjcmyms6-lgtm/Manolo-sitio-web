@@ -444,6 +444,7 @@ const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
   // ---------- Siguiente nivel (docs/LECTURA_NIVEL2.md) ----------
   for (const ancho of [390, 1280]) {
     if (!SOLO || SOLO === "biblia") await N2.bibliaLector(browser, base, ancho, captura);
+    if (!SOLO || SOLO === "marcas") await N2.bibliaMarcas(browser, base, ancho, captura);
   }
   await terminar(browser, srv);
 })();

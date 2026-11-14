@@ -150,25 +150,64 @@ function linkOtraVersion(libro, cap, versiculo, version) {
 
 // ---- Buscar en toda la Biblia (lo usa el Worker, js/biblia-buscar-worker.js) ----
 const norm = s => String(s == null ? "" : s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-// libros: [{ libro, caps }]; consulta: varias palabras (todas deben estar,
-// sin tildes, también a medias: "misericord"). → { total, items: [{ libro, cap, v, texto }] }
+// libros: [{ libro, caps, norm? }] (norm: los mismos textos ya pasados por
+// norm(), para no repetirlo en cada búsqueda); consulta: varias palabras
+// (todas deben estar, sin tildes, también a medias: "misericord").
+// → { total, items: [{ libro, cap, v, texto }], palabras }
+const palabrasDe = consulta => norm(consulta).split(/[^a-z0-9ñ]+/).filter(w => w.length >= 2);
+// Dónde empieza `w` como comienzo de palabra en el texto ya normalizado
+// ("amo" está en "amó" y en "amonestaros", no en "digamos"). -1 si no está.
+const LETRA_N = /[a-z0-9ñ]/;
+function inicioPalabra(n, w, desde) {
+  let i = n.indexOf(w, desde || 0);
+  while (i > 0 && LETRA_N.test(n[i - 1])) i = n.indexOf(w, i + 1);
+  return i;
+}
 function buscar(libros, consulta, max) {
-  const palabras = norm(consulta).split(/[^a-z0-9ñ]+/).filter(w => w.length >= 2);
+  const palabras = palabrasDe(consulta);
   const out = [];
   let total = 0;
   if (!palabras.length) return { total, items: out, palabras };
   const limite = max || 200;
+  // Con varias palabras, primero los versículos que las tienen juntas y en
+  // ese orden ("jehova es mi pastor"); después los demás, en el orden de la Biblia.
+  const frase = palabras.length > 1 ? ` ${palabras.join(" ")}` : null;
+  const juntas = [], sueltas = [];
   (libros || []).forEach(d => (d.caps || []).forEach((c, ci) => c.forEach((t, vi) => {
     if (!t) return;
-    const n = norm(t);
-    if (palabras.every(w => n.includes(w))) {
-      total++;
-      if (out.length < limite) out.push({ libro: d.libro, cap: ci + 1, v: vi + 1, texto: t });
-    }
+    const n = d.norm ? d.norm[ci][vi] : norm(t);
+    if (!palabras.every(w => inicioPalabra(n, w) >= 0)) return;
+    total++;
+    const x = { libro: d.libro, cap: ci + 1, v: vi + 1, texto: t };
+    if (frase && ` ${n.replace(/[^a-z0-9ñ]+/g, " ")}`.includes(frase)) juntas.push(x);
+    else if (sueltas.length < limite) sueltas.push(x);
   })));
+  out.push(...juntas.concat(sueltas).slice(0, limite));
   return { total, items: out, palabras };
 }
 
+// Partes de un texto para resaltar las palabras buscadas (sin tildes):
+// [{ t, si }] (si = coincide). Cada letra se compara con su forma sin tilde,
+// así el texto se muestra tal cual.
+function resaltar(texto, palabras) {
+  const t = String(texto || "");
+  const letras = Array.from(t);
+  const n = letras.map(ch => norm(ch));
+  if (n.some(x => x.length !== 1) || !(palabras || []).length) return [{ t, si: false }];
+  const plano = n.join("");
+  const marca = new Array(letras.length).fill(false);
+  palabras.forEach(w => {
+    let i = inicioPalabra(plano, w);
+    while (i >= 0) { for (let k = i; k < i + w.length; k++) marca[k] = true; i = inicioPalabra(plano, w, i + w.length); }
+  });
+  const out = [];
+  letras.forEach((ch, i) => {
+    const ult = out[out.length - 1];
+    if (ult && ult.si === marca[i]) ult.t += ch; else out.push({ t: ch, si: marca[i] });
+  });
+  return out;
+}
+
 return { VERSION, RUTA, VER_DATOS, CACHE, url, urlIndice, CAMBIOS, ortografiaActual, mayusculaInicial, mostrar,
-  numeros, spec, textoCita, claveCap, claveVers, leerClave, cita, vecino, esPoesia, OTRAS, linkOtraVersion, buscar, norm };
+  numeros, spec, textoCita, claveCap, claveVers, leerClave, cita, vecino, esPoesia, OTRAS, linkOtraVersion, buscar, norm, palabrasDe, resaltar };
 });

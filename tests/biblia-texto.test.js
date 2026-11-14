@@ -102,3 +102,31 @@ test("buscar en toda la Biblia: varias palabras, sin tildes", () => {
   assert.ok(m.total > 50 && m.items.length === 5, "a medias y con límite");
   assert.equal(T.buscar(libros, " ", 5).items.length, 0);
 });
+
+test("búsqueda con textos ya normalizados y resaltado sin tildes", () => {
+  const j = libro("John");
+  const conNorm = { libro: "John", caps: j.caps, norm: j.caps.map(c => c.map(T.norm)) };
+  assert.deepEqual(T.buscar([conNorm], "tal manera amo", 5).items, T.buscar([j], "tal manera amo", 5).items, "mismo resultado");
+  assert.deepEqual(T.palabrasDe("¿No temas, Jacob?"), ["no", "temas", "jacob"]);
+  const partes = T.resaltar("Porque de tal manera amó Dios", T.palabrasDe("tal amo"));
+  assert.deepEqual(partes.filter(p => p.si).map(p => p.t), ["tal", "amó"], "«amo» encuentra «amó» y se muestra con su tilde");
+  assert.equal(partes.map(p => p.t).join(""), "Porque de tal manera amó Dios", "el texto queda igual");
+  assert.deepEqual(T.resaltar("sin nada", []), [{ t: "sin nada", si: false }]);
+});
+
+test("cada palabra cuenta desde el comienzo de una palabra", () => {
+  const libros = ["John", "Rom", "Heb"].map(libro);
+  const r = T.buscar(libros, "tal manera amo", 10);
+  assert.deepEqual(r.items.map(x => `${x.libro} ${x.cap}:${x.v}`), ["John 3:16", "Rom 15:14"], "«digamos» (Hebreos 13:6) ya no cuenta para «amo»");
+  assert.deepEqual(T.resaltar("De tal manera que digamos", ["amo"]).filter(p => p.si), []);
+  assert.ok(T.buscar(libros, "misericord", 5).total > 5, "a medias sigue sirviendo");
+});
+
+test("la frase exacta va primero", () => {
+  const libros = ["Gen", "Ps", "Isa", "Ezek"].map(libro);
+  const r = T.buscar(libros, "jehova es mi pastor", 50);
+  assert.ok(r.total > 1, `${r.total} versículos tienen las cuatro palabras`);
+  assert.deepEqual([r.items[0].libro, r.items[0].cap, r.items[0].v], ["Ps", 23, 1]);
+  const una = T.buscar(libros, "pastor", 3);
+  assert.equal(una.items[0].libro, "Gen", "una sola palabra: en el orden de la Biblia");
+});

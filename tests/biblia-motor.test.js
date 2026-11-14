@@ -104,3 +104,24 @@ test("exportar JSON con la cita", () => {
   assert.equal(j.versiculos[0].cita, "Juan 3:16");
   assert.equal(j.versiculos[0].id, "a");
 });
+
+test("la versión del texto es opcional (D-105)", () => {
+  const base = { fecha: "2026-10-28", libro: "John", capitulo: "3", versiculo: "16", texto: "Porque de tal manera…" };
+  assert.equal(B.validar(Object.assign({ version: "RVR1960" }, base), { hoy: HOY }).doc.version, "RVR1960");
+  assert.equal(B.validar(Object.assign({ version: "RV1909" }, base), { hoy: HOY }).doc.version, "RV1909");
+  assert.equal(B.validar(Object.assign({ version: "<b>NVI</b>" }, base), { hoy: HOY }).doc.version, "bNVIb", "sin caracteres raros");
+  assert.equal("version" in B.validar(Object.assign({ version: "  " }, base), { hoy: HOY }).doc, false, "vacía: no se guarda");
+  assert.equal(B.normalizarDoc("x", Object.assign({ version: "NTV" }, base)).version, "NTV");
+  assert.equal(B.normalizarDoc("x", base).version, "", "los viejos no la tienen");
+});
+
+test("exportar incluye lo del lector (marcas y capítulos leídos)", () => {
+  const docs = { a: { v: 1, fecha: "2026-10-29", libro: "John", capitulo: 3, versiculo: "16", texto: "t", nota: "" } };
+  const solo = JSON.parse(B.exportarJson(docs, "2026-11-14T12:00:00Z"));
+  assert.equal("marcas" in solo, false, "sin extras, como antes");
+  const j = JSON.parse(B.exportarJson(docs, "2026-11-14T12:00:00Z", { marcas: { John: { col: { "3_16": "amarillo" } } }, leidos: { "2026-11-14": ["John.3"] }, lector: { tam: 2 } }));
+  assert.deepEqual(j.marcas, { John: { col: { "3_16": "amarillo" } } });
+  assert.deepEqual(j.capitulosLeidos, { "2026-11-14": ["John.3"] });
+  assert.deepEqual(j.lector, { tam: 2 });
+  assert.equal(j.versiculos.length, 1);
+});

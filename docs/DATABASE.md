@@ -45,6 +45,8 @@ por dueño).
 
 | `users/{uid}/meta/biblia_lector` ✅ | Biblia en Manolo (2026-11-06) | `tam` (0–5), `actual` (ortografía actual, bool), `version` (para "Abrir en otra versión": `RVR1960`, `NVI`…), `ultimo: { libro, cap, y }` (y = fracción del desplazamiento), `ts`, `actualizado` (ms) | Con `merge`. Gana lo más nuevo entre aparatos. D-102 |
 | `users/{uid}/meta/biblia_leidos` ✅ | Biblia en Manolo | `dias: { "AAAA-MM-DD": ["John.3", …] }` (capítulos marcados como leídos ese día), `actualizado` | Con `merge` + `arrayUnion`/`arrayRemove` por día; nada se reescribe. Progreso y racha se calculan |
+| `users/{uid}/biblia_marcas/{libro}` ✅ | Biblia fase 2 (2026-11-14) | `v:1, col: { "cap_v": color }` (amarillo, naranja, verde, azul, rosa), `it: { "cap_v": { r (versículos, "16-17"), f (favorito), n (nota ≤ 1000), t (texto RV1909), d (fecha), ts } }`, `actualizado` | Colección nueva, un documento por libro (≤ 66). Con `merge`; quitar con `FieldValue.delete()`. D-105 |
+| `users/{uid}/biblia/{id}.version` ✅ | Biblia fase 2 | `"RV1909"`, `"RVR1960"`, `"NVI"`… u `"Otra"` | Aditivo: los registros viejos no lo tienen |
 | `data/biblia/rv1909/{libro}.json` (archivo, no Firestore) | Biblia en Manolo | `{ v, libro, nombre, caps: [[texto…]] }` | Generado por `scripts/build-biblia.mjs`; caché `manolo-biblia` |
 
 | `users/{uid}/libros/{id}` ✅ | Libros 3 (2026-10-29) | `v:1, titulo` (≤ 200), `autor` (≤ 150), `paginas` (número o `null`), `estado` (`"por_leer"`, `"leyendo"`, `"terminado"`), `calificacion` (1–5 o `null`), `opinion` (≤ 5000), `fechaRegistro` (AAAA-MM-DD), `fechaInicio`, `fechaFin` (fecha o `null`), `creado` (ms); desde la fase 4 también `portada` | Colección nueva. Lógica en `js/libros-motor.js` |

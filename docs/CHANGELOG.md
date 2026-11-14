@@ -1,5 +1,19 @@
 # Cambios
 
+## 2026-11-14 · Biblia: resaltar, favoritos, notas, anotar, buscar y compartir
+- En el lector, toca uno o varios versículos: resáltalos con 5 colores,
+  guárdalos en ★ Favoritos, escríbeles una nota, compártelos como imagen o
+  cópialos.
+- "Anotar" crea tu registro de siempre con el texto ya puesto. En
+  "Anotar versículo", al poner la cita el texto se completa solo; si pegas
+  el tuyo, eliges de qué versión es.
+- 🔍 Buscar en toda la Biblia: sin tildes, varias palabras, primero la frase
+  exacta; también solo en el Antiguo o el Nuevo Testamento.
+- Biblia › "Marcados": tus favoritos, notas y resaltados. "Exportar" los
+  incluye.
+- Pruebas: `tests/biblia-marcas.test.js`, `tests/biblia-texto.test.js`,
+  `tests/biblia-motor.test.js` y `scripts/e2e/lectura.js` (`SOLO=marcas`).
+
 ## 2026-11-08 · Ejercicio: "Rutina en casa — Glúteo & Full Body"
 - Entrenamiento › "Rutinas listas": la rutina en casa de 3 días (A, B, C)
   con calentamiento, ejercicios (series, reps, músculos y la clave

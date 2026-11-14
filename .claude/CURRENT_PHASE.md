@@ -8,8 +8,8 @@ D-102. Cada fase deja la app funcionando y publicada.
 |---|---|---|
 | 0 | Auditoría y diseño (capturas, preguntas al dueño) | ✅ |
 | 1 | Biblia: texto RV1909, lector y descarga sin internet | ✅ |
-| 2 | Biblia: anotar desde el lector, resaltados, notas, favoritos, búsqueda, compartir | ⏳ |
-| 3 | Biblia: planes, progreso de capítulos, memorización, temas, racha | |
+| 2 | Biblia: anotar desde el lector, resaltados, notas, favoritos, búsqueda, compartir | ✅ |
+| 3 | Biblia: planes, progreso de capítulos, memorización, temas, racha | ⏳ |
 | 4 | Libros: "Leer ahora", velocidad, estados y formatos | |
 | 5 | Libros: ISBN, importar, frases, notas, "¿Qué leo después?", estadísticas | |
 | 6 | Medir tiempos: definitiva, actividades, cronómetro, "Mi mañana", autollenado | |

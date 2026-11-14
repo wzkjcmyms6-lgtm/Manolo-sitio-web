@@ -59,7 +59,9 @@ Actualizado: 2026-11-05 (empieza Ejercicio inteligente, D-090).
 - **Libros, Biblia y Medir tiempos: siguiente nivel (2026-11-06, en curso)**:
   plan y auditoría en `docs/LECTURA_NIVEL2.md`, D-102 en adelante. Fase 1
   hecha: la Biblia RV1909 se lee dentro de Manolo (lector, ortografía
-  actual, leído, descarga sin internet).
+  actual, leído, descarga sin internet). Fase 2 hecha (D-105): resaltar,
+  favoritos, notas, anotar con texto automático, buscar (Worker),
+  compartir imagen y pestaña "Marcados".
 - **Reconocer ejercicios (2026-11-06)**: motor nuevo de búsqueda y
   reconocimiento (331/331 nombres reales, antes 79 %), alias extra y
   «¿Es …?» en no reconocidos (D-101, `js/exercise-search.js`,

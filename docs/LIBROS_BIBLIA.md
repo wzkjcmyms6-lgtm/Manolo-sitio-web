@@ -62,6 +62,16 @@ tamaño de letra, ortografía actual, deslizar para cambiar de capítulo,
 "Marcar como leído", "Abrir en otra versión" y "Descargar la Biblia" para
 leerla sin internet. Detalle en `docs/LECTURA_NIVEL2.md`.
 
+## Tocar versículos, buscar y "Marcados" (2026-11-14, D-105)
+
+En el lector, tocar versículos abre una barra: resaltar (5 colores),
+★ Favorito, ✎ Nota, ＋ Anotar (el registro de siempre con el texto puesto),
+Compartir como imagen y Copiar. 🔍 busca en toda la Biblia (sin tildes,
+varias palabras). La pestaña **Marcados** junta favoritos, notas y
+resaltados. En "Anotar versículo" el texto se completa solo al poner la
+cita; "Versión del texto" dice de qué Biblia es. Detalle en
+`docs/LECTURA_NIVEL2.md`.
+
 ## Libros (fase 3)
 
 - **Agregar o editar**: título (obligatorio), autor, páginas, estado (Por

@@ -88,6 +88,12 @@ const cita = e => {
   return `${nombre} ${e.capitulo || "?"}${e.versiculo ? `:${e.versiculo}` : ""}`;
 };
 
+// Versión del texto: letras, números, guiones y espacios (máx. 24).
+function versionOk(v) {
+  const s = String(v == null ? "" : v).trim().replace(/[^0-9A-Za-zÁÉÍÓÚÑáéíóúñ .\-]/g, "").slice(0, 24).trim();
+  return s || null;
+}
+
 // Datos del formulario → documento. { ok, errores: [{campo, texto}], doc }.
 function validar(datos, opciones) {
   const o = opciones || {};
@@ -106,7 +112,12 @@ function validar(datos, opciones) {
   const t = texto(datos.texto, 2000);
   if (!t) err("texto", "Escribe o pega el texto del versículo.");
   if (errores.length) return { ok: false, errores, doc: null };
-  return { ok: true, errores: [], doc: { v: 1, fecha, libro: l.id, capitulo: cap, versiculo: vers, texto: t, nota: texto(datos.nota, 1000) } };
+  const doc = { v: 1, fecha, libro: l.id, capitulo: cap, versiculo: vers, texto: t, nota: texto(datos.nota, 1000) };
+  // De qué versión es el texto (D-105): "RV1909" si vino del lector, la que
+  // elegiste si lo pegaste. Opcional: los registros viejos no lo tienen.
+  const version = versionOk(datos.version);
+  if (version) doc.version = version;
+  return { ok: true, errores: [], doc };
 }
 
 // Documento guardado → registro para mostrar.
@@ -116,6 +127,7 @@ function normalizarDoc(id, d) {
   const e = {
     id, fecha: d.fecha || "", libro: d.libro || "", capitulo: Number(d.capitulo) || 0, versiculo: d.versiculo ? String(d.versiculo) : "",
     texto: d.texto ? String(d.texto) : "", nota: d.nota ? String(d.nota) : "", creado: typeof d.creado === "number" ? d.creado : 0,
+    version: d.version ? String(d.version) : "",
     orden: l ? l.orden : 999
   };
   e.cita = cita(e);
@@ -199,11 +211,17 @@ function mesSiguiente(mes, n) {
   return d.toISOString().slice(0, 7);
 }
 
-function exportarJson(docs, ahora) {
-  return JSON.stringify({
+// extras (desde la fase 2, D-105): { marcas: { libro: doc }, leidos: { fecha: [caps] }, lector: {…} }.
+function exportarJson(docs, ahora, extras) {
+  const x = extras || {};
+  const out = {
     app: "Manolo · Biblia", version: 1, exportado: ahora,
     versiculos: Object.keys(docs).sort().map(id => Object.assign({ id }, docs[id], { cita: cita(docs[id]) }))
-  }, null, 2);
+  };
+  if (x.marcas && Object.keys(x.marcas).length) out.marcas = x.marcas;
+  if (x.leidos && Object.keys(x.leidos).length) out.capitulosLeidos = x.leidos;
+  if (x.lector) out.lector = x.lector;
+  return JSON.stringify(out, null, 2);
 }
 
 return {

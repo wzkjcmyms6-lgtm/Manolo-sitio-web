@@ -12,7 +12,7 @@ desde D-102. Cada fase deja la app funcionando y publicada.
 |---|---|---|
 | 0 | Auditoría y diseño | ✅ |
 | 1 | Biblia: texto RV1909 (script y un archivo por libro), lector y descarga sin internet | ✅ |
-| 2 | Biblia: anotar desde el lector y texto automático, resaltados, notas, favoritos, búsqueda y compartir | |
+| 2 | Biblia: anotar desde el lector y texto automático, resaltados, notas, favoritos, búsqueda y compartir | ✅ |
 | 3 | Biblia: planes, progreso de capítulos, memorización, temas y racha nueva | |
 | 4 | Libros: "Leer ahora", velocidad y estimaciones, estados y formatos nuevos | |
 | 5 | Libros: escanear ISBN, importar, frases (repaso, etiquetas, compartir), notas, "¿Qué leo después?" y estadísticas | |
@@ -122,3 +122,21 @@ Nada de lo guardado se reescribe; lo viejo sin estos campos se ve igual.
   `SOLO=biblia node scripts/e2e/lectura.js` (64 comprobaciones a 390 y
   1280 px: abrir, elegir, letra, ortografía, leído, deslizar, seguir donde
   quedé, atrás, descargar, sin internet).
+
+## Fase 2: tocar versículos, anotar, buscar y compartir (D-105)
+
+- **Archivos**: `js/biblia-marcas.js` (UMD: claves, qué pintar, cambios a
+  guardar, lista "Marcados"), `js/biblia-imagen.js` (UMD: plan y dibujo de
+  la imagen), `js/biblia-seleccion.js` (barra, nota, compartir, copiar,
+  anotar, pestaña Marcados), `js/biblia-buscar.js` (hoja de búsqueda) y
+  `js/biblia-buscar-worker.js` (Worker, en `EXTRAS` del service worker).
+- **Lector**: avisa `biblia:pintado` ({ libro, cap, marcar }) después de
+  pintar un capítulo y `biblia:lector-cerrado`; `BibliaLector.lugar()`,
+  `datos()` y `el` para los módulos de arriba.
+- **Formulario** (`js/biblia.js`): `BibliaAnotar.abrir(pre)`, campo
+  "Versión del texto", texto automático (`textoAuto`) y "📖 Leer en la
+  Biblia".
+- **Pruebas**: `tests/biblia-marcas.test.js` (claves, parches, lista,
+  imagen), `tests/biblia-texto.test.js` (búsqueda por comienzo de palabra,
+  frase primero, resaltado) y `SOLO=marcas node scripts/e2e/lectura.js`
+  (65 comprobaciones a 390 y 1280 px).

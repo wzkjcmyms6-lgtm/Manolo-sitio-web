@@ -254,6 +254,18 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
   domingo. Toca "Lu": la tabla dice cuánto tardas en promedio cada lunes.
   Con ‹ › pasas de día.
 
+**Biblia: marcar, anotar, buscar y compartir (2026-11)**
+- [ ] En el lector, toca dos versículos seguidos: abajo aparece la barra
+  con la cita. Toca el amarillo: quedan resaltados.
+- [ ] Toca uno y ★: queda con estrella. Toca uno y ✎: escribe una nota y
+  guarda; aparece ✎ al final; tócalo para leerla.
+- [ ] Toca uno y "Anotar": se abre "Anotar versículo" con todo puesto;
+  guarda y míralo en tu lista (dice RV1909).
+- [ ] Toca uno y "Compartir": se abre el menú del iPhone con la imagen.
+- [ ] 🔍: busca "no temas" y toca un resultado.
+- [ ] Biblia › "Marcados": están tus favoritos, notas y resaltados.
+- [ ] "Anotar versículo": elige Salmos, 23 y 1: el texto se completa solo.
+
 **Biblia: leer dentro de Manolo (2026-11)**
 - [ ] Biblia › "Leer la Biblia": abre Mateo 1. Toca "Mateo 1 ▾", busca
   "juan", elige Juan y el capítulo 3.
