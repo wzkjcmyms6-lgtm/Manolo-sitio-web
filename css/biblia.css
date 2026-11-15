@@ -197,3 +197,164 @@ body.bbl-leyendo { overflow: hidden; }
 /* Tres pestañas (Lista · Calendario · Marcados): columnas iguales que entran hasta en 320 px. */
 .bib-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; max-width: 440px; }
 .bib-tabs .fin-tab { min-width: 0; padding-left: 0.35rem; padding-right: 0.35rem; text-align: center; white-space: nowrap; }
+
+/* ---------- Fase 3 (D-106): planes, progreso, memorizar, temas ---------- */
+/* Accesos de Biblia: Planes · Progreso · Memorizar */
+.bib-accesos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin: 0.9rem 0 0.2rem; }
+.bib-accesos a {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15rem; min-height: 64px; min-width: 0;
+  padding: 0.5rem 0.3rem; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--ink);
+  font-size: 0.82rem; font-weight: 600; text-decoration: none; text-align: center;
+}
+.bib-accesos a > span { font-size: 1.25rem; line-height: 1; }
+.bib-accesos a i { font-style: normal; font-size: 0.7rem; font-weight: 700; color: #1a0f05; background: var(--accent-grad); border-radius: 999px; padding: 0 0.4rem; margin-left: 0.15rem; }
+.bib-accesos a:active { background: var(--surface-raised); }
+.bib-pie { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; margin-top: 1.4rem; }
+
+/* Temas: en la tarjeta, en el formulario y el filtro */
+.bib-temas { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.bib-temas i { font-style: normal; font-size: 0.74rem; color: var(--accent-2); border: 1px solid rgba(255, 184, 77, 0.35); border-radius: 999px; padding: 0.05rem 0.5rem; }
+.bib-temas-campo { border: 0; margin: 0; padding: 0; min-width: 0; }
+.bib-temas-campo legend { padding: 0; margin-bottom: 0.35rem; font-size: 0.85rem; color: var(--muted); }
+.bib-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.5rem; }
+@media (min-width: 600px) { .bib-filtros:has(#bib-tema:not([hidden])) { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); } }
+
+/* Calendario: días con capítulos leídos (punto verde abajo) */
+.bib-cal-dia { position: relative; }
+.bib-cal-dia.is-leido::after, .bib-cal-punto {
+  content: ""; width: 6px; height: 6px; border-radius: 50%; background: #4cc38a; display: inline-block;
+}
+.bib-cal-dia.is-leido::after { position: absolute; left: 50%; bottom: 4px; transform: translateX(-50%); }
+.bib-cal-dia.is-hecho.is-leido::after { background: #0a4d2c; }
+.bib-cal-punto { vertical-align: 0.1em; margin-left: 0.15rem; }
+.bib-cal-leido { margin: -0.2rem 0 0.6rem; color: #7fe0a6; font-size: 0.9rem; }
+
+/* Planes: tarjetas de hoy */
+.bpl-hoy-lista { display: flex; flex-direction: column; gap: 0.55rem; margin: 0.2rem 0 0.9rem; }
+.bpl-hoy {
+  display: flex; flex-direction: column; gap: 0.5rem; padding: 0.8rem 0.95rem; border: 1px solid var(--border); border-radius: 18px;
+  background: radial-gradient(140% 160% at 100% 0%, rgba(255, 122, 48, 0.1), transparent 60%), var(--surface);
+}
+.bpl-hoy.is-hecho { border-color: rgba(70, 200, 120, 0.35); }
+.bpl-hoy-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap; }
+.bpl-hoy-cab b { font-size: 0.98rem; }
+.bpl-hoy-cab small { color: var(--muted); font-size: 0.78rem; white-space: nowrap; }
+.bpl-hoy-t { margin: 0; font-size: 0.95rem; line-height: 1.4; overflow-wrap: anywhere; }
+.bpl-hoy.is-hecho .bpl-hoy-t { color: #7fe0a6; }
+.bpl-hoy-fila { display: flex; align-items: center; justify-content: space-between; gap: 0.7rem; }
+.bpl-leer { flex: 0 0 auto; min-width: 88px; }
+.bpl-barra { display: block; height: 6px; border-radius: 999px; background: var(--bg-soft); overflow: hidden; }
+.bpl-barra i { display: block; height: 100%; border-radius: inherit; background: var(--accent-grad); }
+.bpl-atraso { display: flex; flex-direction: column; gap: 0.45rem; padding-top: 0.45rem; border-top: 1px dashed var(--border); }
+.bpl-atraso p { margin: 0; color: var(--accent-2); font-size: 0.86rem; }
+.bpl-atraso-b { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem; }
+.bpl-atraso-b .lib-btn-sec { min-height: 44px; padding: 0.4rem 0.5rem; font-size: 0.84rem; }
+.bpl-mini { color: var(--accent-2); font-weight: 700; font-size: 0.88rem; text-decoration: none; }
+.bpl-sugerencia {
+  display: flex; align-items: center; gap: 0.8rem; min-height: 60px; margin: 0.2rem 0 0.9rem; padding: 0.7rem 0.95rem;
+  border: 1px dashed rgba(255, 122, 48, 0.45); border-radius: 18px; color: var(--ink); text-decoration: none;
+}
+.bpl-sugerencia > span:first-child { font-size: 1.4rem; }
+.bpl-sugerencia > span:nth-child(2) { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.bpl-sugerencia small { color: var(--muted); font-size: 0.8rem; }
+
+/* Planes: página */
+.bpl-t { margin: 1.2rem 0 0.6rem; font-size: 1.05rem; }
+.bpl-t:first-child { margin-top: 0.2rem; }
+.bpl-activos { display: flex; flex-direction: column; gap: 0.9rem; }
+.bpl-plan { display: flex; flex-direction: column; gap: 0.35rem; }
+.bpl-plan .lib-nota { margin: 0; }
+.bpl-quitar { align-self: flex-start; min-height: 40px; border: 0; background: none; color: var(--muted); font: inherit; font-size: 0.85rem; text-decoration: underline; cursor: pointer; padding: 0; }
+.bpl-tipos { display: grid; grid-template-columns: 1fr; gap: 0.6rem; }
+@media (min-width: 700px) { .bpl-tipos { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.bpl-tipo { display: flex; flex-direction: column; gap: 0.45rem; padding: 0.85rem 0.95rem; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); min-width: 0; }
+.bpl-tipo h3 { margin: 0; font-size: 1rem; }
+.bpl-tipo p { margin: 0; color: var(--muted); font-size: 0.88rem; line-height: 1.4; }
+.bpl-tipo .lib-btn { align-self: flex-start; margin-top: 0.2rem; }
+.bpl-ritmo { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 0.5rem; }
+
+/* En el lector: "Plan de hoy" al final del capítulo */
+.bbl-plan { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.7rem 0.8rem; border-radius: 14px; background: rgba(255, 122, 48, 0.08); border: 1px solid rgba(255, 122, 48, 0.3); }
+.bbl-plan p { margin: 0; font-size: 0.92rem; }
+
+/* Progreso */
+.bpr-total { display: flex; flex-direction: column; gap: 0.6rem; padding: 0.9rem 0.95rem; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); }
+.bpr-grande { margin: 0; display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+.bpr-grande b { font-size: 2rem; font-weight: 600; }
+.bpr-grande span { color: var(--muted); }
+.bpr-fila { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.25rem 0.6rem; font-size: 0.88rem; }
+.bpr-fila b { font-weight: 600; white-space: nowrap; }
+.bpr-fila .bpl-barra { grid-column: 1 / -1; }
+.bpr-total .lib-nota { margin: 0; }
+.bpr-mapa { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 0.4rem; }
+.bpr-libro {
+  position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 0.15rem;
+  min-height: 56px; min-width: 0; padding: 0.45rem 0.55rem; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);
+  color: var(--ink); font: inherit; text-align: left; cursor: pointer; isolation: isolate;
+}
+.bpr-libro::before { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--p, 0%); background: rgba(255, 122, 48, 0.18); z-index: -1; }
+.bpr-libro-n { font-size: 0.8rem; font-weight: 600; line-height: 1.15; overflow-wrap: anywhere; }
+.bpr-libro small { color: var(--muted); font-size: 0.72rem; }
+.bpr-libro.is-completo { border-color: rgba(70, 200, 120, 0.45); }
+.bpr-libro.is-completo::before { background: rgba(70, 200, 120, 0.18); }
+.bpr-libro.is-completo small { color: #7fe0a6; font-weight: 700; }
+
+/* Memorizar: tarjeta de hoy y página */
+.bbm-hoy { display: flex; align-items: center; gap: 0.7rem; margin: 0 0 0.9rem; padding: 0.75rem 0.9rem; border: 1px solid rgba(160, 130, 255, 0.35); border-radius: 18px; background: rgba(160, 130, 255, 0.08); }
+.bbm-hoy > span { font-size: 1.4rem; }
+.bbm-hoy p { flex: 1; min-width: 0; margin: 0; display: flex; flex-direction: column; }
+.bbm-hoy small { color: var(--muted); font-size: 0.8rem; }
+.bbm-hoy .lib-btn { flex: 0 0 auto; }
+.bbm-resumen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin-bottom: 0.7rem; }
+.bbm-resumen > div { display: flex; flex-direction: column; min-width: 0; padding: 0.7rem; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); }
+.bbm-resumen b { font-size: 1.3rem; font-weight: 600; }
+.bbm-resumen span { color: var(--muted); font-size: 0.75rem; }
+.bbm-listo { color: #7fe0a6; font-size: 0.92rem; margin: 0 0 0.6rem; }
+.bbm-lista { list-style: none; margin: 0.9rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; }
+.bbm-item { display: flex; flex-direction: column; gap: 0.4rem; padding: 0.75rem 0.85rem; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); min-width: 0; }
+.bbm-item-cab { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+.bbm-item-cab .bbm-cajas { margin-left: auto; }
+.bbm-cajas { display: inline-flex; gap: 3px; }
+.bbm-cajas i { width: 9px; height: 9px; border-radius: 50%; background: var(--bg-soft); border: 1px solid var(--border); }
+.bbm-cajas i.is-llena { background: #a082ff; border-color: #a082ff; }
+.bbm-item-t { margin: 0; font-family: var(--font-display); font-size: 0.95rem; line-height: 1.45; color: #ece9e2; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.bbm-item-pie { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
+.bbm-item-pie small { color: var(--muted); font-size: 0.8rem; }
+.bbm-item-pie > span { display: flex; align-items: center; gap: 0.3rem; }
+.bbm-item-pie .lib-btn-sec { min-height: 40px; padding: 0.3rem 0.8rem; }
+.bbm-quitar { min-height: 40px; border: 0; background: none; color: var(--muted); font: inherit; font-size: 0.82rem; cursor: pointer; padding: 0 0.4rem; }
+
+/* Memorizar: practicar (hoja) */
+.bbm-practica { display: flex; flex-direction: column; gap: 0.8rem; }
+.bbm-practica .bbl-filtros { margin: 0; }
+.bbm-cita { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.bbm-cita b { font-size: 1.05rem; }
+.bbm-texto { margin: 0; font-family: var(--font-display); font-size: 1.2rem; line-height: 1.7; overflow-wrap: anywhere; }
+.bbm-letras { letter-spacing: 0.04em; }
+.bbm-texto .is-mal { color: #ff8a80; text-decoration: underline wavy rgba(255, 138, 128, 0.6); text-underline-offset: 3px; }
+.bbm-hueco {
+  display: inline-block; width: calc(var(--n, 4) * 0.55em); min-width: 1.6em; height: 1.15em; vertical-align: -0.15em; padding: 0;
+  border: 0; border-bottom: 2px solid var(--accent-2); border-radius: 4px 4px 0 0; background: rgba(255, 184, 77, 0.12); cursor: pointer;
+}
+.bbm-nivel { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; color: var(--muted); font-size: 0.85rem; }
+.bbm-pct { margin: 0; font-weight: 700; color: var(--accent-2); }
+.bbm-pct.is-ok { color: #7fe0a6; }
+.bbm-pregunta { margin: 0.2rem 0 0; text-align: center; color: var(--muted); font-size: 0.9rem; }
+.bbm-notas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.45rem; }
+.bbm-nota { min-height: 52px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; padding: 0.3rem; }
+.bbm-nota.is-mal { border-color: rgba(255, 138, 128, 0.45); color: #ff8a80; }
+.bbm-nota.is-duda { border-color: rgba(255, 184, 77, 0.45); color: var(--accent-2); }
+.bbm-nota.is-bien { border-color: rgba(70, 200, 120, 0.5); color: #7fe0a6; }
+.bbm-fin { display: flex; flex-direction: column; gap: 0.6rem; text-align: center; padding: 0.6rem 0; }
+.bbm-fin p { margin: 0; }
+.bbm-fin-t { font-size: 1.5rem; font-weight: 700; }
+
+/* Barra de abajo del lector: seis acciones (3 × 2 en teléfonos angostos) */
+.bbl-sel-acciones { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.bbs-emoji { font-size: 1.05rem; line-height: 20px; height: 20px; }
+@media (max-width: 420px) {
+  .bbl-sel-acciones { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .bbl-sel-acciones button { min-height: 50px; }
+  .bbl-lector.con-sel .bbl-texto { padding-bottom: 360px; }
+  .bbl-lector.con-sel .bbl-toast { bottom: calc(env(safe-area-inset-bottom) + 285px); }
+}

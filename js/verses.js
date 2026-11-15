@@ -30,10 +30,23 @@ const VERSES = [
   { text: "¿Has visto hombre diligente en su trabajo? Delante de los reyes estará.", ref: "Proverbios 22:29" }
 ];
 
+// Biblia › Ajustes › "Versículo de arriba: también de tus favoritos" (D-106):
+// un día sale uno de tus ★ favoritos y otro, uno de esta lista. Los guarda
+// js/biblia-seleccion.js en este teléfono (solo si está activado).
+const CLAVE_FAVORITOS = "manolo.biblia.favoritosArriba";
+function versiculosFavoritos() {
+  try {
+    const xs = JSON.parse(localStorage.getItem(CLAVE_FAVORITOS) || "[]");
+    return Array.isArray(xs) ? xs.filter(x => x && typeof x.text === "string" && x.text.trim() && typeof x.ref === "string") : [];
+  } catch (e) { return []; }
+}
+
 function verseOfTheDay() {
   const start = new Date(new Date().getFullYear(), 0, 0);
   const diff = new Date() - start;
   const dayOfYear = Math.floor(diff / 86400000);
+  const favs = versiculosFavoritos();
+  if (favs.length && dayOfYear % 2 === 0) return favs[Math.floor(dayOfYear / 2) % favs.length];
   return VERSES[dayOfYear % VERSES.length];
 }
 

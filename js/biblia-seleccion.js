@@ -3,6 +3,8 @@
 // resaltar con color, ★ favorito, ✎ nota, ＋ anotar (el registro de siempre
 // en users/{uid}/biblia con el texto puesto), compartir como imagen y copiar.
 // También la pestaña "Marcados" de Biblia (favoritos, notas y resaltados).
+// Fase 3 (D-106): 🧠 Memorizar, y los favoritos para el versículo de arriba
+// (si en Biblia › Ajustes está activado).
 // Datos en users/{uid}/biblia_marcas/{libro}; lógica en js/biblia-marcas.js
 // y la imagen en js/biblia-imagen.js. Ver docs/LECTURA_NIVEL2.md (D-105).
 (function () {
@@ -99,6 +101,7 @@ function pintarBarra() {
       <button type="button" data-bbs="fav" aria-pressed="${fav}"${fav ? ' class="is-activo"' : ""}><span class="icon-sm" data-icon="star"></span><small>Favorito</small></button>
       <button type="button" data-bbs="nota"${item && item.n ? ' class="is-activo"' : ""}><span class="icon-sm" data-icon="edit"></span><small>Nota</small></button>
       <button type="button" data-bbs="anotar"><span class="icon-sm" data-icon="plus"></span><small>Anotar</small></button>
+      ${window.BibliaMemoriaUI ? `<button type="button" data-bbs="memorizar"><span class="bbs-emoji" aria-hidden="true">🧠</span><small>Memorizar</small></button>` : ""}
       <button type="button" data-bbs="compartir"><span class="icon-sm" data-icon="send"></span><small>Compartir</small></button>
       <button type="button" data-bbs="copiar"><span class="icon-sm" data-icon="copy"></span><small>Copiar</small></button>
     </div>`;
@@ -250,6 +253,16 @@ async function copiar() {
   }
   limpiar();
 }
+function memorizar() {
+  const nums = ordenados();
+  if (!window.BibliaMemoriaUI) return;
+  const texto = textos(nums, true);
+  if (!texto) { avisar("Ese versículo no tiene texto"); return; }
+  const r = BibliaMemoriaUI.agregar({ libro: donde.libro, cap: donde.cap, vers: T.spec(nums), texto, version: "RV1909" });
+  if (r === "cargando") { avisar("Un momento: vuelve a tocar Memorizar"); return; }
+  avisar(r === "ya" ? `${citaDe(nums)} ya está en Memorizar` : `🧠 ${citaDe(nums)} en Memorizar`);
+  limpiar();
+}
 function anotar() {
   const nums = ordenados();
   if (!window.BibliaAnotar) return;
@@ -284,6 +297,7 @@ lector.addEventListener("click", e => {
   else if (a === "fav") alternarFavorito();
   else if (a === "nota") abrirNota(ordenados());
   else if (a === "anotar") anotar();
+  else if (a === "memorizar") memorizar();
   else if (a === "compartir") compartir();
   else if (a === "copiar") copiar();
 });
@@ -343,6 +357,28 @@ document.addEventListener("click", e => {
   }
 });
 
+// ---- Versículo de arriba (Inicio): también de tus favoritos ----
+// Se guardan en este teléfono para que salgan al abrir la app, aun sin
+// internet; si se desactiva o no hay favoritos, se borran. Ver js/verses.js.
+const CLAVE_FAVORITOS = "manolo.biblia.favoritosArriba";
+let firmaFavs = null;
+function favoritosArriba() {
+  if (!cargado) return;
+  const xs = L.ajustes().favArriba ? BM.favoritos(docs).slice(0, 200).map(x => {
+    const n = T.numeros(x.versiculo) || [];
+    return { text: T.mostrar(x.texto, { actual: actual(), numero: n[0] }), ref: x.cita };
+  }) : [];
+  const firma = JSON.stringify(xs);
+  if (firma === firmaFavs) return;
+  firmaFavs = firma;
+  try {
+    if (xs.length) localStorage.setItem(CLAVE_FAVORITOS, firma);
+    else localStorage.removeItem(CLAVE_FAVORITOS);
+  } catch (e) { /* sin almacenamiento */ }
+  if (typeof renderVerse === "function") renderVerse("verse-banner");
+}
+window.addEventListener("biblia:lector", favoritosArriba);
+
 // ---- Datos ----
 onAuthReady(() => {
   coleccion().onSnapshot(snap => {
@@ -354,6 +390,7 @@ onAuthReady(() => {
     if (!barra.hidden) pintarBarra();
     if (marcadosEn && !marcadosEn.hidden) renderMarcados(marcadosEn);
     window.dispatchEvent(new CustomEvent("biblia:marcas", { detail: { favoritos: BM.favoritos(docs) } }));
+    favoritosArriba();
   }, err => console.warn("Biblia marcas:", err));
 });
 

@@ -53,3 +53,15 @@ test("filas: sin datos de una sección no aparece; sin margen es un aviso", () =
   assert.deepEqual([sin.titulo, sin.estado, sin.detalle], ["Sin margen para gastar", "aviso", "Queda 1 día del periodo. Mira tu presupuesto."]);
   assert.equal(M.titular([sin]), "Hay algo que mirar hoy.");
 });
+
+test("filas: Biblia cuenta los capítulos leídos y el plan de hoy (D-106)", () => {
+  const b = x => M.filas({ biblia: x })[0];
+  const leida = b({ hoyHecho: true, actual: 4, total: 10, cita: "", capsHoy: 2 });
+  assert.deepEqual([leida.titulo, leida.detalle, leida.estado], ["Biblia leída hoy", "2 capítulos. 4 días seguidos.", "hecho"]);
+  assert.equal(b({ hoyHecho: true, actual: 1, total: 1, cita: "", capsHoy: 1 }).detalle, "1 capítulo.");
+  // Con versículo anotado manda el versículo, aunque también haya leído.
+  assert.equal(b({ hoyHecho: true, actual: 2, total: 5, cita: "Salmos 23:1", capsHoy: 3 }).titulo, "Versículo de hoy anotado");
+  const plan = b({ hoyHecho: false, actual: 6, total: 20, cita: "", plan: { nombre: "Evangelios en 30 días", texto: "Juan 3-4" } });
+  assert.deepEqual([plan.titulo, plan.detalle, plan.estado], ["Lectura de hoy: Juan 3-4", "Evangelios en 30 días. Llevas 6 días seguidos.", "pendiente"]);
+  assert.equal(b({ hoyHecho: false, actual: 0, total: 3, plan: { nombre: "Proverbios del día", texto: "Proverbios 14" } }).detalle, "Proverbios del día.");
+});

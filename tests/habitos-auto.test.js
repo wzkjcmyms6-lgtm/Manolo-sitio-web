@@ -21,6 +21,8 @@ test("por día: suma lo de cada módulo con sus filtros", () => {
   assert.equal(A.porDia("libros", { "2026-11-04": 23, "2026-11-05": 0 })["2026-11-04"].paginas, 23);
   assert.equal(A.porDia("libros", { "2026-11-05": 0 })["2026-11-05"], undefined);
   assert.equal(A.porDia("biblia", [{ fecha: "2026-11-02" }, { fecha: "2026-11-02" }])["2026-11-02"].n, 2);
+  // Biblia también manda los días con capítulos leídos en el lector (D-106).
+  assert.deepEqual(Object.keys(A.porDia("biblia", [{ fecha: "2026-11-02" }, { fecha: "2026-11-03", leido: true }])), ["2026-11-02", "2026-11-03"]);
   const movs = [{ date: "2026-11-04", type: "gasto", category: "antojos" }, { date: "2026-11-04", type: "ingreso", category: "sueldo" }, { date: "2026-11-05", type: "gasto", category: "comida" }];
   assert.equal(A.porDia("finanzas", movs)["2026-11-04"].n, 2);
   assert.deepEqual(Object.keys(A.porDia("gasto", movs, { categoria: "antojos" })), ["2026-11-04"]);

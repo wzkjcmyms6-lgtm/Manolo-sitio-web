@@ -348,4 +348,303 @@ async function bibliaMarcas(browser, base, ancho, captura) {
   await p.context().close();
 }
 
-module.exports = { bibliaLector, bibliaMarcas, txt, visible, sinDesborde, metaDe, consola, deslizar, HOY, FECHA, ZONA };
+// ---------- Fase 3: planes, progreso, memorizar, temas y racha ----------
+const tarjetasPlan = p => p.$$eval("#bib-resumen .bpl-hoy", els => els.map(e => e.textContent.replace(/\s+/g, " ").trim()));
+async function irA(p, hash) {
+  await p.evaluate(h => { location.hash = h; }, hash);
+  await p.waitForTimeout(450);
+}
+async function bibliaPlanes(browser, base, ancho, captura) {
+  console.log(`\nBiblia: planes de lectura, progreso y racha (${ancho} px)`);
+  const alto = ancho > 800 ? 900 : 844;
+  const p = await abrir(browser, base, SEM.estado(HOY), { hash: "#biblia", zona: ZONA, fecha: FECHA, ancho, alto });
+  consola(p);
+  await p.waitForTimeout(900);
+  const planes = async () => ((await metaDe(p, "biblia_planes")) || {}).planes || {};
+  ok(/Elige un plan de lectura/.test(await txt(p, "#bib-resumen .bpl-sugerencia")), "sin planes, arriba sugiere elegir uno");
+  const accesos = await p.$$eval("#bib-resumen .bib-accesos a", as => as.map(a => a.getAttribute("href")));
+  ok(accesos.join(" ") === "#biblia-planes #biblia-progreso #biblia-memorizar", `accesos a Planes, Progreso y Memorizar (${accesos.join(" ")})`);
+  ok(/🔥 2/.test(await txt(p, ".bib-racha")), "racha de 2 días (ayer y anteayer)");
+  ok(await sinDesborde(p), "Biblia no se mueve de lado");
+  await p.click("#bib-resumen .bpl-sugerencia");
+  await p.waitForTimeout(450);
+  ok(await visible(p, "#panel-biblia-planes") && !(await visible(p, "#verse-banner")), "abre «Planes de lectura» (sin el versículo de arriba)");
+  ok((await p.$$("#bpl-app .bpl-tipo")).length === 6, "seis planes para elegir");
+  ok(await sinDesborde(p), "Planes no se mueve de lado");
+  await captura(p, `biblia-planes-${ancho}.png`);
+  await p.click('[data-bpl-empezar="evangelios30"]');
+  await p.waitForTimeout(500);
+  let pl = Object.values(await planes());
+  ok(pl.length === 1 && pl[0].tipo === "evangelios30" && pl[0].inicio === HOY && pl[0].activo === true, "«Empezar hoy» guarda el plan");
+  ok((await p.evaluate(() => location.hash)) === "#biblia", "y vuelve a Biblia");
+  let card = await txt(p, "#bib-resumen .bpl-hoy");
+  ok(/Evangelios en 30 días/.test(card) && /Día 1 de 30/.test(card) && /Hoy: Mateo 1-2/.test(card), `la tarjeta del plan con la lectura de hoy (${card})`);
+  await captura(p, `biblia-plan-hoy-${ancho}.png`);
+
+  // Leer fuera de orden: primero Mateo 2.
+  await p.evaluate(() => BibliaLector.abrir("Matt", 2, { y: 0 }));
+  await p.waitForTimeout(700);
+  ok(/Evangelios en 30 días: 0 de 2 de hoy/.test(await txt(p, ".bbl-plan")), "en el lector: «Evangelios en 30 días: 0 de 2 de hoy»");
+  await p.click('[data-bbl="leido"]');
+  await p.waitForTimeout(400);
+  ok(/1 de 2 de hoy/.test(await txt(p, ".bbl-plan")) && /Seguir con Mateo 1/.test(await txt(p, ".bbl-plan button")), "al marcarlo leído: «1 de 2» y «Seguir con Mateo 1»");
+  await p.click(".bbl-plan button");
+  await p.waitForTimeout(600);
+  ok((await txt(p, "#bbl-donde-t")) === "Mateo 1", "«Seguir con» abre Mateo 1");
+  await p.click('[data-bbl="leido"]');
+  await p.waitForTimeout(400);
+  ok(/Lectura de hoy completa/.test(await txt(p, ".bbl-plan")), "con los dos: «Lectura de hoy completa»");
+  await p.click('[data-bbl="cerrar"]');
+  await p.waitForTimeout(400);
+  card = await txt(p, "#bib-resumen .bpl-hoy");
+  ok(/La lectura de hoy está hecha: Mateo 1-2/.test(card), `la tarjeta lo dice (${card})`);
+  ok(/Hoy ya leíste la Biblia/.test(await txt(p, ".bib-hoy")) && /🔥 3/.test(await txt(p, ".bib-racha")), "la racha cuenta el día leído (3 días)");
+
+  // Calendario y Mi día
+  await p.click('[data-bib-vista="calendario"]');
+  await p.waitForTimeout(300);
+  ok(await p.$eval(`[data-bib-dia="${HOY}"]`, el => el.classList.contains("is-leido")), "en el calendario, hoy tiene la marca de leído");
+  ok(/Leíste Mateo 1-2/.test(await txt(p, ".bib-cal-leido")), "y abajo dice qué leíste");
+  await p.click('[data-bib-vista="lista"]');
+  await irA(p, "#inicio");
+  const md = await txt(p, '[data-md="biblia"]');
+  ok(/Biblia leída hoy/.test(md) && /2 capítulos\. 3 días seguidos/.test(md), `Mi día: «${md}»`);
+
+  // Progreso
+  await irA(p, "#biblia-progreso");
+  ok(await visible(p, "#panel-biblia-progreso") && (await p.$$(".bpr-libro")).length === 66, "Progreso: el mapa de los 66 libros");
+  ok(/2 capítulos leídos en 2026/.test(await txt(p, ".bpr-total")), "cuenta los capítulos leídos este año");
+  ok(/2\/28/.test(await txt(p, '[data-bpr-libro="Matt"]')) && await p.$eval('[data-bpr-libro="Matt"]', el => el.classList.contains("is-empezado")), "Mateo: 2 de 28");
+  ok(await sinDesborde(p), "Progreso no se mueve de lado");
+  await captura(p, `biblia-progreso-${ancho}.png`);
+  await p.click('[data-bpr-libro="Matt"]');
+  await p.waitForTimeout(300);
+  ok((await p.$$(".bpr-hoja [data-bpr-ir]")).length === 28 && (await p.$$(".bpr-hoja .bbl-cap-b.is-leido")).length === 2, "tocar Mateo muestra sus capítulos, 2 leídos");
+  await p.click('.bpr-hoja [data-bpr-ir="Matt.3"]');
+  await p.waitForTimeout(700);
+  ok(await visible(p, "#bbl-lector") && (await txt(p, "#bbl-donde-t")) === "Mateo 3", "y tocar uno lo abre en el lector");
+  await p.click('[data-bbl="cerrar"]');
+  await p.waitForTimeout(400);
+
+  // Quitar el plan
+  await irA(p, "#biblia-planes");
+  ok(/Tus planes/.test(await txt(p, "#bpl-app")) && (await p.$$("#bpl-app .bpl-tipo")).length === 5, "en Planes: el tuyo arriba y los demás para sumar");
+  await p.click("[data-bpl-quitar]");
+  await p.waitForTimeout(400);
+  pl = Object.values(await planes());
+  ok(pl[0].activo === false && pl[0].quitado === HOY, "«Quitar este plan» lo apaga (lo leído queda)");
+  ok((await p.$$("#bpl-app .bpl-tipo")).length === 6, "y vuelven los seis");
+  if (ancho < 800) {
+    await p.setViewportSize({ width: 320, height: 640 });
+    await p.waitForTimeout(200);
+    ok(await sinDesborde(p), "Planes entra en 320 px");
+    await irA(p, "#biblia");
+    ok(await sinDesborde(p), "Biblia entra en 320 px");
+  }
+  ok(!p.errores.length && !p.consola.length, "sin errores" + (p.consola.length ? `: ${p.consola.join(" | ")}` : ""));
+  await p.context().close();
+}
+
+async function bibliaMemoria(browser, base, ancho, captura) {
+  console.log(`\nBiblia: atrasado, Proverbios, memorizar, temas y favoritos arriba (${ancho} px)`);
+  const alto = ancho > 800 ? 900 : 844;
+  const est = SEM.estado(HOY);
+  est.__SEED__["users/test/meta"] = Object.assign({}, est.__SEED__["users/test/meta"], {
+    biblia_planes: { planes: {
+      pN: { tipo: "nt90", inicio: SEM.addDias(HOY, -3), activo: true, creado: 1 },
+      pA: { tipo: "anio", inicio: SEM.addDias(HOY, -2), activo: true, creado: 2 },
+      pP: { tipo: "proverbios", inicio: SEM.addDias(HOY, -10), activo: true, creado: 3 }
+    } },
+    biblia_leidos: { dias: { [SEM.addDias(HOY, -3)]: ["Matt.1", "Matt.2", "Matt.3"] } }
+  });
+  const p = await abrir(browser, base, est, { hash: "#biblia", zona: ZONA, fecha: FECHA, ancho, alto });
+  consola(p);
+  await p.waitForTimeout(900);
+  const planes = async () => ((await metaDe(p, "biblia_planes")) || {}).planes || {};
+  let ts = await tarjetasPlan(p);
+  ok(ts.length === 3, `tres planes arriba (${ts.length})`);
+  ok(/Nuevo Testamento en 90 días/.test(ts[0]) && /Hoy: Mateo 9-11/.test(ts[0]) && /Vas 5 capítulos atrasado/.test(ts[0]), `atrasado: ${ts[0]}`);
+  ok(/Biblia en un año/.test(ts[1]) && /Vas 6 capítulos atrasado/.test(ts[1]), "el de un año también va atrasado");
+  ok(/Proverbios del día/.test(ts[2]) && /Hoy: Proverbios 6/.test(ts[2]) && /6 nov/.test(ts[2]), `Proverbios del día: el 6 (${ts[2]})`);
+  ok(await sinDesborde(p), "con tres planes no se mueve de lado");
+  await captura(p, `biblia-planes-atrasado-${ancho}.png`);
+
+  // Ponerme al día de a poco
+  await p.click('[data-bpl-aldia="pN"]');
+  await p.waitForTimeout(400);
+  let pls = await planes();
+  ok(pls.pN.alDia && pls.pN.alDia.hasta === "2026-11-12", "«Ponerme al día» guarda hasta cuándo (7 días)");
+  const nt = (await tarjetasPlan(p))[0];
+  ok(/Hoy: Mateo 4, 9-11/.test(nt) && /Poniéndote al día hasta el 12 nov: faltan 5 capítulos/.test(nt), `hoy suma uno de los atrasados (${nt})`);
+  await p.click('[data-bpl-leer="pN"]');
+  await p.waitForTimeout(700);
+  ok((await txt(p, "#bbl-donde-t")) === "Mateo 4", "«Leer» abre el primero que falta: Mateo 4");
+  ok(/0 de 4 de hoy/.test(await txt(p, ".bbl-plan")) && /Seguir con Mateo 9/.test(await txt(p, ".bbl-plan button")), "y ofrece seguir con Mateo 9 (no con el 5)");
+  await p.click('[data-bbl="leido"]');
+  await p.waitForTimeout(400);
+  ok(/1 de 4 de hoy/.test(await txt(p, ".bbl-plan")) && /Seguir con Mateo 9/.test(await txt(p, ".bbl-plan button")), "al marcarlo: 1 de 4 (no aparece otro atrasado)");
+  await p.click(".bbl-plan button");
+  await p.waitForTimeout(600);
+  ok((await txt(p, "#bbl-donde-t")) === "Mateo 9", "«Seguir con Mateo 9» lo abre");
+  await p.click('[data-bbl="cerrar"]');
+  await p.waitForTimeout(400);
+
+  // Mover el plan de un año
+  await p.click('[data-bpl-mover="pA"]');
+  await p.waitForTimeout(400);
+  pls = await planes();
+  ok(pls.pA.corrimiento === 2, `«Mover el plan» lo corre 2 días (${pls.pA.corrimiento})`);
+  const anio = (await tarjetasPlan(p))[1];
+  ok(/Día 1 de 365/.test(anio) && /Hoy: Génesis 1-3/.test(anio) && !/atrasado/.test(anio), `y hoy empieza de nuevo (${anio})`);
+
+  // Proverbios del día
+  await p.click('[data-bpl-leer="pP"]');
+  await p.waitForTimeout(700);
+  ok((await txt(p, "#bbl-donde-t")) === "Proverbios 6", "Proverbios del día abre Proverbios 6");
+  await p.click('[data-bbl="leido"]');
+  await p.waitForTimeout(400);
+  await p.click('[data-bbl="cerrar"]');
+  await p.waitForTimeout(400);
+  const prov = (await tarjetasPlan(p))[2];
+  ok(/La lectura de hoy está hecha/.test(prov) && /🔥 1/.test(prov), `leído: ✓ y racha (${prov})`);
+
+  // Memorizar desde el lector
+  const memoria = async () => (((await metaDe(p, "biblia_memoria")) || {}).items) || {};
+  await p.evaluate(() => BibliaLector.abrir("John", 3));
+  await p.waitForTimeout(700);
+  await p.click("#bbl-v16");
+  await p.waitForTimeout(150);
+  ok(await visible(p, '[data-bbs="memorizar"]'), "la barra tiene «Memorizar»");
+  const tam = await p.$$eval(".bbl-sel-acciones button", bs => Math.min(...bs.map(b => Math.min(b.getBoundingClientRect().width, b.getBoundingClientRect().height))));
+  ok(tam >= 44, `seis botones de ${Math.round(tam)} px o más (≥ 44)`);
+  await captura(p, `biblia-seleccion-memorizar-${ancho}.png`);
+  await p.click('[data-bbs="memorizar"]');
+  await p.waitForTimeout(400);
+  let items = await memoria();
+  ok(items.John_3_16 && items.John_3_16.caja === 1 && items.John_3_16.proximo === HOY && /^Porque de tal manera amó Dios al mundo, que ha dado a su Hijo/.test(items.John_3_16.texto), "🧠 Memorizar guarda Juan 3:16 para repasar hoy");
+  ok(/Juan 3:16 en Memorizar/.test(await txt(p, ".bbl-toast")), "y lo avisa");
+  await p.click("#bbl-v16");
+  await p.click('[data-bbs="memorizar"]');
+  await p.waitForTimeout(200);
+  ok(/ya está en Memorizar/.test(await txt(p, ".bbl-toast")), "otra vez: «ya está en Memorizar»");
+  await p.click('[data-bbl="cerrar"]');
+  await p.waitForTimeout(400);
+  ok(/1 versículo para repasar hoy/.test(await txt(p, "#bib-resumen .bbm-hoy")), "arriba de Biblia: «1 versículo para repasar hoy»");
+  await p.click('#bib-resumen [data-bbm="repasar"]');
+  await p.waitForTimeout(400);
+  ok(/^P d t m a D a m,/.test(await txt(p, ".bbm-hoja .bbm-letras")), "repasar: primero, con las primeras letras");
+  await captura(p, `biblia-memorizar-letras-${ancho}.png`);
+  await p.click('.bbm-hoja [data-bbm-nota="bien"]');
+  await p.waitForTimeout(400);
+  items = await memoria();
+  ok(/¡Listo!/.test(await txt(p, ".bbm-hoja .bbm-fin")) && items.John_3_16.caja === 2 && items.John_3_16.proximo === "2026-11-08", "«¡Lo sabía!» lo sube a la caja 2: vuelve en 2 días");
+  await p.click(".bbm-hoja .bbm-fin [data-cerrar-hoja]");
+  await p.waitForTimeout(300);
+  ok(!(await p.$("#bib-resumen .bbm-hoy")), "ya no hay repasos para hoy");
+  await irA(p, "#biblia-memorizar");
+  ok(/Próximo repaso: en 2 días/.test(await txt(p, "#bbm-app .bbm-item")) && /Hoy no tienes repasos/.test(await txt(p, "#bbm-app")), "Memorizar: la lista con el próximo repaso");
+  ok(await sinDesborde(p), "Memorizar no se mueve de lado");
+  await captura(p, `biblia-memorizar-${ancho}.png`);
+  await p.click('[data-bbm-practicar="John_3_16"]');
+  await p.waitForTimeout(300);
+  await p.click('.bbm-hoja [data-bbm-modo="ocultar"]');
+  await p.waitForTimeout(150);
+  const huecos = (await p.$$(".bbm-hoja .bbm-hueco")).length;
+  await p.click(".bbm-hoja .bbm-hueco");
+  await p.waitForTimeout(150);
+  ok(huecos === 10 && (await p.$$(".bbm-hoja .bbm-hueco")).length === 9, `ocultar palabras: ${huecos} huecos; tocar uno lo muestra`);
+  await p.click('.bbm-hoja [data-bbm-nivel="3"]');
+  await p.waitForTimeout(150);
+  ok((await p.$$(".bbm-hoja .bbm-hueco")).length === 30, "«todas» oculta las 30 palabras");
+  await captura(p, `biblia-memorizar-ocultar-${ancho}.png`);
+  await p.click('.bbm-hoja [data-bbm-modo="escribir"]');
+  await p.waitForTimeout(150);
+  await p.fill(".bbm-hoja [data-bbm-escrito]", "porque de tal manera amo dios al mundo que ha dado a su hijo unigenito para que todo aquel que en el cree no se pierda mas tenga vida eterna");
+  await p.click('.bbm-hoja [data-bbm="comprobar"]');
+  await p.waitForTimeout(200);
+  ok(/^100 % · ¡Lo sabías!/.test(await txt(p, ".bbm-hoja .bbm-pct")), "escribirlo sin tildes ni comas: 100 %");
+  await p.click('.bbm-hoja [data-bbm="siguiente"]');
+  await p.waitForTimeout(300);
+  items = await memoria();
+  ok(items.John_3_16.caja === 3 && items.John_3_16.proximo === "2026-11-10", "y sube a la caja 3: vuelve en 4 días");
+  await p.click(".bbm-hoja .bbm-fin [data-cerrar-hoja]");
+  await p.waitForTimeout(300);
+
+  // Memorizar desde tus versículos
+  await irA(p, "#biblia");
+  await p.click("#bib-lista [data-bib-editar]");
+  await p.waitForTimeout(300);
+  await p.click('.bib-hoja [data-bib="memorizar"]');
+  await p.waitForTimeout(300);
+  ok(/Agregado a Memorizar/.test(await txt(p, '.bib-hoja [data-bib="memorizar"]')) && Object.keys(await memoria()).length === 2, "desde tus versículos: «🧠 Memorizar este versículo»");
+  await p.click(".bib-hoja .budget-sheet-close");
+  await p.waitForTimeout(300);
+
+  // Temas
+  await p.click('[data-bib="nuevo"]');
+  await p.waitForTimeout(350);
+  await p.selectOption('.bib-hoja [name="libro"]', "Ps");
+  await p.fill('.bib-hoja [name="capitulo"]', "23");
+  await p.fill('.bib-hoja [name="versiculo"]', "1");
+  let t = "";
+  for (let i = 0; i < 20 && !t; i++) { await p.waitForTimeout(150); t = await p.inputValue('.bib-hoja [name="texto"]'); }
+  await p.click('.bib-hoja [data-bib-tema="fe"]');
+  await p.click('.bib-hoja [data-bib-tema="paz"]');
+  await p.fill('.bib-hoja [name="temaOtro"]', "Trabajo");
+  await captura(p, `biblia-form-temas-${ancho}.png`);
+  await p.click('.bib-hoja button[type="submit"]');
+  await p.waitForTimeout(500);
+  const conTemas = (await p.evaluate(() => Array.from(window.__fakeStore.colMap("users/test/biblia").entries()))).filter(([, d]) => d.temas);
+  ok(conTemas.length === 1 && conTemas[0][1].temas.join(",") === "fe,paz,trabajo", `temas guardados: ${conTemas.length ? conTemas[0][1].temas.join(", ") : "—"}`);
+  ok(await visible(p, "#bib-tema"), "aparece el filtro de temas");
+  await p.selectOption("#bib-tema", "paz");
+  await p.waitForTimeout(200);
+  ok((await p.$$("#bib-lista .bib-item")).length === 1 && /1 de 40/.test(await txt(p, "#bib-lista .lib-nota")), "filtrar por «paz» deja ese versículo");
+  ok((await p.$$eval("#bib-lista .bib-temas i", is => is.map(i => i.textContent))).join(",") === "fe,paz,trabajo", "la tarjeta muestra sus temas");
+  ok(await sinDesborde(p), "con el filtro de temas no se mueve de lado");
+  await captura(p, `biblia-temas-${ancho}.png`);
+  await p.click("#bib-lista [data-bib-editar]");
+  await p.waitForTimeout(300);
+  for (const x of ["fe", "paz", "trabajo"]) await p.click(`.bib-hoja [data-bib-tema="${x}"]`);
+  await p.click('.bib-hoja button[type="submit"]');
+  await p.waitForTimeout(500);
+  const sinTemas = await p.evaluate(id => window.__fakeStore.colMap("users/test/biblia").get(id), conTemas[0][0]);
+  ok(sinTemas && !("temas" in sinTemas), "quitar todos los temas borra el campo");
+  ok(!(await visible(p, "#bib-tema")), "y el filtro se va");
+  const [dl] = await Promise.all([p.waitForEvent("download"), p.click('[data-bib="exportar"]')]);
+  const j = JSON.parse(fs.readFileSync(await dl.path(), "utf8"));
+  ok(j.planes && j.planes.pN && j.planes.pN.tipo === "nt90" && j.memorizar && j.memorizar.John_3_16 && j.memorizar.John_3_16.caja === 3, "Exportar (JSON) incluye tus planes y lo que memorizas");
+
+  // Favoritos en el versículo de arriba
+  await p.evaluate(() => BibliaLector.abrir("John", 3));
+  await p.waitForTimeout(700);
+  await p.click("#bbl-v16");
+  await p.click('[data-bbs="fav"]');
+  await p.waitForTimeout(300);
+  await p.click('[data-bbl="cerrar"]');
+  await p.waitForTimeout(400);
+  await p.click('[data-bib="ajustes"]');
+  await p.waitForTimeout(300);
+  ok(/Tienes 1 favorito/.test(await txt(p, ".bib-hoja-ajustes")), "Ajustes: cuenta tus favoritos");
+  await captura(p, `biblia-ajustes-${ancho}.png`);
+  await p.click(".bib-hoja-ajustes [data-bib-favarriba]");
+  await p.waitForTimeout(400);
+  ok(((await metaDe(p, "biblia_lector")) || {}).favArriba === true, "activar «también de tus favoritos» se guarda");
+  await p.click(".bib-hoja-ajustes .budget-sheet-close");
+  await p.waitForTimeout(300);
+  await irA(p, "#inicio");
+  ok((await txt(p, "#verse-banner .verse-ref")) === "Juan 3:16" && /Porque de tal manera amó Dios/.test(await txt(p, "#verse-banner .verse-text")), "en Inicio, arriba sale tu favorito");
+  await irA(p, "#biblia");
+  await p.click('[data-bib="ajustes"]');
+  await p.waitForTimeout(300);
+  await p.click(".bib-hoja-ajustes [data-bib-favarriba]");
+  await p.waitForTimeout(300);
+  await p.click(".bib-hoja-ajustes .budget-sheet-close");
+  await p.waitForTimeout(300);
+  await irA(p, "#inicio");
+  ok((await txt(p, "#verse-banner .verse-ref")) === "2 Corintios 4:16", "al apagarlo vuelve la lista de siempre");
+  ok(!p.errores.length && !p.consola.length, "sin errores" + (p.consola.length ? `: ${p.consola.join(" | ")}` : ""));
+  await p.context().close();
+}
+
+module.exports = { bibliaLector, bibliaMarcas, bibliaPlanes, bibliaMemoria, txt, visible, sinDesborde, metaDe, consola, deslizar, HOY, FECHA, ZONA };

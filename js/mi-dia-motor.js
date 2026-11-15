@@ -13,7 +13,8 @@ const num1 = n => String(Math.round(Number(n) * 10) / 10).replace(".", ",");
 // d: {
 //   ejercicio: recomendación de EjRecuperacion.recomendar (o null),
 //   habitos: { hechos, total, pendientes: [{ nombre, emoji }] },
-//   biblia: { hoyHecho, actual (racha), total, cita },
+//   biblia: { hoyHecho, actual (racha), total, cita, capsHoy (capítulos leídos hoy),
+//             plan: { nombre, texto } | null (lectura de hoy que falta) },
 //   dinero: { dias, resultado, texto (para gastar por día), conPresupuesto },
 //   running: { kmSemana, meta, manana: { dia, km, dura } | null,
 //              ultima: { cuando: "ayer", km } | null }
@@ -41,7 +42,10 @@ function filas(d) {
   }
   const b = x.biblia;
   if (b && b.total > 0) {
-    if (b.hoyHecho) out.push({ id: "biblia", icono: "biblia", titulo: "Versículo de hoy anotado", detalle: `${b.cita ? `${b.cita}. ` : ""}${b.actual > 1 ? `${b.actual} días seguidos.` : ""}`.trim(), estado: "hecho", href: "#biblia" });
+    const seguidos = b.actual > 1 ? `${b.actual} días seguidos.` : "";
+    if (b.hoyHecho && b.cita) out.push({ id: "biblia", icono: "biblia", titulo: "Versículo de hoy anotado", detalle: `${b.cita}. ${seguidos}`.trim(), estado: "hecho", href: "#biblia" });
+    else if (b.hoyHecho) out.push({ id: "biblia", icono: "biblia", titulo: "Biblia leída hoy", detalle: `${b.capsHoy > 0 ? `${b.capsHoy} ${b.capsHoy === 1 ? "capítulo" : "capítulos"}. ` : ""}${seguidos}`.trim(), estado: "hecho", href: "#biblia" });
+    else if (b.plan) out.push({ id: "biblia", icono: "biblia", titulo: `Lectura de hoy: ${b.plan.texto}`, detalle: b.actual > 0 ? `${b.plan.nombre}. Llevas ${b.actual} ${b.actual === 1 ? "día" : "días"} seguidos.` : `${b.plan.nombre}.`, estado: "pendiente", href: "#biblia" });
     else out.push({ id: "biblia", icono: "biblia", titulo: "Anota el versículo de hoy", detalle: b.actual > 0 ? `Llevas ${b.actual} ${b.actual === 1 ? "día" : "días"} seguidos: no cortes la racha.` : "Tu momento con la Palabra.", estado: "pendiente", href: "#biblia" });
   }
   const m = x.dinero;

@@ -2,8 +2,12 @@
 // El versículo que Juan lee al despertar: fecha, cita (libro, capítulo y
 // versículo), texto y nota. Lista por fecha con filtro y buscador,
 // calendario con racha, editar, borrar y exportar.
+// Fase 3 (D-106): arriba, la lectura de hoy de tus planes y los versículos
+// para repasar; accesos a Planes, Progreso y Memorizar; temas con filtro;
+// la racha también cuenta los días con capítulos leídos; Ajustes (el
+// versículo de arriba también de tus favoritos).
 // Datos en users/{uid}/biblia; la lógica en js/biblia-motor.js.
-// Ver docs/LIBROS_BIBLIA.md.
+// Ver docs/LIBROS_BIBLIA.md y docs/LECTURA_NIVEL2.md.
 (function () {
 // Ícono de la tarjeta de Inicio (mismo trazo que js/icons.js). Se registra
 // aquí para no tocar el archivo compartido; renderIcons() corre después.
@@ -20,12 +24,16 @@ let docs = {};            // id → datos tal como están en Firestore
 let lista = [];           // registros normalizados
 let cargado = false;
 let vista = "lista";      // "lista" | "calendario"
-const filtro = { libro: "", texto: "" };
+const filtro = { libro: "", texto: "", tema: "" };
+let servidor = false;     // la lista ya vino del servidor (no solo de la caché)
 let mes = hoyLocal().slice(0, 7);
 let diaElegido = null;
 let editando = null;      // id que se edita en la hoja (null = nuevo)
 
 const coleccion = () => db.collection("users").doc(currentUser.uid).collection("biblia");
+// Días con algún capítulo marcado como leído en el lector (fase 3).
+const fechasLeidas = () => (window.BibliaPlanes && window.BibliaLector ? BibliaPlanes.fechasLeidas(BibliaLector.leidos()) : []);
+const hojaAjustes = window.Lectura.hoja("bib-hoja-ajustes");
 
 // ---------- Estructura fija (no se repinta al escribir en el buscador) ----------
 app.innerHTML = `
@@ -39,17 +47,21 @@ app.innerHTML = `
     <div class="bib-filtros">
       <input type="search" id="bib-buscar" class="lib-input" placeholder="Buscar en tus versículos" autocomplete="off" aria-label="Buscar">
       <select id="bib-libro" class="lib-input" aria-label="Filtrar por libro"></select>
+      <select id="bib-tema" class="lib-input" aria-label="Filtrar por tema" hidden></select>
     </div>
     <div id="bib-lista"></div>
   </div>
   <div id="bib-cal-vista" hidden></div>
   <div id="bib-marcas-vista" hidden></div>
-  <button type="button" class="lib-btn-sec lib-exportar" data-bib="exportar">Exportar (JSON)</button>`;
+  <div class="bib-pie">
+    <button type="button" class="lib-btn-sec" data-bib="ajustes">⚙ Ajustes</button>
+    <button type="button" class="lib-btn-sec" data-bib="exportar">Exportar (JSON)</button>
+  </div>`;
 const $ = id => document.getElementById(id);
 
 function render() {
   renderResumen();
-  if (vista === "lista") { renderFiltroLibros(); renderLista(); }
+  if (vista === "lista") { renderFiltroLibros(); renderFiltroTemas(); renderLista(); }
   else if (vista === "calendario") renderCalendario();
   else if (window.BibliaSel) BibliaSel.renderMarcados($("bib-marcas-vista"));
 }
@@ -57,17 +69,38 @@ function render() {
 function renderResumen() {
   const el = $("bib-resumen");
   if (!cargado) { el.innerHTML = `<p class="empty-state">Cargando…</p>`; return; }
-  const r = B.racha(lista, hoyLocal());
+  const leidas = fechasLeidas();
+  const r = B.racha(lista, hoyLocal(), leidas);
   const mesNombre = B.MESES[Number(hoyLocal().slice(5, 7)) - 1];
+  // La racha cuenta los días con un versículo anotado o un capítulo leído.
+  const mensaje = r.anotadoHoy ? "✓ Hoy ya anotaste tu versículo."
+    : r.leidoHoy ? "✓ Hoy ya leíste la Biblia. ¿Quieres anotar un versículo?"
+    : leidas.length ? (r.actual > 0 ? "Lee un capítulo o anota un versículo para seguir la racha." : "Lee un capítulo o anota el versículo de hoy.")
+    : r.actual > 0 ? "Anota el de hoy para seguir la racha." : "¿Qué versículo leíste hoy?";
   el.innerHTML = `
     <div class="bib-racha">
       <div><b>${r.actual > 0 ? "🔥 " : ""}${r.actual}</b><span>${r.actual === 1 ? "día seguido" : "días seguidos"}</span></div>
       <div><b>${r.mejor}</b><span>mejor racha</span></div>
       <div><b>${r.esteMes}</b><span>${r.esteMes === 1 ? "día" : "días"} en ${mesNombre}</span></div>
     </div>
+    ${window.BibliaPlanesUI ? BibliaPlanesUI.tarjetasHoy() : ""}
     ${tarjetaLeer()}
-    <p class="bib-hoy ${r.hoyHecho ? "is-hecho" : ""}">${r.hoyHecho ? "✓ Hoy ya anotaste tu versículo." : r.actual > 0 ? "Anota el de hoy para seguir la racha." : "¿Qué versículo leíste hoy?"}</p>
-    <button type="button" class="lib-btn lib-btn-ancho" data-bib="nuevo">＋ ${r.hoyHecho ? "Otro versículo" : "Anotar versículo"}</button>`;
+    ${window.BibliaMemoriaUI ? BibliaMemoriaUI.tarjetaHoy() : ""}
+    <p class="bib-hoy ${r.hoyHecho ? "is-hecho" : ""}">${mensaje}</p>
+    <button type="button" class="lib-btn lib-btn-ancho" data-bib="nuevo">＋ ${r.anotadoHoy ? "Otro versículo" : "Anotar versículo"}</button>
+    ${accesos()}`;
+}
+
+// Planes, Progreso y Memorizar (páginas propias, fase 3).
+function accesos() {
+  const xs = [];
+  if (window.BibliaPlanesUI) xs.push(`<a href="#biblia-planes"><span aria-hidden="true">📅</span>Planes</a>`);
+  if (window.BibliaProgresoUI) xs.push(`<a href="#biblia-progreso"><span aria-hidden="true">📊</span>Progreso</a>`);
+  if (window.BibliaMemoriaUI) {
+    const n = BibliaMemoriaUI.paraHoy();
+    xs.push(`<a href="#biblia-memorizar"><span aria-hidden="true">🧠</span>Memorizar${n ? ` <i aria-label="${n} para hoy">${n}</i>` : ""}</a>`);
+  }
+  return xs.length ? `<nav class="bib-accesos" aria-label="Más de Biblia">${xs.join("")}</nav>` : "";
 }
 
 // "Leer la Biblia" / "Seguir leyendo": abre el lector (js/biblia-lector.js).
@@ -92,11 +125,21 @@ function renderFiltroLibros() {
   sel.disabled = !usados.length;
 }
 
+function renderFiltroTemas() {
+  const sel = $("bib-tema");
+  const usados = B.temasUsados(lista);
+  if (filtro.tema && !usados.some(t => t.tema === filtro.tema)) filtro.tema = "";
+  sel.hidden = !usados.length;
+  sel.innerHTML = `<option value="">Todos los temas</option>` +
+    usados.map(t => `<option value="${esc(t.tema)}"${t.tema === filtro.tema ? " selected" : ""}>${esc(t.tema)} (${t.n})</option>`).join("");
+}
+
 const tarjeta = e => `
       <button type="button" class="bib-item" data-bib-editar="${esc(e.id)}">
         <span class="bib-item-arriba"><b>${esc(e.cita)}${e.version ? ` <i class="bib-version-tag">${esc(e.version)}</i>` : ""}</b><small>${esc(B.fechaLarga(e.fecha))}</small></span>
         <span class="bib-texto">${esc(e.texto)}</span>
         ${e.nota ? `<span class="bib-nota">✍️ ${esc(e.nota)}</span>` : ""}
+        ${e.temas && e.temas.length ? `<span class="bib-temas">${e.temas.map(t => `<i>${esc(t)}</i>`).join("")}</span>` : ""}
       </button>`;
 
 function renderLista() {
@@ -105,7 +148,7 @@ function renderLista() {
   if (!lista.length) { el.innerHTML = `<p class="empty-state">Todavía no anotaste versículos. Toca «Anotar versículo»; también puedes cargar días pasados cambiando la fecha.</p>`; return; }
   const visibles = B.filtrar(lista, filtro);
   if (!visibles.length) { el.innerHTML = `<p class="empty-state">Nada coincide con tu búsqueda.</p>`; return; }
-  el.innerHTML = (filtro.texto || filtro.libro ? `<p class="lib-nota">${visibles.length} de ${lista.length}</p>` : "") +
+  el.innerHTML = (filtro.texto || filtro.libro || filtro.tema ? `<p class="lib-nota">${visibles.length} de ${lista.length}</p>` : "") +
     B.porMes(visibles).map(g => `
     <section class="bib-mes">
       <h3 class="lib-mes-titulo">${esc(g.titulo)}<span>${g.items.length}</span></h3>
@@ -116,9 +159,11 @@ function renderLista() {
 function renderCalendario() {
   const el = $("bib-cal-vista");
   const hoy = hoyLocal();
-  const c = B.calendario(lista, mes, hoy);
+  const c = B.calendario(lista, mes, hoy, fechasLeidas());
   if (!diaElegido) diaElegido = hoy;
   const delDia = B.ordenar(B.filtrar(lista, { fecha: diaElegido }));
+  const leidosMes = c.semanas.flat().filter(d => d.enMes && d.leido).length;
+  const capsDia = window.BibliaLector && window.BibliaPlanes ? (BibliaLector.leidos()[diaElegido] || []) : [];
   el.innerHTML = `
     <div class="bib-cal">
       <div class="bib-cal-cab">
@@ -128,11 +173,12 @@ function renderCalendario() {
       </div>
       <div class="bib-cal-grid" role="grid">
         ${["L", "M", "M", "J", "V", "S", "D"].map(d => `<span class="bib-cal-dow">${d}</span>`).join("")}
-        ${c.semanas.flat().map(d => `<button type="button" class="bib-cal-dia${d.enMes ? "" : " is-fuera"}${d.n ? " is-hecho" : ""}${d.hoy ? " is-hoy" : ""}${d.fecha === diaElegido ? " is-elegido" : ""}" data-bib-dia="${d.fecha}"${d.futuro ? " disabled" : ""} aria-label="${esc(B.fechaLarga(d.fecha))}${d.n ? `: ${d.n} ${d.n === 1 ? "versículo" : "versículos"}` : ""}">${d.dia}</button>`).join("")}
+        ${c.semanas.flat().map(d => `<button type="button" class="bib-cal-dia${d.enMes ? "" : " is-fuera"}${d.n ? " is-hecho" : ""}${d.leido ? " is-leido" : ""}${d.hoy ? " is-hoy" : ""}${d.fecha === diaElegido ? " is-elegido" : ""}" data-bib-dia="${d.fecha}"${d.futuro ? " disabled" : ""} aria-label="${esc(B.fechaLarga(d.fecha))}${d.n ? `: ${d.n} ${d.n === 1 ? "versículo" : "versículos"}` : ""}${d.leido ? `${d.n ? " y" : ":"} capítulos leídos` : ""}">${d.dia}</button>`).join("")}
       </div>
-      <p class="lib-nota">${c.dias} ${c.dias === 1 ? "día anotado" : "días anotados"} en ${esc(c.titulo.toLowerCase())}.</p>
+      <p class="lib-nota">${c.dias} ${c.dias === 1 ? "día anotado" : "días anotados"}${leidosMes ? ` · ${leidosMes} ${leidosMes === 1 ? "día" : "días"} con capítulos leídos <span class="bib-cal-punto" aria-hidden="true"></span>` : ""} en ${esc(c.titulo.toLowerCase())}.</p>
     </div>
     <h3 class="lib-mes-titulo">${esc(B.fechaLarga(diaElegido))}</h3>
+    ${capsDia.length ? `<p class="bib-cal-leido">📖 Leíste ${esc(BibliaPlanes.texto(BibliaPlanes.ordenClaves(capsDia)))}.</p>` : ""}
     ${delDia.length ? delDia.map(tarjeta).join("") : `<p class="empty-state">Ese día no anotaste versículo.</p>
     <button type="button" class="lib-btn-sec" data-bib="nuevo-dia">＋ Anotar el ${esc(B.fechaLarga(diaElegido))}</button>`}`;
 }
@@ -178,14 +224,29 @@ function abrirHoja(id, fecha, pre) {
           <select name="version" class="lib-input">${opciones.map(o => `<option value="${esc(o[0])}"${o[0] === (v.version || "") ? " selected" : ""}>${esc(o[1])}</option>`).join("")}</select>
         </label>
         <label class="lib-campo"><span>Nota personal (opcional)</span><textarea name="nota" rows="2" class="lib-input" placeholder="Lo que te dejó este versículo">${esc(v.nota)}</textarea></label>
+        ${camposTemas(v.temas || [])}
         <p class="lib-error" role="alert" hidden></p>
         ${window.BibliaLector ? `<button type="button" class="bib-leer-cita" data-bib="leer-cita">📖 Leer en la Biblia</button>` : ""}
+        ${window.BibliaMemoriaUI ? `<button type="button" class="bib-leer-cita" data-bib="memorizar">🧠 Memorizar este versículo</button>` : ""}
         <div class="lib-acciones">
           ${e ? `<button type="button" class="lib-btn-peligro" data-bib="borrar">Eliminar</button>` : ""}
           <button type="submit" class="lib-btn">Guardar</button>
         </div>
       </form>`);
 }
+
+// Temas (fase 3): los de siempre, los tuyos y uno nuevo.
+function camposTemas(elegidos) {
+  const todos = B.TEMAS.concat(B.temasUsados(lista).map(t => t.tema), elegidos).filter((t, i, xs) => xs.indexOf(t) === i);
+  return `<fieldset class="lib-campo bib-temas-campo"><legend>Temas (opcional)</legend>
+      <div class="bib-chips" role="group" aria-label="Temas">
+        ${todos.map(t => `<button type="button" class="bbl-chip${elegidos.includes(t) ? " is-activo" : ""}" data-bib-tema="${esc(t)}" aria-pressed="${elegidos.includes(t)}">${esc(t)}</button>`).join("")}
+      </div>
+      <input type="text" name="temaOtro" class="lib-input" maxlength="60" autocomplete="off" placeholder="Otro tema (por ejemplo: trabajo)" aria-label="Otro tema">
+    </fieldset>`;
+}
+const temasDelForm = f => Array.from(f.querySelectorAll("[data-bib-tema].is-activo")).map(b => b.dataset.bibTema)
+  .concat(String(f.elements.temaOtro ? f.elements.temaOtro.value : "").split(","));
 
 hoja.el.addEventListener("change", e => {
   if (e.target.name === "libro") hoja.el.querySelector("[data-bib-cap]").textContent = etiquetaCap(e.target.value);
@@ -248,16 +309,43 @@ hoja.el.addEventListener("submit", e => {
   e.preventDefault();
   const f = e.target;
   const datos = {};
-  Array.from(f.elements).forEach(el => { if (el.name) datos[el.name] = el.value; });
+  Array.from(f.elements).forEach(el => { if (el.name && el.name !== "temaOtro") datos[el.name] = el.value; });
+  datos.temas = temasDelForm(f);
   const r = B.validar(datos, { hoy: hoyLocal() });
   if (!r.ok) { window.Lectura.errores(f, r.errores); return; }
   const fallo = err => alert(`No se pudo guardar: ${err && err.message ? err.message : err}`);
+  // Al editar y quitar todos los temas, se borra el campo.
+  if (editando && !r.doc.temas && docs[editando] && docs[editando].temas) r.doc.temas = firebase.firestore.FieldValue.delete();
   if (editando) coleccion().doc(editando).update(r.doc).catch(fallo);
   else coleccion().add(Object.assign(r.doc, { creado: Date.now() })).catch(fallo);
   if (vista === "calendario") { diaElegido = r.doc.fecha; mes = r.doc.fecha.slice(0, 7); }
   hoja.cerrar();
 });
 hoja.el.addEventListener("click", e => {
+  const tema = e.target.closest("[data-bib-tema]");
+  if (tema) {
+    const on = !tema.classList.contains("is-activo");
+    tema.classList.toggle("is-activo", on);
+    tema.setAttribute("aria-pressed", String(on));
+    return;
+  }
+  const mem = e.target.closest('[data-bib="memorizar"]');
+  if (mem) {
+    const f = hoja.el.querySelector(".bib-form");
+    const l = B.libro(f.elements.libro.value);
+    const cap = Number(f.elements.capitulo.value);
+    const vers = B.versiculoNormal(f.elements.versiculo.value);
+    const texto = f.elements.texto.value.trim();
+    if (!l || !(cap >= 1 && cap <= l.capitulos) || !vers || !texto) {
+      window.Lectura.errores(f, [{ campo: !l ? "libro" : !(cap >= 1 && cap <= l.capitulos) ? "capitulo" : !vers ? "versiculo" : "texto", texto: "Completa la cita y el texto para memorizarlo." }]);
+      return;
+    }
+    const r = BibliaMemoriaUI.agregar({ libro: l.id, cap, vers, texto, version: f.elements.version.value });
+    if (r === "cargando") { mem.textContent = "🧠 Un momento: vuelve a tocar"; return; }
+    mem.textContent = r === "ya" ? "🧠 Ya está en Memorizar" : "✓ Agregado a Memorizar";
+    mem.disabled = true;
+    return;
+  }
   if (e.target.closest('[data-bib="leer-cita"]')) {
     const f = hoja.el.querySelector(".bib-form");
     const l = B.libro(f.elements.libro.value);
@@ -298,21 +386,67 @@ app.addEventListener("click", e => {
   if (b.dataset.bib === "leer") { const u = window.BibliaLector.ultimo(); window.BibliaLector.abrir(u ? u.libro : null, u ? u.cap : null); }
   else if (b.dataset.bib === "nuevo") abrirHoja(null);
   else if (b.dataset.bib === "nuevo-dia") abrirHoja(null, diaElegido);
+  else if (b.dataset.bib === "ajustes") abrirAjustes();
   else if (b.dataset.bib === "exportar") {
     // Con lo del lector: resaltados, favoritos, notas y capítulos leídos.
     const extras = {
       marcas: window.BibliaSel ? BibliaSel.crudos() : {},
       leidos: window.BibliaLector ? BibliaLector.leidos() : {},
-      lector: window.BibliaLector ? BibliaLector.ajustes() : null
+      lector: window.BibliaLector ? BibliaLector.ajustes() : null,
+      planes: window.BibliaPlanesUI ? BibliaPlanesUI.crudos() : {},
+      memoria: window.BibliaMemoriaUI ? BibliaMemoriaUI.crudos() : {}
     };
     window.Lectura.descargar(`manolo-biblia-${hoyLocal()}.json`, B.exportarJson(docs, new Date().toISOString(), extras), "application/json");
   }
 });
-window.addEventListener("biblia:lector", () => { if (cargado) renderResumen(); });
+// ---------- Ajustes (fase 3) ----------
+function abrirAjustes() {
+  const L = window.BibliaLector;
+  if (!L) return;
+  const n = window.BibliaSel ? BibliaSel.favoritos().length : 0;
+  hojaAjustes.abrir("Ajustes de Biblia", `
+    <label class="bbl-aa-fila bbl-switch">
+      <span>Versículo de arriba: también de tus favoritos<small>En Inicio, un día sale uno de tus ★ favoritos de la Biblia y otro, uno de la lista de siempre.</small></span>
+      <input type="checkbox" data-bib-favarriba${L.ajustes().favArriba ? " checked" : ""}>
+    </label>
+    <p class="lib-nota">${n ? `Tienes ${n} ${n === 1 ? "favorito" : "favoritos"}.` : "Todavía no tienes favoritos: en «Leer la Biblia», toca un versículo › ★ Favorito."}</p>
+    <p class="lib-nota">La letra y la ortografía del texto se cambian en el lector, con «Aa».</p>`);
+}
+hojaAjustes.el.addEventListener("change", e => {
+  if (e.target.matches("[data-bib-favarriba]") && window.BibliaLector) BibliaLector.guardar({ favArriba: e.target.checked });
+});
+
+// ---------- Hábitos: "se marca solo" (D-085) ----------
+// Los días con capítulos leídos cuentan como una lectura más (D-106). Solo
+// se deshace algo si la lista y los capítulos leídos vinieron del servidor.
+let firmaLeidos = null;
+function avisarFuente(forzar) {
+  if (!cargado) return;
+  const L = window.BibliaLector;
+  const dias = L ? L.leidos() : {};
+  const leidos = Object.keys(dias).filter(f => (dias[f] || []).length).sort();
+  const est = L && L.leidosEstado ? L.leidosEstado() : { cargado: true, servidor: true };
+  // También avisa cuando lo leído termina de llegar del servidor.
+  const firma = `${leidos.join(",")}|${est.cargado}|${est.servidor}`;
+  if (!forzar && firma === firmaLeidos) return;
+  firmaLeidos = firma;
+  const datos = lista.concat(leidos.map(f => ({ fecha: f, leido: true })));
+  window.dispatchEvent(new CustomEvent("manolo:fuente", { detail: { fuente: "biblia", datos, servidor: servidor && est.cargado && est.servidor } }));
+}
+
+window.addEventListener("biblia:lector", () => {
+  if (!cargado) return;
+  renderResumen();
+  if (vista === "calendario") renderCalendario();
+  avisarFuente(false);
+});
+window.addEventListener("biblia:planes", () => { if (cargado) renderResumen(); });
+window.addEventListener("biblia:memoria", () => { if (cargado) renderResumen(); });
 // "Anotar" desde el lector: el formulario de siempre con la cita y el texto puestos.
 window.BibliaAnotar = { abrir: pre => abrirHoja(null, null, pre) };
 $("bib-buscar").addEventListener("input", e => { filtro.texto = e.target.value; renderLista(); });
 $("bib-libro").addEventListener("change", e => { filtro.libro = e.target.value; renderLista(); });
+$("bib-tema").addEventListener("change", e => { filtro.tema = e.target.value; renderLista(); });
 
 // ---------- Datos ----------
 onAuthReady(() => {
@@ -321,8 +455,9 @@ onAuthReady(() => {
     snap.docs.forEach(d => { docs[d.id] = d.data(); });
     lista = Object.keys(docs).map(id => B.normalizarDoc(id, docs[id]));
     cargado = true;
+    servidor = !(snap.metadata && snap.metadata.fromCache);
     // Hábitos: "se marca solo" al anotar una lectura (js/habitos-auto.js).
-    window.dispatchEvent(new CustomEvent("manolo:fuente", { detail: { fuente: "biblia", datos: lista, servidor: !(snap.metadata && snap.metadata.fromCache) } }));
+    avisarFuente(true);
     render();
   }, err => console.warn("Biblia:", err));
 });

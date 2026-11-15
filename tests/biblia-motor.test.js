@@ -125,3 +125,32 @@ test("exportar incluye lo del lector (marcas y capítulos leídos)", () => {
   assert.deepEqual(j.lector, { tam: 2 });
   assert.equal(j.versiculos.length, 1);
 });
+
+test("temas: limpios, sin repetir, máx. 8 (D-106)", () => {
+  assert.deepEqual(B.temasOk("Fe, gratitud ,  fe, <b>Paz</b>"), ["fe", "gratitud", "bpazb"]);
+  assert.deepEqual(B.temasOk(["Fortaleza", "", "  "]), ["fortaleza"]);
+  assert.equal(B.temasOk("a,b,c,d,e,f,g,h,i,j").length, 8);
+  const base = { fecha: "2026-10-28", libro: "John", capitulo: "3", versiculo: "16", texto: "t" };
+  assert.deepEqual(B.validar(Object.assign({ temas: ["fe", "amor"] }, base), { hoy: HOY }).doc.temas, ["fe", "amor"]);
+  assert.equal("temas" in B.validar(base, { hoy: HOY }).doc, false, "sin temas, no se guarda el campo");
+  const lista = [B.normalizarDoc("a", Object.assign({ temas: ["fe"] }, base)), B.normalizarDoc("b", Object.assign({ temas: ["fe", "paz"] }, base)), B.normalizarDoc("c", base)];
+  assert.deepEqual(B.filtrar(lista, { tema: "fe" }).map(e => e.id), ["a", "b"]);
+  assert.deepEqual(B.temasUsados(lista), [{ tema: "fe", n: 2 }, { tema: "paz", n: 1 }]);
+  assert.deepEqual(lista[2].temas, [], "los viejos, sin temas");
+});
+
+test("la racha cuenta también los capítulos leídos (D-106)", () => {
+  const lista = [B.normalizarDoc("a", { fecha: "2026-10-27", libro: "John", capitulo: 3, versiculo: "16", texto: "t" })];
+  const solo = B.racha(lista, HOY);
+  assert.equal(solo.actual, 0, "como antes: un versículo hace 2 días no alcanza");
+  const r = B.racha(lista, HOY, ["2026-10-28", "2026-10-29", "2026-11-30"]);
+  assert.equal(r.actual, 3, "27 anotado + 28 y 29 leídos");
+  assert.equal(r.hoyHecho, true);
+  assert.equal(r.leidoHoy, true);
+  assert.equal(r.anotadoHoy, false);
+  assert.equal(r.total, 3, "un día futuro no cuenta");
+  const c = B.calendario(lista, "2026-10", HOY, ["2026-10-28"]);
+  const dia = f => c.semanas.flat().find(d => d.fecha === f);
+  assert.equal(dia("2026-10-28").leido, true);
+  assert.equal(dia("2026-10-27").n, 1);
+});

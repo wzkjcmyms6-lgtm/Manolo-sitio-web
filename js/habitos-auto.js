@@ -26,7 +26,7 @@ const FUENTES = [
   { id: "bicicleta", nombre: "Bici", accion: "Al guardar o importar una rodada", medidas: [["n", "rodadas", "Sí/No"], ["km", "km", "Kilómetros"], ["min", "min", "Minutos"]] },
   { id: "movilidad", nombre: "Movilidad", accion: "Al completar una rutina", medidas: [["n", "rutinas", "Sí/No"], ["min", "min", "Minutos"]], rutina: true },
   { id: "libros", nombre: "Libros", accion: "Al anotar páginas leídas", medidas: [["n", "días", "Sí/No"], ["paginas", "páginas", "Páginas"]] },
-  { id: "biblia", nombre: "Biblia", accion: "Al anotar una lectura", medidas: [["n", "lecturas", "Sí/No"]] },
+  { id: "biblia", nombre: "Biblia", accion: "Al anotar un versículo o marcar un capítulo leído", medidas: [["n", "lecturas", "Sí/No"]] },
   { id: "finanzas", nombre: "Finanzas", accion: "Al anotar un movimiento", medidas: [["n", "movimientos", "Sí/No"]] },
   // Para un hábito Evitar: un gasto en esa categoría es una recaída.
   { id: "gasto", nombre: "Finanzas", accion: "Un gasto en una categoría es una recaída", medidas: [["n", "gastos", "Recaída"]], categoria: true, evitar: true },

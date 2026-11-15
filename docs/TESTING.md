@@ -1,6 +1,12 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-14 (Biblia fase 3, D-106): `npm test` → **544 pruebas**.
+  Nuevas: `biblia-planes` (calendarios, lectura de hoy, atrasado, ponerse
+  al día, mover, Proverbios, progreso) y `biblia-memoria` (cajas, primeras
+  letras, ocultar, comparar lo escrito); más casos en `biblia-motor`,
+  `mi-dia` y `habitos-auto`. E2E `scripts/e2e/lectura.js` con
+  `SOLO=planes` y `SOLO=memoria` (a 390 y 1280 px).
 - 2026-11-05 (Ejercicio inteligente, fases 0–8): `npm test` → **480
   pruebas**. Nuevas: `ej-historial`, `ej-equipo`, `ej-entreno`,
   `ej-programa` (progresión v2, estancamiento, descarga, volumen,
@@ -253,6 +259,20 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] Medir tiempos › Promedios › "Por día": siete barras de lunes a
   domingo. Toca "Lu": la tabla dice cuánto tardas en promedio cada lunes.
   Con ‹ › pasas de día.
+
+**Biblia: planes, progreso, memorizar y temas (2026-11)**
+- [ ] Biblia › "Planes" › "Evangelios en 30 días" › "Empezar hoy". Arriba
+  dice "Hoy: Mateo 1-2". Toca "Leer", lee y toca "Marcar como leído";
+  sigue con el próximo. Al terminar, la tarjeta dice ✓.
+- [ ] La racha sube aunque no anotes versículo; en "Calendario" el día
+  tiene un punto verde; en Inicio, "Mi día" dice "Biblia leída hoy".
+- [ ] Biblia › "Progreso": toca Mateo y luego un capítulo: se abre.
+- [ ] En el lector toca un versículo › 🧠 Memorizar. En Biblia, "Repasar":
+  prueba "Ocultar palabras" y "Escribirlo"; toca "¡Lo sabía!".
+- [ ] "Anotar versículo": elige temas (fe, paz) y guarda; en la lista,
+  filtra por "paz".
+- [ ] ⚙ Ajustes › "Versículo de arriba: también de tus favoritos" (con
+  algún ★ favorito): en Inicio, un día sí y otro no sale uno tuyo.
 
 **Biblia: marcar, anotar, buscar y compartir (2026-11)**
 - [ ] En el lector, toca dos versículos seguidos: abajo aparece la barra

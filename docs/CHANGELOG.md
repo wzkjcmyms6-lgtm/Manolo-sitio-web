@@ -1,5 +1,22 @@
 # Cambios
 
+## 2026-11-14 · Biblia: planes de lectura, progreso, memorizar y temas
+- 📅 Planes: Biblia en un año, Nuevo Testamento en 90 días, Evangelios en
+  30, Salmos en 30, Proverbios del día o "A mi ritmo". Arriba de Biblia
+  está la lectura de hoy: "Leer" la abre con un toque.
+- Si te atrasas: "Ponerme al día" (lo reparte en 7 días) o "Mover el plan".
+- 📊 Progreso: cuánto de la Biblia leíste y el mapa de los 66 libros.
+- 🧠 Memorizar: en el lector, toca un versículo › Memorizar. Repásalo con
+  las primeras letras, ocultando palabras o escribiéndolo; vuelve cuando
+  toca (más espaciado si lo sabes).
+- Temas en tus versículos (fe, paz, gratitud… o los tuyos) y filtro.
+- La racha cuenta también los días que marcaste capítulos leídos; el
+  calendario los marca y "Mi día" lo dice.
+- ⚙ Ajustes: el versículo de arriba también de tus favoritos.
+- Pruebas: `tests/biblia-planes.test.js`, `tests/biblia-memoria.test.js`,
+  `tests/biblia-motor.test.js`, `tests/mi-dia.test.js` y
+  `scripts/e2e/lectura.js` (`SOLO=planes` y `SOLO=memoria`).
+
 ## 2026-11-14 · Biblia: resaltar, favoritos, notas, anotar, buscar y compartir
 - En el lector, toca uno o varios versículos: resáltalos con 5 colores,
   guárdalos en ★ Favoritos, escríbeles una nota, compártelos como imagen o

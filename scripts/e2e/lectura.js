@@ -14,7 +14,7 @@ const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
   const srv = await servidor();
   const base = `http://localhost:${srv.address().port}`;
   const browser = await chromium.launch();
-  // SOLO=biblia|… corre solo una parte nueva (scripts/e2e/lectura-n2.js).
+  // SOLO=biblia|marcas|planes|memoria corre solo una parte nueva (scripts/e2e/lectura-n2.js).
   const SOLO = process.env.SOLO;
   if (!SOLO) {
   const p = await abrir(browser, base, {}, { hash: "#inicio", zona: ZONA, fecha: HOY });
@@ -25,7 +25,8 @@ const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
   ok(tarjetas.slice(iFin, iFin + 4).join(",") === "#finanzas,#inversiones,#libros,#biblia", `Libros y Biblia van después de Finanzas e Inversiones (${tarjetas.join(" ")})`);
   ok(await p.$eval('#panel-inicio a[href="#libros"] .icon svg', () => true).catch(() => false), "la tarjeta Libros tiene su ícono");
   ok(await p.$eval('#panel-inicio a[href="#biblia"] .icon svg', () => true).catch(() => false), "la tarjeta Biblia tiene su ícono");
-  const fuera = await p.$$eval('a[href="#libros"], a[href="#biblia"], [data-hash="libros"], [data-hash="biblia"]', els => els.filter(e => !e.closest(".card-grid-home")).length);
+  // (Las páginas de Biblia —Planes, Progreso, Memorizar— vuelven con «‹ Biblia».)
+  const fuera = await p.$$eval('a[href="#libros"], a[href="#biblia"], [data-hash="libros"], [data-hash="biblia"]', els => els.filter(e => !e.closest(".card-grid-home") && !(e.classList.contains("back-link") && e.closest('[id^="panel-biblia-"]'))).length);
   ok(fuera === 0, "no aparecen en la barra inferior, el menú ni otro lugar");
   ok((await sobra(p, "html")) <= 0, "Inicio no se mueve de lado a 390 px");
   await captura(p, "lectura-inicio.png");
@@ -445,6 +446,8 @@ const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
   for (const ancho of [390, 1280]) {
     if (!SOLO || SOLO === "biblia") await N2.bibliaLector(browser, base, ancho, captura);
     if (!SOLO || SOLO === "marcas") await N2.bibliaMarcas(browser, base, ancho, captura);
+    if (!SOLO || SOLO === "planes") await N2.bibliaPlanes(browser, base, ancho, captura);
+    if (!SOLO || SOLO === "memoria") await N2.bibliaMemoria(browser, base, ancho, captura);
   }
   await terminar(browser, srv);
 })();

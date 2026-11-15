@@ -88,6 +88,20 @@ const cita = e => {
   return `${nombre} ${e.capitulo || "?"}${e.versiculo ? `:${e.versiculo}` : ""}`;
 };
 
+// Temas para tus versículos (fase 3, D-106). Se puede sumar uno propio.
+const TEMAS = ["fe", "gratitud", "fortaleza", "paz", "amor", "esperanza", "sabiduría", "perdón", "familia", "oración", "propósito", "provisión"];
+const TEMAS_MAX = 8;
+// "Fe, gratitud ,  fe" o ["Fe", "gratitud"] → ["fe", "gratitud"] (minúsculas, sin repetir, máx. 8 de 24 letras).
+function temasOk(t) {
+  const lista = Array.isArray(t) ? t : String(t == null ? "" : t).split(",");
+  const out = [];
+  lista.forEach(x => {
+    const v = String(x == null ? "" : x).replace(/[^0-9A-Za-zÁÉÍÓÚÜÑáéíóúüñ \-]/g, "").replace(/\s+/g, " ").trim().toLowerCase().slice(0, 24);
+    if (v && !out.includes(v) && out.length < TEMAS_MAX) out.push(v);
+  });
+  return out;
+}
+
 // Versión del texto: letras, números, guiones y espacios (máx. 24).
 function versionOk(v) {
   const s = String(v == null ? "" : v).trim().replace(/[^0-9A-Za-zÁÉÍÓÚÑáéíóúñ .\-]/g, "").slice(0, 24).trim();
@@ -117,6 +131,8 @@ function validar(datos, opciones) {
   // elegiste si lo pegaste. Opcional: los registros viejos no lo tienen.
   const version = versionOk(datos.version);
   if (version) doc.version = version;
+  const temas = temasOk(datos.temas);
+  if (temas.length) doc.temas = temas;
   return { ok: true, errores: [], doc };
 }
 
@@ -128,6 +144,7 @@ function normalizarDoc(id, d) {
     id, fecha: d.fecha || "", libro: d.libro || "", capitulo: Number(d.capitulo) || 0, versiculo: d.versiculo ? String(d.versiculo) : "",
     texto: d.texto ? String(d.texto) : "", nota: d.nota ? String(d.nota) : "", creado: typeof d.creado === "number" ? d.creado : 0,
     version: d.version ? String(d.version) : "",
+    temas: temasOk(d.temas),
     orden: l ? l.orden : 999
   };
   e.cita = cita(e);
@@ -145,10 +162,21 @@ function filtrar(lista, f) {
   return lista.filter(e => {
     if (f.libro && e.libro !== f.libro) return false;
     if (f.fecha && e.fecha !== f.fecha) return false;
+    if (f.tema && !(e.temas || []).includes(f.tema)) return false;
     if (!palabras.length) return true;
     const donde = normalizar(`${e.texto} ${e.nota} ${e.cita}`);
     return palabras.every(p => donde.includes(p));
   });
+}
+
+// Temas que ya usaste, con cuántos versículos (los de la lista primero).
+function temasUsados(lista) {
+  const n = {};
+  lista.forEach(e => (e.temas || []).forEach(t => { n[t] = (n[t] || 0) + 1; }));
+  return Object.keys(n).sort((a, b) => {
+    const ia = TEMAS.indexOf(a), ib = TEMAS.indexOf(b);
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b, "es");
+  }).map(t => ({ tema: t, n: n[t] }));
 }
 
 // Libros que ya usaste, en el orden de la Biblia, con cuántos registros.
@@ -172,8 +200,12 @@ function porMes(lista) {
 
 // Racha: días seguidos con al menos un versículo. La actual termina hoy o,
 // si hoy todavía no anotaste, ayer (sigue viva hasta que pase el día).
-function racha(lista, hoy) {
-  const dias = new Set(lista.map(e => e.fecha).filter(f => fechaOk(f) && f <= hoy));
+// fechasLeidas (fase 3, D-106): días con algún capítulo marcado como leído
+// en el lector; cuentan para la racha igual que un versículo anotado.
+function racha(lista, hoy, fechasLeidas) {
+  const anotados = new Set(lista.map(e => e.fecha).filter(f => fechaOk(f) && f <= hoy));
+  const dias = new Set(anotados);
+  (fechasLeidas || []).forEach(f => { if (fechaOk(f) && f <= hoy) dias.add(f); });
   const hoyHecho = dias.has(hoy);
   let actual = 0;
   for (let f = hoyHecho ? hoy : sumarDias(hoy, -1); dias.has(f); f = sumarDias(f, -1)) actual++;
@@ -184,14 +216,16 @@ function racha(lista, hoy) {
     previo = f;
   });
   const mes = hoy.slice(0, 7);
-  return { actual, mejor, hoyHecho, total: dias.size, esteMes: [...dias].filter(f => f.startsWith(mes)).length };
+  return { actual, mejor, hoyHecho, anotadoHoy: anotados.has(hoy), leidoHoy: (fechasLeidas || []).includes(hoy),
+    total: dias.size, esteMes: [...dias].filter(f => f.startsWith(mes)).length };
 }
 
 // Calendario de un mes ("AAAA-MM"): semanas de lunes a domingo; cada día
 // con cuántos versículos tiene.
-function calendario(lista, mes, hoy) {
+function calendario(lista, mes, hoy, fechasLeidas) {
   const n = {};
   lista.forEach(e => { if (e.fecha.startsWith(mes)) n[e.fecha] = (n[e.fecha] || 0) + 1; });
+  const leido = new Set((fechasLeidas || []).filter(f => f.startsWith(mes)));
   const primero = `${mes}-01`;
   const dow = (new Date(primero + "T12:00:00Z").getUTCDay() + 6) % 7; // lunes = 0
   const semanas = [];
@@ -199,7 +233,7 @@ function calendario(lista, mes, hoy) {
   do {
     const semana = [];
     for (let i = 0; i < 7; i++, f = sumarDias(f, 1)) {
-      semana.push({ fecha: f, dia: Number(f.slice(8, 10)), enMes: f.startsWith(mes), n: n[f] || 0, futuro: !!hoy && f > hoy, hoy: f === hoy });
+      semana.push({ fecha: f, dia: Number(f.slice(8, 10)), enMes: f.startsWith(mes), n: n[f] || 0, leido: leido.has(f), futuro: !!hoy && f > hoy, hoy: f === hoy });
     }
     semanas.push(semana);
   } while (f.startsWith(mes));
@@ -221,11 +255,13 @@ function exportarJson(docs, ahora, extras) {
   if (x.marcas && Object.keys(x.marcas).length) out.marcas = x.marcas;
   if (x.leidos && Object.keys(x.leidos).length) out.capitulosLeidos = x.leidos;
   if (x.lector) out.lector = x.lector;
+  if (x.planes && Object.keys(x.planes).length) out.planes = x.planes;
+  if (x.memoria && Object.keys(x.memoria).length) out.memorizar = x.memoria;
   return JSON.stringify(out, null, 2);
 }
 
 return {
-  LIBROS, MAX_VERSICULO, MESES, libro, normalizar, fechaOk, sumarDias, fechaLarga, mesTitulo, buscarLibro,
+  LIBROS, MAX_VERSICULO, MESES, TEMAS, libro, normalizar, fechaOk, sumarDias, fechaLarga, mesTitulo, buscarLibro, temasOk, temasUsados,
   versiculoNormal, cita, validar, normalizarDoc, ordenar, filtrar, librosUsados, porMes, racha, calendario, mesSiguiente, exportarJson
 };
 });

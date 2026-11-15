@@ -1200,3 +1200,43 @@ filtros (favoritos, notas, colores); "Exportar (JSON)" suma marcas,
 capítulos leídos y ajustes del lector. Sin respuesta del dueño a las
 preguntas de la fase 0: no hay diario de oración y "Abrir en otra versión"
 sigue en RVR1960.
+
+**D-106 (2026-11-14) · Biblia fase 3: planes, progreso, memorizar, temas y
+racha con lo leído.** (1) Planes de lectura en
+`users/{uid}/meta/biblia_planes` (`planes: { id: { tipo, inicio, activo,
+creado, porDia?, desde?, alDia?: { hasta }, corrimiento?, quitado? } }`,
+con `merge`): Biblia en un año (365 días), Nuevo Testamento en 90,
+Evangelios en 30, Salmos en 30, Proverbios del día (el capítulo del día del
+mes; no termina) y "A mi ritmo" (capítulos por día desde el libro que
+elijas). Los capítulos se reparten parejo entre los días; cuenta lo
+marcado "leído" desde que empezó el plan. (2) Atrasado: "Ponerme al día"
+reparte lo atrasado en 7 días (la parte de cada día se fija con lo que
+faltaba al empezar ese día: leer una no hace aparecer otra) y "Mover el
+plan" corre las fechas para que hoy sea el primer día con algo sin leer
+(lo leído queda). "Quitar este plan" lo apaga (`activo: false`), no lo
+borra. (3) Arriba de Biblia, una tarjeta por plan con la lectura de hoy
+("Leer" abre el primer capítulo que falta); en el lector, al final del
+capítulo, "Plan: 1 de 3 de hoy" y "Seguir con …" cuando lo que sigue del
+plan no es el capítulo de al lado. (4) Progreso (`#biblia-progreso`): % de
+la Biblia, AT y NT, libros completos, capítulos de este año y el mapa de
+los 66 libros (tocar uno muestra sus capítulos; tocar un capítulo lo
+abre). (5) Memorizar (`meta/biblia_memoria.items`, id `Libro_cap_vers`):
+cajas tipo Leitner del 1 al 6 que vuelven en 1, 2, 4, 8, 16 y 32 días;
+"¡Lo sabía!" sube de caja, "Me costó" repite mañana y "No lo sabía" vuelve
+a la 1. Practicar: primeras letras, ocultar palabras (pocas, muchas,
+todas) o escribirlo (palabra por palabra, sin tildes, mayúsculas ni
+puntuación; 90 % o más = lo sabías, 60 % o más = te costó). Se agrega
+desde el lector (barra › 🧠) o desde un versículo anotado. (6) Temas
+(`biblia/{id}.temas`, aditivo): 12 de fábrica más los tuyos (hasta 8 por
+versículo) y filtro en la lista; al quitarlos todos se borra el campo.
+(7) La racha cuenta los días con un versículo anotado o un capítulo
+marcado como leído; el calendario marca los días leídos; "Mi día" dice
+"Biblia leída hoy" o la lectura del plan que falta; los hábitos vinculados
+a Biblia también se marcan al marcar un capítulo leído (solo se deshace
+algo con datos del servidor). (8) ⚙ Ajustes de Biblia: "Versículo de
+arriba: también de tus favoritos" (`meta/biblia_lector.favArriba`); los
+favoritos se guardan en el teléfono (`localStorage`
+`manolo.biblia.favoritosArriba`) y en Inicio sale uno un día sí y otro no.
+(9) Pantalla: siguen las pestañas Lista · Calendario · Marcados; Planes,
+Progreso y Memorizar son páginas aparte con accesos debajo de "Anotar
+versículo" (cuatro pestañas no entraban bien en 320 px).

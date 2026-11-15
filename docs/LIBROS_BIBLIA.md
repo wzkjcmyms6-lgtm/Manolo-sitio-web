@@ -72,6 +72,17 @@ resaltados. En "Anotar versículo" el texto se completa solo al poner la
 cita; "Versión del texto" dice de qué Biblia es. Detalle en
 `docs/LECTURA_NIVEL2.md`.
 
+## Planes, progreso, memorizar y temas (2026-11-14, D-106)
+
+Arriba de Biblia, la lectura de hoy de tus **planes** (Biblia en un año,
+NT en 90 días, Evangelios o Salmos en 30, Proverbios del día o "A mi
+ritmo"); si te atrasas, "Ponerme al día" o "Mover el plan". **Progreso**:
+cuánto leíste y el mapa de los 66 libros. **Memorizar**: repasos que se
+espacian si lo sabes (primeras letras, ocultar palabras o escribirlo).
+**Temas** en tus versículos, con filtro. La racha cuenta también los días
+con capítulos leídos. ⚙ Ajustes: el versículo de arriba también de tus
+favoritos. Detalle en `docs/LECTURA_NIVEL2.md`.
+
 ## Libros (fase 3)
 
 - **Agregar o editar**: título (obligatorio), autor, páginas, estado (Por

@@ -38,9 +38,14 @@ function datos() {
   d.habitos = probar(() => (window.Habitos && Habitos.resumenHoy ? Habitos.resumenHoy() : null));
   d.biblia = probar(() => {
     if (!biblia || !window.BibliaMotor) return null;
-    const r = BibliaMotor.racha(biblia, hoy);
+    // Fase 3 (D-106): los capítulos leídos en el lector cuentan para la racha.
+    const L = window.BibliaLector, P = window.BibliaPlanes;
+    const dias = L && P ? L.leidos() : {};
+    const r = BibliaMotor.racha(biblia, hoy, P ? P.fechasLeidas(dias) : []);
     const deHoy = biblia.find(e => e.fecha === hoy);
-    return { hoyHecho: r.hoyHecho, actual: r.actual, total: r.total, cita: deHoy ? deHoy.cita : "" };
+    const pl = window.BibliaPlanesUI ? BibliaPlanesUI.estados().find(x => !x.e.terminado && x.e.lectura.length) : null;
+    return { hoyHecho: r.hoyHecho, actual: r.actual, total: r.total, cita: deHoy ? deHoy.cita : "",
+      capsHoy: (dias[hoy] || []).length, plan: pl ? { nombre: pl.e.nombre, texto: P.texto(pl.e.lectura) } : null };
   });
   d.dinero = probar(() => (window.FinanzasResumen ? FinanzasResumen.hoy() : null));
   d.running = probar(() => {
@@ -101,10 +106,13 @@ if (mostrar) mostrar.addEventListener("click", () => {
 
 window.addEventListener("manolo:fuente", e => {
   const d = e.detail || {};
-  if (d.fuente === "biblia") biblia = d.datos || [];
+  // Biblia manda también los días con capítulos leídos ({ fecha, leido }): aquí solo los versículos.
+  if (d.fuente === "biblia") biblia = (d.datos || []).filter(e => e && !e.leido);
   pedir();
 });
 window.addEventListener("manolo:inicio", pedir);
+window.addEventListener("biblia:lector", pedir);
+window.addEventListener("biblia:planes", pedir);
 window.addEventListener("hashchange", pedir);
 document.addEventListener("rutinas:cambio", pedir);
 document.addEventListener("ejercicio:ajustes", pedir);

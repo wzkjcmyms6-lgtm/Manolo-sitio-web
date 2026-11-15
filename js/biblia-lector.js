@@ -21,6 +21,7 @@ const MEMORIA_MAX = 8; // libros guardados en memoria
 // ---- Estado ----
 const ajustes = Object.assign({ tam: 2, actual: true, version: "RVR1960", ultimo: null }, leerLocal());
 let leidos = {};          // AAAA-MM-DD → [claves de capítulo]
+const leidosEst = { cargado: false, servidor: false };   // para Hábitos (no deshacer con datos de la caché)
 let lugar = null;         // { libro, cap }
 let datos = null;         // libro cargado { libro, nombre, caps }
 const memoria = new Map();
@@ -220,6 +221,9 @@ function pintar(marcar) {
   const leidoHoy = (leidos[hoy] || []).includes(k);
   const antes = !leidoHoy && fechaLeido(k);
   const prev = T.vecino(libro, cap, -1), next = T.vecino(libro, cap, 1);
+  // Si este capítulo es de la lectura de hoy de un plan (js/biblia-plan-ui.js).
+  const plan = window.BibliaPlanesUI ? BibliaPlanesUI.enLector(libro, cap) : null;
+  const sigPlan = plan && plan.sig && !(next && next.libro === plan.sig.libro && next.cap === plan.sig.cap) ? plan.sig : null;
   const nombre = x => `${B.libro(x.libro).nombre} ${x.cap}`;
   art.innerHTML = `
     <p class="bbl-libro">${esc(l.nombre)}</p>
@@ -230,6 +234,7 @@ function pintar(marcar) {
         ? `<button type="button" class="bbl-leido is-hecho" data-bbl="desmarcar" aria-pressed="true">✓ Leído hoy</button>`
         : `<button type="button" class="lib-btn lib-btn-ancho" data-bbl="leido">Marcar como leído</button>
            ${antes ? `<p class="lib-nota">Ya lo leíste el ${esc(B.fechaLarga(antes))}.</p>` : ""}`}
+      ${plan ? `<div class="bbl-plan"><p>📅 ${esc(plan.plan)}: ${esc(plan.texto)}</p>${sigPlan ? `<button type="button" class="lib-btn lib-btn-ancho" data-bbl-ir="${sigPlan.libro}.${sigPlan.cap}">Seguir con ${esc(B.libro(sigPlan.libro).nombre)} ${sigPlan.cap} ›</button>` : ""}</div>` : ""}
       <div class="bbl-nav">
         ${prev ? `<button type="button" class="lib-btn-sec" data-bbl-ir="${prev.libro}.${prev.cap}">‹ ${esc(nombre(prev))}</button>` : "<span></span>"}
         ${next ? `<button type="button" class="${leidoHoy ? "lib-btn" : "lib-btn-sec"}" data-bbl-ir="${next.libro}.${next.cap}">${esc(nombre(next))} ›</button>` : "<span></span>"}
@@ -410,7 +415,7 @@ onAuthReady(() => {
     const d = s.exists ? s.data() : {};
     // Gana lo más nuevo entre este teléfono y la cuenta (otro aparato).
     if ((d.actualizado || 0) <= (ajustes.ts || 0)) return;
-    ["tam", "actual", "version"].forEach(k => { if (d[k] != null) ajustes[k] = d[k]; });
+    ["tam", "actual", "version", "favArriba"].forEach(k => { if (d[k] != null) ajustes[k] = d[k]; });
     if (d.ultimo && B.libro(d.ultimo.libro)) ajustes.ultimo = d.ultimo;
     ajustes.ts = d.actualizado;
     guardarLocal();
@@ -418,6 +423,8 @@ onAuthReady(() => {
   }, err => console.warn("Biblia lector:", err));
   meta("biblia_leidos").onSnapshot(s => {
     leidos = (s.exists && s.data().dias) || {};
+    leidosEst.cargado = true;
+    leidosEst.servidor = !(s.metadata && s.metadata.fromCache);
     avisar();
     if (!el.hidden && datos && lugar) {
       const y = scroll.scrollTop;
@@ -436,6 +443,9 @@ window.BibliaLector = {
   ajustes: () => Object.assign({}, ajustes),
   leidos: () => leidos,
   leidosSet,
-  alCambiar: cb => oyentes.push(cb)
+  leidosEstado: () => Object.assign({}, leidosEst),
+  alCambiar: cb => oyentes.push(cb),
+  // Ajustes de Biblia que no son de lectura (fase 3: favArriba).
+  guardar: campos => guardarAjustes(campos, true)
 };
 })();

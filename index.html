@@ -23,7 +23,7 @@
   <link rel="stylesheet" href="css/inversiones.css?v=202610291000">
   <link rel="stylesheet" href="css/libros.css?v=202610291410">
   <link rel="stylesheet" href="css/rutinas-listas.css?v=202611081200">
-  <link rel="stylesheet" href="css/biblia.css?v=202611141200">
+  <link rel="stylesheet" href="css/biblia.css?v=202611141900">
   <link rel="stylesheet" href="css/movilidad.css?v=202610300100">
   <link rel="stylesheet" href="css/tiempos.css?v=202611061600">
   <link rel="stylesheet" href="css/ej-calendario.css?v=202610290900">
@@ -438,6 +438,23 @@
             <a class="back-link lib-volver" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
             <h1 class="page-title">Biblia</h1>
             <div class="bib-app" id="bib-app"></div>
+          </section>
+
+          <!-- ===== Biblia: planes, progreso y memorizar (sub-paneles de Biblia, D-106) ===== -->
+          <section id="panel-biblia-planes" hidden>
+            <a class="back-link lib-volver" href="#biblia"><span class="icon-sm" data-icon="chevronLeft"></span>Biblia</a>
+            <h1 class="page-title">Planes de lectura</h1>
+            <div class="bpl-app" id="bpl-app"></div>
+          </section>
+          <section id="panel-biblia-progreso" hidden>
+            <a class="back-link lib-volver" href="#biblia"><span class="icon-sm" data-icon="chevronLeft"></span>Biblia</a>
+            <h1 class="page-title">Progreso</h1>
+            <div class="bpr-app" id="bpr-app"></div>
+          </section>
+          <section id="panel-biblia-memorizar" hidden>
+            <a class="back-link lib-volver" href="#biblia"><span class="icon-sm" data-icon="chevronLeft"></span>Biblia</a>
+            <h1 class="page-title">Memorizar</h1>
+            <div class="bbm-app" id="bbm-app"></div>
           </section>
 
           <!-- ===== Movilidad (sub-panel de Inicio) ===== -->
@@ -1408,9 +1425,9 @@
   <script defer src="js/saludo.js?v=202610012000"></script>
   <script defer src="js/accesos-logica.js?v=202610100400"></script>
   <script defer src="js/accesos.js?v=202610100400"></script>
-  <script defer src="js/verses.js?v=202609232200"></script>
+  <script defer src="js/verses.js?v=202611141900"></script>
   <script defer src="js/icons.js?v=202611040400"></script>
-  <script defer src="js/modules.js?v=202611081200"></script>
+  <script defer src="js/modules.js?v=202611141900"></script>
   <script defer src="js/main.js?v=202610010800"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
   <script defer src="js/ejercicios-alias.js?v=202611061200"></script>
@@ -1456,7 +1473,7 @@
   <script defer src="js/habitos-engine.js?v=202611050900"></script>
   <script defer src="js/habitos-categorias.js?v=202611050800"></script>
   <script defer src="js/habitos-hoy.js?v=202611050400"></script>
-  <script defer src="js/habitos-auto.js?v=202611061700"></script>
+  <script defer src="js/habitos-auto.js?v=202611141900"></script>
   <script defer src="js/habitos-plantillas.js?v=202611050700"></script>
   <script defer src="js/scalping-habit.js?v=202610210100"></script>
   <script defer src="js/scalping-avance.js?v=202610230100"></script>
@@ -1511,14 +1528,19 @@
   <script defer src="js/inversiones-graficos.js?v=202610280400"></script>
   <script defer src="js/inversiones.js?v=202610291000"></script>
   <script defer src="js/lectura-comun.js?v=202610290200"></script>
-  <script defer src="js/biblia-motor.js?v=202611141200"></script>
+  <script defer src="js/biblia-motor.js?v=202611141900"></script>
+  <script defer src="js/biblia-planes.js?v=202611141900"></script>
+  <script defer src="js/biblia-memoria.js?v=202611141900"></script>
   <script defer src="js/biblia-texto.js?v=202611141200"></script>
   <script defer src="js/biblia-marcas.js?v=202611141200"></script>
   <script defer src="js/biblia-imagen.js?v=202611141200"></script>
-  <script defer src="js/biblia-lector.js?v=202611141200"></script>
-  <script defer src="js/biblia-seleccion.js?v=202611141200"></script>
+  <script defer src="js/biblia-lector.js?v=202611141900"></script>
+  <script defer src="js/biblia-seleccion.js?v=202611141900"></script>
   <script defer src="js/biblia-buscar.js?v=202611141200"></script>
-  <script defer src="js/biblia.js?v=202611141200"></script>
+  <script defer src="js/biblia-plan-ui.js?v=202611141900"></script>
+  <script defer src="js/biblia-memoria-ui.js?v=202611141900"></script>
+  <script defer src="js/biblia-progreso-ui.js?v=202611141900"></script>
+  <script defer src="js/biblia.js?v=202611141900"></script>
   <script defer src="js/libros-motor.js?v=202610291400"></script>
   <script defer src="js/libros-progreso.js?v=202610291400"></script>
   <script defer src="js/libros.js?v=202611050600"></script>
@@ -1527,7 +1549,7 @@
   <script defer src="js/movilidad.js?v=202611050600"></script>
   <script defer src="js/tiempos-motor.js?v=202611061600"></script>
   <script defer src="js/tiempos.js?v=202611061600"></script>
-  <script defer src="js/mi-dia-motor.js?v=202611060700"></script>
-  <script defer src="js/mi-dia.js?v=202611060700"></script>
+  <script defer src="js/mi-dia-motor.js?v=202611141900"></script>
+  <script defer src="js/mi-dia.js?v=202611141900"></script>
 </body>
 </html>

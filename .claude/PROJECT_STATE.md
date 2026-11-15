@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-05 (empieza Ejercicio inteligente, D-090).
+Actualizado: 2026-11-14 (Biblia fase 3: planes, progreso, memorizar y temas, D-106).
 
 - **App**: PWA estática + Firebase (Auth + Firestore), una sola página,
   JS puro sin build. Ver `docs/ARCHITECTURE.md`.
@@ -61,7 +61,11 @@ Actualizado: 2026-11-05 (empieza Ejercicio inteligente, D-090).
   hecha: la Biblia RV1909 se lee dentro de Manolo (lector, ortografía
   actual, leído, descarga sin internet). Fase 2 hecha (D-105): resaltar,
   favoritos, notas, anotar con texto automático, buscar (Worker),
-  compartir imagen y pestaña "Marcados".
+  compartir imagen y pestaña "Marcados". Fase 3 hecha (D-106): planes de
+  lectura (ponerse al día, mover), progreso de los 66 libros, memorizar
+  (cajas, 3 formas de practicar), temas con filtro, racha con capítulos
+  leídos ("Mi día" y Hábitos) y favoritos en el versículo de arriba.
+  Sigue la fase 4 (Libros).
 - **Reconocer ejercicios (2026-11-06)**: motor nuevo de búsqueda y
   reconocimiento (331/331 nombres reales, antes 79 %), alias extra y
   «¿Es …?» en no reconocidos (D-101, `js/exercise-search.js`,
