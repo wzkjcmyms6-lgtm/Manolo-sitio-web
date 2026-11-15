@@ -1,12 +1,15 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-15 (Finanzas: disponible diario según ingresos reales, D-116).
+Actualizado: 2026-11-15 (Lugares: nueva sección para calificar sitios, D-117).
 
 - **Finanzas, Lugares y copia de seguridad (2026-11-15, en curso)**: Tarea
   1 hecha (D-116): el disponible por día sale de los ingresos registrados
   (no del presupuesto, que queda como meta), con estados, ⓘ y estado vacío;
   en Resumen, Presupuesto, Información y "Mi día" (`docs/FINANZAS.md`).
-  Siguen Lugares (Tarea 2) y la copia de seguridad de todo (Tarea 3).
+  Tarea 2 hecha (D-117): **Lugares** en Inicio (visitados y quiero ir,
+  platos, visitas, fotos en el teléfono con miniatura en la nube, buscar,
+  filtros, ¿Dónde como hoy?, estadísticas, gasto a Finanzas si confirmas;
+  `docs/LUGARES.md`). Sigue la copia de seguridad de todo (Tarea 3).
 
 - **App**: PWA estática + Firebase (Auth + Firestore), una sola página,
   JS puro sin build. Ver `docs/ARCHITECTURE.md`.

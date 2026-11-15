@@ -45,6 +45,7 @@ const SUB_PANELS = [
   { hash: "biblia-memorizar", parent: "biblia" },
   { hash: "movilidad", parent: "inicio" },
   { hash: "tiempos", parent: "inicio" },
+  { hash: "lugares", parent: "inicio" },
   { hash: "fin-presupuesto", parent: "finanzas" },
   { hash: "fin-movimientos", parent: "finanzas" },
   { hash: "fin-analisis", parent: "finanzas" },
@@ -170,7 +171,7 @@ function showPanel(hash) {
   // Running y Bicicleta tampoco llevan versículo: la pantalla es para la actividad.
   // Inversiones tampoco (pedido del dueño 2026-10-28): es una sección aparte.
   // Libros y Biblia tampoco (pedido del dueño 2026-10-29), ni Medir tiempos ni Movilidad.
-  document.getElementById("verse-banner").hidden = isExercise || activeModule === "finanzas" || activeModule === "habitos" || activeModule === "inversiones" || ["running", "bicicleta", "libros", "biblia", "movilidad", "tiempos"].includes(hash) || hash.startsWith("run-") || hash.startsWith("biblia-");
+  document.getElementById("verse-banner").hidden = isExercise || activeModule === "finanzas" || activeModule === "habitos" || activeModule === "inversiones" || ["running", "bicicleta", "libros", "biblia", "movilidad", "tiempos", "lugares"].includes(hash) || hash.startsWith("run-") || hash.startsWith("biblia-");
   document.getElementById("body-banner").hidden = !showBody;
 
   // Pestañas propias de cada módulo (Finanzas, Hábitos, Ejercicio, Inversiones), visibles

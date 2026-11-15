@@ -8,8 +8,8 @@ la fórmula del disponible tal cual). Decisiones desde D-116.
 | Tarea | Qué | Estado |
 |---|---|---|
 | 1 | Finanzas: disponible por día según ingresos reales (`docs/FINANZAS.md`) | ✅ (D-116) |
-| 2 | Lugares: sección nueva para calificar sitios | ⏳ |
-| 3 | Copia de seguridad de todo Manolo (exportar e importar) | |
+| 2 | Lugares: sección nueva para calificar sitios (`docs/LUGARES.md`) | ✅ (D-117) |
+| 3 | Copia de seguridad de todo Manolo (exportar e importar) | ⏳ |
 | QA | Pruebas, 375 px, Lighthouse, sin internet, datos intactos | |
 
 ## Libros, Biblia y Medir tiempos: siguiente nivel (pedido del dueño, 2026-11-06)

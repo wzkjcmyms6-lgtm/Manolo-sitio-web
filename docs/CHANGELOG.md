@@ -1,5 +1,19 @@
 # Cambios
 
+## 2026-11-15 · Lugares: nueva sección para calificar sitios
+- Inicio › **Lugares**: tu guía de dónde comer. Pestañas "Visitados" y
+  "Quiero ir" (con "Ya fui"), buscador, filtros en chips y orden.
+- Registrar un lugar toma segundos: nombre, estrellas y ¿volverías?. En
+  "Más detalles": tipo, zona, qué venden, precio, gasto, calificación por
+  partes, fotos, Google Maps, etiquetas y notas. Platos (con "Mi favorito
+  de aquí") y visitas ("Fuiste X veces · última: …").
+- "¿Dónde como hoy?" sugiere uno al azar entre los que volverías; y
+  estadísticas (total, promedio, top 5, gasto en salidas, tipo favorito).
+- Al anotar una visita con gasto, puedes pasarlo a Finanzas (Comida), solo
+  si confirmas.
+- Las fotos se guardan achicadas en el teléfono; en la nube, una miniatura.
+- Pruebas: `tests/lugares-motor.test.js` y `scripts/e2e/lugares.js`.
+
 ## 2026-11-15 · Finanzas: disponible diario según ingresos reales
 - El monto por día ahora sale de lo que **realmente** entró este mes (si
   presupuestaste 5000 y recibiste 3000, dice 100 por día, no 170). El

@@ -5432,6 +5432,16 @@ function avisarHabitos(servidor) {
   } }));
 }
 
+// Otra sección (Lugares) puede ofrecer anotar un gasto: se abre la hoja de
+// siempre ya llena (Comida); tú eliges la cartera y confirmas con Guardar.
+window.FinanzasNuevo = {
+  gasto({ montoCent, fecha, nota }) {
+    const comida = gastoCategoriesCache.some(c => c.id === "comida") ? "comida" : defaultCategory("gasto");
+    openTxnSheet(null, { type: "gasto", category: comida, payment: ultimaCartera("gasto"), keypad: false,
+      amount: String(FD.aBs(montoCent)).replace(".", ","), desc: String(nota || "").slice(0, 120), date: /^\d{4}-\d{2}-\d{2}$/.test(fecha || "") ? fecha : isoDate(new Date()) });
+  }
+};
+
 // Para "Mi día" en Inicio (js/mi-dia.js): lo que queda para gastar por día
 // en el periodo de hoy, con la misma cuenta que Presupuesto › Información
 // (aunque estés mirando otro mes). Solo lee; no cambia nada.

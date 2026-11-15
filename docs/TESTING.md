@@ -1,6 +1,14 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-15 (Lugares, D-117): `npm test` → **632 pruebas**. Nueva:
+  `lugares-motor` (registrar, más detalles, montos, platos y visitas,
+  documentos viejos, buscar y filtrar, ordenar, "¿Dónde como hoy?",
+  estadísticas, montos y fechas). E2E nueva `scripts/e2e/lugares.js` (75
+  comprobaciones a 375 px: registro rápido, validación, Finanzas solo si
+  confirmas, borrador, fotos en IndexedDB, detalle, platos, visitas,
+  Deshacer, Ya fui, buscar y filtros, sugerencia, estadísticas, exportar,
+  44 px, menos movimiento).
 - 2026-11-15 (Finanzas: disponible diario, D-116): `npm test` → **621
   pruebas**. Nueva: `finanzas-diario` (100 por día con 3000 de 5000, sin
   ingresos, negativo, último día, febrero, otros meses, excluidos, centavos,
@@ -173,7 +181,7 @@ export NODE_PATH=/opt/node22/lib/node_modules   # donde está Playwright
 for f in fase1 regresion hojas sw-instala emojis scalping inversiones tarjetas movilidad \
   running run-importar run-detalle run-feed run-progreso run-inteligencia run-segmentos \
   run-compartir run-qa habitos mi-dia ej-calendario ejercicio libros-progreso lectura \
-  lectura-qa tiempos finanzas-diario; do node scripts/e2e/$f.js || break; done
+  lectura-qa tiempos finanzas-diario lugares; do node scripts/e2e/$f.js || break; done
 ```
 Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
 
@@ -235,6 +243,23 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Lugares (2026-11)**
+- [ ] Inicio › "Lugares" › ＋: escribe un nombre, toca las estrellas y
+  "¿Volverías?", y Guardar (menos de 15 segundos).
+- [ ] Abre otro ＋, escribe algo y cierra la hoja sin guardar; ábrela de
+  nuevo: sigue lo que escribiste.
+- [ ] "Más detalles" › "Agregar foto": saca una foto; guarda y abre el
+  lugar: se ve la foto.
+- [ ] En un lugar: "＋ Plato" (márcalo como favorito) y "＋ Visita" con
+  gasto: te pregunta si lo pasas a Finanzas; prueba "Agregar a Finanzas" y
+  guarda en la hoja de Finanzas.
+- [ ] "Quiero ir" › agrega uno › "Ya fui": califícalo y pasa a Visitados.
+- [ ] Busca un plato; prueba los chips de Tipo y Ordenar.
+- [ ] "¿Dónde como hoy?" y "Estadísticas".
+- [ ] Borra un lugar y toca "Deshacer" (vuelve con todo).
+- [ ] Con modo avión: abre Lugares y agrega uno (se sube al volver la
+  conexión).
 
 **Finanzas: disponible por día (2026-11)**
 - [ ] Finanzas › Resumen: arriba, "Disponible por día" = lo que registraste

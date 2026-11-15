@@ -69,7 +69,7 @@ async function probar(browser, base, ancho) {
   await p.click("#mi-dia-mostrar");
   await p.waitForTimeout(400);
   ok(await p.isVisible("#mi-dia") && !(await p.isVisible("#mi-dia-mostrar")), "«Mostrar «Mi día»» la trae de vuelta");
-  ok(await p.isVisible(".card-grid-home") && (await p.$$(".card-grid-home .card")).length === 10, "las tarjetas de siempre siguen debajo");
+  ok(await p.isVisible(".card-grid-home") && (await p.$$(".card-grid-home .card")).length === 11, "las tarjetas de siempre siguen debajo (con Lugares, D-117)");
   ok(!p.errores.length && !errores.length, `sin errores (${errores.join(" | ")})`);
   await p.context().close();
 

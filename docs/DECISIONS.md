@@ -1497,3 +1497,28 @@ guardan los datos. (5) Variables nuevas en `:root` para lo nuevo: estados
 (`--estado-ok`, `--estado-aviso`, `--estado-mal` y sus fondos), radios
 (`--radio-tarjeta`, `--radio-caja`, `--radio-pildora`), sombra flotante y
 la duración de las animaciones. Detalle en `docs/FINANZAS.md`.
+
+**D-117 (2026-11-15) · Lugares: tu guía de dónde comer.** Pedido del
+dueño. (1) Sub-panel `#lugares` de Inicio (como Libros y Biblia), con
+pestañas Visitados / Quiero ir, buscador (con espera de 0,2 s), chips
+deslizables (orden, tipo, zona, precio, volvería, calificación mínima),
+"¿Dónde como hoy?" (al azar entre los que volverías, sin repetir el último,
+animación corta que respeta "reducir movimiento") y estadísticas. (2) Datos
+en `users/{uid}/lugares` (en la nube, como lo demás), esquema `v: 1`; montos
+en centavos. Registrar pide solo nombre, estrellas y ¿volverías? ("Fui hoy"
+marcado anota la visita); lo demás en "Más detalles". "Ya fui" abre la
+calificación y recién al guardar pasa a Visitados. (3) Fotos: la completa
+en IndexedDB del teléfono (≤ 1200 px, JPEG 0,75), nunca en localStorage;
+en el documento, una miniatura de ~200 px por foto (aprobado por el dueño),
+hasta 6 por lugar; "Exportar (JSON)" lleva las completas. Las fotos de un
+lugar borrado se borran recién cuando vence el "Deshacer". (4) Borrar
+(lugar, plato o visita): al instante con "Deshacer" 5 s, sin confirm().
+Formularios en hojas de abajo con borrador (solo texto e ids de fotos) que
+vuelve si cierras sin querer. (5) Un gasto de visita se ofrece a Finanzas:
+"Agregar a Finanzas" abre la hoja de gasto de siempre ya llena (Comida,
+fecha, nombre del lugar) vía `window.FinanzasNuevo.gasto`; se anota solo si
+tocas Guardar. (6) Accesibilidad: estrellas y opciones como grupos de
+radio con teclado, nombres para lector de pantalla, foco al abrir y al
+cerrar hojas, Escape cierra, áreas de 44 px (también pestañas, "‹ Inicio"
+y Exportar dentro de Lugares), estado con ícono + texto. Detalle en
+`docs/LUGARES.md`.
