@@ -2,7 +2,8 @@
 // Cuánto tarda Juan cada día en sus actividades (las 6 de siempre y las que
 // cree: js/tiempos-actividades.js). Promedio por semana (lunes a domingo),
 // por mes y por día de la semana; los primeros 30 registros de cada
-// actividad dan su promedio final (y se sigue midiendo: fase 6, D-113).
+// actividad son su línea base (antes "promedio final"; se sigue midiendo:
+// fase 6, D-113; nombre nuevo en la fase 7, D-114).
 // Empezó provisoria (2026-10-29); desde la fase 6 es definitiva.
 // Las funciones reciben la lista de actividades (acts); sin ella, las 6.
 // Sin DOM ni Firebase: tests/tiempos-motor.test.js.
@@ -47,7 +48,7 @@ function dias(docs) {
   }).filter(d => fechaOk(d.fecha) && Object.keys(d.seg).length).sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
 }
 
-// Registros que cuentan para el promedio final, por actividad: los primeros 30 por fecha.
+// Registros que cuentan para la línea base, por actividad: los primeros 30 por fecha.
 function contados(ds, acts) {
   const out = {}, lista = listaDe(acts);
   lista.forEach(a => { out[a.id] = []; });
@@ -59,7 +60,7 @@ function contados(ds, acts) {
 
 const promedio = lista => (lista.length ? Math.round(lista.reduce((s, r) => s + r.seg, 0) / lista.length) : null);
 
-// Por actividad: cuántos registros lleva (de 30), su promedio final y si ya
+// Por actividad: cuántos registros lleva (de 30), su línea base y si ya
 // llegó a 30; total: todos sus registros (se sigue midiendo después de los 30).
 function estado(ds, acts) {
   const lista = listaDe(acts), c = contados(ds, lista), out = {};

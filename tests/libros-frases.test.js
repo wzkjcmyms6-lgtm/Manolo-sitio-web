@@ -49,3 +49,23 @@ test("favoritas y etiquetas", () => {
   assert.deepEqual(F.filtrar(lista, { etiqueta: "hábitos" }).map(x => x.id), ["a", "b"]);
   assert.deepEqual(F.filtrar(lista, {}).length, 3);
 });
+
+test("QA fase 8 (D-115): con 3.000 frases elige las mismas que el orden de antes, y rápido", () => {
+  // Datos variados y fijos: favoritas, repasos con distintas notas y fechas.
+  const fs = [];
+  for (let i = 0; i < 3000; i++) {
+    const r = i % 7 === 0 ? null : { n: 1 + (i % 4), int: 7, ultimo: "2026-11-01", proximo: i % 3 ? "2026-11-10" : "2026-12-01", nota: ["encanta", "bien", "menos"][i % 3] };
+    fs.push(frase(`q${i}`, { fav: i % 11 === 0, repaso: r }));
+  }
+  // El orden de antes: puntaje y mezcla del día calculados dentro de la comparación.
+  const hash = s => { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } return h; };
+  const puntaje = f => (f.fav ? 3 : 0) + (f.repaso && f.repaso.nota === "encanta" ? 2 : 0) + (!f.repaso ? 1 : 0);
+  const semilla = hash(HOY);
+  const antes = fs.filter(f => !f.repaso || !f.repaso.proximo || f.repaso.proximo <= HOY)
+    .sort((a, b) => puntaje(b) - puntaje(a) || (hash(a.id + semilla) - hash(b.id + semilla))).slice(0, 3).map(f => f.id);
+  const t0 = Date.now();
+  const r = F.paraHoy(fs, HOY, 3);
+  const ms = Date.now() - t0;
+  assert.deepEqual(r.pendientes.map(f => f.id), antes);
+  assert.ok(ms < 200, `paraHoy con 3.000 frases tardó ${ms} ms`);
+});

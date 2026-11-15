@@ -15,6 +15,30 @@ vuelve (la navegación es por `#hash`). No muestran el versículo de arriba
 | 3 | Libros sin portada + frases | ✅ 2026-10-29 |
 | 4 | Portadas (búsqueda gratuita y foto) | ✅ 2026-10-29 |
 
+## Siguiente nivel (2026-11-06 a 2026-11-15, D-102 a D-115)
+
+Pedido del dueño: "Libros, Biblia y Medir tiempos: siguiente nivel". Plan,
+auditoría y detalle de cada fase en `docs/LECTURA_NIVEL2.md`.
+
+| Fase | Qué | Estado |
+|---|---|---|
+| 0 | Auditoría y diseño | ✅ |
+| 1 | Biblia: texto RV1909, lector y descarga sin internet (D-102) | ✅ |
+| 2 | Biblia: resaltar, favoritos, notas, anotar desde el lector, buscar y compartir (D-105) | ✅ |
+| 3 | Biblia: planes, progreso, memorizar, temas y racha (D-106) | ✅ |
+| 4 | Libros: "Leer ahora", velocidad, Abandonado, releer y audiolibros (D-107) | ✅ |
+| 5 | Libros: "¿Qué leo después?", frases, importar, escanear y estadísticas (D-108 a D-112) | ✅ |
+| 6–7 | Medir tiempos (en `docs/TIEMPOS.md`; D-113 y D-114) | ✅ |
+| 8 | QA final, docs y lista para el iPhone (D-115) | ✅ |
+
+**En pocas palabras, hoy puedes:** leer la Biblia dentro de Manolo (también
+sin internet), marcar y anotar desde el lector, seguir un plan y memorizar
+versículos; medir tus sesiones de lectura y saber cuándo terminas cada
+libro; agregar libros escaneando el código de barras o importando de
+Goodreads, StoryGraph o Kindle; repasar tus frases y ver tus estadísticas.
+Tus versículos, libros y frases de antes quedaron tal cual: lo nuevo solo
+suma campos (lo comprueba `scripts/e2e/lectura-qa.js`, D-115).
+
 ## Archivos
 
 | Archivo | Qué hace |
@@ -22,14 +46,31 @@ vuelve (la navegación es por `#hash`). No muestran el versículo de arriba
 | `js/lectura-comun.js` | Piezas de pantalla de las dos secciones: hoja que sube desde abajo, exportar, errores |
 | `js/biblia-motor.js` | UMD sin DOM: 66 libros, validar, buscar, racha, calendario, exportar. Pruebas: `tests/biblia-motor.test.js` |
 | `js/biblia.js` | Pantalla de Biblia. Registra su ícono (`ICONS.biblia`) |
+| `js/biblia-texto.js` | UMD sin DOM: dónde está cada libro de la RV1909, ortografía actual al mostrar, el texto de una cita. Pruebas: `tests/biblia-texto.test.js` |
+| `js/biblia-lector.js` | Lector a pantalla completa: libro y capítulo, letra, ortografía actual, deslizar, "Marcar como leído", descarga sin internet |
+| `js/biblia-seleccion.js` | Tocar versículos en el lector: resaltar, favorito, nota, anotar, compartir, copiar y memorizar |
+| `js/biblia-marcas.js` | UMD: resaltados, favoritos y notas (`biblia_marcas`, un documento por libro). Pruebas: `tests/biblia-marcas.test.js` |
+| `js/biblia-imagen.js` | Imagen 1080 × 1350 para compartir un versículo (también las frases de Libros) |
+| `js/biblia-buscar.js` + `js/biblia-buscar-worker.js` | Buscar en toda la Biblia sin trabar la pantalla (Worker) |
+| `js/biblia-planes.js` | UMD: planes de lectura, lo atrasado, ponerse al día, mover el plan, progreso de capítulos. Pruebas: `tests/biblia-planes.test.js` |
+| `js/biblia-plan-ui.js`, `js/biblia-progreso-ui.js` | Tarjeta "Hoy" y página de planes; mapa de los 66 libros |
+| `js/biblia-memoria.js` + `js/biblia-memoria-ui.js` | Memorizar: cajas (1, 2, 4, 8, 16 y 32 días) y tres formas de practicar. Pruebas: `tests/biblia-memoria.test.js` |
+| `data/biblia/rv1909/*.json` | Texto de la Reina-Valera 1909 (dominio público), un archivo por libro; lo arma `npm run biblia` |
 | `js/libros-motor.js` | UMD sin DOM: validar libros y frases, ordenar, buscar, resumen, color de la tapa genérica, exportar. Pruebas: `tests/libros-motor.test.js` |
 | `js/libros.js` | Pantalla de Libros. Registra su ícono (`ICONS.libro`) |
+| `js/libros-progreso.js` | UMD: páginas por día, meta, racha, ritmo y cuándo terminas cada libro. Pruebas: `tests/libros-progreso.test.js` |
+| `js/libros-sesiones.js` + `js/libros-sesion.js` | "Leer ahora": cronómetro por marcas de tiempo, sesiones, velocidad y el tiempo que falta. Pruebas: `tests/libros-sesiones.test.js` |
+| `js/libros-siguiente.js` + `js/libros-siguiente-ui.js` | "¿Qué leo después?" con su razón. Pruebas: `tests/libros-siguiente.test.js` |
+| `js/libros-frases.js` + `js/libros-frases-ui.js` | Frases de hoy (repaso espaciado), favoritas, etiquetas y compartir. Pruebas: `tests/libros-frases.test.js` |
+| `js/libros-notas.js` | Notas de cada libro (lo que aprendí, para aplicar, nota) |
+| `js/libros-importar.js` + `js/libros-importar-ui.js` | Importar de Goodreads, StoryGraph y Kindle sin duplicar. Pruebas: `tests/libros-importar.test.js` |
 | `js/libros-isbn.js` | UMD sin DOM: lee el código de barras (EAN-13) de una foto. Se carga al tocar Escanear. Pruebas: `tests/libros-isbn.test.js` |
 | `js/libros-escaner.js` | Hoja de escanear: foto, elegir foto o cámara en vivo |
 | `js/libros-estadisticas.js` | UMD sin DOM: días leídos, calendario, tiempo, velocidad y tendencia, autores, "Tu año en libros". Pruebas: `tests/libros-estadisticas.test.js` |
 | `js/libros-estadisticas-ui.js` | Secciones nuevas de Estadísticas, tarjeta y hoja de "Tu año en libros", imagen para compartir |
 | `css/libros.css` | Estilos propios (solo `.lib-` y `.bib-`) |
-| `scripts/e2e/lectura.js` | Prueba de pantalla de las dos secciones (95 comprobaciones; Open Library simulado) |
+| `scripts/e2e/lectura.js` (+ `lectura-n2.js`) | Prueba de pantalla de las dos secciones (681 comprobaciones a 390, 1280 y 320 px; Open Library simulado). `SOLO=biblia`, `marcas`, `planes`, `memoria`, `sesion`, `siguiente`, `frases`, `importar`, `isbn` o `stats` corre una parte |
+| `scripts/e2e/lectura-qa.js` | QA final (D-115): tus datos de antes intactos después de usar todo lo nuevo, rendimiento con muchos datos y 320 px |
 
 Cambios en archivos compartidos (los mínimos pedidos): dos tarjetas y dos
 `<section>` en `index.html` (con su `<link>`/`<script>`) y dos líneas en
@@ -167,7 +208,8 @@ audiolibro**: el audiolibro avanza por tiempo (si pones su duración) o por
   Eliminar (borra también sus frases; pide confirmación) y "＋ Frase".
 - **Frases**: texto, página opcional y fecha (hoy por defecto). Dentro de
   cada libro y en "Todas mis frases" (buscador por frase, título o autor).
-- **Exportar (JSON)**: libros y frases.
+- **Exportar (JSON)**: libros y frases (desde el QA final, D-115, también
+  tus ajustes: meta de páginas por día, retos y frases por día).
 
 ## Portadas (fase 4)
 
@@ -258,6 +300,8 @@ inteligente". Lógica nueva en `js/libros-progreso.js` (UMD, pruebas en
    "Anotar página", pon la página y guarda; arriba, "Hoy" suma las páginas.
    Toca "Hoy" para cambiar la meta o ponerte un reto de libros. Abre
    "Estadísticas".
+7. Lo nuevo (2026-11): la lista «Libros, Biblia y Medir tiempos: lista
+   final» de `docs/TESTING.md` (unos 30 minutos).
 
 ## Firebase
 

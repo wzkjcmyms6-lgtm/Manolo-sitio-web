@@ -1,6 +1,11 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-15 (QA final de Libros, Biblia y Medir tiempos, D-115): `npm
+  test` → **610 pruebas** (+3: con miles de datos, mismos resultados y
+  rápido; el respaldo de Libros con tus ajustes). E2E nueva
+  `scripts/e2e/lectura-qa.js` (datos de antes intactos, respaldos,
+  rendimiento, 320 px); las 26 suites en verde.
 - 2026-11-15 (Medir tiempos fase 7, D-114): `npm test` → **607 pruebas**.
   Nuevas: `tiempos-plan`, `tiempos-stats`; más en `mi-dia` (filas nuevas y
   máximo 5) y `habitos-auto` (fuente Medir tiempos). E2E `SOLO=fase7`.
@@ -153,14 +158,18 @@
   retiraron en D-033.
 - **Dispositivo real (iPhone)**: pantalla encendida, voz y sonido se validan
   en el teléfono del dueño; nada se da por funcionando sin esa prueba.
-- **Regresión** en cada fase: `npm test` + recorrido de Hábitos, Ejercicio y
-  Finanzas en 390 px.
+- **Regresión** en cada fase: `npm test` + las 26 suites de `scripts/e2e/`
+  (ver "Cómo correr todo"; D-115: una prueba que quedó fuera de la lista
+  corta se rompió sin que se viera).
 
 ## Cómo correr todo
 ```bash
 npm test
 export NODE_PATH=/opt/node22/lib/node_modules   # donde está Playwright
-for f in fase1 running hojas scalping emojis regresion; do node scripts/e2e/$f.js || break; done
+for f in fase1 regresion hojas sw-instala emojis scalping inversiones tarjetas movilidad \
+  running run-importar run-detalle run-feed run-progreso run-inteligencia run-segmentos \
+  run-compartir run-qa habitos mi-dia ej-calendario ejercicio libros-progreso lectura \
+  lectura-qa tiempos; do node scripts/e2e/$f.js || break; done
 ```
 Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
 
@@ -190,12 +199,86 @@ Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
   reales, el menú de compartir del iPhone y las demos sin conexión en el
   teléfono. Van en la lista de abajo ("Ejercicio inteligente").
 
+## Resultado del QA final de Libros, Biblia y Medir tiempos (fase 8, 2026-11-15)
+- Unitarias: 610/610. E2E, las 26 suites de `scripts/e2e/` (2.498
+  comprobaciones, 0 fallas): lectura 681, ejercicio 422, tiempos 223,
+  habitos 216, inversiones 137, scalping 75, run-importar 70, running 64,
+  tarjetas 56, movilidad 55, libros-progreso 53, run-feed 48, lectura-qa 47,
+  run-qa 46, run-detalle 42, fase1 40, regresion 39, mi-dia 38, run-progreso
+  36, run-segmentos 29, hojas 21, ej-calendario 18, run-inteligencia 14,
+  run-compartir 13, emojis 10, sw-instala 5.
+- Nueva `lectura-qa.js` (D-115): con tus datos guardados como antes, usar
+  todo lo nuevo no cambia ni pierde nada de antes (documento por
+  documento) y los tres «Exportar» llevan todo lo nuevo; con 3 años de
+  tiempos, 1.500 versículos, 400 libros y 3.000 frases cada pantalla abre
+  en menos de 1,5 s; a 320 px nada se mueve de lado.
+- Hallazgos arreglados: estadísticas de Medir tiempos y «Frases de hoy»
+  lentas con muchos datos (≈ 160 ms → ≈ 5 ms, mismos resultados); "Tus
+  días" pinta los 90 más nuevos ("Ver 90 días más"); «Exportar» de Medir
+  tiempos sin el plan ni los experimentos y el de Libros sin tus ajustes.
+- `libros-progreso.js` (fuera de la lista corta de cada fase) esperaba el
+  aviso general con un ISBN escrito; desde D-111 el aviso es el del ISBN.
+  La prueba ahora revisa los dos avisos.
+- Lo que no se puede probar aquí: el escáner con la cámara de verdad (que
+  enfoque de cerca), «Leer ahora», ⏱ Medir y «Mi mañana» con el iPhone
+  bloqueado de verdad y la pantalla encendida, el menú de compartir del
+  iPhone y la descarga de la Biblia en el teléfono. Van en la lista de
+  abajo.
+
 ## Pruebas en el iPhone (las hace el dueño)
 Abrir Manolo **desde el ícono de la pantalla de inicio** (no desde Safari),
 con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Libros, Biblia y Medir tiempos: lista final (2026-11, unos 30 min)**
+Sigue este orden. Abajo están las listas de cada parte, por si quieres
+probar más.
+
+*Leo la Biblia dentro de Manolo (también sin internet)*
+- [ ] Biblia › «Leer la Biblia»: lee un capítulo, desliza el dedo para
+  pasar al siguiente y toca «Marcar como leído».
+- [ ] «Aa» › «Descargar la Biblia» (con wifi). Pon modo avión y abre otro
+  libro: se lee igual.
+
+*Sigo un plan y memorizo versículos*
+- [ ] Biblia › «Planes» › elige uno › «Empezar hoy». Arriba dice la
+  lectura de hoy: «Leer» y márcala como leída.
+- [ ] En el lector toca un versículo › 🧠 «Memorizar». En Biblia,
+  «Repasar» › «¡Lo sabía!».
+
+*Mido mis sesiones de lectura y sé cuándo termino cada libro*
+- [ ] Libros › «Sigue leyendo» › «▶ Leer ahora». Bloquea el iPhone 2
+  minutos y vuelve: el reloj siguió. «Terminar», pon la página y guarda.
+- [ ] Abre ese libro: tu velocidad y cuándo lo terminas.
+
+*Agrego libros escaneando o importando*
+- [ ] «Agregar libro» › «📷 Escanear el código de barras» › foto de la
+  contratapa, de cerca: aparece tu libro.
+- [ ] (Si usas Goodreads o Kindle) Libros › abajo, «Importar».
+
+*Medir tiempos: mi mañana en vivo, se llena sola y me arma el plan*
+- [ ] Medir tiempos › «🗓️ Plan de la mañana»: pon a qué hora te levantas y
+  a qué hora tienes que estar listo.
+- [ ] Una mañana: «▶ Empezar mi mañana» y «Siguiente» en cada paso. Debajo
+  del reloj dice si vas adelantado o atrasado; al final, el resumen.
+- [ ] Corre o entrena con Manolo: en Medir tiempos, Correr o Ejercicio de
+  hoy aparecen solos con «⚡».
+- [ ] Inicio › «Mi día»: tu mañana, el libro que lees y el repaso de hoy
+  (5 filas como mucho).
+
+*Mis versículos, libros, frases y tiempos de siempre siguen intactos*
+- [ ] Biblia: tus versículos de antes, la racha y el calendario.
+- [ ] Libros: tus libros y frases de antes, con fechas, estrellas y
+  opiniones.
+- [ ] Medir tiempos › «Tus días»: tus días de antes con sus tiempos;
+  «Línea base» con tus primeros 30.
+- [ ] «Exportar» en Biblia, Libros y Medir tiempos: «Guardar en Archivos».
+
+*Nada más de Manolo se rompió*
+- [ ] Marca un hábito, anota un gasto y abre una rutina de Gimnasio: todo
+  como antes.
 
 **Login**
 - [ ] Al tocar la contraseña aparece el teclado de números.

@@ -34,15 +34,18 @@ function actividad(ds, id, hoy) {
   if (!rs.length) return null;
   const mejor = rs.reduce((m, r) => (r.seg < m.seg ? r : m), rs[0]);
   const peor = rs.reduce((m, r) => (r.seg > m.seg ? r : m), rs[0]);
-  const ult = rs.filter(r => r.fecha > sumarDias(hoy, -30) && r.fecha <= hoy).map(r => r.seg);
-  const ant = rs.filter(r => r.fecha > sumarDias(hoy, -60) && r.fecha <= sumarDias(hoy, -30)).map(r => r.seg);
+  // Las fechas límite, una sola vez (QA fase 8: con años de datos, calcularlas
+  // por registro hacía lenta la pantalla).
+  const hace30 = sumarDias(hoy, -30), hace60 = sumarDias(hoy, -60);
+  const ult = rs.filter(r => r.fecha > hace30 && r.fecha <= hoy).map(r => r.seg);
+  const ant = rs.filter(r => r.fecha > hace60 && r.fecha <= hace30).map(r => r.seg);
   let tendencia = null;
   if (ult.length >= 3 && ant.length >= 3) {
     const antes = media(ant), ahora = media(ult), cambio = Math.round(((ahora - antes) / antes) * 100);
     tendencia = { antes, ahora, cambio, sentido: cambio <= -5 ? "mejor" : cambio >= 5 ? "peor" : "igual" };
   }
-  const lab = rs.filter(r => { const x = diaSemana(r.fecha); return x >= 1 && x <= 5; }).map(r => r.seg);
-  const finde = rs.filter(r => { const x = diaSemana(r.fecha); return x === 0 || x === 6; }).map(r => r.seg);
+  const lab = [], finde = [];
+  rs.forEach(r => { const x = diaSemana(r.fecha); (x === 0 || x === 6 ? finde : lab).push(r.seg); });
   return Object.assign({ id, mejor, peor, tendencia,
     semana: { laborables: { n: lab.length, promedio: media(lab) }, finde: { n: finde.length, promedio: media(finde) } } }, resumir(rs));
 }

@@ -995,7 +995,7 @@ app.addEventListener("click", e => {
   else if (b.dataset.lib === "nueva-frase") {
     if (!libros.length) { alert("Primero agrega un libro."); return; }
     formFrase(null, null, null);
-  } else if (b.dataset.lib === "exportar") window.Lectura.descargar(`manolo-libros-${hoyLocal()}.json`, L.exportarJson(librosDocs, frasesDocs, new Date().toISOString(), portadasDocs), "application/json");
+  } else if (b.dataset.lib === "exportar") window.Lectura.descargar(`manolo-libros-${hoyLocal()}.json`, L.exportarJson(librosDocs, frasesDocs, new Date().toISOString(), portadasDocs, ajustesLib), "application/json");
 });
 $("lib-buscar").addEventListener("input", e => { filtro.texto = e.target.value; renderLista(); });
 $("lib-orden").addEventListener("change", e => { filtro.orden = e.target.value; renderLista(); });

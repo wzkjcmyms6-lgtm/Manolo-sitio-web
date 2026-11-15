@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-15 (Libros fase 4: Leer ahora, velocidad, estados y formatos, D-107).
+Actualizado: 2026-11-15 (Libros, Biblia y Medir tiempos: QA final, D-115; plan terminado).
 
 - **App**: PWA estática + Firebase (Auth + Firestore), una sola página,
   JS puro sin build. Ver `docs/ARCHITECTURE.md`.
@@ -56,7 +56,7 @@ Actualizado: 2026-11-15 (Libros fase 4: Leer ahora, velocidad, estados y formato
   en Entrenamiento (días A/B/C, series para marcar, guardar en el
   historial con sus músculos, progresión y consejos). D-104,
   `docs/RUTINAS_LISTAS.md`.
-- **Libros, Biblia y Medir tiempos: siguiente nivel (2026-11-06, en curso)**:
+- **Libros, Biblia y Medir tiempos: siguiente nivel (2026-11-06 a 2026-11-15, terminado, fases 0–8)**:
   plan y auditoría en `docs/LECTURA_NIVEL2.md`, D-102 en adelante. Fase 1
   hecha: la Biblia RV1909 se lee dentro de Manolo (lector, ortografía
   actual, leído, descarga sin internet). Fase 2 hecha (D-105): resaltar,
@@ -77,7 +77,12 @@ Actualizado: 2026-11-15 (Libros fase 4: Leer ahora, velocidad, estados y formato
   se llena sola con Running, Ejercicio y Libros. Fase 7 hecha (D-114): plan
   de la mañana, estadísticas, línea base y experimentos; "Mi día" (tu
   mañana, el libro que lees, el repaso; máximo 5 filas) y Hábitos (fuente
-  "Medir tiempos"). Sigue la fase 8 (QA final).
+  "Medir tiempos"). Fase 8 hecha (D-115): QA final (regresión de todo
+  Manolo, prueba de datos intactos, rendimiento con muchos datos, 320 px;
+  más rápido con miles de frases y años de tiempos; los respaldos llevan
+  todo lo nuevo) y lista final para el iPhone. Falta: que el dueño haga
+  esa lista (`docs/TESTING.md`) y su OK para el pitido o la voz en «Mi
+  mañana».
 - **Reconocer ejercicios (2026-11-06)**: motor nuevo de búsqueda y
   reconocimiento (331/331 nombres reales, antes 79 %), alias extra y
   «¿Es …?» en no reconocidos (D-101, `js/exercise-search.js`,

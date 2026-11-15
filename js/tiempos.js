@@ -2,8 +2,8 @@
 // Arriba "Mi mañana" (js/tiempos-manana.js) y el plan de la mañana
 // (js/tiempos-plan-ui.js). Anotar por día cuánto tardaste
 // en cada actividad (minutos y segundos, cada una con su botón; o ⏱ Medir
-// con cronómetro), promedios por semana, mes y día de la semana, el
-// promedio final (primeros 30 registros; se sigue midiendo) y tus días.
+// con cronómetro), promedios por semana, mes y día de la semana, la línea
+// base (primeros 30 registros; se sigue midiendo) y tus días.
 // Tus actividades (crear, renombrar, ordenar, archivar) en
 // meta/tiempos_ajustes (js/tiempos-actividades.js); los tiempos que llegan
 // solos de Running, Ejercicio, Libros y Movilidad, en js/tiempos-llenar.js.
@@ -269,9 +269,12 @@ function renderAvance() {
 }
 
 // ---------- Días anotados ----------
+// Los 90 más nuevos; "Ver 90 días más" trae los anteriores (QA fase 8, D-115).
+const DIAS_POR_VEZ = 90;
+let diasVer = DIAS_POR_VEZ;
 function renderDias() {
   const el = $("tmp-dias");
-  const lista = ds.slice().reverse();
+  const lista = ds.slice().reverse(), ver = lista.slice(0, diasVer), resto = lista.length - ver.length;
   const todos = T.promedioDias(ds);
   const orden = todas();
   el.innerHTML = `
@@ -282,11 +285,12 @@ function renderDias() {
       <div><b>${T.texto(todos.promedio)}</b><span>tu día en promedio (todo junto)</span></div>
     </div>
     <p class="tmp-nota">Toca un día para corregirlo.</p>
-    ${lista.map(d => `
+    ${ver.map(d => `
     <button type="button" class="bib-item tmp-dia" data-tmp-dia="${d.fecha}">
       <span class="tmp-dia-cab"><b>${esc(T.fechaLarga(d.fecha))}</b><b class="tmp-dia-total">${T.texto(T.totalDia(d))}</b></span>
       <span>${orden.filter(a => d.seg[a.id]).concat(Object.keys(d.seg).filter(id => !orden.some(a => a.id === id)).map(actDe)).map(a => `${esc(a.nombre)}: ${T.texto(d.seg[a.id])}${d.auto && d.auto[a.id] ? " ⚡" : ""}`).join(" · ")}</span>
-    </button>`).join("")}`}`;
+    </button>`).join("")}
+    ${resto > 0 ? `<button type="button" class="lib-btn-sec lib-btn-ancho lib-mt" data-tmp-mas>${resto > DIAS_POR_VEZ ? `Ver ${DIAS_POR_VEZ} días más` : `Ver ${resto === 1 ? "el día que falta" : `los ${resto} días que faltan`}`}</button>` : ""}`}`;
 }
 
 // ---------- Exportar (JSON y CSV) ----------
@@ -294,7 +298,9 @@ function exportar(formato) {
   const hoy = hoyLocal(), nombres = {};
   todas().forEach(a => { nombres[a.id] = a.nombre; });
   if (formato === "json") {
-    const datos = { app: "Manolo", seccion: "Medir tiempos", version: 1, exportado: new Date().toISOString(), actividades: A.paraGuardar(todas()), dias: docs };
+    // Con el plan de la mañana y los experimentos (fase 7; QA fase 8, D-115).
+    const datos = { app: "Manolo", seccion: "Medir tiempos", version: 1, exportado: new Date().toISOString(), actividades: A.paraGuardar(todas()),
+      plan: (ajustes && ajustes.plan) || null, experimentos: (ajustes && ajustes.experimentos) || {}, dias: docs };
     window.Lectura.descargar(`manolo-tiempos-${hoy}.json`, JSON.stringify(datos, null, 2), "application/json");
     return;
   }
@@ -316,6 +322,7 @@ app.addEventListener("click", e => {
   if (m) { ref = T.mover(tipo, ref, Number(m.dataset.tmpMover)); renderPromedios(); return; }
   const ex = e.target.closest("[data-tmp-exportar]");
   if (ex) { exportar(ex.dataset.tmpExportar); return; }
+  if (e.target.closest("[data-tmp-mas]")) { diasVer += DIAS_POR_VEZ; renderDias(); return; }
   const d = e.target.closest("[data-tmp-dia]");
   if (d) {
     fecha = d.dataset.tmpDia;

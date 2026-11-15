@@ -18,7 +18,7 @@ desde D-102. Cada fase deja la app funcionando y publicada.
 | 5 | Libros: escanear ISBN, importar, frases (repaso, etiquetas, compartir), notas, "¿Qué leo después?" y estadísticas | ✅ |
 | 6 | Medir tiempos: definitiva, actividades editables, cronómetro, "Mi mañana" y llenado automático | ✅ |
 | 7 | Medir tiempos: plan de la mañana, estadísticas, línea base y experimentos; "Mi día" y Hábitos | ✅ |
-| 8 | QA final, docs y lista para el iPhone | |
+| 8 | QA final, docs y lista para el iPhone | ✅ |
 
 Datos de prueba: `scripts/e2e/lectura-semilla.js` (50 días de versículos,
 10 libros con progreso y frases, 40 días de tiempos).
@@ -307,3 +307,30 @@ Nada de lo guardado se reescribe; lo viejo sin estos campos se ve igual.
   node scripts/e2e/tiempos.js` (plan y días de la semana, te faltan,
   estadísticas, línea base, experimento nuevo, terminar y quitar, Mi mañana
   contra tu plan, hábito Tiempo que se llena solo, Mi día).
+
+## Fase 8: QA final, docs y lista para el iPhone (D-115)
+- **Regresión de todo Manolo**: `npm test` (610) y las 26 suites de
+  `scripts/e2e/` (2.498 comprobaciones, 0 fallas).
+- **Prueba nueva** `scripts/e2e/lectura-qa.js` (`SOLO=intactos`,
+  `rendimiento` o `angosto`): (1) con los datos guardados como antes
+  (`lectura-semilla.js`), usar todo lo nuevo no cambia ni pierde nada de
+  antes: versículos (el editado conserva todo), libros (la sesión de hoy
+  solo suma), frases (el repaso solo suma), días de Medir tiempos
+  (idénticos) y ajustes de Libros; y los tres «Exportar» llevan todo lo
+  nuevo; (2) con 3 años de tiempos, 1.500 versículos, 400 libros y 3.000
+  frases, cada pantalla abre en menos de 1,5 s sin pausas largas; (3) a
+  320 px nada se mueve de lado.
+- **Arreglos**: estadísticas de Medir tiempos (fechas fuera del bucle),
+  «Frases de hoy» (la mezcla del día, una vez por frase), "Tus días" (los 90
+  más nuevos y "Ver 90 días más"), con pruebas que comparan los resultados
+  con los de antes (`tests/tiempos-stats.test.js`,
+  `tests/libros-frases.test.js`). Respaldos: «Exportar» de Medir tiempos
+  suma el plan y los experimentos; el de Libros, tus ajustes
+  (`tests/libros-motor.test.js`). `scripts/e2e/libros-progreso.js`: la
+  comprobación del aviso sin resultados ahora revisa el aviso del ISBN
+  (D-111) y el general.
+- **Docs**: `docs/LIBROS_BIBLIA.md` (resumen del siguiente nivel, archivos
+  nuevos) y `docs/TIEMPOS.md` (definitiva: línea base, datos, QA). Lista
+  final para el iPhone en `docs/TESTING.md`.
+- **Queda opcional (espera OK)**: pitido o voz cuando un paso de "Mi
+  mañana" pasa tu promedio.

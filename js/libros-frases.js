@@ -44,9 +44,12 @@ function paraHoy(frases, hoy, max) {
   const hechas = lista.filter(f => repasadaHoy(f, hoy));
   const faltan = Math.max(0, n - hechas.length);
   const semilla = hash(hoy);
+  // Puntaje y mezcla, una vez por frase (QA fase 8: con miles de frases,
+  // calcularlos en cada comparación del orden era lento).
   const pendientes = lista.filter(f => !repasadaHoy(f, hoy) && toca(f, hoy))
-    .sort((a, b) => puntaje(b) - puntaje(a) || (hash(a.id + semilla) - hash(b.id + semilla)))
-    .slice(0, faltan);
+    .map(f => ({ f, p: puntaje(f), h: hash(f.id + semilla) }))
+    .sort((a, b) => b.p - a.p || a.h - b.h)
+    .slice(0, faltan).map(x => x.f);
   return { hechas, pendientes, max: n };
 }
 

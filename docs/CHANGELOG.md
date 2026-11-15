@@ -1,5 +1,19 @@
 # Cambios
 
+## 2026-11-15 · Libros, Biblia y Medir tiempos: QA final
+- Revisión completa de Manolo: todas las pruebas en verde.
+- Prueba nueva que confirma que tus versículos, libros, frases y tiempos de
+  antes quedan intactos después de usar todo lo nuevo.
+- Más rápido con muchos datos: las estadísticas de Medir tiempos y «Frases
+  de hoy». «Tus días» muestra los últimos 90 y «Ver 90 días más».
+- «Exportar» de Medir tiempos ahora guarda también tu plan de la mañana y
+  tus experimentos; el de Libros, tu meta de páginas, tus retos y cuántas
+  frases por día.
+- Documentación final (`docs/LIBROS_BIBLIA.md`, `docs/TIEMPOS.md`) y la
+  lista final para el iPhone en `docs/TESTING.md`.
+- Pruebas: `scripts/e2e/lectura-qa.js` (nueva), `tests/tiempos-stats.test.js`,
+  `tests/libros-frases.test.js` y `tests/libros-motor.test.js`.
+
 ## 2026-11-15 · Medir tiempos: plan de la mañana, estadísticas y experimentos
 - Plan de la mañana: pones a qué hora te levantas y a qué hora tienes que
   estar listo, y Manolo arma tu mañana con tus tiempos: te dice si te sobra

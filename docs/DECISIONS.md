@@ -1442,3 +1442,35 @@ siempre. (6) Hábitos: "Medir tiempos" es una fuente más de "se marca solo"
 un paso de tu mañana a un hábito (el opcional de la fase 7) sale con el
 mismo mecanismo: al cerrar el paso, el hábito se marca. Sin lecturas nuevas
 de Firestore.
+
+**D-115 (2026-11-15) · QA final de "Libros, Biblia y Medir tiempos:
+siguiente nivel".** (1) Regresión de todo Manolo: `npm test` (610) y las 26
+pruebas de pantalla de `scripts/e2e/` (2.498 comprobaciones, 0
+fallas). (2) Prueba nueva `scripts/e2e/lectura-qa.js`: con versículos,
+libros, frases y tiempos guardados como antes, usar todo lo nuevo (lector,
+plan, memorizar, editar un versículo y dos libros, Leer ahora, repaso de
+frases, importar de Goodreads y Kindle, Mi mañana, se llena sola, plan de
+la mañana, experimento) no cambia ni pierde ningún dato de antes: se
+compara documento por documento (lo nuevo solo suma campos; los días de
+Medir tiempos de antes quedan idénticos). Con muchos datos (3 años de
+tiempos, 1.500 versículos, 400 libros, 3.000 frases) cada pantalla abre en
+menos de 1,5 s y sin pausas de más de 0,5 s; a 320 px nada se mueve de lado.
+(3) Lo que encontró: con muchos datos, las estadísticas de Medir tiempos
+calculaban fechas dentro del bucle de cada registro y «Frases de hoy»
+recalculaba la mezcla del día en cada comparación del orden (≈ 160 ms cada
+una); ahora una vez por registro (≈ 5 ms, mismos resultados, con pruebas que
+lo comparan). "Tus días" muestra los 90 más nuevos con "Ver 90 días más"
+(antes pintaba todos en cada cambio). Biblia con 1.500 versículos pasó de
+0,9 s a 0,4 s. La medición es pesimista: el Firestore de prueba avisa a
+todas las pantallas en cada guardado (el de verdad, solo a las que cambian).
+Respaldos ("todo lo nuevo entra en el exportar de cada sección"): el de
+Medir tiempos no llevaba el plan ni los experimentos y el de Libros no
+llevaba tus ajustes (meta de páginas, retos, frases por día); ahora sí (el
+de Biblia ya llevaba marcas, leídos, planes y memorizar). La regresión
+completa encontró una comprobación vieja de `libros-progreso.js` (no estaba
+en la lista corta de cada fase): con un ISBN escrito esperaba el aviso
+general "No encontré ese libro", pero desde D-111 el aviso es el del ISBN
+("No encontré ese ISBN…", correcto). Se ajustó la prueba: ahora revisa los
+dos avisos. Desde ahora, la regresión de cada fase corre las 26 suites. (4)
+Queda opcional, esperando OK del dueño: pitido o voz cuando un paso de "Mi
+mañana" pasa tu promedio (hoy el reloj se pone naranja).

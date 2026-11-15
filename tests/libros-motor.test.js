@@ -240,3 +240,11 @@ test("fase 5d: el ISBN escrito o escaneado se guarda (D-111)", () => {
   assert.ok(!("isbn" in con("")) && !("isbn" in con("12345")) && !("isbn" in con(undefined)), "vacío o raro: no va (al editar no borra el que había)");
   assert.equal(L.normalizarLibro("a", { titulo: "x", isbn: "9788478884452" }).isbn, "9788478884452");
 });
+
+test("exportar (QA fase 8, D-115): también tus ajustes (meta de páginas, retos y frases por día)", () => {
+  const j = JSON.parse(L.exportarJson({}, {}, "x", {}, { metaPaginasDia: 25, retos: { 2026: 12 }, frasesDia: 2 }));
+  assert.deepEqual(j.ajustes, { metaPaginasDia: 25, retos: { 2026: 12 }, frasesDia: 2 });
+  assert.equal(JSON.parse(L.exportarJson({}, {}, "x")).ajustes, null);
+  assert.equal(JSON.parse(L.exportarJson({}, {}, "x", {}, {})).ajustes, null);
+});
+

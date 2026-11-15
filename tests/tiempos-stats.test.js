@@ -73,3 +73,24 @@ test("validar un experimento nuevo", () => {
   assert.equal(S.validarExperimento({ nombre: "x", desde: "2026-11-20" }, HOY).error, "No puede empezar en el futuro.");
   assert.deepEqual(S.validarExperimento({ nombre: "  Café antes  ", desde: HOY, nota: "a" }, HOY).doc, { nombre: "Café antes", desde: HOY, nota: "a", hasta: null });
 });
+
+test("QA fase 8 (D-115): con 3 años de datos, mismos números que contando a mano, y rápido", () => {
+  // 1.095 días con huecos, de una actividad.
+  const ds = dias("manana", HOY, 1095, (i, f) => (i % 9 === 0 ? null : 1200 + ((i * 37) % 600)));
+  const rs = ds.filter(d => d.seg.manana).map(d => ({ fecha: d.fecha, seg: d.seg.manana }));
+  const media = xs => Math.round(xs.reduce((s, x) => s + x, 0) / xs.length);
+  const hace = n => sumar(HOY, -n);
+  const ult = rs.filter(r => r.fecha > hace(30) && r.fecha <= HOY).map(r => r.seg);
+  const ant = rs.filter(r => r.fecha > hace(60) && r.fecha <= hace(30)).map(r => r.seg);
+  const dow = f => new Date(f + "T12:00:00Z").getUTCDay();
+  const lab = rs.filter(r => dow(r.fecha) >= 1 && dow(r.fecha) <= 5).map(r => r.seg);
+  const finde = rs.filter(r => dow(r.fecha) === 0 || dow(r.fecha) === 6).map(r => r.seg);
+  const t0 = Date.now();
+  const x = S.actividad(ds, "manana", HOY);
+  const ms = Date.now() - t0;
+  assert.equal(x.n, rs.length);
+  assert.deepEqual([x.tendencia.antes, x.tendencia.ahora], [media(ant), media(ult)]);
+  assert.deepEqual([x.semana.laborables.n, x.semana.laborables.promedio, x.semana.finde.n, x.semana.finde.promedio], [lab.length, media(lab), finde.length, media(finde)]);
+  assert.ok(ms < 100, `actividad() con 3 años tardó ${ms} ms`);
+});
+

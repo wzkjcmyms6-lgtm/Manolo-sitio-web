@@ -38,22 +38,35 @@ día en tus actividades; las 6 de siempre conservan su id:
   cada actividad en ese día de la semana y cuántos días entran. Abajo, cuál
   es tu día más largo y el más corto. Usa todo lo registrado; no guarda
   nada nuevo (`TiemposMotor.porDiaSemana`).
-- **Promedio final**: los primeros **30 registros** de cada actividad (uno
-  por día, por fecha) dan su promedio final ("✅ 30 de 30 · promedio final
-  …"). Hasta la fase 5 la actividad se cerraba ahí; **desde la fase 6 se
-  sigue midiendo** (el promedio final no cambia; los promedios por semana,
-  mes y día usan todos los registros). En la fase 7 pasa a llamarse "Línea
-  base" y se suman los experimentos.
+- **Línea base** (hasta la fase 6 se llamaba "Promedio final"): los
+  primeros **30 registros** de cada actividad (uno por día, por fecha) dan
+  su línea base ("✅ Línea base: 25 min"). Hasta la fase 5 la actividad se
+  cerraba ahí; **desde la fase 6 se sigue midiendo** (la línea base no
+  cambia; los promedios por semana, mes y día usan todos los registros).
+  Para comparar un cambio en tu rutina contra ella: **Experimentos** (fase
+  7).
 - **Tus días**: lista del más nuevo al más viejo; tocar uno lo abre arriba.
   Cada día muestra su **total** (la suma de todo lo anotado ese día) y,
   arriba de la lista, cuántos **días registrados** hay y **tu día en
   promedio** (el promedio de esos totales). En **Promedios**, la última fila
   "Tu día (todo junto)" da el promedio de los totales de esa semana o mes.
   Pedido del dueño 2026-10-30 ("que se registren los días y se haga un
-  promedio de los días"); se calcula, no se guarda nada nuevo.
+  promedio de los días"); se calcula, no se guarda nada nuevo. Muestra los
+  90 días más nuevos; "Ver 90 días más" trae los anteriores (QA final,
+  D-115: con años de datos, pintarlos todos era lento).
 
-Datos: `users/{uid}/tiempos/{AAAA-MM-DD}` (ver `docs/DATABASE.md`). Las
-reglas de Firestore ya cubren `users/{uid}/**`: no hubo que tocar la consola.
+Datos (detalle en `docs/DATABASE.md`):
+- `users/{uid}/tiempos/{AAAA-MM-DD}`: `fecha`, `seg: { actividad: segundos }`,
+  `actualizado`; desde la fase 6 también `auto` (llegó solo) y `noAuto` (lo
+  quitaste: no vuelve). Tus días de siempre quedaron tal cual.
+- `users/{uid}/meta/tiempos_ajustes`: `actividades` (fase 6), `plan` y
+  `experimentos` (fase 7).
+- En el teléfono (`localStorage`): `manolo.tiempos.medir` y
+  `manolo.tiempos.manana` (el cronómetro y "Mi mañana" en curso; así siguen
+  aunque cierres la app).
+
+Las reglas de Firestore ya cubren `users/{uid}/**`: no hubo que tocar la
+consola.
 
 ## Fase 6 (2026-11-15, D-113): definitiva
 
@@ -78,7 +91,8 @@ reglas de Firestore ya cubren `users/{uid}/**`: no hubo que tocar la consola.
   ese día; si la carrera desaparece, el tiempo automático también (solo con
   datos del servidor); y solo desde el día en que empezó a llenarse sola
   (tus días de antes no cambian). En la fila se ve "⚡ de Running".
-- **Exportar** (abajo): JSON (actividades y días) y CSV para Excel
+- **Exportar** (abajo): JSON (actividades y días; desde el QA final
+  también el plan de la mañana y los experimentos) y CSV para Excel
   (separado con ";", decimales con coma, con la columna "automatico").
 
 ## Fase 7 (2026-11-15, D-114): plan, estadísticas, línea base y experimentos
@@ -103,15 +117,30 @@ reglas de Firestore ya cubren `users/{uid}/**`: no hubo que tocar la consola.
   se llena con una actividad (o todo el día). Así un paso de tu mañana marca
   su hábito al cerrarlo.
 
+## QA final (fase 8, 2026-11-15, D-115)
+
+- Con tus días guardados como antes, usar todo lo nuevo (Mi mañana, se
+  llena sola, plan, experimento) no cambia ni un dato de tus días de antes:
+  lo comprueba `scripts/e2e/lectura-qa.js` documento por documento.
+- Con 3 años de datos, Medir tiempos y «Mi mañana» abren rápido (menos de
+  0,1 s en la prueba); a 320 px nada se mueve de lado.
+- Arreglado en el QA: las estadísticas calculaban fechas dentro del bucle
+  de cada registro (≈ 160 ms con 3 años; ahora ≈ 5 ms, mismos números);
+  "Tus días" pintaba todos los días en cada cambio (ahora los 90 más nuevos
+  y "Ver 90 días más"); y «Exportar (JSON)» no llevaba el plan ni los
+  experimentos (ahora sí).
+- **Queda opcional (espera tu OK)**: que suene un pitido o una voz cuando un
+  paso de "Mi mañana" pasa tu promedio. Hoy el reloj se pone naranja.
+
 ## Archivos
 
 | Archivo | Qué hace |
 |---|---|
-| `js/tiempos-motor.js` | UMD sin DOM: leer minutos/segundos, promedios por semana, mes y día, promedio final (primeros 30), tu promedio (últimos 30); con tus actividades. Pruebas: `tests/tiempos-motor.test.js` |
+| `js/tiempos-motor.js` | UMD sin DOM: leer minutos/segundos, promedios por semana, mes y día, línea base (primeros 30), tu promedio (últimos 30); con tus actividades. Pruebas: `tests/tiempos-motor.test.js` |
 | `js/tiempos-actividades.js` | UMD: tus actividades (las 6 de siempre y las tuyas), validar, ordenar, archivar, de dónde se llenan solas. Pruebas: `tests/tiempos-actividades.test.js` |
 | `js/tiempos-crono.js` | UMD: cronómetro por marcas de tiempo y "Mi mañana" (siguiente, pausar, saltar, terminar, resumen). Pruebas: `tests/tiempos-crono.test.js` |
 | `js/tiempos-auto.js` | UMD: qué se llena solo (Running, Ejercicio, Libros, Movilidad) con las reglas de Hábitos. Pruebas: `tests/tiempos-auto.test.js` |
-| `js/tiempos.js` | Pantalla (anotar, promedios, promedio final, tus días, exportar), Firestore y `window.TiemposDatos` para las otras piezas |
+| `js/tiempos.js` | Pantalla (anotar, promedios, línea base, tus días, exportar), Firestore y `window.TiemposDatos` para las otras piezas |
 | `js/tiempos-manana.js` | "Mi mañana" y "⏱ Medir" (hojas, reloj, pantalla encendida) |
 | `js/tiempos-actividades-ui.js` | Hoja "Tus actividades" |
 | `js/tiempos-llenar.js` | Escucha a Running, Ejercicio, Libros y Movilidad y escribe lo automático |
@@ -119,8 +148,9 @@ reglas de Firestore ya cubren `users/{uid}/**`: no hubo que tocar la consola.
 | `js/tiempos-stats.js` | UMD: estadísticas, línea base y experimentos. Pruebas: `tests/tiempos-stats.test.js` |
 | `js/tiempos-plan-ui.js` | Sección "Plan de la mañana" |
 | `js/tiempos-stats-ui.js` | Secciones "Estadísticas" y "Experimentos" |
-| `css/tiempos.css` | Estilos propios (clases `.tmp-`, `.tman-`, `.tact-`); reutiliza `.lib-input`, `.lib-btn`, `.bib-item`, `.fin-tabs` |
+| `css/tiempos.css` | Estilos propios (clases `.tmp-`, `.tman-`, `.tact-`, `.tpl-`, `.tst-`, `.tex-`); reutiliza `.lib-input`, `.lib-btn`, `.bib-item`, `.fin-tabs` |
 | `scripts/e2e/tiempos.js` (+ `tiempos-n2.js`) | Prueba de pantalla (`SOLO=fase6` o `SOLO=fase7` corre solo lo de esa fase) |
+| `scripts/e2e/lectura-qa.js` | QA final (D-115): tus días de siempre idénticos después de usar todo lo nuevo, 3 años de datos y 320 px |
 
 ## Cómo probar en el iPhone
 
@@ -130,7 +160,8 @@ reglas de Firestore ya cubren `users/{uid}/**`: no hubo que tocar la consola.
    "✓ 25 min". Las demás pueden quedar vacías. Más tarde, guarda otra.
 3. Baja a **Promedios**: "Esta semana" con tus tiempos; toca **Mes** y las
    flechas ‹ › para ver otros meses.
-4. **Promedio final**: cada actividad muestra "N de 30".
+4. **Línea base**: cada actividad muestra "N de 30" hasta juntar sus
+   primeros 30; después, "✅ Línea base".
 5. En **Tus días**, toca un día para corregirlo.
 6. (Fase 6) Arriba, **▶ Empezar mi mañana**: haz tu rutina con "Siguiente";
    al final mira el resumen contra tu promedio.

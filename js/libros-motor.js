@@ -419,10 +419,12 @@ function portadaParaGuardar(sel, ahora) {
   return null;
 }
 
-function exportarJson(libros, frases, ahora, portadas) {
+// ajustes (QA fase 8, D-115): meta de páginas por día, retos y frases por día.
+function exportarJson(libros, frases, ahora, portadas, ajustes) {
   const lista = docs => Object.keys(docs).sort().map(id => Object.assign({ id }, docs[id]));
   return JSON.stringify({ app: "Manolo · Libros", version: 1, exportado: ahora, libros: lista(libros), frases: lista(frases),
-    fotosDePortada: lista(portadas || {}).map(p => ({ libroId: p.id, datos: p.datos, ancho: p.ancho, alto: p.alto })) }, null, 2);
+    fotosDePortada: lista(portadas || {}).map(p => ({ libroId: p.id, datos: p.datos, ancho: p.ancho, alto: p.alto })),
+    ajustes: ajustes && Object.keys(ajustes).length ? ajustes : null }, null, 2);
 }
 
 return {

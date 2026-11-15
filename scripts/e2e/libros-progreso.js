@@ -140,6 +140,11 @@ const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
   ok(pedidos.some(u => u.includes("q=isbn:9780307387264")), "un ISBN se busca como ISBN (y Enter busca, no guarda)");
   ok(await p.$eval(".lib-hoja", el => !el.hidden) && !(await todos()).some(([, x]) => !x.titulo), "Enter no guardó un libro vacío");
   modoOL = "vacio";
+  // Con el ISBN escrito, el aviso propio del ISBN (D-111); con un título, el de siempre.
+  await p.click(hoja('[data-lib="buscar-libro"]'));
+  await p.waitForTimeout(400);
+  ok(/No encontré ese ISBN en Open Library/.test(await tx(hoja("[data-lib-buscar-msg]"))), "un ISBN sin resultados lo dice (y el ISBN queda guardado)");
+  await p.fill(hoja("[data-lib-q]"), "un libro que no existe");
   await p.click(hoja('[data-lib="buscar-libro"]'));
   await p.waitForTimeout(400);
   ok(/No encontré ese libro/.test(await tx(hoja("[data-lib-buscar-msg]"))), "sin resultados lo dice");
