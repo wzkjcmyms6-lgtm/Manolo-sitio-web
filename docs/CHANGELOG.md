@@ -1,5 +1,14 @@
 # Cambios
 
+## 2026-11-15 · Libros: importar de Goodreads, StoryGraph y Kindle
+- "Importar" (abajo de Libros): eliges el archivo que exportas de Goodreads
+  o StoryGraph, o el «My Clippings.txt» del Kindle.
+- Antes de agregar ves qué es nuevo y qué ya tienes; nada se duplica.
+- Del Kindle llegan tus subrayados como frases y tus notas como notas del
+  libro.
+- Pruebas: `tests/libros-importar.test.js` y `scripts/e2e/lectura.js`
+  (`SOLO=importar`).
+
 ## 2026-11-15 · Libros: repaso de frases, favoritas, etiquetas y compartir
 - Arriba de Libros, "Frases de hoy": de 1 a 3 frases de tus libros para
   repasar. Las que te encantan vuelven pronto; las demás, cada vez más

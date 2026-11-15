@@ -83,6 +83,14 @@ espacian si lo sabes (primeras letras, ocultar palabras o escribirlo).
 con capítulos leídos. ⚙ Ajustes: el versículo de arriba también de tus
 favoritos. Detalle en `docs/LECTURA_NIVEL2.md`.
 
+## Importar de Goodreads, StoryGraph y Kindle (2026-11-15, D-110)
+
+Abajo de Libros, **Importar**: el archivo que exportas de Goodreads o
+StoryGraph (.csv) o el «My Clippings.txt» del Kindle. Ves qué es nuevo y
+qué ya tienes antes de agregar; nada se duplica (por ISBN o por título y
+autor). Del Kindle llegan los subrayados como frases y las notas como notas
+del libro.
+
 ## Frases: repaso, favoritas, etiquetas y compartir (2026-11-15, D-109)
 
 Arriba de Libros, **Frases de hoy**: de 1 a 3 frases para repasar; las que

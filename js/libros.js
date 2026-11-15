@@ -74,7 +74,10 @@ app.innerHTML = `
     <div id="lib-frases"></div>
   </div>
   <div id="lib-vista-stats" hidden></div>
-  <button type="button" class="lib-btn-sec lib-exportar" data-lib="exportar">Exportar (JSON)</button>`;
+  <div class="lib-pie">
+    <button type="button" class="lib-btn-sec" data-limp="abrir">Importar</button>
+    <button type="button" class="lib-btn-sec" data-lib="exportar">Exportar (JSON)</button>
+  </div>`;
 const $ = id => document.getElementById(id);
 
 // Portada: la tapa genérica (título y autor) siempre debajo y, encima, la

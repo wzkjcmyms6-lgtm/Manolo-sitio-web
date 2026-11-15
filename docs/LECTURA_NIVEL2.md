@@ -234,3 +234,13 @@ Nada de lo guardado se reescribe; lo viejo sin estos campos se ve igual.
 - **Pruebas**: `tests/libros-frases.test.js` y `SOLO=frases node
   scripts/e2e/lectura.js` (repaso completo, favorita, compartir, frases por
   día, etiquetas y filtros; a 390, 1280 y 320 px).
+
+### 5c. Importar de Goodreads, StoryGraph y Kindle (D-110)
+- **Archivos**: `js/libros-importar.js` (UMD: `csv`, `detectar`, `libros`,
+  `libroDeFila`, `clippings`, `kindle`, `claveLibro`, `sagaDelTitulo`) y
+  `js/libros-importar-ui.js` (elegir archivo, vista previa, guardar en
+  lotes). `normalizarLibro` suma `isbn`.
+- **Pruebas**: `tests/libros-importar.test.js` (CSV con comillas y saltos
+  de línea, Goodreads, StoryGraph, Kindle en español e inglés, duplicados)
+  y `SOLO=importar node scripts/e2e/lectura.js` (los tres formatos y un
+  archivo que no es; a 390, 1280 y 320 px).

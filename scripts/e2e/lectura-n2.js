@@ -1005,4 +1005,111 @@ async function librosFrases(browser, base, ancho, captura) {
   await p.context().close();
 }
 
-module.exports = { bibliaLector, bibliaMarcas, bibliaPlanes, bibliaMemoria, librosSesion, librosSiguiente, librosFrases, txt, visible, sinDesborde, metaDe, consola, deslizar, HOY, FECHA, ZONA };
+// ---------- Fase 5c: importar de Goodreads, StoryGraph y Kindle ----------
+async function librosImportar(browser, base, ancho, captura) {
+  console.log(`\nLibros: importar de Goodreads, StoryGraph y Kindle (${ancho} px)`);
+  const alto = ancho > 800 ? 900 : 844;
+  const p = await abrir(browser, base, SEM.estado(HOY), { hash: "#libros", zona: ZONA, fecha: FECHA, ancho, alto });
+  consola(p);
+  await p.waitForTimeout(900);
+  const todos = col => p.evaluate(c => Array.from(window.__fakeStore.colMap(`users/test/${c}`).entries()), col);
+  const subir = async (nombre, texto) => {
+    await p.click('[data-limp="abrir"]');
+    await p.waitForTimeout(250);
+    await p.setInputFiles(".limp-hoja [data-limp-archivo]", { name: nombre, mimeType: "text/plain", buffer: Buffer.from(texto, "utf8") });
+    await p.waitForTimeout(400);
+  };
+  const GR = [
+    "Book Id,Title,Author,Author l-f,Additional Authors,ISBN,ISBN13,My Rating,Average Rating,Publisher,Binding,Number of Pages,Year Published,Original Publication Year,Date Read,Date Added,Bookshelves,Bookshelves with positions,Exclusive Shelf,My Review,Spoiler,Private Notes,Read Count,Owned Copies",
+    '1,Hábitos atómicos,James Clear,"Clear, James",,="",="",5,4.3,,Paperback,328,2018,2018,,2026/10/01,,,currently-reading,,,,0,0',
+    '2,"Harry Potter y la piedra filosofal (Harry Potter, #1)",J. K. Rowling,"Rowling, J. K.",,="",="9788478884452",5,4.5,,Paperback,256,1997,1997,2025/08/20,2025/08/01,,,read,"Mágico.",,,1,0',
+    '3,El poder del hábito,Charles Duhigg,"Duhigg, Charles",,="",="",4,4.1,,Kindle Edition,408,2012,2012,2025/09/30,2025/09/01,,,read,,,,1,0',
+    '4,Deep Work,Cal Newport,"Newport, Cal",,="",="",0,4.2,,Audible Audio,,2016,2016,,2025/10/01,to-read,to-read (#1),to-read,,,,0,0'
+  ].join("\n");
+
+  // Goodreads
+  await subir("goodreads_library_export.csv", GR);
+  ok(/Importar de Goodreads/.test(await txt(p, ".limp-hoja h3")), "reconoce el archivo de Goodreads");
+  ok(/3\s*nuevos/.test(await txt(p, ".limp-hoja .limp-resumen")) && /1\s*ya los tienes/.test(await txt(p, ".limp-hoja .limp-resumen")), "vista previa: 3 nuevos y 1 que ya tienes (Hábitos atómicos)");
+  ok(/Harry Potter y la piedra filosofal/.test(await txt(p, ".limp-hoja .limp-lista")) && /Harry Potter #1/.test(await txt(p, ".limp-hoja .limp-lista")), "con su estado, estrellas y la saga sacada del título");
+  await captura(p, `libros-importar-previa-${ancho}.png`);
+  await p.click('.limp-hoja [data-limp-i="2"]');
+  ok((await txt(p, '.limp-hoja [data-limp="importar"]')) === "Agregar 2 libros", "desmarcar uno cambia el botón");
+  await p.click('.limp-hoja [data-limp="importar"]');
+  await p.waitForTimeout(600);
+  ok(/Agregaste 2 libros de Goodreads/.test(await txt(p, ".limp-hoja .limp-listo")), "«Listo: agregaste 2 libros»");
+  let libros = (await todos("libros")).map(([, d]) => d);
+  const hp = libros.find(d => /Harry Potter/.test(d.titulo));
+  ok(hp && hp.titulo === "Harry Potter y la piedra filosofal" && hp.saga === "Harry Potter" && hp.sagaN === 1 && hp.estado === "terminado" && hp.fechaFin === "2025-08-20" && hp.calificacion === 5 && hp.isbn === "9788478884452" && hp.importado.de === "goodreads",
+    "Harry Potter entra terminado, con saga, fecha, estrellas e ISBN");
+  ok(libros.some(d => d.titulo === "El poder del hábito" && d.formato === "digital") && !libros.some(d => d.titulo === "Deep Work"), "el de Kindle como digital; el desmarcado no entra");
+  ok(libros.filter(d => d.titulo === "Hábitos atómicos").length === 1, "Hábitos atómicos no se duplicó");
+  await p.click(".limp-hoja .limp-listo [data-cerrar-hoja]");
+  await p.waitForTimeout(300);
+
+  // Kindle
+  const KINDLE = [
+    "Hábitos atómicos (James Clear)",
+    "- Tu subrayado en la página 38 | posición 580-582 | Añadido el domingo, 5 de octubre de 2026 22:22:10",
+    "",
+    "Cada acción que realizas es un voto por el tipo de persona que deseas ser.",
+    "==========",
+    "Hábitos atómicos (James Clear)",
+    "- Tu subrayado en la página 51 | posición 700-702 | Añadido el lunes, 6 de octubre de 2026 7:10:00",
+    "",
+    "Los hábitos son el interés compuesto de la superación personal.",
+    "==========",
+    "Hábitos atómicos (James Clear)",
+    "- Tu nota en la página 51 | posición 702 | Añadido el lunes, 6 de octubre de 2026 7:11:00",
+    "",
+    "Aplicarlo a la lectura de la mañana.",
+    "==========",
+    "Mañana es hoy (Ana Gómez)",
+    "- Tu subrayado en la posición 120-121 | Añadido el martes, 7 de octubre de 2026 8:00:00",
+    "",
+    "Lo que haces cada día importa más que lo que haces de vez en cuando.",
+    "==========",
+    ""].join("\n");
+  const frasesAntes = (await todos("libros_frases")).length;
+  await subir("My Clippings.txt", KINDLE);
+  ok(/Importar de Kindle/.test(await txt(p, ".limp-hoja h3")), "reconoce «My Clippings.txt»");
+  const res = await txt(p, ".limp-hoja .limp-resumen");
+  ok(/2\s*frases nuevas/.test(res) && /1\s*ya las tienes/.test(res) && /1\s*nota/.test(res), `vista previa: ${res}`);
+  ok(/libro nuevo/.test(await txt(p, ".limp-hoja .limp-lista")) && await visible(p, ".limp-hoja [data-limp-estado]"), "avisa el libro nuevo y pregunta cómo queda");
+  await p.selectOption(".limp-hoja [data-limp-estado]", "leyendo");
+  await captura(p, `libros-importar-kindle-${ancho}.png`);
+  await p.click('.limp-hoja [data-limp="importar"]');
+  await p.waitForTimeout(600);
+  ok(/Agregaste 2 frases y 1 nota \(y 1 libro nuevo\)/.test(await txt(p, ".limp-hoja .limp-listo")), "«Agregaste 2 frases y 1 nota (y 1 libro nuevo)»");
+  const frases = (await todos("libros_frases")).map(([, d]) => d);
+  ok(frases.length === frasesAntes + 2 && frases.filter(f => f.importado && f.importado.de === "kindle").every(f => f.fecha && f.texto), "las frases nuevas entran con su fecha");
+  const l1 = (await todos("libros")).find(([id]) => id === "l1")[1];
+  const nota = Object.values(l1.notas || {})[0];
+  ok(nota && nota.tipo === "nota" && /lectura de la mañana/.test(nota.texto) && nota.fecha === "2026-10-06", "la nota del Kindle va a las notas del libro");
+  const nuevo = (await todos("libros")).map(([, d]) => d).find(d => d.titulo === "Mañana es hoy");
+  ok(nuevo && nuevo.estado === "leyendo" && nuevo.formato === "digital" && nuevo.autor === "Ana Gómez", "el libro nuevo queda Leyendo, digital");
+  await p.click(".limp-hoja .limp-listo [data-cerrar-hoja]");
+  await p.waitForTimeout(300);
+
+  // StoryGraph y un archivo que no es
+  const SG = ["Title,Authors,Contributors,ISBN/UID,Format,Read Status,Date Added,Last Date Read,Dates Read,Read Count,Moods,Pace,Character- or Plot-Driven?,Strong Character Development?,Loveable Characters?,Diverse Characters?,Flawed Characters?,Star Rating,Review,Content Warnings,Content Warning Description,Tags,Owned?",
+    "Meditaciones,Marco Aurelio,,abc,digital,did-not-finish,2026/09/01,,,0,,,,,,,,,,,,,No"].join("\n");
+  await subir("storygraph.csv", SG);
+  await p.click('.limp-hoja [data-limp="importar"]');
+  await p.waitForTimeout(500);
+  ok((await todos("libros")).some(([, d]) => d.titulo === "Meditaciones" && d.estado === "abandonado"), "StoryGraph: «did-not-finish» entra como Abandonado");
+  await p.click(".limp-hoja .limp-listo [data-cerrar-hoja]");
+  await p.waitForTimeout(300);
+  await subir("foto.txt", "hola, esto no es");
+  ok(/No reconozco este archivo/.test(await txt(p, ".limp-hoja .lib-error")), "un archivo que no es: lo dice");
+  ok(await sinDesborde(p), "no se mueve de lado");
+  if (ancho < 800) {
+    await p.setViewportSize({ width: 320, height: 640 });
+    await p.waitForTimeout(200);
+    ok(await sinDesborde(p), "entra en 320 px");
+  }
+  ok(!p.errores.length && !p.consola.length, "sin errores" + (p.consola.length ? `: ${p.consola.join(" | ")}` : ""));
+  await p.context().close();
+}
+
+module.exports = { bibliaLector, bibliaMarcas, bibliaPlanes, bibliaMemoria, librosSesion, librosSiguiente, librosFrases, librosImportar, txt, visible, sinDesborde, metaDe, consola, deslizar, HOY, FECHA, ZONA };

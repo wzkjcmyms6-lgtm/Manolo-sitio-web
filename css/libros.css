@@ -461,3 +461,26 @@ input[type="date"].lib-input { -webkit-appearance: none; appearance: none; }
 .lfr-fin p { margin: 0; }
 .lfr-fin-t { font-size: 1.4rem; font-weight: 700; }
 .lfr-fin .lib-campo { text-align: left; }
+
+/* ---------- Fase 5c (D-110): importar ---------- */
+.lib-pie { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; margin-top: 1.4rem; }
+.limp { display: flex; flex-direction: column; gap: 0.75rem; }
+.limp p { margin: 0; }
+.limp-de { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.45rem; color: var(--muted); font-size: 0.88rem; line-height: 1.4; }
+.limp-de b { color: var(--ink); }
+.limp-archivo { position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.limp-archivo input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.limp-resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 0.5rem; }
+.limp-resumen > div { display: flex; flex-direction: column; padding: 0.65rem 0.7rem; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); min-width: 0; }
+.limp-resumen b { font-size: 1.3rem; }
+.limp-resumen span { color: var(--muted); font-size: 0.75rem; }
+.limp-marcar { display: flex; gap: 0.8rem; }
+.limp-link { min-height: 40px; border: 0; background: none; color: var(--accent-2); font: inherit; font-weight: 700; font-size: 0.88rem; cursor: pointer; padding: 0; }
+.limp-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; max-height: 46vh; overflow-y: auto; }
+.limp-lista label { display: flex; align-items: center; gap: 0.6rem; min-height: 48px; padding: 0.35rem 0.6rem; border-radius: 12px; background: var(--surface); cursor: pointer; }
+.limp-lista input { width: 22px; height: 22px; flex: 0 0 auto; accent-color: var(--accent-1); }
+.limp-lista span { display: flex; flex-direction: column; min-width: 0; }
+.limp-lista b { font-size: 0.92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.limp-lista small { color: var(--muted); font-size: 0.78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.limp-listo { text-align: center; }
+.limp-listo-t { font-size: 1.4rem; font-weight: 700; color: #7fe0a6; }

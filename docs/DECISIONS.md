@@ -1304,3 +1304,24 @@ PNG pesaba 1,2 MB y tardaba segundos en armarse. (4) Pestaña Frases:
 filtros Todas · ★ Favoritas · #etiquetas; en el formulario, ★ Favorita,
 etiquetas (las tuyas como botones y una nueva) y el consejo de copiar el
 texto con la cámara del iPhone (Texto en vivo).
+
+**D-110 (2026-11-15) · Libros fase 5c: importar de Goodreads, StoryGraph y
+Kindle.** (1) "Importar" (abajo de Libros) lee el archivo en el teléfono
+(nada sale de Manolo), reconoce de qué app es por su contenido y muestra la
+vista previa con casillas; "Agregar" guarda en lotes de hasta 400
+escrituras. (2) Goodreads (CSV de "Export Library"): estante → estado
+(read, currently-reading, to-read), "My Rating" (0 = sin calificar),
+páginas, "Date Read"/"Date Added", Binding → formato (Kindle = digital,
+Audible = audiolibro), ISBN (viene como `="…"`), año de la primera
+edición, reseña (sin HTML) y la saga del título "(Saga, #2)". StoryGraph
+(CSV): "Read Status" (did-not-finish y paused → Abandonado), formato,
+estrellas con decimales (4,5 → 5), "Dates Read" (inicio y fin) y reseña.
+Kindle ("My Clippings.txt", en español o inglés): subrayados → frases con
+página y fecha, notas → notas del libro, marcadores no; un subrayado que
+amplía otro deja solo el más largo; los libros que no tienes se crean
+como digitales, con el estado que elijas (Terminado por defecto). (3) Sin
+duplicar: un libro ya está si coincide el ISBN o el título (sin
+tildes, sin subtítulo ni saga entre paréntesis) y el apellido del primer
+autor; dos veces en el archivo entra una; una frase, si su texto ya está
+en ese libro. (4) Datos nuevos, aditivos: `isbn` e `importado: { de, id }`
+en el libro y `importado: { de: "kindle", ubicacion }` en la frase.

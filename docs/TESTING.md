@@ -1,6 +1,9 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-15 (Libros fase 5c, D-110): `npm test` → **567 pruebas**. Nueva:
+  `libros-importar` (CSV, Goodreads, StoryGraph, Kindle, duplicados). E2E
+  `SOLO=importar`.
 - 2026-11-15 (Libros fase 5b, D-109): `npm test` → **561 pruebas**. Nueva:
   `libros-frases` (repaso, calificar, etiquetas). E2E `SOLO=frases`.
 - 2026-11-15 (Libros fase 5a, D-108): `npm test` → **557 pruebas**. Nueva:
@@ -268,6 +271,13 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] Medir tiempos › Promedios › "Por día": siete barras de lunes a
   domingo. Toca "Lu": la tabla dice cuánto tardas en promedio cada lunes.
   Con ‹ › pasas de día.
+
+**Libros: importar (2026-11)**
+- [ ] Si usas Goodreads: en la web, «Export Library»; guarda el .csv en
+  Archivos. En Manolo, Libros › abajo «Importar» › elige el archivo: mira
+  la vista previa y toca «Agregar».
+- [ ] Con un Kindle: copia «My Clippings.txt» al iPhone y elígelo: llegan
+  tus subrayados como frases.
 
 **Libros: frases de hoy, favoritas, etiquetas y compartir (2026-11)**
 - [ ] Libros: arriba, "Frases de hoy" › "Repasar". Toca ❤️, 👍 o 👎 en cada

@@ -169,7 +169,9 @@ function normalizarLibro(id, d) {
     saga: typeof d.saga === "string" ? d.saga : "",
     sagaN: typeof d.sagaN === "number" && d.sagaN > 0 ? d.sagaN : null,
     prioridad: d.prioridad === "alta" || d.prioridad === "baja" ? d.prioridad : null,
-    notas: d.notas && typeof d.notas === "object" ? d.notas : null
+    notas: d.notas && typeof d.notas === "object" ? d.notas : null,
+    // Fase 5c (D-110): ISBN (para no duplicar al importar o escanear).
+    isbn: typeof d.isbn === "string" && /^(\d{9}[\dX]|\d{13})$/.test(d.isbn) ? d.isbn : null
   };
 }
 // Lecturas anteriores (al "Leer de nuevo") que terminaste: [{ fechaFin, paginas, … }].
