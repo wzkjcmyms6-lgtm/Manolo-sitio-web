@@ -222,6 +222,8 @@ function renderNav() {
   if (sidebarNav) {
     sidebarNav.innerHTML =
       MODULES.map(m => linkHTML(m, "nav-icon", current)).join("") +
+      // Copia de seguridad de todo (D-118, js/respaldo.js): solo en el menú del teléfono.
+      `<button type="button" class="nav-extra-btn" data-respaldo-abrir><span class="nav-icon" data-icon="respaldo"></span>Copia de seguridad</button>` +
       `<button type="button" id="logout-btn" class="logout-btn">Cerrar sesión</button>`;
   }
 

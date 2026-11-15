@@ -1,0 +1,92 @@
+/* ---------- Copia de seguridad de todo Manolo (D-118) ----------
+   Hoja de js/respaldo.js. Solo usa las variables de :root (css/style.css):
+   colores, estados, radios y tiempos de siempre. */
+
+/* Inicio: "Copia de seguridad" y "Estado de la cuenta", abajo y juntos */
+.inicio-pie { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.25rem 1.2rem; margin-top: 1.6rem; }
+.inicio-pie .cuenta-estado-btn { margin: 0; }
+.inicio-pie .rsp-abrir { color: var(--accent-2); }
+
+/* Menú ☰ del teléfono (en la compu está abajo en Inicio) */
+.nav-extra-btn {
+  display: flex; align-items: center; width: 100%; min-height: 44px; margin-top: 0.75rem; padding: 0.6rem 0.75rem;
+  border-radius: 10px; border: 1px solid var(--border); background: none; color: var(--ink);
+  font: inherit; font-size: 0.92rem; font-weight: 500; text-align: left; cursor: pointer;
+}
+.nav-extra-btn .nav-icon { color: var(--accent-2); }
+.nav-extra-btn:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+@media (max-width: 768px) { .nav-extra-btn + .logout-btn { margin-top: 0.5rem; min-height: 44px; } }
+@media (min-width: 769px) { .nav-extra-btn { display: none; } }
+
+/* Hoja */
+.rsp-raiz .lib-hoja-cuerpo { padding-bottom: calc(1.2rem + env(safe-area-inset-bottom)); }
+.rsp-raiz button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.rsp-intro { margin: 0 0 1rem; color: var(--muted); font-size: 0.92rem; line-height: 1.45; }
+.rsp-bloque { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radio-caja); padding: 1rem; margin-bottom: 0.8rem; min-width: 0; }
+.rsp-h4 { display: flex; align-items: center; gap: 0.5rem; margin: 0 0 0.35rem; font-size: 1rem; }
+.rsp-h4:focus { outline: none; }
+.rsp-h4:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 3px; border-radius: 6px; }
+.rsp-h4-paso { font-size: 1.15rem; margin-bottom: 0.6rem; }
+.rsp-ic { display: inline-flex; width: 20px; height: 20px; flex-shrink: 0; color: var(--accent-2); }
+.rsp-nota { margin: 0 0 0.8rem; color: var(--muted); font-size: 0.86rem; line-height: 1.45; }
+.rsp-nota strong { color: var(--ink); }
+.rsp-num { font-variant-numeric: tabular-nums; }
+
+.rsp-btn { display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+.rsp-btn + .rsp-btn { margin-top: 0.6rem; }
+.rsp-btn .rsp-ic { color: currentColor; }
+.rsp-btn:disabled { opacity: 0.75; cursor: progress; }
+.rsp-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+/* Mensajes: siempre con ícono y texto (nunca solo el color) */
+.rsp-ok, .rsp-error, .rsp-aviso, .rsp-seguro {
+  display: flex; align-items: flex-start; gap: 0.55rem; margin: 0 0 0.8rem; padding: 0.75rem 0.85rem;
+  border-radius: var(--radio-caja); font-size: 0.9rem; line-height: 1.4; color: var(--ink);
+}
+.rsp-ok { background: var(--estado-ok-fondo); }
+.rsp-ok .rsp-ic { color: var(--estado-ok); }
+.rsp-error { background: var(--estado-mal-fondo); }
+.rsp-aviso { background: var(--estado-aviso-fondo); }
+.rsp-seguro { background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
+.rsp-ic-texto {
+  display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex-shrink: 0;
+  border-radius: 50%; background: var(--estado-mal); color: #0a0a0a; font-size: 0.75rem; font-weight: 800;
+}
+.rsp-aviso .rsp-ic-texto { background: var(--estado-aviso); }
+
+/* Qué se agregaría */
+.rsp-archivo { display: flex; flex-direction: column; gap: 0.15rem; margin: 0 0 1rem; color: var(--muted); font-size: 0.85rem; }
+.rsp-archivo-nombre { color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
+.rsp-grande { display: flex; align-items: baseline; gap: 0.4rem; margin: 0 0 0.6rem; color: var(--muted); font-size: 1rem; }
+.rsp-grande strong { color: var(--ink); font-size: 2.2rem; line-height: 1.1; }
+.rsp-filas { list-style: none; margin: 0 0 0.9rem; padding: 0; border: 1px solid var(--border); border-radius: var(--radio-caja); overflow: hidden; }
+.rsp-filas li { display: flex; justify-content: space-between; align-items: baseline; gap: 0.8rem; padding: 0.7rem 0.9rem; font-size: 0.92rem; }
+.rsp-filas li + li { border-top: 1px solid var(--border); }
+.rsp-mas { color: var(--estado-ok); font-weight: 700; flex-shrink: 0; }
+
+/* Avance y espera */
+.rsp-barra { height: 10px; margin: 0.4rem 0 0.5rem; border-radius: var(--radio-pildora); background: var(--surface-raised); overflow: hidden; }
+.rsp-barra span { display: block; height: 100%; background: var(--accent-grad); transform-origin: left; transform: scaleX(0); transition: transform var(--anim-rapida) ease-out; }
+.rsp-cargando { padding: 1.4rem 0.5rem; text-align: center; }
+.rsp-cargando .rsp-h4 { justify-content: center; }
+.rsp-rueda {
+  display: inline-block; width: 28px; height: 28px; margin-bottom: 0.6rem; border-radius: 50%;
+  border: 3px solid var(--surface-raised); border-top-color: var(--accent-2); animation: rsp-gira 0.8s linear infinite;
+}
+.rsp-rueda-chica { width: 16px; height: 16px; margin: 0; border-width: 2px; }
+@keyframes rsp-gira { to { transform: rotate(360deg); } }
+
+/* Copias automáticas */
+.rsp-autos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.rsp-auto { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; }
+.rsp-auto-txt { display: flex; flex-direction: column; min-width: 0; font-size: 0.9rem; }
+.rsp-auto-txt small { color: var(--muted); font-size: 0.8rem; }
+.lib-btn-sec.rsp-auto-btn { flex-shrink: 0; min-height: 44px; padding: 0.4rem 1rem; font-size: 0.85rem; }
+
+/* Aviso flotante: encima de la hoja */
+.rsp-toast { right: 16px; z-index: 1200; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rsp-rueda { animation: none; }
+  .rsp-barra span { transition: none; }
+}

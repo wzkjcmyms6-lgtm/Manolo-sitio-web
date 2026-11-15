@@ -1,6 +1,14 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-15 (Copia de seguridad de todo, D-118): `npm test` → **640
+  pruebas**. Nueva: `respaldo-motor` (armar la copia y las fechas, revisar
+  el archivo, lo dañado, copias de una sección y el archivo de Lugares,
+  solo agregar lo que falta, ids, ninguna colección afuera). E2E nueva
+  `scripts/e2e/respaldo.js` (descargar y abrir el archivo, restaurar sin
+  pisar, la foto, la copia automática, Deshacer, sin duplicados, archivos
+  que no sirven, sin internet, 375 px, 44 px, menú ☰, compu, menos
+  movimiento).
 - 2026-11-15 (Lugares, D-117): `npm test` → **632 pruebas**. Nueva:
   `lugares-motor` (registrar, más detalles, montos, platos y visitas,
   documentos viejos, buscar y filtrar, ordenar, "¿Dónde como hoy?",
@@ -181,7 +189,7 @@ export NODE_PATH=/opt/node22/lib/node_modules   # donde está Playwright
 for f in fase1 regresion hojas sw-instala emojis scalping inversiones tarjetas movilidad \
   running run-importar run-detalle run-feed run-progreso run-inteligencia run-segmentos \
   run-compartir run-qa habitos mi-dia ej-calendario ejercicio libros-progreso lectura \
-  lectura-qa tiempos finanzas-diario lugares; do node scripts/e2e/$f.js || break; done
+  lectura-qa tiempos finanzas-diario lugares respaldo; do node scripts/e2e/$f.js || break; done
 ```
 Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
 
@@ -243,6 +251,18 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Copia de seguridad (2026-11)**
+- [ ] Inicio › abajo "Copia de seguridad" › "Descargar copia de todo" ›
+  "Guardar archivo" › "Guardar en Archivos" (en iCloud Drive).
+- [ ] Ábrelo de nuevo: dice cuándo guardaste la última copia.
+- [ ] "Elegir archivo de copia" › elige el archivo recién guardado: dice
+  "Ya tienes todo" (no agrega nada repetido).
+- [ ] Borra un gasto de prueba en Finanzas, restaura la copia: aparece
+  "Esto se agregaría: 1"; "Agregar lo que falta" lo trae de vuelta, y lo
+  demás queda igual.
+- [ ] Abajo aparece "Copias automáticas" con la de antes de restaurar.
+- [ ] Menú ☰ › "Copia de seguridad" también la abre.
 
 **Lugares (2026-11)**
 - [ ] Inicio › "Lugares" › ＋: escribe un nombre, toca las estrellas y

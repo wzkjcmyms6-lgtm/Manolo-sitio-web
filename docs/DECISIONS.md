@@ -1522,3 +1522,30 @@ radio con teclado, nombres para lector de pantalla, foco al abrir y al
 cerrar hojas, Escape cierra, áreas de 44 px (también pestañas, "‹ Inicio"
 y Exportar dentro de Lugares), estado con ícono + texto. Detalle en
 `docs/LUGARES.md`.
+
+**D-118 (2026-11-15) · Copia de seguridad de todo Manolo.** Pedido del
+dueño ("exportar/importar JSON que incluya TODO, también Lugares; al
+importar, valida y haz un respaldo antes de reemplazar"). (1) Una hoja
+desde Inicio (abajo, junto a "Estado de la cuenta") y el menú ☰ del
+teléfono (en la compu no, para no amontonar la barra de arriba). (2) El
+archivo (`app: "Manolo", tipo: "copia-completa", version: 1`) lleva las 21
+colecciones de `users/{uid}` y las fotos completas de Lugares del teléfono;
+no lleva `finanzas_respaldos` ni lo compartido (`feed`, `comentarios`,
+`accesos`, `admins`). Una prueba revisa `js/` y falla si una colección
+nueva queda afuera. Timestamps como `{__tipo: "timestamp", ms}`. (3)
+Descargar en dos toques (preparar → "Guardar archivo") porque el iPhone
+solo abre "Compartir" justo después de un toque. (4) Restaurar **nunca
+reemplaza**: con el dueño se decidió que importar solo agrega lo que falta
+(un documento que ya existe se deja como está, aunque en la copia esté
+distinto). Antes de escribir, se lee de la nube lo que ya tienes (hace falta
+internet: sin eso se podría pisar algo que el teléfono no tiene guardado) y
+se guarda una copia automática de lo actual en el teléfono (IndexedDB
+`manolo-respaldos`, las últimas 3, descargables); si esa copia falla, no se
+cambia nada. "Deshacer" quita exactamente lo agregado. (5) Acepta también
+el "Exportar (JSON)" de Lugares (trae los documentos tal cual y las
+fotos); la copia de Hábitos o de Finanzas se importa en su sección (la hoja
+dice dónde); los resúmenes de Libros, Biblia, Inversiones y Medir tiempos
+no se restauran. (6) Lotes de hasta 400 escrituras y 4 MB; si no hay
+respuesta en 20 s, lo escrito queda en el teléfono y Firestore lo sube
+solo; restaurar la misma copia otra vez completa lo que falte sin
+duplicar. Detalle en `docs/RESPALDO.md`.

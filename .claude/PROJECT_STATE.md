@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-15 (Lugares: nueva sección para calificar sitios, D-117).
+Actualizado: 2026-11-15 (Copia de seguridad de todo Manolo, D-118).
 
 - **Finanzas, Lugares y copia de seguridad (2026-11-15, en curso)**: Tarea
   1 hecha (D-116): el disponible por día sale de los ingresos registrados
@@ -9,7 +9,11 @@ Actualizado: 2026-11-15 (Lugares: nueva sección para calificar sitios, D-117).
   Tarea 2 hecha (D-117): **Lugares** en Inicio (visitados y quiero ir,
   platos, visitas, fotos en el teléfono con miniatura en la nube, buscar,
   filtros, ¿Dónde como hoy?, estadísticas, gasto a Finanzas si confirmas;
-  `docs/LUGARES.md`). Sigue la copia de seguridad de todo (Tarea 3).
+  `docs/LUGARES.md`). Tarea 3 hecha (D-118): **Copia de seguridad de
+  todo** (Inicio abajo y menú ☰): un archivo con las 21 colecciones y las
+  fotos de Lugares; restaurar revisa el archivo, guarda una copia
+  automática y solo agrega lo que falta, con Deshacer (`docs/RESPALDO.md`).
+  Sigue el QA final.
 
 - **App**: PWA estática + Firebase (Auth + Firestore), una sola página,
   JS puro sin build. Ver `docs/ARCHITECTURE.md`.

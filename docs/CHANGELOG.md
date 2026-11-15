@@ -1,5 +1,16 @@
 # Cambios
 
+## 2026-11-15 · Copia de seguridad de todo Manolo
+- Inicio › "Copia de seguridad" (abajo) y el menú ☰: guarda en un archivo
+  todo Manolo (hábitos, finanzas, inversiones, ejercicio, running, libros,
+  Biblia, tiempos, lugares con sus fotos y tus ajustes).
+- "Restaurar desde una copia" revisa el archivo, te muestra qué se
+  agregaría y solo agrega lo que te falta: nunca borra ni cambia lo que ya
+  tienes. Antes guarda sola una copia de lo que tienes ahora en el teléfono
+  (las últimas 3, se pueden descargar). Con "Deshacer".
+- También sirve el archivo que exporta Lugares.
+- Pruebas: `tests/respaldo-motor.test.js` y `scripts/e2e/respaldo.js`.
+
 ## 2026-11-15 · Lugares: nueva sección para calificar sitios
 - Inicio › **Lugares**: tu guía de dónde comer. Pestañas "Visitados" y
   "Quiero ir" (con "Ya fui"), buscador, filtros en chips y orden.
