@@ -127,7 +127,7 @@ function normalizar(doc, id) {
     despuesDe: texto(d.despuesDe) || null,
     vinculo: texto(d.vinculo) || null,
     // "Se marca solo" (js/habitos-auto.js): medida, rutina o categoría de gasto, y desde cuándo.
-    vinculoCfg: d.vinculoCfg && typeof d.vinculoCfg === "object" ? { medida: texto(d.vinculoCfg.medida) || null, rutina: texto(d.vinculoCfg.rutina) || null, categoria: texto(d.vinculoCfg.categoria) || null } : null,
+    vinculoCfg: d.vinculoCfg && typeof d.vinculoCfg === "object" ? { medida: texto(d.vinculoCfg.medida) || null, rutina: texto(d.vinculoCfg.rutina) || null, categoria: texto(d.vinculoCfg.categoria) || null, actividad: texto(d.vinculoCfg.actividad) || null } : null,
     vinculoDesde: esFecha(d.vinculoDesde) ? d.vinculoDesde : null,
     // Hora opcional "HH:MM" para ordenar dentro de su momento.
     hora: typeof d.hora === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(d.hora) ? d.hora : "",

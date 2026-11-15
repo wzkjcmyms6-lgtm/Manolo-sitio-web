@@ -1012,6 +1012,7 @@ function formDesde(h) {
     vinculo: h ? h.vinculo || "" : "",
     vinculoMedida: h && h.vinculoCfg ? h.vinculoCfg.medida || "" : "",
     vinculoRutina: h && h.vinculoCfg ? h.vinculoCfg.rutina || "" : "",
+    vinculoActividad: h && h.vinculoCfg ? h.vinculoCfg.actividad || "" : "",
     vinculoCategoria: h && h.vinculoCfg ? h.vinculoCfg.categoria || "" : "",
     // "Más opciones" abierto si el hábito ya usa alguna.
     _mas: !!(h && (h.descripcion || h.minima || h.despuesDe || h.vinculo || h.dificultad !== "media"))
@@ -1183,7 +1184,8 @@ function guardarForm() {
   else if (f.id) datos.hora = FV().delete();
   const anterior = f.id ? normal[f.id] : null;
   if (datos.vinculo) {
-    datos.vinculoCfg = { medida: f.tipo === "medible" ? f.vinculoMedida || medidaDefecto(datos.vinculo) : null, rutina: datos.vinculo === "movilidad" ? f.vinculoRutina || null : null, categoria: datos.vinculo === "gasto" ? f.vinculoCategoria || null : null };
+    datos.vinculoCfg = { medida: f.tipo === "medible" ? f.vinculoMedida || medidaDefecto(datos.vinculo) : null, rutina: datos.vinculo === "movilidad" ? f.vinculoRutina || null : null, categoria: datos.vinculo === "gasto" ? f.vinculoCategoria || null : null,
+      actividad: datos.vinculo === "tiempos" ? f.vinculoActividad || null : null };
     // Desde cuándo se marca solo: hoy, salvo que ya estuviera vinculado igual.
     const igual = anterior && anterior.vinculo === datos.vinculo && JSON.stringify(anterior.vinculoCfg || {}) === JSON.stringify(datos.vinculoCfg);
     datos.vinculoDesde = igual && anterior.vinculoDesde ? anterior.vinculoDesde : hoy();
@@ -1635,6 +1637,11 @@ function vinculoHtml(f) {
     if (def.rutina && window.MovilidadRutinas) {
       html += `<label class="hb-campo"><span>Rutina</span><select name="vinculoRutina"><option value="">Cualquier rutina</option>${MovilidadRutinas.map(r =>
         `<option value="${escapeHtml(r.id)}"${r.id === f.vinculoRutina ? " selected" : ""}>${escapeHtml(r.nombre)}</option>`).join("")}</select></label>`;
+    }
+    if (def.actividad && window.TiemposDatos) {
+      const acts = TiemposDatos.actividades().filter(a => !a.archivada || a.id === f.vinculoActividad);
+      html += `<label class="hb-campo"><span>Actividad</span><select name="vinculoActividad"><option value="">Todo el día (la suma)</option>${acts.map(a =>
+        `<option value="${escapeHtml(a.id)}"${a.id === f.vinculoActividad ? " selected" : ""}>${escapeHtml(`${a.emoji ? `${a.emoji} ` : ""}${a.nombre}`)}</option>`).join("")}</select></label>`;
     }
     if (def.categoria) {
       const cats = (fuentes.finanzas && fuentes.finanzas.categorias) || [];

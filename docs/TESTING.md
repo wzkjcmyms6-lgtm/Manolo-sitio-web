@@ -1,6 +1,9 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-15 (Medir tiempos fase 7, D-114): `npm test` → **607 pruebas**.
+  Nuevas: `tiempos-plan`, `tiempos-stats`; más en `mi-dia` (filas nuevas y
+  máximo 5) y `habitos-auto` (fuente Medir tiempos). E2E `SOLO=fase7`.
 - 2026-11-15 (Medir tiempos fase 6, D-113): `npm test` → **596 pruebas**.
   Nuevas: `tiempos-actividades`, `tiempos-crono`, `tiempos-auto` y más en
   `tiempos-motor`. E2E `scripts/e2e/tiempos.js` (+ `SOLO=fase6`).
@@ -280,6 +283,16 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] Medir tiempos › Promedios › "Por día": siete barras de lunes a
   domingo. Toca "Lu": la tabla dice cuánto tardas en promedio cada lunes.
   Con ‹ › pasas de día.
+
+**Medir tiempos: plan de la mañana, estadísticas y experimentos (2026-11)**
+- [ ] Medir tiempos › «🗓️ Plan de la mañana»: pon a qué hora te levantas y
+  a qué hora tienes que estar listo. Mira si te sobra tiempo; toca «Sá».
+- [ ] «▶ Empezar mi mañana»: debajo del reloj dice si vas adelantado o
+  atrasado según tu plan; al final, a qué hora terminaste.
+- [ ] «📊 Estadísticas»: toca otra actividad. «🧪 Experimentos › ＋ Nuevo».
+- [ ] Inicio › «Mi día»: tu mañana, el libro que lees y el repaso de hoy.
+- [ ] Hábitos › editar un hábito › «Se marca solo» › «Medir tiempos» ›
+  elige «Rutina de la mañana».
 
 **Medir tiempos: Mi mañana, ⏱ Medir y se llena sola (2026-11)**
 - [ ] Inicio › Medir tiempos › «▶ Empezar mi mañana»: haz cada paso y toca

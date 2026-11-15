@@ -8,7 +8,9 @@
 // Todo por marcas de tiempo (js/tiempos-crono.js) y guardado en el teléfono:
 // si el iPhone se bloquea o cierras la app, sigue donde ibas. La pantalla
 // no se apaga mientras mides (Wake Lock, si el iPhone lo permite).
-// Usa window.TiemposDatos (js/tiempos.js). D-113.
+// Usa window.TiemposDatos (js/tiempos.js). D-113. Fase 7 (D-114): con tu
+// plan de la mañana (js/tiempos-plan-ui.js) dice si vas adelantado o
+// atrasado, a qué hora terminaste, y le cuenta a "Mi día" cómo vas.
 (function () {
 "use strict";
 const C = window.TiemposCrono, T = window.TiemposMotor, A = window.TiemposActividades;
@@ -25,6 +27,15 @@ const ponerLS = (k, v) => { try { if (v) localStorage.setItem(k, JSON.stringify(
 const actDe = id => (D() ? D().actividades().find(a => a.id === id) : null) || { id, nombre: id, emoji: "" };
 const medirGuardado = () => { const st = leerLS(K_MEDIR); return C.cronoValido(st, hoyLocal(), Date.now()) ? st : null; };
 const mananaGuardada = () => { const m = leerLS(K_MANANA); return C.mananaValida(m, hoyLocal(), Date.now()) ? m : null; };
+const PL = () => window.TiemposPlan || null;
+const horaDe = ms => { const d = new Date(ms); return d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds(); };
+// Tu plan de hoy (o null): { cfg, pl }.
+const planHoy = f => (window.TiemposPlanUI ? TiemposPlanUI.planDe(f) : null);
+function textoPlan(v) {
+  if (v == null) return "";
+  const m = Math.max(1, Math.round(Math.abs(v) / 60));
+  return v > 60 ? `Según tu plan: vas ${m} min atrasado.` : v < -60 ? `Según tu plan: vas ${m} min adelantado.` : "Según tu plan: vas a tiempo.";
+}
 const signo = s => `${s > 0 ? "+" : s < 0 ? "−" : "±"}${T.texto(Math.abs(s)) === "—" ? "0 s" : T.texto(Math.abs(s))}`;
 const aprox = s => T.texto(Math.max(60, Math.round(s / 60) * 60));
 // Tus promedios sin el día que estás midiendo (si no, hoy se compararía consigo mismo).
@@ -136,6 +147,7 @@ function abrirManana() {
       <p class="tman-paso">${esc(A.etiqueta(a))}</p>
       <p class="tman-reloj" data-tman-reloj aria-live="off">${C.reloj(C.transcurrido(m.paso, ahora))}</p>
       <p class="tman-prom" data-tman-prom></p>
+      <p class="tman-plan" data-tman-plan></p>
       <div class="tman-botones">
         <button type="button" class="lib-btn tman-grande" data-tman="siguiente">${m.i + 1 < m.pasos.length ? `Siguiente: ${esc(actDe(m.pasos[m.i + 1]).nombre)} ›` : "Terminar ✓"}</button>
         <button type="button" class="lib-btn-sec" data-tman="pausa-manana">${C.enPausa(m.paso) ? "▶ Seguir" : "⏸ Pausar"}</button>
@@ -160,10 +172,15 @@ function abrirResumen(m) {
   const fila = p => `<li class="${p.saltado ? "is-saltado" : ""}"><span>${esc(A.etiqueta(actDe(p.id)))}</span>
     <b>${p.saltado ? "saltado" : T.texto(p.seg)}</b>${p.diferencia != null ? `<small class="${p.diferencia > 0 ? "is-mas" : "is-menos"}">${signo(p.diferencia)}</small>` : "<small></small>"}</li>`;
   const dif = r.diferencia;
+  // Contra tu plan: a qué hora terminaste y tu hora de estar listo.
+  const pr = planHoy(m.fecha), finSeg = m.fin ? horaDe(m.fin) : null;
+  const vsListo = pr && finSeg != null && PL() ? PL().contraListo(pr.cfg, finSeg) : null;
+  const lineaPlan = vsListo == null ? "" : `Terminaste a las ${PL().aHora(finSeg)}: ${Math.abs(vsListo) < 60 ? "justo a tu hora" : `${T.texto(Math.round(Math.abs(vsListo) / 60) * 60)} ${vsListo > 0 ? "después" : "antes"} de tu hora`} (${PL().aHora(PL().aSeg(pr.cfg.listo))}).`;
   hoja.abrir("Mi mañana", `
     <div class="tman tman-resumen">
       <p class="tman-ok">✓ Mañana terminada</p>
       <p class="tman-total"><b>${T.texto(r.total)}</b> en ${r.hechos} ${r.hechos === 1 ? "paso" : "pasos"}${r.saltados ? ` (saltaste ${r.saltados})` : ""}</p>
+      ${lineaPlan ? `<p class="tman-plan ${vsListo > 60 ? "is-atrasado" : "is-adelantado"}">${esc(lineaPlan)}</p>` : ""}
       ${dif != null ? `<p class="tman-vs ${dif > 0 ? "is-mas" : "is-menos"}">${dif > 30 ? `${T.texto(dif)} más que tu promedio` : dif < -30 ? `${T.texto(-dif)} menos que tu promedio 🎉` : "Igual que tu promedio"}</p>` : ""}
       <ul class="tman-tabla">${r.pasos.map(fila).join("")}</ul>
       <p class="lib-ayuda">Los tiempos ya quedaron anotados en ${esc(T.fechaLarga(m.fecha))}. Puedes corregirlos abajo, en «Anotar tiempos».</p>
@@ -188,6 +205,13 @@ function actualizarReloj() {
   const v = C.contraPromedio(m, promediosSin(m.fecha), ahora), p = hoja.el.querySelector("[data-tman-prom]");
   el.classList.toggle("is-pasado", !!(v && v.pasado));
   if (p) p.textContent = !v ? "Sin promedio todavía para este paso." : v.pasado ? `Vas ${C.reloj(-v.falta)} por encima de tu promedio (${T.texto(v.promedio)}).` : `Tu promedio: ${T.texto(v.promedio)} · te quedan ${C.reloj(v.falta)}`;
+  // Contra tu plan (si tienes uno): el paso actual va entre su hora de empezar y la de terminar.
+  const ep = hoja.el.querySelector("[data-tman-plan]"), pr = planHoy(m.fecha);
+  if (ep && pr && PL()) {
+    const vs = PL().vsAhora(pr.pl, C.actual(m), horaDe(ahora));
+    ep.textContent = textoPlan(vs);
+    ep.className = `tman-plan${vs > 60 ? " is-atrasado" : vs < -60 ? " is-adelantado" : ""}`;
+  }
 }
 function aviso(t) {
   const e = hoja.el.querySelector(".lib-error");
@@ -255,5 +279,23 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden && mo
 function refrescar() { const el = document.getElementById("tmp-manana"); if (el) tarjeta(el); }
 window.addEventListener("tiempos:datos", refrescar);
 
-window.TiemposManana = { tarjeta, medir, empezarManana, abrirManana, abrirMedir };
+// Para "Mi día" (fase 7): cómo va tu mañana de hoy.
+function paraMiDia() {
+  const d = D();
+  if (!d || !d.listo()) return null;
+  const hoy = hoyLocal(), m = mananaGuardada(), ahora = Date.now(), pr = planHoy(hoy);
+  if (m && m.fecha === hoy && !C.terminada(m)) {
+    const id = C.actual(m);
+    return { estado: "curso", paso: m.i + 1, de: m.pasos.length, nombre: actDe(id).nombre, vsPlan: pr && PL() ? PL().vsAhora(pr.pl, id, horaDe(ahora)) : null };
+  }
+  const guardada = leerLS(K_MANANA);
+  if (guardada && guardada.fecha === hoy && C.terminada(guardada)) {
+    const r = C.resumen(guardada, promediosSin(hoy));
+    return { estado: "hecha", total: r.total, dif: r.diferencia };
+  }
+  if (pr && pr.pl && pr.pl.ok && PL() && horaDe(ahora) < PL().aSeg(pr.cfg.listo)) return { estado: "pendiente", listo: PL().aHora(PL().aSeg(pr.cfg.listo)) };
+  return null;
+}
+
+window.TiemposManana = { tarjeta, medir, empezarManana, abrirManana, abrirMedir, paraMiDia };
 })();

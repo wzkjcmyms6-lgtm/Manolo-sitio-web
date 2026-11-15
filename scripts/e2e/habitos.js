@@ -363,7 +363,7 @@ function conTemporadaVista(opciones) {
     await p.waitForTimeout(300);
     ok(await p.isVisible('[data-campo="vinculo"][data-v="running"]'), "«Se marca solo» ofrece Running, Bici, Movilidad, Libros, Biblia y Finanzas");
     const fuentesForm = await p.$$eval('[data-campo="vinculo"]', els => els.map(x => x.textContent.trim()));
-    ok(fuentesForm.join(",") === "No,Running,Bici,Movilidad,Libros,Biblia,Finanzas,Gimnasio", `opciones (${fuentesForm})`);
+    ok(fuentesForm.join(",") === "No,Running,Bici,Movilidad,Libros,Biblia,Finanzas,Medir tiempos,Gimnasio", `opciones (${fuentesForm})`);
     await p.click('[data-campo="vinculo"][data-v="running"]');
     await p.waitForTimeout(200);
     await p.click('.hb-acciones-fijas [type="submit"]');

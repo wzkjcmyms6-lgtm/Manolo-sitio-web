@@ -1,6 +1,6 @@
 // ---------- Hábitos: "se marca solo" con los demás módulos (lógica pura) ----------
 // Cada módulo avisa con sus datos (Running y Bici con "manolo:actividades";
-// Movilidad, Libros, Biblia y Finanzas con "manolo:fuente"). Aquí se decide
+// Movilidad, Libros, Biblia, Finanzas y Medir tiempos con "manolo:fuente"). Aquí se decide
 // qué valor toca cada día a cada hábito vinculado y qué escribir o deshacer.
 // Reglas (D-085):
 // - Lo automático se guarda con `auto: { f: fuente, v: valor }` en el
@@ -30,6 +30,9 @@ const FUENTES = [
   { id: "finanzas", nombre: "Finanzas", accion: "Al anotar un movimiento", medidas: [["n", "movimientos", "Sí/No"]] },
   // Para un hábito Evitar: un gasto en esa categoría es una recaída.
   { id: "gasto", nombre: "Finanzas", accion: "Un gasto en una categoría es una recaída", medidas: [["n", "gastos", "Recaída"]], categoria: true, evitar: true },
+  // Medir tiempos (fase 7, D-114): un paso de tu mañana o cualquier
+  // actividad (o todo el día); Tiempo suma sus minutos.
+  { id: "tiempos", nombre: "Medir tiempos", accion: "Al anotar o medir esa actividad en Medir tiempos", medidas: [["n", "días", "Sí/No"], ["min", "min", "Minutos"]], actividad: true },
   // Gimnasio avisa al guardar un entreno (sin lista de datos: no deshace).
   { id: "gimnasio", nombre: "Gimnasio", accion: "Al guardar un entreno", medidas: [["n", "entrenos", "Sí/No"]], soloEvento: true }
 ];
@@ -55,6 +58,12 @@ function porDia(id, datos, cfg) {
       const d = datos[f], o = d && typeof d === "object";
       const p = num(o ? d.paginas : d), m = o ? num(d.min) : 0;
       if (p > 0 || m > 0) sumar(f, { n: 1, paginas: p, min: m });
+    });
+  } else if (id === "tiempos") {
+    // Días de Medir tiempos ([{ fecha, seg: { actividad: segundos } }]): la actividad elegida o todo el día.
+    (datos || []).forEach(d => {
+      const seg = d && d.seg ? (c.actividad ? num(d.seg[c.actividad]) : Object.keys(d.seg).reduce((s, k) => s + num(d.seg[k]), 0)) : 0;
+      if (seg > 0) sumar(d.fecha, { n: 1, min: seg / 60 });
     });
   } else if (id === "biblia") {
     (datos || []).forEach(l => sumar(l && l.fecha, { n: 1 }));

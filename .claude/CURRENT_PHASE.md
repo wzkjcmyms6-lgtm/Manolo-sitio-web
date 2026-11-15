@@ -13,8 +13,8 @@ D-102. Cada fase deja la app funcionando y publicada.
 | 4 | Libros: "Leer ahora", velocidad, estados y formatos | ✅ |
 | 5 | Libros: ISBN, importar, frases, notas, "¿Qué leo después?", estadísticas | ✅ (D-108 a D-112) |
 | 6 | Medir tiempos: definitiva, actividades, cronómetro, "Mi mañana", autollenado | ✅ (D-113) |
-| 7 | Medir tiempos: plan de la mañana, estadísticas, experimentos; "Mi día" y Hábitos | ⏳ |
-| 8 | QA final, docs y lista para el iPhone | |
+| 7 | Medir tiempos: plan de la mañana, estadísticas, experimentos; "Mi día" y Hábitos | ✅ (D-114) |
+| 8 | QA final, docs y lista para el iPhone | ⏳ |
 
 Preguntas al dueño (fase 0): ¿diario de oración? (sin respuesta = no) y
 versión para "Abrir en otra versión" (sin respuesta = RVR1960 en

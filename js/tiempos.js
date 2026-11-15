@@ -1,5 +1,6 @@
 // ---------- Medir tiempos (sub-panel de Inicio) ----------
-// Arriba "Mi mañana" (js/tiempos-manana.js). Anotar por día cuánto tardaste
+// Arriba "Mi mañana" (js/tiempos-manana.js) y el plan de la mañana
+// (js/tiempos-plan-ui.js). Anotar por día cuánto tardaste
 // en cada actividad (minutos y segundos, cada una con su botón; o ⏱ Medir
 // con cronómetro), promedios por semana, mes y día de la semana, el
 // promedio final (primeros 30 registros; se sigue midiendo) y tus días.
@@ -7,7 +8,9 @@
 // meta/tiempos_ajustes (js/tiempos-actividades.js); los tiempos que llegan
 // solos de Running, Ejercicio, Libros y Movilidad, en js/tiempos-llenar.js.
 // Datos en users/{uid}/tiempos (un documento por día, id = fecha).
-// Definitiva desde la fase 6 (D-113).
+// Definitiva desde la fase 6 (D-113). Fase 7 (D-114): plan de la mañana,
+// estadísticas (js/tiempos-stats-ui.js), línea base y experimentos; avisa
+// sus días a Hábitos ("manolo:fuente", fuente "tiempos").
 (function () {
 const T = window.TiemposMotor, A = window.TiemposActividades;
 const app = document.getElementById("tmp-app");
@@ -38,9 +41,12 @@ const actDe = id => todas().find(a => a.id === id) || { id, nombre: id, emoji: "
 
 app.innerHTML = `
   <section class="tmp-card tman-zona" id="tmp-manana" aria-label="Mi mañana"></section>
+  <section class="tmp-card tman-zona" id="tmp-plan" aria-label="Plan de la mañana"></section>
   <section class="tmp-card tmp-anotar" id="tmp-anotar" aria-labelledby="tmp-anotar-t"></section>
   <section class="tmp-card" id="tmp-promedios" aria-labelledby="tmp-prom-t"></section>
+  <section class="tmp-card tman-zona" id="tmp-stats" aria-label="Estadísticas"></section>
   <section class="tmp-card" id="tmp-avance" aria-labelledby="tmp-av-t"></section>
+  <section class="tmp-card tman-zona" id="tmp-exp" aria-label="Experimentos"></section>
   <section class="tmp-card" id="tmp-dias" aria-labelledby="tmp-dias-t"></section>
   <div class="tmp-pie">
     <button type="button" class="lib-btn-sec lib-btn-chico" data-tmp-exportar="json">Exportar (JSON)</button>
@@ -51,14 +57,19 @@ const anotar = $("tmp-anotar");
 const fallo = err => alert(`No se pudo guardar: ${err && err.message ? err.message : err}`);
 
 function render() {
-  // (tiempos-manana.js carga después: la tarjeta se pinta con "tiempos:datos".)
+  // (Estas piezas cargan después: se pintan también con "tiempos:datos".)
   if (window.TiemposManana) TiemposManana.tarjeta($("tmp-manana"));
+  if (window.TiemposPlanUI) TiemposPlanUI.pintar($("tmp-plan"));
+  if (window.TiemposStatsUI) { TiemposStatsUI.pintarStats($("tmp-stats")); TiemposStatsUI.pintarExp($("tmp-exp")); }
   renderForm();
   renderPromedios();
   renderAvance();
   renderDias();
 }
 const avisarDatos = () => window.dispatchEvent(new CustomEvent("tiempos:datos"));
+// Hábitos (fase 7): un hábito puede llenarse con una actividad de Medir tiempos.
+let servidor = false;
+const avisarHabitos = () => window.dispatchEvent(new CustomEvent("manolo:fuente", { detail: { fuente: "tiempos", datos: ds, servidor } }));
 
 // Cambia el día en memoria al toque (Firestore confirma después con onSnapshot).
 function cambiarLocal(f, id, seg, o) {
@@ -239,20 +250,20 @@ function renderPromedios() {
     ${p.enCurso && p.hayDatos ? `<p class="tmp-nota">${tipo === "semana" ? "La semana" : "El mes"} todavía no termina: el promedio se va armando con cada día.</p>` : ""}`;
 }
 
-// ---------- Promedio final: los primeros 30 registros ----------
+// ---------- Línea base: los primeros 30 registros (antes "promedio final") ----------
 function renderAvance() {
   const el = $("tmp-avance");
   const acts = activas(), e = T.estado(ds, acts);
   el.innerHTML = `
-    <h2 class="tmp-titulo" id="tmp-av-t">Promedio final</h2>
-    <p class="tmp-nota">Tus primeros ${T.LIMITE} registros de cada actividad dan su promedio final. Después se sigue midiendo (los promedios de arriba usan todo).</p>
+    <h2 class="tmp-titulo" id="tmp-av-t">Línea base</h2>
+    <p class="tmp-nota">Tus primeros ${T.LIMITE} registros de cada actividad son tu línea base (antes, «promedio final»). Después se sigue midiendo; con un experimento comparas un cambio contra ella.</p>
     ${acts.map(a => {
       const x = e[a.id];
       return `
     <div class="tmp-avance${x.completa ? " is-completa" : ""}" data-tmp-avance="${a.id}">
       <div class="tmp-avance-fila"><b>${esc(a.nombre)}</b><span>${x.n} de ${T.LIMITE}</span></div>
       <span class="tmp-barra" aria-hidden="true"><i style="width:${Math.round((x.n / T.LIMITE) * 100)}%"></i></span>
-      <small>${x.completa ? `✅ Promedio final: <b>${T.texto(x.promedio)}</b>${x.total > x.n ? ` · ya llevas ${x.total} registros` : ""}` : x.n ? `Promedio hasta ahora: <b>${T.texto(x.promedio)}</b> · ${x.faltan === 1 ? "falta 1" : `faltan ${x.faltan}`}` : "Sin registros todavía"}</small>
+      <small>${x.completa ? `✅ Línea base: <b>${T.texto(x.promedio)}</b>${x.total > x.n ? ` · ya llevas ${x.total} registros` : ""}` : x.n ? `Promedio hasta ahora: <b>${T.texto(x.promedio)}</b> · ${x.faltan === 1 ? "falta 1" : `faltan ${x.faltan}`}` : "Sin registros todavía"}</small>
     </div>`;
     }).join("")}`;
 }
@@ -327,6 +338,25 @@ window.TiemposDatos = {
   segDe: (f, id) => { const d = docs[f]; return d && d.seg && d.seg[id] > 0 ? d.seg[id] : 0; },
   // Un tiempo medido (⏱ o Mi mañana): igual que si lo escribieras.
   guardar: (f, id, seg) => { guardarSeg(f, id, seg); if (f === fecha) { delete borradores[id]; aviso = { id, texto: "✓ Guardado" }; } render(); avisarDatos(); },
+  // Plan de la mañana y experimentos (fase 7): se suman a lo que ya había.
+  guardarAjustes: parcial => {
+    const prev = ajustes || {};
+    const nuevo = Object.assign({}, prev, parcial);
+    if (parcial.experimentos) {
+      nuevo.experimentos = Object.assign({}, prev.experimentos);
+      Object.keys(parcial.experimentos).forEach(k => { nuevo.experimentos[k] = Object.assign({}, nuevo.experimentos[k], parcial.experimentos[k]); });
+    }
+    ajustes = nuevo;
+    render();
+    avisarDatos();
+    return refAjustes().set(Object.assign({}, parcial, { actualizado: Date.now() }), { merge: true }).catch(fallo);
+  },
+  quitarExperimento: id => {
+    if (ajustes && ajustes.experimentos) { ajustes = Object.assign({}, ajustes, { experimentos: Object.assign({}, ajustes.experimentos) }); delete ajustes.experimentos[id]; }
+    render();
+    avisarDatos();
+    return refAjustes().update({ [`experimentos.${id}`]: borrar(), actualizado: Date.now() }).catch(fallo);
+  },
   guardarActividades: mapa => {
     ajustes = Object.assign({}, ajustes, { actividades: Object.assign({}, ajustes && ajustes.actividades, mapa) });
     render();
@@ -362,8 +392,10 @@ onAuthReady(() => {
     snap.docs.forEach(d => { docs[d.id] = d.data(); });
     ds = T.dias(docs);
     cargado = true;
+    servidor = !(snap.metadata && snap.metadata.fromCache);
     render();
     avisarDatos();
+    avisarHabitos();
   }, err => console.warn("Medir tiempos:", err));
   refAjustes().onSnapshot(snap => {
     ajustes = snap.exists ? snap.data() : null;

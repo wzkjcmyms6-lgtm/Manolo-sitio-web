@@ -1,6 +1,8 @@
-// "Mi día" en Inicio: arma las filas (entrenar, hábitos, Biblia, para
-// gastar hoy y Running) con lo que cada sección ya calculó — sin pantalla
-// ni Firebase (D-100). La pantalla está en js/mi-dia.js.
+// "Mi día" en Inicio: arma las filas (mi mañana, entrenar, hábitos, Biblia,
+// el libro que lees, el repaso de hoy, para gastar hoy y Running) con lo que
+// cada sección ya calculó — sin pantalla ni Firebase (D-100). Como mucho 5
+// filas: si hay más, quedan las de hacer hoy (fase 7, D-114). La pantalla
+// está en js/mi-dia.js.
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
   else root.MiDiaMotor = factory();
@@ -17,12 +19,35 @@ const num1 = n => String(Math.round(Number(n) * 10) / 10).replace(".", ",");
 //             plan: { nombre, texto } | null (lectura de hoy que falta) },
 //   dinero: { dias, resultado, texto (para gastar por día), conPresupuesto },
 //   running: { kmSemana, meta, manana: { dia, km, dura } | null,
-//              ultima: { cuando: "ayer", km } | null }
+//              ultima: { cuando: "ayer", km } | null },
+//   manana: { estado: "curso" | "hecha" | "pendiente", paso, de, nombre, vsPlan (s, + = atrasado),
+//             total, dif (s contra tu promedio), listo ("8:00") } (Medir tiempos),
+//   libro: { titulo, paginasHoy, meta } (el que estás leyendo),
+//   repaso: { frases, versiculos } (para repasar hoy)
 // }
 // → [{ id, icono, titulo, detalle, estado: "hecho" | "pendiente" | "aviso" | "libre", href }]
+const MAX = 5;
+const PESO = { pendiente: 0, aviso: 1, hecho: 2, libre: 3 };
+const minutos = s => { const m = Math.max(1, Math.round(Math.abs(s) / 60)); return `${m} min`; };
+function duracion(s) {
+  const m = Math.round((s || 0) / 60);
+  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h${m % 60 ? ` ${String(m % 60).padStart(2, "0")} min` : ""}`;
+}
 function filas(d) {
   const x = d || {};
   const out = [];
+  // Mi mañana (Medir tiempos): lo primero del día.
+  const mm = x.manana;
+  if (mm && mm.estado === "curso") {
+    const v = mm.vsPlan;
+    const detalle = v == null ? `Ahora: ${mm.nombre}.` : v > 60 ? `Vas ${minutos(v)} atrasado según tu plan.` : v < -60 ? `Vas ${minutos(v)} adelantado según tu plan.` : "Vas a tiempo según tu plan.";
+    out.push({ id: "manana", icono: "timer", titulo: `Mi mañana: paso ${mm.paso} de ${mm.de}`, detalle, estado: v > 60 ? "aviso" : "pendiente", href: "#tiempos" });
+  } else if (mm && mm.estado === "hecha") {
+    const dif = mm.dif == null || Math.abs(mm.dif) < 60 ? "" : ` · ${minutos(mm.dif)} ${mm.dif > 0 ? "más" : "menos"} que tu promedio`;
+    out.push({ id: "manana", icono: "timer", titulo: "Mi mañana: lista", detalle: `${duracion(mm.total)}${dif}.`, estado: "hecho", href: "#tiempos" });
+  } else if (mm && mm.estado === "pendiente") {
+    out.push({ id: "manana", icono: "timer", titulo: "Empieza tu mañana", detalle: `Tu plan: listo a las ${mm.listo}.`, estado: "pendiente", href: "#tiempos" });
+  }
   const ej = x.ejercicio;
   if (ej) {
     const r0 = (ej.razones || [])[0] || "";
@@ -48,6 +73,20 @@ function filas(d) {
     else if (b.plan) out.push({ id: "biblia", icono: "biblia", titulo: `Lectura de hoy: ${b.plan.texto}`, detalle: b.actual > 0 ? `${b.plan.nombre}. Llevas ${b.actual} ${b.actual === 1 ? "día" : "días"} seguidos.` : `${b.plan.nombre}.`, estado: "pendiente", href: "#biblia" });
     else out.push({ id: "biblia", icono: "biblia", titulo: "Anota el versículo de hoy", detalle: b.actual > 0 ? `Llevas ${b.actual} ${b.actual === 1 ? "día" : "días"} seguidos: no cortes la racha.` : "Tu momento con la Palabra.", estado: "pendiente", href: "#biblia" });
   }
+  // El libro que estás leyendo: páginas de hoy contra tu meta.
+  const li = x.libro;
+  if (li && li.titulo) {
+    const hecho = li.meta > 0 && li.paginasHoy >= li.meta;
+    out.push({ id: "libro", icono: "libro", titulo: `Leyendo: ${li.titulo}`,
+      detalle: hecho ? `Meta de hoy cumplida: ${li.paginasHoy} páginas.` : li.meta > 0 ? `${li.paginasHoy} de ${li.meta} páginas hoy.` : li.paginasHoy ? `${li.paginasHoy} páginas hoy.` : "Todavía no leíste hoy.",
+      estado: hecho ? "hecho" : "pendiente", href: "#libros" });
+  }
+  // El repaso de hoy: frases (Libros) y versículos para memorizar (Biblia).
+  const rp = x.repaso;
+  if (rp && (rp.frases > 0 || rp.versiculos > 0)) {
+    const partes = [rp.frases > 0 ? `${rp.frases} ${rp.frases === 1 ? "frase" : "frases"}` : "", rp.versiculos > 0 ? `${rp.versiculos} ${rp.versiculos === 1 ? "versículo" : "versículos"}` : ""].filter(Boolean);
+    out.push({ id: "repaso", icono: rp.versiculos > 0 && !rp.frases ? "biblia" : "libro", titulo: "Repaso de hoy", detalle: `${lista(partes)} para repasar.`, estado: "pendiente", href: rp.frases > 0 ? "#libros" : "#biblia-memorizar" });
+  }
   const m = x.dinero;
   if (m && m.conPresupuesto && m.dias > 0) {
     const quedan = m.dias === 1 ? "Queda 1 día del periodo." : `Quedan ${m.dias} días del periodo.`;
@@ -63,7 +102,14 @@ function filas(d) {
       : r.ultima ? `Última: ${r.ultima.cuando}, ${num1(r.ultima.km)} km.` : "Sigue sumando.";
     out.push({ id: "running", icono: "running", titulo: `Running: ${num1(r.kmSemana)}${meta} km esta semana`, detalle, estado: cumplida ? "hecho" : "libre", href: "#running" });
   }
-  return out;
+  return elegir(out);
+}
+// Como mucho 5 filas: quedan las de hacer hoy (luego avisos, hechas y
+// libres), en su orden de siempre.
+function elegir(out) {
+  if (out.length <= MAX) return out;
+  return out.map((f, i) => ({ f, i })).sort((a, b) => (PESO[a.f.estado] - PESO[b.f.estado]) || a.i - b.i)
+    .slice(0, MAX).sort((a, b) => a.i - b.i).map(x => x.f);
 }
 
 // Frase de arriba: cuántas cosas faltan hoy.

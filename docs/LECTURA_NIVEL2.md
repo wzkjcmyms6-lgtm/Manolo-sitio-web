@@ -17,7 +17,7 @@ desde D-102. Cada fase deja la app funcionando y publicada.
 | 4 | Libros: "Leer ahora", velocidad y estimaciones, estados y formatos nuevos | ✅ |
 | 5 | Libros: escanear ISBN, importar, frases (repaso, etiquetas, compartir), notas, "¿Qué leo después?" y estadísticas | ✅ |
 | 6 | Medir tiempos: definitiva, actividades editables, cronómetro, "Mi mañana" y llenado automático | ✅ |
-| 7 | Medir tiempos: plan de la mañana, estadísticas, línea base y experimentos; "Mi día" y Hábitos | |
+| 7 | Medir tiempos: plan de la mañana, estadísticas, línea base y experimentos; "Mi día" y Hábitos | ✅ |
 | 8 | QA final, docs y lista para el iPhone | |
 
 Datos de prueba: `scripts/e2e/lectura-semilla.js` (50 días de versículos,
@@ -293,3 +293,17 @@ Nada de lo guardado se reescribe; lo viejo sin estos campos se ve igual.
   pausa y "sumar"; Mi mañana completa con saltar, pausar, cerrar y seguir,
   resumen; se llena sola con Running, Ejercicio y Libros; quitar y cambiar a
   mano; exportar; a 390, 1280 y 320 px).
+
+## Fase 7: plan de la mañana, estadísticas, experimentos, Mi día y Hábitos (D-114)
+- **Archivos nuevos**: `js/tiempos-plan.js`, `js/tiempos-stats.js` (UMD con
+  pruebas), `js/tiempos-plan-ui.js`, `js/tiempos-stats-ui.js`. Cambiados:
+  `js/tiempos.js` (huecos, Línea base, ajustes, avisa a Hábitos),
+  `js/tiempos-manana.js` (contra tu plan, `paraMiDia`), `js/mi-dia-motor.js`
+  y `js/mi-dia.js` (mi mañana, libro, repaso; máximo 5 filas),
+  `js/habitos-auto.js`, `js/habitos-engine.js` y `js/habitos.js` (fuente
+  "Medir tiempos"), `css/tiempos.css`.
+- **Pruebas**: `tests/tiempos-plan.test.js`, `tiempos-stats`, `mi-dia` (filas
+  nuevas y el máximo de 5), `habitos-auto` (fuente tiempos) y `SOLO=fase7
+  node scripts/e2e/tiempos.js` (plan y días de la semana, te faltan,
+  estadísticas, línea base, experimento nuevo, terminar y quitar, Mi mañana
+  contra tu plan, hábito Tiempo que se llena solo, Mi día).

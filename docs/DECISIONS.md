@@ -1412,3 +1412,33 @@ es "solo evento"). Sin lecturas nuevas de Firestore: usa los datos que cada
 sección ya carga. (6) Exportar JSON y CSV (";" y coma decimal, para Excel en
 español). (7) Opcional, sin hacer hasta que el dueño diga: pitido o voz si
 un paso pasa tu promedio (por ahora el reloj se pone naranja).
+
+**D-114 (2026-11-15) · Medir tiempos fase 7: plan de la mañana,
+estadísticas, línea base y experimentos; "Mi día" y Hábitos.** (1) Plan de
+la mañana (`meta/tiempos_ajustes.plan = { levantarse, listo }`): la línea de
+tiempo usa la **mediana** de tus últimos 30 registros de cada paso (una
+mañana rara no la mueve como un promedio) y solo los pasos que **sueles
+hacer ese día de la semana** (los anotados en al menos la mitad de esos
+días; así Ejercicio y Correr no se suman el mismo día). Dice si te sobra o
+te falta tiempo, dónde se te va más (el paso más largo y su %) y dónde
+podrías ahorrar (mediana contra tu mejor tiempo). (2) Mi mañana contra tu
+plan: en vivo, si el paso actual va antes de su hora (adelantado), en ella
+(a tiempo) o después (atrasado); al final, a qué hora terminaste contra tu
+hora de estar listo. (3) Estadísticas por actividad: promedio, mediana,
+mejor y peor (con fecha), tendencia (últimos 30 días contra los 30
+anteriores, con 3 registros o más en cada lado; ±5 % = igual; menos tiempo =
+mejor), lunes a viernes contra fin de semana, y el total de tu mañana por
+día. (4) El "promedio final" pasa a llamarse **Línea base** (tus primeros
+30). Un **experimento** (`meta/tiempos_ajustes.experimentos.{id} = {
+nombre, desde, nota, hasta, creado }`) toma los 30 registros siguientes a
+su fecha y compara su mediana con la línea base (solo días de antes del
+experimento); "Terminarlo hoy" y "Quitar" (tus tiempos no se tocan). (5)
+"Mi día": suma tu mañana (en curso y contra tu plan, lista, o "Empieza tu
+mañana" si tienes plan), el libro que lees (páginas de hoy contra tu meta)
+y el repaso de hoy (frases y versículos); como mucho 5 filas: primero lo que
+hay que hacer hoy, después avisos, lo hecho y lo libre, en su orden de
+siempre. (6) Hábitos: "Medir tiempos" es una fuente más de "se marca solo"
+(una actividad o todo el día; Sí/No o Tiempo en minutos). Con eso, vincular
+un paso de tu mañana a un hábito (el opcional de la fase 7) sale con el
+mismo mecanismo: al cerrar el paso, el hábito se marca. Sin lecturas nuevas
+de Firestore.

@@ -1,6 +1,6 @@
 // Pruebas de pantalla de Medir tiempos (sub-panel de Inicio).
 // Uso: node scripts/e2e/tiempos.js [carpeta-para-capturas]
-// SOLO=fase6 corre solo lo de la fase 6 (scripts/e2e/tiempos-n2.js).
+// SOLO=fase6 o SOLO=fase7 corre solo lo de esa fase (scripts/e2e/tiempos-n2.js).
 const { chromium, servidor, abrir, ok, captura: capturar, terminar } = require("./comun.js");
 const T = require("../../js/tiempos-motor.js");
 const N2 = require("./tiempos-n2.js");
@@ -54,7 +54,9 @@ async function elegirDia(p, f) {
       await N2.seLlenaSolo(browser, base, ancho, captura);
     }
   };
+  const fase7 = async () => { for (const ancho of [390, 1280]) await N2.planStatsExp(browser, base, ancho, captura); };
   if (SOLO === "fase6") { await fase6(); await terminar(browser, srv); return; }
+  if (SOLO === "fase7") { await fase7(); await terminar(browser, srv); return; }
   const p = await abrir(browser, base, { __SEED__: SEED }, { hash: "#inicio", zona: ZONA, fecha: HOY });
   await p.waitForTimeout(600);
 
@@ -108,10 +110,10 @@ async function elegirDia(p, f) {
   const est = T.estado(ds);
   console.log("\n30 registros: promedio final");
   ok(est.manana.n === 30 && est.manana.completa, "con el de hoy, la rutina de la mañana llega a 30");
-  ok(/30 de 30/.test(await texto(p, '[data-tmp-avance="manana"]')) && (await texto(p, '[data-tmp-avance="manana"]')).includes(`Promedio final: ${T.texto(est.manana.promedio)}`), `promedio final ${T.texto(est.manana.promedio)}`);
+  ok(/30 de 30/.test(await texto(p, '[data-tmp-avance="manana"]')) && (await texto(p, '[data-tmp-avance="manana"]')).includes(`Línea base: ${T.texto(est.manana.promedio)}`), `línea base (antes «promedio final») ${T.texto(est.manana.promedio)}`);
   ok(await p.$('#tmp-anotar [name="manana-min"]'), "hoy todavía se puede corregir (ya cuenta)");
   await elegirDia(p, "2026-10-27");
-  ok(await p.$('#tmp-anotar [name="manana-min"]') && (await texto(p, '[data-tmp-avance="manana"]')).includes(`Promedio final: ${T.texto(est.manana.promedio)}`), "otro día se sigue pudiendo anotar (fase 6: se sigue midiendo después de los 30) y el promedio final queda");
+  ok(await p.$('#tmp-anotar [name="manana-min"]') && (await texto(p, '[data-tmp-avance="manana"]')).includes(`Línea base: ${T.texto(est.manana.promedio)}`), "otro día se sigue pudiendo anotar (fase 6: se sigue midiendo después de los 30) y la línea base queda");
   ok(await p.$('#tmp-anotar [name="correr-min"]'), "las demás actividades siguen abiertas");
   ok((await p.$eval('#tmp-anotar [name="correr-min"]', el => el.value)) === "33" && (await p.$eval('#tmp-anotar [name="correr-seg"]', el => el.value)) === "20", "al elegir un día con datos, se cargan (33 min 20 s)");
   ok((await texto(p, '[data-tmp-avance="leer"] .tmp-avance-fila span')) === "2 de 30", "leer lleva 2 de 30");
@@ -200,5 +202,6 @@ async function elegirDia(p, f) {
   ok(!q.errores.length, "sin errores de página");
   await q.context().close();
   await fase6();
+  await fase7();
   await terminar(browser, srv);
 })();

@@ -65,3 +65,36 @@ test("filas: Biblia cuenta los capítulos leídos y el plan de hoy (D-106)", () 
   assert.deepEqual([plan.titulo, plan.detalle, plan.estado], ["Lectura de hoy: Juan 3-4", "Evangelios en 30 días. Llevas 6 días seguidos.", "pendiente"]);
   assert.equal(b({ hoyHecho: false, actual: 0, total: 3, plan: { nombre: "Proverbios del día", texto: "Proverbios 14" } }).detalle, "Proverbios del día.");
 });
+
+test("fase 7 (D-114): mi mañana, el libro que lees y el repaso de hoy", () => {
+  const curso = M.filas({ manana: { estado: "curso", paso: 2, de: 5, nombre: "Desayunar", vsPlan: 300 } })[0];
+  assert.deepEqual([curso.id, curso.titulo, curso.detalle, curso.estado, curso.href], ["manana", "Mi mañana: paso 2 de 5", "Vas 5 min atrasado según tu plan.", "aviso", "#tiempos"]);
+  assert.equal(M.filas({ manana: { estado: "curso", paso: 1, de: 5, nombre: "Rutina", vsPlan: -120 } })[0].detalle, "Vas 2 min adelantado según tu plan.");
+  assert.equal(M.filas({ manana: { estado: "curso", paso: 1, de: 5, nombre: "Rutina", vsPlan: null } })[0].detalle, "Ahora: Rutina.");
+  const hecha = M.filas({ manana: { estado: "hecha", total: 5700, dif: -180 } })[0];
+  assert.deepEqual([hecha.titulo, hecha.detalle, hecha.estado], ["Mi mañana: lista", "1 h 35 min · 3 min menos que tu promedio.", "hecho"]);
+  assert.equal(M.filas({ manana: { estado: "pendiente", listo: "8:00" } })[0].detalle, "Tu plan: listo a las 8:00.");
+  const libro = M.filas({ libro: { titulo: "Hábitos atómicos", paginasHoy: 12, meta: 30 } })[0];
+  assert.deepEqual([libro.titulo, libro.detalle, libro.estado], ["Leyendo: Hábitos atómicos", "12 de 30 páginas hoy.", "pendiente"]);
+  assert.equal(M.filas({ libro: { titulo: "x", paginasHoy: 31, meta: 30 } })[0].estado, "hecho");
+  const rep = M.filas({ repaso: { frases: 3, versiculos: 2 } })[0];
+  assert.deepEqual([rep.detalle, rep.href], ["3 frases y 2 versículos para repasar.", "#libros"]);
+  assert.equal(M.filas({ repaso: { frases: 0, versiculos: 1 } })[0].href, "#biblia-memorizar");
+  assert.equal(M.filas({ repaso: { frases: 0, versiculos: 0 } }).length, 0);
+});
+
+test("fase 7: como mucho 5 filas, primero lo que hay que hacer hoy", () => {
+  const fs = M.filas({
+    manana: { estado: "hecha", total: 5400, dif: 0 },
+    ejercicio: { tipo: "descanso", razones: ["Hoy toca descansar."] },
+    habitos: { hechos: 1, total: 3, pendientes: [{ nombre: "Agua" }, { nombre: "Orar" }] },
+    biblia: { hoyHecho: false, actual: 3, total: 10 },
+    libro: { titulo: "Sapiens", paginasHoy: 0, meta: 30 },
+    repaso: { frases: 2, versiculos: 0 },
+    dinero: { dias: 5, resultado: 100, texto: "Bs 20", conPresupuesto: true },
+    running: { kmSemana: 10, meta: 0, manana: null }
+  });
+  assert.equal(fs.length, 5);
+  assert.deepEqual(fs.map(f => f.id), ["manana", "habitos", "biblia", "libro", "repaso"], "quedan los pendientes y lo hecho de hoy; se van el descanso, el dinero y Running (libres)");
+});
+

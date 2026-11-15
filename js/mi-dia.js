@@ -48,6 +48,25 @@ function datos() {
       capsHoy: (dias[hoy] || []).length, plan: pl ? { nombre: pl.e.nombre, texto: P.texto(pl.e.lectura) } : null };
   });
   d.dinero = probar(() => (window.FinanzasResumen ? FinanzasResumen.hoy() : null));
+  // Fase 7 (D-114): mi mañana, el libro que lees y el repaso de hoy.
+  d.manana = probar(() => (window.TiemposManana && TiemposManana.paraMiDia ? TiemposManana.paraMiDia() : null));
+  d.libro = probar(() => {
+    const D = window.LibrosDatos, P = window.LibrosProgreso;
+    if (!D || !P || !D.listo()) return null;
+    const leyendo = D.lista().filter(l => l.estado === "leyendo" && !P.esAudio(l));
+    if (!leyendo.length) return null;
+    const porDia = P.paginasPorDia(D.lista());
+    // El que tocaste último (el de la página más reciente).
+    const ultimo = l => Object.keys(l.progreso || {}).sort().pop() || l.fechaInicio || "";
+    const l = leyendo.slice().sort((a, b) => ultimo(b).localeCompare(ultimo(a)))[0];
+    return { titulo: l.titulo, paginasHoy: porDia[hoy] || 0, meta: D.metaDia() };
+  });
+  d.repaso = probar(() => {
+    const D = window.LibrosDatos, F = window.LibrosFrases;
+    const frases = D && F && D.listo() ? F.paraHoy(D.frases(), hoy, D.frasesDia()).pendientes.length : 0;
+    const versiculos = window.BibliaMemoriaUI && BibliaMemoriaUI.paraHoy ? BibliaMemoriaUI.paraHoy() : 0;
+    return { frases, versiculos };
+  });
   d.running = probar(() => {
     if (!window.RunDatos || !window.RunAnalisis) return null;
     const docs = RunDatos.lista("running");
@@ -113,6 +132,9 @@ window.addEventListener("manolo:fuente", e => {
 window.addEventListener("manolo:inicio", pedir);
 window.addEventListener("biblia:lector", pedir);
 window.addEventListener("biblia:planes", pedir);
+window.addEventListener("biblia:memoria", pedir);
+window.addEventListener("libros:datos", pedir);
+window.addEventListener("tiempos:datos", pedir);
 window.addEventListener("hashchange", pedir);
 document.addEventListener("rutinas:cambio", pedir);
 document.addEventListener("ejercicio:ajustes", pedir);

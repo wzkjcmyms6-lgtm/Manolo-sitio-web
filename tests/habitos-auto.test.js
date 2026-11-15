@@ -127,3 +127,18 @@ test("sugiere vincular un hábito por su nombre (Correr → Running…)", () => 
   assert.equal(s("Leer", { tipo: "tiempo" }).fuente, "libros", "con las sesiones de «Leer ahora», Libros da minutos (D-107)");
   assert.equal(s("Correr", { tipo: "tiempo" }).fuente, "running");
 });
+
+test("Medir tiempos como fuente (fase 7): una actividad o todo el día", () => {
+  const ds = [
+    { fecha: "2026-11-15", seg: { manana: 1500, leer: 1800 } },
+    { fecha: "2026-11-16", seg: { manana: 1200 } }
+  ];
+  assert.deepEqual(A.porDia("tiempos", ds, { actividad: "leer" }), { "2026-11-15": { n: 1, km: 0, min: 30, paginas: 0 } });
+  assert.deepEqual(A.porDia("tiempos", ds)["2026-11-15"].min, 55, "sin actividad: todo el día");
+  const h = { tipo: "tiempo", vinculo: "tiempos", vinculoCfg: { actividad: "manana" }, inicio: "2026-11-01" };
+  const p = A.plan(h, A.porDia("tiempos", ds, h.vinculoCfg), {}, { hoy: "2026-11-16", ahora: 1 });
+  assert.deepEqual(Object.keys(p.poner), ["2026-11-15", "2026-11-16"]);
+  assert.equal(p.poner["2026-11-16"].v, 20, "Tiempo: 20 minutos");
+  assert.equal(A.fuente("tiempos").actividad, true);
+});
+

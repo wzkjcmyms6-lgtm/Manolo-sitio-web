@@ -81,6 +81,28 @@ reglas de Firestore ya cubren `users/{uid}/**`: no hubo que tocar la consola.
 - **Exportar** (abajo): JSON (actividades y días) y CSV para Excel
   (separado con ";", decimales con coma, con la columna "automatico").
 
+## Fase 7 (2026-11-15, D-114): plan, estadísticas, línea base y experimentos
+
+- **Plan de la mañana** (arriba): pones a qué hora te levantas y a qué hora
+  tienes que estar listo. Con la mediana de tus últimos 30 registros de cada
+  paso arma la línea de tiempo del día que elijas (Lu…Do: los pasos que
+  sueles hacer ese día). Dice si te sobra o te falta tiempo, dónde se te va
+  más y dónde podrías ahorrar.
+- **Mi mañana contra tu plan**: en vivo "vas 4 min atrasado / adelantado / a
+  tiempo"; al final, "Terminaste a las 7:52: 8 min antes de tu hora".
+- **Estadísticas** (después de Promedios): por actividad, promedio,
+  mediana, mejor y peor, tendencia (últimos 30 días contra los 30
+  anteriores), lunes a viernes contra fin de semana; y el total de tu mañana
+  por día (barras).
+- **Línea base** (antes "Promedio final"): tus primeros 30 registros.
+- **Experimentos**: "¿Qué cambiaste?" desde un día; sus 30 registros se
+  comparan con la línea base (− = más rápido). "Terminarlo hoy" o "Quitar".
+- **Mi día** (Inicio): tu mañana (en curso, lista o "Empieza tu mañana"),
+  el libro que lees y el repaso de hoy; como mucho 5 filas.
+- **Hábitos**: "Se marca solo" › "Medir tiempos": un hábito Sí/No o Tiempo
+  se llena con una actividad (o todo el día). Así un paso de tu mañana marca
+  su hábito al cerrarlo.
+
 ## Archivos
 
 | Archivo | Qué hace |
@@ -93,8 +115,12 @@ reglas de Firestore ya cubren `users/{uid}/**`: no hubo que tocar la consola.
 | `js/tiempos-manana.js` | "Mi mañana" y "⏱ Medir" (hojas, reloj, pantalla encendida) |
 | `js/tiempos-actividades-ui.js` | Hoja "Tus actividades" |
 | `js/tiempos-llenar.js` | Escucha a Running, Ejercicio, Libros y Movilidad y escribe lo automático |
+| `js/tiempos-plan.js` | UMD: plan de la mañana (medianas, pasos de cada día, sobra o falta, contra tu plan). Pruebas: `tests/tiempos-plan.test.js` |
+| `js/tiempos-stats.js` | UMD: estadísticas, línea base y experimentos. Pruebas: `tests/tiempos-stats.test.js` |
+| `js/tiempos-plan-ui.js` | Sección "Plan de la mañana" |
+| `js/tiempos-stats-ui.js` | Secciones "Estadísticas" y "Experimentos" |
 | `css/tiempos.css` | Estilos propios (clases `.tmp-`, `.tman-`, `.tact-`); reutiliza `.lib-input`, `.lib-btn`, `.bib-item`, `.fin-tabs` |
-| `scripts/e2e/tiempos.js` (+ `tiempos-n2.js`) | Prueba de pantalla (`SOLO=fase6` corre solo lo de la fase 6) |
+| `scripts/e2e/tiempos.js` (+ `tiempos-n2.js`) | Prueba de pantalla (`SOLO=fase6` o `SOLO=fase7` corre solo lo de esa fase) |
 
 ## Cómo probar en el iPhone
 
@@ -114,3 +140,7 @@ reglas de Firestore ya cubren `users/{uid}/**`: no hubo que tocar la consola.
    mírala en "Mi mañana".
 9. Corre o entrena con Manolo: en Medir tiempos, Correr o Ejercicio de ese
    día aparecen solos con "⚡".
+10. (Fase 7) **Plan de la mañana**: pon a qué hora te levantas y a qué hora
+    tienes que estar listo; mira si te sobra tiempo y toca otro día (Sá).
+11. **🧪 Experimentos › ＋ Nuevo**: "Dejo la ropa lista la noche anterior".
+    En unas semanas verás si tu mañana bajó.

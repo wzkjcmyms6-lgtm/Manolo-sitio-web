@@ -256,4 +256,105 @@ async function seLlenaSolo(browser, base, ancho, captura) {
   await p.context().close();
 }
 
-module.exports = { actividades, medirYManana, seLlenaSolo };
+// ---------- Fase 7: plan de la mañana, estadísticas, experimentos, Mi día y Hábitos ----------
+async function planStatsExp(browser, base, ancho, captura) {
+  console.log(`\nMedir tiempos: plan de la mañana, estadísticas y experimentos (${ancho} px)`);
+  const e = semilla(), S = e.__SEED__;
+  // Un hábito de tipo Tiempo que se llena con la rutina de la mañana.
+  S["users/test/habitos"] = { rutina: { v: 2, name: "Rutina de la mañana", emoji: "🌅", tipo: "tiempo", meta: 25, unidad: "min", days: [true, true, true, true, true, true, true],
+    done: [], registros: {}, createdAt: Date.parse("2026-11-01T07:00:00-04:00"), inicio: "2026-11-01", orden: 1, dificultad: "media", freqType: "diario", timeOfDay: "manana",
+    vinculo: "tiempos", vinculoCfg: { actividad: "manana" }, vinculoDesde: "2026-11-14" } };
+  const p = await abrir(browser, base, e, { hash: "#tiempos", zona: ZONA, relojFalso: `${HOY}T06:00:00-04:00`, ancho, alto: 844 });
+  consola(p);
+  const avanzar = async ms => { await p.clock.fastForward(ms); await p.waitForTimeout(350); };
+  await p.waitForTimeout(1000);
+
+  // Plan de la mañana
+  ok(/¿A qué hora te levantas/.test(await txt(p, "#tmp-plan")), "plan: pregunta a qué hora te levantas y a qué hora estar listo");
+  await p.fill('#tmp-plan [name="levantarse"]', "05:30");
+  await p.fill('#tmp-plan [name="listo"]', "08:00");
+  await p.click('#tmp-plan [type="submit"]');
+  await p.waitForTimeout(400);
+  const aj = await ajustes(p);
+  ok(aj.plan && aj.plan.levantarse === "5:30" && aj.plan.listo === "8:00", "se guarda tu plan");
+  const linea = await p.$$eval("#tmp-plan .tpl-linea li", els => els.map(x => x.textContent.replace(/\s+/g, " ").trim()));
+  ok(/^5:30.*Rutina de la mañana/.test(linea[0]) && /Listo/.test(linea[linea.length - 1]), `la línea de tiempo empieza a las 5:30 (${linea[0]})`);
+  ok(linea.some(x => /Ejercicio/.test(x)) && !linea.some(x => /Correr/.test(x)), "los lunes: con Ejercicio y sin Correr (lo que sueles hacer ese día)");
+  ok(/Te (sobran|faltan)/.test(await txt(p, "#tmp-plan .tpl-veredicto")) && /Donde más se te va/.test(await txt(p, "#tmp-plan")), "dice si te sobra o te falta tiempo y dónde se te va más");
+  await p.click('#tmp-plan [data-tpl-dow="6"]');
+  await p.waitForTimeout(200);
+  const sab = await txt(p, "#tmp-plan .tpl-linea");
+  ok(/Correr/.test(sab) && !/Ejercicio/.test(sab), "los sábados: con Correr");
+  await captura(p, `tiempos-plan-${ancho}.png`);
+  await p.click('#tmp-plan [data-tpl="editar"]');
+  await p.waitForTimeout(150);
+  await p.fill('#tmp-plan [name="listo"]', "06:30");
+  await p.click('#tmp-plan [type="submit"]');
+  await p.waitForTimeout(400);
+  ok(/Te faltan/.test(await txt(p, "#tmp-plan .tpl-veredicto")), "con poco tiempo: «Te faltan…»");
+  await p.click('#tmp-plan [data-tpl="editar"]');
+  await p.fill('#tmp-plan [name="listo"]', "08:00");
+  await p.click('#tmp-plan [type="submit"]');
+  await p.waitForTimeout(400);
+
+  // Estadísticas
+  const cifras = await txt(p, "#tmp-stats [data-tst-cifras]");
+  ok(/Promedio.*Mediana.*Mejor.*Peor/.test(cifras), `estadísticas: promedio, mediana, mejor y peor (${cifras.slice(0, 80)})`);
+  ok(/más rápido|más lento|Igual que el mes anterior/.test(await txt(p, "#tmp-stats .tst-tend")) && /Lunes a viernes: .* fin de semana: /.test(await txt(p, "#tmp-stats")), "tendencia y días de semana contra fin de semana");
+  await p.click('#tmp-stats [data-tst-act="desayunar"]');
+  await p.waitForTimeout(200);
+  ok(await p.$eval('#tmp-stats [data-tst-act="desayunar"]', b => b.getAttribute("aria-pressed") === "true") && (await txt(p, "#tmp-stats [data-tst-cifras]")) !== cifras, "otra actividad, otros números");
+  ok((await p.$$("#tmp-stats .tst-b")).length >= 20, "tu mañana por día (barras)");
+
+  // Línea base y experimentos
+  ok(/Línea base/.test(await txt(p, "#tmp-avance h2")) && /Línea base: /.test(await txt(p, '#tmp-avance [data-tmp-avance="manana"]')), "el promedio final ahora se llama «Línea base»");
+  await p.click('#tmp-exp [data-tex="nuevo"]');
+  await p.waitForTimeout(200);
+  await p.fill('#tmp-exp [name="nombre"]', "Ropa lista la noche anterior");
+  await p.fill('#tmp-exp [name="desde"]', "2026-11-01");
+  await p.click('#tmp-exp [type="submit"]');
+  await p.waitForTimeout(400);
+  const exps = (await ajustes(p)).experimentos || {};
+  const id = Object.keys(exps)[0];
+  ok(id && exps[id].nombre === "Ropa lista la noche anterior" && exps[id].desde === "2026-11-01", "«Nuevo experimento» se guarda");
+  const tarjeta = await txt(p, `#tmp-exp [data-tex-id="${id}"]`);
+  ok(/en curso/.test(tarjeta) && /antes \d/.test(tarjeta) && /[−+±]\d+ %/.test(tarjeta) && /\d+\/30/.test(tarjeta), `compara con tu línea base (${tarjeta.slice(0, 120)})`);
+  await captura(p, `tiempos-experimento-${ancho}.png`);
+  await p.click(`#tmp-exp [data-tex-terminar="${id}"]`);
+  await p.waitForTimeout(400);
+  ok((await ajustes(p)).experimentos[id].hasta === HOY && /terminado/.test(await txt(p, `#tmp-exp [data-tex-id="${id}"]`)), "«Terminarlo hoy»");
+  await p.click(`#tmp-exp [data-tex-quitar="${id}"]`);
+  await p.waitForTimeout(400);
+  ok(!((await ajustes(p)).experimentos || {})[id] && !(await p.$(`#tmp-exp [data-tex-id="${id}"]`)), "«Quitar» (tus tiempos no se borran)");
+
+  // Mi mañana contra tu plan (te levantaste 5:30; son las 6:00)
+  await p.click('#tmp-manana [data-tman="empezar"]');
+  await p.waitForTimeout(400);
+  ok(/Según tu plan: vas \d+ min atrasado/.test(await txt(p, ".tman-hoja .tman-plan")), `en vivo contra tu plan (${await txt(p, ".tman-hoja .tman-plan")})`);
+  for (let i = 0; i < 6; i++) {
+    await avanzar(10 * 60000);
+    await p.click('.tman-hoja [data-tman="siguiente"]');
+    await p.waitForTimeout(300);
+  }
+  ok(/Terminaste a las 7:0\d/.test(await txt(p, ".tman-hoja .tman-resumen")) && /antes de tu hora \(8:00\)/.test(await txt(p, ".tman-hoja .tman-resumen")), `al final, contra tu hora de estar listo (${(await txt(p, ".tman-hoja .tman-resumen")).slice(0, 80)})`);
+  await p.click('.tman-hoja [data-tman="listo-manana"]');
+  await p.waitForTimeout(500);
+
+  // Hábitos: el de la rutina de la mañana se llena solo (Tiempo = minutos).
+  const h = await p.evaluate(() => window.__fakeStore.colMap("users/test/habitos").get("rutina"));
+  const r15 = h.registros["2026-11-15"], rHoy = h.registros[HOY];
+  ok(r15 && r15.auto && r15.auto.f === "tiempos" && r15.v > 0, "Hábitos: «Rutina de la mañana» (Tiempo) se llena con Medir tiempos");
+  ok(rHoy && rHoy.v === 10, `y hoy, con lo que mediste en Mi mañana (${rHoy && rHoy.v} min)`);
+
+  // Mi día en Inicio: mi mañana (lista), el repaso y lo que toca hoy.
+  await p.evaluate(() => { location.hash = "#inicio"; });
+  await p.waitForTimeout(600);
+  const md = await p.$$eval("#mi-dia .md-fila", els => els.map(x => x.dataset.md));
+  ok(md.includes("manana") && /Mi mañana: lista/.test(await txt(p, '#mi-dia [data-md="manana"]')), `«Mi día»: tu mañana lista (${md.join(", ")})`);
+  ok(md.length <= 5, "Mi día: como mucho 5 filas");
+  ok(await sinDesborde(p), "no se mueve de lado");
+  sinErrores(p);
+  await p.context().close();
+}
+
+module.exports = { actividades, medirYManana, seLlenaSolo, planStatsExp };

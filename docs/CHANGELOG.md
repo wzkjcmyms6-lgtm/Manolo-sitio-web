@@ -1,5 +1,20 @@
 # Cambios
 
+## 2026-11-15 · Medir tiempos: plan de la mañana, estadísticas y experimentos
+- Plan de la mañana: pones a qué hora te levantas y a qué hora tienes que
+  estar listo, y Manolo arma tu mañana con tus tiempos: te dice si te sobra
+  o te falta tiempo, dónde se te va más y dónde podrías ahorrar.
+- En «Mi mañana» ves si vas adelantado o atrasado según tu plan, y al final
+  a qué hora terminaste.
+- Estadísticas de cada actividad (mediana, mejor, peor, si vas más rápido) y
+  tu mañana por día.
+- El promedio final ahora es tu «Línea base»; con «Experimentos» comparas un
+  cambio en tu rutina contra ella.
+- «Mi día» muestra tu mañana, el libro que lees y el repaso de hoy (máximo 5
+  filas). En Hábitos, un hábito puede marcarse solo con Medir tiempos.
+- Pruebas: `tests/tiempos-plan.test.js`, `tiempos-stats`, `mi-dia`,
+  `habitos-auto` y `scripts/e2e/tiempos.js` (`SOLO=fase7`).
+
 ## 2026-11-15 · Medir tiempos: definitiva, «Mi mañana», ⏱ Medir y se llena sola
 - Medir tiempos deja de ser provisoria: tus tiempos de siempre siguen ahí.
 - «Tus actividades»: crea las tuyas con emoji, cámbiales el nombre,

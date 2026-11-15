@@ -132,9 +132,10 @@ opcional, `pendientesMomento`).
 | Finanzas | anotaste un movimiento | cuántos | |
 | Gasto (Evitar) | un gasto en la categoría = recaída | — | |
 | Gimnasio | al guardar un entreno | meta | evento `entreno:guardado` |
+| Medir tiempos (2026-11-15, D-114) | anotaste o mediste esa actividad (o algo ese día) | minutos de esa actividad (o del día) | `manolo:fuente` "tiempos"; `vinculoCfg.actividad` (vacío = todo el día). Así un paso de "Mi mañana" marca su hábito al cerrarlo |
 
 Datos nuevos del hábito: `vinculo`, `vinculoCfg { medida, rutina,
-categoria }`, `vinculoDesde`; en el registro, `auto: { f, v }`.
+categoria, actividad }`, `vinculoDesde`; en el registro, `auto: { f, v }`.
 
 **"¿Que se marque solo?" (2026-11-06, D-103)**: un hábito **sin vínculo**
 nunca se marca solo (era el caso de "Correr" creado antes del 5 de
