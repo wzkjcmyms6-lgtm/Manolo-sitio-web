@@ -1,5 +1,17 @@
 # Cambios
 
+## 2026-11-15 · Libros: repaso de frases, favoritas, etiquetas y compartir
+- Arriba de Libros, "Frases de hoy": de 1 a 3 frases de tus libros para
+  repasar. Las que te encantan vuelven pronto; las demás, cada vez más
+  espaciadas.
+- Frases favoritas (★) y con etiquetas; en "Frases", filtros por favoritas
+  y por etiqueta.
+- Compartir una frase como imagen.
+- Consejo: con la cámara del iPhone copias el texto de la página y lo
+  pegas.
+- Pruebas: `tests/libros-frases.test.js`, `tests/libros-motor.test.js` y
+  `scripts/e2e/lectura.js` (`SOLO=frases`).
+
 ## 2026-11-15 · Libros: "¿Qué leo después?", sagas, prioridad y notas
 - Debajo de "Sigue leyendo", "¿Qué leo después?": tus libros por leer en
   orden y por qué (tu prioridad, la saga que vienes leyendo, un género que

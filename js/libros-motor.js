@@ -247,6 +247,17 @@ function notasDe(libro) {
 }
 
 // ---- Frases ----
+// Etiquetas (fase 5b, D-109): "Fe, hábitos ,fe" o ["Fe", "hábitos"] → ["fe", "hábitos"]
+// (minúsculas, sin repetir, hasta 8 de 24 letras).
+function etiquetasOk(t) {
+  const lista = Array.isArray(t) ? t : String(t == null ? "" : t).split(",");
+  const out = [];
+  lista.forEach(x => {
+    const v = String(x == null ? "" : x).replace(/^#/, "").replace(/[^0-9A-Za-zÁÉÍÓÚÜÑáéíóúüñ \-]/g, "").replace(/\s+/g, " ").trim().toLowerCase().slice(0, 24);
+    if (v && !out.includes(v) && out.length < 8) out.push(v);
+  });
+  return out;
+}
 function validarFrase(datos, opciones) {
   const o = opciones || {};
   const errores = [];
@@ -265,12 +276,15 @@ function validarFrase(datos, opciones) {
   if (!fechaOk(fecha)) err("fecha", "Pon la fecha.");
   else if (o.hoy && fecha > o.hoy) err("fecha", "La fecha no puede ser futura.");
   if (errores.length) return { ok: false, errores, doc: null };
-  return { ok: true, errores: [], doc: { v: 1, libroId, texto: t, pagina, fecha } };
+  return { ok: true, errores: [], doc: { v: 1, libroId, texto: t, pagina, fecha, fav: datos.fav === true || datos.fav === "1", etiquetas: etiquetasOk(datos.etiquetas) } };
 }
 function normalizarFrase(id, d) {
   d = d || {};
   return { id, libroId: d.libroId || "", texto: d.texto ? String(d.texto) : "", pagina: Number.isInteger(d.pagina) ? d.pagina : null,
-    fecha: fechaOk(d.fecha) ? d.fecha : "", creado: typeof d.creado === "number" ? d.creado : 0 };
+    fecha: fechaOk(d.fecha) ? d.fecha : "", creado: typeof d.creado === "number" ? d.creado : 0,
+    // Fase 5b (D-109): favorita, etiquetas y repaso.
+    fav: d.fav === true, etiquetas: etiquetasOk(d.etiquetas),
+    repaso: d.repaso && typeof d.repaso === "object" ? d.repaso : null };
 }
 const ordenarFrases = lista => lista.slice().sort((a, b) => b.fecha.localeCompare(a.fecha) || (b.creado - a.creado) || String(b.id).localeCompare(String(a.id)));
 // Buscar en el texto de la frase y en el título y autor de su libro.
@@ -407,7 +421,7 @@ function exportarJson(libros, frases, ahora, portadas) {
 }
 
 return {
-  ESTADOS, ESTADO, FORMATOS, FORMATO, DURACION_MAX, leerDuracion, duracionTexto, PRIORIDADES, TIPOS_NOTA, TIPO_NOTA, validarNota, notasDe, ORDENES, GENEROS, GENERO, normalizar, fechaOk, fechaLarga, estrellas,
+  ESTADOS, ESTADO, FORMATOS, FORMATO, DURACION_MAX, leerDuracion, duracionTexto, PRIORIDADES, TIPOS_NOTA, TIPO_NOTA, validarNota, notasDe, etiquetasOk, ORDENES, GENEROS, GENERO, normalizar, fechaOk, fechaLarga, estrellas,
   validarLibro, normalizarLibro, ordenar, filtrar, resumen, colorTapa,
   validarFrase, normalizarFrase, ordenarFrases, filtrarFrases, frasesDe, exportarJson,
   urlBusqueda, leerBusqueda, urlBuscarLibro, esIsbn, leerLibros, generoDesdeTemas, duplicado, urlPortadaOL, portadaUrlOk, medidasFoto, CALIDADES, LIMITE_FOTO, fotoOk, kb, portadaParaGuardar

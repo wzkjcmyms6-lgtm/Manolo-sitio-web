@@ -34,6 +34,7 @@ let encontrados = [];           // resultados de "Buscar el libro"
 let busquedaEnCurso = null;     // para cancelar la búsqueda anterior
 let relojBusqueda = 0;
 let textoFrases = "";
+const filtroFrases = { fav: false, etiqueta: "" };   // fase 5b (D-109)
 let actual = null;              // qué muestra la hoja: { modo: "ver"|"libro"|"frase", id, libroId, volver }
 let portadaSel;                 // en el formulario: undefined = sin cambios, null = quitar, { tipo: "url"|"foto", … }
 
@@ -49,6 +50,7 @@ const fallo = (que) => err => alert(`No se pudo ${que}: ${err && err.message ? e
 app.innerHTML = `
   <div class="lib-resumen" id="lib-resumen"></div>
   <div id="lib-leyendo"></div>
+  <div id="lib-repaso"></div>
   <div id="lib-siguiente"></div>
   <button type="button" class="lib-btn lib-btn-ancho" data-lib="nuevo">＋ Agregar libro</button>
   <div class="fin-tabs lib-tabs" role="tablist" aria-label="Libros">
@@ -67,6 +69,7 @@ app.innerHTML = `
   </div>
   <div id="lib-vista-frases" hidden>
     <input type="search" id="lib-buscar-frases" class="lib-input" placeholder="Buscar en tus frases" autocomplete="off" aria-label="Buscar frases">
+    <div class="lib-chips lib-frases-filtros" id="lib-frases-filtros" role="group" aria-label="Filtrar frases"></div>
     <button type="button" class="lib-btn-sec lib-btn-ancho lib-mt" data-lib="nueva-frase">＋ Agregar frase</button>
     <div id="lib-frases"></div>
   </div>
@@ -95,6 +98,7 @@ function render() {
   renderResumen();
   renderLeyendo();
   if (window.LibrosSiguienteUI) LibrosSiguienteUI.render();
+  if (window.LibrosFrasesUI) LibrosFrasesUI.render();
   if (vista === "libros") { renderEstados(); renderGeneros(); renderLista(); } else if (vista === "frases") renderFrases(); else renderStats();
   if (hoja.abierta() && actual && actual.modo === "ver") ver(actual.id);
 }
@@ -226,18 +230,34 @@ const fraseHtml = (f, conLibro) => {
   const l = conLibro && libros.find(x => x.id === f.libroId);
   const pie = [conLibro && l ? `${l.titulo}${l.autor ? `, ${l.autor}` : ""}` : "", f.pagina ? `p. ${f.pagina}` : "", L.fechaLarga(f.fecha)].filter(Boolean).join(" · ");
   return `
-      <button type="button" class="lib-frase" data-lib-frase="${esc(f.id)}">
-        <span class="lib-frase-t">${esc(f.texto)}</span>
+      <button type="button" class="lib-frase${f.fav ? " is-fav" : ""}" data-lib-frase="${esc(f.id)}">
+        <span class="lib-frase-t">${f.fav ? '<b class="lib-frase-fav" aria-label="Favorita">★</b> ' : ""}${esc(f.texto)}</span>
         <small>${esc(pie)}</small>
+        ${f.etiquetas && f.etiquetas.length ? `<span class="lib-frase-etq">${f.etiquetas.map(t => `<i>#${esc(t)}</i>`).join("")}</span>` : ""}
       </button>`;
 };
+// Filtros de la pestaña Frases: Todas, ★ Favoritas y etiquetas (D-109).
+function renderFiltrosFrases() {
+  const el = $("lib-frases-filtros");
+  const F = window.LibrosFrases;
+  if (!F || !frases.length) { el.innerHTML = ""; return; }
+  const etqs = F.etiquetasUsadas(frases);
+  if (filtroFrases.etiqueta && !etqs.some(t => t.etiqueta === filtroFrases.etiqueta)) filtroFrases.etiqueta = "";
+  const favs = frases.filter(f => f.fav).length;
+  const chip = (attr, val, on, txt, n) => `<button type="button" class="lib-filtro${on ? " active" : ""}" ${attr}="${esc(val)}" aria-pressed="${on}">${txt} <span>${n}</span></button>`;
+  el.innerHTML = chip("data-lib-ffiltro", "todas", !filtroFrases.fav && !filtroFrases.etiqueta, "Todas", frases.length) +
+    (favs ? chip("data-lib-ffiltro", "fav", filtroFrases.fav, "★ Favoritas", favs) : "") +
+    etqs.map(t => chip("data-lib-fetq", t.etiqueta, filtroFrases.etiqueta === t.etiqueta, `#${esc(t.etiqueta)}`, t.n)).join("");
+}
 
 function renderFrases() {
   const el = $("lib-frases");
   if (cargados < 2) { el.innerHTML = ""; return; }
   if (!frases.length) { el.innerHTML = `<p class="empty-state">Todavía no guardaste frases. Ábrelas desde cada libro o con «Agregar frase».</p>`; return; }
-  const visibles = L.ordenarFrases(L.filtrarFrases(frases, libros, textoFrases));
-  el.innerHTML = (textoFrases ? `<p class="lib-nota">${visibles.length} de ${frases.length}</p>` : "") +
+  renderFiltrosFrases();
+  const base = window.LibrosFrases ? LibrosFrases.filtrar(frases, filtroFrases) : frases;
+  const visibles = L.ordenarFrases(L.filtrarFrases(base, libros, textoFrases));
+  el.innerHTML = (textoFrases || filtroFrases.fav || filtroFrases.etiqueta ? `<p class="lib-nota">${visibles.length} de ${frases.length}</p>` : "") +
     (visibles.length ? visibles.map(f => fraseHtml(f, true)).join("") : `<p class="empty-state">Ninguna frase coincide.</p>`);
 }
 
@@ -480,7 +500,8 @@ function formFrase(id, libroId, volver) {
   const lid = f ? f.libroId : libroId || "";
   actual = { modo: "frase", id: f ? f.id : null, libroId: lid, volver: volver || null };
   const l = libros.find(x => x.id === lid);
-  const v = f || { texto: "", pagina: null, fecha: hoyLocal() };
+  const v = f || { texto: "", pagina: null, fecha: hoyLocal(), fav: false, etiquetas: [] };
+  const etqs = Array.from(new Set((v.etiquetas || []).concat(window.LibrosFrases ? LibrosFrases.etiquetasUsadas(frases).map(t => t.etiqueta) : [])));
   const elegirLibro = volver === "ver" && l
     ? `<p class="lib-nota">De <b>${esc(l.titulo)}</b>${l.autor ? ` · ${esc(l.autor)}` : ""}</p><input type="hidden" name="libroId" value="${esc(l.id)}">`
     : `<label class="lib-campo"><span>Libro</span><select name="libroId" class="lib-input">
@@ -491,6 +512,12 @@ function formFrase(id, libroId, volver) {
       <form class="lib-form lib-form-frase" novalidate>
         ${elegirLibro}
         <label class="lib-campo"><span>Frase</span><textarea name="texto" rows="4" class="lib-input" placeholder="Copia la frase tal cual">${esc(v.texto)}</textarea></label>
+        <p class="lib-ayuda">📷 Desde la página: abre la cámara del iPhone (o una foto), mantén el dedo sobre el texto, toca «Copiar» y pégalo aquí.</p>
+        <label class="lib-check"><input type="checkbox" name="fav" value="1"${v.fav ? " checked" : ""}> ★ Favorita</label>
+        <fieldset class="lib-campo lib-etq-campo"><legend>Etiquetas (opcional)</legend>
+          ${etqs.length ? `<div class="lib-chips">${etqs.map(t => `<button type="button" class="bbl-chip${(v.etiquetas || []).includes(t) ? " is-activo" : ""}" data-lib-etq="${esc(t)}" aria-pressed="${(v.etiquetas || []).includes(t)}">#${esc(t)}</button>`).join("")}</div>` : ""}
+          <input type="text" name="etiquetaNueva" class="lib-input" maxlength="80" autocomplete="off" placeholder="Nueva etiqueta (por ejemplo: hábitos)" aria-label="Nueva etiqueta">
+        </fieldset>
         <div class="lib-par">
           <label class="lib-campo"><span>Página (opcional)</span><input type="text" inputmode="numeric" name="pagina" autocomplete="off" value="${esc(v.pagina || "")}" class="lib-input" placeholder="72"></label>
           <label class="lib-campo"><span>Fecha</span><input type="date" name="fecha" max="${hoyLocal()}" value="${esc(v.fecha)}" class="lib-input"></label>
@@ -498,6 +525,7 @@ function formFrase(id, libroId, volver) {
         <p class="lib-error" role="alert" hidden></p>
         <div class="lib-acciones">
           ${f ? `<button type="button" class="lib-btn-peligro" data-lib="borrar-frase">Eliminar</button>` : ""}
+          ${f && window.LibrosFrasesUI ? `<button type="button" class="lib-btn-sec" data-lfr-compartir="${esc(f.id)}">Compartir</button>` : ""}
           <button type="submit" class="lib-btn">Guardar</button>
         </div>
       </form>`);
@@ -544,7 +572,10 @@ hoja.el.addEventListener("submit", e => {
     refAjustes().set({ metaPaginasDia: r.metaPaginasDia, retos: { [hoy.slice(0, 4)]: r.reto } }, { merge: true }).catch(fallo("guardar"));
     hoja.cerrar();
   } else if (actual && actual.modo === "frase") {
-    const r = L.validarFrase(leer(f), { hoy, libros: libros.map(x => x.id) });
+    const datos = leer(f);
+    datos.fav = f.elements.fav && f.elements.fav.checked;
+    datos.etiquetas = Array.from(f.querySelectorAll("[data-lib-etq].is-activo")).map(b => b.dataset.libEtq).concat(String(datos.etiquetaNueva || "").split(","));
+    const r = L.validarFrase(datos, { hoy, libros: libros.map(x => x.id) });
     if (!r.ok) { window.Lectura.errores(f, r.errores); return; }
     if (actual.id) ref("libros_frases").doc(actual.id).update(r.doc).catch(fallo("guardar"));
     else ref("libros_frases").add(Object.assign(r.doc, { creado: Date.now() })).catch(fallo("guardar"));
@@ -606,6 +637,14 @@ hoja.el.addEventListener("click", e => {
   if (pag) { formPagina(pag.dataset.libPagina, "ver"); return; }
   const libroElegido = e.target.closest("[data-lib-elegir-libro]");
   if (libroElegido) { elegirLibro(encontrados[Number(libroElegido.dataset.libElegirLibro)]); return; }
+  // Etiquetas de la frase (D-109).
+  const etq = e.target.closest("[data-lib-etq]");
+  if (etq) {
+    const on = !etq.classList.contains("is-activo");
+    etq.classList.toggle("is-activo", on);
+    etq.setAttribute("aria-pressed", String(on));
+    return;
+  }
   // Prioridad (D-108).
   const prio = e.target.closest("[data-lib-set-prioridad]");
   if (prio && f) {
@@ -919,6 +958,10 @@ app.addEventListener("click", e => {
   if (fr) { formFrase(fr.dataset.libFrase, null, null); return; }
   const est = e.target.closest("[data-lib-estado]");
   if (est) { filtro.estado = est.dataset.libEstado; renderEstados(); renderLista(); return; }
+  const ff = e.target.closest("[data-lib-ffiltro]");
+  if (ff) { filtroFrases.fav = ff.dataset.libFfiltro === "fav" ? !filtroFrases.fav : false; filtroFrases.etiqueta = ""; renderFrases(); return; }
+  const fe = e.target.closest("[data-lib-fetq]");
+  if (fe) { filtroFrases.etiqueta = filtroFrases.etiqueta === fe.dataset.libFetq ? "" : fe.dataset.libFetq; filtroFrases.fav = false; renderFrases(); return; }
   const b = e.target.closest("[data-lib]");
   if (!b) return;
   if (b.dataset.lib === "nuevo") formLibro(null);
@@ -952,10 +995,11 @@ onAuthReady(() => {
     snap.docs.forEach(d => { frasesDocs[d.id] = d.data(); });
     frases = Object.keys(frasesDocs).map(id => L.normalizarFrase(id, frasesDocs[id]));
     listo("frases");
+    window.dispatchEvent(new CustomEvent("libros:datos"));
   }, err => console.warn("Libros (frases):", err));
   refAjustes().onSnapshot(d => {
     ajustesLib = d.exists ? d.data() || {} : {};
-    if (cargados >= 2) { renderResumen(); renderLeyendo(); if (window.LibrosSiguienteUI) LibrosSiguienteUI.render(); if (vista === "stats") renderStats(); }
+    if (cargados >= 2) { renderResumen(); renderLeyendo(); if (window.LibrosSiguienteUI) LibrosSiguienteUI.render(); if (window.LibrosFrasesUI) LibrosFrasesUI.render(); if (vista === "stats") renderStats(); }
   }, err => console.warn("Libros (metas):", err));
   ref("libros_portadas").onSnapshot(snap => {
     portadasDocs = {};
@@ -968,6 +1012,8 @@ onAuthReady(() => {
 window.LibrosDatos = {
   uno: id => libros.find(x => x.id === id) || null,
   lista: () => libros,
+  frases: () => frases,
+  frasesDia: () => (Number.isInteger(ajustesLib.frasesDia) && ajustesLib.frasesDia >= 1 && ajustesLib.frasesDia <= 3 ? ajustesLib.frasesDia : 3),
   listo: () => cargados >= 2,
   metaDia, metaAnio,
   tapa: l => tapa(l),

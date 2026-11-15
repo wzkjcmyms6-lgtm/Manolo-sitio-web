@@ -83,6 +83,14 @@ espacian si lo sabes (primeras letras, ocultar palabras o escribirlo).
 con capítulos leídos. ⚙ Ajustes: el versículo de arriba también de tus
 favoritos. Detalle en `docs/LECTURA_NIVEL2.md`.
 
+## Frases: repaso, favoritas, etiquetas y compartir (2026-11-15, D-109)
+
+Arriba de Libros, **Frases de hoy**: de 1 a 3 frases para repasar; las que
+te encantan vuelven pronto y las demás cada vez más espaciadas. Cada frase
+puede ser **★ favorita** y tener **etiquetas**; en "Frases" se filtran. Se
+**comparten como imagen**. Para copiar una frase de la página: la cámara
+del iPhone (Texto en vivo) y pegar.
+
 ## "¿Qué leo después?", sagas, prioridad y notas (2026-11-15, D-108)
 
 Debajo de "Sigue leyendo", **¿Qué leo después?** ordena tus libros por

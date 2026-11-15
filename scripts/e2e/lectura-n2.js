@@ -917,4 +917,92 @@ async function librosSiguiente(browser, base, ancho, captura) {
   await p.context().close();
 }
 
-module.exports = { bibliaLector, bibliaMarcas, bibliaPlanes, bibliaMemoria, librosSesion, librosSiguiente, txt, visible, sinDesborde, metaDe, consola, deslizar, HOY, FECHA, ZONA };
+// ---------- Fase 5b: frases favoritas, etiquetas, compartir y repaso ----------
+async function librosFrases(browser, base, ancho, captura) {
+  console.log(`\nLibros: repaso de frases, favoritas, etiquetas y compartir (${ancho} px)`);
+  const alto = ancho > 800 ? 900 : 844;
+  const p = await abrir(browser, base, SEM.estado(HOY), { hash: "#libros", zona: ZONA, fecha: FECHA, ancho, alto });
+  consola(p);
+  await p.evaluate(() => {
+    window.__compartido = [];
+    navigator.canShare = () => true;
+    navigator.share = async d => { window.__compartido.push(`${d.files[0].name}:${d.files[0].type}:${d.files[0].size > 1000}`); };
+  });
+  await p.waitForTimeout(900);
+  const frase = id => p.evaluate(i => window.__fakeStore.colMap("users/test/libros_frases").get(i), id);
+  const todas = () => p.evaluate(() => Array.from(window.__fakeStore.colMap("users/test/libros_frases").entries()));
+
+  ok(/3 frases para hoy/.test(await txt(p, "#lib-repaso .lfr-hoy")), "arriba de Libros: «3 frases para hoy»");
+  await p.click('#lib-repaso [data-lfr="repasar"]');
+  await p.waitForTimeout(300);
+  ok(await visible(p, ".lfr-hoja .lfr-texto") && /1 de 3/.test(await txt(p, ".lfr-hoja .lfr-paso")), "el repaso muestra una frase por vez (1 de 3)");
+  const primera = await p.$eval(".lfr-hoja [data-lfr-fav]", b => b.dataset.lfrFav);
+  await p.click(".lfr-hoja [data-lfr-fav]");
+  await p.waitForTimeout(300);
+  ok((await frase(primera)).fav === true && /★ Favorita/.test(await txt(p, ".lfr-hoja [data-lfr-fav]")), "☆ la marca favorita");
+  const esperarCompartir = async n => { for (let k = 0; k < 80 && (await p.evaluate(() => window.__compartido.length)) < n; k++) await p.waitForTimeout(100); };
+  await p.click(".lfr-hoja [data-lfr-compartir]");
+  await esperarCompartir(1);
+  const comp = await p.evaluate(() => window.__compartido);
+  ok(comp.length === 1 && /^frase-.*\.jpg:image\/jpeg:true$/.test(comp[0]), `Compartir arma la imagen (${comp[0]})`);
+  await captura(p, `libros-frases-repaso-${ancho}.png`);
+  await p.click('.lfr-hoja [data-lfr-nota="encanta"]');
+  await p.waitForTimeout(400);
+  const r1 = (await frase(primera)).repaso;
+  ok(r1 && r1.nota === "encanta" && r1.int === 3 && r1.ultimo === HOY && r1.proximo === "2026-11-09", "❤️ Me encanta: vuelve en 3 días");
+  ok(/2 de 3/.test(await txt(p, ".lfr-hoja .lfr-paso")), "y pasa a la siguiente");
+  await p.click('.lfr-hoja [data-lfr-nota="bien"]');
+  await p.waitForTimeout(300);
+  await p.click('.lfr-hoja [data-lfr-nota="menos"]');
+  await p.waitForTimeout(400);
+  const repasos = (await todas()).map(([, d]) => d.repaso).filter(Boolean);
+  ok(repasos.length === 3 && repasos.some(x => x.int === 7) && repasos.some(x => x.int === 90), "👍 Bien (7 días) y 👎 Menos (90 días)");
+  ok(/Listo por hoy/.test(await txt(p, ".lfr-hoja .lfr-fin")), "al final: «Listo por hoy»");
+  await p.click('.lfr-hoja [data-lfr-pordia="2"]');
+  await p.waitForTimeout(300);
+  ok(((await metaDe(p, "libros_ajustes")) || {}).frasesDia === 2, "y eliges cuántas por día (2)");
+  await p.click(".lfr-hoja .lfr-fin [data-cerrar-hoja]");
+  await p.waitForTimeout(300);
+  ok(/Repasaste tus frases de hoy/.test(await txt(p, "#lib-repaso")), "la tarjeta dice que ya repasaste las de hoy");
+
+  // Pestaña Frases: favoritas y etiquetas
+  await p.click('[data-lib-vista="frases"]');
+  await p.waitForTimeout(300);
+  ok(/Todas\s*6/.test(await txt(p, "#lib-frases-filtros")) && /★ Favoritas\s*1/.test(await txt(p, "#lib-frases-filtros")), "filtros: Todas y ★ Favoritas");
+  await p.click('[data-lib-ffiltro="fav"]');
+  await p.waitForTimeout(200);
+  ok((await p.$$("#lib-frases .lib-frase")).length === 1 && (await p.$$("#lib-frases .lib-frase-fav")).length === 1, "★ Favoritas deja la tuya, con su estrella");
+  await p.click('[data-lib-ffiltro="todas"]');
+  await p.waitForTimeout(200);
+  await p.click('#lib-frases [data-lib-frase="f1"]');
+  await p.waitForTimeout(300);
+  ok(/Desde la página: abre la cámara del iPhone/.test(await txt(p, ".lib-hoja")), "el formulario explica cómo copiar una frase con la cámara");
+  await p.fill('.lib-hoja [name="etiquetaNueva"]', "hábitos, Fe");
+  await captura(p, `libros-frase-form-${ancho}.png`);
+  await p.click('.lib-hoja button[type="submit"]');
+  await p.waitForTimeout(400);
+  ok(JSON.stringify((await frase("f1")).etiquetas) === '["hábitos","fe"]', "las etiquetas se guardan (en minúsculas)");
+  await p.click('#lib-frases [data-lib-frase="f2"]');
+  await p.waitForTimeout(300);
+  await p.click('.lib-hoja [data-lib-etq="hábitos"]');
+  await p.click('.lib-hoja [data-lfr-compartir="f2"]');
+  await esperarCompartir(2);
+  ok((await p.evaluate(() => window.__compartido.length)) === 2, "«Compartir» también desde la frase");
+  await p.click('.lib-hoja button[type="submit"]');
+  await p.waitForTimeout(400);
+  ok(/#hábitos\s*2/.test(await txt(p, "#lib-frases-filtros")) && /#fe\s*1/.test(await txt(p, "#lib-frases-filtros")), "las etiquetas que ya usaste aparecen para elegir y como filtros");
+  await p.click('[data-lib-fetq="hábitos"]');
+  await p.waitForTimeout(200);
+  ok((await p.$$("#lib-frases .lib-frase")).length === 2 && /2 de 6/.test(await txt(p, "#lib-frases .lib-nota")), "filtrar por #hábitos");
+  await captura(p, `libros-frases-filtros-${ancho}.png`);
+  ok(await sinDesborde(p), "Frases no se mueve de lado");
+  if (ancho < 800) {
+    await p.setViewportSize({ width: 320, height: 640 });
+    await p.waitForTimeout(200);
+    ok(await sinDesborde(p), "Frases entra en 320 px");
+  }
+  ok(!p.errores.length && !p.consola.length, "sin errores" + (p.consola.length ? `: ${p.consola.join(" | ")}` : ""));
+  await p.context().close();
+}
+
+module.exports = { bibliaLector, bibliaMarcas, bibliaPlanes, bibliaMemoria, librosSesion, librosSiguiente, librosFrases, txt, visible, sinDesborde, metaDe, consola, deslizar, HOY, FECHA, ZONA };

@@ -424,3 +424,40 @@ input[type="date"].lib-input { -webkit-appearance: none; appearance: none; }
 .lnota-cab { color: var(--muted); font-size: 0.78rem; font-weight: 600; }
 .lnota-t { font-size: 0.92rem; line-height: 1.45; white-space: pre-line; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .lnota-form .lib-segmento button { font-size: 0.82rem; }
+
+/* ---------- Fase 5b (D-109): frases favoritas, etiquetas y repaso ---------- */
+.lib-frase.is-fav { border-color: rgba(255, 209, 102, 0.35); }
+.lib-frase-fav { color: #ffd166; font-family: var(--font-body, inherit); }
+.lib-frase-etq { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.lib-frase-etq i, .lfr-etiquetas i { font-style: normal; font-size: 0.74rem; color: var(--accent-2); border: 1px solid rgba(255, 184, 77, 0.35); border-radius: 999px; padding: 0.05rem 0.5rem; }
+.lib-frases-filtros { margin: 0.6rem 0 0.2rem; }
+.lib-check { display: flex; align-items: center; gap: 0.6rem; min-height: 44px; font-weight: 600; cursor: pointer; }
+.lib-check input { width: 22px; height: 22px; accent-color: var(--accent-1); }
+.lib-etq-campo { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 0.45rem; }
+.lib-etq-campo legend { padding: 0; margin-bottom: 0.35rem; font-size: 0.85rem; color: var(--muted); }
+.lib-etq-campo .lib-chips { margin: 0; }
+
+.lfr-hoy { display: flex; align-items: center; gap: 0.7rem; margin: 0.2rem 0 0.9rem; padding: 0.75rem 0.9rem; border: 1px solid rgba(255, 184, 77, 0.35); border-radius: 18px; background: rgba(255, 184, 77, 0.07); }
+.lfr-hoy > span { font-size: 1.4rem; }
+.lfr-hoy p { flex: 1; min-width: 0; margin: 0; display: flex; flex-direction: column; }
+.lfr-hoy small { color: var(--muted); font-size: 0.8rem; }
+.lfr-hoy .lib-btn { flex: 0 0 auto; }
+.lfr-listo { margin: 0.2rem 0 0.8rem; color: #7fe0a6; font-size: 0.9rem; }
+.lfr { display: flex; flex-direction: column; gap: 0.7rem; }
+.lfr-paso { margin: 0; color: var(--muted); font-size: 0.82rem; text-align: center; }
+.lfr-texto { margin: 0.2rem 0 0; font-family: var(--font-display); font-size: 1.3rem; line-height: 1.5; overflow-wrap: anywhere; }
+.lfr-de { margin: 0; color: var(--accent-2); font-weight: 600; font-size: 0.92rem; }
+.lfr-etiquetas { margin: 0; display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.lfr-notas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.45rem; margin-top: 0.3rem; }
+.lfr-nota { min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; font-size: 0.86rem; font-weight: 700; cursor: pointer; }
+.lfr-nota span { font-size: 1.25rem; }
+.lfr-nota.is-encanta { border-color: rgba(255, 138, 128, 0.45); }
+.lfr-nota.is-bien { border-color: rgba(70, 200, 120, 0.45); }
+.lfr-mas { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.lfr-mas .lib-btn-chico { min-height: 44px; }
+.lfr-mas .is-fav { color: #ffd166; border-color: rgba(255, 209, 102, 0.5); }
+.lfr .lib-ayuda { margin: 0; }
+.lfr-fin { display: flex; flex-direction: column; gap: 0.7rem; text-align: center; }
+.lfr-fin p { margin: 0; }
+.lfr-fin-t { font-size: 1.4rem; font-weight: 700; }
+.lfr-fin .lib-campo { text-align: left; }

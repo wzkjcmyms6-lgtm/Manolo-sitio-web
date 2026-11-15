@@ -56,7 +56,7 @@ test("tapa genérica: el mismo libro, el mismo color", () => {
 
 test("frases: validar, ordenar, buscar (también por libro)", () => {
   const ok = L.validarFrase({ libroId: "a", texto: " Lo esencial es invisible a los ojos. ", pagina: "72", fecha: "2026-10-28" }, { hoy: HOY, libros: ["a"] });
-  assert.deepEqual(ok.doc, { v: 1, libroId: "a", texto: "Lo esencial es invisible a los ojos.", pagina: 72, fecha: "2026-10-28" });
+  assert.deepEqual(ok.doc, { v: 1, libroId: "a", texto: "Lo esencial es invisible a los ojos.", pagina: 72, fecha: "2026-10-28", fav: false, etiquetas: [] });
   assert.equal(L.validarFrase({ libroId: "a", texto: "x", fecha: HOY }, { hoy: HOY }).doc.pagina, null, "página opcional");
   const mal = L.validarFrase({ libroId: "zz", texto: "", pagina: "-3", fecha: "2026-12-01" }, { hoy: HOY, libros: ["a"] });
   assert.deepEqual(mal.errores.map(e => e.campo), ["libroId", "texto", "pagina", "fecha"]);
@@ -223,4 +223,13 @@ test("fase 5: saga, prioridad y notas del libro (D-108)", () => {
   } });
   assert.deepEqual(L.notasDe(l).map(x => [x.id, x.tipo]), [["d", "nota"], ["b", "aplicar"], ["a", "nota"]], "la más nueva primero; las vacías no");
   assert.deepEqual(L.notasDe(L.normalizarLibro("e", { titulo: "E" })), []);
+});
+
+test("fase 5b: frase favorita y con etiquetas (D-109)", () => {
+  const r = L.validarFrase({ libroId: "a", texto: "x", fecha: HOY, fav: "1", etiquetas: "#Fe, hábitos ,fe,  Mucho   espacio " }, { hoy: HOY });
+  assert.deepEqual([r.doc.fav, r.doc.etiquetas], [true, ["fe", "hábitos", "mucho espacio"]]);
+  assert.deepEqual(L.etiquetasOk(["A", "b", "c", "d", "e", "f", "g", "h", "i"]).length, 8, "hasta 8");
+  const n = L.normalizarFrase("f", { libroId: "a", texto: "x", fecha: HOY, fav: true, etiquetas: ["Fe"], repaso: { n: 1 } });
+  assert.deepEqual([n.fav, n.etiquetas, n.repaso.n], [true, ["fe"], 1]);
+  assert.deepEqual([L.normalizarFrase("g", { texto: "y" }).fav, L.normalizarFrase("g", { texto: "y" }).etiquetas, L.normalizarFrase("g", {}).repaso], [false, [], null], "las de antes: sin favorita ni etiquetas");
 });

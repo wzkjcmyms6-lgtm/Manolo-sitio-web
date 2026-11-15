@@ -1286,3 +1286,21 @@ usaste) y número (acepta 1,5); `saga`, `sagaN`, `prioridad` en el libro
 "Para aplicar" o "Nota", con fecha (`notas: { id: { texto, tipo, fecha,
 creado } }` en el libro; se agregan, editan y borran de a una con
 `update` por campo).
+
+**D-109 (2026-11-15) · Libros fase 5b: frases favoritas, etiquetas,
+compartir y repaso.** (1) Cada frase suma `fav`, `etiquetas` (minúsculas,
+hasta 8 de 24 letras, también "#fe") y `repaso: { n, int, ultimo, proximo,
+nota }` (aditivo; `validarFrase` siempre escribe `fav` y `etiquetas`). (2)
+"Repaso de frases": de 1 a 3 por día (`meta/libros_ajustes.frasesDia`, 3 si
+no está). Las de hoy son las que ya repasaste hoy más las que tocan hasta
+completar el número, así que no cambian durante el día. Orden: favoritas
+(+3), las que te encantan (+2), nunca vistas (+1); los empates se mezclan
+con el día como semilla. Calificar: ❤️ "Me encanta" vuelve en 3 días (las
+buenas vuelven más), 👍 "Bien" 7, 14, 28… hasta 60 días, 👎 "Menos" 90
+días. (3) Compartir una frase: imagen JPEG 1080 × 1350 con
+`js/biblia-imagen.js`, que ahora acepta título y pie (`dibujar(g, plan,
+{ titulo, pie })`) y achica o corta la cita si no entra; JPEG porque el
+PNG pesaba 1,2 MB y tardaba segundos en armarse. (4) Pestaña Frases:
+filtros Todas · ★ Favoritas · #etiquetas; en el formulario, ★ Favorita,
+etiquetas (las tuyas como botones y una nueva) y el consejo de copiar el
+texto con la cámara del iPhone (Texto en vivo).

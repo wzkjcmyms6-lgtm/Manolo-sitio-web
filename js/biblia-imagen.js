@@ -53,8 +53,11 @@ function plan(texto, cita, medir) {
   return { W, H, M, tam, alto, lineas: ls, y0: ARRIBA + tam, cita: String(cita || ""), recortado: true };
 }
 
-// Pinta el plan en un contexto 2D (canvas de W × H).
-function dibujar(g, p) {
+// Pinta el plan en un contexto 2D (canvas de W × H). o (opcional, D-109):
+// { titulo: "BIBLIA", pie: "Reina-Valera 1909 · Manolo" } para otros usos
+// (las frases de Libros).
+function dibujar(g, p, o) {
+  const op = Object.assign({ titulo: "BIBLIA", pie: "Reina-Valera 1909 · Manolo" }, o);
   g.fillStyle = "#0a0a0a";
   g.fillRect(0, 0, p.W, p.H);
   const brillo = g.createRadialGradient(p.W * 0.82, 0, 40, p.W * 0.82, 0, 980);
@@ -72,7 +75,7 @@ function dibujar(g, p) {
   // Arriba: la palabra "BIBLIA" y una raya naranja.
   g.fillStyle = "#ffb84d";
   g.font = `700 30px ${SANS}`;
-  g.fillText("BIBLIA", p.M, 150);
+  g.fillText(op.titulo, p.M, 150);
   const raya = g.createLinearGradient(p.M, 0, p.M + 120, 0);
   raya.addColorStop(0, "#ff7a30");
   raya.addColorStop(1, "#ffb84d");
@@ -82,13 +85,16 @@ function dibujar(g, p) {
   g.fillStyle = "#f5f4f1";
   g.font = `500 ${p.tam}px ${SERIF}`;
   p.lineas.forEach((l, i) => g.fillText(l, p.M, p.y0 + i * p.alto));
-  // La cita y el pie.
+  // La cita (si es larga, más chica y, si no entra, cortada) y el pie.
   g.fillStyle = "#ffb84d";
-  g.font = `700 46px ${SANS}`;
-  g.fillText(p.cita, p.M, p.H - 190);
+  let tamCita = 46, cita = p.cita;
+  g.font = `700 ${tamCita}px ${SANS}`;
+  while (tamCita > 30 && g.measureText(cita).width > p.W - 2 * p.M) { tamCita -= 2; g.font = `700 ${tamCita}px ${SANS}`; }
+  while (cita.length > 4 && g.measureText(cita).width > p.W - 2 * p.M) cita = `${cita.slice(0, -2).trimEnd()}…`;
+  g.fillText(cita, p.M, p.H - 190);
   g.fillStyle = "#9a978f";
   g.font = `500 28px ${SANS}`;
-  g.fillText("Reina-Valera 1909 · Manolo", p.M, p.H - 130);
+  g.fillText(op.pie, p.M, p.H - 130);
   return g;
 }
 

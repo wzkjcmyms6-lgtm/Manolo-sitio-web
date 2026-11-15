@@ -1,6 +1,8 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-15 (Libros fase 5b, D-109): `npm test` → **561 pruebas**. Nueva:
+  `libros-frases` (repaso, calificar, etiquetas). E2E `SOLO=frases`.
 - 2026-11-15 (Libros fase 5a, D-108): `npm test` → **557 pruebas**. Nueva:
   `libros-siguiente` ("¿Qué leo después?"). E2E `SOLO=siguiente`.
 - 2026-11-15 (Libros fase 4, D-107): `npm test` → **552 pruebas**.
@@ -266,6 +268,13 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] Medir tiempos › Promedios › "Por día": siete barras de lunes a
   domingo. Toca "Lu": la tabla dice cuánto tardas en promedio cada lunes.
   Con ‹ › pasas de día.
+
+**Libros: frases de hoy, favoritas, etiquetas y compartir (2026-11)**
+- [ ] Libros: arriba, "Frases de hoy" › "Repasar". Toca ❤️, 👍 o 👎 en cada
+  una; en una, "☆ Favorita" y "Compartir" (se abre el menú del iPhone).
+- [ ] Al final, elige cuántas frases por día (1, 2 o 3).
+- [ ] "Frases": abre una frase y ponle una etiqueta; filtra por ella y por
+  "★ Favoritas".
 
 **Libros: ¿Qué leo después?, sagas y notas (2026-11)**
 - [ ] Libros: debajo de "Sigue leyendo", "¿Qué leo después?" con 3 libros y

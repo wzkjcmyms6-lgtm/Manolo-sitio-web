@@ -222,3 +222,15 @@ Nada de lo guardado se reescribe; lo viejo sin estos campos se ve igual.
   largo, reto, tiempo en la lista) y `SOLO=siguiente node
   scripts/e2e/lectura.js` (orden y razones, prioridad, Empezar, saga, notas;
   a 390, 1280 y 320 px).
+
+### 5b. Frases: favoritas, etiquetas, compartir y repaso (D-109)
+- **Archivos**: `js/libros-frases.js` (UMD: `paraHoy`, `calificar`,
+  `etiquetasUsadas`, `filtrar`), `js/libros-frases-ui.js` (tarjeta "Frases
+  de hoy", hoja del repaso, compartir). En `js/libros-motor.js`:
+  `etiquetasOk` y `fav`/`etiquetas` en `validarFrase`. `js/biblia-imagen.js`
+  acepta título y pie.
+- `window.LibrosDatos` suma `frases` y `frasesDia`; las frases también
+  avisan `libros:datos`.
+- **Pruebas**: `tests/libros-frases.test.js` y `SOLO=frases node
+  scripts/e2e/lectura.js` (repaso completo, favorita, compartir, frases por
+  día, etiquetas y filtros; a 390, 1280 y 320 px).
