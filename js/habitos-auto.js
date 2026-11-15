@@ -25,7 +25,7 @@ const FUENTES = [
   { id: "running", nombre: "Running", accion: "Al guardar o importar una carrera", medidas: [["n", "carreras", "Sí/No"], ["km", "km", "Kilómetros"], ["min", "min", "Minutos"]] },
   { id: "bicicleta", nombre: "Bici", accion: "Al guardar o importar una rodada", medidas: [["n", "rodadas", "Sí/No"], ["km", "km", "Kilómetros"], ["min", "min", "Minutos"]] },
   { id: "movilidad", nombre: "Movilidad", accion: "Al completar una rutina", medidas: [["n", "rutinas", "Sí/No"], ["min", "min", "Minutos"]], rutina: true },
-  { id: "libros", nombre: "Libros", accion: "Al anotar páginas leídas", medidas: [["n", "días", "Sí/No"], ["paginas", "páginas", "Páginas"]] },
+  { id: "libros", nombre: "Libros", accion: "Al anotar páginas o una sesión de lectura", medidas: [["n", "días", "Sí/No"], ["paginas", "páginas", "Páginas"], ["min", "min", "Minutos"]] },
   { id: "biblia", nombre: "Biblia", accion: "Al anotar un versículo o marcar un capítulo leído", medidas: [["n", "lecturas", "Sí/No"]] },
   { id: "finanzas", nombre: "Finanzas", accion: "Al anotar un movimiento", medidas: [["n", "movimientos", "Sí/No"]] },
   // Para un hábito Evitar: un gasto en esa categoría es una recaída.
@@ -50,7 +50,12 @@ function porDia(id, datos, cfg) {
   } else if (id === "movilidad") {
     (datos || []).forEach(s => { if (!c.rutina || s.rutinaId === c.rutina) sumar(s && s.fecha, { n: 1, min: num(s.duracionSeg) / 60 }); });
   } else if (id === "libros") {
-    Object.keys(datos || {}).forEach(f => { const p = num(datos[f]); if (p > 0) sumar(f, { n: 1, paginas: p }); });
+    // Páginas del día, o { paginas, min } desde la fase 4 (sesiones de "Leer ahora", D-107).
+    Object.keys(datos || {}).forEach(f => {
+      const d = datos[f], o = d && typeof d === "object";
+      const p = num(o ? d.paginas : d), m = o ? num(d.min) : 0;
+      if (p > 0 || m > 0) sumar(f, { n: 1, paginas: p, min: m });
+    });
   } else if (id === "biblia") {
     (datos || []).forEach(l => sumar(l && l.fecha, { n: 1 }));
   } else if (id === "finanzas") {

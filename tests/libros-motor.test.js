@@ -10,7 +10,7 @@ test("validar un libro: título obligatorio, fechas editables y coherentes", () 
     opinion: " Una obra maestra. ", fechaRegistro: "2025-03-01", fechaInicio: "2025-01-10", fechaFin: "2025-02-20" }, { hoy: HOY });
   assert.equal(r.ok, true);
   assert.deepEqual(r.doc, { v: 1, titulo: "Cien años de soledad", autor: "Gabriel García Márquez", paginas: 471, estado: "terminado", calificacion: 5,
-    opinion: "Una obra maestra.", fechaRegistro: "2025-03-01", fechaInicio: "2025-01-10", fechaFin: "2025-02-20", genero: null, anio: null, olKey: null });
+    opinion: "Una obra maestra.", fechaRegistro: "2025-03-01", fechaInicio: "2025-01-10", fechaFin: "2025-02-20", genero: null, anio: null, olKey: null, formato: "papel" });
   const min = L.validarLibro({ titulo: "Solo título", fechaRegistro: HOY }, { hoy: HOY });
   assert.deepEqual([min.ok, min.doc.paginas, min.doc.calificacion, min.doc.fechaInicio, min.doc.fechaFin, min.doc.estado], [true, null, null, null, null, "por_leer"], "lo demás es opcional");
   const mal = L.validarLibro({ titulo: "", paginas: "12.5", calificacion: "6", fechaRegistro: "", fechaInicio: "2026-10-20", fechaFin: "2026-10-10" }, { hoy: HOY });
@@ -176,3 +176,27 @@ test("filtrar por género y ordenar por calificación", () => {
   assert.ok(L.ORDENES.some(o => o.id === "calificacion"));
 });
 
+test("fase 4: Abandonado, formato y duración del audiolibro (D-107)", () => {
+  assert.deepEqual(L.ESTADOS.map(e => e.id), ["por_leer", "leyendo", "terminado", "abandonado"]);
+  assert.deepEqual(L.FORMATOS.map(f => f.id), ["papel", "digital", "audio"]);
+  const audio = L.validarLibro({ titulo: "Sapiens", fechaRegistro: HOY, formato: "audio", duracion: "15:17", estado: "abandonado" }, { hoy: HOY });
+  assert.deepEqual([audio.ok, audio.doc.formato, audio.doc.duracionMin, audio.doc.estado], [true, "audio", 917, "abandonado"]);
+  assert.equal(L.validarLibro({ titulo: "X", fechaRegistro: HOY, formato: "audio", duracion: "" }, { hoy: HOY }).doc.duracionMin, null, "la duración es opcional");
+  assert.deepEqual(L.validarLibro({ titulo: "X", fechaRegistro: HOY, formato: "audio", duracion: "diez" }, { hoy: HOY }).errores.map(e => e.campo), ["duracion"]);
+  const papel = L.validarLibro({ titulo: "X", fechaRegistro: HOY, formato: "papel", duracion: "10:00" }, { hoy: HOY }).doc;
+  assert.equal("duracionMin" in papel, false, "en papel no se toca la duración que tenías");
+  assert.equal(L.validarLibro({ titulo: "X", fechaRegistro: HOY, formato: "raro" }, { hoy: HOY }).doc.formato, "papel");
+  assert.deepEqual(["10:30", "10", "1h30", "", "x", "2:75"].map(L.leerDuracion), [630, 600, 90, null, NaN, NaN]);
+  assert.equal(L.duracionTexto(917), "15:17");
+  const n = L.normalizarLibro("a", { titulo: "A", formato: "audio", duracionMin: 600, pctActual: 45.5, progresoPct: { [HOY]: 45.5 }, fechaDejado: "2026-10-01", sesiones: { s1: { min: 30 } }, lecturas: { 1: { estado: "terminado" } } });
+  assert.deepEqual([n.formato, n.duracionMin, n.pctActual, n.fechaDejado, Object.keys(n.sesiones), Object.keys(n.lecturas)], ["audio", 600, 45.5, "2026-10-01", ["s1"], ["1"]]);
+  assert.equal(L.normalizarLibro("b", { titulo: "B" }).formato, "papel", "los libros de antes son de papel");
+  // Resumen: Abandonado y cada vez que lo terminaste.
+  const lista = [
+    libro("a", { estado: "abandonado" }),
+    libro("b", { estado: "leyendo", paginas: 200, lecturas: { 1: { estado: "terminado", fechaFin: "2026-03-01", paginas: 200 } } }),
+    libro("c", { estado: "terminado", paginas: 100, fechaFin: "2026-09-01", lecturas: { 1: { estado: "terminado", fechaFin: "2025-05-01" } } })
+  ];
+  const r = L.resumen(lista, HOY);
+  assert.deepEqual([r.abandonado, r.leyendo, r.terminado, r.terminadosEsteAnio, r.paginasLeidas], [1, 1, 1, 2, 400]);
+});

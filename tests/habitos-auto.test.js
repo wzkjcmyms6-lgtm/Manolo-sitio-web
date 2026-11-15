@@ -21,6 +21,9 @@ test("por día: suma lo de cada módulo con sus filtros", () => {
   assert.equal(A.porDia("libros", { "2026-11-04": 23, "2026-11-05": 0 })["2026-11-04"].paginas, 23);
   assert.equal(A.porDia("libros", { "2026-11-05": 0 })["2026-11-05"], undefined);
   assert.equal(A.porDia("biblia", [{ fecha: "2026-11-02" }, { fecha: "2026-11-02" }])["2026-11-02"].n, 2);
+  // Libros: páginas o { paginas, min } con las sesiones de "Leer ahora" (D-107).
+  assert.deepEqual(A.porDia("libros", { "2026-11-02": 30, "2026-11-03": { paginas: 0, min: 25 }, "2026-11-04": { paginas: 12, min: 20 } }),
+    { "2026-11-02": { n: 1, km: 0, min: 0, paginas: 30 }, "2026-11-03": { n: 1, km: 0, min: 25, paginas: 0 }, "2026-11-04": { n: 1, km: 0, min: 20, paginas: 12 } });
   // Biblia también manda los días con capítulos leídos en el lector (D-106).
   assert.deepEqual(Object.keys(A.porDia("biblia", [{ fecha: "2026-11-02" }, { fecha: "2026-11-03", leido: true }])), ["2026-11-02", "2026-11-03"]);
   const movs = [{ date: "2026-11-04", type: "gasto", category: "antojos" }, { date: "2026-11-04", type: "ingreso", category: "sueldo" }, { date: "2026-11-05", type: "gasto", category: "comida" }];
@@ -121,6 +124,6 @@ test("sugiere vincular un hábito por su nombre (Correr → Running…)", () => 
   assert.deepEqual(s("Correr", { tipo: "medible", unidad: "km" }).cfg, { medida: "km", rutina: null, categoria: null });
   assert.equal(s("Leer", { tipo: "medible", unidad: "páginas" }).cfg.medida, "paginas");
   assert.equal(s("Correr", { tipo: "medible", unidad: "veces" }).cfg.medida, "n");
-  assert.equal(s("Leer", { tipo: "tiempo" }), null, "Libros no da minutos");
+  assert.equal(s("Leer", { tipo: "tiempo" }).fuente, "libros", "con las sesiones de «Leer ahora», Libros da minutos (D-107)");
   assert.equal(s("Correr", { tipo: "tiempo" }).fuente, "running");
 });

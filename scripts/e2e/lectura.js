@@ -14,7 +14,7 @@ const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
   const srv = await servidor();
   const base = `http://localhost:${srv.address().port}`;
   const browser = await chromium.launch();
-  // SOLO=biblia|marcas|planes|memoria corre solo una parte nueva (scripts/e2e/lectura-n2.js).
+  // SOLO=biblia|marcas|planes|memoria|sesion corre solo una parte nueva (scripts/e2e/lectura-n2.js).
   const SOLO = process.env.SOLO;
   if (!SOLO) {
   const p = await abrir(browser, base, {}, { hash: "#inicio", zona: ZONA, fecha: HOY });
@@ -448,6 +448,7 @@ const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
     if (!SOLO || SOLO === "marcas") await N2.bibliaMarcas(browser, base, ancho, captura);
     if (!SOLO || SOLO === "planes") await N2.bibliaPlanes(browser, base, ancho, captura);
     if (!SOLO || SOLO === "memoria") await N2.bibliaMemoria(browser, base, ancho, captura);
+    if (!SOLO || SOLO === "sesion") await N2.librosSesion(browser, base, ancho, captura);
   }
   await terminar(browser, srv);
 })();

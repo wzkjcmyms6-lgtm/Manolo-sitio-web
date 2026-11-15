@@ -1,6 +1,8 @@
 // ---------- Libros: motor sin pantalla ----------
 // Validar libros y frases, ordenar, buscar, resumen, colores de la tapa
 // genérica y exportar. Sin DOM ni Firebase: tests/libros-motor.test.js.
+// Fase 4 (D-107): estado Abandonado, formato (papel, digital o audiolibro
+// con su duración) y lecturas anteriores (releer).
 // Colecciones: users/{uid}/libros y users/{uid}/libros_frases (docs/DATABASE.md).
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
@@ -11,10 +13,20 @@
 const ESTADOS = [
   { id: "por_leer", nombre: "Por leer", emoji: "📚" },
   { id: "leyendo", nombre: "Leyendo", emoji: "📖" },
-  { id: "terminado", nombre: "Terminado", emoji: "✅" }
+  { id: "terminado", nombre: "Terminado", emoji: "✅" },
+  { id: "abandonado", nombre: "Abandonado", emoji: "⏸" }
 ];
 const ESTADO = {};
 ESTADOS.forEach(e => { ESTADO[e.id] = e; });
+// Formato: el audiolibro avanza por % (o por tiempo, si pones su duración).
+const FORMATOS = [
+  { id: "papel", nombre: "Papel", emoji: "📕" },
+  { id: "digital", nombre: "Digital", emoji: "📱" },
+  { id: "audio", nombre: "Audiolibro", emoji: "🎧" }
+];
+const FORMATO = {};
+FORMATOS.forEach(f => { FORMATO[f.id] = f; });
+const DURACION_MAX = 100 * 60;   // un audiolibro de hasta 100 horas
 // Géneros para clasificar (la búsqueda sugiere uno según los temas de Open Library).
 const GENEROS = [
   { id: "novela", nombre: "Novela" },
@@ -50,6 +62,17 @@ function fechaLarga(f) {
   return `${d} ${MESES[m - 1].slice(0, 3)} ${a}`;
 }
 const estrellas = n => (n >= 1 && n <= 5 ? "★".repeat(n) + "☆".repeat(5 - n) : "");
+// Duración de un audiolibro: "10:30" (horas:minutos) o "10" (horas) → minutos.
+// Vacío → null; mal escrita → NaN.
+function leerDuracion(txt) {
+  const t = String(txt == null ? "" : txt).trim().replace(/\s*h\s*$/i, "");
+  if (!t) return null;
+  const m = /^(\d{1,3})(?:[:h]\s*([0-5]?\d))?$/i.exec(t);
+  if (!m) return NaN;
+  const min = Number(m[1]) * 60 + Number(m[2] || 0);
+  return min >= 1 && min <= DURACION_MAX ? min : NaN;
+}
+const duracionTexto = min => (Number.isInteger(min) && min > 0 ? `${Math.floor(min / 60)}:${String(min % 60).padStart(2, "0")}` : "");
 
 // ---- Libros ----
 // Datos del formulario → documento. { ok, errores: [{campo, texto}], doc }.
@@ -66,6 +89,9 @@ function validarLibro(datos, opciones) {
     if (!(Number.isInteger(paginas) && paginas >= 1 && paginas <= 20000)) { err("paginas", "Revisa las páginas (un número entero)."); paginas = null; }
   }
   const estado = ESTADO[datos.estado] ? datos.estado : "por_leer";
+  const formato = FORMATO[datos.formato] ? datos.formato : "papel";
+  let duracionMin = formato === "audio" ? leerDuracion(datos.duracion) : null;
+  if (Number.isNaN(duracionMin)) { err("duracion", "Escribe la duración como horas:minutos (por ejemplo 10:30)."); duracionMin = null; }
   const calTxt = String(datos.calificacion == null ? "" : datos.calificacion).trim();
   let calificacion = null;
   if (calTxt && calTxt !== "0") {
@@ -86,13 +112,14 @@ function validarLibro(datos, opciones) {
   if (errores.length) return { ok: false, errores, doc: null };
   // Datos que completa la búsqueda (2026-10-29): género, año y obra de Open Library.
   const anio = Number(datos.anio);
-  return {
-    ok: true, errores: [],
-    doc: { v: 1, titulo, autor: texto(datos.autor, 150).replace(/\s+/g, " "), paginas, estado, calificacion, opinion: texto(datos.opinion, 5000), fechaRegistro, fechaInicio, fechaFin,
+  const doc = { v: 1, titulo, autor: texto(datos.autor, 150).replace(/\s+/g, " "), paginas, estado, calificacion, opinion: texto(datos.opinion, 5000), fechaRegistro, fechaInicio, fechaFin,
       genero: GENERO[datos.genero] ? datos.genero : null,
       anio: Number.isInteger(anio) && anio >= 1 && anio <= 2100 ? anio : null,
-      olKey: /^\/works\/OL\d+W$/.test(String(datos.olKey || "")) ? datos.olKey : null }
-  };
+      olKey: /^\/works\/OL\d+W$/.test(String(datos.olKey || "")) ? datos.olKey : null,
+      formato };
+  // La duración solo con audiolibro (si cambias a papel, la que tenías queda guardada).
+  if (formato === "audio") doc.duracionMin = duracionMin;
+  return { ok: true, errores: [], doc };
 }
 
 function normalizarLibro(id, d) {
@@ -109,9 +136,21 @@ function normalizarLibro(id, d) {
     // Progreso de lectura (js/libros-progreso.js).
     paginaActual: Number.isInteger(d.paginaActual) && d.paginaActual >= 0 ? d.paginaActual : null,
     paginaBase: Number.isInteger(d.paginaBase) && d.paginaBase >= 0 ? d.paginaBase : null,
-    progreso: d.progreso && typeof d.progreso === "object" ? d.progreso : null
+    progreso: d.progreso && typeof d.progreso === "object" ? d.progreso : null,
+    // Fase 4 (D-107): formato, audiolibro (avance en %), abandonado, sesiones y lecturas anteriores.
+    formato: FORMATO[d.formato] ? d.formato : "papel",
+    duracionMin: Number.isInteger(d.duracionMin) && d.duracionMin > 0 && d.duracionMin <= DURACION_MAX ? d.duracionMin : null,
+    pctActual: typeof d.pctActual === "number" && d.pctActual >= 0 && d.pctActual <= 100 ? d.pctActual : null,
+    pctBase: typeof d.pctBase === "number" && d.pctBase >= 0 && d.pctBase <= 100 ? d.pctBase : null,
+    progresoPct: d.progresoPct && typeof d.progresoPct === "object" ? d.progresoPct : null,
+    fechaDejado: fechaOk(d.fechaDejado) ? d.fechaDejado : null,
+    sesiones: d.sesiones && typeof d.sesiones === "object" ? d.sesiones : null,
+    lecturas: d.lecturas && typeof d.lecturas === "object" ? d.lecturas : null
   };
 }
+// Lecturas anteriores (al "Leer de nuevo") que terminaste: [{ fechaFin, paginas, … }].
+const terminadasAntes = l => Object.keys(l.lecturas || {}).filter(k => /^\d+$/.test(k)).map(k => l.lecturas[k])
+  .filter(x => x && typeof x === "object" && x.estado === "terminado");
 
 // Orden: por fecha (la más nueva primero; los que no tienen esa fecha, al
 // final) o por título.
@@ -135,14 +174,17 @@ function filtrar(lista, f) {
 }
 
 function resumen(lista, hoy) {
-  const r = { total: lista.length, por_leer: 0, leyendo: 0, terminado: 0, paginasLeidas: 0, terminadosEsteAnio: 0 };
+  const r = { total: lista.length, por_leer: 0, leyendo: 0, terminado: 0, abandonado: 0, paginasLeidas: 0, terminadosEsteAnio: 0 };
   const anio = String(hoy || "").slice(0, 4);
   lista.forEach(l => {
     r[l.estado]++;
-    if (l.estado === "terminado") {
-      if (l.paginas) r.paginasLeidas += l.paginas;
-      if (anio && (l.fechaFin || "").startsWith(anio)) r.terminadosEsteAnio++;
-    }
+    // Cada vez que lo terminaste cuenta (también las lecturas anteriores).
+    const veces = (l.estado === "terminado" ? [l] : []).concat(terminadasAntes(l));
+    veces.forEach(x => {
+      const pags = Number.isInteger(x.paginas) ? x.paginas : l.paginas;
+      if (pags) r.paginasLeidas += pags;
+      if (anio && (x.fechaFin || "").startsWith(anio)) r.terminadosEsteAnio++;
+    });
   });
   return r;
 }
@@ -318,7 +360,7 @@ function exportarJson(libros, frases, ahora, portadas) {
 }
 
 return {
-  ESTADOS, ESTADO, ORDENES, GENEROS, GENERO, normalizar, fechaOk, fechaLarga, estrellas,
+  ESTADOS, ESTADO, FORMATOS, FORMATO, DURACION_MAX, leerDuracion, duracionTexto, ORDENES, GENEROS, GENERO, normalizar, fechaOk, fechaLarga, estrellas,
   validarLibro, normalizarLibro, ordenar, filtrar, resumen, colorTapa,
   validarFrase, normalizarFrase, ordenarFrases, filtrarFrases, frasesDe, exportarJson,
   urlBusqueda, leerBusqueda, urlBuscarLibro, esIsbn, leerLibros, generoDesdeTemas, duplicado, urlPortadaOL, portadaUrlOk, medidasFoto, CALIDADES, LIMITE_FOTO, fotoOk, kb, portadaParaGuardar

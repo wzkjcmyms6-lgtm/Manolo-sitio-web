@@ -647,4 +647,174 @@ async function bibliaMemoria(browser, base, ancho, captura) {
   await p.context().close();
 }
 
-module.exports = { bibliaLector, bibliaMarcas, bibliaPlanes, bibliaMemoria, txt, visible, sinDesborde, metaDe, consola, deslizar, HOY, FECHA, ZONA };
+// ---------- Fase 4: Libros — Leer ahora, velocidad, estados y formatos ----------
+async function librosSesion(browser, base, ancho, captura) {
+  console.log(`\nLibros: Leer ahora, velocidad, abandonado, releer y audiolibro (${ancho} px)`);
+  const alto = ancho > 800 ? 900 : 844;
+  const p = await abrir(browser, base, SEM.estado(HOY), { hash: "#libros", zona: ZONA, relojFalso: FECHA, ancho, alto });
+  consola(p);
+  await p.evaluate(() => {
+    window.__wl = 0; window.__wlr = 0;
+    Object.defineProperty(navigator, "wakeLock", { configurable: true, value: { request: async () => { window.__wl++; return { release: async () => { window.__wlr++; }, addEventListener() {} }; } } });
+  });
+  const avanzar = async ms => { await p.clock.fastForward(ms); await p.waitForTimeout(80); };
+  await p.waitForTimeout(900);
+  const libro = id => p.evaluate(i => window.__fakeStore.colMap("users/test/libros").get(i), id);
+  const reloj = () => txt(p, ".lib-hoja-sesion .lses-reloj");
+
+  ok((await p.$$("#lib-leyendo [data-lses-leer]")).length === 2, "«Sigue leyendo»: ▶ Leer ahora en los dos libros");
+  await p.click('#lib-leyendo [data-lses-leer="l1"]');
+  await p.waitForTimeout(300);
+  ok(await visible(p, ".lib-hoja-sesion") && (await reloj()) === "0:00" && /Empezaste en la página 142/.test(await txt(p, ".lses-desde")), "Leer ahora: el reloj empieza en 0:00 desde la página 142");
+  await p.click(".lib-hoja-sesion [data-lses-pantalla]");
+  await p.waitForTimeout(150);
+  ok(await p.evaluate(() => window.__wl) === 1, "«Mantener la pantalla encendida» la pide");
+  await avanzar(12 * 60000 + 34000);
+  ok((await reloj()) === "12:34", `el reloj corre (${await reloj()})`);
+  await captura(p, `libros-leer-ahora-${ancho}.png`);
+  await p.click('.lib-hoja-sesion [data-lses="pausa"]');
+  await p.waitForTimeout(150);
+  ok(await p.evaluate(() => window.__wlr) >= 1, "en pausa suelta la pantalla");
+  await avanzar(10 * 60000);
+  ok((await reloj()) === "12:34" && /en pausa/.test(await txt(p, ".lses-desde")), "en pausa no cuenta");
+  await p.click('.lib-hoja-sesion [data-lses="seguir"]');
+  await avanzar(28 * 60000 + 26000);
+  ok((await reloj()) === "41:00", `y al seguir vuelve a contar (${await reloj()})`);
+  await p.click(".lib-hoja-sesion .budget-sheet-close");
+  await p.waitForTimeout(350);
+  ok(/41:0\d/.test(await txt(p, '#lib-leyendo .lses-corre')), "cerrada la hoja, «Sigue leyendo» muestra el reloj corriendo");
+  ok(await p.evaluate(() => !!localStorage.getItem("manolo.libros.sesion")), "la sesión queda guardada en el teléfono (sigue aunque cierres la app)");
+
+  // Terminar y guardar
+  await p.click("#lib-leyendo .lses-corre");
+  await p.waitForTimeout(300);
+  await p.click('.lib-hoja-sesion [data-lses="terminar"]');
+  await p.waitForTimeout(250);
+  ok((await p.inputValue('.lib-hoja-sesion [name="minutos"]')) === "41" && (await p.inputValue('.lib-hoja-sesion [name="hasta"]')) === "142", "Terminar: 41 minutos y la página en la que ibas");
+  await p.click('.lib-hoja-sesion [data-lses-sumar="20"]');
+  ok((await p.inputValue('.lib-hoja-sesion [name="hasta"]')) === "162", "+20 suma páginas");
+  await p.fill('.lib-hoja-sesion [name="hasta"]', "165");
+  await captura(p, `libros-sesion-fin-${ancho}.png`);
+  await p.click('.lib-hoja-sesion button[type="submit"]');
+  await p.waitForTimeout(500);
+  const fin = await txt(p, ".lib-hoja-sesion .lses-listo");
+  ok(/23 páginas en 41 min/.test(fin) && /33,7 pág\.\/hora/.test(fin), `resumen: ${fin}`);
+  let l1 = await libro("l1");
+  const ses = Object.values(l1.sesiones || {});
+  ok(ses.length === 1 && ses[0].min === 41 && ses[0].desde === 142 && ses[0].hasta === 165 && ses[0].fecha === HOY && l1.paginaActual === 165 && l1.progreso[HOY] === 165,
+    "la sesión queda en el libro (41 min, de la 142 a la 165) y la página de hoy también");
+  await captura(p, `libros-sesion-listo-${ancho}.png`);
+  await p.click(".lib-hoja-sesion [data-cerrar-hoja].lib-btn");
+  await p.waitForTimeout(300);
+  ok(/23\s*de 30 páginas/.test(await txt(p, "#lib-resumen .lib-meta")), "la meta de hoy suma las 23 páginas");
+  ok(await p.evaluate(() => !localStorage.getItem("manolo.libros.sesion")), "y la sesión del teléfono se borra");
+
+  // Ficha: velocidad, lo que falta y las sesiones
+  await p.click('#lib-leyendo [data-lib-ver="l1"]');
+  await p.waitForTimeout(350);
+  const ficha = await txt(p, ".lib-hoja .lses-ficha");
+  ok(/Tu velocidad: 33,7 pág\.\/hora/.test(ficha) && /Te faltan unas 4 h 50 min de lectura/.test(ficha), `ficha: velocidad y tiempo que falta (${ficha.slice(0, 90)}…)`);
+  ok((await p.$$(".lib-hoja .lses-lista li")).length === 1, "y la lista de sesiones");
+  await captura(p, `libros-ficha-sesiones-${ancho}.png`);
+  await p.click(".lib-hoja .budget-sheet-close");
+  await p.waitForTimeout(300);
+
+  // Dejar de leer y retomar
+  await p.click('#lib-leyendo [data-lib-ver="l2"]');
+  await p.waitForTimeout(300);
+  await p.click('.lib-hoja [data-lses-dejar="l2"]');
+  await p.waitForTimeout(400);
+  let l2 = await libro("l2");
+  ok(l2.estado === "abandonado" && l2.fechaDejado === HOY, "«Dejar de leerlo» lo pasa a Abandonado");
+  ok(/Lo dejaste el 6 nov 2026 en la página 60/.test(await txt(p, ".lib-hoja .lses-dejado")), "la ficha dice cuándo y dónde lo dejaste");
+  ok((await p.$$('#lib-leyendo [data-lib-sigue="l2"]')).length === 0 && /Abandonado\s*1/.test(await txt(p, "#lib-estados")), "sale de «Sigue leyendo» y aparece el filtro Abandonado");
+  await p.click('.lib-hoja [data-lses-retomar="l2"]');
+  await p.waitForTimeout(400);
+  l2 = await libro("l2");
+  ok(l2.estado === "leyendo" && l2.paginaActual === 60, "«Retomar» lo vuelve a Leyendo en la misma página");
+  await p.click(".lib-hoja .budget-sheet-close");
+  await p.waitForTimeout(300);
+
+  // Leer de nuevo (sin perder la lectura anterior)
+  const terminadosAntes = await txt(p, "#lib-resumen .lib-cifras");
+  await p.click('[data-lib-estado="terminado"]');
+  await p.waitForTimeout(200);
+  await p.click('#lib-lista [data-lib-ver="l3"]');
+  await p.waitForTimeout(300);
+  await p.click('.lib-hoja [data-lses-releer="l3"]');
+  await p.waitForTimeout(400);
+  const l3 = await libro("l3");
+  ok(l3.estado === "leyendo" && l3.fechaInicio === HOY && l3.paginaActual === 0 && l3.lecturas && l3.lecturas["1"] && l3.lecturas["1"].estado === "terminado" && l3.lecturas["1"].fechaFin === SEM.addDias(HOY, -80),
+    "«Leer de nuevo»: empieza otra lectura y la anterior queda guardada");
+  ok(/Lecturas anteriores/.test(await txt(p, ".lib-hoja .lses-ficha")) && /1ª/.test(await txt(p, ".lib-hoja .lses-lecturas")), "la ficha muestra la lectura anterior");
+  ok((await txt(p, "#lib-resumen .lib-cifras")).replace(/^\d+/, "") === terminadosAntes.replace(/^\d+/, ""), "los terminados del año no cambian");
+  await p.click(".lib-hoja .budget-sheet-close");
+  await p.waitForTimeout(300);
+  await p.click('[data-lib-estado=""]');
+
+  // Audiolibro
+  await p.click('[data-lib="nuevo"]');
+  await p.waitForTimeout(350);
+  await p.fill('.lib-hoja [name="titulo"]', "Sapiens (audio)");
+  await p.click('.lib-hoja [data-lib-set-formato="audio"]');
+  ok(await visible(p, '.lib-hoja [name="duracion"]') && !(await visible(p, '.lib-hoja [name="paginas"]')), "Audiolibro: pide la duración en vez de las páginas");
+  await p.fill('.lib-hoja [name="duracion"]', "15:17");
+  await p.click('.lib-hoja [data-lib-set-estado="leyendo"]');
+  const seg = await p.$eval(".lib-hoja .lib-segmento.is-cuatro", el => ({ w: el.scrollWidth - el.clientWidth, n: el.children.length }));
+  ok(seg.n === 4 && seg.w <= 0, "el estado tiene 4 opciones y entra");
+  await captura(p, `libros-form-audio-${ancho}.png`);
+  await p.click('.lib-hoja button[type="submit"]');
+  await p.waitForTimeout(500);
+  const audioId = await p.evaluate(() => Array.from(window.__fakeStore.colMap("users/test/libros").entries()).find(([, d]) => d.titulo === "Sapiens (audio)")[0]);
+  let au = await libro(audioId);
+  ok(au.formato === "audio" && au.duracionMin === 917 && au.estado === "leyendo", "se guarda como audiolibro de 15:17");
+  await p.click(`#lib-leyendo [data-lib-pagina="${audioId}"]`);
+  await p.waitForTimeout(300);
+  await p.fill('.lib-hoja [name="paginaH"]', "3");
+  await p.fill('.lib-hoja [name="paginaM"]', "20");
+  await p.click('.lib-hoja button[type="submit"]');
+  await p.waitForTimeout(400);
+  au = await libro(audioId);
+  ok(au.pctActual === 21.8 && au.progresoPct[HOY] === 21.8, `«Anotar avance» por tiempo: 3:20 de 15:17 = ${au.pctActual} %`);
+  ok(/3:20 de 15:17 · 22 %/.test(await txt(p, `#lib-leyendo [data-lib-sigue="${audioId}"]`)), "la tarjeta lo muestra en tiempo y %");
+  await p.click(`#lib-leyendo [data-lses-leer="${audioId}"]`);
+  await p.waitForTimeout(300);
+  await avanzar(30 * 60000);
+  await p.click('.lib-hoja-sesion [data-lses="terminar"]');
+  await p.waitForTimeout(250);
+  ok((await p.inputValue('.lib-hoja-sesion [name="hastaH"]')) === "3" && (await p.inputValue('.lib-hoja-sesion [name="hastaM"]')) === "20", "al terminar, propone el tiempo en que ibas");
+  await p.click('.lib-hoja-sesion [data-lses-sumar="30"]');
+  ok((await p.inputValue('.lib-hoja-sesion [name="hastaM"]')) === "50", "+30 min");
+  await p.click('.lib-hoja-sesion button[type="submit"]');
+  await p.waitForTimeout(500);
+  ok(/0:30 de audio en 30 min/.test(await txt(p, ".lib-hoja-sesion .lses-listo")), `resumen del audiolibro: ${await txt(p, ".lib-hoja-sesion .lses-listo-t")}`);
+  au = await libro(audioId);
+  const sa = Object.values(au.sesiones || {})[0];
+  ok(sa && sa.unidad === "pct" && sa.desde === 21.8 && sa.hasta === 25.1 && sa.min === 30, "la sesión del audiolibro guarda el % de antes y después");
+  await p.click(".lib-hoja-sesion [data-cerrar-hoja].lib-btn");
+  await p.waitForTimeout(300);
+
+  // Descartar una sesión
+  await p.click('#lib-leyendo [data-lses-leer="l2"]');
+  await p.waitForTimeout(250);
+  await avanzar(5 * 60000);
+  await p.click('.lib-hoja-sesion [data-lses="descartar"]');
+  await p.waitForTimeout(300);
+  ok(!(await visible(p, ".lib-hoja-sesion")) && !(await libro("l2")).sesiones && await p.evaluate(() => !localStorage.getItem("manolo.libros.sesion")), "«Descartar esta sesión» no guarda nada");
+
+  ok(await sinDesborde(p), "Libros no se mueve de lado");
+  await captura(p, `libros-sigue-leyendo-${ancho}.png`);
+  if (ancho < 800) {
+    await p.setViewportSize({ width: 320, height: 640 });
+    await p.waitForTimeout(200);
+    ok(await sinDesborde(p), "Libros entra en 320 px");
+    await p.click('#lib-leyendo [data-lses-leer="l1"]');
+    await p.waitForTimeout(300);
+    ok(await sinDesborde(p) && await p.$eval(".lib-hoja-sesion .lses-reloj", el => el.scrollWidth <= el.clientWidth + 1), "el reloj entra en 320 px");
+    await p.click('.lib-hoja-sesion [data-lses="descartar"]');
+  }
+  ok(!p.errores.length && !p.consola.length, "sin errores" + (p.consola.length ? `: ${p.consola.join(" | ")}` : ""));
+  await p.context().close();
+}
+
+module.exports = { bibliaLector, bibliaMarcas, bibliaPlanes, bibliaMemoria, librosSesion, txt, visible, sinDesborde, metaDe, consola, deslizar, HOY, FECHA, ZONA };

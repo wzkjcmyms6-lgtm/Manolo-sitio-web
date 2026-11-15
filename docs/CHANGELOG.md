@@ -1,5 +1,21 @@
 # Cambios
 
+## 2026-11-15 · Libros: "Leer ahora", velocidad, Abandonado, releer y audiolibros
+- ▶ Leer ahora: un cronómetro para tu lectura (sigue contando con el
+  teléfono bloqueado). Al terminar pones la página a la que llegaste y
+  queda la sesión: páginas, minutos y tu velocidad (páginas por hora).
+- En cada libro: tu velocidad, cuánto tiempo de lectura te falta y tus
+  sesiones.
+- "Dejar de leerlo" (Abandonado) y "Retomar"; "📖 Leer de nuevo" en un libro
+  terminado, sin perder la lectura anterior.
+- Formato: papel, digital o audiolibro. El audiolibro avanza por tiempo
+  (con su duración) o por %.
+- Hábitos: un hábito "Leer" de minutos puede marcarse solo con tus
+  sesiones de lectura.
+- Pruebas: `tests/libros-sesiones.test.js`, `tests/libros-progreso.test.js`,
+  `tests/libros-motor.test.js`, `tests/habitos-auto.test.js` y
+  `scripts/e2e/lectura.js` (`SOLO=sesion`).
+
 ## 2026-11-14 · Biblia: planes de lectura, progreso, memorizar y temas
 - 📅 Planes: Biblia en un año, Nuevo Testamento en 90 días, Evangelios en
   30, Salmos en 30, Proverbios del día o "A mi ritmo". Arriba de Biblia

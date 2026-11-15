@@ -127,7 +127,7 @@ opcional, `pendientesMomento`).
 |---|---|---|---|
 | Running, Bici | hubo carrera/rodada | km, minutos o cuántas | `manolo:actividades` |
 | Movilidad | completaste una rutina (o una en particular) | minutos o cuántas | `manolo:fuente` |
-| Libros | leíste ese día | páginas del día | `LibrosProgreso.paginasPorDia` |
+| Libros | leíste ese día | páginas o minutos del día (sesiones de "Leer ahora", D-107) | `LibrosSesiones.porDiaHabitos` |
 | Biblia | anotaste una lectura | cuántas | |
 | Finanzas | anotaste un movimiento | cuántos | |
 | Gasto (Evitar) | un gasto en la categoría = recaída | — | |

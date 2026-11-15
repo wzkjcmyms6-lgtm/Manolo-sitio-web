@@ -138,32 +138,48 @@ function renderResumen() {
 }
 
 // ---------- Sigue leyendo: página, ritmo y cuándo lo terminas ----------
-function textoPagina(x) {
+function textoPagina(x, l) {
+  // Audiolibro (D-107): avanza en % (y en tiempo, si tiene su duración).
+  if (x.unidad === "pct") {
+    const dur = P.duracionDe(l);
+    if (x.pagina == null) return dur ? `${P.hm(dur)} de audio · ¿por dónde vas?` : "¿Por dónde vas?";
+    return dur ? `${P.hm((x.pagina / 100) * dur)} de ${P.hm(dur)} · ${x.pct} %` : `${x.pct} % escuchado`;
+  }
   if (x.pagina == null) return x.total ? `${x.total} páginas · ¿en cuál vas?` : "¿En qué página vas?";
   return x.total ? `Página ${x.pagina} de ${x.total} · ${x.pct} %` : `Página ${x.pagina}`;
 }
 function estimacion(x) {
-  const falta = x.faltan ? `Faltan ${nf(x.faltan)} páginas. ` : "";
-  if (x.finRitmo) return `${falta}A tu ritmo (${nf(x.ritmo)} pág. al día) lo terminas el ${P.fechaCorta(x.finRitmo)}.`;
+  const audio = x.unidad === "pct";
+  const falta = audio ? (x.faltaAudioMin ? `Te faltan ${P.hm(x.faltaAudioMin)} de audio. ` : x.faltan ? `Falta el ${nf(x.faltan)} %. ` : "")
+    : x.faltan ? `Faltan ${nf(x.faltan)} páginas. ` : "";
+  if (x.finRitmo) return `${falta}A tu ritmo (${nf(x.ritmo)} ${audio ? "%" : "pág."} al día) lo terminas el ${P.fechaCorta(x.finRitmo)}.`;
   if (x.finMeta) return `${falta}Con ${metaDia()} páginas al día lo terminas el ${P.fechaCorta(x.finMeta)}.`;
-  return "";
+  return audio ? falta.trim() : "";
 }
+// "Leer ahora" (js/libros-sesion.js) y "Anotar página" (o avance, en un audiolibro).
+const botonesLeer = l => `<div class="lib-leer-botones">
+    ${window.LibrosSesion ? LibrosSesion.boton(l) : ""}
+    <button type="button" class="${window.LibrosSesion ? "lib-btn-sec" : "lib-btn"} lib-btn-chico" data-lib-pagina="${esc(l.id)}">${P.esAudio(l) ? "Anotar avance" : "Anotar página"}</button>
+  </div>`;
+// Tiempo de lectura que falta, a tu velocidad (con las sesiones de "Leer ahora").
+const faltaLeer = l => { const d = window.LibrosSesiones ? LibrosSesiones.delLibro(l, hoyLocal()) : null; return d && d.faltaMin ? `≈ ${LibrosSesiones.duracion(d.faltaMin)} de lectura a ${LibrosSesiones.textoVelocidad(d.velocidad, d.unidad)}.` : ""; };
 function renderLeyendo() {
   const el = $("lib-leyendo");
   const lista = cargados < 2 ? [] : L.ordenar(libros.filter(l => l.estado === "leyendo"), "inicio");
   if (!lista.length) { el.innerHTML = ""; return; }
   const hoy = hoyLocal();
   el.innerHTML = `<h2 class="lib-sec-t">Sigue leyendo</h2>` + lista.map(l => {
-    const x = P.lectura(l, hoy, metaDia()), est = estimacion(x);
+    const x = P.lectura(l, hoy, metaDia()), est = estimacion(x), falta = faltaLeer(l);
     return `
     <div class="lib-sigue" data-lib-sigue="${esc(l.id)}">
       <button type="button" class="lib-sigue-portada" data-lib-ver="${esc(l.id)}" aria-label="Ver ${esc(l.titulo)}"><span class="lib-portada">${tapa(l)}</span></button>
       <div class="lib-sigue-info">
-        <b class="lib-sigue-t">${esc(l.titulo)}</b>
-        <span class="lib-sigue-pag">${esc(textoPagina(x))}</span>
+        <b class="lib-sigue-t">${P.esAudio(l) ? "🎧 " : ""}${esc(l.titulo)}</b>
+        <span class="lib-sigue-pag">${esc(textoPagina(x, l))}</span>
         ${x.pct != null ? `<span class="lib-barra" aria-hidden="true"><i style="width:${x.pct}%"></i></span>` : ""}
         ${est ? `<small class="lib-sigue-est">${esc(est)}</small>` : ""}
-        <button type="button" class="lib-btn lib-btn-chico" data-lib-pagina="${esc(l.id)}">Anotar página</button>
+        ${falta ? `<small class="lib-sigue-est">${esc(falta)}</small>` : ""}
+        ${botonesLeer(l)}
       </div>
     </div>`;
   }).join("");
@@ -335,15 +351,17 @@ function ver(id) {
             ${chipEstado(l.estado)}
             ${l.calificacion ? `<p class="lib-estrellas is-grande" aria-label="${l.calificacion} de 5">${L.estrellas(l.calificacion)}</p>` : ""}
             ${l.genero ? `<span class="lib-chip">${esc(L.GENERO[l.genero].nombre)}</span>` : ""}
+            ${l.formato !== "papel" ? `<span class="lib-chip">${L.FORMATO[l.formato].emoji} ${esc(L.FORMATO[l.formato].nombre)}${l.duracionMin ? ` · ${esc(P.hm(l.duracionMin))}` : ""}</span>` : ""}
           </div>
         </div>
         ${l.estado === "leyendo" ? `
         <div class="lib-progreso">
-          <b>${esc(textoPagina(x))}</b>
+          <b>${esc(textoPagina(x, l))}</b>
           ${x.pct != null ? `<span class="lib-barra" aria-hidden="true"><i style="width:${x.pct}%"></i></span>` : ""}
           ${est ? `<p class="lib-nota">${esc(est)}</p>` : ""}
-          <button type="button" class="lib-btn lib-btn-chico" data-lib-pagina="${esc(l.id)}">Anotar página</button>
-        </div>` : ""}
+          ${botonesLeer(l)}
+        </div>` : l.estado === "por_leer" && window.LibrosSesion ? `<div class="lib-progreso">${botonesLeer(l)}</div>` : ""}
+        ${window.LibrosSesion ? LibrosSesion.ficha(l) : ""}
         <dl class="lib-datos">
           ${dato("Páginas", l.paginas ? String(l.paginas) : "")}
           ${dato("Publicado", l.anio ? String(l.anio) : "")}
@@ -367,7 +385,8 @@ function ver(id) {
 function formLibro(id) {
   const l = id ? libros.find(x => x.id === id) : null;
   actual = { modo: "libro", id: l ? l.id : null };
-  const v = l || { titulo: "", autor: "", paginas: null, estado: "por_leer", calificacion: null, opinion: "", fechaRegistro: hoyLocal(), fechaInicio: null, fechaFin: null, genero: null, anio: null, olKey: null };
+  const v = l || { titulo: "", autor: "", paginas: null, estado: "por_leer", calificacion: null, opinion: "", fechaRegistro: hoyLocal(), fechaInicio: null, fechaFin: null, genero: null, anio: null, olKey: null, formato: "papel", duracionMin: null };
+  const audio = v.formato === "audio";
   encontrados = [];
   const hoy = hoyLocal();
   const fecha = (name, etiqueta, valor) => `<label class="lib-campo"><span>${etiqueta}</span><input type="date" name="${name}" max="${hoy}" value="${esc(valor || "")}" class="lib-input"></label>`;
@@ -397,8 +416,15 @@ function formLibro(id) {
         <label class="lib-campo"><span>Título</span><input type="text" name="titulo" maxlength="200" autocomplete="off" value="${esc(v.titulo)}" class="lib-input" placeholder="Ej: Cien años de soledad"></label>
         <p class="lib-ayuda lib-aviso-dup" data-lib-dup hidden></p>
         <label class="lib-campo"><span>Autor</span><input type="text" name="autor" maxlength="150" autocomplete="off" value="${esc(v.autor)}" class="lib-input" placeholder="Ej: Gabriel García Márquez"></label>
+        <div class="lib-campo"><span>Formato</span>
+          <div class="lib-segmento" role="radiogroup" aria-label="Formato">
+            ${L.FORMATOS.map(x => `<button type="button" class="${x.id === v.formato ? "active" : ""}" data-lib-set-formato="${x.id}" role="radio" aria-checked="${x.id === v.formato}">${x.nombre}</button>`).join("")}
+          </div>
+          <input type="hidden" name="formato" value="${esc(v.formato || "papel")}">
+        </div>
         <div class="lib-par">
-          <label class="lib-campo"><span>Páginas (opcional)</span><input type="text" inputmode="numeric" name="paginas" autocomplete="off" value="${esc(v.paginas || "")}" class="lib-input" placeholder="350"></label>
+          <label class="lib-campo" data-lib-solo="papel"${audio ? " hidden" : ""}><span>Páginas (opcional)</span><input type="text" inputmode="numeric" name="paginas" autocomplete="off" value="${esc(v.paginas || "")}" class="lib-input" placeholder="350"></label>
+          <label class="lib-campo" data-lib-solo="audio"${audio ? "" : " hidden"}><span>Duración (h:mm, opcional)</span><input type="text" inputmode="text" name="duracion" autocomplete="off" value="${esc(L.duracionTexto(v.duracionMin))}" class="lib-input" placeholder="10:30"></label>
           <label class="lib-campo"><span>Género (opcional)</span><select name="genero" class="lib-input">
             <option value="">Sin género</option>
             ${L.GENEROS.map(g => `<option value="${g.id}"${g.id === v.genero ? " selected" : ""}>${esc(g.nombre)}</option>`).join("")}
@@ -407,7 +433,7 @@ function formLibro(id) {
         <input type="hidden" name="anio" value="${esc(v.anio || "")}">
         <input type="hidden" name="olKey" value="${esc(v.olKey || "")}">
         <div class="lib-campo"><span>Estado</span>
-          <div class="lib-segmento" role="radiogroup" aria-label="Estado">
+          <div class="lib-segmento is-cuatro" role="radiogroup" aria-label="Estado">
             ${L.ESTADOS.map(e => `<button type="button" class="${e.id === v.estado ? "active" : ""}" data-lib-set-estado="${e.id}" role="radio" aria-checked="${e.id === v.estado}">${e.nombre}</button>`).join("")}
           </div>
           <input type="hidden" name="estado" value="${esc(v.estado)}">
@@ -489,8 +515,10 @@ hoja.el.addEventListener("submit", e => {
   } else if (actual && actual.modo === "pagina") {
     const l = libros.find(x => x.id === actual.id);
     if (!l) { hoja.cerrar(); return; }
-    const r = P.registrarPagina(l, f.elements.pagina.value, hoy);
-    if (!r.ok) { window.Lectura.errores(f, [{ campo: "pagina", texto: r.error }]); return; }
+    const LS = window.LibrosSesion;
+    const lr = P.leerAvance(l, LS ? LS.textoCampo(f, l, "pagina") : f.elements.pagina.value);
+    const r = lr.ok ? P.registrarAvance(l, lr.valor, hoy) : lr;
+    if (!r.ok) { window.Lectura.errores(f, [{ campo: LS ? LS.campoError(l, "pagina") : "pagina", texto: r.error }]); return; }
     ref("libros").doc(l.id).update(r.cambios).catch(fallo("guardar"));
     if (r.terminado) festejo(l); else if (actual.volver === "ver") ver(l.id); else hoja.cerrar();
   } else if (actual && actual.modo === "metas") {
@@ -537,6 +565,11 @@ hoja.el.addEventListener("keydown", e => {
 hoja.el.addEventListener("click", e => {
   const f = hoja.el.querySelector("form");
   const sumar = e.target.closest("[data-lib-sumar]");
+  if (sumar && f && window.LibrosSesion) {
+    const l = libros.find(x => x.id === actual.id);
+    if (l) LibrosSesion.sumar(f, l, "pagina", sumar.dataset.libSumar);
+    return;
+  }
   if (sumar && f) {
     const l = libros.find(x => x.id === actual.id);
     const campo = f.elements.pagina;
@@ -556,6 +589,15 @@ hoja.el.addEventListener("click", e => {
   if (pag) { formPagina(pag.dataset.libPagina, "ver"); return; }
   const libroElegido = e.target.closest("[data-lib-elegir-libro]");
   if (libroElegido) { elegirLibro(encontrados[Number(libroElegido.dataset.libElegirLibro)]); return; }
+  // Formato (D-107): el audiolibro pide la duración en vez de las páginas.
+  const fmt = e.target.closest("[data-lib-set-formato]");
+  if (fmt && f) {
+    const id = fmt.dataset.libSetFormato;
+    f.elements.formato.value = id;
+    hoja.el.querySelectorAll("[data-lib-set-formato]").forEach(b => { const on = b === fmt; b.classList.toggle("active", on); b.setAttribute("aria-checked", String(on)); });
+    hoja.el.querySelectorAll("[data-lib-solo]").forEach(c => { c.hidden = (c.dataset.libSolo === "audio") !== (id === "audio"); });
+    return;
+  }
   // Estado: al pasar a "Leyendo" o "Terminado" sin fecha, propone la de hoy.
   const est = e.target.closest("[data-lib-set-estado]");
   if (est && f) {
@@ -718,16 +760,19 @@ function formPagina(id, volver) {
   const hoy = hoyLocal();
   const x = P.lectura(l, hoy, metaDia());
   const hoyPags = P.paginasPorDia(libros)[hoy] || 0;
-  hoja.abrir("¿En qué página vas?", `
+  // Audiolibro (D-107): el avance en tiempo o en % (campos de js/libros-sesion.js).
+  const LS = window.LibrosSesion;
+  const campo = LS && (P.esAudio(l) || l.estado !== "terminado") ? LS.campoAvance(l, "pagina") : `<label class="lib-campo"><span>Voy en la página${l.paginas ? ` (de ${l.paginas})` : ""}</span>
+          <input type="text" inputmode="numeric" pattern="[0-9]*" name="pagina" autocomplete="off" value="${esc(x.pagina != null && l.estado !== "terminado" ? x.pagina : "")}" class="lib-input lib-input-grande"></label>`;
+  hoja.abrir(P.esAudio(l) ? "¿Por dónde vas?" : "¿En qué página vas?", `
       <form class="lib-form lib-form-pagina" novalidate>
         <p class="lib-nota"><b>${esc(l.titulo)}</b>${l.autor ? ` · ${esc(l.autor)}` : ""}</p>
-        <label class="lib-campo"><span>Voy en la página${l.paginas ? ` (de ${l.paginas})` : ""}</span>
-          <input type="text" inputmode="numeric" pattern="[0-9]*" name="pagina" autocomplete="off" value="${esc(x.pagina != null && l.estado !== "terminado" ? x.pagina : "")}" class="lib-input lib-input-grande"></label>
-        <div class="lib-sumar" role="group" aria-label="Sumar páginas">
+        ${campo}
+        ${LS ? LS.botonesSumar(l, "data-lib-sumar") : `<div class="lib-sumar" role="group" aria-label="Sumar páginas">
           ${[10, 20, 30].map(n => `<button type="button" class="lib-btn-sec lib-btn-chico" data-lib-sumar="${n}">+${n}</button>`).join("")}
           ${l.paginas ? `<button type="button" class="lib-btn-sec lib-btn-chico" data-lib-sumar="fin">Lo terminé</button>` : ""}
-        </div>
-        <p class="lib-ayuda">Hoy llevas ${nf(hoyPags)} de ${metaDia()} páginas.${!P.entradas(l).length && l.estado === "leyendo" && l.fechaInicio !== hoy ? " Como ya venías leyéndolo, desde hoy cuento tus páginas por día." : ""}</p>
+        </div>`}
+        <p class="lib-ayuda">${P.esAudio(l) ? "El audiolibro no suma páginas a tu meta del día; con «Leer ahora» se guardan tus minutos." : `Hoy llevas ${nf(hoyPags)} de ${metaDia()} páginas.${!P.entradas(l).length && l.estado === "leyendo" && l.fechaInicio !== hoy ? " Como ya venías leyéndolo, desde hoy cuento tus páginas por día." : ""}`}</p>
         <p class="lib-error" role="alert" hidden></p>
         <div class="lib-acciones">
           ${volver === "ver" ? `<button type="button" class="lib-btn-sec" data-lib="volver-ficha">Cancelar</button>` : ""}
@@ -872,9 +917,11 @@ onAuthReady(() => {
     librosDocs = {};
     snap.docs.forEach(d => { librosDocs[d.id] = d.data(); });
     libros = Object.keys(librosDocs).map(id => L.normalizarLibro(id, librosDocs[id]));
-    // Hábitos: "se marca solo" con las páginas leídas de cada día (js/habitos-auto.js).
-    if (window.LibrosProgreso) window.dispatchEvent(new CustomEvent("manolo:fuente", { detail: { fuente: "libros", datos: LibrosProgreso.paginasPorDia(libros), servidor: !(snap.metadata && snap.metadata.fromCache) } }));
+    // Hábitos: "se marca solo" con las páginas y los minutos de cada día (js/habitos-auto.js).
+    const porDia = window.LibrosSesiones ? LibrosSesiones.porDiaHabitos(libros) : window.LibrosProgreso ? LibrosProgreso.paginasPorDia(libros) : null;
+    if (porDia) window.dispatchEvent(new CustomEvent("manolo:fuente", { detail: { fuente: "libros", datos: porDia, servidor: !(snap.metadata && snap.metadata.fromCache) } }));
     listo("libros");
+    window.dispatchEvent(new CustomEvent("libros:datos"));
   }, err => console.warn("Libros:", err));
   ref("libros_frases").onSnapshot(snap => {
     frasesDocs = {};
@@ -892,6 +939,17 @@ onAuthReady(() => {
     if (cargados >= 2 && vista === "libros") renderLista();
     if (hoja.abierta() && actual && actual.modo === "ver") ver(actual.id);
   }, err => console.warn("Libros (portadas):", err));
+});
+// "Leer ahora" (js/libros-sesion.js): lo que necesita de aquí.
+window.LibrosDatos = {
+  uno: id => libros.find(x => x.id === id) || null,
+  listo: () => cargados >= 2,
+  metaDia,
+  festejo: id => { const l = libros.find(x => x.id === id); if (l) festejo(Object.assign({}, l)); }
+};
+window.addEventListener("libros:sesion", () => {
+  renderLeyendo();
+  if (hoja.abierta() && actual && actual.modo === "ver") ver(actual.id);
 });
 render();
 })();

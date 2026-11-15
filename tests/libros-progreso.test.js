@@ -130,3 +130,57 @@ test("terminar desde el formulario cierra el progreso; metas", () => {
   assert.deepEqual(P.validarMetas({ metaPaginasDia: "0", reto: "x" }).errores.map(e => e.campo), ["metaPaginasDia", "reto"]);
 });
 
+
+test("audiolibro: avance en % o por tiempo; no suma páginas (D-107)", () => {
+  const a = libro("au", { formato: "audio", duracionMin: 600, estado: "leyendo", fechaInicio: "2026-10-20" });
+  assert.deepEqual(P.leerAvance(a, "3:00"), { ok: true, valor: 30 });
+  assert.deepEqual(P.leerAvance(a, "45 %"), { ok: true, valor: 45 });
+  assert.equal(P.leerAvance(a, "11:00").ok, false, "más que lo que dura");
+  assert.equal(P.leerAvance(libro("sin", { formato: "audio" }), "3:00").ok, false, "sin duración, solo %");
+  assert.deepEqual(P.leerAvance(libro("p", {}), "142"), { ok: true, valor: 142 });
+  const r = P.registrarAvance(a, 30, HOY);
+  assert.deepEqual(r.cambios, { pctBase: 30, progresoPct: { [HOY]: 30 }, pctActual: 30 }, "ya lo venía escuchando: lo de antes no cuenta hoy");
+  const conAvance = Object.assign({}, a, r.cambios, { progresoPct: { "2026-10-25": 10, [HOY]: 30 }, pctBase: 0 });
+  const x = P.lectura(conAvance, HOY, 30);
+  assert.deepEqual([x.unidad, x.pagina, x.pct, x.faltan, x.faltaAudioMin, x.finMeta], ["pct", 30, 30, 70, 420, null], "faltan 7 horas de audio; la meta de páginas no aplica");
+  assert.equal(P.avanceTexto(conAvance), "3:00");
+  assert.deepEqual(P.pasos(conAvance).map(p => p.texto), ["+15 min", "+30 min", "+1 h"]);
+  assert.equal(P.sumarAvance(conAvance, "3:00", 30), "3:30");
+  assert.equal(P.sumarAvance(conAvance, "", "fin"), "10:00");
+  assert.deepEqual(P.paginasPorDia([conAvance]), {}, "el audiolibro no suma páginas");
+  const fin = P.registrarAvance(conAvance, 100, HOY);
+  assert.deepEqual([fin.terminado, fin.cambios.estado, fin.cambios.fechaFin], [true, "terminado", HOY]);
+  const pct = libro("pc", { formato: "audio", estado: "leyendo", pctActual: 40 });
+  assert.deepEqual([P.avanceTexto(pct), P.sumarAvance(pct, "", 10), P.pasos(pct)[0].texto], ["40", "50", "+5 %"]);
+  assert.deepEqual(P.alTerminar(Object.assign({}, conAvance), HOY), { progresoPct: { "2026-10-25": 10, [HOY]: 100 }, pctActual: 100 });
+});
+
+test("releer: la lectura anterior queda guardada y todo cuenta (D-107)", () => {
+  const l = libro("re", { titulo: "Cien años", autor: "GGM", paginas: 300, estado: "terminado", calificacion: 5, fechaInicio: "2026-01-05", fechaFin: "2026-02-01",
+    paginaActual: 300, paginaBase: 0, progreso: { "2026-01-10": 100, "2026-02-01": 300 } });
+  const c = P.nuevaLectura(l, HOY, 99);
+  assert.deepEqual(c["lecturas.1"], { estado: "terminado", fechaInicio: "2026-01-05", fechaFin: "2026-02-01", formato: "papel", paginas: 300, calificacion: 5, cerrada: 99,
+    paginaActual: 300, paginaBase: 0, progreso: { "2026-01-10": 100, "2026-02-01": 300 } });
+  assert.deepEqual([c.estado, c.fechaInicio, c.fechaFin, c.paginaActual, c.paginaBase], ["leyendo", HOY, null, 0, 0]);
+  // Como queda en Firestore (con el mapa lecturas).
+  const nuevo = Object.assign({}, l, c, { lecturas: { 1: c["lecturas.1"] } });
+  delete nuevo["lecturas.1"];
+  assert.deepEqual(P.lecturasDe(nuevo).map(x => [x.n, x.estado, x.actual]), [[1, "terminado", false], [2, "leyendo", true]]);
+  const conPaginas = Object.assign({}, nuevo, P.registrarAvance(nuevo, 40, HOY).cambios);
+  const porDia = P.paginasPorDia([conPaginas]);
+  assert.deepEqual([porDia["2026-01-10"], porDia["2026-02-01"], porDia[HOY]], [100, 200, 40], "las páginas de la primera lectura siguen contando");
+  const segunda = Object.assign({}, conPaginas, { estado: "terminado", fechaFin: HOY, paginaActual: 300 });
+  assert.equal(P.reto([segunda], 10, HOY).terminados, 2, "cada vez que lo terminaste cuenta para el reto");
+  assert.deepEqual(P.terminaciones([segunda]).map(t => [t.n, t.fechaFin]), [[1, "2026-02-01"], [2, HOY]]);
+  const est = P.estadisticas([segunda], HOY);
+  assert.deepEqual([est.terminadosAnio, est.porMes[1].libros, est.porMes[9].libros], [2, 1, 1]);
+  assert.equal(P.nuevaLectura(nuevo, HOY, 1)["lecturas.2"].estado, "leyendo", "la tercera guarda la segunda en lecturas.2");
+});
+
+test("abandonar y retomar (D-107)", () => {
+  assert.deepEqual(P.abandonar(HOY), { estado: "abandonado", fechaDejado: HOY });
+  assert.deepEqual(P.retomar(), { estado: "leyendo" });
+  const dejado = libro("ab", { paginas: 200, estado: "abandonado", fechaInicio: "2026-10-01", paginaActual: 50, paginaBase: 0, progreso: { "2026-10-02": 50 } });
+  assert.equal(P.registrarPagina(dejado, "60", HOY).cambios.estado, "leyendo", "anotar una página lo retoma");
+  assert.equal(P.reto([dejado], 5, HOY).terminados, 0, "abandonado no cuenta como terminado");
+});

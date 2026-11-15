@@ -1240,3 +1240,30 @@ favoritos se guardan en el teléfono (`localStorage`
 (9) Pantalla: siguen las pestañas Lista · Calendario · Marcados; Planes,
 Progreso y Memorizar son páginas aparte con accesos debajo de "Anotar
 versículo" (cuatro pestañas no entraban bien en 320 px).
+
+**D-107 (2026-11-15) · Libros fase 4: "Leer ahora", velocidad, Abandonado,
+releer y audiolibros.** (1) "▶ Leer ahora" en "Sigue leyendo" y en la
+ficha: un cronómetro por marcas de tiempo (empezó, pausas) guardado en el
+teléfono (`localStorage manolo.libros.sesion`, con el uid): sigue con el
+teléfono bloqueado o la app cerrada y no gasta Firestore mientras corre.
+Pausa, "Mantener la pantalla encendida" (Screen Wake Lock, opcional, solo
+mientras la hoja está abierta y corriendo) y "Descartar". Al terminar:
+minutos (editables, de 1 a 720) y "¿A qué página llegaste?" → en el libro
+`sesiones.{id} = { fecha, ini, fin, min, desde, hasta, unidad, lectura }`
+y el avance de hoy (como "Anotar página"), en un solo `update`. (2)
+Velocidad = avance ÷ minutos de las sesiones que avanzaron (con 5 minutos
+o más); "te faltan unas 4 h 50 min de lectura" a esa velocidad; "lo
+terminas el …" sigue siendo a tu ritmo de páginas por día. (3) Estado
+Abandonado (`fechaDejado`): "Dejar de leerlo" y "Retomar" (sigue en la
+misma página); anotar avance en uno abandonado lo vuelve a Leyendo. (4)
+"📖 Leer de nuevo" en uno terminado: la lectura de ahora se guarda en
+`lecturas.N` (estado, fechas, formato, páginas, calificación y su avance)
+y empieza otra desde 0; las páginas por día, el reto y las estadísticas
+cuentan todas las lecturas (cada vez que lo terminaste suma). Nada se
+borra. (5) Formato: Papel, Digital o Audiolibro (`formato`,
+`duracionMin` opcional). El audiolibro avanza en % (`pctActual`,
+`pctBase`, `progresoPct`, con un decimal; con su duración se anota en
+horas y minutos y se convierte) y no suma a la meta de páginas; sí suma
+minutos. (6) Hábitos: Libros manda `{ fecha: { paginas, min } }`; un
+hábito de Tiempo "Leer" ahora puede marcarse solo con las sesiones.
+

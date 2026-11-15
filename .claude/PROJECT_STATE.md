@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-14 (Biblia fase 3: planes, progreso, memorizar y temas, D-106).
+Actualizado: 2026-11-15 (Libros fase 4: Leer ahora, velocidad, estados y formatos, D-107).
 
 - **App**: PWA estática + Firebase (Auth + Firestore), una sola página,
   JS puro sin build. Ver `docs/ARCHITECTURE.md`.
@@ -65,7 +65,10 @@ Actualizado: 2026-11-14 (Biblia fase 3: planes, progreso, memorizar y temas, D-1
   lectura (ponerse al día, mover), progreso de los 66 libros, memorizar
   (cajas, 3 formas de practicar), temas con filtro, racha con capítulos
   leídos ("Mi día" y Hábitos) y favoritos en el versículo de arriba.
-  Sigue la fase 4 (Libros).
+  Fase 4 hecha (D-107): "Leer ahora" (cronómetro, sesiones, velocidad y
+  tiempo que falta), Abandonado y Retomar, "Leer de nuevo" (lecturas
+  anteriores) y audiolibros (por tiempo o %). Sigue la fase 5 (Libros:
+  ISBN, importar, frases, notas, "¿Qué leo después?", estadísticas).
 - **Reconocer ejercicios (2026-11-06)**: motor nuevo de búsqueda y
   reconocimiento (331/331 nombres reales, antes 79 %), alias extra y
   «¿Es …?» en no reconocidos (D-101, `js/exercise-search.js`,

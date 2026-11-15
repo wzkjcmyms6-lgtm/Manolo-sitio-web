@@ -329,3 +329,64 @@ input[type="date"].lib-input { -webkit-appearance: none; appearance: none; }
 .lib-curiosos { margin: 0 0 0.5rem; padding-left: 1.1rem; color: var(--muted); font-size: 0.88rem; line-height: 1.5; }
 .lib-curiosos b { color: var(--ink); }
 .lib-curiosos:empty { display: none; }
+
+/* ---------- Fase 4 (D-107): Leer ahora, Abandonado, formato ---------- */
+.lib-chip.is-abandonado { background: rgba(255, 184, 77, 0.14); color: #ffcf7a; }
+.lib-segmento.is-cuatro { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 400px) {
+  .lib-segmento.is-cuatro { grid-template-columns: repeat(2, minmax(0, 1fr)); border-radius: 18px; }
+}
+.lib-leer-botones { display: grid; grid-template-columns: repeat(2, minmax(0, max-content)); gap: 0.45rem; margin-top: 0.15rem; max-width: 100%; }
+.lib-leer-botones .lib-btn-chico { min-height: 44px; padding-left: 0.75rem; padding-right: 0.75rem; white-space: nowrap; }
+@media (max-width: 400px) {
+  .lib-sigue .lib-leer-botones { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .lib-sigue .lib-leer-botones .lib-btn-chico { padding-left: 0.4rem; padding-right: 0.4rem; font-size: 0.8rem; }
+}
+@media (max-width: 359px) { .lib-sigue .lib-leer-botones { grid-template-columns: 1fr; } }
+.lib-sigue .lib-leer-botones .lib-btn-chico { margin-top: 0; }
+.lses-corre { font-variant-numeric: tabular-nums; }
+
+/* Reloj de la sesión */
+.lses { display: flex; flex-direction: column; align-items: stretch; gap: 0.75rem; text-align: center; }
+.lses-nota { margin: 0; color: var(--accent-2); }
+.lses-libro { margin: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+.lses-libro b { font-size: 1.05rem; }
+.lses-libro small { color: var(--muted); font-size: 0.85rem; }
+.lses-reloj { margin: 0.4rem 0 0; font-size: clamp(3.4rem, 16vw, 5rem); font-weight: 700; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.lses-reloj.is-pausa { color: var(--muted); }
+.lses-desde { margin: 0; color: var(--muted); font-size: 0.9rem; }
+.lses-botones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; margin-top: 0.4rem; }
+.lses-botones button { min-height: 52px; font-size: 1rem; }
+.lses-pantalla { text-align: left; }
+.lses-link { align-self: center; min-height: 44px; border: 0; background: none; color: var(--muted); font: inherit; font-size: 0.86rem; text-decoration: underline; cursor: pointer; padding: 0 0.4rem; }
+.lses .lib-ayuda { margin: 0; }
+.lses-fin .lses-libro { text-align: center; }
+.lses-min { max-width: 10rem; }
+.lses-hm { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+.lses-hm label { display: flex; align-items: center; gap: 0.35rem; }
+.lses-hm span { color: var(--muted); font-weight: 600; }
+
+/* Al guardar */
+.lses-listo { display: flex; flex-direction: column; gap: 0.5rem; text-align: center; }
+.lses-listo p { margin: 0; }
+.lses-listo-t { font-size: 1.3rem; font-weight: 700; color: #7fe0a6; }
+.lses-listo-v { font-size: 1.05rem; font-weight: 700; }
+.lses-listo-l { color: var(--muted); }
+.lses-listo .lib-btn { margin-top: 0.6rem; }
+
+/* En la ficha */
+.lses-ficha { display: flex; flex-direction: column; gap: 0.5rem; margin: 0 0 0.9rem; }
+.lses-ficha .lib-h-fila { margin-top: 0.2rem; }
+.lses-datos { margin: 0; font-size: 0.9rem; color: var(--ink); line-height: 1.5; }
+.lses-total { color: var(--muted); font-size: 0.8rem; }
+.lses-lista, .lses-lecturas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+.lses-lista li { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 0.8fr); gap: 0.5rem; padding: 0.45rem 0.65rem; border-radius: 10px; background: var(--surface-raised); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.lses-lista li span:last-child { text-align: right; color: var(--muted); }
+.lses-lecturas li { font-size: 0.86rem; color: var(--muted); }
+.lses-lecturas b { color: var(--ink); }
+.lses-ficha .lses-link { align-self: flex-start; padding: 0; }
+.lses-dejado { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap; padding: 0.7rem 0.8rem; border-radius: 14px; background: rgba(255, 184, 77, 0.08); border: 1px solid rgba(255, 184, 77, 0.3); }
+.lses-dejado p { margin: 0; font-size: 0.9rem; }
+.lses-releer { margin-top: 0.2rem; }
+.lib-campo[hidden] { display: none; }
+.lses-datos b { white-space: nowrap; }

@@ -83,6 +83,18 @@ espacian si lo sabes (primeras letras, ocultar palabras o escribirlo).
 con capítulos leídos. ⚙ Ajustes: el versículo de arriba también de tus
 favoritos. Detalle en `docs/LECTURA_NIVEL2.md`.
 
+## Leer ahora, velocidad, Abandonado, releer y audiolibros (2026-11-15, D-107)
+
+En "Sigue leyendo" y en cada libro, **▶ Leer ahora** abre un cronómetro
+(sigue con el teléfono bloqueado; pausa y pantalla encendida opcional). Al
+terminar pones la página a la que llegaste y queda la sesión: páginas,
+minutos y tu velocidad. La ficha muestra tu velocidad, el tiempo de
+lectura que te falta, tus sesiones, **Dejar de leerlo** (Abandonado) /
+**Retomar** y, en uno terminado, **📖 Leer de nuevo** (la lectura anterior
+queda guardada y cuenta en tus estadísticas). Formato **papel, digital o
+audiolibro**: el audiolibro avanza por tiempo (si pones su duración) o por
+%. Detalle en `docs/LECTURA_NIVEL2.md`.
+
 ## Libros (fase 3)
 
 - **Agregar o editar**: título (obligatorio), autor, páginas, estado (Por

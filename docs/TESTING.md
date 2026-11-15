@@ -1,6 +1,11 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-15 (Libros fase 4, D-107): `npm test` → **552 pruebas**.
+  Nueva: `libros-sesiones` (cronómetro, cerrar, velocidad, tiempo que
+  falta, minutos por día); más casos en `libros-progreso` (audiolibro,
+  releer, abandonar), `libros-motor` y `habitos-auto`. E2E
+  `scripts/e2e/lectura.js` con `SOLO=sesion` (a 390, 1280 y 320 px).
 - 2026-11-14 (Biblia fase 3, D-106): `npm test` → **544 pruebas**.
   Nuevas: `biblia-planes` (calendarios, lectura de hoy, atrasado, ponerse
   al día, mover, Proverbios, progreso) y `biblia-memoria` (cajas, primeras
@@ -259,6 +264,18 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] Medir tiempos › Promedios › "Por día": siete barras de lunes a
   domingo. Toca "Lu": la tabla dice cuánto tardas en promedio cada lunes.
   Con ‹ › pasas de día.
+
+**Libros: Leer ahora, Abandonado, releer y audiolibros (2026-11)**
+- [ ] Libros › "Sigue leyendo" › "▶ Leer ahora": corre el reloj. Bloquea el
+  teléfono un par de minutos y vuelve: el tiempo siguió.
+- [ ] "Terminar": pon la página a la que llegaste y "Guardar": dice cuántas
+  páginas, minutos y páginas por hora. Abre el libro: tu velocidad y
+  cuánto tiempo te falta.
+- [ ] En un libro: "Dejar de leerlo" (queda en Abandonado) y "Retomar".
+- [ ] En uno terminado: "📖 Leer de nuevo"; abajo dice "Lecturas
+  anteriores".
+- [ ] "Agregar libro" › Audiolibro › duración 10:30; "Anotar avance" con
+  horas y minutos.
 
 **Biblia: planes, progreso, memorizar y temas (2026-11)**
 - [ ] Biblia › "Planes" › "Evangelios en 30 días" › "Empezar hoy". Arriba

@@ -333,6 +333,10 @@ function conTemporadaVista(opciones) {
     await p.click("[data-rellenar]");
     await p.waitForTimeout(600);
     ok((await hab("correr")).registros["2026-11-01"].auto, "y la marca si aceptas");
+    // Con las sesiones de «Leer ahora», Libros da minutos: «Leer» (Tiempo) también (D-107).
+    ok(/Leer.*puede marcarse solo.*sesión de lectura en Libros/.test(await texto(p, ".hb-sug-vinc")), "después ofrece «Leer» (Tiempo) con las sesiones de Libros");
+    await p.click(".hb-sug-vinc [data-vinc-no]");
+    await p.waitForTimeout(500);
     ok(!(await p.$(".hb-sug-vinc")), "sin más sugerencias");
     ok(p.errores.length === 0 && p.consola.length === 0, `sin errores (${p.errores.concat(p.consola).join(" | ")})`);
     await p.context().close();
