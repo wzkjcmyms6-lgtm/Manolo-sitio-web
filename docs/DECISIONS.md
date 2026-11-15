@@ -1325,3 +1325,32 @@ tildes, sin subtítulo ni saga entre paréntesis) y el apellido del primer
 autor; dos veces en el archivo entra una; una frase, si su texto ya está
 en ese libro. (4) Datos nuevos, aditivos: `isbn` e `importado: { de, id }`
 en el libro y `importado: { de: "kindle", ubicacion }` en la frase.
+
+**D-111 (2026-11-15) · Libros fase 5d: escanear el código de barras
+(ISBN).** (1) Lector propio y sin librerías, `js/libros-isbn.js` (unos 14
+KB, muy por debajo de los 200 KB pedidos): se carga recién al tocar
+"Escanear" (script que se agrega a la página) y el service worker lo
+guarda (EXTRAS) para usarlo sin internet. Las librerías conocidas (ZXing,
+Quagga) pesan bastante más y leen muchos formatos que no hacen falta: un
+libro siempre usa EAN-13. (2) Cómo lee: recorre líneas a lo largo de la foto
+(filas; si no encuentra, columnas y diagonales), en los dos sentidos; cada
+línea se pasa a barras de cuatro maneras (por los bordes, umbral de toda la
+línea, umbral local por sombras y una versión más nítida por si está
+movida), con el cruce entre píxeles para barras de 1 o 2 px; cada dígito se
+compara por anchos y, si la foto está borrosa, por la distancia entre
+bordes del mismo tipo. Pide guardas al inicio, en el medio y al final,
+blanco antes y después, el dígito de control y que los 12 dígitos se
+parezcan bien en promedio: en 1.200 imágenes sin código (ruido, barras al
+azar) no inventó ninguno. Gana el código que más líneas leyeron; con una
+sola línea vale solo si empieza con 978/979. (3) En el iPhone, lo más
+confiable es la foto: la cámara del sistema enfoca de cerca (macro) y la
+foto se lee en el teléfono a 2.000 px (y si no, a 1.100). La cámara en
+vivo (getUserMedia, cámara de atrás, sin micrófono) lee una franja del
+medio unas 6 veces por segundo y pide el mismo código dos veces; se apaga
+al leer, al cerrar la hoja o al salir de la app. Si el navegador trae
+BarcodeDetector (Chrome, Android), se usa primero. (4) Al leer un ISBN se
+cierra la hoja y el libro se busca en Open Library como si lo hubieras
+escrito. El ISBN buscado (escrito o escaneado) se guarda en el libro
+aunque Open Library no lo tenga: campo `isbn` (aditivo, el mismo de la
+fase 5c); vacío no borra el que había. Un código que no es de libro lo
+dice («no es de un libro»).

@@ -23,8 +23,8 @@
 //
 // IMPORTANTE: cada entrega que cambie la app debe subir VERSION y HUELLA con
 // `npm run sw` (el test tests/sw-version.test.js falla si alguien lo olvida).
-const VERSION = "2026-11-15.5";
-const HUELLA = "d515927811dc";
+const VERSION = "2026-11-15.6";
+const HUELLA = "3e1942499807";
 const PREFIJO = "manolo-app-";
 const CACHE = PREFIJO + VERSION;
 const DATOS = "manolo-datos"; // copias de respaldo de datos que cambian solos (tipo de cambio, precios)
@@ -38,7 +38,7 @@ const BIBLIA = "manolo-biblia";               // libros de la Biblia abiertos o 
 const ES_BIBLIA = /\/data\/biblia\//;
 
 // Archivos que no aparecen en index.html pero la app necesita.
-const EXTRAS = ["./", "manifest.json", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "js/importar-rutinas.js", "js/importar-ui.js", "js/biblia-buscar-worker.js", "vendor/leaflet-1.9.4/leaflet.js", "vendor/leaflet-1.9.4/leaflet.css"];
+const EXTRAS = ["./", "manifest.json", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "js/importar-rutinas.js", "js/importar-ui.js", "js/biblia-buscar-worker.js", "js/libros-isbn.js", "vendor/leaflet-1.9.4/leaflet.js", "vendor/leaflet-1.9.4/leaflet.css"];
 
 function propio(url) {
   return new URL(url, self.location.href).origin === self.location.origin;

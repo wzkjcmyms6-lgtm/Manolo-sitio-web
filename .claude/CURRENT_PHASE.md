@@ -11,7 +11,7 @@ D-102. Cada fase deja la app funcionando y publicada.
 | 2 | Biblia: anotar desde el lector, resaltados, notas, favoritos, búsqueda, compartir | ✅ |
 | 3 | Biblia: planes, progreso de capítulos, memorización, temas, racha | ✅ |
 | 4 | Libros: "Leer ahora", velocidad, estados y formatos | ✅ |
-| 5 | Libros: ISBN, importar, frases, notas, "¿Qué leo después?", estadísticas | ⏳ |
+| 5 | Libros: ISBN, importar, frases, notas, "¿Qué leo después?", estadísticas | ⏳ (hechas: qué leo después, sagas y notas D-108; frases D-109; importar D-110; escanear ISBN D-111. Falta: estadísticas) |
 | 6 | Medir tiempos: definitiva, actividades, cronómetro, "Mi mañana", autollenado | |
 | 7 | Medir tiempos: plan de la mañana, estadísticas, experimentos; "Mi día" y Hábitos | |
 | 8 | QA final, docs y lista para el iPhone | |

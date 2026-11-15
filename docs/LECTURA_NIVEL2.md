@@ -244,3 +244,22 @@ Nada de lo guardado se reescribe; lo viejo sin estos campos se ve igual.
   de línea, Goodreads, StoryGraph, Kindle en español e inglés, duplicados)
   y `SOLO=importar node scripts/e2e/lectura.js` (los tres formatos y un
   archivo que no es; a 390, 1280 y 320 px).
+
+### 5d. Escanear el código de barras (ISBN) (D-111)
+- **Archivos**: `js/libros-isbn.js` (UMD sin DOM: `leerImagen`,
+  `leerFila`, `modulos`, `ean13Valido`, `esIsbn13`, `isbn10a13`,
+  `digitoControl`; se carga al tocar Escanear y está en los EXTRAS del
+  service worker) y `js/libros-escaner.js` (hoja: sacar foto, elegir foto,
+  cámara en vivo; avisa con el evento `libros:isbn`). En `libros.js`: el
+  botón, el campo oculto `isbn`, la búsqueda del ISBN y la fila «ISBN» en
+  la ficha. `validarLibro` guarda `isbn` solo si viene.
+- **Pruebas**: `tests/libros-isbn.test.js` (control, ISBN-10 → 13, filas,
+  fotos dibujadas con desenfoque, ruido, poco contraste, sombra, reflejo,
+  perspectiva, giros, de costado, diagonal, foto grande, precio EAN-5,
+  margen chico, zona; y que no invente: ruido, control malo, barras al
+  azar) y `SOLO=isbn node scripts/e2e/lectura.js` (foto JPEG girada y
+  borrosa → busca y guarda; código que no es de libro; foto sin código;
+  sin permiso de cámara; cámara en vivo simulada; se apaga al cerrar; a
+  390, 1280 y 320 px).
+- **Pendiente de probar en el iPhone de verdad**: la foto debería ser
+  confiable; la cámara en vivo depende de que el iPhone enfoque de cerca.

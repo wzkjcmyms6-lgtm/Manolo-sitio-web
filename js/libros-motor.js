@@ -138,6 +138,9 @@ function validarLibro(datos, opciones) {
       formato, saga: saga || null, sagaN: saga ? sagaN : null, prioridad: datos.prioridad === "alta" || datos.prioridad === "baja" ? datos.prioridad : null };
   // La duración solo con audiolibro (si cambias a papel, la que tenías queda guardada).
   if (formato === "audio") doc.duracionMin = duracionMin;
+  // ISBN (fase 5d, escrito o escaneado): solo si viene; vacío no borra el que había.
+  const isbn = String(datos.isbn || "").replace(/[-\s]/g, "").toUpperCase();
+  if (/^(\d{9}[\dX]|\d{13})$/.test(isbn)) doc.isbn = isbn;
   return { ok: true, errores: [], doc };
 }
 

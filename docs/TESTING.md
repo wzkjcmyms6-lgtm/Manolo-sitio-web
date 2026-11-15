@@ -1,6 +1,9 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-15 (Libros fase 5d, D-111): `npm test` → **577 pruebas**. Nueva:
+  `libros-isbn` (códigos de barras dibujados: borrosos, con ruido, girados,
+  de costado; y que no invente). E2E `SOLO=isbn`.
 - 2026-11-15 (Libros fase 5c, D-110): `npm test` → **567 pruebas**. Nueva:
   `libros-importar` (CSV, Goodreads, StoryGraph, Kindle, duplicados). E2E
   `SOLO=importar`.
@@ -271,6 +274,14 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] Medir tiempos › Promedios › "Por día": siete barras de lunes a
   domingo. Toca "Lu": la tabla dice cuánto tardas en promedio cada lunes.
   Con ‹ › pasas de día.
+
+**Libros: escanear el código de barras (2026-11)**
+- [ ] Libros › «Agregar libro» › «📷 Escanear el código de barras» ›
+  «Sacar foto del código»: saca la foto de la contratapa de cerca. En un
+  segundo dice «Leí el ISBN…» y aparece tu libro para tocarlo.
+- [ ] Prueba «Cámara en vivo»: pon el código dentro del recuadro. Si no lo
+  lee en unos segundos, aleja un poco el teléfono (o usa la foto).
+- [ ] Guarda el libro y ábrelo: en su ficha aparece «ISBN».
 
 **Libros: importar (2026-11)**
 - [ ] Si usas Goodreads: en la web, «Export Library»; guarda el .csv en

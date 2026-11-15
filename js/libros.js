@@ -392,6 +392,7 @@ function ver(id) {
         <dl class="lib-datos">
           ${dato("Páginas", l.paginas ? String(l.paginas) : "")}
           ${dato("Publicado", l.anio ? String(l.anio) : "")}
+          ${dato("ISBN", l.isbn || "")}
           ${dato("Lo leíste en", dias ? `${dias} ${dias === 1 ? "día" : "días"}` : "")}
           ${dato("Registrado", L.fechaLarga(l.fechaRegistro))}
           ${dato("Empezado", l.fechaInicio ? L.fechaLarga(l.fechaInicio) : "")}
@@ -427,6 +428,7 @@ function formLibro(id) {
             <input type="search" class="lib-input" data-lib-q placeholder="Título, autor o ISBN" autocomplete="off" enterkeyhint="search" aria-label="Buscar el libro en Open Library">
             <button type="button" class="lib-btn-sec lib-btn-chico" data-lib="buscar-libro">Buscar</button>
           </div>
+          <button type="button" class="lib-btn-sec lib-btn-chico lib-escanear" data-lib-escanear>📷 Escanear el código de barras</button>
           <p class="lib-ayuda" data-lib-buscar-msg>${l ? "¿Te faltan datos? Búscalo y completo lo que falte." : "Escribe y elige tu libro: completo el título, el autor, las páginas, la portada y el género."}</p>
           <div class="lib-encontrados" data-lib-encontrados></div>
         </div>
@@ -472,6 +474,7 @@ function formLibro(id) {
         </div>
         <input type="hidden" name="anio" value="${esc(v.anio || "")}">
         <input type="hidden" name="olKey" value="${esc(v.olKey || "")}">
+        <input type="hidden" name="isbn" value="${esc(v.isbn || "")}">
         <div class="lib-campo"><span>Estado</span>
           <div class="lib-segmento is-cuatro" role="radiogroup" aria-label="Estado">
             ${L.ESTADOS.map(e => `<button type="button" class="${e.id === v.estado ? "active" : ""}" data-lib-set-estado="${e.id}" role="radio" aria-checked="${e.id === v.estado}">${e.nombre}</button>`).join("")}
@@ -608,6 +611,14 @@ hoja.el.addEventListener("input", e => {
   if (f && !f.querySelector(".is-error")) f.querySelector(".lib-error").hidden = true;
 });
 
+// El escáner (js/libros-escaner.js) leyó un ISBN: lo busca como si lo escribieras.
+document.addEventListener("libros:isbn", e => {
+  const q = hoja.el.querySelector("[data-lib-q]"), isbn = e.detail && e.detail.isbn;
+  if (!q || !isbn || !hoja.abierta()) return;
+  q.value = isbn;
+  clearTimeout(relojBusqueda);
+  buscarLibro();
+});
 // Enter en "Buscar el libro" busca (no guarda el formulario).
 hoja.el.addEventListener("keydown", e => {
   if (e.key === "Enter" && e.target.matches("[data-lib-q]")) { e.preventDefault(); clearTimeout(relojBusqueda); buscarLibro(); }
@@ -767,6 +778,10 @@ function buscarLibro() {
   const texto = q.value.trim();
   if (texto.length < 2) { mensajeBusqueda("Escribe al menos parte del título (o el ISBN)."); q.focus(); return; }
   if (busquedaEnCurso) busquedaEnCurso.abort();
+  // El ISBN que buscas (escrito o escaneado) queda en el libro, aunque Open
+  // Library no lo tenga (fase 5d).
+  const f = hoja.el.querySelector(".lib-form-libro"), isbn = L.esIsbn(texto);
+  if (f && f.elements.isbn) f.elements.isbn.value = isbn ? texto.replace(/[-\s]/g, "").toUpperCase() : "";
   const corte = typeof AbortController === "function" ? new AbortController() : null;
   busquedaEnCurso = corte;
   const reloj = setTimeout(() => corte && corte.abort(), 12000);
@@ -776,7 +791,7 @@ function buscarLibro() {
     .then(json => {
       if (!hoja.el.contains(caja) || busquedaEnCurso !== corte) return;
       encontrados = L.leerLibros(json, 8);
-      if (!encontrados.length) { caja.innerHTML = ""; mensajeBusqueda("No encontré ese libro. Prueba con menos palabras, con el título original o escríbelo a mano abajo."); return; }
+      if (!encontrados.length) { caja.innerHTML = ""; mensajeBusqueda(isbn ? "No encontré ese ISBN en Open Library. Búscalo por el título o escribe los datos abajo (el ISBN queda guardado)." : "No encontré ese libro. Prueba con menos palabras, con el título original o escríbelo a mano abajo."); return; }
       mensajeBusqueda("Toca tu libro:");
       caja.innerHTML = encontrados.map((x, i) => `
           <button type="button" class="lib-encontrado" data-lib-elegir-libro="${i}">

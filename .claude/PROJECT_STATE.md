@@ -67,8 +67,11 @@ Actualizado: 2026-11-15 (Libros fase 4: Leer ahora, velocidad, estados y formato
   leídos ("Mi día" y Hábitos) y favoritos en el versículo de arriba.
   Fase 4 hecha (D-107): "Leer ahora" (cronómetro, sesiones, velocidad y
   tiempo que falta), Abandonado y Retomar, "Leer de nuevo" (lecturas
-  anteriores) y audiolibros (por tiempo o %). Sigue la fase 5 (Libros:
-  ISBN, importar, frases, notas, "¿Qué leo después?", estadísticas).
+  anteriores) y audiolibros (por tiempo o %). Fase 5 casi lista:
+  "¿Qué leo después?", sagas, prioridad y notas (D-108); repaso de frases,
+  favoritas, etiquetas y compartir (D-109); importar de Goodreads,
+  StoryGraph y Kindle (D-110); escanear el código de barras con lector
+  propio (D-111). Falta: estadísticas nuevas y "Tu año en libros".
 - **Reconocer ejercicios (2026-11-06)**: motor nuevo de búsqueda y
   reconocimiento (331/331 nombres reales, antes 79 %), alias extra y
   «¿Es …?» en no reconocidos (D-101, `js/exercise-search.js`,

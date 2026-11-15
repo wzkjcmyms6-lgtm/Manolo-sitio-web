@@ -484,3 +484,25 @@ input[type="date"].lib-input { -webkit-appearance: none; appearance: none; }
 .limp-lista small { color: var(--muted); font-size: 0.78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .limp-listo { text-align: center; }
 .limp-listo-t { font-size: 1.4rem; font-weight: 700; color: #7fe0a6; }
+
+/* ---------- Escanear el código de barras (fase 5d, D-111) ---------- */
+.lib-escanear { justify-self: start; align-self: flex-start; min-height: 40px; }
+.lesc { display: flex; flex-direction: column; gap: 0.75rem; }
+.lesc p { margin: 0; }
+.lesc .lib-ayuda { margin: -0.35rem 0 0; }
+.lesc-archivo { position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; }
+.lesc-archivo input { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 16px; }
+.lesc-otros { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem; }
+.lesc-otros .lib-btn-chico { min-height: 44px; }
+.lesc-inicio { display: flex; flex-direction: column; gap: 0.75rem; }
+.lesc.is-vivo .lesc-inicio { display: none; }
+.lesc-vivo { display: flex; flex-direction: column; gap: 0.6rem; }
+.lesc-vivo[hidden] { display: none; }
+.lesc-video { position: relative; aspect-ratio: 4 / 3; border-radius: 16px; overflow: hidden; background: #000; }
+.lesc-video video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lesc-guia { position: absolute; left: 10%; right: 10%; top: 30%; bottom: 30%; border: 3px solid rgba(255, 255, 255, 0.9); border-radius: 12px; box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.35); }
+.lesc-guia::after { content: ""; position: absolute; left: 6%; right: 6%; top: 50%; height: 2px; background: #ff5a5a; box-shadow: 0 0 8px #ff5a5a; }
+.lesc-estado { padding: 0.6rem 0.75rem; border-radius: 12px; background: var(--surface); font-size: 0.9rem; line-height: 1.4; }
+.lesc-estado[hidden] { display: none; }
+.lesc-estado.is-error { color: var(--danger); }
+.lesc-estado.is-ok { color: #7fe0a6; font-weight: 700; }

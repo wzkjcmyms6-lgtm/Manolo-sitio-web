@@ -1112,4 +1112,181 @@ async function librosImportar(browser, base, ancho, captura) {
   await p.context().close();
 }
 
-module.exports = { bibliaLector, bibliaMarcas, bibliaPlanes, bibliaMemoria, librosSesion, librosSiguiente, librosFrases, librosImportar, txt, visible, sinDesborde, metaDe, consola, deslizar, HOY, FECHA, ZONA };
+// ---------- Fase 5d: escanear el código de barras (ISBN) ----------
+// Una "foto" de la contratapa dibujada en la página: fondo de color, texto,
+// el código (girado y algo borroso) y en JPEG, como sale de la cámara.
+function fotoCodigo(p, codigo, o = {}) {
+  return p.evaluate(({ codigo, o }) => {
+    const W = o.ancho || 1200, H = o.alto || 900, mod = o.modulo || 4;
+    const c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    const g = c.getContext("2d");
+    g.fillStyle = "#cfc6b4"; g.fillRect(0, 0, W, H);
+    g.fillStyle = "#3a3a3a"; g.font = "28px serif";
+    for (let i = 0; i < 6; i++) g.fillText(`Una historia de magia, amistad y valor (${i + 1})`, 40, 60 + i * 42);
+    if (codigo) {
+      const m = window.LibrosIsbn.modulos(codigo), ancho = (m.length + 22) * mod, alto = Math.round(ancho * 0.5);
+      g.save();
+      g.translate(W * 0.55, H * 0.65);
+      g.rotate(((o.angulo || 0) * Math.PI) / 180);
+      g.fillStyle = "#fff"; g.fillRect(-ancho / 2, -alto / 2, ancho, alto + 36);
+      g.fillStyle = "#111";
+      m.forEach((b, i) => { if (b) g.fillRect(-ancho / 2 + (11 + i) * mod, -alto / 2 + 10, mod, alto - 16); });
+      g.font = "22px monospace"; g.fillText(codigo, -ancho / 2 + 11 * mod, alto / 2 + 26);
+      g.restore();
+    }
+    const c2 = document.createElement("canvas");
+    c2.width = W; c2.height = H;
+    const g2 = c2.getContext("2d");
+    g2.filter = `blur(${o.desenfoque == null ? 0.8 : o.desenfoque}px)`;
+    g2.drawImage(c, 0, 0);
+    return c2.toDataURL("image/jpeg", 0.85).split(",")[1];
+  }, { codigo, o }).then(b => Buffer.from(b, "base64"));
+}
+// La cámara en vivo de mentira: un lienzo con el código que se mueve un poco.
+function camaraFalsa(p, codigo, error, retraso) {
+  return p.evaluate(({ codigo, error, retraso }) => {
+    window.__camara = { pedidas: 0, apagada: false, pedido: null };
+    navigator.mediaDevices.getUserMedia = async pedido => {
+      window.__camara.pedidas++;
+      window.__camara.pedido = pedido;
+      if (error) throw new DOMException("sin permiso", error);
+      const cv = document.createElement("canvas");
+      cv.width = 1280; cv.height = 720;
+      const g = cv.getContext("2d"), m = window.LibrosIsbn.modulos(codigo), mod = 5;
+      let t = 0;
+      const dibujar = () => {
+        t++;
+        g.fillStyle = "#9a9a9a"; g.fillRect(0, 0, 1280, 720);
+        if (t * 90 < retraso) return;     // primero, apuntando a otra parte (la hora está fija)
+        g.save();
+        g.translate(640 + Math.sin(t / 3) * 6, 360);
+        g.rotate((4 * Math.PI) / 180);
+        const ancho = (m.length + 22) * mod, alto = 210;
+        g.fillStyle = "#f4f4f4"; g.fillRect(-ancho / 2, -alto / 2, ancho, alto);
+        g.fillStyle = "#151515";
+        m.forEach((b, i) => { if (b) g.fillRect(-ancho / 2 + (11 + i) * mod, -alto / 2 + 15, mod, alto - 30); });
+        g.restore();
+      };
+      dibujar();
+      const s = cv.captureStream(15);
+      const reloj = setInterval(dibujar, 90);
+      s.getTracks().forEach(tr => { const parar = tr.stop.bind(tr); tr.stop = () => { window.__camara.apagada = true; clearInterval(reloj); parar(); }; });
+      return s;
+    };
+  }, { codigo, error: error || null, retraso: retraso || 0 });
+}
+async function esperarTexto(p, sel, re, ms = 6000) {
+  const fin = Date.now() + ms;
+  let t = "";
+  while (Date.now() < fin) {
+    t = await txt(p, sel);
+    if (re.test(t)) return t;
+    await p.waitForTimeout(120);
+  }
+  return t;
+}
+async function librosEscaner(browser, base, ancho, captura) {
+  console.log(`\nLibros: escanear el código de barras (${ancho} px)`);
+  const alto = ancho > 800 ? 900 : 844;
+  const p = await abrir(browser, base, SEM.estado(HOY), { hash: "#libros", zona: ZONA, fecha: FECHA, ancho, alto });
+  consola(p);
+  const pedidos = [];
+  const OL_HP = { docs: [{ key: "/works/OL82586W", title: "Harry Potter y la piedra filosofal", author_name: ["J. K. Rowling"], cover_i: 10521270, first_publish_year: 1997, number_of_pages_median: 256, edition_count: 40 }] };
+  const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64");
+  await p.context().route(/openlibrary\.org\/search\.json/, r => {
+    pedidos.push(r.request().url());
+    r.fulfill({ contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: JSON.stringify(/isbn%3A9788478884452/.test(r.request().url()) ? OL_HP : { docs: [] }) });
+  });
+  await p.context().route(/covers\.openlibrary\.org/, r => r.fulfill({ contentType: "image/png", body: PNG }));
+  const lector = [];
+  p.on("request", r => { if (/libros-isbn\.js/.test(r.url())) lector.push(r.url()); });
+  await p.waitForTimeout(900);
+  const todos = col => p.evaluate(c => Array.from(window.__fakeStore.colMap(`users/test/${c}`).entries()), col);
+  const ESTADO = ".lesc-hoja [data-lesc-estado]";
+
+  await p.click('[data-lib="nuevo"]');
+  await p.waitForTimeout(300);
+  ok(await visible(p, ".lib-hoja [data-lib-escanear]"), "«📷 Escanear el código de barras» en «Buscar el libro»");
+  ok((await p.evaluate(() => typeof window.LibrosIsbn)) === "undefined" && !lector.length, "el lector no se carga hasta tocar Escanear");
+  await p.click(".lib-hoja [data-lib-escanear]");
+  await p.waitForTimeout(500);
+  ok(/Escanear el código/.test(await txt(p, ".lesc-hoja h3")) && await visible(p, ".lesc-hoja .budget-sheet-panel"), "se abre la hoja de escanear (encima del formulario)");
+  ok((await p.evaluate(() => typeof window.LibrosIsbn)) === "object" && lector.length === 1, "al tocar, carga el lector (una vez)");
+  const capturas = await p.$$eval(".lesc-hoja [data-lesc-foto]", els => els.map(e => e.getAttribute("capture")));
+  ok(capturas[0] === "environment" && capturas[1] === null, "«Sacar foto» abre la cámara; «Elegir una foto», tus fotos");
+  await captura(p, `libros-escanear-${ancho}.png`);
+
+  // Foto con el código de un libro → busca el libro y guarda el ISBN.
+  await p.locator(".lesc-hoja [data-lesc-foto]").first().setInputFiles({ name: "IMG_0001.jpg", mimeType: "image/jpeg", buffer: await fotoCodigo(p, "9788478884452", { angulo: 6 }) });
+  ok(/Leí el ISBN 9788478884452/.test(await esperarTexto(p, ESTADO, /Leí el ISBN|No encontré|no es de un libro/)), "lee el código de la foto (girada y algo borrosa)");
+  await p.waitForTimeout(900);
+  ok(!(await visible(p, ".lesc-hoja .budget-sheet-panel")), "la hoja de escanear se cierra sola");
+  ok((await p.inputValue(".lib-hoja [data-lib-q]")) === "9788478884452" && pedidos.some(u => /q=isbn%3A9788478884452/.test(u)), "pone el ISBN en el buscador y lo busca en Open Library");
+  await p.waitForSelector('.lib-hoja [data-lib-elegir-libro="0"]', { timeout: 4000 });
+  await p.click('.lib-hoja [data-lib-elegir-libro="0"]');
+  await p.waitForTimeout(300);
+  ok((await p.inputValue('.lib-hoja [name="titulo"]')) === "Harry Potter y la piedra filosofal", "tocas el resultado y se completa el libro");
+  await p.click('.lib-hoja .lib-form-libro [type="submit"]');
+  await p.waitForTimeout(600);
+  const hp = (await todos("libros")).find(([, d]) => d.titulo === "Harry Potter y la piedra filosofal");
+  ok(hp && hp[1].isbn === "9788478884452" && hp[1].olKey === "/works/OL82586W", "se guarda con su ISBN");
+  if (await visible(p, ".lib-hoja .budget-sheet-panel")) { await p.click(".lib-hoja .budget-sheet-close"); await p.waitForTimeout(300); }
+  await p.click(`[data-lib-ver="${hp[0]}"]`);
+  await p.waitForTimeout(300);
+  ok(/ISBN\s*9788478884452/.test(await txt(p, ".lib-hoja .lib-datos")), "la ficha muestra el ISBN");
+  await p.click(".lib-hoja .budget-sheet-close");
+  await p.waitForTimeout(300);
+
+  // Un código que no es de libro, y una foto sin código.
+  await p.click('[data-lib="nuevo"]');
+  await p.waitForTimeout(300);
+  await p.click(".lib-hoja [data-lib-escanear]");
+  await p.waitForTimeout(300);
+  await p.locator(".lesc-hoja [data-lesc-foto]").nth(1).setInputFiles({ name: "galletas.jpg", mimeType: "image/jpeg", buffer: await fotoCodigo(p, "4006381333931") });
+  ok(/Ese código \(400…\) no es de un libro/.test(await esperarTexto(p, ESTADO, /no es de un libro|No encontré|Leí/)), "un código que no es de libro: lo dice");
+  await p.locator(".lesc-hoja [data-lesc-foto]").first().setInputFiles({ name: "IMG_0002.jpg", mimeType: "image/jpeg", buffer: await fotoCodigo(p, null) });
+  ok(/No encontré el código/.test(await esperarTexto(p, ESTADO, /No encontré|no es de un libro|Leí/)), "una foto sin código: «No encontré el código…» con consejos");
+  ok(await sinDesborde(p), "no se mueve de lado");
+
+  // Sin permiso para la cámara.
+  await camaraFalsa(p, "9780439023481", "NotAllowedError");
+  await p.click('.lesc-hoja [data-lesc="vivo"]');
+  ok(/No hay permiso para la cámara/.test(await esperarTexto(p, ESTADO, /permiso|No pude/)), "sin permiso para la cámara: explica dónde darlo o sacar foto");
+
+  // Cámara en vivo: lee el código mientras apuntas y apaga la cámara.
+  await camaraFalsa(p, "9780439023481", null, 1500);
+  await p.click('.lesc-hoja [data-lesc="vivo"]');
+  await p.waitForTimeout(400);
+  ok(await visible(p, ".lesc-hoja [data-lesc-vivo] video") && await visible(p, ".lesc-hoja .lesc-guia"), "se ve la cámara con el recuadro");
+  const pedido = await p.evaluate(() => window.__camara.pedido);
+  ok(pedido && pedido.audio === false && pedido.video.facingMode.ideal === "environment", "pide la cámara de atrás, sin micrófono");
+  await captura(p, `libros-escanear-vivo-${ancho}.png`);
+  const enVivo = await esperarTexto(p, ESTADO, /Leí el ISBN|no es de un libro/, 8000);
+  ok(/Leí el ISBN 9780439023481/.test(enVivo), `la cámara en vivo lee el código (${enVivo})`);
+  ok(await p.evaluate(() => window.__camara.apagada), "y apaga la cámara");
+  await p.waitForTimeout(900);
+  ok((await p.inputValue(".lib-hoja [data-lib-q]")) === "9780439023481" && /No encontré ese ISBN/.test(await txt(p, ".lib-hoja [data-lib-buscar-msg]")), "si Open Library no lo tiene, lo dice (y el ISBN queda para guardar)");
+  ok((await p.inputValue('.lib-hoja [name="isbn"]')) === "9780439023481", "el ISBN queda en el formulario");
+
+  // Cerrar la hoja con la cámara prendida la apaga.
+  await p.click(".lib-hoja [data-lib-escanear]");
+  await p.waitForTimeout(300);
+  await camaraFalsa(p, "4006381333931");
+  await p.click('.lesc-hoja [data-lesc="vivo"]');
+  ok(/no es de un libro/.test(await esperarTexto(p, ESTADO, /no es de un libro|Leí/, 8000)), "en vivo, un código que no es de libro: avisa y sigue buscando");
+  ok(!(await p.evaluate(() => window.__camara.apagada)), "(la cámara sigue prendida)");
+  await p.click(".lesc-hoja .budget-sheet-close");
+  await p.waitForTimeout(400);
+  ok(await p.evaluate(() => window.__camara.apagada), "al cerrar la hoja se apaga la cámara");
+  if (ancho < 800) {
+    await p.click(".lib-hoja [data-lib-escanear]");
+    await p.setViewportSize({ width: 320, height: 640 });
+    await p.waitForTimeout(250);
+    ok(await sinDesborde(p), "entra en 320 px");
+  }
+  ok(!p.errores.length && !p.consola.length, "sin errores" + (p.consola.length ? `: ${p.consola.join(" | ")}` : ""));
+  await p.context().close();
+}
+
+module.exports = { bibliaLector, bibliaMarcas, bibliaPlanes, bibliaMemoria, librosSesion, librosSiguiente, librosFrases, librosImportar, librosEscaner, txt, visible, sinDesborde, metaDe, consola, deslizar, HOY, FECHA, ZONA };

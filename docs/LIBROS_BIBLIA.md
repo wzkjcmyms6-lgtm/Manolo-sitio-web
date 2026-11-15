@@ -24,6 +24,8 @@ vuelve (la navegación es por `#hash`). No muestran el versículo de arriba
 | `js/biblia.js` | Pantalla de Biblia. Registra su ícono (`ICONS.biblia`) |
 | `js/libros-motor.js` | UMD sin DOM: validar libros y frases, ordenar, buscar, resumen, color de la tapa genérica, exportar. Pruebas: `tests/libros-motor.test.js` |
 | `js/libros.js` | Pantalla de Libros. Registra su ícono (`ICONS.libro`) |
+| `js/libros-isbn.js` | UMD sin DOM: lee el código de barras (EAN-13) de una foto. Se carga al tocar Escanear. Pruebas: `tests/libros-isbn.test.js` |
+| `js/libros-escaner.js` | Hoja de escanear: foto, elegir foto o cámara en vivo |
 | `css/libros.css` | Estilos propios (solo `.lib-` y `.bib-`) |
 | `scripts/e2e/lectura.js` | Prueba de pantalla de las dos secciones (95 comprobaciones; Open Library simulado) |
 
@@ -82,6 +84,16 @@ espacian si lo sabes (primeras letras, ocultar palabras o escribirlo).
 **Temas** en tus versículos, con filtro. La racha cuenta también los días
 con capítulos leídos. ⚙ Ajustes: el versículo de arriba también de tus
 favoritos. Detalle en `docs/LECTURA_NIVEL2.md`.
+
+## Escanear el código de barras (2026-11-15, D-111)
+
+Al agregar un libro, **📷 Escanear el código de barras**: sacas una foto
+del código de la contratapa (el que dice ISBN y empieza con 978 o 979) y
+Manolo busca el libro en Open Library. También puedes elegir una foto que
+ya tengas o usar la cámara en vivo. La foto se lee en el teléfono (no se
+sube a ningún lado) y el lector funciona sin internet; la búsqueda del
+libro sí necesita internet. El ISBN queda guardado en el libro y se ve en
+su ficha.
 
 ## Importar de Goodreads, StoryGraph y Kindle (2026-11-15, D-110)
 

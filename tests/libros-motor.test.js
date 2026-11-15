@@ -233,3 +233,10 @@ test("fase 5b: frase favorita y con etiquetas (D-109)", () => {
   assert.deepEqual([n.fav, n.etiquetas, n.repaso.n], [true, ["fe"], 1]);
   assert.deepEqual([L.normalizarFrase("g", { texto: "y" }).fav, L.normalizarFrase("g", { texto: "y" }).etiquetas, L.normalizarFrase("g", {}).repaso], [false, [], null], "las de antes: sin favorita ni etiquetas");
 });
+
+test("fase 5d: el ISBN escrito o escaneado se guarda (D-111)", () => {
+  const con = isbn => L.validarLibro({ titulo: "x", fechaRegistro: HOY, isbn }, { hoy: HOY }).doc;
+  assert.deepEqual([con("978-84-7888-445-2").isbn, con("847888445x").isbn, con(" 9780439023481 ").isbn], ["9788478884452", "847888445X", "9780439023481"]);
+  assert.ok(!("isbn" in con("")) && !("isbn" in con("12345")) && !("isbn" in con(undefined)), "vacío o raro: no va (al editar no borra el que había)");
+  assert.equal(L.normalizarLibro("a", { titulo: "x", isbn: "9788478884452" }).isbn, "9788478884452");
+});

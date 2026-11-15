@@ -1,5 +1,16 @@
 # Cambios
 
+## 2026-11-15 · Libros: escanear el código de barras
+- Al agregar un libro, «📷 Escanear el código de barras»: sacas una foto
+  del código de la contratapa (o eliges una, o usas la cámara en vivo) y
+  Manolo busca el libro solo.
+- El ISBN queda guardado en el libro y se ve en su ficha.
+- El lector es de Manolo (pesa poco y funciona sin internet); la foto no
+  sale del teléfono.
+- Pruebas: `tests/libros-isbn.test.js` (códigos dibujados: chicos,
+  borrosos, con ruido, sombra, girados, de costado y en diagonal) y
+  `scripts/e2e/lectura.js` (`SOLO=isbn`).
+
 ## 2026-11-15 · Libros: importar de Goodreads, StoryGraph y Kindle
 - "Importar" (abajo de Libros): eliges el archivo que exportas de Goodreads
   o StoryGraph, o el «My Clippings.txt» del Kindle.
