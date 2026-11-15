@@ -26,6 +26,17 @@ const actDe = id => (D() ? D().actividades().find(a => a.id === id) : null) || {
 const medirGuardado = () => { const st = leerLS(K_MEDIR); return C.cronoValido(st, hoyLocal(), Date.now()) ? st : null; };
 const mananaGuardada = () => { const m = leerLS(K_MANANA); return C.mananaValida(m, hoyLocal(), Date.now()) ? m : null; };
 const signo = s => `${s > 0 ? "+" : s < 0 ? "−" : "±"}${T.texto(Math.abs(s)) === "—" ? "0 s" : T.texto(Math.abs(s))}`;
+const aprox = s => T.texto(Math.max(60, Math.round(s / 60) * 60));
+// Tus promedios sin el día que estás midiendo (si no, hoy se compararía consigo mismo).
+const promediosSin = f => (D() ? D().promedios(f) : {});
+// Tu mañana en promedio: la suma de sus pasos en cada día (los últimos 30 días con alguno).
+function mananaTipica(pasos, sin) {
+  const d = D();
+  if (!d) return null;
+  const ids = pasos.map(a => a.id);
+  const tot = d.ds().filter(x => x.fecha !== sin).map(x => ids.reduce((s, id) => s + (x.seg[id] || 0), 0)).filter(s => s > 0).slice(-30);
+  return tot.length ? Math.round(tot.reduce((s, x) => s + x, 0) / tot.length) : null;
+}
 
 // ---- Pantalla encendida ----
 async function despierto(si) {
@@ -51,7 +62,7 @@ function abrirMedir() {
   const st = medirGuardado();
   if (!st) { cerrar(); return; }
   modo = "medir";
-  const a = actDe(st.id), ahora = Date.now(), prom = (D() && D().promedios()[st.id]) || null;
+  const a = actDe(st.id), ahora = Date.now(), prom = promediosSin(st.fecha)[st.id] || null;
   hoja.abrir("Medir ahora", `
     <div class="tman" data-tman-medir-hoja>
       <p class="tman-paso">${esc(A.etiqueta(a))}</p>
@@ -112,11 +123,11 @@ function abrirManana() {
   if (!m) { cerrar(); return; }
   if (C.terminada(m)) { abrirResumen(m); return; }
   modo = "manana";
-  const d = D(), prom = d ? d.promedios() : {}, ahora = Date.now();
+  const prom = promediosSin(m.fecha), ahora = Date.now();
   const id = C.actual(m), a = actDe(id);
   const pasos = m.pasos.map((p, k) => {
     const x = actDe(p), hecho = m.hechos[p], salto = m.saltados.includes(p);
-    const est = k < m.i ? (hecho ? `✓ ${T.texto(hecho)}` : "saltado") : k === m.i ? "ahora" : prom[p] ? `≈ ${T.texto(prom[p])}` : "";
+    const est = k < m.i ? (hecho ? `✓ ${T.texto(hecho)}` : "saltado") : k === m.i ? "ahora" : prom[p] ? `≈ ${aprox(prom[p])}` : "";
     return `<li class="${k < m.i ? (salto ? "is-saltado" : "is-hecho") : k === m.i ? "is-ahora" : ""}"><span>${esc(A.etiqueta(x))}</span><small>${esc(est)}</small></li>`;
   }).join("");
   hoja.abrir("Mi mañana", `
@@ -145,7 +156,7 @@ function cerrarPaso(r) {
 function abrirResumen(m) {
   modo = "resumen";
   latir(false);
-  const d = D(), r = C.resumen(m, d ? d.promedios() : {});
+  const r = C.resumen(m, promediosSin(m.fecha));
   const fila = p => `<li class="${p.saltado ? "is-saltado" : ""}"><span>${esc(A.etiqueta(actDe(p.id)))}</span>
     <b>${p.saltado ? "saltado" : T.texto(p.seg)}</b>${p.diferencia != null ? `<small class="${p.diferencia > 0 ? "is-mas" : "is-menos"}">${signo(p.diferencia)}</small>` : "<small></small>"}</li>`;
   const dif = r.diferencia;
@@ -174,7 +185,7 @@ function actualizarReloj() {
   const m = mananaGuardada();
   if (!m || !m.paso) return;
   el.textContent = C.reloj(C.transcurrido(m.paso, ahora));
-  const v = C.contraPromedio(m, D() ? D().promedios() : {}, ahora), p = hoja.el.querySelector("[data-tman-prom]");
+  const v = C.contraPromedio(m, promediosSin(m.fecha), ahora), p = hoja.el.querySelector("[data-tman-prom]");
   el.classList.toggle("is-pasado", !!(v && v.pasado));
   if (p) p.textContent = !v ? "Sin promedio todavía para este paso." : v.pasado ? `Vas ${C.reloj(-v.falta)} por encima de tu promedio (${T.texto(v.promedio)}).` : `Tu promedio: ${T.texto(v.promedio)} · te quedan ${C.reloj(v.falta)}`;
 }
@@ -189,7 +200,7 @@ function tarjeta(el) {
   if (!el) return;
   const d = D();
   if (!d || !d.listo()) { el.innerHTML = ""; return; }
-  const m = mananaGuardada(), st = medirGuardado(), prom = d.promedios();
+  const m = mananaGuardada(), st = medirGuardado(), hoy = hoyLocal(), prom = d.promedios(hoy);
   const pasos = A.pasosManana(d.ajustes());
   const midiendo = st ? `<button type="button" class="tman-midiendo" data-tman="ver-medir">⏱ Midiendo «${esc(actDe(st.id).nombre)}»: <b>${C.reloj(C.transcurrido(st, Date.now()))}</b> · Ver</button>` : "";
   if (m && !C.terminada(m)) {
@@ -200,12 +211,12 @@ function tarjeta(el) {
     </div>`;
     return;
   }
-  const total = pasos.reduce((s, a) => s + (prom[a.id] || 0), 0);
-  const hecha = m && C.terminada(m) && m.fecha === hoyLocal() ? C.resumen(m, prom) : null;
+  const tipica = mananaTipica(pasos, hoy);
+  const hecha = m && C.terminada(m) && m.fecha === hoy ? C.resumen(m, prom) : null;
   el.innerHTML = `${midiendo}<div class="tman-tarjeta">
     <h2 class="tmp-titulo">🌅 Mi mañana</h2>
     ${hecha ? `<p class="tman-hoy">✓ Hoy: <b>${T.texto(hecha.total)}</b>${hecha.diferencia != null ? ` (${signo(hecha.diferencia)} que tu promedio)` : ""} · <button type="button" class="tman-link" data-tman="ver-resumen">Ver</button></p>` : ""}
-    ${pasos.length ? `<p class="tmp-nota">${pasos.map(a => esc(A.etiqueta(a))).join(" → ")}${total ? ` · ≈ ${T.texto(total)} en total` : ""}</p>
+    ${pasos.length ? `<p class="tmp-nota">${pasos.map(a => esc(A.etiqueta(a))).join(" → ")}${tipica ? ` · tu mañana en promedio: ${aprox(tipica)}` : ""}</p>
     <button type="button" class="lib-btn lib-btn-ancho" data-tman="empezar">▶ Empezar mi mañana</button>`
       : `<p class="tmp-nota">Elige qué actividades van en tu mañana en «Tus actividades».</p>`}
   </div>`;

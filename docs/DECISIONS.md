@@ -1384,3 +1384,31 @@ audiolibros, relecturas, frases y la frase del año (tu favorita más
 reciente). Se comparte como imagen JPEG de 1080 × 1350 (sin emojis en la
 imagen: no todos los teléfonos los dibujan igual en un lienzo). Nada nuevo
 se guarda: todo sale de los datos que ya había.
+
+**D-113 (2026-11-15) · Medir tiempos fase 6: definitiva, tus actividades,
+⏱ Medir, "Mi mañana" y se llena sola.** (1) Deja de ser provisoria (fuera
+"Cómo borrarla"); los datos de `tiempos/{fecha}` quedan tal cual. (2) Tus
+actividades en `meta/tiempos_ajustes.actividades` ({ nombre, emoji, orden,
+archivada, manana, fuente, desde }); sin ese documento valen las 6 de
+siempre, que conservan su id. El primer día con la versión nueva se crea el
+documento y las que se llenan solas (Correr ← Running, Ejercicio ←
+Ejercicio, Leer ← Libros) empiezan **desde ese día**: los días de antes no
+cambian (si no, el promedio final de los primeros 30 se movería). (3) Se
+sigue midiendo después de los 30: el promedio final (primeros 30) no
+cambia; los promedios por semana, mes y día de la semana usan todos los
+registros. (4) ⏱ Medir y Mi mañana por marcas de tiempo guardadas en el
+teléfono (`manolo.tiempos.medir`, `manolo.tiempos.manana`), como "Leer
+ahora": sobreviven al bloqueo y a cerrar la app (hasta 12 h). Cada paso de
+Mi mañana se anota al cerrarlo (un tiempo medido manda como uno escrito);
+"tu promedio" = el de tus últimos 30 registros sin contar el día que mides.
+El orden de la mañana es el de tus actividades (un solo orden, más simple
+que dos listas). (5) Se llena sola con las reglas de Hábitos (D-085):
+`auto: { id: { f, s } }` en el día; lo manual manda; quitar uno automático
+deja `noAuto: { id: true }`; si la fuente desaparece se quita (solo con
+datos del servidor). Running avisa con `manolo:actividades`; Libros y
+Movilidad con `manolo:fuente`; Ejercicio ahora también (`fuente:
+"gimnasio"`, la duración de cada entreno; Hábitos lo ignora porque Gimnasio
+es "solo evento"). Sin lecturas nuevas de Firestore: usa los datos que cada
+sección ya carga. (6) Exportar JSON y CSV (";" y coma decimal, para Excel en
+español). (7) Opcional, sin hacer hasta que el dueño diga: pitido o voz si
+un paso pasa tu promedio (por ahora el reloj se pone naranja).

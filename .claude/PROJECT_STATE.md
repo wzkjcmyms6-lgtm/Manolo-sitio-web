@@ -72,8 +72,10 @@ Actualizado: 2026-11-15 (Libros fase 4: Leer ahora, velocidad, estados y formato
   favoritas, etiquetas y compartir (D-109); importar de Goodreads,
   StoryGraph y Kindle (D-110); escanear el código de barras con lector
   propio (D-111); calendario de días leídos, tiempo, velocidad y su
-  tendencia, autores y "Tu año en libros" (D-112). Sigue la fase 6 (Medir
-  tiempos).
+  tendencia, autores y "Tu año en libros" (D-112). Fase 6 hecha (D-113):
+  Medir tiempos definitiva, tus actividades, ⏱ Medir, "Mi mañana" guiada y
+  se llena sola con Running, Ejercicio y Libros. Sigue la fase 7 (plan de la
+  mañana, estadísticas, línea base y experimentos; "Mi día" y Hábitos).
 - **Reconocer ejercicios (2026-11-06)**: motor nuevo de búsqueda y
   reconocimiento (331/331 nombres reales, antes 79 %), alias extra y
   «¿Es …?» en no reconocidos (D-101, `js/exercise-search.js`,

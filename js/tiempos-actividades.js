@@ -117,8 +117,8 @@ function mover(todas, id, delta) {
 function paraGuardar(todas) {
   const out = {};
   (todas || []).forEach(a => {
-    out[a.id] = { nombre: a.nombre, emoji: a.emoji, orden: a.orden, archivada: !!a.archivada, manana: a.manana !== false, fuente: a.fuente || "" };
-    if (a.desde) out[a.id].desde = a.desde;
+    // desde: null si no se llena sola (al guardar con merge, borra el de antes).
+    out[a.id] = { nombre: a.nombre, emoji: a.emoji, orden: a.orden, archivada: !!a.archivada, manana: a.manana !== false, fuente: a.fuente || "", desde: a.fuente && a.desde ? a.desde : null };
   });
   return out;
 }

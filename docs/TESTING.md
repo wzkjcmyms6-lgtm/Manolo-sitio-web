@@ -1,6 +1,9 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-15 (Medir tiempos fase 6, D-113): `npm test` → **596 pruebas**.
+  Nuevas: `tiempos-actividades`, `tiempos-crono`, `tiempos-auto` y más en
+  `tiempos-motor`. E2E `scripts/e2e/tiempos.js` (+ `SOLO=fase6`).
 - 2026-11-15 (Libros fase 5e, D-112): `npm test` → **584 pruebas**. Nueva:
   `libros-estadisticas` (calendario, tiempo, velocidad, autores, el año).
   E2E `SOLO=stats`. Con esto, la fase 5 de Libros está completa.
@@ -277,6 +280,15 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] Medir tiempos › Promedios › "Por día": siete barras de lunes a
   domingo. Toca "Lu": la tabla dice cuánto tardas en promedio cada lunes.
   Con ‹ › pasas de día.
+
+**Medir tiempos: Mi mañana, ⏱ Medir y se llena sola (2026-11)**
+- [ ] Inicio › Medir tiempos › «▶ Empezar mi mañana»: haz cada paso y toca
+  «Siguiente». Si algo hoy no lo haces, «Saltar». Al final mira el resumen.
+- [ ] En una actividad, «⏱ Medir»; bloquea el iPhone un minuto y vuelve: el
+  reloj siguió. «Terminar y guardar».
+- [ ] «⚙️ Tus actividades»: crea una nueva con emoji y súbela con ↑.
+- [ ] Después de correr o entrenar con Manolo, abre Medir tiempos: Correr o
+  Ejercicio de hoy aparecen solos con «⚡».
 
 **Libros: estadísticas y «Tu año en libros» (2026-11)**
 - [ ] Libros › Estadísticas: mira el calendario del mes; toca un día en

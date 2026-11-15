@@ -1,9 +1,10 @@
-// ---------- Medir tiempos (sección provisoria) ----------
-// Cuánto tarda Juan cada día en su rutina de la mañana, ejercicio, correr,
-// desayunar, bañarse y leer 30 páginas. Promedio por semana (lunes a
-// domingo) y por mes; con 30 registros de una actividad, se cierra y ese es
-// su promedio final. Pedido del dueño 2026-10-29: "no muy bien hecha, la
-// borraremos más adelante" (ver docs/TIEMPOS.md, "Cómo borrarla").
+// ---------- Medir tiempos ----------
+// Cuánto tarda Juan cada día en sus actividades (las 6 de siempre y las que
+// cree: js/tiempos-actividades.js). Promedio por semana (lunes a domingo),
+// por mes y por día de la semana; los primeros 30 registros de cada
+// actividad dan su promedio final (y se sigue midiendo: fase 6, D-113).
+// Empezó provisoria (2026-10-29); desde la fase 6 es definitiva.
+// Las funciones reciben la lista de actividades (acts); sin ella, las 6.
 // Sin DOM ni Firebase: tests/tiempos-motor.test.js.
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
@@ -28,23 +29,29 @@ const fechaOk = f => /^\d{4}-\d{2}-\d{2}$/.test(f || "") && !isNaN(new Date(f + 
 const fechaUtc = f => new Date(f + "T12:00:00Z");
 const iso = d => d.toISOString().slice(0, 10);
 const segOk = s => typeof s === "number" && isFinite(s) && s > 0;
+const idOk = id => /^[a-z0-9_-]{1,40}$/.test(id);
+const listaDe = acts => (Array.isArray(acts) && acts.length ? acts : ACTIVIDADES);
 
-// Documentos de Firestore (id = fecha) → días ordenados: [{ fecha, seg: { id: segundos } }].
+// Documentos de Firestore (id = fecha) → días ordenados:
+// [{ fecha, seg: { id: segundos }, auto?, noAuto? }] (auto: lo que llegó solo, fase 6).
 function dias(docs) {
   return Object.keys(docs || {}).map(id => {
     const d = docs[id] || {};
     const fecha = fechaOk(d.fecha) ? d.fecha : id;
     const seg = {};
-    ACTIVIDADES.forEach(a => { if (d.seg && segOk(d.seg[a.id])) seg[a.id] = Math.round(d.seg[a.id]); });
-    return { fecha, seg };
+    Object.keys(d.seg && typeof d.seg === "object" ? d.seg : {}).forEach(k => { if (idOk(k) && segOk(d.seg[k])) seg[k] = Math.round(d.seg[k]); });
+    const out = { fecha, seg };
+    if (d.auto && typeof d.auto === "object" && Object.keys(d.auto).length) out.auto = d.auto;
+    if (d.noAuto && typeof d.noAuto === "object" && Object.keys(d.noAuto).length) out.noAuto = d.noAuto;
+    return out;
   }).filter(d => fechaOk(d.fecha) && Object.keys(d.seg).length).sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
 }
 
-// Registros que cuentan, por actividad: los primeros 30 por fecha.
-function contados(ds) {
-  const out = {};
-  ACTIVIDADES.forEach(a => { out[a.id] = []; });
-  (ds || []).forEach(d => ACTIVIDADES.forEach(a => {
+// Registros que cuentan para el promedio final, por actividad: los primeros 30 por fecha.
+function contados(ds, acts) {
+  const out = {}, lista = listaDe(acts);
+  lista.forEach(a => { out[a.id] = []; });
+  (ds || []).forEach(d => lista.forEach(a => {
     if (d.seg[a.id] && out[a.id].length < LIMITE) out[a.id].push({ fecha: d.fecha, seg: d.seg[a.id] });
   }));
   return out;
@@ -52,21 +59,34 @@ function contados(ds) {
 
 const promedio = lista => (lista.length ? Math.round(lista.reduce((s, r) => s + r.seg, 0) / lista.length) : null);
 
-// Por actividad: cuántos registros lleva (de 30), su promedio y si ya se cerró.
-function estado(ds) {
-  const c = contados(ds), out = {};
-  ACTIVIDADES.forEach(a => {
+// Por actividad: cuántos registros lleva (de 30), su promedio final y si ya
+// llegó a 30; total: todos sus registros (se sigue midiendo después de los 30).
+function estado(ds, acts) {
+  const lista = listaDe(acts), c = contados(ds, lista), out = {};
+  lista.forEach(a => {
     const n = c[a.id].length;
-    out[a.id] = { n, faltan: LIMITE - n, completa: n >= LIMITE, promedio: promedio(c[a.id]) };
+    out[a.id] = { n, faltan: LIMITE - n, completa: n >= LIMITE, promedio: promedio(c[a.id]), total: (ds || []).filter(d => d.seg[a.id]).length };
   });
   return out;
 }
 
-// ¿Ya no se puede anotar esta actividad ese día? (cerrada y ese día no la tenía;
-// un registro que ya cuenta se puede corregir).
+// (Hasta la fase 5) ¿Ya no se podía anotar esta actividad ese día? Desde
+// la fase 6 se sigue midiendo después de los 30: la pantalla ya no la usa.
 function bloqueada(ds, id, fecha) {
-  if (!estado(ds)[id].completa) return false;
-  return !contados(ds)[id].some(r => r.fecha === fecha);
+  const act = [{ id }];
+  if (!estado(ds, act)[id].completa) return false;
+  return !contados(ds, act)[id].some(r => r.fecha === fecha);
+}
+
+// "Tu promedio" (para Mi mañana y Medir ahora): el de tus últimos 30
+// registros de cada actividad (cómo vienes ahora). → { id: segundos }
+function promedios(ds, acts, n) {
+  const out = {}, cuantos = n || LIMITE;
+  listaDe(acts).forEach(a => {
+    const rs = (ds || []).filter(d => d.seg[a.id]).slice(-cuantos).map(d => ({ seg: d.seg[a.id] }));
+    if (rs.length) out[a.id] = promedio(rs);
+  });
+  return out;
 }
 
 // Minutos y segundos escritos → { seg } (null si los dos están vacíos) o { error }.
@@ -141,19 +161,21 @@ function tituloRango(tipo, r, hoy) {
 
 // Total de un día: la suma de todo lo que anotaste ese día (2026-10-30:
 // "que se registren los días y se haga un promedio de los días").
-const totalDia = d => ACTIVIDADES.reduce((s, a) => s + (d && d.seg && d.seg[a.id] > 0 ? d.seg[a.id] : 0), 0);
+const totalDia = d => Object.keys((d && d.seg) || {}).reduce((s, k) => s + (d.seg[k] > 0 ? d.seg[k] : 0), 0);
 // Días anotados (con algo) entre desde y hasta (sin límites = todos) y el promedio de sus totales.
 function promedioDias(ds, desde, hasta) {
   const dias = (ds || []).filter(d => (!desde || d.fecha >= desde) && (!hasta || d.fecha <= hasta) && totalDia(d) > 0);
   return { dias: dias.length, promedio: dias.length ? Math.round(dias.reduce((s, d) => s + totalDia(d), 0) / dias.length) : null };
 }
 
-// Promedio de cada actividad en la semana o el mes de `ref` (solo registros que cuentan).
-function periodo(ds, tipo, ref, hoy) {
-  const r = rango(tipo, ref), c = contados(ds), act = {};
-  ACTIVIDADES.forEach(a => {
-    const dentro = c[a.id].filter(x => x.fecha >= r.desde && x.fecha <= r.hasta);
-    act[a.id] = { n: dentro.length, promedio: promedio(dentro) };
+// Promedio de cada actividad en la semana o el mes de `ref` (todos sus
+// registros, también después de los 30: fase 6).
+function periodo(ds, tipo, ref, hoy, acts) {
+  const r = rango(tipo, ref), act = {}, lista = listaDe(acts);
+  const dentro = (ds || []).filter(d => d.fecha >= r.desde && d.fecha <= r.hasta);
+  lista.forEach(a => {
+    const rs = dentro.filter(d => d.seg[a.id]).map(d => ({ fecha: d.fecha, seg: d.seg[a.id] }));
+    act[a.id] = { n: rs.length, promedio: promedio(rs) };
   });
   return {
     tipo, desde: r.desde, hasta: r.hasta, act,
@@ -161,7 +183,7 @@ function periodo(ds, tipo, ref, hoy) {
     titulo: tituloRango(tipo, r, hoy || r.hasta),
     enCurso: !!hoy && hoy >= r.desde && hoy <= r.hasta,
     futuro: !!hoy && r.desde > hoy,
-    hayDatos: ACTIVIDADES.some(a => act[a.id].n > 0)
+    hayDatos: lista.some(a => act[a.id].n > 0)
   };
 }
 
@@ -172,11 +194,11 @@ function periodo(ds, tipo, ref, hoy) {
 const NOMBRES_DIA = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 const CORTOS_DIA = ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sá"];
 const diaSemana = f => fechaUtc(f).getUTCDay();
-function porDiaSemana(ds) {
+function porDiaSemana(ds, acts) {
   return [1, 2, 3, 4, 5, 6, 0].map(dow => {
     const delDia = (ds || []).filter(d => diaSemana(d.fecha) === dow);
     const act = {};
-    ACTIVIDADES.forEach(a => {
+    listaDe(acts).forEach(a => {
       const rs = delDia.filter(d => d.seg[a.id]).map(d => ({ fecha: d.fecha, seg: d.seg[a.id] }));
       act[a.id] = { n: rs.length, promedio: promedio(rs) };
     });
@@ -208,6 +230,6 @@ function fechaLarga(f) {
   return `${DIAS[d.getUTCDay()]} ${d.getUTCDate()} de ${MESES[d.getUTCMonth()]}`;
 }
 
-return { ACTIVIDADES, LIMITE, dias, contados, totalDia, promedioDias, estado, bloqueada, leer, campos, texto, lunes, rango, mover, periodo, fechaLarga,
+return { ACTIVIDADES, LIMITE, dias, contados, totalDia, promedioDias, estado, bloqueada, promedios, leer, campos, texto, lunes, rango, mover, periodo, fechaLarga,
   NOMBRES_DIA, diaSemana, porDiaSemana, extremosSemana, corto };
 });

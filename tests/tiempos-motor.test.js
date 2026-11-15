@@ -112,10 +112,35 @@ test("periodo: promedios de la semana y del mes", () => {
   assert.strictEqual(T.periodo(ds, "semana", "2027-01-04", "2026-10-28").titulo, "4 ene – 10 ene 2027");
 });
 
-test("periodo: solo cuentan los primeros 30", () => {
+test("periodo: después de los 30 se sigue midiendo y cuenta (fase 6)", () => {
   const ds = T.dias(docsDe(seguidos("leer", "2026-09-01", 32, i => (i < 30 ? 1200 : 6000))));
   const oct = T.periodo(ds, "mes", "2026-10-01", "2026-10-02");
-  assert.deepStrictEqual(oct.act.leer, { n: 0, promedio: null });
+  assert.deepStrictEqual(oct.act.leer, { n: 2, promedio: 6000 });
+  const e = T.estado(ds);
+  assert.deepStrictEqual([e.leer.n, e.leer.completa, e.leer.promedio, e.leer.total], [30, true, 1200, 32], "el promedio final sigue siendo el de los primeros 30");
+});
+
+test("actividades tuyas (fase 6): las nuevas y las archivadas también cuentan", () => {
+  const acts = [{ id: "manana" }, { id: "a-orar" }];
+  const ds = T.dias({
+    "2026-11-14": { fecha: "2026-11-14", seg: { "a-orar": 600, manana: 1500, "MAL": 5 }, auto: { manana: { f: "running", s: 1500 } } },
+    "2026-11-15": { fecha: "2026-11-15", seg: { "a-orar": 900 }, noAuto: { correr: true } }
+  });
+  assert.deepStrictEqual(ds[0], { fecha: "2026-11-14", seg: { "a-orar": 600, manana: 1500 }, auto: { manana: { f: "running", s: 1500 } } }, "guarda de dónde llegó solo");
+  assert.deepStrictEqual(ds[1].noAuto, { correr: true });
+  assert.strictEqual(T.totalDia(ds[0]), 2100, "el total del día suma todo lo anotado");
+  assert.deepStrictEqual(T.estado(ds, acts)["a-orar"], { n: 2, faltan: 28, completa: false, promedio: 750, total: 2 });
+  assert.deepStrictEqual(T.periodo(ds, "semana", "2026-11-15", "2026-11-15", acts).act["a-orar"], { n: 2, promedio: 750 });
+  assert.deepStrictEqual(T.porDiaSemana(ds, acts)[6].act["a-orar"], { n: 1, promedio: 900 }, "el domingo");
+  assert.deepStrictEqual(T.promedios(ds, acts), { manana: 1500, "a-orar": 750 });
+  assert.strictEqual(T.bloqueada(ds, "a-orar", "2026-11-16"), false);
+});
+
+test("tu promedio para Mi mañana: los últimos 30 registros", () => {
+  const ds = T.dias(docsDe(seguidos("leer", "2026-09-01", 40, i => (i < 10 ? 3000 : 1200))));
+  assert.deepStrictEqual(T.promedios(ds), { leer: 1200 }, "los 10 primeros (más lentos) ya no pesan");
+  assert.deepStrictEqual(T.promedios(ds, null, 40), { leer: Math.round((10 * 3000 + 30 * 1200) / 40) });
+  assert.deepStrictEqual(T.promedios([]), {});
 });
 
 test("fechaLarga", () => {

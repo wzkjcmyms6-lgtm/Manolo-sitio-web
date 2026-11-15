@@ -1,5 +1,18 @@
 # Cambios
 
+## 2026-11-15 · Medir tiempos: definitiva, «Mi mañana», ⏱ Medir y se llena sola
+- Medir tiempos deja de ser provisoria: tus tiempos de siempre siguen ahí.
+- «Tus actividades»: crea las tuyas con emoji, cámbiales el nombre,
+  ordénalas y archívalas.
+- ⏱ Medir: un cronómetro grande que sigue aunque bloquees el teléfono.
+- «Mi mañana»: tu rutina paso a paso, con tu promedio en vivo y un resumen
+  al final.
+- Se llena sola: Correr con tus carreras, Ejercicio con tus entrenos y Leer
+  con «Leer ahora». Lo que anotas a mano siempre manda.
+- Después de 30 registros se sigue midiendo; exportar en JSON y CSV.
+- Pruebas: `tests/tiempos-actividades.test.js`, `tiempos-crono`,
+  `tiempos-auto`, `tiempos-motor` y `scripts/e2e/tiempos.js` (`SOLO=fase6`).
+
 ## 2026-11-15 · Libros: estadísticas nuevas y «Tu año en libros»
 - Estadísticas › calendario del mes con los días que leíste (más fuerte el
   color cuanto más leíste); toca un día para ver qué leíste.

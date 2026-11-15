@@ -44,12 +44,12 @@ test("subir y bajar: solo entre las activas, las archivadas quedan al final", ()
   assert.equal(A.mover(l, "manana", -1), null, "la primera no sube");
   assert.equal(A.mover(l, "leer", 1), null, "la última no baja");
   const g = A.paraGuardar(l);
-  assert.deepEqual(g.correr, { nombre: "Correr", emoji: "🏃", orden: 2, archivada: true, manana: true, fuente: "running" });
+  assert.deepEqual(g.correr, { nombre: "Correr", emoji: "🏃", orden: 2, archivada: true, manana: true, fuente: "running", desde: null });
 });
 
 test("se llenan solas desde el primer día con la versión nueva (o desde que eliges la sección)", () => {
   const ini = A.inicial("2026-11-16");
-  assert.deepEqual([ini.correr.desde, ini.leer.desde, ini.ejercicio.desde, "desde" in ini.manana], ["2026-11-16", "2026-11-16", "2026-11-16", false]);
+  assert.deepEqual([ini.correr.desde, ini.leer.desde, ini.ejercicio.desde, ini.manana.desde], ["2026-11-16", "2026-11-16", "2026-11-16", null]);
   const l = A.lista({ actividades: ini });
   assert.equal(l.find(a => a.id === "correr").desde, "2026-11-16");
   const orar = { id: "a-orar", fuente: "", desde: null };

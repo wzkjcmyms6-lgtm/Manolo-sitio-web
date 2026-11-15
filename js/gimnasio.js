@@ -1237,6 +1237,9 @@ onAuthReady(() => {
     historyCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     cacheAnteriores = new WeakMap();
     avisarHistorial();
+    // Medir tiempos se llena solo con la duración de tus entrenos (fase 6, D-113).
+    window.dispatchEvent(new CustomEvent("manolo:fuente", { detail: { fuente: "gimnasio",
+      datos: historyCache.map(w => ({ fecha: w.date, min: Number(w.durationMin) || 0 })), servidor: !(snap.metadata && snap.metadata.fromCache) } }));
     redibujarSiSePuede();
   });
 });

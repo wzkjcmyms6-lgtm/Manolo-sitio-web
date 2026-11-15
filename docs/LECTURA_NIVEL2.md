@@ -16,7 +16,7 @@ desde D-102. Cada fase deja la app funcionando y publicada.
 | 3 | Biblia: planes, progreso de capítulos, memorización, temas y racha nueva | ✅ |
 | 4 | Libros: "Leer ahora", velocidad y estimaciones, estados y formatos nuevos | ✅ |
 | 5 | Libros: escanear ISBN, importar, frases (repaso, etiquetas, compartir), notas, "¿Qué leo después?" y estadísticas | ✅ |
-| 6 | Medir tiempos: definitiva, actividades editables, cronómetro, "Mi mañana" y llenado automático | |
+| 6 | Medir tiempos: definitiva, actividades editables, cronómetro, "Mi mañana" y llenado automático | ✅ |
 | 7 | Medir tiempos: plan de la mañana, estadísticas, línea base y experimentos; "Mi día" y Hábitos | |
 | 8 | QA final, docs y lista para el iPhone | |
 
@@ -279,3 +279,17 @@ Nada de lo guardado se reescribe; lo viejo sin estos campos se ve igual.
   tapa, la tarjeta el 20 de diciembre y el 10 de enero y no en febrero; a
   390, 1280 y 320 px).
 - **Fase 5 completa** (5a a 5e).
+
+## Fase 6: Medir tiempos definitiva (D-113)
+- **Archivos nuevos**: `js/tiempos-actividades.js`, `js/tiempos-crono.js`,
+  `js/tiempos-auto.js` (UMD con pruebas), `js/tiempos-manana.js`,
+  `js/tiempos-actividades-ui.js`, `js/tiempos-llenar.js`. Cambiados:
+  `js/tiempos-motor.js` (tus actividades, se sigue midiendo, tu promedio),
+  `js/tiempos.js` (reescrito: ⏱ Medir, ⚡, exportar, `TiemposDatos`),
+  `js/gimnasio.js` (avisa la duración de los entrenos), `css/tiempos.css`.
+- **Pruebas**: `tests/tiempos-actividades.test.js`, `tiempos-crono`,
+  `tiempos-auto`, `tiempos-motor` (fase 6) y `SOLO=fase6 node
+  scripts/e2e/tiempos.js` (crear, renombrar, ordenar, archivar; ⏱ Medir con
+  pausa y "sumar"; Mi mañana completa con saltar, pausar, cerrar y seguir,
+  resumen; se llena sola con Running, Ejercicio y Libros; quitar y cambiar a
+  mano; exportar; a 390, 1280 y 320 px).
