@@ -34,7 +34,7 @@ function render() {
     <div class="bpr-mapa">${pr.libros.filter(l => l.testamento === "AT").map(tile).join("")}</div>
     <h2 class="bpl-t">Nuevo Testamento</h2>
     <div class="bpr-mapa">${pr.libros.filter(l => l.testamento === "NT").map(tile).join("")}</div>
-    <p class="lib-nota">Cuenta lo que marcas con «Marcar como leído» al final de cada capítulo.</p>`;
+    <p class="lib-nota">Toca un libro para marcar los capítulos que leíste (también en tu Biblia de papel). Cuenta lo de «Leí en mi Biblia» y lo de «Marcar como leído» del lector.</p>`;
 }
 function abrirLibro(id) {
   const l = B.libro(id);
@@ -49,7 +49,10 @@ function abrirLibro(id) {
 }
 app.addEventListener("click", e => {
   const b = e.target.closest("[data-bpr-libro]");
-  if (b) abrirLibro(b.dataset.bprLibro);
+  if (!b) return;
+  // D-122: los capítulos se marcan con un toque (y "Leer en la app" para el lector).
+  if (window.BibliaMarcarUI) BibliaMarcarUI.abrirLibro(b.dataset.bprLibro, { leer: true });
+  else abrirLibro(b.dataset.bprLibro);
 });
 hoja.el.addEventListener("click", e => {
   const b = e.target.closest("[data-bpr-ir]");

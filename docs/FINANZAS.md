@@ -6,6 +6,29 @@ Notas de diseño de Finanzas que no están en otro lado. El código vive en
 `users/{uid}/finanzas`, `ahorros`, `carteras_movimientos` y `meta/…` (ver
 `docs/DATABASE.md`).
 
+## Pago mínimo de las tarjetas (2026-11-15, D-121)
+
+- **Dónde:** Finanzas › Tarjetas de crédito › editar una tarjeta ›
+  "Pago mínimo (Bs) · opcional". Es lo que sí o sí tienes que pagar antes
+  del día de pago para no caer en el buró; sale en el extracto y cambia
+  cada mes.
+- **Cálculo:**
+  - Lo pagado cuenta desde el día de pago anterior (sin incluirlo) hasta
+    hoy: pagos y transferencias a esa tarjeta, no ajustes.
+  - Falta = mínimo − pagado, nunca más de lo que debes.
+  - Sin deuda: no hay pago mínimo ese mes.
+- **En pantalla:**
+  - "Pago mínimo: Bs X", con cuándo vence y lo ya pagado.
+  - Rojo y "Urgente" a 3 días o menos; ámbar y "Pronto" a 7 días o menos.
+  - Botones "Pagar el mínimo" (abre la transferencia con ese monto) y
+    "Pagar todo".
+  - Cubierto: "✓ Pago mínimo cubierto".
+- **También aparece en:** el Resumen (fila de la tarjeta y "Atención") y
+  "Mi día" de Inicio, cuando vence en 3 días o menos.
+- **Lógica:** `js/finanzas/tarjetas.js` (`pagoAnterior`, `pagado`,
+  `estado().lista[].minimo`). Pruebas: `tests/finanzas-tarjetas.test.js` y
+  `scripts/e2e/tarjetas-minimo.js`.
+
 ## Disponible por día (2026-11-15, D-116)
 
 Pedido del dueño: "el monto diario sale del presupuesto que escribo, no de lo

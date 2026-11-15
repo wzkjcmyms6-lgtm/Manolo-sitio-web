@@ -71,6 +71,20 @@ function marcarLeido(libro, cap, si) {
     .catch(err => alert(`No se pudo guardar: ${err && err.message ? err.message : err}`));
 }
 
+// Varios capítulos de una vez (D-122: "Leí en mi Biblia", el plan de hoy).
+function marcarVarios(claves, si) {
+  const ks = Array.from(new Set((claves || []).filter(k => T.leerClave(k))));
+  if (!ks.length) return Promise.resolve();
+  const hoy = hoyLocal();
+  const fv = firebase.firestore.FieldValue;
+  const dia = (leidos[hoy] || []).filter(x => !ks.includes(x));
+  if (si) ks.forEach(k => dia.push(k));
+  leidos = Object.assign({}, leidos, { [hoy]: dia });
+  avisar();
+  return meta("biblia_leidos").set({ dias: { [hoy]: si ? fv.arrayUnion(...ks) : fv.arrayRemove(...ks) }, actualizado: Date.now() }, { merge: true })
+    .catch(err => alert(`No se pudo guardar: ${err && err.message ? err.message : err}`));
+}
+
 // ---- Texto (memoria → caché → red) ----
 async function cargarLibro(id) {
   if (memoria.has(id)) return memoria.get(id);
@@ -443,6 +457,8 @@ window.BibliaLector = {
   ajustes: () => Object.assign({}, ajustes),
   leidos: () => leidos,
   leidosSet,
+  marcar: marcarVarios,
+  fechaLeido,
   leidosEstado: () => Object.assign({}, leidosEst),
   alCambiar: cb => oyentes.push(cb),
   // Ajustes de Biblia que no son de lectura (fase 3: favArriba).

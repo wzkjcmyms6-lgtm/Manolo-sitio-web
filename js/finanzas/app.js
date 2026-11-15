@@ -310,6 +310,7 @@ function filaTarjetaResumen(t) {
           <span class="fin-tc-barra is-${t.nivel}" aria-hidden="true"><i style="width:${pct}%"></i></span>
           <span class="fin-cartera-sub">Disponible: ${formatBsShort(FD.aBs(t.disponibleCent))}</span>
           <span class="fin-cartera-sub">${t.pago.dias === 0 ? "Hoy toca pagar" : `Pago: ${fechaCorta(t.pago.fecha)} · ${t.pago.dias === 1 ? "falta 1 día" : `faltan ${t.pago.dias} días`}`}</span>
+          ${t.minimo && t.minimo.faltaCent > 0 ? `<span class="fin-cartera-sub fin-cartera-min is-${t.minimo.urgencia}">Mínimo por pagar: ${formatBsShort(FD.aBs(t.minimo.faltaCent))}</span>` : t.minimo && !t.minimo.sinDeuda ? `<span class="fin-cartera-sub fin-cartera-min is-ok">✓ Mínimo cubierto</span>` : ""}
         </button>
         ${t.deudaCent > 0 ? `<button type="button" class="fin-cartera-pagar" data-pagar-tarjeta="${escapeHtml(t.id)}" aria-label="Pagar ${escapeHtml(t.nombre)}">Pagar</button>` : ""}
       </div>`;
@@ -899,7 +900,11 @@ function resAtencionHTML(period) {
       items.push({ peso: 2, html: `<a class="res-item" href="#fin-analisis"><span class="res-item-ic" aria-hidden="true"><span data-icon="calendar"></span></span><span><strong>${enDias(p.fecha)}:</strong> ${escapeHtml(p.rec.nombre)} · ${p.rec.type === "ingreso" ? "+" : ""}${bsCent(p.rec.montoCent || 0)}</span></a>` });
     });
     pagosDeTarjeta().forEach(x => {
-      if (x.deudaCent > 0 && x.dias <= 3) items.push({ peso: 2.5, html: `<a class="res-item aviso" href="${tarjetasCache.length ? "#fin-tarjetas" : "#fin-movimientos"}"><span class="res-item-ic" aria-hidden="true"><span data-icon="calendar"></span></span><span><strong>${x.dias === 0 ? "Hoy" : x.dias === 1 ? "Mañana" : `En ${x.dias} días`}:</strong> pago de ${x.nombre ? escapeHtml(x.nombre) : "la tarjeta"} · ${bsCent(x.deudaCent)}</span></a>` });
+      if (!(x.deudaCent > 0 && x.dias <= 3)) return;
+      const cuando = x.dias === 0 ? "Hoy" : x.dias === 1 ? "Mañana" : `En ${x.dias} días`;
+      const href = tarjetasCache.length ? "#fin-tarjetas" : "#fin-movimientos";
+      if (x.minimo && x.minimo.faltaCent > 0) items.push({ peso: 4, html: `<a class="res-item mal" href="${href}"><span class="res-item-ic" aria-hidden="true">!</span><span><strong>${cuando}:</strong> pago mínimo de ${escapeHtml(x.nombre)} · ${bsCent(x.minimo.faltaCent)} (para no caer en el buró)</span></a>` });
+      else items.push({ peso: 2.5, html: `<a class="res-item aviso" href="${href}"><span class="res-item-ic" aria-hidden="true"><span data-icon="calendar"></span></span><span><strong>${cuando}:</strong> pago de ${x.nombre ? escapeHtml(x.nombre) : "la tarjeta"} · ${bsCent(x.deudaCent)}${x.minimo && x.minimo.cubierto ? " · mínimo cubierto" : ""}</span></a>` });
     });
   }
   items.sort((a, b) => b.peso - a.peso);
@@ -1331,6 +1336,7 @@ function anProximosHTML() {
   if (!lista.length) return `${head}<p class="an-vacio">No hay pagos programados. <a href="#fin-recurrentes">Configura tus pagos recurrentes</a> (alquiler, servicios, suscripciones) para verlos venir.</p>`;
   const salen = lista.filter(x => !x.ingreso).reduce((s, x) => s + x.cent, 0);
   const entran = lista.filter(x => x.ingreso).reduce((s, x) => s + x.cent, 0);
+  const t = FD.saldos(financeCache);   // Efectivo + Débito, en centavos
   const libre = t.saldo + entran - salen;
   return `${head}
     <div class="an-fila-big"><span class="vg-big an-num">${bsC(salen)}</span><span class="an-kpi-sub">por pagar${entran ? ` · entran ${bsC(entran)}` : ""}</span></div>
@@ -3622,13 +3628,35 @@ function pagosDeTarjeta() {
     const { date, days } = nextCardPayDate();
     return [{ nombre: "", deudaCent: FD.saldos(financeCache).deuda, fecha: isoDate(date), dias: days }];
   }
-  return estadoTarjetas().lista.map(c => ({ nombre: c.nombre, deudaCent: c.deudaCent, fecha: c.pago.fecha, dias: c.pago.dias }));
+  return estadoTarjetas().lista.map(c => ({ nombre: c.nombre, deudaCent: c.deudaCent, fecha: c.pago.fecha, dias: c.pago.dias, minimo: c.minimo }));
 }
-// Pagar es una transferencia de Débito a la tarjeta, por el total que debes.
-function pagarTarjeta(id) {
+// Pagar es una transferencia de Débito a la tarjeta, por el total que debes
+// (o solo lo que falta del pago mínimo, D-121).
+function pagarTarjeta(id, soloMinimo) {
   const c = id ? tarjetaEstado(id) : null;
   const deudaCent = Math.max(0, c ? c.deudaCent : FD.saldos(financeCache).deuda);
-  openTxnSheet(null, { type: "transferencia", from: "debito", to: "tarjeta", tarjetaId: c ? c.id : null, amount: String(FD.aBs(deudaCent)).replace(".", ","), desc: c ? `Pago de ${c.nombre}` : "Pago de tarjeta" });
+  const min = soloMinimo && c && c.minimo && c.minimo.faltaCent > 0 ? c.minimo.faltaCent : null;
+  openTxnSheet(null, { type: "transferencia", from: "debito", to: "tarjeta", tarjetaId: c ? c.id : null, amount: String(FD.aBs(min || deudaCent)).replace(".", ","),
+    desc: c ? `${min ? "Pago mínimo" : "Pago"} de ${c.nombre}` : "Pago de tarjeta" });
+}
+// "Vence hoy / mañana / el 29 nov (en 14 días)".
+function venceTexto(p) {
+  return p.dias === 0 ? "vence hoy" : p.dias === 1 ? "vence mañana" : `vence el ${fechaCorta(p.fecha)} (en ${p.dias} días)`;
+}
+// Pago mínimo de una tarjeta (D-121): lo que falta, ya cubierto o sin deuda.
+function minimoHTML(c) {
+  const m = c.minimo;
+  if (!m) return c.deudaCent > 0
+    ? `<button type="button" class="fin-tc-min-agregar" data-tc-min-agregar="${escapeHtml(c.id)}"><span data-icon="plus"></span>Agregar el pago mínimo</button>` : "";
+  if (m.sinDeuda) return `<p class="fin-tc-min is-ok"><span class="fin-tc-min-ic" aria-hidden="true">✓</span><span>Sin deuda: este mes no tienes pago mínimo.</span></p>`;
+  if (m.cubierto) return `<p class="fin-tc-min is-ok"><span class="fin-tc-min-ic" aria-hidden="true">✓</span><span><strong>Pago mínimo cubierto</strong><small>Pagaste ${formatBsShort(FD.aBs(m.pagadoCent))} desde el ${escapeHtml(fechaCorta(m.desde))}. Mínimo: ${formatBsShort(FD.aBs(m.cent))}.</small></span></p>`;
+  const etiqueta = m.urgencia === "mal" ? "Urgente" : m.urgencia === "aviso" ? "Pronto" : "Pendiente";
+  return `<div class="fin-tc-min is-${m.urgencia}" role="group" aria-label="Pago mínimo de ${escapeHtml(c.nombre)}">
+      <span class="fin-tc-min-ic" aria-hidden="true">!</span>
+      <span><strong>Pago mínimo: ${formatMoney(FD.aBs(m.faltaCent))}</strong>
+        <small>${etiqueta}: ${venceTexto(c.pago)}${m.pagadoCent > 0 ? ` · ya pagaste ${formatBsShort(FD.aBs(m.pagadoCent))} de ${formatBsShort(FD.aBs(m.cent))}` : ""}. Págalo para no caer en el buró.</small></span>
+    </div>
+    <button type="button" class="fin-tc-pagar fin-tc-pagar-min" data-tc-pagar-min="${escapeHtml(c.id)}">Pagar el mínimo (${formatBsShort(FD.aBs(m.faltaCent))})</button>`;
 }
 
 function renderTarjetas() {
@@ -3657,6 +3685,7 @@ function renderTarjetas() {
         <div><span>Disponible</span><strong>${formatBsShort(FD.aBs(tot.disponibleCent))}</strong></div>
       </div>
       <span class="fin-tc-barra is-${tot.nivel}" aria-hidden="true"><i style="width:${Math.min(100, Math.round(tot.uso * 100))}%"></i></span>
+      ${e.minimoFaltaCent > 0 ? `<p class="fin-tc-pie"><span>Pagos mínimos que faltan: <strong class="neg">${formatBsShort(FD.aBs(e.minimoFaltaCent))}</strong></span></p>` : ""}
     </div>` : ""}
     ${e.lista.map((c, i) => tarjetaHTML(c, i === 0 && e.lista.length > 1)).join("")}
     <p class="fin-tc-nota">El disponible es tu límite menos lo que debes.${e.lista.length > 1 ? " La principal se queda con los gastos con tarjeta que anotaste antes de registrar tus tarjetas." : ""}</p>`;
@@ -3680,27 +3709,29 @@ function tarjetaHTML(c, principal) {
       <p class="fin-tc-pie"><span>Usaste el ${pct} % de ${formatBsShort(FD.aBs(c.limiteCent))}</span>${c.deudaCent < 0 ? `<span>Saldo a favor: ${formatBsShort(FD.aBs(-c.deudaCent))}</span>` : ""}</p>
       <p class="fin-tc-pie"><span>${c.pago.dias === 0 ? "Hoy toca pagar" : `Pago: ${fechaCorta(c.pago.fecha)} (${c.pago.dias === 1 ? "falta 1 día" : `faltan ${c.pago.dias} días`})`}</span></p>
       ${c.nivel === "pasado" ? `<p class="fin-tc-alerta">Te pasaste del límite por ${formatBsShort(FD.aBs(-c.disponibleCent))}.</p>` : c.nivel === "alto" ? `<p class="fin-tc-alerta is-aviso">Ya usaste el ${pct} % del límite.</p>` : ""}
-      ${c.deudaCent > 0 ? `<button type="button" class="fin-tc-pagar" data-tc-pagar="${escapeHtml(c.id)}">Pagar ${formatMoney(FD.aBs(c.deudaCent))}</button>` : ""}
+      ${minimoHTML(c)}
+      ${c.deudaCent > 0 ? `<button type="button" class="fin-tc-pagar${c.minimo && c.minimo.faltaCent > 0 ? " is-sec" : ""}" data-tc-pagar="${escapeHtml(c.id)}">Pagar todo (${formatMoney(FD.aBs(c.deudaCent))})</button>` : ""}
     </article>`;
 }
 
 // ---- Hoja para agregar o editar una tarjeta ----
-let tcEditando = null; // { id|null, nombre, limite, diaPago } tal como están en el formulario
+let tcEditando = null; // { id|null, nombre, limite, diaPago, pagoMinimo } tal como están en el formulario
 // La lista tal como está guardada (se editan esas entradas para no perder campos).
 const tarjetasCrudas = () => (metaCrudo.finanzas_tarjetas && Array.isArray(metaCrudo.finanzas_tarjetas.list) ? metaCrudo.finanzas_tarjetas.list : []);
 function guardarTarjetas(list) {
   // Sin campos vacíos (Firestore no acepta undefined).
   tarjetasDocRef().set({ list: JSON.parse(JSON.stringify(list)) }, { merge: true }).catch(err => console.error("Manolo: no se pudieron guardar las tarjetas", err));
 }
-function abrirTarjeta(id) {
+function abrirTarjeta(id, enfocar) {
   const c = id ? tarjetasCache.find(x => x.id === id) : null;
   tcEditando = c
-    ? { id: c.id, nombre: c.nombre, limite: String(FD.aBs(c.limiteCent)).replace(".", ","), diaPago: c.diaPago ? String(c.diaPago) : "" }
-    : { id: null, nombre: "", limite: "", diaPago: "" };
+    ? { id: c.id, nombre: c.nombre, limite: String(FD.aBs(c.limiteCent)).replace(".", ","), diaPago: c.diaPago ? String(c.diaPago) : "", pagoMinimo: c.pagoMinimoCent ? String(FD.aBs(c.pagoMinimoCent)).replace(".", ",") : "" }
+    : { id: null, nombre: "", limite: "", diaPago: "", pagoMinimo: "" };
   renderTarjetaForm([]);
   document.getElementById("tc-sheet-title").textContent = c ? "Editar tarjeta" : "Nueva tarjeta";
   document.getElementById("tc-borrar").hidden = !c;
   showSheet(document.getElementById("tc-sheet"));
+  if (enfocar) setTimeout(() => { const i = document.getElementById("tc-form").elements[enfocar]; if (i) i.focus(); }, 280);
 }
 function renderTarjetaForm(errores) {
   const r = tcEditando;
@@ -3710,6 +3741,8 @@ function renderTarjetaForm(errores) {
   f.innerHTML = `
     <label class="rec-campo">Nombre<input type="text" name="nombre" maxlength="40" value="${escapeHtml(r.nombre)}" placeholder="Visa BNB" autocomplete="off"></label>
     <label class="rec-campo">Límite (Bs)<input type="text" name="limite" inputmode="decimal" value="${escapeHtml(r.limite)}" placeholder="5000" autocomplete="off"></label>
+    <label class="rec-campo">Pago mínimo (Bs) · opcional<input type="text" name="pagoMinimo" inputmode="decimal" value="${escapeHtml(r.pagoMinimo || "")}" placeholder="250" autocomplete="off" aria-describedby="tc-min-ayuda"></label>
+    <p class="fin-aj-texto fin-tc-min-ayuda" id="tc-min-ayuda">Lo que sí o sí tienes que pagar antes del día de pago para no caer en el buró. Sale en tu extracto: actualízalo cada mes.</p>
     <label class="rec-campo">Día de pago<select name="diaPago" class="txn-filtro-select">
       <option value="">El de Ajustes (día ${diaPagoTarjeta()})</option>
       ${dias.map(d => `<option value="${d}"${String(d) === r.diaPago ? " selected" : ""}>Día ${d}</option>`).join("")}
@@ -3722,7 +3755,7 @@ function renderTarjetaForm(errores) {
 }
 function leerTarjetaForm() {
   const f = document.getElementById("tc-form");
-  Object.assign(tcEditando, { nombre: f.elements.nombre.value, limite: f.elements.limite.value, diaPago: f.elements.diaPago.value });
+  Object.assign(tcEditando, { nombre: f.elements.nombre.value, limite: f.elements.limite.value, diaPago: f.elements.diaPago.value, pagoMinimo: f.elements.pagoMinimo.value });
 }
 function guardarTarjeta() {
   leerTarjetaForm();
@@ -3730,7 +3763,7 @@ function guardarTarjeta() {
   const v = TC.validar(r, tarjetasCache, r.id);
   if (!v.ok) { renderTarjetaForm(v.errores); return; }
   const crudas = tarjetasCrudas();
-  guardarTarjetas(r.id ? crudas.map(x => (x && x.id === r.id ? TC.editar(x, v.datos) : x)) : crudas.concat([TC.nueva(v.datos, tarjetasCache)]));
+  guardarTarjetas(r.id ? crudas.map(x => (x && x.id === r.id ? TC.editar(x, v.datos, Date.now()) : x)) : crudas.concat([TC.nueva(v.datos, tarjetasCache)]));
   hideSheet(document.getElementById("tc-sheet"));
   avisoFin(r.id ? `«${v.datos.nombre}» guardada` : `«${v.datos.nombre}» agregada · límite ${formatBsShort(FD.aBs(v.datos.limiteCent))}`);
 }
@@ -3757,6 +3790,10 @@ document.getElementById("panel-fin-tarjetas").addEventListener("click", e => {
   if (ed) { abrirTarjeta(ed.dataset.tcEditar); return; }
   const pg = e.target.closest("[data-tc-pagar]");
   if (pg) { pagarTarjeta(pg.dataset.tcPagar); return; }
+  const pm = e.target.closest("[data-tc-pagar-min]");
+  if (pm) { pagarTarjeta(pm.dataset.tcPagarMin, true); return; }
+  const ag = e.target.closest("[data-tc-min-agregar]");
+  if (ag) { abrirTarjeta(ag.dataset.tcMinAgregar, "pagoMinimo"); return; }
   if (e.target.closest("[data-tc-nueva]")) abrirTarjeta(null);
 });
 document.getElementById("tc-sheet").addEventListener("click", e => {
@@ -5446,6 +5483,12 @@ window.FinanzasNuevo = {
 // en el periodo de hoy, con la misma cuenta que Presupuesto › Información
 // (aunque estés mirando otro mes). Solo lee; no cambia nada.
 window.FinanzasResumen = {
+  // D-121: pagos mínimos que faltan y vencen en 3 días o menos.
+  tarjetas() {
+    if (!tarjetasCache.length) return [];
+    return estadoTarjetas().lista.filter(c => c.minimo && c.minimo.faltaCent > 0 && c.pago.dias <= 3)
+      .map(c => ({ nombre: c.nombre, falta: bsCent(c.minimo.faltaCent), faltaCent: c.minimo.faltaCent, dias: c.pago.dias }));
+  },
   hoy() {
     if (!financeCache.length && !delServidor.finanzas) return null;
     const antes = budgetsCache;

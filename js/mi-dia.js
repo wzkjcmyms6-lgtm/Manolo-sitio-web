@@ -48,6 +48,7 @@ function datos() {
       capsHoy: (dias[hoy] || []).length, plan: pl ? { nombre: pl.e.nombre, texto: P.texto(pl.e.lectura) } : null };
   });
   d.dinero = probar(() => (window.FinanzasResumen ? FinanzasResumen.hoy() : null));
+  d.tarjetas = probar(() => (window.FinanzasResumen && FinanzasResumen.tarjetas ? FinanzasResumen.tarjetas() : null));
   // Fase 7 (D-114): mi mañana, el libro que lees y el repaso de hoy.
   d.manana = probar(() => (window.TiemposManana && TiemposManana.paraMiDia ? TiemposManana.paraMiDia() : null));
   d.libro = probar(() => {

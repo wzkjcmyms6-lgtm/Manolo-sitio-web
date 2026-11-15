@@ -334,3 +334,34 @@ Nada de lo guardado se reescribe; lo viejo sin estos campos se ve igual.
   final para el iPhone en `docs/TESTING.md`.
 - **Queda opcional (espera OK)**: pitido o voz cuando un paso de "Mi
   mañana" pasa tu promedio.
+
+## Después: "Leí en mi Biblia" (D-122, 2026-11-15)
+
+El dueño casi siempre lee en su Biblia de papel.
+
+**Antes**, marcar un capítulo pedía:
+1. abrir el lector;
+2. elegir el libro y el capítulo;
+3. bajar hasta el final;
+4. tocar "Marcar como leído".
+
+**Ahora:**
+- **Tarjeta "Leí en mi Biblia"**, arriba de Biblia y antes del lector:
+  - un toque en "✓ Leí Génesis 4": el que sigue al último que marcaste,
+    saltando lo ya leído;
+  - con un plan: "✓ Ya leí lo de hoy: Mateo 1–2";
+  - dice lo marcado hoy y ya ofrece el siguiente.
+- **"Elegir otros capítulos":**
+  - libros, con los recientes arriba y un buscador;
+  - después los números del libro: tocar uno lo marca como leído hoy y
+    tocarlo otra vez lo quita;
+  - solo se quita lo de hoy; lo de otros días no se borra.
+- **Progreso:** al tocar un libro se abre la misma hoja, con "Leer en la
+  app".
+- **Deshacer:** cada marca lo tiene durante 5 segundos.
+- **Dónde se guarda:** en lo de siempre, `meta/biblia_leidos`. Por eso
+  cuenta para la racha, los planes, Hábitos y "Mi día".
+
+Archivos y pruebas:
+- Lógica: `js/biblia-marcar.js` (`tests/biblia-marcar.test.js`).
+- Pantalla: `js/biblia-marcar-ui.js` (`scripts/e2e/biblia-marcar.js`).

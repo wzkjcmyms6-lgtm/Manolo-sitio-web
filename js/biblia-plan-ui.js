@@ -100,7 +100,7 @@ function render() {
         <button type="button" class="bpl-quitar" data-bpl-quitar="${esc(plan.id)}">Quitar este plan</button>
       </section>`).join("")}</div>` : ""}
     <h2 class="bpl-t">${xs.length ? "Sumar otro plan" : "Elige un plan"}</h2>
-    <p class="lib-nota">La lectura de cada día aparece arriba de Biblia. Al terminar un capítulo, toca «Marcar como leído».</p>
+    <p class="lib-nota">La lectura de cada día aparece arriba de Biblia. Si lees en tu Biblia de papel, márcala con «✓ Ya leí lo de hoy»; en el lector, con «Marcar como leído».</p>
     <div class="bpl-tipos">${P.ORDEN_TIPOS.filter(t => !tipos.has(t) || t === "ritmo").map(t => {
       const d = P.TIPOS[t];
       return `<section class="bpl-tipo">

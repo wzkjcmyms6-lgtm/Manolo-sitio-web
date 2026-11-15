@@ -1,5 +1,18 @@
 # Cambios
 
+## 2026-11-15 · Pago mínimo, Biblia en papel y arreglos del iPhone
+- Tarjetas de crédito: cada tarjeta puede tener su **pago mínimo** (lo que
+  sí o sí hay que pagar para no caer en el buró). Muestra cuánto falta y
+  cuándo vence, con "Pagar el mínimo"; avisa en el Resumen y en "Mi día".
+- Biblia: **"Leí en mi Biblia"**: marca lo que leíste en papel con un toque
+  ("✓ Leí Génesis 4") o tocando los números de los capítulos; también desde
+  Progreso. Con "Deshacer".
+- iPhone: la barra de abajo ya no queda flotando a media pantalla después
+  de escribir; los campos de hora de Medir tiempos caben en su tarjeta;
+  "Lamentaciones" se corta en sílabas.
+- Arreglado: Finanzas › Análisis › "Próximos 30 días" fallaba con pagos por
+  venir.
+
 ## 2026-11-15 · QA final (Finanzas, Lugares y copia de seguridad)
 - Accesibilidad: el menú ☰ cerrado ya no recibe el foco; mientras
   escribes, el zoom con dos dedos sigue libre (salvo en campos de letra

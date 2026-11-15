@@ -27,7 +27,7 @@ test("normalizar: limpia lo guardado", () => {
     { id: "z", nombre: "Master", limiteCent: 200000, diaPago: 40, color: "rojo" }
   ]);
   assert.strictEqual(n.length, 2);
-  assert.deepStrictEqual(n[0], { id: "x", nombre: "Visa", limiteCent: 150050, diaPago: 10, color: TC.COLORES[0], creado: 0 });
+  assert.deepStrictEqual(n[0], { id: "x", nombre: "Visa", limiteCent: 150050, diaPago: 10, color: TC.COLORES[0], creado: 0, pagoMinimoCent: null });
   assert.strictEqual(n[1].diaPago, null);
   assert.strictEqual(n[1].color, TC.COLORES[1]);
   assert.deepStrictEqual(TC.normalizar(null), []);
@@ -103,7 +103,7 @@ test("leerMonto: coma decimal y punto de miles", () => {
 test("validar el formulario", () => {
   let r = TC.validar({ nombre: "  Visa   Oro ", limite: "15.000", diaPago: "20" }, [visa]);
   assert.ok(r.ok);
-  assert.deepStrictEqual(r.datos, { nombre: "Visa Oro", limiteCent: 1500000, diaPago: 20 });
+  assert.deepStrictEqual(r.datos, { nombre: "Visa Oro", limiteCent: 1500000, diaPago: 20, pagoMinimoCent: null });
   r = TC.validar({ nombre: "", limite: "", diaPago: "" }, []);
   assert.deepStrictEqual(r.errores.map(e => e.campo), ["nombre", "limite"]);
   r = TC.validar({ nombre: "visa bnb", limite: "0", diaPago: "32" }, [visa]);
@@ -124,4 +124,65 @@ test("nueva y editar", () => {
   assert.strictEqual(e.color, n.color);
   assert.strictEqual(e.limite, 8000);
   assert.strictEqual(e.diaPago, null);
+});
+
+// ---- Pago mínimo (D-121) ----
+test("pago mínimo: se guarda por tarjeta, opcional", () => {
+  let r = TC.validar({ nombre: "Visa", limite: "5000", pagoMinimo: "250,50" }, []);
+  assert.ok(r.ok);
+  assert.strictEqual(r.datos.pagoMinimoCent, 25050);
+  assert.strictEqual(TC.validar({ nombre: "Visa", limite: "5000", pagoMinimo: "" }, []).datos.pagoMinimoCent, null, "vacío = sin pago mínimo");
+  assert.strictEqual(TC.validar({ nombre: "Visa", limite: "5000", pagoMinimo: "0" }, []).datos.pagoMinimoCent, null, "0 = sin pago mínimo");
+  r = TC.validar({ nombre: "Visa", limite: "5000", pagoMinimo: "doscientos" }, []);
+  assert.deepStrictEqual(r.errores.map(e => e.campo), ["pagoMinimo"]);
+  const n = TC.nueva({ nombre: "Visa", limiteCent: 500000, diaPago: 15, pagoMinimoCent: 25000 }, [], 1767225600000);
+  assert.deepStrictEqual([n.pagoMinimoCent, n.pagoMinimo, n.pagoMinimoActualizado], [25000, 250, 1767225600000]);
+  // Editar: cambia el mínimo y la fecha; lo demás (y lo desconocido) se conserva.
+  const e = TC.editar(Object.assign({ extra: "x" }, n), { nombre: "Visa", limiteCent: 500000, diaPago: 15, pagoMinimoCent: 30000 }, 1767312000000);
+  assert.deepStrictEqual([e.pagoMinimoCent, e.pagoMinimo, e.pagoMinimoActualizado, e.extra, e.id], [30000, 300, 1767312000000, "x", n.id]);
+  const igual = TC.editar(e, { nombre: "Visa Oro", limiteCent: 500000, diaPago: 15, pagoMinimoCent: 30000 }, 1767398400000);
+  assert.strictEqual(igual.pagoMinimoActualizado, 1767312000000, "si no cambia, la fecha queda");
+  const sin = TC.editar(e, { nombre: "Visa", limiteCent: 500000, diaPago: 15, pagoMinimoCent: null }, 1767398400000);
+  assert.strictEqual(sin.pagoMinimoCent, null);
+  // Lo guardado antes (sin pago mínimo) se lee igual.
+  assert.strictEqual(TC.normalizar([{ id: "a", nombre: "A", limiteCent: 100 }])[0].pagoMinimoCent, null);
+  assert.strictEqual(TC.normalizar([{ id: "a", nombre: "A", limiteCent: 100, pagoMinimo: 80.5 }])[0].pagoMinimoCent, 8050);
+});
+
+test("pago mínimo: día de pago anterior (inicio del ciclo)", () => {
+  assert.strictEqual(TC.pagoAnterior(29, "2026-11-15"), "2026-10-29");
+  assert.strictEqual(TC.pagoAnterior(29, "2026-11-29"), "2026-10-29", "el mismo día de pago");
+  assert.strictEqual(TC.pagoAnterior(29, "2026-11-30"), "2026-11-29");
+  assert.strictEqual(TC.pagoAnterior(31, "2027-03-10"), "2027-02-28", "en febrero, el último día");
+  assert.strictEqual(TC.pagoAnterior(15, "2027-01-10"), "2026-12-15", "cruza el año");
+});
+
+test("pago mínimo: cuánto falta para no caer en el buró", () => {
+  const visaMin = Object.assign({}, visa, { pagoMinimoCent: 25000 });   // paga el 15
+  const deuda = [mov("g1", { date: "2026-10-01", type: "gasto", payment: "credito", amount: 1200, tarjetaId: "tc_visa" })];
+  // 10 nov: el ciclo va del 15 oct al 15 nov; no pagaste nada.
+  let c = TC.estado(deuda, [visaMin], "2026-11-10", 29).lista[0];
+  assert.deepStrictEqual(c.minimo, { cent: 25000, pagadoCent: 0, faltaCent: 25000, cubierto: false, sinDeuda: false, desde: "2026-10-15", urgencia: "aviso" });
+  // Pagaste 100 el 20 oct y 50 el 12 nov (de otra tarjeta no cuenta, ni antes del ciclo).
+  const pagos = deuda.concat([
+    mov("p0", { date: "2026-10-15", type: "pago_tarjeta", payment: "debito", amount: 500, tarjetaId: "tc_visa" }),   // del ciclo anterior
+    mov("p1", { date: "2026-10-20", type: "transferencia", from: "debito", to: "tarjeta", amount: 100, tarjetaId: "tc_visa" }),
+    mov("p2", { date: "2026-11-12", type: "pago_tarjeta", payment: "debito", amount: 50, tarjetaId: "tc_visa" }),
+    mov("p3", { date: "2026-11-12", type: "pago_tarjeta", payment: "debito", amount: 999, tarjetaId: "tc_master" }),
+    mov("p4", { date: "2026-11-13", type: "ajuste_tarjeta", amount: 30, tarjetaId: "tc_visa" })                         // un ajuste no es pago
+  ]);
+  c = TC.estado(pagos, [visaMin, master], "2026-11-13", 29).lista[0];
+  assert.deepStrictEqual([c.minimo.pagadoCent, c.minimo.faltaCent, c.minimo.urgencia], [15000, 10000, "mal"], "faltan 100 a 2 días");
+  // Con lo pagado ya cubierto.
+  c = TC.estado(pagos.concat([mov("p5", { date: "2026-11-14", type: "pago_tarjeta", payment: "debito", amount: 100, tarjetaId: "tc_visa" })]), [visaMin, master], "2026-11-14", 29).lista[0];
+  assert.deepStrictEqual([c.minimo.faltaCent, c.minimo.cubierto, c.minimo.urgencia], [0, true, "ok"]);
+  // Si debes menos que el mínimo, solo falta lo que debes; sin deuda, nada.
+  const poco = [mov("g2", { date: "2026-11-01", type: "gasto", payment: "credito", amount: 80, tarjetaId: "tc_visa" })];
+  assert.strictEqual(TC.estado(poco, [visaMin], "2026-11-10", 29).lista[0].minimo.faltaCent, 8000);
+  const nada = TC.estado([], [visaMin], "2026-11-10", 29);
+  assert.deepStrictEqual([nada.lista[0].minimo.sinDeuda, nada.lista[0].minimo.cubierto], [true, true]);
+  // Sin pago mínimo registrado: null (como antes).
+  assert.strictEqual(TC.estado(deuda, [visa], "2026-11-10", 29).lista[0].minimo, null);
+  // Total de mínimos que faltan.
+  assert.strictEqual(TC.estado(deuda, [visaMin, master], "2026-11-10", 29).minimoFaltaCent, 25000);
 });

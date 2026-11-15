@@ -1,6 +1,13 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-15 (pago mínimo, Biblia en papel y arreglos del iPhone, D-120 a
+  D-122): `npm test` → **655 pruebas**. Nuevas: `viewport-ajuste` (cuánto
+  mover lo fijo cuando el iPhone deja la pantalla corrida), `biblia-marcar`
+  (qué sigue, lo de hoy, recientes, el plan) y más en `finanzas-tarjetas`
+  (pago mínimo: guardar, ciclo, cuánto falta) y `mi-dia` (aviso del
+  mínimo). E2E nuevas: `pantalla` (pantalla corrida, campos de 16 px,
+  campos de hora, nombres largos), `tarjetas-minimo` y `biblia-marcar`.
 - 2026-11-15 (QA final de Finanzas, Lugares y copia de seguridad, D-119):
   `npm test` → **641 pruebas** en verde (las del disponible por día: 11 de
   11; nueva en `lugares-motor`: miniaturas solo de imágenes de verdad). E2E nueva `scripts/e2e/sin-internet.js` (service worker de verdad,
@@ -199,7 +206,8 @@ export NODE_PATH=/opt/node22/lib/node_modules   # donde está Playwright
 for f in fase1 regresion hojas sw-instala emojis scalping inversiones tarjetas movilidad \
   running run-importar run-detalle run-feed run-progreso run-inteligencia run-segmentos \
   run-compartir run-qa habitos mi-dia ej-calendario ejercicio libros-progreso lectura \
-  lectura-qa tiempos finanzas-diario lugares respaldo sin-internet; do node scripts/e2e/$f.js || break; done
+  lectura-qa tiempos finanzas-diario lugares respaldo sin-internet pantalla tarjetas-minimo \
+  biblia-marcar; do node scripts/e2e/$f.js || break; done
 ```
 Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
 
@@ -261,6 +269,21 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Pago mínimo, Biblia en papel y arreglos (2026-11)**
+- [ ] Finanzas › Tarjetas: edita una tarjeta, pon su "Pago mínimo" y
+  guarda: la tarjeta dice cuánto falta y cuándo vence; "Pagar el mínimo"
+  abre el pago con ese monto.
+- [ ] Biblia: en "Leí en mi Biblia" toca "✓ Leí …": queda marcado y ofrece
+  el siguiente. Toca "Deshacer" una vez.
+- [ ] "Elegir otros capítulos" › un libro › toca 2 o 3 números: quedan en
+  verde. Toca uno otra vez: se quita.
+- [ ] Biblia › Progreso › un libro: misma hoja para marcar.
+- [ ] Escribe algo (por ejemplo una nota de un hábito), cierra el teclado
+  y baja hasta el final: la barra de abajo queda abajo (no a media
+  pantalla).
+- [ ] Medir tiempos › Plan de la mañana: los dos campos de hora caben en
+  la tarjeta.
 
 **Copia de seguridad (2026-11)**
 - [ ] Inicio › abajo "Copia de seguridad" › "Descargar copia de todo" ›

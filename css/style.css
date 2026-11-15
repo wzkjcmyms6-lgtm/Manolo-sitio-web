@@ -402,7 +402,7 @@ body.sheet-open { overflow: hidden; }
 .workout-meta-row label[hidden] { display: none; }
 .workout-meta-row input {
   padding: 0.35rem 0.55rem; border-radius: 8px; border: 1px solid var(--border);
-  background: var(--surface); color: var(--ink); font: inherit; font-size: 0.85rem; max-width: 150px;
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 1rem; max-width: 150px;
   color-scheme: dark;
 }
 .workout-meta-row input[type="number"] { width: 72px; }
@@ -432,7 +432,7 @@ body.sheet-open { overflow: hidden; }
 .ex-field[hidden] { display: none; }
 .ex-field input, .ex-field select {
   padding: 0.6rem 0.7rem; border-radius: 10px; border: 1px solid var(--border);
-  background: var(--surface); color: var(--ink); font: inherit; font-size: 0.95rem; width: 100%;
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 1rem; width: 100%;
 }
 .ex-field input:focus, .ex-field select:focus { outline: none; border-color: var(--accent-1); }
 .ex-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
@@ -890,7 +890,7 @@ button.back-link { background: none; border: none; cursor: pointer; font-family:
   padding: 0.6rem 0.8rem;
   border: 1px solid var(--border);
   border-radius: 10px;
-  font-size: 0.95rem;
+  font-size: 1rem;
   flex: 1 1 140px;
   background: var(--bg-soft);
   color: var(--ink);

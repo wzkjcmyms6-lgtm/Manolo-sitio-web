@@ -991,7 +991,7 @@ button.remain-cat:active .remain-ring { transform: scale(0.95); }
 .txn-note-row input::placeholder { color: var(--muted); }
 .txn-date-row { cursor: default; }
 .txn-date-label { position: relative; flex: 1; color: var(--ink); cursor: pointer; }
-.txn-date-label input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
+.txn-date-label input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; font-size: 16px; }
 .txn-date-arrow { width: 40px; height: 40px; padding: 9px; background: none; border: none; color: var(--ink); cursor: pointer; }
 .txn-date-arrow:disabled { opacity: 0.25; cursor: default; }
 .txn-toggle-row { cursor: pointer; }
@@ -1249,6 +1249,7 @@ button.remain-cat:active .remain-ring { transform: scale(0.95); }
   background: var(--surface); border: 1px solid var(--border); color: var(--ink); cursor: pointer;
 }
 .txn-search input, .txn-search-clear { display: none; }
+.txn-search input { font-size: 16px; }
 .txn-search.open { justify-content: stretch; }
 .txn-search.open .txn-search-toggle { display: none; }
 .txn-search.open input {
@@ -1821,6 +1822,24 @@ button.res-cat { cursor: pointer; }
 .fin-tc-alerta { margin: 0; padding: 0.5rem 0.7rem; border-radius: 12px; background: rgba(226, 89, 63, 0.12); color: #f1a193; font-size: 0.85rem; }
 .fin-tc-alerta.is-aviso { background: rgba(255, 184, 77, 0.12); color: #ffcf85; }
 .fin-tc-pagar { align-self: flex-start; min-height: 44px; padding: 0 1.1rem; border-radius: 999px; border: 0; background: var(--accent-grad); color: #0a0a0a; font: inherit; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
+.fin-tc-pagar.is-sec { background: transparent; color: var(--ink); border: 1px solid var(--border); }
+/* Pago mínimo (D-121): siempre con ícono y texto; el color acompaña. */
+.fin-tc-min { display: flex; align-items: flex-start; gap: 0.6rem; margin: 0; padding: 0.7rem 0.8rem; border-radius: var(--radio-caja); background: var(--surface-raised); font-size: 0.9rem; line-height: 1.4; }
+.fin-tc-min strong { display: block; font-variant-numeric: tabular-nums; }
+.fin-tc-min small { display: block; color: var(--muted); font-size: 0.8rem; margin-top: 0.1rem; }
+.fin-tc-min-ic { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; font-size: 0.8rem; font-weight: 800; background: var(--muted); color: #0a0a0a; }
+.fin-tc-min.is-ok { background: var(--estado-ok-fondo); }
+.fin-tc-min.is-ok .fin-tc-min-ic { background: var(--estado-ok); }
+.fin-tc-min.is-aviso { background: var(--estado-aviso-fondo); }
+.fin-tc-min.is-aviso .fin-tc-min-ic { background: var(--estado-aviso); }
+.fin-tc-min.is-mal { background: var(--estado-mal-fondo); }
+.fin-tc-min.is-mal .fin-tc-min-ic { background: var(--estado-mal); }
+.fin-tc-min-agregar { align-self: flex-start; display: inline-flex; align-items: center; gap: 0.4rem; min-height: 44px; padding: 0 0.2rem; border: 0; background: none; color: var(--accent-2); font: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
+.fin-tc-min-agregar [data-icon] { width: 16px; height: 16px; display: flex; }
+.fin-tc-min-ayuda { margin-top: -0.35rem; }
+.fin-cartera-min.is-mal { color: var(--estado-mal); font-weight: 700; }
+.fin-cartera-min.is-aviso { color: var(--estado-aviso); font-weight: 700; }
+.fin-cartera-min.is-ok { color: var(--estado-ok); }
 .fin-tc-nota { margin: 0; color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
 .fin-tc-vacio { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; padding: 1.1rem; border-radius: 18px; background: var(--surface); border: 1px dashed var(--border); }
 .fin-tc-vacio p { margin: 0; color: var(--muted); font-size: 0.9rem; line-height: 1.45; }

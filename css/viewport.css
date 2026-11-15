@@ -1,0 +1,39 @@
+/* ---------- iPhone: lo fijo vuelve a su lugar (D-120) ----------
+   Cuando el iPhone deja la pantalla "corrida" después de escribir,
+   js/viewport-ajuste.js pone la clase html.vv-corrida con --vv-arriba y
+   --vv-abajo, y esto devuelve cada cosa fija a donde va. Sin esa clase
+   (casi siempre) no cambia nada. Se carga al final, después de todo. */
+
+/* Fijo arriba: barra superior, aviso de versión nueva y avisos de arriba. */
+html.vv-corrida .topbar,
+html.vv-corrida .app-aviso,
+html.vv-corrida .avisos-toast,
+html.vv-corrida .gx-aviso,
+html.vv-corrida .sidebar { translate: 0 var(--vv-arriba, 0px); }
+
+/* Fijo abajo: barra de pestañas, botones ＋ y avisos con "Deshacer". */
+html.vv-corrida .bottom-nav,
+html.vv-corrida .txn-fab,
+html.vv-corrida .hb-fab,
+html.vv-corrida .lug-fab,
+html.vv-corrida .undo-toast,
+html.vv-corrida .hb-toast,
+html.vv-corrida .gx-barra,
+html.vv-corrida #panel-fin-herramientas-carteras-detalle.wallet-sheet { translate: 0 var(--vv-abajo, 0px); }
+
+/* Pantalla completa (hojas, lector de la Biblia, guías): de borde a borde de lo visible. */
+html.vv-corrida .budget-sheet,
+html.vv-corrida .muscle-sheet,
+html.vv-corrida .cat-sheet,
+html.vv-corrida .app-dialog,
+html.vv-corrida .rk-aviso-modal,
+html.vv-corrida .category-selector-modal,
+html.vv-corrida .sidebar-overlay,
+html.vv-corrida .login-screen,
+html.vv-corrida .bbl-lector,
+html.vv-corrida .mov-guia,
+html.vv-corrida .hb-wrapped,
+html.vv-corrida .sc-guiado {
+  top: var(--vv-arriba, 0px);
+  bottom: calc(0px - var(--vv-abajo, 0px));
+}

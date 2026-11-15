@@ -1,6 +1,11 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-15 (QA final de Finanzas, Lugares y copia de seguridad, D-119).
+Actualizado: 2026-11-15 (pago mínimo, Biblia en papel y arreglos del iPhone, D-120 a D-122).
+
+- **Ajustes del dueño (2026-11-15)**: pago mínimo por tarjeta con aviso
+  (D-121); "Leí en mi Biblia" para marcar lo leído en papel con un toque
+  (D-122); en el iPhone, lo fijo vuelve a su lugar si la pantalla queda
+  corrida y todos los campos con letra de 16 px (D-120).
 
 - **Finanzas, Lugares y copia de seguridad (2026-11-15, terminado)**: Tarea
   1 hecha (D-116): el disponible por día sale de los ingresos registrados

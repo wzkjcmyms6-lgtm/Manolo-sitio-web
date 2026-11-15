@@ -418,11 +418,13 @@ async function bibliaPlanes(browser, base, ancho, captura) {
   ok(await sinDesborde(p), "Progreso no se mueve de lado");
   await captura(p, `biblia-progreso-${ancho}.png`);
   await p.click('[data-bpr-libro="Matt"]');
-  await p.waitForTimeout(300);
-  ok((await p.$$(".bpr-hoja [data-bpr-ir]")).length === 28 && (await p.$$(".bpr-hoja .bbl-cap-b.is-leido")).length === 2, "tocar Mateo muestra sus capítulos, 2 leídos");
-  await p.click('.bpr-hoja [data-bpr-ir="Matt.3"]');
-  await p.waitForTimeout(700);
-  ok(await visible(p, "#bbl-lector") && (await txt(p, "#bbl-donde-t")) === "Mateo 3", "y tocar uno lo abre en el lector");
+  await p.waitForTimeout(400);
+  // D-122: un libro abre la hoja para marcar (tocar = leído hoy) con «Leer en la app».
+  ok((await p.$$(".bmk-hoja [data-bmk-cap]")).length === 28 && (await p.$$(".bmk-hoja .bbl-cap-b.is-leido")).length === 2, "tocar Mateo muestra sus capítulos para marcar, 2 leídos");
+  const primero = await p.$eval(".bmk-hoja [data-bmk-cap]:not(.is-leido)", b => b.textContent.trim());
+  await p.click('.bmk-hoja [data-bmk="leer"]');
+  await p.waitForTimeout(900);
+  ok(await visible(p, "#bbl-lector") && (await txt(p, "#bbl-donde-t")) === `Mateo ${primero}`, `y «Leer Mateo en la app» lo abre en el lector (Mateo ${primero}, el primero sin leer)`);
   await p.click('[data-bbl="cerrar"]');
   await p.waitForTimeout(400);
 

@@ -1,5 +1,15 @@
 # Fase actual
 
+## Ajustes del dueño (2026-11-15, después de probar en el iPhone)
+| Qué | Estado |
+|---|---|
+| Fallas de pantalla de las capturas (barra flotando, campos de hora, nombres largos) | ✅ (D-120) |
+| Tarjetas: pago mínimo por tarjeta | ✅ (D-121) |
+| Biblia: marcar lo leído en papel, más sencillo | ✅ (D-122) |
+
+Queda del dueño: probar en el iPhone la lista «Pago mínimo, Biblia en
+papel y arreglos» de `docs/TESTING.md`.
+
 ## Finanzas (disponible diario), Lugares y copia de seguridad (pedido del dueño, 2026-11-15)
 Plan aprobado por el dueño ("OK" a las tres recomendaciones: fotos en el
 teléfono con miniatura en la nube; copia de seguridad de todo como Tarea 3;

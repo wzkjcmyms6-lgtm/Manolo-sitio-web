@@ -84,6 +84,7 @@ function renderResumen() {
       <div><b>${r.esteMes}</b><span>${r.esteMes === 1 ? "día" : "días"} en ${mesNombre}</span></div>
     </div>
     ${window.BibliaPlanesUI ? BibliaPlanesUI.tarjetasHoy() : ""}
+    ${window.BibliaMarcarUI ? BibliaMarcarUI.tarjeta() : ""}
     ${tarjetaLeer()}
     ${window.BibliaMemoriaUI ? BibliaMemoriaUI.tarjetaHoy() : ""}
     <p class="bib-hoy ${r.hoyHecho ? "is-hecho" : ""}">${mensaje}</p>

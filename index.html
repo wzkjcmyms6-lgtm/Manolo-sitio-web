@@ -17,13 +17,13 @@
   <!-- Fuentes guardadas en el repo: la app no depende de internet para verse bien -->
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
-  <link rel="stylesheet" href="css/style.css?v=202611160400">
-  <link rel="stylesheet" href="css/finanzas.css?v=202611160100">
+  <link rel="stylesheet" href="css/style.css?v=202611160600">
+  <link rel="stylesheet" href="css/finanzas.css?v=202611160600">
   <link rel="stylesheet" href="css/habitos.css?v=202611061700">
   <link rel="stylesheet" href="css/inversiones.css?v=202610291000">
-  <link rel="stylesheet" href="css/libros.css?v=202611151500">
+  <link rel="stylesheet" href="css/libros.css?v=202611160600">
   <link rel="stylesheet" href="css/rutinas-listas.css?v=202611081200">
-  <link rel="stylesheet" href="css/biblia.css?v=202611141900">
+  <link rel="stylesheet" href="css/biblia.css?v=202611160700">
   <link rel="stylesheet" href="css/movilidad.css?v=202610300100">
   <link rel="stylesheet" href="css/tiempos.css?v=202611151900">
   <link rel="stylesheet" href="css/lugares.css?v=202611160200">
@@ -31,6 +31,8 @@
   <link rel="stylesheet" href="css/ej-calendario.css?v=202610290900">
   <link rel="stylesheet" href="css/ejercicio.css?v=202611060100">
   <link rel="stylesheet" href="css/run.css?v=202611040900">
+  <!-- Al final de todo: devuelve lo fijo a su lugar en el iPhone (D-120) -->
+  <link rel="stylesheet" href="css/viewport.css?v=202611160600">
 </head>
 <body>
   <!-- Degradado marfil y brillo del maniquí (mapa corporal y creador de ejercicios) -->
@@ -1446,6 +1448,7 @@
   <script defer src="js/icons.js?v=202611040400"></script>
   <script defer src="js/modules.js?v=202611160300"></script>
   <script defer src="js/main.js?v=202611160400"></script>
+  <script defer src="js/viewport-ajuste.js?v=202611160600"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
   <script defer src="js/ejercicios-alias.js?v=202611061200"></script>
   <script defer src="js/exercise-search.js?v=202611061200"></script>
@@ -1538,9 +1541,9 @@
   <script defer src="js/finanzas/demo.js?v=202610011300"></script>
   <script defer src="js/finanzas/analisis.js?v=202610011500"></script>
   <script defer src="js/finanzas/presupuesto.js?v=202610011600"></script>
-  <script defer src="js/finanzas/tarjetas.js?v=202610291310"></script>
+  <script defer src="js/finanzas/tarjetas.js?v=202611160700"></script>
   <script defer src="js/finanzas/diario.js?v=202611160100"></script>
-  <script defer src="js/finanzas/app.js?v=202611160200"></script>
+  <script defer src="js/finanzas/app.js?v=202611160700"></script>
   <script defer src="js/inversiones-motor.js?v=202610280600"></script>
   <script defer src="js/inversiones-series.js?v=202610280400"></script>
   <script defer src="js/inversiones-graficos.js?v=202610280400"></script>
@@ -1548,17 +1551,19 @@
   <script defer src="js/lectura-comun.js?v=202610290200"></script>
   <script defer src="js/biblia-motor.js?v=202611141900"></script>
   <script defer src="js/biblia-planes.js?v=202611141900"></script>
+  <script defer src="js/biblia-marcar.js?v=202611160700"></script>
   <script defer src="js/biblia-memoria.js?v=202611141900"></script>
   <script defer src="js/biblia-texto.js?v=202611141200"></script>
   <script defer src="js/biblia-marcas.js?v=202611141200"></script>
   <script defer src="js/biblia-imagen.js?v=202611150900"></script>
-  <script defer src="js/biblia-lector.js?v=202611141900"></script>
+  <script defer src="js/biblia-lector.js?v=202611160700"></script>
   <script defer src="js/biblia-seleccion.js?v=202611141900"></script>
   <script defer src="js/biblia-buscar.js?v=202611141200"></script>
-  <script defer src="js/biblia-plan-ui.js?v=202611141900"></script>
+  <script defer src="js/biblia-plan-ui.js?v=202611160700"></script>
+  <script defer src="js/biblia-marcar-ui.js?v=202611160700"></script>
   <script defer src="js/biblia-memoria-ui.js?v=202611141900"></script>
-  <script defer src="js/biblia-progreso-ui.js?v=202611141900"></script>
-  <script defer src="js/biblia.js?v=202611141900"></script>
+  <script defer src="js/biblia-progreso-ui.js?v=202611160700"></script>
+  <script defer src="js/biblia.js?v=202611160700"></script>
   <script defer src="js/libros-motor.js?v=202611152000"></script>
   <script defer src="js/libros-progreso.js?v=202611150200"></script>
   <script defer src="js/libros-sesiones.js?v=202611150200"></script>
@@ -1595,7 +1600,7 @@
   <script defer src="js/lugares-hojas.js?v=202611160500"></script>
   <script defer src="js/respaldo-motor.js?v=202611160300"></script>
   <script defer src="js/respaldo.js?v=202611160500"></script>
-  <script defer src="js/mi-dia-motor.js?v=202611160100"></script>
-  <script defer src="js/mi-dia.js?v=202611151900"></script>
+  <script defer src="js/mi-dia-motor.js?v=202611160700"></script>
+  <script defer src="js/mi-dia.js?v=202611160700"></script>
 </body>
 </html>

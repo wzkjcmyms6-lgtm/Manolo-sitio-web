@@ -1576,3 +1576,57 @@ cambiar esas variables en un solo lugar. (6) Revisión de código: las
 miniaturas de fotos de Lugares solo se aceptan si son una imagen en base64
 (`miniOk`: JPEG, PNG o WebP; sin SVG) y siempre se escapan al ponerlas en
 la pantalla; así un archivo de copia armado a mano no puede meter código.
+
+**D-120 (2026-11-15) · Fallas de pantalla de las capturas del dueño.** (1)
+La barra de abajo, el ＋ y el aviso de versión nueva aparecían a media
+pantalla, la barra de arriba se escondía (el texto pasaba bajo la hora y
+la batería) y el lector de la Biblia no cubría abajo. Causa: el iPhone, al
+cerrar el teclado o el selector de hora, a veces deja la parte visible
+"corrida" de la que usa para lo fijo. Dos arreglos: (a) evitar lo que lo
+dispara: todos los campos con letra de 16 px o más (eran 3 reglas: ajustes
+de ejercicio, formularios de running/carteras y el entreno en vivo), así
+el iPhone no acerca la pantalla al escribir (y `js/main.js` no cambia el
+zoom); (b) si igual pasa, `js/viewport-ajuste.js` lo mide con
+`window.visualViewport` y `css/viewport.css` devuelve lo fijo a su lugar
+(barra de arriba y de abajo, ＋, avisos, hojas y pantallas completas). Sin
+el error no cambia nada; mientras escribes, tampoco. (2) Medir tiempos ›
+Plan de la mañana: los campos de hora se salían de la tarjeta en el iPhone
+(ancho propio del campo de hora): `appearance: none` como los de fecha.
+(3) Biblia › Progreso: "Lamentacione-s" → corte por sílabas
+(`hyphens: auto`). (4) La letra con serifa de Finanzas es a propósito
+(Fraunces en toda la sección, decisión de antes). Pruebas:
+`tests/viewport-ajuste.test.js`, `scripts/e2e/pantalla.js`.
+
+**D-121 (2026-11-15) · Tarjetas: pago mínimo por tarjeta.** Pedido del
+dueño: "lo que sí o sí tengo que pagar para no ir a buró, por tarjeta".
+(1) Campo opcional "Pago mínimo (Bs)" en cada tarjeta
+(`meta/finanzas_tarjetas.list[].pagoMinimoCent`, `pagoMinimo` en Bs y
+`pagoMinimoActualizado`; aditivo: las tarjetas viejas siguen igual). (2) Lo
+pagado cuenta desde el día de pago anterior (sin incluirlo) hasta hoy:
+pagos y transferencias a esa tarjeta (no ajustes). Falta = mínimo −
+pagado, nunca más de lo que debes; sin deuda, nada. (3) En la tarjeta:
+"Pago mínimo: Bs X" con cuándo vence, lo ya pagado y "para no caer en el
+buró"; rojo ("Urgente") a 3 días o menos, ámbar a 7, con ícono y texto;
+botones "Pagar el mínimo" y "Pagar todo". Cubierto: "✓ Pago mínimo
+cubierto". (4) También en el Resumen (fila de la tarjeta y "Atención") y en
+"Mi día" de Inicio cuando vence en 3 días o menos (hoy o mañana: "por
+hacer"). (5) Arreglado de paso un error de antes: Análisis › "Próximos 30
+días" fallaba en cuanto había un pago por venir (usaba una variable sin
+definir). Pruebas: `tests/finanzas-tarjetas.test.js`,
+`tests/mi-dia.test.js`, `scripts/e2e/tarjetas-minimo.js`.
+
+**D-122 (2026-11-15) · Biblia: marcar lo leído en tu Biblia de papel.**
+Pedido del dueño: casi siempre lee en papel; marcar capítulos tenía que ser
+más sencillo (antes: abrir el lector, elegir libro y capítulo, bajar hasta
+el final y "Marcar como leído"). (1) Tarjeta "Leí en mi Biblia" arriba de
+Biblia (antes que el lector): un toque en "✓ Leí Génesis 4" (el que sigue
+al último que marcaste, saltando lo ya leído) o, con un plan, "✓ Ya leí lo
+de hoy: Mateo 1–2". Dice lo marcado hoy y ofrece el siguiente. (2) "Elegir
+otros capítulos": libros (los recientes arriba, buscador) → números; tocar
+uno lo marca como leído hoy y tocarlo otra vez lo quita (solo lo de hoy:
+lo de otros días no se borra). (3) Progreso › un libro abre la misma hoja
+(con "Leer en la app"). (4) Cada marca con "Deshacer" (5 s). Se guarda en
+lo de siempre (`meta/biblia_leidos`, `arrayUnion` por día): cuenta para
+racha, planes, Hábitos y "Mi día". Lógica en `js/biblia-marcar.js`
+(`tests/biblia-marcar.test.js`); pantalla `js/biblia-marcar-ui.js`
+(`scripts/e2e/biblia-marcar.js`).
