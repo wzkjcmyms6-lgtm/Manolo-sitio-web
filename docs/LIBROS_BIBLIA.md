@@ -83,6 +83,14 @@ espacian si lo sabes (primeras letras, ocultar palabras o escribirlo).
 con capítulos leídos. ⚙ Ajustes: el versículo de arriba también de tus
 favoritos. Detalle en `docs/LECTURA_NIVEL2.md`.
 
+## "¿Qué leo después?", sagas, prioridad y notas (2026-11-15, D-108)
+
+Debajo de "Sigue leyendo", **¿Qué leo después?** ordena tus libros por
+leer y dice por qué (tu prioridad, el siguiente de una saga, un género que
+hace rato no lees, el largo contra tu ritmo). "Ver los N" para cambiar la
+prioridad o empezar uno. Cada libro puede tener **saga y número** y
+**notas con fecha** (lo que aprendiste, ideas para aplicar).
+
 ## Leer ahora, velocidad, Abandonado, releer y audiolibros (2026-11-15, D-107)
 
 En "Sigue leyendo" y en cada libro, **▶ Leer ahora** abre un cronómetro

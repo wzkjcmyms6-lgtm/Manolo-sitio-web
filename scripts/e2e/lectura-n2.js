@@ -817,4 +817,104 @@ async function librosSesion(browser, base, ancho, captura) {
   await p.context().close();
 }
 
-module.exports = { bibliaLector, bibliaMarcas, bibliaPlanes, bibliaMemoria, librosSesion, txt, visible, sinDesborde, metaDe, consola, deslizar, HOY, FECHA, ZONA };
+// ---------- Fase 5a: ¿Qué leo después?, sagas, prioridad y notas ----------
+async function librosSiguiente(browser, base, ancho, captura) {
+  console.log(`\nLibros: ¿Qué leo después?, sagas, prioridad y notas (${ancho} px)`);
+  const alto = ancho > 800 ? 900 : 844;
+  const p = await abrir(browser, base, SEM.estado(HOY), { hash: "#libros", zona: ZONA, fecha: FECHA, ancho, alto });
+  consola(p);
+  await p.waitForTimeout(900);
+  const libro = id => p.evaluate(i => window.__fakeStore.colMap("users/test/libros").get(i), id);
+  const titulos = sel => p.$$eval(sel, els => els.map(e => e.textContent.trim()));
+
+  let tops = await titulos("#lib-siguiente .lsig-t b");
+  ok(tops.join(" | ") === "El Principito | Piense y hágase rico | La sombra del viento", `«¿Qué leo después?»: tus Por leer en orden (${tops.join(" | ")})`);
+  ok(/Hace rato no lees infantil y juvenil/.test(await txt(p, "#lib-siguiente .lsig-item")), "con la razón: un género que hace rato no lees");
+  await captura(p, `libros-siguiente-${ancho}.png`);
+  await p.click('#lib-siguiente [data-lsig="todos"]');
+  await p.waitForTimeout(300);
+  ok((await p.$$(".lsig-hoja .lsig-fila")).length === 3 && /Es largo: unos 3 meses a tu ritmo/.test(await txt(p, ".lsig-hoja")), "la lista completa con razones y avisos");
+  await p.click('.lsig-hoja [data-lsig-id="l8"][data-lsig-prio="alta"]');
+  await p.waitForTimeout(500);
+  ok((await libro("l8")).prioridad === "alta", "Prioridad «Alta» se guarda");
+  tops = await titulos(".lsig-hoja .lsig-t b");
+  ok(tops[0] === "La sombra del viento" && /La marcaste con prioridad alta/.test(await txt(p, ".lsig-hoja .lsig-fila")), `y sube al primer lugar (${tops[0]})`);
+  await captura(p, `libros-siguiente-todos-${ancho}.png`);
+  await p.click('.lsig-hoja [data-lsig-empezar="l9"]');
+  await p.waitForTimeout(500);
+  const l9 = await libro("l9");
+  ok(l9.estado === "leyendo" && l9.fechaInicio === HOY && !(await visible(p, ".lsig-hoja")), "«Empezar» lo pasa a Leyendo desde hoy");
+  ok((await p.$$('#lib-leyendo [data-lib-sigue="l9"]')).length === 1 && (await p.$$("#lib-siguiente .lsig-item")).length === 2, "aparece en «Sigue leyendo» y sale de la lista");
+
+  // Sagas
+  const agregar = async (titulo, saga, n, terminado) => {
+    await p.click('[data-lib="nuevo"]');
+    await p.waitForTimeout(350);
+    await p.fill('.lib-hoja [name="titulo"]', titulo);
+    await p.fill('.lib-hoja [name="paginas"]', "400");
+    await p.fill('.lib-hoja [name="saga"]', saga);
+    await p.fill('.lib-hoja [name="sagaN"]', n);
+    if (terminado) await p.click('.lib-hoja [data-lib-set-estado="terminado"]');
+    await p.click('.lib-hoja button[type="submit"]');
+    await p.waitForTimeout(500);
+  };
+  await agregar("La comunidad del anillo", "El Señor de los Anillos", "1", true);
+  await agregar("Las dos torres", "El Señor de los Anillos", "2", false);
+  const torres = await p.evaluate(() => Array.from(window.__fakeStore.colMap("users/test/libros").values()).find(d => d.titulo === "Las dos torres"));
+  ok(torres && torres.saga === "El Señor de los Anillos" && torres.sagaN === 2, "la saga se guarda con su número");
+  ok(/Sigue la saga «El Señor de los Anillos»: es el 2/.test(await txt(p, "#lib-siguiente")), "«Las dos torres» sube: sigue la saga que terminaste");
+  await p.click('#lib-buscar');
+  await p.fill("#lib-buscar", "dos torres");
+  await p.waitForTimeout(250);
+  await p.click("#lib-lista .lib-card");
+  await p.waitForTimeout(300);
+  ok(/📚 El Señor de los Anillos · n\.º 2/.test(await txt(p, ".lib-hoja .lib-ficha-info")), "la ficha muestra la saga");
+  await p.click(".lib-hoja .budget-sheet-close");
+  await p.waitForTimeout(300);
+  await p.fill("#lib-buscar", "");
+  await p.dispatchEvent("#lib-buscar", "input");
+
+  // Notas del libro
+  await p.click('#lib-leyendo [data-lib-ver="l1"]');
+  await p.waitForTimeout(300);
+  ok(/Lo que aprendiste o ideas para aplicar/.test(await txt(p, ".lib-hoja .lnotas")), "la ficha tiene «Notas» (vacío, con ayuda)");
+  await p.click('.lib-hoja [data-lnota-nueva="l1"]');
+  await p.waitForTimeout(300);
+  ok(await visible(p, ".lnota-hoja form"), "＋ Nota abre la hoja encima de la ficha");
+  await p.click('.lnota-hoja [data-lnota-tipo="aplicar"]');
+  await p.fill('.lnota-hoja [name="texto"]', "Hacer la cama al despertar: un voto por la persona que quiero ser.");
+  await captura(p, `libros-nota-${ancho}.png`);
+  await p.click('.lnota-hoja button[type="submit"]');
+  await p.waitForTimeout(500);
+  let notas = (await libro("l1")).notas || {};
+  const nid = Object.keys(notas)[0];
+  ok(nid && notas[nid].tipo === "aplicar" && notas[nid].fecha === HOY && /Hacer la cama/.test(notas[nid].texto), "la nota se guarda en el libro con su tipo y fecha");
+  ok(/✅ Para aplicar · 6 nov 2026/.test(await txt(p, ".lib-hoja .lnota")), "y aparece en la ficha");
+  await captura(p, `libros-ficha-notas-${ancho}.png`);
+  await p.click(".lib-hoja .lnota");
+  await p.waitForTimeout(300);
+  await p.fill('.lnota-hoja [name="texto"]', "Hacer la cama al despertar.");
+  await p.click('.lnota-hoja button[type="submit"]');
+  await p.waitForTimeout(500);
+  notas = (await libro("l1")).notas || {};
+  ok(notas[nid].texto === "Hacer la cama al despertar." && Object.keys(notas).length === 1, "tocarla la edita");
+  await p.click(".lib-hoja .lnota");
+  await p.waitForTimeout(300);
+  await p.click(".lnota-hoja [data-lnota-borrar]");
+  await p.waitForTimeout(500);
+  ok(!Object.keys((await libro("l1")).notas || {}).length, "y se puede eliminar");
+  await p.click(".lib-hoja .budget-sheet-close");
+  await p.waitForTimeout(300);
+  ok(await sinDesborde(p), "Libros no se mueve de lado");
+  if (ancho < 800) {
+    await p.setViewportSize({ width: 320, height: 640 });
+    await p.waitForTimeout(200);
+    await p.click('#lib-siguiente [data-lsig="todos"]');
+    await p.waitForTimeout(300);
+    ok(await sinDesborde(p), "«¿Qué leo después?» entra en 320 px");
+  }
+  ok(!p.errores.length && !p.consola.length, "sin errores" + (p.consola.length ? `: ${p.consola.join(" | ")}` : ""));
+  await p.context().close();
+}
+
+module.exports = { bibliaLector, bibliaMarcas, bibliaPlanes, bibliaMemoria, librosSesion, librosSiguiente, txt, visible, sinDesborde, metaDe, consola, deslizar, HOY, FECHA, ZONA };

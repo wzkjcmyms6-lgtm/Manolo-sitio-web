@@ -10,7 +10,7 @@ test("validar un libro: título obligatorio, fechas editables y coherentes", () 
     opinion: " Una obra maestra. ", fechaRegistro: "2025-03-01", fechaInicio: "2025-01-10", fechaFin: "2025-02-20" }, { hoy: HOY });
   assert.equal(r.ok, true);
   assert.deepEqual(r.doc, { v: 1, titulo: "Cien años de soledad", autor: "Gabriel García Márquez", paginas: 471, estado: "terminado", calificacion: 5,
-    opinion: "Una obra maestra.", fechaRegistro: "2025-03-01", fechaInicio: "2025-01-10", fechaFin: "2025-02-20", genero: null, anio: null, olKey: null, formato: "papel" });
+    opinion: "Una obra maestra.", fechaRegistro: "2025-03-01", fechaInicio: "2025-01-10", fechaFin: "2025-02-20", genero: null, anio: null, olKey: null, formato: "papel", saga: null, sagaN: null, prioridad: null });
   const min = L.validarLibro({ titulo: "Solo título", fechaRegistro: HOY }, { hoy: HOY });
   assert.deepEqual([min.ok, min.doc.paginas, min.doc.calificacion, min.doc.fechaInicio, min.doc.fechaFin, min.doc.estado], [true, null, null, null, null, "por_leer"], "lo demás es opcional");
   const mal = L.validarLibro({ titulo: "", paginas: "12.5", calificacion: "6", fechaRegistro: "", fechaInicio: "2026-10-20", fechaFin: "2026-10-10" }, { hoy: HOY });
@@ -199,4 +199,28 @@ test("fase 4: Abandonado, formato y duración del audiolibro (D-107)", () => {
   ];
   const r = L.resumen(lista, HOY);
   assert.deepEqual([r.abandonado, r.leyendo, r.terminado, r.terminadosEsteAnio, r.paginasLeidas], [1, 1, 1, 2, 400]);
+});
+
+test("fase 5: saga, prioridad y notas del libro (D-108)", () => {
+  const r = L.validarLibro({ titulo: "Las dos torres", fechaRegistro: HOY, saga: "  El Señor   de los Anillos ", sagaN: "2", prioridad: "alta" }, { hoy: HOY });
+  assert.deepEqual([r.doc.saga, r.doc.sagaN, r.doc.prioridad], ["El Señor de los Anillos", 2, "alta"]);
+  assert.equal(L.validarLibro({ titulo: "X", fechaRegistro: HOY, saga: "S", sagaN: "1,5" }, { hoy: HOY }).doc.sagaN, 1.5, "un libro entre medio");
+  assert.deepEqual(L.validarLibro({ titulo: "X", fechaRegistro: HOY, saga: "S", sagaN: "0" }, { hoy: HOY }).errores.map(e => e.campo), ["sagaN"]);
+  assert.deepEqual([L.validarLibro({ titulo: "X", fechaRegistro: HOY, sagaN: "3" }, { hoy: HOY }).doc.sagaN, L.validarLibro({ titulo: "X", fechaRegistro: HOY, prioridad: "urgente" }, { hoy: HOY }).doc.prioridad], [null, null], "sin saga no hay número; prioridad rara = normal");
+  const n = L.normalizarLibro("a", { titulo: "A", saga: "S", sagaN: 3, prioridad: "baja", notas: { x: { texto: "Hola", fecha: HOY, tipo: "aprendi" } } });
+  assert.deepEqual([n.saga, n.sagaN, n.prioridad, Object.keys(n.notas)], ["S", 3, "baja", ["x"]]);
+  assert.deepEqual([L.normalizarLibro("b", { titulo: "B" }).saga, L.normalizarLibro("b", { titulo: "B" }).prioridad], ["", null]);
+  // Notas
+  const ok = L.validarNota({ texto: "  Hábitos pequeños, resultados grandes. ", tipo: "aprendi", fecha: HOY }, { hoy: HOY });
+  assert.deepEqual(ok.doc, { texto: "Hábitos pequeños, resultados grandes.", tipo: "aprendi", fecha: HOY });
+  assert.equal(L.validarNota({ texto: "x", tipo: "otra", fecha: HOY }, { hoy: HOY }).doc.tipo, "nota");
+  assert.deepEqual(L.validarNota({ texto: "", fecha: "2026-12-01" }, { hoy: HOY }).errores.map(e => e.campo), ["texto", "fecha"]);
+  const l = L.normalizarLibro("c", { titulo: "C", notas: {
+    a: { texto: "Vieja", fecha: "2026-10-01", tipo: "nota", creado: 1 },
+    b: { texto: "Nueva", fecha: "2026-10-20", tipo: "aplicar", creado: 2 },
+    c: { texto: "  ", fecha: "2026-10-21" },
+    d: { texto: "Mismo día, después", fecha: "2026-10-20", tipo: "raro", creado: 3 }
+  } });
+  assert.deepEqual(L.notasDe(l).map(x => [x.id, x.tipo]), [["d", "nota"], ["b", "aplicar"], ["a", "nota"]], "la más nueva primero; las vacías no");
+  assert.deepEqual(L.notasDe(L.normalizarLibro("e", { titulo: "E" })), []);
 });

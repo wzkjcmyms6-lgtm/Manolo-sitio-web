@@ -1267,3 +1267,22 @@ horas y minutos y se convierte) y no suma a la meta de páginas; sí suma
 minutos. (6) Hábitos: Libros manda `{ fecha: { paginas, min } }`; un
 hábito de Tiempo "Leer" ahora puede marcarse solo con las sesiones.
 
+**D-108 (2026-11-15) · Libros fase 5a: "¿Qué leo después?", sagas,
+prioridad y notas.** (1) "¿Qué leo después?" ordena tus "Por leer" con
+reglas y puntos, sin IA (`js/libros-siguiente.js`): prioridad Alta +30 /
+Baja −15; el siguiente de una saga cuyo anterior terminaste +25 (si falta
+uno anterior, −20 y lo avisa: "Antes va el 2 de «…»"); el n.º 1 de una saga
++3; un género que no está entre tus últimos 6 terminados +12 (para
+equilibrar) y −8 si vienes de dos seguidos del mismo; el largo contra tu
+ritmo real (páginas por día de los últimos 30 días, o tu meta si casi no
+anotaste): hasta 14 días +8, más de 60 −5; con el reto atrasado, los que
+terminas en 3 semanas +6; 6 meses o más en la lista, hasta +5. Se muestran
+las 2 razones que más suman y los avisos. (2) En Libros, debajo de "Sigue
+leyendo", los 3 primeros; "Ver los N" abre la lista con razones, la
+prioridad (Baja · Normal · Alta, se cambia ahí) y "Empezar" (pasa a
+Leyendo desde hoy). (3) Saga: nombre (con sugerencias de las que ya
+usaste) y número (acepta 1,5); `saga`, `sagaN`, `prioridad` en el libro
+(aditivo). (4) Notas por libro aparte de "Mi opinión": "Lo que aprendí",
+"Para aplicar" o "Nota", con fecha (`notas: { id: { texto, tipo, fecha,
+creado } }` en el libro; se agregan, editan y borran de a una con
+`update` por campo).

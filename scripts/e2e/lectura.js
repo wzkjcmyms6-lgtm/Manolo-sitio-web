@@ -14,7 +14,7 @@ const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
   const srv = await servidor();
   const base = `http://localhost:${srv.address().port}`;
   const browser = await chromium.launch();
-  // SOLO=biblia|marcas|planes|memoria|sesion corre solo una parte nueva (scripts/e2e/lectura-n2.js).
+  // SOLO=biblia|marcas|planes|memoria|sesion|siguiente corre solo una parte nueva (scripts/e2e/lectura-n2.js).
   const SOLO = process.env.SOLO;
   if (!SOLO) {
   const p = await abrir(browser, base, {}, { hash: "#inicio", zona: ZONA, fecha: HOY });
@@ -272,7 +272,7 @@ const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
   await esc2(lc("texto"), "Fue el tiempo que pasaste con tu rosa lo que la hizo tan importante.");
   await esc2(lc("pagina"), "80");
   await guardarL();
-  ok(/Frases 2/.test(await tx(".lib-hoja .lib-h-fila")), "al guardar vuelve a la ficha con 2 frases");
+  ok(/Frases 2/.test(await tx(".lib-hoja .lib-h-fila:last-of-type")) || /Frases\s*2\b/.test(await tx(".lib-hoja .lib-ficha")), "al guardar vuelve a la ficha con 2 frases");
   await captura(w, "libros-ficha.png");
   const fNueva = (await col(FRA)).find(([, d]) => d.pagina === 80);
   await w.click(`.lib-hoja [data-lib-frase="${fNueva[0]}"]`);
@@ -449,6 +449,7 @@ const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
     if (!SOLO || SOLO === "planes") await N2.bibliaPlanes(browser, base, ancho, captura);
     if (!SOLO || SOLO === "memoria") await N2.bibliaMemoria(browser, base, ancho, captura);
     if (!SOLO || SOLO === "sesion") await N2.librosSesion(browser, base, ancho, captura);
+    if (!SOLO || SOLO === "siguiente") await N2.librosSiguiente(browser, base, ancho, captura);
   }
   await terminar(browser, srv);
 })();

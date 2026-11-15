@@ -1,5 +1,15 @@
 # Cambios
 
+## 2026-11-15 · Libros: "¿Qué leo después?", sagas, prioridad y notas
+- Debajo de "Sigue leyendo", "¿Qué leo después?": tus libros por leer en
+  orden y por qué (tu prioridad, la saga que vienes leyendo, un género que
+  hace rato no lees, lo largo contra tu ritmo). "Ver los N" para cambiar la
+  prioridad o "Empezar" uno.
+- En cada libro: saga y número, y notas con fecha (lo que aprendiste,
+  ideas para aplicar), aparte de "Mi opinión".
+- Pruebas: `tests/libros-siguiente.test.js`, `tests/libros-motor.test.js` y
+  `scripts/e2e/lectura.js` (`SOLO=siguiente`).
+
 ## 2026-11-15 · Libros: "Leer ahora", velocidad, Abandonado, releer y audiolibros
 - ▶ Leer ahora: un cronómetro para tu lectura (sigue contando con el
   teléfono bloqueado). Al terminar pones la página a la que llegaste y

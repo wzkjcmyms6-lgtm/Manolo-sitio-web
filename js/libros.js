@@ -49,6 +49,7 @@ const fallo = (que) => err => alert(`No se pudo ${que}: ${err && err.message ? e
 app.innerHTML = `
   <div class="lib-resumen" id="lib-resumen"></div>
   <div id="lib-leyendo"></div>
+  <div id="lib-siguiente"></div>
   <button type="button" class="lib-btn lib-btn-ancho" data-lib="nuevo">＋ Agregar libro</button>
   <div class="fin-tabs lib-tabs" role="tablist" aria-label="Libros">
     <button type="button" class="fin-tab active" role="tab" data-lib-vista="libros" aria-selected="true">Mis libros</button>
@@ -93,6 +94,7 @@ const chipEstado = id => `<span class="lib-chip is-${id}">${L.ESTADO[id].emoji} 
 function render() {
   renderResumen();
   renderLeyendo();
+  if (window.LibrosSiguienteUI) LibrosSiguienteUI.render();
   if (vista === "libros") { renderEstados(); renderGeneros(); renderLista(); } else if (vista === "frases") renderFrases(); else renderStats();
   if (hoja.abierta() && actual && actual.modo === "ver") ver(actual.id);
 }
@@ -352,6 +354,8 @@ function ver(id) {
             ${l.calificacion ? `<p class="lib-estrellas is-grande" aria-label="${l.calificacion} de 5">${L.estrellas(l.calificacion)}</p>` : ""}
             ${l.genero ? `<span class="lib-chip">${esc(L.GENERO[l.genero].nombre)}</span>` : ""}
             ${l.formato !== "papel" ? `<span class="lib-chip">${L.FORMATO[l.formato].emoji} ${esc(L.FORMATO[l.formato].nombre)}${l.duracionMin ? ` · ${esc(P.hm(l.duracionMin))}` : ""}</span>` : ""}
+            ${l.saga ? `<span class="lib-chip">📚 ${esc(l.saga)}${l.sagaN ? ` · n.º ${esc(String(l.sagaN).replace(".", ","))}` : ""}</span>` : ""}
+            ${l.prioridad === "alta" && l.estado === "por_leer" ? `<span class="lib-chip is-prioridad">📌 Prioridad alta</span>` : ""}
           </div>
         </div>
         ${l.estado === "leyendo" ? `
@@ -371,6 +375,7 @@ function ver(id) {
           ${dato("Terminado", l.fechaFin ? L.fechaLarga(l.fechaFin) : "")}
         </dl>
         ${l.opinion ? `<h5 class="lib-h">Mi opinión</h5><p class="lib-opinion">${esc(l.opinion)}</p>` : ""}
+        ${window.LibrosNotas ? LibrosNotas.ficha(l) : ""}
         ${l.olKey ? `<p class="lib-nota"><a class="lib-enlace" href="https://openlibrary.org${esc(l.olKey)}" target="_blank" rel="noopener">Más datos en Open Library ↗</a></p>` : ""}
         <div class="lib-acciones">
           <button type="button" class="lib-btn-peligro" data-lib="borrar">Eliminar</button>
@@ -385,8 +390,9 @@ function ver(id) {
 function formLibro(id) {
   const l = id ? libros.find(x => x.id === id) : null;
   actual = { modo: "libro", id: l ? l.id : null };
-  const v = l || { titulo: "", autor: "", paginas: null, estado: "por_leer", calificacion: null, opinion: "", fechaRegistro: hoyLocal(), fechaInicio: null, fechaFin: null, genero: null, anio: null, olKey: null, formato: "papel", duracionMin: null };
+  const v = l || { titulo: "", autor: "", paginas: null, estado: "por_leer", calificacion: null, opinion: "", fechaRegistro: hoyLocal(), fechaInicio: null, fechaFin: null, genero: null, anio: null, olKey: null, formato: "papel", duracionMin: null, saga: "", sagaN: null, prioridad: null };
   const audio = v.formato === "audio";
+  const sagas = Array.from(new Set(libros.map(x => x.saga).filter(Boolean))).sort((a, b) => a.localeCompare(b, "es"));
   encontrados = [];
   const hoy = hoyLocal();
   const fecha = (name, etiqueta, valor) => `<label class="lib-campo"><span>${etiqueta}</span><input type="date" name="${name}" max="${hoy}" value="${esc(valor || "")}" class="lib-input"></label>`;
@@ -429,6 +435,17 @@ function formLibro(id) {
             <option value="">Sin género</option>
             ${L.GENEROS.map(g => `<option value="${g.id}"${g.id === v.genero ? " selected" : ""}>${esc(g.nombre)}</option>`).join("")}
           </select></label>
+        </div>
+        <div class="lib-par is-saga">
+          <label class="lib-campo"><span>Saga (opcional)</span><input type="text" name="saga" maxlength="80" autocomplete="off" list="lib-sagas" value="${esc(v.saga || "")}" class="lib-input" placeholder="Ej: Harry Potter"></label>
+          <label class="lib-campo"><span>N.º</span><input type="text" inputmode="decimal" name="sagaN" autocomplete="off" value="${esc(v.sagaN ? String(v.sagaN).replace(".", ",") : "")}" class="lib-input" placeholder="1"></label>
+          <datalist id="lib-sagas">${sagas.map(x => `<option value="${esc(x)}">`).join("")}</datalist>
+        </div>
+        <div class="lib-campo"><span>Prioridad para leerlo («¿Qué leo después?»)</span>
+          <div class="lib-segmento" role="radiogroup" aria-label="Prioridad">
+            ${L.PRIORIDADES.map(x => `<button type="button" class="${x.id === (v.prioridad || "") ? "active" : ""}" data-lib-set-prioridad="${x.id}" role="radio" aria-checked="${x.id === (v.prioridad || "")}">${x.nombre}</button>`).join("")}
+          </div>
+          <input type="hidden" name="prioridad" value="${esc(v.prioridad || "")}">
         </div>
         <input type="hidden" name="anio" value="${esc(v.anio || "")}">
         <input type="hidden" name="olKey" value="${esc(v.olKey || "")}">
@@ -589,6 +606,13 @@ hoja.el.addEventListener("click", e => {
   if (pag) { formPagina(pag.dataset.libPagina, "ver"); return; }
   const libroElegido = e.target.closest("[data-lib-elegir-libro]");
   if (libroElegido) { elegirLibro(encontrados[Number(libroElegido.dataset.libElegirLibro)]); return; }
+  // Prioridad (D-108).
+  const prio = e.target.closest("[data-lib-set-prioridad]");
+  if (prio && f) {
+    f.elements.prioridad.value = prio.dataset.libSetPrioridad;
+    hoja.el.querySelectorAll("[data-lib-set-prioridad]").forEach(b => { const on = b === prio; b.classList.toggle("active", on); b.setAttribute("aria-checked", String(on)); });
+    return;
+  }
   // Formato (D-107): el audiolibro pide la duración en vez de las páginas.
   const fmt = e.target.closest("[data-lib-set-formato]");
   if (fmt && f) {
@@ -931,7 +955,7 @@ onAuthReady(() => {
   }, err => console.warn("Libros (frases):", err));
   refAjustes().onSnapshot(d => {
     ajustesLib = d.exists ? d.data() || {} : {};
-    if (cargados >= 2) { renderResumen(); renderLeyendo(); if (vista === "stats") renderStats(); }
+    if (cargados >= 2) { renderResumen(); renderLeyendo(); if (window.LibrosSiguienteUI) LibrosSiguienteUI.render(); if (vista === "stats") renderStats(); }
   }, err => console.warn("Libros (metas):", err));
   ref("libros_portadas").onSnapshot(snap => {
     portadasDocs = {};
@@ -943,8 +967,10 @@ onAuthReady(() => {
 // "Leer ahora" (js/libros-sesion.js): lo que necesita de aquí.
 window.LibrosDatos = {
   uno: id => libros.find(x => x.id === id) || null,
+  lista: () => libros,
   listo: () => cargados >= 2,
-  metaDia,
+  metaDia, metaAnio,
+  tapa: l => tapa(l),
   festejo: id => { const l = libros.find(x => x.id === id); if (l) festejo(Object.assign({}, l)); }
 };
 window.addEventListener("libros:sesion", () => {

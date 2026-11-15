@@ -3,6 +3,7 @@
 // genérica y exportar. Sin DOM ni Firebase: tests/libros-motor.test.js.
 // Fase 4 (D-107): estado Abandonado, formato (papel, digital o audiolibro
 // con su duración) y lecturas anteriores (releer).
+// Fase 5 (D-108): saga (nombre y número), prioridad y notas por libro.
 // Colecciones: users/{uid}/libros y users/{uid}/libros_frases (docs/DATABASE.md).
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
@@ -27,6 +28,16 @@ const FORMATOS = [
 const FORMATO = {};
 FORMATOS.forEach(f => { FORMATO[f.id] = f; });
 const DURACION_MAX = 100 * 60;   // un audiolibro de hasta 100 horas
+// Prioridad para "¿Qué leo después?" (sin marcar = normal).
+const PRIORIDADES = [{ id: "baja", nombre: "Baja" }, { id: "", nombre: "Normal" }, { id: "alta", nombre: "Alta" }];
+// Notas del libro (aparte de "Mi opinión").
+const TIPOS_NOTA = [
+  { id: "aprendi", nombre: "Lo que aprendí", corto: "Aprendí", emoji: "💡" },
+  { id: "aplicar", nombre: "Para aplicar", corto: "Aplicar", emoji: "✅" },
+  { id: "nota", nombre: "Nota", corto: "Nota", emoji: "✎" }
+];
+const TIPO_NOTA = {};
+TIPOS_NOTA.forEach(t => { TIPO_NOTA[t.id] = t; });
 // Géneros para clasificar (la búsqueda sugiere uno según los temas de Open Library).
 const GENEROS = [
   { id: "novela", nombre: "Novela" },
@@ -90,6 +101,14 @@ function validarLibro(datos, opciones) {
   }
   const estado = ESTADO[datos.estado] ? datos.estado : "por_leer";
   const formato = FORMATO[datos.formato] ? datos.formato : "papel";
+  // Saga (fase 5): nombre y número (1, 2… o 1,5 para un libro entre medio).
+  const saga = texto(datos.saga, 80).replace(/\s+/g, " ");
+  const sagaTxt = String(datos.sagaN == null ? "" : datos.sagaN).trim().replace(",", ".");
+  let sagaN = null;
+  if (saga && sagaTxt) {
+    sagaN = Math.round(Number(sagaTxt) * 10) / 10;
+    if (!(sagaN > 0 && sagaN <= 999)) { err("sagaN", "El número en la saga va de 1 a 999."); sagaN = null; }
+  }
   let duracionMin = formato === "audio" ? leerDuracion(datos.duracion) : null;
   if (Number.isNaN(duracionMin)) { err("duracion", "Escribe la duración como horas:minutos (por ejemplo 10:30)."); duracionMin = null; }
   const calTxt = String(datos.calificacion == null ? "" : datos.calificacion).trim();
@@ -116,7 +135,7 @@ function validarLibro(datos, opciones) {
       genero: GENERO[datos.genero] ? datos.genero : null,
       anio: Number.isInteger(anio) && anio >= 1 && anio <= 2100 ? anio : null,
       olKey: /^\/works\/OL\d+W$/.test(String(datos.olKey || "")) ? datos.olKey : null,
-      formato };
+      formato, saga: saga || null, sagaN: saga ? sagaN : null, prioridad: datos.prioridad === "alta" || datos.prioridad === "baja" ? datos.prioridad : null };
   // La duración solo con audiolibro (si cambias a papel, la que tenías queda guardada).
   if (formato === "audio") doc.duracionMin = duracionMin;
   return { ok: true, errores: [], doc };
@@ -145,7 +164,12 @@ function normalizarLibro(id, d) {
     progresoPct: d.progresoPct && typeof d.progresoPct === "object" ? d.progresoPct : null,
     fechaDejado: fechaOk(d.fechaDejado) ? d.fechaDejado : null,
     sesiones: d.sesiones && typeof d.sesiones === "object" ? d.sesiones : null,
-    lecturas: d.lecturas && typeof d.lecturas === "object" ? d.lecturas : null
+    lecturas: d.lecturas && typeof d.lecturas === "object" ? d.lecturas : null,
+    // Fase 5 (D-108): saga, prioridad y notas.
+    saga: typeof d.saga === "string" ? d.saga : "",
+    sagaN: typeof d.sagaN === "number" && d.sagaN > 0 ? d.sagaN : null,
+    prioridad: d.prioridad === "alta" || d.prioridad === "baja" ? d.prioridad : null,
+    notas: d.notas && typeof d.notas === "object" ? d.notas : null
   };
 }
 // Lecturas anteriores (al "Leer de nuevo") que terminaste: [{ fechaFin, paginas, … }].
@@ -197,6 +221,29 @@ function colorTapa(titulo, autor) {
   let h = 0;
   for (const c of normalizar(`${titulo}|${autor}`)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return TAPAS[h % TAPAS.length];
+}
+
+// ---- Notas del libro (fase 5) ----
+// Datos del formulario → { ok, errores, doc: { texto, tipo, fecha } }.
+function validarNota(datos, opciones) {
+  const o = opciones || {};
+  const errores = [];
+  const t = texto(datos.texto, 3000);
+  if (!t) errores.push({ campo: "texto", texto: "Escribe la nota." });
+  const fecha = String(datos.fecha || "").trim();
+  if (!fechaOk(fecha)) errores.push({ campo: "fecha", texto: "Pon la fecha." });
+  else if (o.hoy && fecha > o.hoy) errores.push({ campo: "fecha", texto: "La fecha no puede ser futura." });
+  if (errores.length) return { ok: false, errores, doc: null };
+  return { ok: true, errores: [], doc: { texto: t, tipo: TIPO_NOTA[datos.tipo] ? datos.tipo : "nota", fecha } };
+}
+// Las notas de un libro, la más nueva primero.
+function notasDe(libro) {
+  const n = libro && libro.notas;
+  if (!n || typeof n !== "object") return [];
+  return Object.keys(n).map(id => Object.assign({ id }, n[id]))
+    .filter(x => x && typeof x.texto === "string" && x.texto.trim() && fechaOk(x.fecha))
+    .map(x => Object.assign(x, { tipo: TIPO_NOTA[x.tipo] ? x.tipo : "nota" }))
+    .sort((a, b) => b.fecha.localeCompare(a.fecha) || (b.creado || 0) - (a.creado || 0) || b.id.localeCompare(a.id));
 }
 
 // ---- Frases ----
@@ -360,7 +407,7 @@ function exportarJson(libros, frases, ahora, portadas) {
 }
 
 return {
-  ESTADOS, ESTADO, FORMATOS, FORMATO, DURACION_MAX, leerDuracion, duracionTexto, ORDENES, GENEROS, GENERO, normalizar, fechaOk, fechaLarga, estrellas,
+  ESTADOS, ESTADO, FORMATOS, FORMATO, DURACION_MAX, leerDuracion, duracionTexto, PRIORIDADES, TIPOS_NOTA, TIPO_NOTA, validarNota, notasDe, ORDENES, GENEROS, GENERO, normalizar, fechaOk, fechaLarga, estrellas,
   validarLibro, normalizarLibro, ordenar, filtrar, resumen, colorTapa,
   validarFrase, normalizarFrase, ordenarFrases, filtrarFrases, frasesDe, exportarJson,
   urlBusqueda, leerBusqueda, urlBuscarLibro, esIsbn, leerLibros, generoDesdeTemas, duplicado, urlPortadaOL, portadaUrlOk, medidasFoto, CALIDADES, LIMITE_FOTO, fotoOk, kb, portadaParaGuardar

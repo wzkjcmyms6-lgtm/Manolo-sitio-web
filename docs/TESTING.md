@@ -1,6 +1,8 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-15 (Libros fase 5a, D-108): `npm test` → **557 pruebas**. Nueva:
+  `libros-siguiente` ("¿Qué leo después?"). E2E `SOLO=siguiente`.
 - 2026-11-15 (Libros fase 4, D-107): `npm test` → **552 pruebas**.
   Nueva: `libros-sesiones` (cronómetro, cerrar, velocidad, tiempo que
   falta, minutos por día); más casos en `libros-progreso` (audiolibro,
@@ -264,6 +266,13 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] Medir tiempos › Promedios › "Por día": siete barras de lunes a
   domingo. Toca "Lu": la tabla dice cuánto tardas en promedio cada lunes.
   Con ‹ › pasas de día.
+
+**Libros: ¿Qué leo después?, sagas y notas (2026-11)**
+- [ ] Libros: debajo de "Sigue leyendo", "¿Qué leo después?" con 3 libros y
+  su razón. "Ver los…": pon uno en Alta y míralo subir; "Empezar" otro.
+- [ ] Edita un libro: saga y número (por ejemplo Harry Potter, 2).
+- [ ] En un libro, "＋ Nota" › "Aplicar" › escribe y guarda; tócala para
+  editarla.
 
 **Libros: Leer ahora, Abandonado, releer y audiolibros (2026-11)**
 - [ ] Libros › "Sigue leyendo" › "▶ Leer ahora": corre el reloj. Bloquea el

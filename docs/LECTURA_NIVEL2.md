@@ -208,3 +208,17 @@ Nada de lo guardado se reescribe; lo viejo sin estos campos se ve igual.
   pantalla encendida, guardar, velocidad, dejar y retomar, releer,
   audiolibro, descartar; a 390, 1280 y 320 px).
 
+## Fase 5: Libros, por partes
+
+### 5a. "¿Qué leo después?", sagas, prioridad y notas (D-108)
+- **Archivos**: `js/libros-siguiente.js` (UMD: `siguientes`,
+  `ritmoDiario`), `js/libros-siguiente-ui.js` (sección y lista completa),
+  `js/libros-notas.js` (notas en la ficha y su hoja). En
+  `js/libros-motor.js`: `PRIORIDADES`, `TIPOS_NOTA`, `validarNota`,
+  `notasDe` y saga/prioridad en `validarLibro`.
+- `window.LibrosDatos` suma `lista`, `metaAnio` y `tapa` (la portada de
+  siempre). La sección se repinta con `libros:datos`.
+- **Pruebas**: `tests/libros-siguiente.test.js` (prioridad, saga, géneros,
+  largo, reto, tiempo en la lista) y `SOLO=siguiente node
+  scripts/e2e/lectura.js` (orden y razones, prioridad, Empezar, saga, notas;
+  a 390, 1280 y 320 px).
