@@ -15,7 +15,7 @@ desde D-102. Cada fase deja la app funcionando y publicada.
 | 2 | Biblia: anotar desde el lector y texto automático, resaltados, notas, favoritos, búsqueda y compartir | ✅ |
 | 3 | Biblia: planes, progreso de capítulos, memorización, temas y racha nueva | ✅ |
 | 4 | Libros: "Leer ahora", velocidad y estimaciones, estados y formatos nuevos | ✅ |
-| 5 | Libros: escanear ISBN, importar, frases (repaso, etiquetas, compartir), notas, "¿Qué leo después?" y estadísticas | |
+| 5 | Libros: escanear ISBN, importar, frases (repaso, etiquetas, compartir), notas, "¿Qué leo después?" y estadísticas | ✅ |
 | 6 | Medir tiempos: definitiva, actividades editables, cronómetro, "Mi mañana" y llenado automático | |
 | 7 | Medir tiempos: plan de la mañana, estadísticas, línea base y experimentos; "Mi día" y Hábitos | |
 | 8 | QA final, docs y lista para el iPhone | |
@@ -263,3 +263,19 @@ Nada de lo guardado se reescribe; lo viejo sin estos campos se ve igual.
   390, 1280 y 320 px).
 - **Pendiente de probar en el iPhone de verdad**: la foto debería ser
   confiable; la cámara en vivo depende de que el iPhone enfoque de cerca.
+
+### 5e. Estadísticas nuevas y "Tu año en libros" (D-112)
+- **Archivos**: `js/libros-estadisticas.js` (UMD: `porDia`, `nivel`,
+  `delDia`, `calendario`, `tiempo`, `velocidad`, `autores`, `generos`,
+  `anio`, `anioParaMostrar`, `aniosConLibros`, `duracion`) y
+  `js/libros-estadisticas-ui.js` (secciones de Estadísticas, tarjeta
+  `#lib-anio`, hoja `lanio-hoja` e imagen para compartir). En `libros.js`:
+  los huecos `data-lest`, `#lib-anio` y `LibrosDatos.grafico`/`ver`.
+- **Pruebas**: `tests/libros-estadisticas.test.js` (días con páginas, % y
+  minutos; niveles; calendario; tiempo y estimado; velocidad y tendencia;
+  autores con releídos; el año completo; cuándo aparece) y `SOLO=stats node
+  scripts/e2e/lectura.js` (calendario y ‹ ›, tocar un día y una barra,
+  tiempo, velocidad, autores, la hoja del año y ‹ 2025, compartir, tocar una
+  tapa, la tarjeta el 20 de diciembre y el 10 de enero y no en febrero; a
+  390, 1280 y 320 px).
+- **Fase 5 completa** (5a a 5e).

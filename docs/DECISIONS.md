@@ -1354,3 +1354,33 @@ escrito. El ISBN buscado (escrito o escaneado) se guarda en el libro
 aunque Open Library no lo tenga: campo `isbn` (aditivo, el mismo de la
 fase 5c); vacío no borra el que había. Un código que no es de libro lo
 dice («no es de un libro»).
+
+**D-112 (2026-11-15) · Libros fase 5e: estadísticas nuevas y "Tu año en
+libros".** (1) Lógica nueva en `js/libros-estadisticas.js` (UMD); la
+pantalla, en `js/libros-estadisticas-ui.js`, que llena huecos que deja
+`renderStats()` (`data-lest="…"`) y usa los mismos gráficos de barras
+(`LibrosDatos.grafico`, tocar una barra dice su valor). (2) Un día cuenta
+como leído si anotaste páginas, % de un audiolibro o una sesión de «Leer
+ahora». Calendario por mes (lunes a domingo, ‹ › hasta el mes de hoy):
+cinco tonos según tu meta de páginas (algo, la mitad, la meta, el doble);
+los minutos se comparan con lo que te lleva la meta a tu velocidad (30 min
+si todavía no se sabe); tocar un día dice qué libros y cuánto. Elegimos
+calendario por mes y no el "mapa del año" de 53 columnas porque en el
+iPhone cada día quedaría de 5 px, imposible de tocar. (3) Tiempo leyendo:
+solo lo medido con «Leer ahora» (año, mes, promedio por sesión, minutos
+por semana de las últimas 12, la sesión más larga); lo anotado sin
+cronómetro se muestra aparte como estimado con tu velocidad. (4)
+Velocidad: páginas por hora de cada mes (con 10 minutos o más) y la
+tendencia: los últimos 3 meses contra los 3 anteriores, con 30 minutos o
+más en cada lado (±5 % = "se mantiene"). (5) Autores (y géneros): libros
+distintos terminados; un releído cuenta una vez, con las páginas de las
+dos lecturas. (6) "Tu año en libros": tarjeta arriba de Libros del 15 de
+diciembre al 31 de enero (el año que se cierra) y botón en Estadísticas
+(cualquier año con libros, ‹ ›): terminados, páginas, tiempo, días con
+lectura, mejor racha, comparación con el año anterior, las tapas, tus 5
+estrellas (el releído una vez), el más largo, el más rápido, mejor mes
+(con 2 libros o más), género, autor del año (2 libros distintos o más),
+audiolibros, relecturas, frases y la frase del año (tu favorita más
+reciente). Se comparte como imagen JPEG de 1080 × 1350 (sin emojis en la
+imagen: no todos los teléfonos los dibujan igual en un lienzo). Nada nuevo
+se guarda: todo sale de los datos que ya había.

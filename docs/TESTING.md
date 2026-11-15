@@ -1,6 +1,9 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-15 (Libros fase 5e, D-112): `npm test` → **584 pruebas**. Nueva:
+  `libros-estadisticas` (calendario, tiempo, velocidad, autores, el año).
+  E2E `SOLO=stats`. Con esto, la fase 5 de Libros está completa.
 - 2026-11-15 (Libros fase 5d, D-111): `npm test` → **577 pruebas**. Nueva:
   `libros-isbn` (códigos de barras dibujados: borrosos, con ruido, girados,
   de costado; y que no invente). E2E `SOLO=isbn`.
@@ -274,6 +277,13 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] Medir tiempos › Promedios › "Por día": siete barras de lunes a
   domingo. Toca "Lu": la tabla dice cuánto tardas en promedio cada lunes.
   Con ‹ › pasas de día.
+
+**Libros: estadísticas y «Tu año en libros» (2026-11)**
+- [ ] Libros › Estadísticas: mira el calendario del mes; toca un día en
+  color y lee qué leíste. Toca ‹ para ver el mes pasado.
+- [ ] Más abajo: «Tiempo leyendo» y «Velocidad» (si usaste «Leer ahora»).
+- [ ] Toca «🎉 Tu año en libros 2026» › «Compartir como imagen»: elige
+  WhatsApp o «Guardar imagen».
 
 **Libros: escanear el código de barras (2026-11)**
 - [ ] Libros › «Agregar libro» › «📷 Escanear el código de barras» ›

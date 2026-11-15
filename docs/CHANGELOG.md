@@ -1,5 +1,16 @@
 # Cambios
 
+## 2026-11-15 · Libros: estadísticas nuevas y «Tu año en libros»
+- Estadísticas › calendario del mes con los días que leíste (más fuerte el
+  color cuanto más leíste); toca un día para ver qué leíste.
+- Tiempo leyendo (con «Leer ahora»), velocidad en páginas por hora y si vas
+  más rápido o más lento que hace unos meses, y tus autores.
+- «Tu año en libros»: tus números del año, tus libros, lo mejor y tu frase
+  del año, para compartir como imagen. Aparece arriba de Libros del 15 de
+  diciembre al 31 de enero.
+- Pruebas: `tests/libros-estadisticas.test.js` y `scripts/e2e/lectura.js`
+  (`SOLO=stats`).
+
 ## 2026-11-15 · Libros: escanear el código de barras
 - Al agregar un libro, «📷 Escanear el código de barras»: sacas una foto
   del código de la contratapa (o eliges una, o usas la cámara en vivo) y

@@ -49,6 +49,7 @@ const fallo = (que) => err => alert(`No se pudo ${que}: ${err && err.message ? e
 // ---------- Estructura fija (el buscador no se repinta al escribir) ----------
 app.innerHTML = `
   <div class="lib-resumen" id="lib-resumen"></div>
+  <div id="lib-anio"></div>
   <div id="lib-leyendo"></div>
   <div id="lib-repaso"></div>
   <div id="lib-siguiente"></div>
@@ -324,11 +325,15 @@ function renderStats() {
       ${cifra("Días leyendo", e.diasLeyendoAnio, `en ${e.anio}`)}
       ${cifra("Calificación", e.calificacionMedia ? `${String(e.calificacionMedia).replace(".", ",")} ★` : "—", "promedio")}
     </div>
+    <div data-lest="anio"></div>
     <section class="lib-graf">
       <h3>Páginas por día</h3>
       <p class="lib-nota">Últimos 30 días. La línea es tu meta de ${metaDia()}.</p>
       ${graficoBarras("dias", dias, { titulo: "Páginas leídas por día, últimos 30 días", meta: metaDia(), etiquetas: i => i === 0 || i === 14 || i === 29, columna: "Día", unidad: graficos.dias.unidad })}
     </section>
+    <div data-lest="calendario"></div>
+    <div data-lest="tiempo"></div>
+    <div data-lest="velocidad"></div>
     <section class="lib-graf">
       <h3>Libros terminados por mes</h3>
       <p class="lib-nota">${e.anio}</p>
@@ -341,11 +346,14 @@ function renderStats() {
         <div class="lib-genero-fila"><span>${esc(L.GENERO[g.nombre] ? L.GENERO[g.nombre].nombre : g.nombre)}</span><span class="lib-barra" aria-hidden="true"><i style="width:${Math.round((g.n / maxGen) * 100)}%"></i></span><b>${g.n}</b></div>`).join("")}
       </div>
     </section>` : ""}
+    <div data-lest="autores"></div>
     <ul class="lib-curiosos">
       ${e.autorTop ? `<li>Tu autor más leído: <b>${esc(e.autorTop.nombre)}</b> (${e.autorTop.n} libros).</li>` : ""}
       ${e.diasPorLibro ? `<li>Tardas en promedio <b>${e.diasPorLibro} ${e.diasPorLibro === 1 ? "día" : "días"}</b> en leer un libro.</li>` : ""}
       ${e.masLargo ? `<li>El más largo que terminaste: <b>${esc(e.masLargo.titulo)}</b> (${nf(e.masLargo.paginas)} páginas).</li>` : ""}
     </ul>`;
+  // Fase 5e (D-112): calendario, tiempo, velocidad, autores y el año.
+  if (window.LibrosEstadisticasUI) LibrosEstadisticasUI.pintar(el);
 }
 function leerBarra(g) {
   const id = g.dataset.graf, i = Number(g.dataset.grafI), gr = graficos[id];
@@ -1035,6 +1043,9 @@ window.LibrosDatos = {
   listo: () => cargados >= 2,
   metaDia, metaAnio,
   tapa: l => tapa(l),
+  ver: id => ver(id),
+  // Un gráfico de barras como los de Estadísticas (tocar una barra dice su valor).
+  grafico: (id, datos, o) => { graficos[id] = { datos, unidad: o.unidad }; return graficoBarras(id, datos, o); },
   festejo: id => { const l = libros.find(x => x.id === id); if (l) festejo(Object.assign({}, l)); }
 };
 window.addEventListener("libros:sesion", () => {

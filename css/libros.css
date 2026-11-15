@@ -506,3 +506,70 @@ input[type="date"].lib-input { -webkit-appearance: none; appearance: none; }
 .lesc-estado[hidden] { display: none; }
 .lesc-estado.is-error { color: var(--danger); }
 .lesc-estado.is-ok { color: #7fe0a6; font-weight: 700; }
+
+/* ---------- Estadísticas nuevas y "Tu año en libros" (fase 5e, D-112) ---------- */
+.lest-sub { margin: 0.8rem 0 0.2rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+.lest-cifras { margin: 0.4rem 0 0; }
+.lest-vel { margin: 0.3rem 0 0.2rem; font-size: 0.95rem; }
+.lest-vel b { font-size: 2rem; font-variant-numeric: tabular-nums; margin-right: 0.25rem; }
+.lest-tend { margin: 0 0 0.3rem; font-size: 0.88rem; line-height: 1.4; color: var(--muted); }
+.lest-tend.is-sube { color: #7fe0a6; }
+.lest-tend.is-baja { color: #ffb37a; }
+.lest-nav {
+  min-width: 44px; min-height: 44px; border-radius: 999px; border: 1px solid var(--border); background: transparent;
+  color: var(--ink); font: inherit; font-size: 1.3rem; line-height: 1; cursor: pointer; touch-action: manipulation;
+}
+.lest-nav:disabled { opacity: 0.3; cursor: default; }
+.lest-cal-cab { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.lest-cal-cab h3 { text-align: center; flex: 1; min-width: 0; }
+.lest-cal .lib-nota { text-align: center; }
+.lest-semana, .lest-grilla { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.lest-semana { margin: 0.3rem 0 0.2rem; }
+.lest-semana span { text-align: center; color: var(--muted); font-size: 0.72rem; font-weight: 600; }
+.lest-dia {
+  aspect-ratio: 1; min-height: 36px; max-height: 56px; width: 100%; padding: 0; border-radius: 10px; border: 1px solid transparent;
+  background: var(--surface-raised); color: var(--ink); font: inherit; font-size: 0.82rem; font-weight: 600; font-variant-numeric: tabular-nums;
+  cursor: pointer; touch-action: manipulation;
+}
+.lest-dia.is-vacio { background: none; cursor: default; }
+.lest-dia:disabled { opacity: 0.35; cursor: default; }
+.lest-dia.n1, .lest-leyenda .n1 { background: rgba(217, 115, 46, 0.3); }
+.lest-dia.n2, .lest-leyenda .n2 { background: rgba(217, 115, 46, 0.55); }
+.lest-dia.n3, .lest-leyenda .n3 { background: #d9732e; color: #0a0a0a; }
+.lest-dia.n4, .lest-leyenda .n4 { background: #ffb347; color: #0a0a0a; }
+.lest-dia.is-hoy { border-color: var(--ink); }
+.lest-dia.is-elegido { box-shadow: 0 0 0 2px var(--accent-2, #ffb347); }
+.lest-leyenda { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px; margin-top: 0.55rem; color: var(--muted); font-size: 0.72rem; }
+.lest-leyenda i { width: 14px; height: 14px; border-radius: 4px; background: var(--surface-raised); }
+.lest-leyenda span:first-child { margin-right: 2px; }
+.lest-leyenda span:last-child { margin-left: 2px; }
+.lanio-boton, .lanio-tarjeta {
+  display: flex; align-items: center; gap: 0.7rem; width: 100%; margin-bottom: 0.9rem; padding: 0.85rem 1rem; border-radius: 16px;
+  border: 1px solid rgba(255, 154, 77, 0.45); background: linear-gradient(135deg, rgba(255, 122, 61, 0.18), rgba(255, 179, 71, 0.08));
+  color: var(--ink); font: inherit; text-align: left; cursor: pointer; touch-action: manipulation;
+}
+.lanio-boton b { flex: 1; font-size: 0.98rem; }
+.lanio-emoji { font-size: 1.6rem; }
+.lanio-txt { display: flex; flex-direction: column; gap: 0.15rem; flex: 1; min-width: 0; }
+.lanio-txt b { font-size: 1rem; }
+.lanio-txt small { color: var(--muted); font-size: 0.82rem; line-height: 1.35; }
+.lanio-ir { color: var(--muted); font-size: 1.4rem; }
+.lanio { display: flex; flex-direction: column; gap: 0.8rem; }
+.lanio p { margin: 0; }
+.lanio-nav { display: flex; align-items: center; justify-content: center; gap: 1.2rem; }
+.lanio-nav b, .lanio-anio { font-size: 1.5rem; font-weight: 800; text-align: center; }
+.lanio-hero { text-align: center; font-size: 1.05rem; color: var(--muted); }
+.lanio-hero b { display: block; font-size: 3.6rem; line-height: 1; color: #ff9a4d; font-variant-numeric: tabular-nums; }
+.lanio-cifras { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+.lanio-cifras > div { display: flex; flex-direction: column; gap: 0.1rem; padding: 0.7rem; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); min-width: 0; }
+.lanio-cifras b { font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+.lanio-cifras span { color: var(--muted); font-size: 0.78rem; line-height: 1.3; }
+.lanio-comp { text-align: center; font-weight: 600; }
+.lanio-h { margin: 0.3rem 0 0; font-size: 0.95rem; }
+.lanio-tapas { display: grid; grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: 0.55rem; }
+.lanio-tapa { padding: 0; border: none; background: none; cursor: pointer; min-width: 0; }
+.lanio-tapa .lib-portada { margin: 0; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45); }
+.lanio-lista { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.45rem; font-size: 0.9rem; line-height: 1.4; }
+.lanio-lista li { display: flex; gap: 0.5rem; }
+.lanio-frase { margin: 0; padding: 0.8rem 1rem; border-left: 3px solid #ff9a4d; border-radius: 0 12px 12px 0; background: var(--surface); font-style: italic; line-height: 1.45; }
+.lanio-frase cite { display: block; margin-top: 0.35rem; color: var(--muted); font-size: 0.82rem; font-style: normal; }

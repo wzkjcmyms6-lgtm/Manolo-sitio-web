@@ -26,6 +26,8 @@ vuelve (la navegación es por `#hash`). No muestran el versículo de arriba
 | `js/libros.js` | Pantalla de Libros. Registra su ícono (`ICONS.libro`) |
 | `js/libros-isbn.js` | UMD sin DOM: lee el código de barras (EAN-13) de una foto. Se carga al tocar Escanear. Pruebas: `tests/libros-isbn.test.js` |
 | `js/libros-escaner.js` | Hoja de escanear: foto, elegir foto o cámara en vivo |
+| `js/libros-estadisticas.js` | UMD sin DOM: días leídos, calendario, tiempo, velocidad y tendencia, autores, "Tu año en libros". Pruebas: `tests/libros-estadisticas.test.js` |
+| `js/libros-estadisticas-ui.js` | Secciones nuevas de Estadísticas, tarjeta y hoja de "Tu año en libros", imagen para compartir |
 | `css/libros.css` | Estilos propios (solo `.lib-` y `.bib-`) |
 | `scripts/e2e/lectura.js` | Prueba de pantalla de las dos secciones (95 comprobaciones; Open Library simulado) |
 
@@ -84,6 +86,24 @@ espacian si lo sabes (primeras letras, ocultar palabras o escribirlo).
 **Temas** en tus versículos, con filtro. La racha cuenta también los días
 con capítulos leídos. ⚙ Ajustes: el versículo de arriba también de tus
 favoritos. Detalle en `docs/LECTURA_NIVEL2.md`.
+
+## Estadísticas y "Tu año en libros" (2026-11-15, D-112)
+
+En **Estadísticas**, además de lo de antes:
+- **Calendario** del mes: cada día que leíste se pinta, más fuerte cuanto
+  más cerca (o más allá) de tu meta de páginas. ‹ › cambia de mes; tocar un
+  día dice qué leíste.
+- **Tiempo leyendo** (lo que mides con «Leer ahora»): el año, el mes, el
+  promedio por sesión y los minutos de cada semana.
+- **Velocidad**: páginas por hora, cada mes, y si vas más rápido o más
+  lento que hace unos meses.
+- **Tus autores**: los que más leíste.
+
+**Tu año en libros**: del 15 de diciembre al 31 de enero aparece arriba de
+Libros (y siempre, con un botón en Estadísticas): cuántos libros, páginas,
+tiempo y días leíste, tus libros del año, lo mejor (5 estrellas, el más
+largo, el más rápido, tu mejor mes, tu autor) y tu frase del año. «Compartir
+como imagen» arma una imagen para mandar por WhatsApp o guardar.
 
 ## Escanear el código de barras (2026-11-15, D-111)
 

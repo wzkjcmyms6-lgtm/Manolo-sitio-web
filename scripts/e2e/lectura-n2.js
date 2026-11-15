@@ -1289,4 +1289,107 @@ async function librosEscaner(browser, base, ancho, captura) {
   await p.context().close();
 }
 
-module.exports = { bibliaLector, bibliaMarcas, bibliaPlanes, bibliaMemoria, librosSesion, librosSiguiente, librosFrases, librosImportar, librosEscaner, txt, visible, sinDesborde, metaDe, consola, deslizar, HOY, FECHA, ZONA };
+// ---------- Fase 5e: estadísticas nuevas y "Tu año en libros" ----------
+// La semilla de siempre + sesiones de "Leer ahora" (julio, septiembre, octubre y noviembre).
+function semillaStats(hoy) {
+  const e = SEM.estado(hoy), L = e.__SEED__["users/test/libros"];
+  const s = (fecha, min, desde, hasta) => ({ fecha, min, desde, hasta, unidad: "pag", ini: Date.parse(`${fecha}T07:00:00-04:00`) });
+  L.l1.sesiones = { a: s("2026-10-28", 25, 60, 70), b: s("2026-11-03", 30, 100, 112), c: s("2026-11-05", 40, 120, 135) };
+  L.l5.sesiones = { a: s("2026-09-12", 60, 0, 40), b: s("2026-09-20", 90, 40, 100) };
+  L.l3.sesiones = { a: s("2026-07-15", 60, 0, 30), b: s("2026-07-25", 60, 30, 60) };
+  // Un libro de 2025 para pasar de año en la hoja.
+  L.l11 = { v: 1, titulo: "Rayuela", autor: "Julio Cortázar", paginas: 600, estado: "terminado", genero: "novela", calificacion: 4, fechaRegistro: "2025-10-01", fechaInicio: "2025-10-02", fechaFin: "2025-11-20", creado: Date.parse("2025-10-01T08:00:00Z") };
+  return e;
+}
+async function librosEstadisticas(browser, base, ancho, captura) {
+  console.log(`\nLibros: estadísticas nuevas y «Tu año en libros» (${ancho} px)`);
+  const alto = ancho > 800 ? 900 : 844;
+  const p = await abrir(browser, base, semillaStats(HOY), { hash: "#libros", zona: ZONA, fecha: FECHA, ancho, alto });
+  consola(p);
+  await p.evaluate(() => {
+    window.__compartido = [];
+    navigator.canShare = () => true;
+    navigator.share = async d => { window.__compartido.push(`${d.files[0].name}:${d.files[0].type}:${d.files[0].size > 20000}`); };
+  });
+  await p.waitForTimeout(900);
+  ok((await txt(p, "#lib-anio")) === "", "en noviembre no aparece la tarjeta del año");
+  await p.click('[data-lib-vista="stats"]');
+  await p.waitForTimeout(400);
+
+  // Calendario
+  ok((await txt(p, ".lest-cal h3")) === "Noviembre 2026", "calendario del mes, con su nombre");
+  ok(/Leíste 4 de 6 días/.test(await txt(p, ".lest-cal .lib-nota")), `«Leíste 4 de 6 días…» (${await txt(p, ".lest-cal .lib-nota")})`);
+  const celdas = await p.$$eval(".lest-grilla .lest-dia", els => els.map(b => [b.dataset.lestDia || "", b.className, b.disabled]));
+  const de = f => celdas.find(c => c[0] === f) || ["", "", null];
+  ok(celdas.length === 42 && celdas.slice(0, 6).every(c => /is-vacio/.test(c[1])), "semanas de lunes a domingo (el 1 es domingo)");
+  ok(/n[1-4]/.test(de("2026-11-05")[1]) && /is-hoy/.test(de("2026-11-06")[1]) && de("2026-11-07")[2] === true && /n0/.test(de("2026-11-02")[1]),
+    "los días leídos se pintan; hoy marcado; lo que viene, apagado");
+  await p.click('[data-lest-dia="2026-11-05"]');
+  const dia = await txt(p, "[data-lest-dia-txt]");
+  ok(/^Jueves 5 de noviembre: .*Hábitos atómicos \(.*40 min\)/.test(dia), `tocar un día dice qué leíste (${dia})`);
+  await p.click('.lest-cal [aria-label="Mes anterior"]');
+  await p.waitForTimeout(150);
+  ok((await txt(p, ".lest-cal h3")) === "Octubre 2026" && /Leíste \d+ de 31 días/.test(await txt(p, ".lest-cal .lib-nota")), "‹ va al mes anterior");
+  await p.click('.lest-cal [aria-label="Mes siguiente"]');
+  await p.waitForTimeout(150);
+  ok((await txt(p, ".lest-cal h3")) === "Noviembre 2026" && await p.$eval('.lest-cal [aria-label="Mes siguiente"]', b => b.disabled), "› vuelve; no pasa del mes de hoy");
+
+  // Tiempo, velocidad y autores
+  const tiempo = await txt(p, '[data-lest="tiempo"]');
+  ok(/Tiempo leyendo/.test(tiempo) && /En 2026\s*6 h 5 min/.test(tiempo) && /Este mes\s*1 h 10 min/.test(tiempo), `tiempo leyendo: el año y el mes (${tiempo.slice(0, 120)})`);
+  ok(/Tu sesión más larga: 1 h 30 min con «Mero cristianismo»/.test(tiempo), "y la sesión más larga");
+  await p.click('[data-graf="lest-semanas"][data-graf-i="11"]');
+  ok(/^Semana del 2 de noviembre: 70 minutos$/.test(await txt(p, '[data-graf-lectura="lest-semanas"]')), "tocar una barra: los minutos de esa semana");
+  const vel = await txt(p, '[data-lest="velocidad"]');
+  ok(/\d+ páginas por hora/.test(vel) && /más rápido que hace unos meses|más lento|se mantiene/.test(vel), `velocidad y su tendencia (${vel.slice(0, 140)})`);
+  const autores = await p.$$eval('[data-lest="autores"] .lib-genero-fila span:first-child', els => els.map(e => e.textContent));
+  ok(autores.length === 5 && autores.includes("Gabriel García Márquez"), `tus autores (${autores.join(", ")})`);
+  ok(await sinDesborde(p), "no se mueve de lado");
+  await captura(p, `libros-stats-nuevas-${ancho}.png`);
+
+  // Tu año en libros
+  await p.click('[data-lest="anio"] [data-lanio-abrir="2026"]');
+  await p.waitForTimeout(400);
+  ok(/Tu año en libros/.test(await txt(p, ".lanio-hoja h3")) && /^5 libros terminados$/.test(await txt(p, ".lanio-hoja .lanio-hero")), "la hoja del año: 5 libros terminados");
+  ok((await p.$$(".lanio-hoja .lanio-tapa")).length === 5 && /Tus 5 estrellas: «Cien años de soledad», «Mero cristianismo»/.test(await txt(p, ".lanio-hoja .lanio-lista")), "las tapas del año y lo mejor");
+  ok(/libros? más que en 2025|fueron|Igual que/.test(await txt(p, ".lanio-hoja .lanio-comp")), "compara con el año anterior");
+  await captura(p, `libros-anio-${ancho}.png`);
+  await p.click('.lanio-hoja [aria-label="Año anterior"]');
+  await p.waitForTimeout(250);
+  ok(/^1 libro terminado$/.test(await txt(p, ".lanio-hoja .lanio-hero")) && (await txt(p, ".lanio-hoja .lanio-nav b")) === "2025", "‹ pasa a 2025");
+  await p.click('.lanio-hoja [aria-label="Año siguiente"]');
+  await p.waitForTimeout(250);
+  await p.click(".lanio-hoja [data-lanio-compartir]");
+  let compartido = [];
+  for (let i = 0; i < 40 && !compartido.length; i++) { await p.waitForTimeout(200); compartido = await p.evaluate(() => window.__compartido); }
+  ok(compartido[0] === "mi-anio-en-libros-2026.jpg:image/jpeg:true", `se comparte como imagen (${compartido[0]})`);
+  await p.click('.lanio-hoja [data-lanio-ver="l3"]');
+  await p.waitForTimeout(400);
+  ok(!(await visible(p, ".lanio-hoja .budget-sheet-panel")) && /Cien años de soledad/.test(await txt(p, ".lib-hoja h3")), "tocar una tapa abre el libro");
+  if (ancho < 800) {
+    await p.click(".lib-hoja .budget-sheet-close");
+    await p.waitForTimeout(300);
+    await p.setViewportSize({ width: 320, height: 640 });
+    await p.waitForTimeout(200);
+    ok(await sinDesborde(p), "entra en 320 px");
+  }
+  ok(!p.errores.length && !p.consola.length, "sin errores" + (p.consola.length ? `: ${p.consola.join(" | ")}` : ""));
+  await p.context().close();
+
+  // Del 15 de diciembre al 31 de enero, la tarjeta arriba de Libros.
+  for (const [fecha, se] of [["2026-12-20T09:00:00-04:00", true], ["2027-01-10T09:00:00-04:00", true], ["2027-02-03T09:00:00-04:00", false]]) {
+    const q = await abrir(browser, base, semillaStats(HOY), { hash: "#libros", zona: ZONA, fecha, ancho, alto });
+    await q.waitForTimeout(900);
+    const t = await txt(q, "#lib-anio");
+    ok(se ? /Tu año en libros 2026/.test(t) && /5 libros/.test(t) : t === "", `${fecha.slice(0, 10)}: ${se ? "tarjeta «Tu año en libros 2026»" : "sin tarjeta"}`);
+    if (se && fecha.startsWith("2026-12")) {
+      await captura(q, `libros-anio-tarjeta-${ancho}.png`);
+      await q.click("#lib-anio .lanio-tarjeta");
+      await q.waitForTimeout(400);
+      ok(/^5 libros terminados$/.test(await txt(q, ".lanio-hoja .lanio-hero")), "la tarjeta abre la hoja del año");
+    }
+    await q.context().close();
+  }
+}
+
+module.exports = { bibliaLector, bibliaMarcas, bibliaPlanes, bibliaMemoria, librosSesion, librosSiguiente, librosFrases, librosImportar, librosEscaner, librosEstadisticas, txt, visible, sinDesborde, metaDe, consola, deslizar, HOY, FECHA, ZONA };
