@@ -70,6 +70,8 @@ function aCent(v) {
   return n < MAX.monto ? Math.round(n * 100) : NaN;
 }
 
+// Miniatura de una foto: data URL de imagen en base64, y nada más (QA, D-119).
+const miniOk = m => typeof m === "string" && m.length <= 400000 && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(m);
 // Link de Google Maps (o cualquier https): solo http(s), sin espacios.
 function mapsOk(url) {
   const u = String(url || "").trim();
@@ -167,7 +169,7 @@ function normalizar(id, doc) {
     .map(k => { const v = d.visitas[k]; return { id: k, fecha: v.fecha, conQuien: texto(v.conQuien, MAX.conQuien), gastoCent: Number.isInteger(v.gastoCent) ? v.gastoCent : null, nota: texto(v.nota, MAX.notaVisita), creado: Number(v.creado) || 0 }; })
     .sort((a, b) => b.fecha.localeCompare(a.fecha) || b.creado - a.creado);
   const fotos = (Array.isArray(d.fotos) ? d.fotos : []).filter(f => f && typeof f.id === "string").slice(0, MAX.fotos)
-    .map(f => ({ id: f.id, mini: typeof f.mini === "string" && f.mini.startsWith("data:image/") ? f.mini : null, ancho: Number(f.ancho) || 0, alto: Number(f.alto) || 0 }));
+    .map(f => ({ id: f.id, mini: miniOk(f.mini) ? f.mini : null, ancho: Number(f.ancho) || 0, alto: Number(f.alto) || 0 }));
   const desglose = {};
   DESGLOSE.forEach(x => { desglose[x.id] = entero15(d.desglose && d.desglose[x.id]); });
   return {
@@ -275,7 +277,7 @@ function nuevoId(prefijo, ahora, azar) {
   return `${prefijo}${Number(ahora || Date.now()).toString(36)}${r}`;
 }
 
-return { TIPOS, TIPO, VOLVERIA, VOLV, DESGLOSE, ORDENES, MAX, aCent, mapsOk, etiquetasDe, sinTildes, fechaOk,
+return { TIPOS, TIPO, VOLVERIA, VOLV, DESGLOSE, ORDENES, MAX, aCent, mapsOk, miniOk, etiquetasDe, sinTildes, fechaOk,
   validarLugar, validarPlato, validarVisita, normalizar, resumenVisitas, favorito, precioTxt, bs, fechaCorta,
   coincide, filtrar, ordenar, zonas, sugerir, estadisticas, nuevoId };
 });

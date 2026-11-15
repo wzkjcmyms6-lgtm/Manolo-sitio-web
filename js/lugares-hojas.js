@@ -262,7 +262,7 @@ function abrirMas(form, abrir) {
 }
 function pintarFotos(form, st) {
   const caja = form.querySelector("[data-fotos]");
-  caja.innerHTML = st.fotos.map((f, i) => `<span class="lug-foto-mini">${f.mini ? `<img src="${f.mini}" alt="Foto ${i + 1}" width="64" height="64" loading="lazy" decoding="async">` : `<span aria-hidden="true">📷</span>`}
+  caja.innerHTML = st.fotos.map((f, i) => `<span class="lug-foto-mini">${f.mini ? `<img src="${esc(f.mini)}" alt="Foto ${i + 1}" width="64" height="64" loading="lazy" decoding="async">` : `<span aria-hidden="true">📷</span>`}
     <button type="button" class="lug-foto-quitar" data-quitar-foto="${esc(f.id)}" aria-label="Quitar la foto ${i + 1}">${icono("close")}</button></span>`).join("");
   caja.hidden = !st.fotos.length;
   pintar(caja);
@@ -403,8 +403,8 @@ function detalle(id, refresco) {
   const hoy = hoyLocal(), r = M.resumenVisitas(l), fav = M.favorito(l);
   const f0 = l.fotos[0];
   const fotos = l.fotos.length ? `<div class="lug-det-fotos">
-      <img class="lug-det-img" data-foto-grande="${esc(f0.id)}" src="${f0.mini || ""}" alt="Foto de ${esc(l.nombre)}" width="${f0.ancho || 1200}" height="${f0.alto || 900}" decoding="async">
-      ${l.fotos.length > 1 ? `<div class="lug-det-miniaturas">${l.fotos.map((f, i) => `<button type="button" class="lug-det-mini${i === 0 ? " is-sel" : ""}" data-ver-foto="${esc(f.id)}" aria-label="Ver la foto ${i + 1}" aria-pressed="${i === 0}">${f.mini ? `<img src="${f.mini}" alt="" width="56" height="56" loading="lazy" decoding="async">` : "📷"}</button>`).join("")}</div>` : ""}
+      <img class="lug-det-img" data-foto-grande="${esc(f0.id)}" src="${esc(f0.mini || "")}" alt="Foto de ${esc(l.nombre)}" width="${f0.ancho || 1200}" height="${f0.alto || 900}" decoding="async">
+      ${l.fotos.length > 1 ? `<div class="lug-det-miniaturas">${l.fotos.map((f, i) => `<button type="button" class="lug-det-mini${i === 0 ? " is-sel" : ""}" data-ver-foto="${esc(f.id)}" aria-label="Ver la foto ${i + 1}" aria-pressed="${i === 0}">${f.mini ? `<img src="${esc(f.mini)}" alt="" width="56" height="56" loading="lazy" decoding="async">` : "📷"}</button>`).join("")}</div>` : ""}
     </div>` : `<div class="lug-det-sinfoto" aria-hidden="true">${l.tipo ? M.TIPO[l.tipo].emoji : "📍"}</div>`;
   const estrellas = n => `<span class="lug-det-estrellas" role="img" aria-label="${n} de 5 estrellas">${"★".repeat(n)}<span class="is-vacia">${"★".repeat(5 - n)}</span></span>`;
   const desglose = M.DESGLOSE.filter(x => l.desglose[x.id]);

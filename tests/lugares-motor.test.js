@@ -7,6 +7,15 @@ const HOY = "2026-11-15";
 // Un lugar ya leído (normalizado) a partir de un documento.
 const lugar = (id, d) => L.normalizar(id, Object.assign({ v: 1, estado: "visitado", calificacion: 4, volveria: "si" }, d));
 
+test("miniaturas: solo imágenes de verdad (nada que se salga del HTML)", () => {
+  const ok = "data:image/jpeg;base64,/9j/4AAQSkZJRg==";
+  const l = L.normalizar("x", { v: 1, nombre: "A", estado: "visitado", calificacion: 4, volveria: "si",
+    fotos: [{ id: "f1", mini: ok }, { id: "f2", mini: 'data:image/png" onerror="alert(1)' }, { id: "f3", mini: "javascript:alert(1)" }, { id: "f4", mini: 5 }] });
+  assert.deepEqual(l.fotos.map(f => f.mini), [ok, null, null, null]);
+  assert.equal(L.miniOk(ok), true);
+  assert.equal(L.miniOk("data:image/svg+xml;base64,PHN2Zz4="), false, "sin SVG");
+});
+
 test("registrar en segundos: solo nombre, estrellas y ¿volverías?", () => {
   const r = L.validarLugar({ nombre: "  Pollos   Copacabana ", calificacion: "5", volveria: "si" });
   assert.equal(r.ok, true);

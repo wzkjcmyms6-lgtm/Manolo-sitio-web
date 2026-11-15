@@ -10,7 +10,11 @@ la fórmula del disponible tal cual). Decisiones desde D-116.
 | 1 | Finanzas: disponible por día según ingresos reales (`docs/FINANZAS.md`) | ✅ (D-116) |
 | 2 | Lugares: sección nueva para calificar sitios (`docs/LUGARES.md`) | ✅ (D-117) |
 | 3 | Copia de seguridad de todo Manolo (`docs/RESPALDO.md`) | ✅ (D-118) |
-| QA | Pruebas, 375 px, Lighthouse, sin internet, datos intactos | ⏳ |
+| QA | Pruebas, 375 px, Lighthouse, sin internet, datos intactos | ✅ (D-119) |
+
+**Plan terminado (2026-11-15).** Queda del dueño: hacer en el iPhone las
+listas «Copia de seguridad», «Lugares» y «Finanzas: disponible por día»
+de `docs/TESTING.md` y avisar qué falló.
 
 ## Libros, Biblia y Medir tiempos: siguiente nivel (pedido del dueño, 2026-11-06)
 Diseño, auditoría y bitácora en `docs/LECTURA_NIVEL2.md`; decisiones desde

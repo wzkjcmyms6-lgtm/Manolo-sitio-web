@@ -402,7 +402,7 @@ function guardarFotos(v, p, alGuardar) {
   // La miniatura de cada foto viene en el documento del lugar.
   const minis = {};
   const lugares = v.colecciones.lugares || {};
-  Object.keys(lugares).forEach(id => (Array.isArray(lugares[id].fotos) ? lugares[id].fotos : []).forEach(x => { if (x && x.id && typeof x.mini === "string") minis[x.id] = x.mini; }));
+  Object.keys(lugares).forEach(id => (Array.isArray(lugares[id].fotos) ? lugares[id].fotos : []).forEach(x => { if (x && x.id && window.LugaresMotor && window.LugaresMotor.miniOk(x.mini)) minis[x.id] = x.mini; }));
   const n = x => (Number.isFinite(x) && x > 0 ? Math.round(x) : 0);
   return p.fotosNuevas.reduce((prom, x) => prom.then(() => F.deDataUrl(x.datos)
     .then(blob => F.guardar({ id: x.id, lugarId: x.lugarId, blob, mini: minis[x.id] || null, ancho: n(x.ancho), alto: n(x.alto), creado: Date.now() }))

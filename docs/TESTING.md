@@ -1,6 +1,16 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-15 (QA final de Finanzas, Lugares y copia de seguridad, D-119):
+  `npm test` → **641 pruebas** en verde (las del disponible por día: 11 de
+  11; nueva en `lugares-motor`: miniaturas solo de imágenes de verdad). E2E nueva `scripts/e2e/sin-internet.js` (service worker de verdad,
+  modo avión) y más en `lugares` (zoom libre, títulos en orden) y
+  `respaldo` (guardar la copia no cambia datos, menú cerrado fuera del
+  foco); las 30 suites en verde. Lighthouse (Accesibilidad / Buenas
+  prácticas, 375 px): Inicio 100/100, hoja de la copia 100/100, Lugares
+  lista 100/100, detalle 100/100, nuevo lugar 97/100 (botón fijo
+  "Guardar" sobre dos chips; ver D-119), Finanzas 100/100 y "¿Cómo se
+  calcula?" 100/100.
 - 2026-11-15 (Copia de seguridad de todo, D-118): `npm test` → **640
   pruebas**. Nueva: `respaldo-motor` (armar la copia y las fechas, revisar
   el archivo, lo dañado, copias de una sección y el archivo de Lugares,
@@ -189,7 +199,7 @@ export NODE_PATH=/opt/node22/lib/node_modules   # donde está Playwright
 for f in fase1 regresion hojas sw-instala emojis scalping inversiones tarjetas movilidad \
   running run-importar run-detalle run-feed run-progreso run-inteligencia run-segmentos \
   run-compartir run-qa habitos mi-dia ej-calendario ejercicio libros-progreso lectura \
-  lectura-qa tiempos finanzas-diario lugares respaldo; do node scripts/e2e/$f.js || break; done
+  lectura-qa tiempos finanzas-diario lugares respaldo sin-internet; do node scripts/e2e/$f.js || break; done
 ```
 Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
 

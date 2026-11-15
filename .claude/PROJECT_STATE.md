@@ -1,8 +1,8 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-15 (Copia de seguridad de todo Manolo, D-118).
+Actualizado: 2026-11-15 (QA final de Finanzas, Lugares y copia de seguridad, D-119).
 
-- **Finanzas, Lugares y copia de seguridad (2026-11-15, en curso)**: Tarea
+- **Finanzas, Lugares y copia de seguridad (2026-11-15, terminado)**: Tarea
   1 hecha (D-116): el disponible por día sale de los ingresos registrados
   (no del presupuesto, que queda como meta), con estados, ⓘ y estado vacío;
   en Resumen, Presupuesto, Información y "Mi día" (`docs/FINANZAS.md`).
@@ -13,7 +13,8 @@ Actualizado: 2026-11-15 (Copia de seguridad de todo Manolo, D-118).
   todo** (Inicio abajo y menú ☰): un archivo con las 21 colecciones y las
   fotos de Lugares; restaurar revisa el archivo, guarda una copia
   automática y solo agrega lo que falta, con Deshacer (`docs/RESPALDO.md`).
-  Sigue el QA final.
+  QA final hecho (D-119): Lighthouse 97–100 / 100, prueba sin internet,
+  menú cerrado fuera del foco y zoom libre al escribir.
 
 - **App**: PWA estática + Firebase (Auth + Firestore), una sola página,
   JS puro sin build. Ver `docs/ARCHITECTURE.md`.

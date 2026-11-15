@@ -1549,3 +1549,30 @@ no se restauran. (6) Lotes de hasta 400 escrituras y 4 MB; si no hay
 respuesta en 20 s, lo escrito queda en el teléfono y Firestore lo sube
 solo; restaurar la misma copia otra vez completa lo que falte sin
 duplicar. Detalle en `docs/RESPALDO.md`.
+
+**D-119 (2026-11-15) · QA final de Finanzas, Lugares y la copia de
+seguridad.** (1) Lighthouse (Accesibilidad y Buenas prácticas, 375 px, con
+el Firebase de prueba) en Inicio, la hoja de la copia de seguridad,
+Lugares (lista, detalle y nuevo lugar) y Finanzas: 100 y 100 en todo,
+menos "Nuevo lugar" con Accesibilidad 97: avisa que dos botones de "Tipo"
+quedan debajo del botón fijo "Guardar" de la hoja; miden 44 px y se tocan
+al deslizar (el botón fijo es a propósito: la acción principal al alcance
+del pulgar). (2) Arreglos que salieron de esa revisión: el menú ☰
+cerrado del teléfono ya no recibe el foco (`visibility: hidden` al
+terminar de deslizarse); el zoom de la pantalla se fija solo al escribir
+en campos de letra menor a 16 px (con 16 px o más el iPhone no acerca, así
+que el zoom con dos dedos queda libre); Lugares tiene un título "Tus
+lugares" para el lector de pantalla, así los títulos van en orden. (3)
+Sin internet: prueba nueva `scripts/e2e/sin-internet.js` con el service
+worker de verdad (la app se guarda completa, también lo nuevo, y en modo
+avión abren Inicio, Lugares, la copia de seguridad y el disponible por
+día). (4) Datos de antes intactos: abrir las pantallas y guardar una copia
+no cambia ni un dato (comprobado en la prueba de la copia), y lo nuevo
+solo agrega (el disponible por día solo lee; Lugares es una colección
+nueva; restaurar nunca pisa). (5) Modo claro: la app es solo oscura (su
+identidad visual); no se agregó un modo claro solo en las pantallas
+nuevas, que usan las variables de `:root`, así un modo claro futuro sería
+cambiar esas variables en un solo lugar. (6) Revisión de código: las
+miniaturas de fotos de Lugares solo se aceptan si son una imagen en base64
+(`miniOk`: JPEG, PNG o WebP; sin SVG) y siempre se escapan al ponerlas en
+la pantalla; así un archivo de copia armado a mano no puede meter código.

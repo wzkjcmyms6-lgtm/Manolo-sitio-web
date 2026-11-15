@@ -106,6 +106,7 @@ app.innerHTML = `
     <span class="lug-buscar-ic" data-icon="search" aria-hidden="true"></span>
     <input type="search" class="lib-input" id="lug-q" placeholder="Nombre, plato o etiqueta" aria-label="Buscar lugares por nombre, plato o etiqueta" autocomplete="off" enterkeyhint="search">
   </label>
+  <h2 class="visually-hidden">Tus lugares</h2>
   <div class="fin-tabs lug-tabs" role="tablist" aria-label="Lugares">
     <button type="button" class="fin-tab" role="tab" id="lug-tab-visitado" data-lug-tab="visitado" aria-controls="lug-lista">Visitados</button>
     <button type="button" class="fin-tab" role="tab" id="lug-tab-quiero" data-lug-tab="quiero" aria-controls="lug-lista">Quiero ir</button>
@@ -154,7 +155,7 @@ function volvHTML(v) {
 }
 function fotoHTML(l, clase) {
   const f = l.fotos[0];
-  if (f && f.mini) return `<span class="${clase}"><img src="${f.mini}" alt="" width="64" height="64" loading="lazy" decoding="async"></span>`;
+  if (f && f.mini) return `<span class="${clase}"><img src="${esc(f.mini)}" alt="" width="64" height="64" loading="lazy" decoding="async"></span>`;
   return `<span class="${clase} is-icono" aria-hidden="true">${l.tipo ? M.TIPO[l.tipo].emoji : "📍"}</span>`;
 }
 function metaHTML(l) {

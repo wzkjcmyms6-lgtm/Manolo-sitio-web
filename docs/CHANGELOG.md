@@ -1,5 +1,15 @@
 # Cambios
 
+## 2026-11-15 · QA final (Finanzas, Lugares y copia de seguridad)
+- Accesibilidad: el menú ☰ cerrado ya no recibe el foco; mientras
+  escribes, el zoom con dos dedos sigue libre (salvo en campos de letra
+  chica); Lugares con títulos en orden para el lector de pantalla.
+- Lighthouse en las pantallas nuevas: 97–100 en Accesibilidad y 100 en
+  Buenas prácticas.
+- Prueba nueva sin internet (`scripts/e2e/sin-internet.js`).
+- Seguridad: las miniaturas de fotos de Lugares solo se aceptan si son
+  imágenes de verdad (también al restaurar una copia).
+
 ## 2026-11-15 · Copia de seguridad de todo Manolo
 - Inicio › "Copia de seguridad" (abajo) y el menú ☰: guarda en un archivo
   todo Manolo (hábitos, finanzas, inversiones, ejercicio, running, libros,

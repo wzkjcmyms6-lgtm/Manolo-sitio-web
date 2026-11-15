@@ -67,6 +67,9 @@ fotos (hasta 6), link de Google Maps, etiquetas y notas.
   localStorage. En la nube queda solo una miniatura de ~200 px de cada foto
   (unos 10 KB): si cambias de teléfono, ves la miniatura; la foto completa
   vive en el teléfono donde la sacaste y en tus copias de seguridad.
+- Una miniatura solo se acepta si es una imagen en base64 (JPEG, PNG o
+  WebP; `LugaresMotor.miniOk`) y siempre se escapa al mostrarla, también
+  si viene de una copia de seguridad (D-119).
 - Manolo pide al navegador que no borre tus datos (`navigator.storage.persist()`).
 - Las reglas de Firestore ya cubren `users/{uid}/**`: no hay que tocar la
   consola.

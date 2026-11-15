@@ -58,6 +58,9 @@ async function cerrarHoja(p, clase) {
   await p.waitForTimeout(400);
   ok(await abierta(p, ".lug-hoja-form") && /Nuevo lugar/.test(await txt(p, ".lug-hoja-form h3")), "＋ abre «Nuevo lugar» en una hoja de abajo");
   ok(await p.evaluate(() => document.activeElement && document.activeElement.name === "nombre"), "el cursor ya está en Nombre");
+  await p.waitForTimeout(100);
+  ok(await p.evaluate(() => !/maximum-scale/.test(document.querySelector('meta[name="viewport"]').content)), "escribiendo (letra de 16 px) el zoom con dos dedos sigue libre (QA, D-119)");
+  ok(await p.$eval("#panel-lugares h2.visually-hidden", h => h.textContent === "Tus lugares").catch(() => false), "títulos en orden para el lector de pantalla: Lugares › Tus lugares › hoja");
   ok(await p.$eval(form('[name="nombre"]'), el => parseFloat(getComputedStyle(el).fontSize) >= 16), "letra de 16 px o más (el iPhone no hace zoom)");
   await p.click(form(".lug-guardar"));
   await p.waitForTimeout(250);

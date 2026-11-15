@@ -212,6 +212,7 @@ async function cerrarHoja(p) {
   console.log("\nMenú ☰");
   await p.goto(base + "/index.html#inicio");
   await p.waitForTimeout(900);
+  ok(await p.$eval("#sidebar", el => getComputedStyle(el).visibility === "hidden"), "con el menú cerrado, sus enlaces no reciben el foco (QA, D-119)");
   await p.click("#menu-toggle");
   await p.waitForTimeout(300);
   ok(await p.isVisible("#sidebar .nav-extra-btn") && /Copia de seguridad/.test(await txt(p, "#sidebar .nav-extra-btn")), "«Copia de seguridad» en el menú ☰ (antes de Cerrar sesión)");
@@ -219,6 +220,8 @@ async function cerrarHoja(p) {
   await p.click("#sidebar .nav-extra-btn");
   await p.waitForTimeout(450);
   ok(await abierta(p) && !(await p.$eval("#sidebar", el => el.classList.contains("open"))), "abre la hoja y cierra el menú");
+  await p.waitForTimeout(300);
+  ok(await p.$eval("#sidebar", el => getComputedStyle(el).visibility === "hidden"), "el menú cerrado vuelve a quedar fuera del foco");
   await cerrarHoja(p);
   ok(await p.evaluate(() => document.activeElement && document.activeElement.id === "menu-toggle"), "al cerrar, el foco vuelve al botón del menú");
   ok(!consola.length && !p.errores.length, `sin errores ni advertencias en la consola${consola.length ? ` (${consola[0]})` : ""}`);

@@ -41,7 +41,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const libre = vp.content;
   const fijo = libre + ", maximum-scale=1";
   const esCampo = t => t && t.closest && t.closest("input, select, textarea");
-  const fijar = e => { if (esCampo(e.target)) vp.content = fijo; };
+  // Solo con letra de menos de 16 px: con 16 px o más el iPhone no acerca,
+  // así que el zoom con dos dedos queda libre también mientras escribes
+  // (QA 2026-11, D-119).
+  const chico = c => { try { return parseFloat(getComputedStyle(c).fontSize) < 16; } catch (e) { return true; } };
+  const fijar = e => { const c = esCampo(e.target); if (c && chico(c)) vp.content = fijo; };
   document.addEventListener("touchstart", fijar, { capture: true, passive: true });
   document.addEventListener("focusin", fijar);
   document.addEventListener("focusout", () => {
