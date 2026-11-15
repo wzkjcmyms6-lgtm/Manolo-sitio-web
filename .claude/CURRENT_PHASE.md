@@ -1,5 +1,17 @@
 # Fase actual
 
+## Finanzas (disponible diario), Lugares y copia de seguridad (pedido del dueño, 2026-11-15)
+Plan aprobado por el dueño ("OK" a las tres recomendaciones: fotos en el
+teléfono con miniatura en la nube; copia de seguridad de todo como Tarea 3;
+la fórmula del disponible tal cual). Decisiones desde D-116.
+
+| Tarea | Qué | Estado |
+|---|---|---|
+| 1 | Finanzas: disponible por día según ingresos reales (`docs/FINANZAS.md`) | ✅ (D-116) |
+| 2 | Lugares: sección nueva para calificar sitios | ⏳ |
+| 3 | Copia de seguridad de todo Manolo (exportar e importar) | |
+| QA | Pruebas, 375 px, Lighthouse, sin internet, datos intactos | |
+
 ## Libros, Biblia y Medir tiempos: siguiente nivel (pedido del dueño, 2026-11-06)
 Diseño, auditoría y bitácora en `docs/LECTURA_NIVEL2.md`; decisiones desde
 D-102. Cada fase deja la app funcionando y publicada.

@@ -10,12 +10,12 @@ test("filas: entrenar, hábitos, Biblia, dinero y Running, con su estado y a dó
     ejercicio: { tipo: "cambio", rutina: RUT.empuje, plan: RUT.pierna, razones: ["Ayer corriste 18 km: tus piernas necesitan recuperarse."] },
     habitos: { hechos: 3, total: 7, pendientes: [{ nombre: "Leer" }, { nombre: "Agua" }, { nombre: "Scalping" }, { nombre: "Orar" }] },
     biblia: { hoyHecho: false, actual: 12, total: 40 },
-    dinero: { dias: 12, resultado: 1020, texto: "Bs 85", conPresupuesto: true },
+    dinero: { estado: "verde", dias: 12, disponibleDia: "Bs 100", quedaDia: "Bs 85", pasado: null },
     running: { kmSemana: 24, meta: 30, manana: null }
   });
   assert.deepEqual(fs.map(f => [f.id, f.estado, f.href]), [
     ["entreno", "aviso", "#ejercicio"], ["habitos", "pendiente", "#habitos"], ["biblia", "pendiente", "#biblia"],
-    ["dinero", "libre", "#fin-presupuesto"], ["running", "libre", "#running"]]);
+    ["dinero", "libre", "#finanzas"], ["running", "libre", "#running"]]);
   assert.equal(fs[0].titulo, "Mejor hoy: Empuje");
   assert.equal(fs[0].detalle, "En vez de Pierna. Ayer corriste 18 km: tus piernas necesitan recuperarse.");
   assert.equal(fs[1].detalle, "Faltan: Leer, Agua, Scalping y 1 más.");
@@ -48,9 +48,12 @@ test("filas: cada caso del entreno y lo hecho", () => {
 test("filas: sin datos de una sección no aparece; sin margen es un aviso", () => {
   assert.deepEqual(M.filas({}), []);
   assert.equal(M.titular([]), "");
-  assert.deepEqual(M.filas({ habitos: { hechos: 0, total: 0 }, biblia: { total: 0 }, dinero: { conPresupuesto: false, dias: 10 }, running: { kmSemana: 0 } }), []);
-  const sin = M.filas({ dinero: { dias: 1, resultado: -50, texto: "Bs 0", conPresupuesto: true } })[0];
-  assert.deepEqual([sin.titulo, sin.estado, sin.detalle], ["Sin margen para gastar", "aviso", "Queda 1 día del periodo. Mira tu presupuesto."]);
+  assert.deepEqual(M.filas({ habitos: { hechos: 0, total: 0 }, biblia: { total: 0 }, dinero: { estado: "vacio", dias: 10 }, running: { kmSemana: 0 } }), []);
+  const sin = M.filas({ dinero: { estado: "rojo", dias: 1, disponibleDia: "Bs 100", quedaDia: "−Bs 50", pasado: "Bs 50" } })[0];
+  assert.deepEqual([sin.titulo, sin.estado, sin.detalle, sin.href], ["Gastaste más de lo que entró", "aviso", "Te pasaste Bs 50. Queda 1 día del mes.", "#finanzas"]);
+  const ambar = M.filas({ dinero: { estado: "ambar", dias: 10, disponibleDia: "Bs 100", quedaDia: "Bs 80", pasado: null } })[0];
+  assert.deepEqual([ambar.titulo, ambar.estado, ambar.detalle], ["Para gastar hoy: Bs 80", "aviso", "Vas más rápido de lo ideal (disponible: Bs 100 por día). Quedan 10 días del mes."]);
+  assert.equal(M.filas({ dinero: { estado: "cerrado", dias: 0 } }).length, 0, "mes cerrado: no aparece"); 
   assert.equal(M.titular([sin]), "Hay algo que mirar hoy.");
 });
 
@@ -91,7 +94,7 @@ test("fase 7: como mucho 5 filas, primero lo que hay que hacer hoy", () => {
     biblia: { hoyHecho: false, actual: 3, total: 10 },
     libro: { titulo: "Sapiens", paginasHoy: 0, meta: 30 },
     repaso: { frases: 2, versiculos: 0 },
-    dinero: { dias: 5, resultado: 100, texto: "Bs 20", conPresupuesto: true },
+    dinero: { estado: "verde", dias: 5, disponibleDia: "Bs 30", quedaDia: "Bs 20", pasado: null },
     running: { kmSemana: 10, meta: 0, manana: null }
   });
   assert.equal(fs.length, 5);

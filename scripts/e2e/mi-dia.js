@@ -46,10 +46,11 @@ async function probar(browser, base, ancho) {
   ok(/^Mejor hoy: Empuje\s*En vez de Pierna\. Ayer corriste 18 km/.test(filas[0].t) && /is-aviso/.test(filas[0].clase), "entrenar: tras la carrera larga, Empuje en vez de Pierna");
   ok(/^Hábitos: \d+ de \d+\s*Faltan: /.test(filas[1].t) && /is-pendiente/.test(filas[1].clase), `hábitos: ${filas[1].t.slice(0, 50)}…`);
   ok(/^Anota el versículo de hoy\s*Llevas 2 días seguidos/.test(filas[2].t), "Biblia: el versículo de hoy y la racha");
-  ok(/^Para gastar hoy: Bs \d+/.test(filas[3].t) && /Quedan \d+ días del periodo/.test(filas[3].t), `dinero: ${filas[3].t}`);
+  // D-116: 6000 recibidos en noviembre (30 días) → 200 por día; te queda (6000 − 120) ÷ 26 días.
+  ok(/^Para gastar hoy: Bs 226,15/.test(filas[3].t) && /Disponible: Bs 200 por día\. Quedan 26 días del mes\./.test(filas[3].t), `dinero: ${filas[3].t}`);
   ok(/^Running: 24 km esta semana\s*Última: ayer, 18 km\.$/.test(filas[4].t), `running: ${filas[4].t}`);
   ok(filas.every(f => f.alto >= 44), `filas de ≥ 44 px (${Math.min(...filas.map(f => Math.round(f.alto)))})`);
-  ok(filas.map(f => f.href).join(",") === "#ejercicio,#habitos,#biblia,#fin-presupuesto,#running", "cada fila lleva a su sección");
+  ok(filas.map(f => f.href).join(",") === "#ejercicio,#habitos,#biblia,#finanzas,#running", "cada fila lleva a su sección");
   ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "sin scroll de costado");
   if (CAPTURAS) await (await p.$("#mi-dia")).screenshot({ path: path.join(CAPTURAS, `mi-dia-${ancho}.png`) });
   await p.click('#mi-dia [data-md="entreno"]');

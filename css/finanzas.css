@@ -1744,6 +1744,49 @@ button.res-cat { cursor: pointer; }
 .res-cat-v { font-weight: 600; min-width: 4.5rem; text-align: right; }
 .res-hero .vg-bar { margin: 0.4rem 0 0.2rem; }
 
+/* ===== Disponible por día (D-116) ===== */
+.dia-cab { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.dia-info {
+  width: 44px; height: 44px; margin: -10px -10px -10px 0; flex-shrink: 0;
+  display: grid; place-items: center; border: 0; border-radius: 50%; background: none; color: var(--muted); cursor: pointer;
+}
+.dia-info [data-icon] { width: 22px; height: 22px; }
+.dia-info[aria-expanded="true"] { color: var(--accent-2); }
+.dia-info:focus-visible, .dia-registrar:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.dia-queda { margin: 0.35rem 0 0.8rem; font-size: 0.95rem; color: var(--muted); line-height: 1.45; }
+.dia-queda strong { color: var(--ink); font-size: 1.05rem; }
+.dia-queda strong.neg, .res-hero .neg { color: var(--estado-mal); }
+.dia-estado {
+  display: flex; align-items: flex-start; gap: 0.6rem; margin: 0 0 0.9rem; padding: 0.7rem 0.8rem;
+  border-radius: var(--radio-caja); font-size: 0.92rem; line-height: 1.4; border: 1px solid transparent;
+}
+.dia-estado-ico { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; }
+.dia-estado-ico svg { width: 15px; height: 15px; }
+.dia-estado.is-verde { background: var(--estado-ok-fondo); border-color: rgba(95, 207, 138, 0.35); }
+.dia-estado.is-verde .dia-estado-ico { background: rgba(95, 207, 138, 0.2); color: var(--estado-ok); }
+.dia-estado.is-verde strong { color: var(--estado-ok); }
+.dia-estado.is-ambar { background: var(--estado-aviso-fondo); border-color: rgba(240, 168, 71, 0.35); }
+.dia-estado.is-ambar .dia-estado-ico { background: rgba(240, 168, 71, 0.22); color: var(--estado-aviso); }
+.dia-estado.is-ambar strong { color: var(--estado-aviso); }
+.dia-estado.is-rojo { background: var(--estado-mal-fondo); border-color: rgba(226, 89, 63, 0.4); }
+.dia-estado.is-rojo .dia-estado-ico { background: rgba(226, 89, 63, 0.25); color: var(--estado-mal); }
+.dia-estado.is-rojo strong { color: var(--estado-mal); }
+.dia-estado.is-cerrado { background: rgba(255, 255, 255, 0.04); border-color: var(--border); }
+.dia-estado.is-cerrado .dia-estado-ico { background: var(--border); color: var(--ink); }
+.dia-meta { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; font-size: 0.88rem; color: var(--muted); }
+.dia-meta strong { color: var(--ink); font-weight: 600; }
+.res-hero .dia-meta-barra { margin: 0.4rem 0 0.6rem; }
+.dia-como { margin: 0.4rem 0 0.2rem; padding: 0.8rem 0.9rem; border-radius: var(--radio-caja); background: var(--bg-soft); border: 1px solid var(--border); font-size: 0.9rem; line-height: 1.5; }
+.dia-como p { margin: 0 0 0.5rem; }
+.dia-como p:last-child { margin-bottom: 0; color: var(--muted); }
+.dia-cuenta { padding-left: 0.7rem; border-left: 2px solid var(--accent-1); color: var(--muted); }
+.dia-cuenta strong { color: var(--ink); }
+.dia-vacio { font-size: 0.95rem; color: var(--muted); margin: 0.4rem 0 0.8rem; line-height: 1.5; }
+.dia-vacio strong { color: var(--ink); }
+.dia-registrar { min-height: 48px; }
+.dia-registrar [data-icon] { width: 18px; height: 18px; }
+.remain-gauge-value.an-num { font-variant-numeric: tabular-nums; }
+
 /* Montos que se achican para caber (ver ajustarNumeros en app.js) */
 .an-kpi strong, .gasto-center-value, .vg-big, .pres-card-queda, .budget-summary-value, .cat-detail-remaining { max-width: 100%; overflow: hidden; }
 .vg-big, .an-kpi strong, .gasto-center-value { white-space: nowrap; }

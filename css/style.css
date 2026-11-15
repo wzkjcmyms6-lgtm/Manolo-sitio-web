@@ -20,6 +20,20 @@
   --sidebar-w: 220px;
   --font-body: "DM Sans", system-ui, sans-serif;
   --font-display: "Fraunces", "DM Sans", system-ui, serif;
+  /* Estados (D-116): siempre con ícono y texto, nunca solo el color. Son
+     los mismos tonos que ya usaba Finanzas ("Atención"). */
+  --estado-ok: #5fcf8a;
+  --estado-ok-fondo: rgba(95, 207, 138, 0.12);
+  --estado-aviso: #f0a847;
+  --estado-aviso-fondo: rgba(240, 168, 71, 0.12);
+  --estado-mal: #ff7a66;
+  --estado-mal-fondo: rgba(226, 89, 63, 0.14);
+  /* Radios, sombra y tiempos de animación de siempre, con nombre. */
+  --radio-tarjeta: 24px;
+  --radio-caja: 14px;
+  --radio-pildora: 999px;
+  --sombra-flotante: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --anim-rapida: 0.18s;
 }
 * { box-sizing: border-box; }
 /* Sin el rebote elástico del iPhone al llegar arriba o abajo de la pantalla. */

@@ -17,7 +17,7 @@ const num1 = n => String(Math.round(Number(n) * 10) / 10).replace(".", ",");
 //   habitos: { hechos, total, pendientes: [{ nombre, emoji }] },
 //   biblia: { hoyHecho, actual (racha), total, cita, capsHoy (capítulos leídos hoy),
 //             plan: { nombre, texto } | null (lectura de hoy que falta) },
-//   dinero: { dias, resultado, texto (para gastar por día), conPresupuesto },
+//   dinero: { estado: "verde"|"ambar"|"rojo"|"cerrado"|"vacio", dias, disponibleDia, quedaDia, pasado } (D-116),
 //   running: { kmSemana, meta, manana: { dia, km, dura } | null,
 //              ultima: { cuando: "ayer", km } | null },
 //   manana: { estado: "curso" | "hecha" | "pendiente", paso, de, nombre, vsPlan (s, + = atrasado),
@@ -87,11 +87,15 @@ function filas(d) {
     const partes = [rp.frases > 0 ? `${rp.frases} ${rp.frases === 1 ? "frase" : "frases"}` : "", rp.versiculos > 0 ? `${rp.versiculos} ${rp.versiculos === 1 ? "versículo" : "versículos"}` : ""].filter(Boolean);
     out.push({ id: "repaso", icono: rp.versiculos > 0 && !rp.frases ? "biblia" : "libro", titulo: "Repaso de hoy", detalle: `${lista(partes)} para repasar.`, estado: "pendiente", href: rp.frases > 0 ? "#libros" : "#biblia-memorizar" });
   }
+  // Dinero (D-116): lo que te queda por día desde hoy, según lo que entró de
+  // verdad este mes. Sin ingresos registrados, no aparece (nada inventado).
   const m = x.dinero;
-  if (m && m.conPresupuesto && m.dias > 0) {
-    const quedan = m.dias === 1 ? "Queda 1 día del periodo." : `Quedan ${m.dias} días del periodo.`;
-    if (!(m.resultado > 0)) out.push({ id: "dinero", icono: "finance", titulo: "Sin margen para gastar", detalle: `${quedan} Mira tu presupuesto.`, estado: "aviso", href: "#fin-presupuesto" });
-    else out.push({ id: "dinero", icono: "finance", titulo: `Para gastar hoy: ${m.texto}`, detalle: quedan, estado: "libre", href: "#fin-presupuesto" });
+  if (m && m.estado && m.estado !== "vacio" && m.dias > 0) {
+    const quedan = m.dias === 1 ? "Queda 1 día del mes." : `Quedan ${m.dias} días del mes.`;
+    if (m.estado === "rojo") out.push({ id: "dinero", icono: "finance", titulo: "Gastaste más de lo que entró", detalle: `${m.pasado ? `Te pasaste ${m.pasado}. ` : ""}${quedan}`, estado: "aviso", href: "#finanzas" });
+    else out.push({ id: "dinero", icono: "finance", titulo: `Para gastar hoy: ${m.quedaDia}`,
+      detalle: m.estado === "ambar" ? `Vas más rápido de lo ideal (disponible: ${m.disponibleDia} por día). ${quedan}` : `Disponible: ${m.disponibleDia} por día. ${quedan}`,
+      estado: m.estado === "ambar" ? "aviso" : "libre", href: "#finanzas" });
   }
   const r = x.running;
   if (r && (r.kmSemana > 0 || r.meta > 0 || r.manana)) {

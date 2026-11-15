@@ -1,6 +1,12 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-15 (Libros, Biblia y Medir tiempos: QA final, D-115; plan terminado).
+Actualizado: 2026-11-15 (Finanzas: disponible diario según ingresos reales, D-116).
+
+- **Finanzas, Lugares y copia de seguridad (2026-11-15, en curso)**: Tarea
+  1 hecha (D-116): el disponible por día sale de los ingresos registrados
+  (no del presupuesto, que queda como meta), con estados, ⓘ y estado vacío;
+  en Resumen, Presupuesto, Información y "Mi día" (`docs/FINANZAS.md`).
+  Siguen Lugares (Tarea 2) y la copia de seguridad de todo (Tarea 3).
 
 - **App**: PWA estática + Firebase (Auth + Firestore), una sola página,
   JS puro sin build. Ver `docs/ARCHITECTURE.md`.

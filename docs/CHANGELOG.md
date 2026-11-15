@@ -1,5 +1,16 @@
 # Cambios
 
+## 2026-11-15 · Finanzas: disponible diario según ingresos reales
+- El monto por día ahora sale de lo que **realmente** entró este mes (si
+  presupuestaste 5000 y recibiste 3000, dice 100 por día, no 170). El
+  presupuesto queda como meta: "Recibido vs. presupuestado".
+- Tarjeta nueva arriba del Resumen: "Disponible por día" grande, "Te queda
+  por día desde hoy", estado en verde, ámbar o rojo (con ícono y texto) y ⓘ
+  "¿Cómo se calcula?" con tus números. Sin ingresos: mensaje y botón
+  "Registrar ingreso".
+- Presupuesto, Información y "Mi día" usan el mismo cálculo.
+- Pruebas: `tests/finanzas-diario.test.js` y `scripts/e2e/finanzas-diario.js`.
+
 ## 2026-11-15 · Libros, Biblia y Medir tiempos: QA final
 - Revisión completa de Manolo: todas las pruebas en verde.
 - Prueba nueva que confirma que tus versículos, libros, frases y tiempos de

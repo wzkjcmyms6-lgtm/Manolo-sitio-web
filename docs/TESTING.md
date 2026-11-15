@@ -1,6 +1,10 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-15 (Finanzas: disponible diario, D-116): `npm test` → **621
+  pruebas**. Nueva: `finanzas-diario` (100 por día con 3000 de 5000, sin
+  ingresos, negativo, último día, febrero, otros meses, excluidos, centavos,
+  periodo del 25 al 24). E2E nueva `scripts/e2e/finanzas-diario.js`.
 - 2026-11-15 (QA final de Libros, Biblia y Medir tiempos, D-115): `npm
   test` → **610 pruebas** (+3: con miles de datos, mismos resultados y
   rápido; el respaldo de Libros con tus ajustes). E2E nueva
@@ -169,7 +173,7 @@ export NODE_PATH=/opt/node22/lib/node_modules   # donde está Playwright
 for f in fase1 regresion hojas sw-instala emojis scalping inversiones tarjetas movilidad \
   running run-importar run-detalle run-feed run-progreso run-inteligencia run-segmentos \
   run-compartir run-qa habitos mi-dia ej-calendario ejercicio libros-progreso lectura \
-  lectura-qa tiempos; do node scripts/e2e/$f.js || break; done
+  lectura-qa tiempos finanzas-diario; do node scripts/e2e/$f.js || break; done
 ```
 Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
 
@@ -231,6 +235,15 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Finanzas: disponible por día (2026-11)**
+- [ ] Finanzas › Resumen: arriba, "Disponible por día" = lo que registraste
+  de ingresos este mes ÷ los días del mes (si presupuestaste 5000 y
+  recibiste 3000, dice Bs 100).
+- [ ] Toca ⓘ: la cuenta con tus números.
+- [ ] Anota un gasto: "Te queda por día desde hoy" baja al instante; si
+  baja de tu disponible, el aviso pasa a ámbar.
+- [ ] Inicio › "Mi día": "Para gastar hoy" dice lo mismo.
 
 **Libros, Biblia y Medir tiempos: lista final (2026-11, unos 30 min)**
 Sigue este orden. Abajo están las listas de cada parte, por si quieres

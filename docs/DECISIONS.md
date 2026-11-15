@@ -1474,3 +1474,26 @@ general "No encontré ese libro", pero desde D-111 el aviso es el del ISBN
 dos avisos. Desde ahora, la regresión de cada fase corre las 26 suites. (4)
 Queda opcional, esperando OK del dueño: pitido o voz cuando un paso de "Mi
 mañana" pasa tu promedio (hoy el reloj se pone naranja).
+
+**D-116 (2026-11-15) · Finanzas: el disponible por día sale de lo que
+realmente entró.** Pedido del dueño: con presupuesto 5000 y 3000 recibidos
+debe decir 100 por día, no ~170. (1) Cálculo nuevo en
+`js/finanzas/diario.js` (función pura, en centavos, con pruebas):
+disponible por día = ingresos registrados del mes ÷ días del mes; te queda
+por día desde hoy = (ingresos − gastos) ÷ días que faltan contando hoy. El
+presupuesto de ingresos queda solo como meta ("Recibido vs. presupuestado").
+Antes contaba lo mayor entre lo presupuestado y lo recibido y descontaba
+por adelantado los ahorros y fijos presupuestados; ahora solo cuenta lo
+que ya entró y lo que ya gastaste (el dueño aceptó la fórmula tal cual).
+(2) El "mes" es el periodo del presupuesto (día 1 salvo que se cambie). No
+cuentan transferencias, pagos de tarjeta ni lo "Excluido del presupuesto".
+Redondeo hacia abajo al centavo. (3) Estados con color, ícono y texto:
+verde (te queda ≥ disponible), ámbar (menos), rojo (negativo), "Mes
+cerrado"; sin ingresos, estado vacío con "Registrar ingreso" (nunca un
+número inventado). ⓘ "¿Cómo se calcula?" con los números reales. (4) Se
+usa en Resumen, Presupuesto (anillo y línea por día), Información y "Mi
+día"; la "Proyección" de Información no cambia. Nada cambia en cómo se
+guardan los datos. (5) Variables nuevas en `:root` para lo nuevo: estados
+(`--estado-ok`, `--estado-aviso`, `--estado-mal` y sus fondos), radios
+(`--radio-tarjeta`, `--radio-caja`, `--radio-pildora`), sombra flotante y
+la duración de las animaciones. Detalle en `docs/FINANZAS.md`.

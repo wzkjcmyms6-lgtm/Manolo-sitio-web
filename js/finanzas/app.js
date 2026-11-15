@@ -801,35 +801,87 @@ function vgCalendarHTML(period) {
 // 1 cuánto puedes gastar por día · 2 gasto del periodo · 3 atención
 // · 4 ahorro · 5 en qué se va · 6 RE-IVA del mes. Lo profundo está en Análisis.
 
-// 1. Puedes gastar por día
+if (typeof ICONS === "object") {
+  ICONS.diaInfo = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5"/><path d="M12 7.6v.2"/></svg>`;
+  ICONS.diaAlerta = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M12 4 2.8 19.5h18.4L12 4Z"/><path d="M12 10v4.2"/><path d="M12 16.9v.2"/></svg>`;
+}
+// 1. Disponible por día (D-116): lo que ENTRÓ este mes ÷ los días del mes, y
+// lo que te queda por día desde hoy. El presupuesto de ingresos queda solo
+// como meta ("Recibido vs. presupuestado"). Cálculo en js/finanzas/diario.js.
+let diaComoAbierto = false;   // "¿Cómo se calcula?" abierto o cerrado
+const ESTADO_DIA = {
+  verde: { icono: "check", titulo: "Vas bien" },
+  ambar: { icono: "diaAlerta", titulo: "Vas gastando más rápido de lo ideal" },
+  rojo: { icono: "diaAlerta", titulo: "Gastaste más de lo que entró" },
+  cerrado: { icono: "calendar", titulo: "Mes cerrado" }
+};
+const bsSigno = c => `${c < 0 ? "−" : ""}${bsCent(Math.abs(c))}`;
+const diasTxt = n => `${n} ${n === 1 ? "día" : "días"}`;
+
+// Lo que presupuestaste de ingresos en el periodo que estás mirando (la meta).
+function metaIngresosCent() {
+  return (CATEGORIES.ingreso || []).reduce((s, c) => s + FD.aCentavos(budgetsCache[c.id] || 0), 0);
+}
+function calcDiario(period) {
+  return window.FinanzasDiario.calcular({ movimientos: financeCache, inicio: period.startISO, fin: period.endISO,
+    hoy: isoDate(new Date()), presupuestoCent: metaIngresosCent() });
+}
+
+// La explicación con tus números (botón ⓘ).
+function diaComoHTML(d) {
+  const meta = d.presupuesto ? `Tu presupuesto de ingresos (${bsCent(d.presupuesto.metaCent)}) es la meta: no cambia estos números.` : "Si armas un presupuesto de ingresos, aquí verás cuánto recibiste de lo presupuestado.";
+  return `<div class="dia-como" id="dia-como" role="region" aria-label="Cómo se calcula"${diaComoAbierto ? "" : " hidden"}>
+      <p><strong>Disponible por día</strong> = lo que entró este mes ÷ los días del mes.</p>
+      <p class="dia-cuenta an-num">${bsCent(d.ingresosCent)} ÷ ${diasTxt(d.diasMes)} = <strong>${bsCent(d.disponibleDiaCent)}</strong></p>
+      ${d.diasRestantes > 0 ? `<p><strong>Te queda por día desde hoy</strong> = (lo que entró − lo que gastaste) ÷ los días que faltan, contando hoy.</p>
+      <p class="dia-cuenta an-num">(${bsCent(d.ingresosCent)} − ${bsCent(d.gastosCent)}) ÷ ${diasTxt(d.diasRestantes)} = <strong>${bsSigno(d.quedaDiaCent)}</strong></p>
+      <p>Verde si te queda por día igual o más que tu disponible; ámbar si te queda menos; rojo si gastaste más de lo que entró.</p>` : ""}
+      <p>${meta} No cuentan las transferencias, los pagos de tarjeta ni lo «Excluido del presupuesto».</p>
+    </div>`;
+}
+
 function resHeroHTML(period) {
-  const { days, daily, result } = budgetProjection(period);
-  const base = incomeBase(period);
-  const gastado = FD.sumaBs(financeCache.filter(m => m.type === "gasto" && !m.excluded && isInPeriod(m.date, period)), m => m.amount);
-  const barra = base > 0 ? `<div class="vg-bar" role="img" aria-label="Gastaste ${Math.round(Math.min(gastado / base, 1) * 100)} % de lo que entra"><span style="width:${(Math.min(gastado / base, 1) * 100).toFixed(1)}%"></span></div>` : "";
-  if (base <= 0) {
-    return `<div class="vg-label">Puedes gastar por día</div>
-      <p class="res-vacio">Registra tu ingreso o arma tu presupuesto y aquí verás cuánto puedes gastar cada día.</p>
-      <a class="res-link" href="#fin-presupuesto">Armar presupuesto<span data-icon="chevronRight"></span></a>`;
+  const d = calcDiario(period);
+  const cab = `<div class="dia-cab"><div class="vg-label">Disponible por día</div>${d.estado === "vacio" ? "" : `<button type="button" class="dia-info" data-dia-como aria-expanded="${diaComoAbierto}" aria-controls="dia-como" aria-label="¿Cómo se calcula?"><span data-icon="diaInfo"></span></button>`}</div>`;
+  if (d.estado === "vacio") {
+    return `${cab}
+      <p class="dia-vacio">Todavía no registraste ingresos en ${periodLabel(period).replace(/^./, c => c.toLowerCase())}. Cuando anotes lo que te entra, aquí verás cuánto tienes para cada día.</p>
+      ${d.presupuesto ? `<p class="dia-vacio">Tu meta de ingresos: <strong class="an-num">${bsCent(d.presupuesto.metaCent)}</strong>.</p>` : ""}
+      <button type="button" class="fin-aj-btn is-principal dia-registrar" data-dia-registrar><span data-icon="plus"></span>Registrar ingreso</button>`;
   }
-  if (days <= 0) {
-    return `<div class="vg-label">Periodo cerrado</div>
-      <div class="vg-big an-num${result < 0 ? " over" : ""}">${result < 0 ? "−" : ""}${formatBsShort(Math.round(Math.abs(result)))}</div>
-      <p class="res-sub">${result < 0 ? "Gastaste más de lo que entró." : "Es lo que te sobró en este periodo."}</p>${barra}`;
-  }
-  const quedan = `quedan ${days} ${days === 1 ? "día" : "días"}`;
-  if (result <= 0) {
-    return `<div class="vg-label">Puedes gastar por día</div>
-      <div class="vg-big over">Sin margen</div>
-      <p class="res-sub">Ya usaste todo lo que entra este periodo (${quedan}). Revisa el presupuesto.</p>${barra}
-      <a class="res-link" href="#fin-presupuesto">Ver presupuesto<span data-icon="chevronRight"></span></a>`;
-  }
-  return `<div class="vg-label">Puedes gastar por día</div>
-    <div class="vg-big an-num">${formatBsShort(Math.floor(daily))}</div>
-    <p class="res-sub">Te quedan <strong class="an-num">${formatBsShort(Math.round(result))}</strong> para los próximos ${days} ${days === 1 ? "día" : "días"}, después de fijos y ahorro.</p>
-    ${barra}
+  const e = ESTADO_DIA[d.estado];
+  const detalle = d.estado === "verde" ? "Te queda por día igual o más que tu disponible."
+    : d.estado === "ambar" ? `Te queda menos por día que tu disponible (${bsCent(d.disponibleDiaCent)}).`
+    : d.estado === "rojo" ? `Te pasaste ${bsCent(-d.quedaCent)} de lo que entró este mes.`
+    : `Te sobró ${bsCent(d.quedaCent)}.`;
+  const queda = d.diasRestantes > 0
+    ? `<p class="dia-queda">Te queda por día desde hoy: <strong class="an-num${d.quedaDiaCent < 0 ? " neg" : ""}">${bsSigno(d.quedaDiaCent)}</strong> · ${d.diasRestantes === 1 ? "queda 1 día" : `quedan ${d.diasRestantes} días`}</p>`
+    : `<p class="dia-queda">Este mes ya terminó.</p>`;
+  const meta = d.presupuesto ? `
+    <div class="dia-meta"><span>Recibido vs. presupuestado</span><strong class="an-num">${bsCent(d.presupuesto.recibidoCent)} de ${bsCent(d.presupuesto.metaCent)} · ${d.presupuesto.pct} %</strong></div>
+    <div class="vg-bar dia-meta-barra" role="img" aria-label="Recibiste el ${d.presupuesto.pct} % de lo presupuestado"><span style="width:${Math.min(d.presupuesto.pct, 100)}%"></span></div>` : "";
+  return `${cab}
+    <div class="vg-big an-num">${bsCent(d.disponibleDiaCent)}</div>
+    ${queda}
+    <p class="dia-estado is-${d.estado}"><span class="dia-estado-ico" data-icon="${e.icono}" aria-hidden="true"></span><span><strong>${e.titulo}.</strong> ${detalle}</span></p>
+    ${meta}
+    ${diaComoHTML(d)}
     <a class="res-link" href="#fin-presupuesto">Ver presupuesto<span data-icon="chevronRight"></span></a>`;
 }
+
+// ⓘ abre o cierra la explicación sin volver a dibujar todo; "Registrar
+// ingreso" abre la hoja de siempre, ya en Ingreso.
+document.addEventListener("click", e => {
+  const como = e.target.closest("[data-dia-como]");
+  if (como) {
+    diaComoAbierto = !diaComoAbierto;
+    como.setAttribute("aria-expanded", String(diaComoAbierto));
+    const caja = document.getElementById("dia-como");
+    if (caja) caja.hidden = !diaComoAbierto;
+    return;
+  }
+  if (e.target.closest("[data-dia-registrar]")) openTxnSheet(null, { type: "ingreso", category: defaultCategory("ingreso"), payment: ultimaCartera("ingreso") });
+});
 
 // 3. Atención: hasta 3 cosas para mirar hoy.
 function resAtencionHTML(period) {
@@ -2448,21 +2500,19 @@ function renderBudgets() {
     .sort((a, b) => STATE_RANK[budgetState(b.rows[0].planned, b.rows[0].used, "gasto")]
       - STATE_RANK[budgetState(a.rows[0].planned, a.rows[0].used, "gasto")]);
 
-  // Restante para gastar = todo lo que entra − todo lo gastado (con o sin
-  // presupuesto).
-  const totalIncome = incomeBase(period);
-  const totalBudget = groupSections.reduce((s, sec) => s + sec.rows.reduce((t, r) => t + r.planned, 0), 0);
-  const totalSpent = Object.values(spent).reduce((s, v) => s + v, 0);
-  const base = totalIncome > 0 ? totalIncome : totalBudget;
-  const leftToSpend = base - totalSpent;
+  // Restante para gastar = lo que ENTRÓ este periodo − todo lo gastado (con o
+  // sin presupuesto). D-116: con lo recibido de verdad; el presupuesto de
+  // ingresos es solo la meta. Sin ingresos, no se inventa un número.
+  const d = calcDiario(period);
+  const sinIngresos = d.estado === "vacio";
 
   document.getElementById("budget-remaining-hero").innerHTML = `
     <div class="remain-gauge">
-      ${remainingGauge(base > 0 ? Math.max(leftToSpend, 0) / base : 0)}
+      ${remainingGauge(d.ingresosCent > 0 ? Math.max(d.quedaCent, 0) / d.ingresosCent : 0)}
       <div class="remain-gauge-center">
         <span class="remain-gauge-icon" data-icon="home"></span>
-        <span class="remain-gauge-value${leftToSpend < 0 ? " over" : ""}">${formatBsShort(Math.abs(leftToSpend))}</span>
-        <span class="remain-gauge-label">${leftToSpend < 0 ? "Sobrepasado" : "Restante para gastar"}</span>
+        <span class="remain-gauge-value an-num${d.quedaCent < 0 ? " over" : ""}">${sinIngresos ? "Sin ingresos" : bsCent(Math.abs(d.quedaCent))}</span>
+        <span class="remain-gauge-label">${sinIngresos ? "Registra lo que te entra" : d.quedaCent < 0 ? "Sobrepasado" : "Restante para gastar"}</span>
       </div>
     </div>
     ${dailyAllowanceHTML(period)}
@@ -3023,17 +3073,20 @@ function budgetProjection(period) {
   return { info, days, lines, result, daily };
 }
 
+// Debajo del anillo de Presupuesto: disponible y lo que te queda por día (D-116).
 function dailyAllowanceHTML(period) {
-  const { days, daily, result } = budgetProjection(period);
-  if (days <= 0) return "";
-  const left = `quedan ${days} día${days === 1 ? "" : "s"}`;
-  if (result <= 0) return `<div class="remain-daily over"><strong>Sin margen para gastar</strong> · ${left}</div>`;
-  return `<div class="remain-daily">Puedes gastar <strong>${formatBsShort(Math.round(daily))}</strong> por día · ${left}</div>`;
+  const d = calcDiario(period);
+  if (d.estado === "vacio") return `<div class="remain-daily">Registra tus ingresos de este periodo para ver tu disponible por día.</div>`;
+  if (d.diasRestantes <= 0) return "";
+  const left = `quedan ${diasTxt(d.diasRestantes)}`;
+  if (d.estado === "rojo") return `<div class="remain-daily over"><strong>Gastaste más de lo que entró</strong> · ${left}</div>`;
+  return `<div class="remain-daily">Disponible <strong class="an-num">${bsCent(d.disponibleDiaCent)}</strong> por día · te queda <strong class="an-num">${bsCent(d.quedaDiaCent)}</strong> por día · ${left}</div>`;
 }
 
 function renderBudgetInfo() {
   const period = currentBudgetPeriod();
-  const { info, days, lines, result, daily } = budgetProjection(period);
+  const { info, lines, result } = budgetProjection(period);
+  const d = calcDiario(period);
 
   const breakdownRows = [
     { label: "Ingresos", color: "#5cc98a", ...info.ingreso },
@@ -3041,13 +3094,16 @@ function renderBudgetInfo() {
     { label: "Otros gastos", color: "#6b6a66", ...info.otros }
   ];
 
-  const dailyHTML = days > 0
-    ? `<p class="info-sub">Quedan <strong>${days} día${days === 1 ? "" : "s"}</strong> en este periodo.</p>
+  // D-116: lo que te queda por día sale de lo que entró de verdad.
+  const dailyHTML = d.estado === "vacio"
+    ? `<p class="info-sub">Todavía no registraste ingresos en este periodo: anota lo que te entra para ver cuánto tienes por día.</p>`
+    : d.diasRestantes > 0
+    ? `<p class="info-sub">Quedan <strong>${diasTxt(d.diasRestantes)}</strong> en este periodo. Disponible: <strong class="an-num">${bsCent(d.disponibleDiaCent)}</strong> por día.</p>
        <div class="info-highlight">
-         <span class="info-cal"><span class="info-cal-top"></span><span class="info-cal-num">${days}</span></span>
+         <span class="info-cal"><span class="info-cal-top"></span><span class="info-cal-num">${d.diasRestantes}</span></span>
          <div>
-           <div class="info-highlight-value${result < 0 ? " over" : ""}">${formatBsShort(Math.round(daily))}</div>
-           <div class="info-highlight-label">Restante para gastar al día</div>
+           <div class="info-highlight-value an-num${d.quedaCent < 0 ? " over" : ""}">${bsSigno(d.quedaDiaCent)}</div>
+           <div class="info-highlight-label">Te queda por día desde hoy</div>
          </div>
        </div>`
     : `<p class="info-sub">Este periodo ya terminó.</p>`;
@@ -5385,8 +5441,10 @@ window.FinanzasResumen = {
     const antes = budgetsCache;
     budgetsCache = catsEnBs(FP.delPeriodo(presupuestoDoc, presupuestoBase, claveActual()).cats);
     try {
-      const { days, result, daily } = budgetProjection(budgetPeriodAt(0));
-      return { dias: days, resultado: result, texto: formatBsShort(Math.round(daily)), conPresupuesto: Object.keys(budgetsCache).some(id => budgetsCache[id] > 0) };
+      // D-116: lo mismo que la tarjeta "Disponible por día" del Resumen.
+      const d = calcDiario(budgetPeriodAt(0));
+      return { estado: d.estado, dias: d.diasRestantes, disponibleDia: bsCent(d.disponibleDiaCent),
+        quedaDia: d.quedaDiaCent == null ? null : bsSigno(d.quedaDiaCent), pasado: d.quedaCent < 0 ? bsCent(-d.quedaCent) : null };
     } finally {
       budgetsCache = antes;
     }

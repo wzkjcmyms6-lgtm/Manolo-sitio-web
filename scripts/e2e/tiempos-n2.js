@@ -125,14 +125,17 @@ async function medirYManana(browser, base, ancho, captura) {
   await p.waitForTimeout(300);
   ok(/Medir ahora/.test(await txt(p, ".tman-hoja h3")) && (await reloj()) === "0:00" && /Bañarse/.test(await txt(p, ".tman-hoja .tman-paso")), "⏱ Medir: el reloj empieza en 0:00");
   await avanzar(9 * 60000 + 15000);
-  ok((await reloj()) === "9:15", `corre (${await reloj()})`);
+  // El reloj de prueba sigue corriendo entre pasos: ±3 s (como cerca()).
+  const segs = t => { const m = /^(\d+):(\d{2})$/.exec(t || ""); return m ? Number(m[1]) * 60 + Number(m[2]) : null; };
+  ok(cerca(segs(await reloj()), 555), `corre (${await reloj()})`);
   ok(await p.evaluate(() => window.__wl) >= 1, "mantiene la pantalla encendida");
   await p.click('.tman-hoja [data-tman="pausa-medir"]');
   await avanzar(3 * 60000);
-  ok((await reloj()) === "9:15", "en pausa no cuenta");
+  const enPausa = await reloj();
+  ok(cerca(segs(enPausa), 555), `en pausa no cuenta (${enPausa})`);
   await p.click('.tman-hoja [data-tman="pausa-medir"]');
   await avanzar(45000);
-  ok((await reloj()) === "10:00", `al seguir vuelve a contar (${await reloj()})`);
+  ok(cerca(segs(await reloj()), segs(enPausa) + 45), `al seguir vuelve a contar (${await reloj()})`);
   ok(await p.evaluate(() => !!localStorage.getItem("manolo.tiempos.medir")), "queda guardado en el teléfono (sigue aunque se bloquee)");
   await captura(p, `tiempos-medir-${ancho}.png`);
   await p.click('.tman-hoja [data-tman="terminar-medir"]');
