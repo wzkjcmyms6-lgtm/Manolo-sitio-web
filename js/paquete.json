@@ -144,6 +144,7 @@
   "js/libros.js",
   "js/libros-ediciones-ui.js",
   "js/libros-autor-ui.js",
+  "js/libros-trata-ui.js",
   "js/libros-sesion.js",
   "js/libros-siguiente-ui.js",
   "js/libros-notas.js",

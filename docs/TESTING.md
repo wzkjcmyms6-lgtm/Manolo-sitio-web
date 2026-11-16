@@ -1,6 +1,14 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (Libros nivel 3, fase 4, D-132): `npm test` → **722
+  pruebas**. Más en `libros-fuentes` (temas en español, "sport" no es
+  "transport", "De qué trata" de Wikipedia sin la serie ni la película,
+  Open Library solo en español, Google Books de extra, limpiar el texto).
+  E2E `libros-n3` con la fase 4 (temas en la ficha, tocar uno filtra la
+  lista, "De qué trata" con fuente y "Ver más", Google Books cuando no hay
+  Wikipedia, la segunda vez sin pedir nada, temas al agregar, páginas por
+  género; 390 y 320 px).
 - 2026-11-16 (Libros nivel 3, fase 3, D-131): `npm test` → **719
   pruebas**. Más en `libros-fuentes` (el autor por su nombre, su ficha, su
   Wikipedia emparejada por Wikidata y sin homónimos, sus libros más leídos
@@ -366,6 +374,13 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Libros: temas y "De qué trata" (2026-11)**
+- [ ] Agrega un libro buscándolo: en su ficha salen sus temas en español.
+  Toca uno: la lista muestra tus libros de ese tema.
+- [ ] En la ficha, "De qué trata": ¿el resumen es de ese libro? Toca la
+  fuente para verla.
+- [ ] Estadísticas › "Lo que más lees": cada género dice sus páginas.
 
 **Libros: la ficha del autor (2026-11)**
 - [ ] Abre un libro tuyo y toca el nombre del autor: ¿sale su foto, quién

@@ -61,7 +61,7 @@ app.innerHTML = `
   </div>
   <div id="lib-vista-libros">
     <div class="lib-filtros">
-      <input type="search" id="lib-buscar" class="lib-input" placeholder="Buscar por título o autor" autocomplete="off" aria-label="Buscar libros">
+      <input type="search" id="lib-buscar" class="lib-input" placeholder="Buscar por título, autor o tema" autocomplete="off" aria-label="Buscar libros">
       <select id="lib-orden" class="lib-input" aria-label="Ordenar">${L.ORDENES.map(o => `<option value="${o.id}">${esc(o.nombre)}</option>`).join("")}</select>
       <select id="lib-genero" class="lib-input" aria-label="Filtrar por género" hidden></select>
     </div>
@@ -344,7 +344,7 @@ function renderStats() {
     <section class="lib-graf">
       <h3>Lo que más lees</h3>
       <div class="lib-generos">${e.generos.slice(0, 6).map(g => `
-        <div class="lib-genero-fila"><span>${esc(L.GENERO[g.nombre] ? L.GENERO[g.nombre].nombre : g.nombre)}</span><span class="lib-barra" aria-hidden="true"><i style="width:${Math.round((g.n / maxGen) * 100)}%"></i></span><b>${g.n}</b></div>`).join("")}
+        <div class="lib-genero-fila"><span>${esc(L.GENERO[g.nombre] ? L.GENERO[g.nombre].nombre : g.nombre)}${e.paginasGenero && e.paginasGenero[g.nombre] ? ` <small>${esc(e.paginasGenero[g.nombre].toLocaleString("es"))} págs.</small>` : ""}</span><span class="lib-barra" aria-hidden="true"><i style="width:${Math.round((g.n / maxGen) * 100)}%"></i></span><b>${g.n}</b></div>`).join("")}
       </div>
     </section>` : ""}
     <div data-lest="autores"></div>
@@ -400,6 +400,7 @@ function ver(id) {
           ${botonesLeer(l)}
         </div>` : l.estado === "por_leer" && window.LibrosSesion ? `<div class="lib-progreso">${botonesLeer(l)}</div>` : ""}
         ${window.LibrosSesion ? LibrosSesion.ficha(l) : ""}
+        ${window.LibrosTrataUI ? LibrosTrataUI.temas(l) : ""}
         <dl class="lib-datos">
           ${dato("Páginas", l.paginas ? String(l.paginas) : "")}
           ${dato("Edición", l.edicion && window.LibrosFuentes ? LibrosFuentes.textoEdicion(l.edicion) : "")}
@@ -410,6 +411,7 @@ function ver(id) {
           ${dato("Empezado", l.fechaInicio ? L.fechaLarga(l.fechaInicio) : "")}
           ${dato("Terminado", l.fechaFin ? L.fechaLarga(l.fechaFin) : "")}
         </dl>
+        <div class="lib-trata-caja" data-lib-trata></div>
         ${l.opinion ? `<h5 class="lib-h">Mi opinión</h5><p class="lib-opinion">${esc(l.opinion)}</p>` : ""}
         ${window.LibrosNotas ? LibrosNotas.ficha(l) : ""}
         ${l.olKey ? `<p class="lib-nota"><a class="lib-enlace" href="https://openlibrary.org${esc(l.olKey)}" target="_blank" rel="noopener">Más datos en Open Library ↗</a></p>` : ""}
@@ -420,6 +422,8 @@ function ver(id) {
         <div class="lib-h lib-h-fila"><h5>Frases <span>${fs.length}</span></h5><button type="button" class="lib-btn-sec lib-btn-chico" data-lib="frase-de">＋ Frase</button></div>
         ${fs.length ? fs.map(f => fraseHtml(f, false)).join("") : `<p class="lib-nota">Guarda aquí las frases que te gustaron de este libro.</p>`}
       </div>`);
+  // "De qué trata" (D-132): se busca después de abrir la ficha.
+  if (window.LibrosTrataUI) LibrosTrataUI.pintar(hoja.el.querySelector("[data-lib-trata]"), l);
 }
 
 // ---------- Hoja: agregar o editar libro ----------
@@ -493,6 +497,7 @@ function formLibro(id) {
         <input type="hidden" name="edicionEditorial" value="${esc((v.edicion && v.edicion.editorial) || "")}">
         <input type="hidden" name="edicionAnio" value="${esc((v.edicion && v.edicion.anio) || "")}">
         <input type="hidden" name="edicionFormato" value="${esc((v.edicion && v.edicion.formato) || "")}">
+        <input type="hidden" name="temas" value="${esc((v.temas || []).join("|"))}">
         <input type="hidden" name="isbn" value="${esc(v.isbn || "")}">
         <div class="lib-campo"><span>Estado</span>
           <div class="lib-segmento is-cuatro" role="radiogroup" aria-label="Estado">
@@ -677,6 +682,16 @@ hoja.el.addEventListener("click", e => {
   if (pag) { formPagina(pag.dataset.libPagina, "ver"); return; }
   const libroElegido = e.target.closest("[data-lib-elegir-libro]");
   if (libroElegido) { elegirLibro(encontrados[Number(libroElegido.dataset.libElegirLibro)]); return; }
+  // Un tema (D-132): tu lista filtrada por ese tema.
+  const tema = e.target.closest("[data-lib-tema]");
+  if (tema) {
+    filtro.texto = tema.dataset.libTema;
+    filtro.estado = "";
+    $("lib-buscar").value = filtro.texto;
+    hoja.cerrar();
+    if (vista !== "libros") { const b = app.querySelector('[data-lib-vista="libros"]'); if (b) b.click(); } else renderLista();
+    return;
+  }
   // Ficha del autor (D-131).
   if (e.target.closest("[data-lib-autor]") && window.LibrosAutorUI && actual && actual.id) {
     const l = libros.find(x => x.id === actual.id);
@@ -888,6 +903,7 @@ function elegirLibro(x) {
   f.elements.olKey.value = x.olKey || "";
   if (f.elements.tituloOriginal) f.elements.tituloOriginal.value = x.tituloOriginal || "";
   if (f.elements.autorKey) f.elements.autorKey.value = x.autorKey || "";
+  if (f.elements.temas && x.temas) f.elements.temas.value = x.temas.join("|");
   f.dataset.autorElegido = x.autor || "";
   // Al editar, una portada que ya tenías se respeta.
   const original = actual.id ? (libros.find(y => y.id === actual.id) || {}).portada : null;

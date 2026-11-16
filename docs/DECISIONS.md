@@ -1869,3 +1869,26 @@ al instante y sin internet. Sin internet y sin nada guardado, lo dice y
 muestra igual tus libros de él. Lógica en `js/libros-fuentes.js`;
 pantalla en `js/libros-autor-ui.js`.
 
+**D-132 (2026-11-16) · Libros nivel 3, fase 4: temas en español y "De qué
+trata".** (1) **Temas**: los temas de Open Library (casi todos en inglés)
+se traducen con una lista de unos 60 ("Habit" → hábitos, "Personal
+Finance" → finanzas personales, "Concentration camps" → Holocausto, "Magic
+realism" → realismo mágico…); cada tema va al primero que coincide (los
+más específicos antes), hasta 5, sin repetir el género. Una pista corta
+tiene que empezar una palabra ("sport" no es "transport"). Lo que no está
+en la lista (premios, listas de ventas, "Accessible book") no se muestra.
+Se guardan con el libro al elegirlo (`temas`); la ficha los muestra y
+tocar uno filtra tu lista por ese tema (el buscador de la lista también
+busca por tema). (2) **"De qué trata"** en la ficha: primero la página del
+libro en **Wikipedia en español** (la descripción tiene que decir que es un
+libro, novela, ensayo…, el título parecerse y el apellido del autor
+aparecer: así no sale la serie de televisión ni la película con el mismo
+nombre); si no hay, la descripción de **Open Library** solo si está en
+español; si no, **Google Books** (sin clave: si no responde, nada). Se
+limpia ("[cita requerida]", la pronunciación, markdown), se corta en una
+frase (≤ 700) y se muestra con su fuente y enlace; largo, con "Ver más".
+Nada se inventa: sin fuente, no se muestra. Lo encontrado queda en el
+teléfono (90 días; "no hay", 7). (3) Estadísticas: "Lo que más lees"
+también dice las páginas de cada género. Lógica en `js/libros-fuentes.js`;
+pantalla en `js/libros-trata-ui.js`.
+

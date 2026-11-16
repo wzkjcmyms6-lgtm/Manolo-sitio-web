@@ -10,6 +10,8 @@
 // Fase 3 (D-131): la ficha del autor (Open Library y Wikipedia simulados
 // con respuestas reales), sus libros, "＋ Quiero leer", guardado en el
 // teléfono y sin internet.
+// Fase 4 (D-132): temas en español (tocar uno filtra la lista), "De qué
+// trata" (Wikipedia; Google Books como extra), guardado, páginas por género.
 // Uso: node scripts/e2e/libros-n3.js [carpeta-para-capturas]
 const fs = require("node:fs");
 const path = require("node:path");
@@ -313,12 +315,14 @@ async function fase3(browser, base, ancho) {
   if (await p.$eval(".lib-hoja", el => !el.hidden).catch(() => false)) { await p.click(".lib-hoja .budget-sheet-close"); await p.waitForTimeout(300); }
 
   console.log("La segunda vez abre al instante (guardado en el teléfono)");
-  const antes = pedidos.length;
+  // Abrir un libro también busca "De qué trata" (D-132): se cuentan solo los del autor.
+  const delAutor = () => pedidos.filter(u => /search\/authors|\/authors\/OL|author_key|gsrsearch=Paulo%20Coelho&/.test(u)).length;
+  const antes = delAutor();
   await p.click('[data-lib-ver="b2"]');
   await p.waitForTimeout(300);
   await p.click(".lib-hoja [data-lib-autor]");
   await p.waitForTimeout(250);
-  ok(pedidos.length === antes && /Escritor brasileño/.test(await txt(p, hoja(".lib-autor-quien"))), "sin pedir nada otra vez");
+  ok(delAutor() === antes && /Escritor brasileño/.test(await txt(p, hoja(".lib-autor-quien"))), "sin pedir nada otra vez");
   ok((await p.$$(hoja("[data-lib-autor-ver]"))).length === 3, "y ya cuenta el que agregaste (3 tuyos)");
   await p.click(hoja('[data-lib-autor-ver="b1"]'));
   await p.waitForTimeout(400);
@@ -338,6 +342,101 @@ async function fase3(browser, base, ancho) {
   await p.context().close();
 }
 
+// ---- Fase 4 (D-132): temas y "De qué trata" ----
+const SEED4 = { [LIB]: {
+  c1: lb({ titulo: "Cien años de soledad", autor: "Gabriel García Márquez", olKey: "/works/OL274505W", paginas: 417, estado: "terminado", calificacion: 5, fechaFin: "2026-11-05", genero: "novela", temas: ["realismo mágico", "familia"] }),
+  c2: lb({ titulo: "Rayuela", autor: "Julio Cortázar", paginas: 600, estado: "por_leer", genero: "novela" }),
+  c3: lb({ titulo: "Padre rico, padre pobre", autor: "Robert T. Kiyosaki", paginas: 264, estado: "terminado", fechaFin: "2026-10-01", genero: "finanzas", temas: ["finanzas personales"] })
+} };
+// Con la forma de la respuesta de Google Books (hecha a mano; no es una respuesta real).
+const GOOGLE_RAYUELA = JSON.stringify({ items: [{ volumeInfo: { title: "Rayuela", authors: ["Julio Cortázar"], language: "es", infoLink: "http://books.google.com/books?id=prueba",
+  description: "Una novela que se puede leer de varias maneras: de corrido o saltando capítulos según el tablero de dirección que propone el autor." } }] });
+async function fase4(browser, base, ancho) {
+  console.log(`\nLibros nivel 3, fase 4: temas y «De qué trata» (${ancho} px)`);
+  const p = await abrir(browser, base, { __SEED__: SEED4 }, { hash: "#libros", zona: ZONA, fecha: HOY, ancho, alto: ancho > 800 ? 900 : 844 });
+  const wiki = [];
+  const json = (r, cuerpo) => r.fulfill({ contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: cuerpo });
+  await p.context().route(/es\.wikipedia\.org\/w\/api\.php/, r => {
+    const u = decodeURIComponent(r.request().url());
+    wiki.push(u);
+    json(r, /Cien años/.test(u) ? FX("wiki-libro-cien-anos") : /Hábitos/.test(u) ? FX("wiki-libro-habitos") : JSON.stringify({ batchcomplete: "" }));
+  });
+  await p.context().route(/openlibrary\.org\/works\/OL\d+W\.json/, r => json(r, JSON.stringify({ key: "/works/x" })));
+  await p.context().route(/www\.googleapis\.com\/books/, r => json(r, /Rayuela/.test(decodeURIComponent(r.request().url())) ? GOOGLE_RAYUELA : JSON.stringify({ totalItems: 0 })));
+  await p.context().route(/openlibrary\.org\/search\.json/, r => {
+    const q = (decodeURIComponent(r.request().url()).match(/[?&]q=([^&]*)/) || [])[1] || "";
+    const fx = (RESPUESTAS.find(([re]) => re.test(q)) || [null, null])[1];
+    json(r, fx ? FX(fx) : JSON.stringify({ docs: [] }));
+  });
+  await p.context().route(/openlibrary\.org\/(works\/OL\d+W\/editions|isbn|books)/, r => json(r, JSON.stringify({ entries: [] })));
+  await p.context().route(/covers\.openlibrary\.org/, r => r.fulfill({ contentType: "image/png", body: PNG }));
+  await p.waitForTimeout(800);
+  const hoja = sel => `.lib-hoja ${sel}`;
+  const libros = () => p.evaluate(c => Array.from(window.__fakeStore.colMap(c).entries()), LIB);
+
+  await p.click('[data-lib-ver="c1"]');
+  await p.waitForTimeout(150);
+  ok(/Buscando de qué trata/.test(await txt(p, hoja("[data-lib-trata]"))) || /De qué trata/.test(await txt(p, hoja("[data-lib-trata]"))), "la ficha busca «De qué trata»");
+  await p.waitForTimeout(500);
+  const temas = await p.$$eval(hoja("[data-lib-tema]"), els => els.map(e => e.textContent.trim()));
+  ok(temas.join(",") === "realismo mágico,familia", `sus temas: ${temas.join(", ")}`);
+  const trata = await txt(p, hoja("[data-lib-trata]"));
+  ok(/^De qué trata Cien años de soledad es una novela del escritor colombiano/.test(trata) && /Fuente: Wikipedia ↗/.test(trata), "«De qué trata» con su fuente (Wikipedia)");
+  ok(wiki.length === 1 && /gsrsearch=Cien años de soledad marquez/.test(wiki[0]), "lo busca por el título y el apellido del autor");
+  const corto = await p.$eval(hoja("[data-lib-trata-texto]"), el => el.classList.contains("is-corto") && el.scrollHeight > el.clientHeight + 2);
+  ok(corto && await p.$(hoja("[data-lib-trata-mas]")) !== null, "si es largo, se corta con «Ver más»");
+  await p.$eval(hoja("[data-lib-trata]"), el => el.scrollIntoView({ block: "center" }));
+  await p.waitForTimeout(200);
+  await captura(p, `libros-n3-trata-${ancho}.png`);
+  await p.click(hoja("[data-lib-trata-mas]"));
+  await p.waitForTimeout(150);
+  ok(await p.$eval(hoja("[data-lib-trata-texto]"), el => !el.classList.contains("is-corto")), "«Ver más» lo muestra entero");
+  await p.click(hoja('[data-lib-tema="realismo mágico"]'));
+  await p.waitForTimeout(500);
+  const visibles = await p.$$eval("#lib-lista [data-lib-ver]", els => Array.from(new Set(els.filter(e => e.offsetParent).map(e => e.dataset.libVer))));
+  ok((await p.inputValue("#lib-buscar")) === "realismo mágico" && visibles.join(",") === "c1", `tocar un tema muestra tus libros de ese tema (${visibles.join(",")})`);
+  await p.fill("#lib-buscar", "");
+  await p.dispatchEvent("#lib-buscar", "input");
+  await p.waitForTimeout(300);
+
+  console.log("Sin Wikipedia: Google Books (extra); la segunda vez, sin pedir nada");
+  await p.click('[data-lib-ver="c2"]');
+  await p.waitForTimeout(700);
+  const trata2 = await txt(p, hoja("[data-lib-trata]"));
+  ok(/^De qué trata Una novela que se puede leer de varias maneras/.test(trata2) && /Fuente: Google Libros ↗/.test(trata2), "sin página en Wikipedia: Google Books");
+  ok(await p.$eval(hoja("[data-lib-trata] .lib-enlace"), a => a.href.startsWith("https://books.google.com/")).catch(() => false), "su enlace va por https");
+  await p.click(".lib-hoja .budget-sheet-close");
+  await p.waitForTimeout(300);
+  const antes = wiki.length;
+  await p.click('[data-lib-ver="c1"]');
+  await p.waitForTimeout(300);
+  ok(wiki.length === antes && /Cien años de soledad es una novela/.test(await txt(p, hoja("[data-lib-trata]"))), "la segunda vez sale al instante (guardado en el teléfono)");
+  await p.click(".lib-hoja .budget-sheet-close");
+  await p.waitForTimeout(300);
+
+  console.log("Temas al agregar y páginas por género");
+  await p.click('[data-lib="nuevo"]');
+  await p.waitForTimeout(350);
+  await p.fill(hoja("[data-lib-q]"), "padre rico padre pobre");
+  await p.press(hoja("[data-lib-q]"), "Enter");
+  await p.waitForTimeout(450);
+  await p.click(hoja('[data-lib-elegir-libro="1"]'));
+  await p.waitForTimeout(400);
+  ok((await p.$eval(hoja('[name="temas"]'), i => i.value)).split("|").includes("finanzas personales"), "al elegir un libro, se llenan sus temas");
+  await p.click(hoja(".lib-form-libro [type=submit]"));
+  await p.waitForTimeout(450);
+  const nuevo = (await libros()).find(([, d]) => d.titulo === "Padre rico, padre pobre para jóvenes");
+  ok(nuevo && Array.isArray(nuevo[1].temas) && nuevo[1].temas.includes("finanzas personales"), "se guardan con el libro");
+  if (await p.$eval(".lib-hoja", el => !el.hidden).catch(() => false)) { await p.click(".lib-hoja .budget-sheet-close"); await p.waitForTimeout(300); }
+  await p.click('[data-lib-vista="stats"]');
+  await p.waitForTimeout(400);
+  const generos = await p.$$eval(".lib-genero-fila", els => els.map(e => e.innerText.replace(/\s+/g, " ").trim()));
+  ok(generos.some(t => /^Novela 417 págs\. 1$/.test(t)) && generos.some(t => /^Negocios y finanzas 264 págs\. 1$/.test(t)), `«Lo que más lees» con las páginas de cada género (${generos.join(" | ")})`);
+  ok((await sobra(p, "html")) <= 0, "nada se sale de ancho");
+  ok(!p.errores.length, `sin errores de página${p.errores.length ? `: ${p.errores[0]}` : ""}`);
+  await p.context().close();
+}
+
 (async () => {
   const srv = await servidor();
   const base = `http://localhost:${srv.address().port}`;
@@ -345,5 +444,6 @@ async function fase3(browser, base, ancho) {
   for (const ancho of [390, 320, 1280]) await prueba(browser, base, ancho);
   for (const ancho of [390, 320]) await fase2(browser, base, ancho);
   for (const ancho of [390, 320]) await fase3(browser, base, ancho);
+  for (const ancho of [390, 320]) await fase4(browser, base, ancho);
   await terminar(browser, srv);
 })();

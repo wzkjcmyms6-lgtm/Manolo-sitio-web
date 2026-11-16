@@ -191,7 +191,7 @@ const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
   ok((await tx('[data-graf-lectura="meses"]')) === "sep: 1 libro", "tocar septiembre: «sep: 1 libro»");
   await p.click('.lib-graf:nth-of-type(2) .lib-g-tabla summary');
   ok((await p.$$eval(".lib-graf:nth-of-type(2) .lib-g-tabla tbody tr", r => r.length)) === 12, "«Ver tabla» con los 12 meses");
-  ok(/Novela 1/.test(await tx(".lib-generos")) && /El más largo que terminaste: Cien años de soledad \(471 páginas\)/.test(await tx(".lib-curiosos")), "lo que más lees (cuenta los terminados: Novela 1) y el más largo");
+  ok(/Novela 96 págs\. 1/.test(await tx(".lib-generos")) && /El más largo que terminaste: Cien años de soledad \(471 páginas\)/.test(await tx(".lib-curiosos")), "lo que más lees (cuenta los terminados: Novela 1, con sus páginas, D-132) y el más largo");
   await captura(p, "libros-estadisticas.png");
   ok(!p.errores.length, "sin errores de página");
   await p.context().close();

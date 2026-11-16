@@ -11,7 +11,7 @@ test("validar un libro: título obligatorio, fechas editables y coherentes", () 
   assert.equal(r.ok, true);
   assert.deepEqual(r.doc, { v: 1, titulo: "Cien años de soledad", autor: "Gabriel García Márquez", paginas: 471, estado: "terminado", calificacion: 5,
     opinion: "Una obra maestra.", fechaRegistro: "2025-03-01", fechaInicio: "2025-01-10", fechaFin: "2025-02-20", genero: null, anio: null, olKey: null,
-    tituloOriginal: null, autorKey: null, edicion: null, formato: "papel", saga: null, sagaN: null, prioridad: null });
+    tituloOriginal: null, autorKey: null, edicion: null, temas: null, formato: "papel", saga: null, sagaN: null, prioridad: null });
   // Nivel 3 (D-129): título original y autor de Open Library, si vienen.
   const n3 = L.validarLibro({ titulo: "Hábitos atómicos", tituloOriginal: " Atomic  Habits ", autorKey: "OL7422948A", fechaRegistro: HOY }, { hoy: HOY });
   assert.deepEqual([n3.doc.tituloOriginal, n3.doc.autorKey], ["Atomic Habits", "OL7422948A"]);

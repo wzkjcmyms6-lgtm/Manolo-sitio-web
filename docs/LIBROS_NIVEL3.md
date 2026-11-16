@@ -13,7 +13,7 @@ publicada, con pruebas y su lista para el iPhone.
 | 1 | Buscar bien: título en español, autor correcto, el libro de verdad primero; buscar también por autor | ✅ (D-129) |
 | 2 | Las páginas de tu edición: elegir la edición (editorial, año, tapa y páginas), la recomendada, el ISBN exacto y cuántas páginas por día para terminarlo | ✅ (D-130) |
 | 3 | Ficha del autor: foto, quién es (en español), tus libros de él y sus otros libros con "＋ Quiero leer" | ✅ (D-131) |
-| 4 | Género y temas en español, "De qué trata" y estadísticas por género | |
+| 4 | Género y temas en español, "De qué trata" y estadísticas por género | ✅ (D-132) |
 | 5 | Completar tu biblioteca: arreglar los libros que ya tienes (títulos en inglés, sin autor, páginas, género o portada), siempre con tu OK | |
 | 6 | Recomendaciones: "Si te gustó…", del mismo autor y de los mismos temas; "¿Qué leo después?" más inteligente | |
 | 7 | Control final y lista para el iPhone | |
@@ -128,7 +128,14 @@ Brida, El Zahir…).
 - Lo que se baja del autor se guarda en el teléfono (abre sin internet la
   segunda vez).
 
-### Fase 4 — Género, temas y "De qué trata"
+### Fase 4 — Género, temas y "De qué trata" ✅ (D-132)
+Hecho en `js/libros-fuentes.js` y `js/libros-trata-ui.js`. Con las
+respuestas reales: Padre rico → riqueza, finanzas personales, inversiones,
+éxito; El hombre en busca de sentido → Holocausto, sentido de la vida,
+espiritualidad; "De qué trata" de Wikipedia para Cien años de soledad,
+Hábitos atómicos y El principito (la serie y la película del mismo nombre
+quedan fuera).
+
 - Género mejor detectado (más pistas en español e inglés) y **temas en
   español** ("hábitos", "finanzas personales", "realismo mágico"…).
 - **"De qué trata"**: un resumen corto en español cuando hay una fuente

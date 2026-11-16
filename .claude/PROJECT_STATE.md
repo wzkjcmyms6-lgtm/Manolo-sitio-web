@@ -14,6 +14,8 @@ Actualizado: 2026-11-16 (Libros nivel 3 en curso, D-128).
   exacto) y "¿Para cuándo lo quieres terminar?" con páginas por día.
   Fase 3 hecha (D-131): **ficha del autor** (tocar el autor: quién es en
   español, tus libros de él y sus libros más leídos con "＋ Quiero leer").
+  Fase 4 hecha (D-132): **temas en español** (tocar uno filtra la lista) y
+  **"De qué trata"** (Wikipedia, Open Library o Google Books, con fuente).
 
 - **Mejoras sin servidor (2026-11-15, terminado)**: fase 1 hecha (D-123):
   **Biblia en audio** en el lector, con las voces del iPhone (sin

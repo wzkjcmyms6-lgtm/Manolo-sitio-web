@@ -2553,6 +2553,9 @@ html[data-modo="claro"] {
 :where(html[data-modo="claro"]) .lib-autor-libro-t small {
   color: var(--muted);
 }
+:where(html[data-modo="claro"]) .lib-genero-fila small {
+  color: var(--muted);
+}
 :where(html[data-modo="claro"]) .lib-aviso-dup {
   color: #995d00;
 }

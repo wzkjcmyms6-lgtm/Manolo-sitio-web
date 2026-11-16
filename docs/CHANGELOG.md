@@ -1,5 +1,13 @@
 # Cambios
 
+## 2026-11-16 · Libros: temas y "De qué trata"
+- Cada libro trae sus **temas en español** (por ejemplo "finanzas
+  personales", "hábitos"). Toca un tema y ves tus libros de ese tema.
+- En la ficha, **"De qué trata"**: un resumen en español (de Wikipedia o de
+  Google Libros), con su fuente.
+- En Estadísticas, "Lo que más lees" también dice **cuántas páginas** de
+  cada género.
+
 ## 2026-11-16 · Libros: la ficha del autor
 - En la ficha de un libro, **toca el autor**: su foto, quién es (en
   español, de Wikipedia), sus años, **tus libros de él** y **sus libros más

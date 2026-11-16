@@ -6,6 +6,7 @@
 // Fase 5 (D-108): saga (nombre y número), prioridad y notas por libro.
 // Nivel 3 (D-129): título original y autor de Open Library (js/libros-fuentes.js).
 // Nivel 3, fase 2 (D-130): la edición (editorial, año, tapa) y metaFin.
+// Nivel 3, fase 4 (D-132): temas (en español, hasta 5); el buscador de la lista también los mira.
 // Colecciones: users/{uid}/libros y users/{uid}/libros_frases (docs/DATABASE.md).
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
@@ -89,6 +90,13 @@ const duracionTexto = min => (Number.isInteger(min) && min > 0 ? `${Math.floor(m
 
 // ---- Libros ----
 // Datos del formulario → documento. { ok, errores: [{campo, texto}], doc }.
+// Temas (fase 4, D-132): lista o "a|b|c" → hasta 5, cortos y sin repetir; vacío = null.
+function temasOk(t) {
+  const lista = (Array.isArray(t) ? t : String(t || "").split("|")).map(x => texto(x, 40).replace(/\s+/g, " ")).filter(Boolean);
+  const out = [];
+  lista.forEach(x => { if (out.length < 5 && !out.some(y => normalizar(y) === normalizar(x))) out.push(x); });
+  return out.length ? out : null;
+}
 // La edición que elegiste (fase 2, D-130): { key, editorial, anio, formato } o null.
 const FORMATOS_EDICION = ["dura", "blanda", "bolsillo", "digital", "audio"];
 function edicionDe(d) {
@@ -153,6 +161,7 @@ function validarLibro(datos, opciones) {
       tituloOriginal: texto(datos.tituloOriginal, 200).replace(/\s+/g, " ") || null,
       autorKey: /^OL\d+A$/.test(String(datos.autorKey || "")) ? datos.autorKey : null,
       edicion: edicionDe(datos),
+      temas: temasOk(datos.temas),
       formato, saga: saga || null, sagaN: saga ? sagaN : null, prioridad: datos.prioridad === "alta" || datos.prioridad === "baja" ? datos.prioridad : null };
   // La duración solo con audiolibro (si cambias a papel, la que tenías queda guardada).
   if (formato === "audio") doc.duracionMin = duracionMin;
@@ -179,6 +188,7 @@ function normalizarLibro(id, d) {
     // Nivel 3, fase 2 (D-130).
     edicion: d.edicion && typeof d.edicion === "object" ? edicionDe(d.edicion) : null,
     metaFin: fechaOk(d.metaFin) ? d.metaFin : null,
+    temas: temasOk(d.temas) || [],
     // Progreso de lectura (js/libros-progreso.js).
     paginaActual: Number.isInteger(d.paginaActual) && d.paginaActual >= 0 ? d.paginaActual : null,
     paginaBase: Number.isInteger(d.paginaBase) && d.paginaBase >= 0 ? d.paginaBase : null,
@@ -223,7 +233,7 @@ function ordenar(lista, criterio) {
 function filtrar(lista, f) {
   f = f || {};
   const palabras = normalizar(f.texto).split(/\s+/).filter(Boolean);
-  return lista.filter(l => (!f.estado || l.estado === f.estado) && (!f.genero || l.genero === f.genero) && palabras.every(p => normalizar(`${l.titulo} ${l.autor}`).includes(p)));
+  return lista.filter(l => (!f.estado || l.estado === f.estado) && (!f.genero || l.genero === f.genero) && palabras.every(p => normalizar(`${l.titulo} ${l.autor} ${(l.temas || []).join(" ")}`).includes(p)));
 }
 
 function resumen(lista, hoy) {
@@ -453,7 +463,7 @@ function exportarJson(libros, frases, ahora, portadas, ajustes) {
 
 return {
   ESTADOS, ESTADO, FORMATOS, FORMATO, DURACION_MAX, leerDuracion, duracionTexto, PRIORIDADES, TIPOS_NOTA, TIPO_NOTA, validarNota, notasDe, etiquetasOk, ORDENES, GENEROS, GENERO, normalizar, fechaOk, fechaLarga, estrellas,
-  validarLibro, normalizarLibro, edicionDe, ordenar, filtrar, resumen, colorTapa,
+  validarLibro, normalizarLibro, edicionDe, temasOk, ordenar, filtrar, resumen, colorTapa,
   validarFrase, normalizarFrase, ordenarFrases, filtrarFrases, frasesDe, exportarJson,
   urlBusqueda, leerBusqueda, urlBuscarLibro, esIsbn, leerLibros, generoDesdeTemas, duplicado, urlPortadaOL, portadaUrlOk, medidasFoto, CALIDADES, LIMITE_FOTO, fotoOk, kb, portadaParaGuardar
 };

@@ -291,6 +291,8 @@ function estadisticas(libros, hoy) {
     calificacionMedia: calificados.length ? Math.round((calificados.reduce((s, l) => s + l.calificacion, 0) / calificados.length) * 10) / 10 : null,
     autorTop: autores[0] && autores[0].n >= 2 ? autores[0] : null,
     generos: contar(terminados, l => l.genero || ""),
+    // Nivel 3, fase 4 (D-132): páginas leídas por género (libros terminados con páginas).
+    paginasGenero: terminados.reduce((o, l) => { if (l.genero && Number.isInteger(l.paginas)) o[l.genero] = (o[l.genero] || 0) + l.paginas; return o; }, {}),
     diasPorLibro: duraciones.length ? Math.round(duraciones.reduce((s, d) => s + d, 0) / duraciones.length) : null,
     masLargo: largo ? { id: largo.id, titulo: largo.titulo, paginas: largo.paginas } : null
   };

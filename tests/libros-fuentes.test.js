@@ -252,3 +252,61 @@ test("sus libros más leídos, en español, sin resúmenes y sin lo que ya tiene
   assert.equal(F.loTienes(l[2], tengo), false);
   assert.equal(F.loTienes(Object.assign({}, l[0], { titulo: "Otro" }), [{ titulo: "O Alquimista" }]), true, "por el título original");
 });
+
+// ---- Fase 4 (D-132): temas en español y "De qué trata" ----
+test("temas en español desde los de Open Library (hasta 5, sin repetir el género)", () => {
+  const t = q => buscar(q[0], q[1]).libros[0].temas;
+  assert.deepEqual(t(["padre-rico", "padre rico padre pobre"]), ["riqueza", "finanzas personales", "inversiones", "éxito"]);
+  assert.deepEqual(t(["frankl", "el hombre en busca de sentido"]), ["Holocausto", "sentido de la vida", "espiritualidad"]);
+  assert.ok(t(["habitos-atomicos", "habitos atomicos"]).includes("hábitos"));
+  assert.ok(t(["cien-anos", "cien años de soledad"]).includes("realismo mágico"));
+  assert.ok(buscar("habitos-atomicos", "habitos atomicos").libros.every(x => x.temas.length <= 5));
+  assert.deepEqual(F.temasDe(["Transportation", "Sports", "Habitat"]), ["deporte", "hábitos"], "«sport» no es «transport»");
+  assert.deepEqual(F.temasDe(["Psychology", "Self-help"], "psicologia"), ["autoayuda"], "sin repetir el género");
+  assert.deepEqual(F.temasDe(["nyt:paperback_advice=2012-01-14", "Open Library Staff Picks", "Accessible book"]), []);
+  assert.deepEqual(F.temasDe(null), []);
+});
+
+test("de qué trata: la página del libro en Wikipedia (no la serie ni la película)", () => {
+  const c = F.leerWikiLibro(fx("wiki-libro-cien-anos"), "Cien años de soledad", "Gabriel García Márquez");
+  assert.equal(c.fuente, "wikipedia");
+  assert.equal(c.url, "https://es.wikipedia.org/wiki/Cien_a%C3%B1os_de_soledad");
+  assert.match(c.texto, /^Cien años de soledad es una novela del escritor colombiano/);
+  assert.equal(c.genero, "novela");
+  assert.ok(c.texto.length <= 701);
+  const h = F.leerWikiLibro(fx("wiki-libro-habitos"), "Hábitos atómicos", "James Clear");
+  assert.match(h.texto, /^Hábitos atómicos: Cambios pequeños, resultados extraordinarios/);
+  assert.equal(h.genero, null, "«libro de James Clear» no dice el género");
+  const p = F.leerWikiLibro(fx("wiki-libro-principito"), "El principito", "Antoine de Saint-Exupéry");
+  assert.match(p.texto, /^El principito \(en francés: Le Petit Prince\) es una novela corta/, "sin la pronunciación");
+  assert.equal(p.genero, "novela");
+  assert.equal(F.leerWikiLibro(fx("wiki-libro-cien-anos"), "Cien años de soledad", "Otro Autor"), null, "de otro autor, no");
+  assert.equal(F.leerWikiLibro(fx("wiki-libro-principito"), "Rayuela", "Julio Cortázar"), null);
+  assert.equal(F.leerWikiLibro(null, "x", "y"), null);
+  assert.match(F.urlWikiLibro("Hábitos atómicos", "James Clear"), /gsrsearch=H%C3%A1bitos%20at%C3%B3micos%20clear&/);
+});
+
+test("de qué trata: Open Library solo si está en español; Google Books como extra", () => {
+  const o = F.leerObra(fx("obra-cien-anos"));
+  assert.equal(o.fuente, "openlibrary");
+  assert.match(o.texto, /^Cien años de soledad es una novela/);
+  assert.ok(!/[*_]/.test(o.texto), "sin markdown");
+  assert.equal(F.leerObra(fx("obra-habitos")), null, "en inglés, no");
+  assert.equal(F.urlObra("/works/OL274505W"), "https://openlibrary.org/works/OL274505W.json");
+  assert.equal(F.urlObra("x"), null);
+  // Formato de Google Books (ejemplo hecho a mano con la forma de su respuesta, no es una respuesta real).
+  const g = { items: [
+    { volumeInfo: { title: "Hábitos atómicos", authors: ["James Clear"], language: "en", description: "x".repeat(100) } },
+    { volumeInfo: { title: "Hábitos atómicos", authors: ["James Clear"], language: "es", description: "<p>Un método <b>fácil</b> y comprobado para crear buenos hábitos y dejar los malos, paso a paso, con ejemplos de la vida real.</p>", infoLink: "http://books.google.com/x" } }
+  ] };
+  const r = F.leerGoogle(g, "Hábitos atómicos", "James Clear");
+  assert.deepEqual([r.fuente, r.url], ["google", "https://books.google.com/x"]);
+  assert.equal(r.texto, "Un método fácil y comprobado para crear buenos hábitos y dejar los malos, paso a paso, con ejemplos de la vida real.");
+  assert.equal(F.leerGoogle(g, "Otro libro", "James Clear"), null);
+  assert.equal(F.leerGoogle({ error: { code: 429 } }, "x", "y"), null);
+  assert.match(F.urlGoogle("Hábitos atómicos", "James Clear"), /intitle%3AH%C3%A1bitos%20at%C3%B3micos%20inauthor%3Aclear&langRestrict=es/);
+  assert.equal(F.esEspanol("The quick brown fox jumps over the lazy dog and the cat"), false);
+  assert.equal(F.esEspanol("La novela cuenta la historia de una familia en un pueblo que se llama Macondo"), true);
+  assert.equal(F.limpiarSinopsis("Texto [1] con nota[cita requerida] y *énfasis*."), "Texto con nota y énfasis.");
+  assert.ok(F.limpiarSinopsis("Una frase. ".repeat(100), 200).length <= 201);
+});

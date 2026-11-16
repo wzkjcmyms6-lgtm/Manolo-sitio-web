@@ -18,6 +18,9 @@
 // Fase 3 (D-131) — ficha del autor: su ficha de Open Library, su página de
 // Wikipedia en español (emparejada por Wikidata para no confundirlo con
 // otro del mismo nombre) y sus libros más leídos, en español.
+// Fase 4 (D-132) — temas en español (de los temas de Open Library) y "De
+// qué trata": la página del libro en Wikipedia en español; si no, la
+// descripción de Open Library si está en español; si no, Google Books.
 // Sin DOM ni Firebase: tests/libros-fuentes.test.js, con respuestas reales
 // guardadas en tests/fixtures/libros/.
 (function (root, factory) {
@@ -100,6 +103,7 @@ function leerBusqueda(json, q, max) {
         paginas: Number.isInteger(pags) && pags > 0 && pags <= 20000 ? pags : null,
         url: idPortada ? L.urlPortadaOL(idPortada, "M") : "", urlChica: idPortada ? L.urlPortadaOL(idPortada, "S") : "",
         genero: L.generoDesdeTemas(d.subject),
+        temas: temasDe(d.subject, L.generoDesdeTemas(d.subject)),
         olKey: /^\/works\/OL\d+W$/.test(String(d.key || "")) ? d.key : null,
         edicionKey: ed && /^\/books\/OL\d+M$/.test(String(ed.key || "")) ? ed.key : null,
         ediciones, derivado, enEspanol: enEsp
@@ -306,8 +310,120 @@ const loTienes = (x, libros) => (libros || []).some(l => (x.olKey && l.olKey ===
 // "1947" o "1927–2014".
 const anios = a => (a && a.nacio ? (a.murio ? `${a.nacio}–${a.murio}` : String(a.nacio)) : "");
 
+// ---- Fase 4 (D-132): temas en español ----
+// Cada tema de Open Library (inglés o español) se traduce al primero que
+// coincide (los más específicos van antes); hasta 5, sin repetir el género.
+const TEMAS = [
+  ["romper hábitos", ["habit breaking"]], ["hábitos", ["habit", "habito"]], ["productividad", ["productiv", "time management"]],
+  ["finanzas personales", ["personal finance", "finanzas personales", "finance, personal"]], ["inversiones", ["invest", "inversion"]],
+  ["riqueza", ["wealth", "riqueza", "rich people", "ricos"]], ["éxito", ["success", "exito"]], ["liderazgo", ["leadership", "liderazgo"]],
+  ["emprendimiento", ["entrepreneur", "empren"]], ["negocios", ["business", "negocio"]], ["economía", ["economic", "economia"]],
+  ["vida cristiana", ["christian life", "vida cristiana"]], ["oración", ["prayer", "oracion"]], ["Biblia", ["bible", "biblia"]],
+  ["teología", ["theolog", "teolog", "apologetic"]], ["cristianismo", ["christian", "cristian"]], ["fe", ["faith"]],
+  ["meditación", ["meditation", "meditacion", "mindfulness"]], ["espiritualidad", ["spiritual", "espiritual", "new thought"]],
+  ["estoicismo", ["stoic", "estoic"]], ["sentido de la vida", ["meaning of life", "sentido de la vida"]], ["filosofía", ["philosoph", "filosof"]],
+  ["Holocausto", ["holocaust", "holocausto", "concentration camp", "konzentrationslager", "campos de concentracion"]],
+  ["Segunda Guerra Mundial", ["world war, 1939", "segunda guerra mundial"]], ["historia", ["history", "historia"]],
+  ["civilización", ["civilization", "civilizacion"]], ["neurociencia", ["neuroscien", "brain", "cerebro"]], ["psicología", ["psycholog", "psicolog", "behavior modification"]],
+  ["autoayuda", ["self-help", "self help", "autoayuda", "self-actualization", "personal growth", "superacion", "desarrollo personal", "self-improvement"]],
+  ["motivación", ["motivation", "motivacion", "inspirational"]], ["felicidad", ["happiness", "felicidad"]],
+  ["salud", ["health", "salud"]], ["nutrición", ["nutrition", "nutricion", "diet"]], ["deporte", ["sport", "deporte", "running", "fitness"]],
+  ["ciencia", ["science", "ciencia"]], ["tecnología", ["technology", "tecnologia"]], ["inteligencia artificial", ["artificial intelligence", "inteligencia artificial"]],
+  ["realismo mágico", ["magic realism", "realismo magico"]], ["historias de amor", ["love stories", "historias de amor", "romance"]],
+  ["ciencia ficción", ["science fiction", "ciencia ficcion"]], ["fantasía", ["fantasy", "fantasia"]], ["misterio", ["mystery", "detective", "misterio"]],
+  ["suspenso", ["thriller", "suspense", "suspenso"]], ["terror", ["horror", "terror"]], ["crimen", ["crime", "murder", "crimen", "asesinato"]],
+  ["aventura", ["adventure", "aventura"]], ["viajes", ["voyages and travels", "travel", "viaje"]], ["distopía", ["dystopi", "distopi", "totalitarian"]],
+  ["política", ["politic", "politica"]], ["matrimonio", ["marriage", "matrimonio"]], ["familia", ["family", "familia", "parenting", "crianza"]],
+  ["relaciones", ["relationship", "relaciones", "interpersonal"]], ["comunicación", ["communication", "comunicacion"]],
+  ["biografía", ["biography", "biografia", "autobiograph", "memoir", "memorias"]], ["poesía", ["poetry", "poesia", "poems"]],
+  ["clásicos", ["classic literature", "clasicos"]], ["infantil", ["juvenile", "children", "infantil"]], ["juvenil", ["young adult", "juvenil"]]
+];
+// Una pista corta (5 letras o menos) tiene que empezar una palabra: "sport"
+// no es "transport".
+const pista = (t, p) => (p.length <= 5 ? new RegExp(`(^|[^a-z])${p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test(t) : t.includes(p));
+function temasDe(temas, genero) {
+  const out = [];
+  const delGenero = genero && L.GENERO[genero] ? L.normalizar(L.GENERO[genero].nombre) : "";
+  (Array.isArray(temas) ? temas : []).slice(0, 40).forEach(t => {
+    const x = L.normalizar(t);
+    if (!x || out.length >= 5) return;
+    const hit = TEMAS.find(([, ps]) => ps.some(p => pista(x, p)));
+    if (hit && !out.includes(hit[0]) && L.normalizar(hit[0]) !== delGenero) out.push(hit[0]);
+  });
+  return out;
+}
+
+// ---- Fase 4 (D-132): "De qué trata" ----
+const apellido = autor => (esLatino(autor) ? palabras(autor).slice(-1)[0] || "" : "");
+// La página del libro en Wikipedia en español: la descripción dice que es
+// un libro (novela, ensayo…), el título se parece y el autor aparece; así
+// no sale la serie de televisión ni la película con el mismo nombre.
+const urlWikiLibro = (titulo, autor) => `https://es.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=${encodeURIComponent(`${String(titulo || "").trim()} ${apellido(autor)}`.trim())}&gsrlimit=5&prop=pageprops%7Cextracts%7Cdescription&ppprop=wikibase_item&exintro=1&explaintext=1&exsentences=4`;
+const OBRAS = /(^|[^a-z])(libro|novela|obra|ensayo|cuentos?|poemario|relatos?|autobiografia|memorias|biografia|historieta|comic|saga|best seller)([^a-z]|$)/;
+function generoDesdeDescripcion(d) {
+  const x = L.normalizar(d);
+  if (/novela|cuento|relato/.test(x)) return "novela";
+  if (/poemario|poesia/.test(x)) return "poesia";
+  if (/biografia|memorias/.test(x)) return "biografia";
+  if (/autoayuda|desarrollo personal/.test(x)) return "desarrollo";
+  return null;
+}
+// Sin "[cita requerida]", sin markdown ni enlaces, y cortado en una frase.
+function limpiarSinopsis(t, max) {
+  let s = String(t || "").split(/\n-{3,}|\n\s*(?:see also|contains|also contained in)\b/i)[0]
+    .replace(/<br\s*\/?>/gi, " ").replace(/<\/p>/gi, " ").replace(/<[^>]+>/g, "")
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&").replace(/&nbsp;/g, " ")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").replace(/\(\[[^\]]*\]\[\d+\]\)/g, "").replace(/\[\d+\]:\s*\S+/g, "")
+    .replace(/\[(?:cita requerida|nota \d+|n\. \d+|\d+)\]/gi, "").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1")
+    .replace(/[,;]?\s*pronunciaci[oó]n[^/)]*\/[^/]*\//gi, "").replace(/\(\s*\)/g, "")
+    .replace(/\s*\u200b\s*/g, " ").replace(/\s+/g, " ").replace(/\s+([.,;:])/g, "$1").trim();
+  const tope = max || 700;
+  if (s.length > tope) { const corte = s.slice(0, tope); const fin = Math.max(corte.lastIndexOf(". "), corte.lastIndexOf("? "), corte.lastIndexOf("! ")); s = fin > tope * 0.5 ? corte.slice(0, fin + 1) : `${corte.replace(/\s+\S*$/, "")}…`; }
+  return s;
+}
+function leerWikiLibro(json, titulo, autor) {
+  const paginas = json && json.query && json.query.pages ? Object.values(json.query.pages).sort((a, b) => (a.index || 0) - (b.index || 0)) : [];
+  const ap = apellido(autor);
+  const p = paginas.find(x => {
+    const desc = L.normalizar(x.description || "");
+    const base = String(x.title || "").replace(/\s*\([^)]*\)\s*$/, "");
+    const inicio = L.normalizar(String(x.extract || "").slice(0, 400));
+    return OBRAS.test(desc) && parecido(titulo, base) >= 0.6 && (!ap || desc.includes(ap) || inicio.includes(ap));
+  });
+  if (!p || !p.extract) return null;
+  return { texto: limpiarSinopsis(p.extract), fuente: "wikipedia", url: `https://es.wikipedia.org/wiki/${encodeURIComponent(String(p.title).replace(/ /g, "_"))}`,
+    genero: generoDesdeDescripcion(p.description) };
+}
+// ¿Está en español? (más palabras comunes del español que del inglés)
+const PAL_ES = new Set(["el", "la", "los", "las", "de", "del", "que", "y", "en", "un", "una", "es", "por", "con", "para", "su", "sus", "se", "lo", "como", "pero", "más", "fue", "este", "esta", "son", "sobre", "también", "entre"]);
+const PAL_EN = new Set(["the", "and", "of", "to", "in", "is", "that", "it", "with", "as", "for", "was", "on", "are", "be", "by", "this", "from", "his", "her", "you", "your", "an", "at"]);
+function esEspanol(t) {
+  const ws = String(t || "").toLowerCase().match(/[a-záéíóúñü]+/g) || [];
+  let es = 0, en = 0;
+  ws.forEach(w => { if (PAL_ES.has(w)) es++; if (PAL_EN.has(w)) en++; });
+  return es >= 3 && es > en * 1.5;
+}
+// La descripción de la obra en Open Library (solo si está en español).
+const urlObra = olKey => (/^\/works\/OL\d+W$/.test(String(olKey || "")) ? `${OL}${olKey}.json` : null);
+function leerObra(json) {
+  if (!json || typeof json !== "object") return null;
+  const d = typeof json.description === "string" ? json.description : json.description && typeof json.description.value === "string" ? json.description.value : "";
+  const texto = limpiarSinopsis(d);
+  return texto.length >= 60 && esEspanol(texto) ? { texto, fuente: "openlibrary", url: `${OL}${json.key || ""}` } : null;
+}
+// Google Books (sin clave): solo un extra; si no responde, nada.
+const urlGoogle = (titulo, autor) => `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(`intitle:${String(titulo || "").trim()}${apellido(autor) ? ` inauthor:${apellido(autor)}` : ""}`)}&langRestrict=es&maxResults=5&printType=books&fields=items(volumeInfo(title,authors,description,language,infoLink))`;
+function leerGoogle(json, titulo, autor) {
+  const items = ((json && json.items) || []).map(x => x && x.volumeInfo).filter(Boolean);
+  const v = items.find(x => x.language === "es" && parecido(titulo, x.title) >= 0.6 && (!autor || (x.authors || []).some(a => mismoAutor(a, autor) || L.normalizar(a).includes(apellido(autor) || "@"))) && String(x.description || "").length >= 80);
+  if (!v) return null;
+  const u = String(v.infoLink || "").replace(/^http:/, "https:");
+  return { texto: limpiarSinopsis(v.description), fuente: "google", url: /^https:\/\/books\.google\.[a-z.]+\//.test(u) ? u : "" };
+}
+
 return { OL, CAMPOS, urlBuscar, parecido, esDerivado, esLatino, limpiarTitulo, leerBusqueda, urlFichaAutor, nombreDeFicha,
   urlEdiciones, urlIsbn, urlEdicion, formatoDe, NOMBRE_FORMATO, paginasDe, anioDe, limpiarEditorial, leerEdicion, leerEdiciones, enEspanol,
   gruposDePaginas, recomendar, pedirMas, textoEdicion,
-  urlLibrosDeAutor, urlBuscarAutor, elegirAutor, mismoAutor, leerAutor, urlWikiAutor, leerWiki, librosDeAutor, loTienes, anios };
+  urlLibrosDeAutor, urlBuscarAutor, elegirAutor, mismoAutor, leerAutor, urlWikiAutor, leerWiki, librosDeAutor, loTienes, anios,
+  TEMAS, temasDe, urlWikiLibro, leerWikiLibro, generoDesdeDescripcion, limpiarSinopsis, esEspanol, urlObra, leerObra, urlGoogle, leerGoogle };
 });

@@ -5879,6 +5879,13 @@ input[type="date"].lib-input, input[type="time"].lib-input { -webkit-appearance:
 .lib-autor-libro-t b { font-size: 0.92rem; line-height: 1.25; overflow-wrap: anywhere; }
 .lib-autor-libro-t small { color: var(--muted); font-size: 0.78rem; }
 .lib-autor-otro .lib-btn-chico { flex-shrink: 0; }
+/* Nivel 3, fase 4 (D-132): temas y "De qué trata" */
+.lib-temas { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.2rem 0 0.6rem; }
+.lib-tema { font: inherit; font-size: 0.8rem; cursor: pointer; min-height: 32px; }
+.lib-trata { margin: 0; line-height: 1.55; font-size: 0.95rem; }
+.lib-trata.is-corto { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.lib-trata-caja .lib-btn-chico { margin-top: 0.3rem; }
+.lib-genero-fila small { color: var(--muted); font-size: 0.75rem; }
 .lib-aviso-dup { color: #ffcf85; }
 .lib-aviso-dup[hidden] { display: none; }
 
