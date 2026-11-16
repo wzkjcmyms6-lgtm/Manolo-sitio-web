@@ -198,3 +198,57 @@ test("piezas de las ediciones: formato, páginas, año, editorial y cuándo pedi
   assert.equal(F.pedirMas({ links: { next: "/x" } }, 300, 0), false, "hasta 300");
   assert.equal(F.pedirMas({ links: {} }, 100, 0), false);
 });
+
+// ---- Fase 3 (D-131): la ficha del autor ----
+test("el autor por su nombre: de los que se llaman igual, el que más obras tiene", () => {
+  assert.equal(F.elegirAutor(fx("autores-paulo-coelho"), "Paulo Coelho"), "OL66700A", "no «Paulo Coelho Netto»");
+  assert.equal(F.elegirAutor(fx("autores-paulo-coelho"), "paulo  COELHO"), "OL66700A");
+  assert.equal(F.elegirAutor({ docs: [] }, "x"), null);
+  assert.equal(F.elegirAutor(null, "x"), null);
+  assert.match(F.urlBuscarAutor(" Paulo Coelho "), /^https:\/\/openlibrary\.org\/search\/authors\.json\?q=Paulo%20Coelho&limit=8$/);
+  assert.match(F.urlLibrosDeAutor("OL66700A"), /q=author_key%3AOL66700A&lang=es&sort=editions&limit=30/);
+  assert.equal(F.urlLibrosDeAutor("x"), null);
+  assert.equal(F.mismoAutor("Robert T. Kiyosaki", "Robert Kiyosaki"), true);
+  assert.equal(F.mismoAutor("R. Kiyosaki", "Robert Kiyosaki"), true);
+  assert.equal(F.mismoAutor("Gabriel García Márquez", "gabriel garcia marquez"), true);
+  assert.equal(F.mismoAutor("Paulo Coelho", "João Paulo Borges Coelho"), false);
+  assert.equal(F.mismoAutor("Coelho", "Paulo Coelho"), false);
+  assert.equal(F.mismoAutor("", "x"), false);
+});
+
+test("su ficha y su Wikipedia en español (emparejada por Wikidata)", () => {
+  const a = F.leerAutor(fx("autor-coelho"));
+  assert.deepEqual([a.key, a.nombre, a.nacio, a.murio, a.wikidata, F.anios(a)], ["OL66700A", "Paulo Coelho", 1947, null, "Q12881", "1947"]);
+  assert.match(a.foto, /^https:\/\/covers\.openlibrary\.org\/a\/id\/\d+-M\.jpg$/);
+  assert.ok(a.bio.length > 40);
+  const w = F.leerWiki(fx("wiki-paulo-coelho"), a);
+  assert.equal(w.titulo, "Paulo Coelho");
+  assert.equal(w.descripcion, "escritor brasileño");
+  assert.match(w.extracto, /^Paulo Coelho de Souza \(Río de Janeiro, 24 de agosto de 1947\) es un novelista/);
+  assert.ok(!/cita requerida|\[\d+\]/.test(w.extracto), "sin las marcas de Wikipedia ([cita requerida])");
+  assert.match(w.foto, /^https:\/\/(upload|thumb)\.wikimedia\.org\//);
+  assert.equal(w.url, "https://es.wikipedia.org/wiki/Paulo_Coelho");
+  // Con otro Wikidata, no es él (aunque se llame parecido).
+  assert.equal(F.leerWiki(fx("wiki-paulo-coelho"), Object.assign({}, a, { wikidata: "Q1" })), null);
+  // Sin Wikidata: solo si su apellido está en el título y escribe.
+  assert.equal(F.leerWiki(fx("wiki-paulo-coelho"), { nombre: "Paulo Coelho", wikidata: null }).titulo, "Paulo Coelho");
+  assert.equal(F.leerWiki(fx("wiki-george-hill"), { nombre: "George Hill", wikidata: null }), null, "no el basquetbolista");
+  assert.equal(F.leerWiki(null, a), null);
+  assert.equal(F.leerAutor(null), null);
+  assert.equal(F.anios({ nacio: 1927, murio: 2014 }), "1927–2014");
+  assert.equal(F.anios(null), "");
+});
+
+test("sus libros más leídos, en español, sin resúmenes y sin lo que ya tienes", () => {
+  const l = F.librosDeAutor(fx("libros-de-coelho"));
+  assert.ok(l.length >= 8 && l.length <= 12);
+  assert.equal(l[0].titulo, "El alquimista");
+  assert.ok(l.some(x => x.titulo === "Brida") && l.some(x => x.titulo === "La bruja de Portobello"));
+  assert.ok(l.every(x => !x.derivado));
+  for (let i = 1; i < l.length; i++) assert.ok(Number(l[i - 1].enEspanol) > Number(l[i].enEspanol) || l[i - 1].ediciones >= l[i].ediciones);
+  const tengo = [{ titulo: "El Alquimista" }, { titulo: "x", olKey: l[1].olKey }];
+  assert.equal(F.loTienes(l[0], tengo), true, "por el título");
+  assert.equal(F.loTienes(l[1], tengo), true, "por la obra");
+  assert.equal(F.loTienes(l[2], tengo), false);
+  assert.equal(F.loTienes(Object.assign({}, l[0], { titulo: "Otro" }), [{ titulo: "O Alquimista" }]), true, "por el título original");
+});

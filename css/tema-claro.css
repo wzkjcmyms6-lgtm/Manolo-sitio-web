@@ -2525,6 +2525,34 @@ html[data-modo="claro"] {
 :where(html[data-modo="claro"]) .lib-ed.is-on {
   box-shadow: inset 0 0 0 1px var(--accent-1);
 }
+:where(html[data-modo="claro"]) .lib-autor-link {
+  color: var(--muted);
+  background: none;
+}
+:where(html[data-modo="claro"]) .lib-autor-foto {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .lib-autor-foto b {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-autor-quien p {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-autor-libro,
+:where(html[data-modo="claro"]) .lib-autor-otro {
+  color: var(--ink);
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .lib-autor-libro .lib-portada,
+:where(html[data-modo="claro"]) .lib-autor-otro-portada {
+  box-shadow: none;
+}
+:where(html[data-modo="claro"]) .lib-autor-otro-portada img {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .lib-autor-libro-t small {
+  color: var(--muted);
+}
 :where(html[data-modo="claro"]) .lib-aviso-dup {
   color: #995d00;
 }

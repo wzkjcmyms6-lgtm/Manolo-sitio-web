@@ -12,6 +12,8 @@ Actualizado: 2026-11-16 (Libros nivel 3 en curso, D-128).
   por autor (`js/libros-fuentes.js`). Fase 2 hecha (D-130): **las páginas
   de tu edición** (ediciones en español agrupadas, la recomendada, el ISBN
   exacto) y "¿Para cuándo lo quieres terminar?" con páginas por día.
+  Fase 3 hecha (D-131): **ficha del autor** (tocar el autor: quién es en
+  español, tus libros de él y sus libros más leídos con "＋ Quiero leer").
 
 - **Mejoras sin servidor (2026-11-15, terminado)**: fase 1 hecha (D-123):
   **Biblia en audio** en el lector, con las voces del iPhone (sin

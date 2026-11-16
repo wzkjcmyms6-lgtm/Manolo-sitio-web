@@ -1,5 +1,11 @@
 # Cambios
 
+## 2026-11-16 · Libros: la ficha del autor
+- En la ficha de un libro, **toca el autor**: su foto, quién es (en
+  español, de Wikipedia), sus años, **tus libros de él** y **sus libros más
+  leídos**, con "＋ Quiero leer" para agregarlos con todo lleno.
+- La segunda vez abre al instante, también sin internet.
+
 ## 2026-11-16 · Libros: las páginas de tu edición
 - Al elegir un libro, Manolo te muestra **las ediciones en español con sus
   páginas** (por ejemplo "De 326 a 338 págs. · 4 ediciones" y "448 págs.,

@@ -382,7 +382,7 @@ function ver(id) {
           <div class="lib-ficha-info">
             <h4>${esc(l.titulo)}</h4>
             ${l.tituloOriginal ? `<p class="lib-orig">Título original: ${esc(l.tituloOriginal)}</p>` : ""}
-            ${l.autor ? `<p>${esc(l.autor)}</p>` : ""}
+            ${l.autor ? (window.LibrosAutorUI ? `<button type="button" class="lib-autor-link" data-lib-autor aria-label="Ver la ficha de ${esc(l.autor)}">${esc(l.autor)} <span aria-hidden="true">›</span></button>` : `<p>${esc(l.autor)}</p>`) : ""}
             ${chipEstado(l.estado)}
             ${l.calificacion ? `<p class="lib-estrellas is-grande" aria-label="${l.calificacion} de 5">${L.estrellas(l.calificacion)}</p>` : ""}
             ${l.genero ? `<span class="lib-chip">${esc(L.GENERO[l.genero].nombre)}</span>` : ""}
@@ -677,6 +677,12 @@ hoja.el.addEventListener("click", e => {
   if (pag) { formPagina(pag.dataset.libPagina, "ver"); return; }
   const libroElegido = e.target.closest("[data-lib-elegir-libro]");
   if (libroElegido) { elegirLibro(encontrados[Number(libroElegido.dataset.libElegirLibro)]); return; }
+  // Ficha del autor (D-131).
+  if (e.target.closest("[data-lib-autor]") && window.LibrosAutorUI && actual && actual.id) {
+    const l = libros.find(x => x.id === actual.id);
+    if (l) LibrosAutorUI.abrir(l);
+    return;
+  }
   if (f && f.matches(".lib-form-libro") && window.LibrosEdicionesUI && LibrosEdicionesUI.click(e, f, { alElegir: portadaDeEdicion })) return;
   const fin = e.target.closest("[data-lib-fin]");
   if (fin && actual && actual.id) { guardarMetaFin(actual.id, fin.dataset.libFin || null); return; }
@@ -1124,6 +1130,8 @@ window.LibrosDatos = {
   metaDia, metaAnio,
   tapa: l => tapa(l),
   ver: id => ver(id),
+  // Nivel 3 (D-131): "＋ Quiero leer" desde la ficha del autor.
+  agregarCon: x => { formLibro(null); setTimeout(() => elegirLibro(x), 0); },
   // Un gráfico de barras como los de Estadísticas (tocar una barra dice su valor).
   grafico: (id, datos, o) => { graficos[id] = { datos, unidad: o.unidad }; return graficoBarras(id, datos, o); },
   festejo: id => { const l = libros.find(x => x.id === id); if (l) festejo(Object.assign({}, l)); }

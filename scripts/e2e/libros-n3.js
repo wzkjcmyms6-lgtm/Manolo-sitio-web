@@ -7,6 +7,9 @@
 // Fase 2 (D-130): las páginas de tu edición (ediciones en español
 // agrupadas, la recomendada, el ISBN exacto, a mano mandan las tuyas, sin
 // internet) y "¿Para cuándo lo quieres terminar?" (páginas por día).
+// Fase 3 (D-131): la ficha del autor (Open Library y Wikipedia simulados
+// con respuestas reales), sus libros, "＋ Quiero leer", guardado en el
+// teléfono y sin internet.
 // Uso: node scripts/e2e/libros-n3.js [carpeta-para-capturas]
 const fs = require("node:fs");
 const path = require("node:path");
@@ -253,11 +256,94 @@ async function fase2(browser, base, ancho) {
   await p.context().close();
 }
 
+// ---- Fase 3 (D-131): la ficha del autor ----
+const SEED3 = { [LIB]: {
+  b1: lb({ titulo: "Brida", autor: "Paulo Coelho", paginas: 288, estado: "por_leer" }),
+  b2: lb({ titulo: "El alquimista", autor: "Paulo Coelho", autorKey: "OL66700A", olKey: "/works/OL796465W", paginas: 192, estado: "terminado", calificacion: 5, fechaFin: "2026-11-05" }),
+  b3: lb({ titulo: "Cuentos de mi abuela", autor: "Rosa Pérez", estado: "por_leer" })
+} };
+async function fase3(browser, base, ancho) {
+  console.log(`\nLibros nivel 3, fase 3: la ficha del autor (${ancho} px)`);
+  const p = await abrir(browser, base, { __SEED__: SEED3 }, { hash: "#libros", zona: ZONA, fecha: HOY, ancho, alto: ancho > 800 ? 900 : 844 });
+  const pedidos = [];
+  let caido = false;
+  const json = (r, cuerpo) => r.fulfill({ contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: cuerpo });
+  await p.context().route(/openlibrary\.org\/search\/authors\.json/, r => { pedidos.push(r.request().url()); if (caido) return r.abort(); json(r, /coelho/i.test(decodeURIComponent(r.request().url())) ? FX("autores-paulo-coelho") : JSON.stringify({ docs: [] })); });
+  await p.context().route(/openlibrary\.org\/authors\/OL66700A\.json/, r => { pedidos.push(r.request().url()); json(r, FX("autor-coelho")); });
+  await p.context().route(/openlibrary\.org\/search\.json/, r => {
+    const u = decodeURIComponent(r.request().url());
+    pedidos.push(u);
+    json(r, /author_key:OL66700A/.test(u) ? FX("libros-de-coelho") : JSON.stringify({ docs: [] }));
+  });
+  await p.context().route(/openlibrary\.org\/(works|isbn|books)\//, r => json(r, JSON.stringify({ entries: [] })));
+  await p.context().route(/es\.wikipedia\.org\/w\/api\.php/, r => { pedidos.push(r.request().url()); json(r, FX("wiki-paulo-coelho")); });
+  await p.context().route(/covers\.openlibrary\.org|wikimedia\.org/, r => r.fulfill({ contentType: "image/png", body: PNG }));
+  await p.waitForTimeout(800);
+  const hoja = sel => `.lib-autor-hoja ${sel}`;
+  const libros = () => p.evaluate(c => Array.from(window.__fakeStore.colMap(c).entries()), LIB);
+
+  await p.click('[data-lib-ver="b1"]');
+  await p.waitForTimeout(350);
+  ok(/Paulo Coelho ›/.test(await txt(p, ".lib-hoja [data-lib-autor]")), "en la ficha del libro, el autor se puede tocar");
+  await p.click(".lib-hoja [data-lib-autor]");
+  await p.waitForTimeout(150);
+  ok(/Buscando quién es/.test(await txt(p, hoja("[data-lib-autor-estado]"))) || /escritor brasileño/i.test(await txt(p, hoja(".lib-autor-quien"))), "abre su ficha (primero «Buscando quién es…»)");
+  await p.waitForTimeout(700);
+  ok(pedidos.some(u => /search\/authors\.json\?q=Paulo%20Coelho/.test(u)), "sin autor de Open Library guardado, lo busca por su nombre");
+  const quien = await txt(p, hoja(".lib-autor-quien"));
+  ok(/^Paulo Coelho Escritor brasileño 1947$/.test(quien), `quién es: ${quien}`);
+  ok(/^Paulo Coelho de Souza \(Río de Janeiro, 24 de agosto de 1947\) es un novelista/.test(await txt(p, hoja(".lib-autor-bio"))), "un resumen en español (Wikipedia)");
+  ok(await p.$eval(hoja(".lib-enlace"), a => a.href === "https://es.wikipedia.org/wiki/Paulo_Coelho" && a.target === "_blank").catch(() => false), "«Leer más en Wikipedia»");
+  ok(await p.$eval(hoja(".lib-autor-foto img"), i => /wikimedia\.org/.test(i.src)).catch(() => false), "con su foto");
+  const mios = await p.$$eval(hoja("[data-lib-autor-ver]"), els => els.map(e => e.innerText.replace(/\s+/g, " ").trim()));
+  ok(mios.length === 2 && mios.some(t => /Brida Por leer$/.test(t)) && mios.some(t => /El alquimista Terminado · ★★★★★$/.test(t)), `tus libros de él: ${mios.join(" | ")}`);
+  const otrosT = await p.$$eval(hoja(".lib-autor-otro"), els => els.map(e => e.innerText.replace(/\s+/g, " ").trim()));
+  ok(otrosT.length >= 6 && !otrosT.some(t => /^(El alquimista|Brida) /.test(t)), `sus libros más leídos, sin los que ya tienes (${otrosT.length})`);
+  ok(/^A Orillas Del Rio Piedra Me Sente Y Llore .*72 ediciones/.test(otrosT[0]), `el más leído primero (${otrosT[0].slice(0, 60)})`);
+  await captura(p, `libros-n3-autor-${ancho}.png`);
+  const iBruja = otrosT.findIndex(t => /^La bruja de Portobello/.test(t));
+  await p.click(hoja(`[data-lib-autor-quiero="${iBruja}"]`));
+  await p.waitForTimeout(700);
+  const campo = n => p.$eval(`.lib-hoja [name="${n}"]`, i => i.value);
+  ok((await txt(p, ".lib-hoja h3")) === "Agregar libro" && (await campo("titulo")) === "La bruja de Portobello" && (await campo("autor")) === "Paulo Coelho", "«＋ Quiero leer» abre Agregar libro con todo lleno");
+  ok((await campo("autorKey")) === "OL66700A" && (await campo("tituloOriginal")) === "A bruxa de Portobello" && (await campo("estado")) === "por_leer", "con su autor de Open Library, el título original y «Por leer»");
+  await p.click(".lib-hoja .lib-form-libro [type=submit]");
+  await p.waitForTimeout(450);
+  ok((await libros()).some(([, d]) => d.titulo === "La bruja de Portobello" && d.estado === "por_leer" && d.autorKey === "OL66700A"), "se agrega a tu lista");
+  if (await p.$eval(".lib-hoja", el => !el.hidden).catch(() => false)) { await p.click(".lib-hoja .budget-sheet-close"); await p.waitForTimeout(300); }
+
+  console.log("La segunda vez abre al instante (guardado en el teléfono)");
+  const antes = pedidos.length;
+  await p.click('[data-lib-ver="b2"]');
+  await p.waitForTimeout(300);
+  await p.click(".lib-hoja [data-lib-autor]");
+  await p.waitForTimeout(250);
+  ok(pedidos.length === antes && /Escritor brasileño/.test(await txt(p, hoja(".lib-autor-quien"))), "sin pedir nada otra vez");
+  ok((await p.$$(hoja("[data-lib-autor-ver]"))).length === 3, "y ya cuenta el que agregaste (3 tuyos)");
+  await p.click(hoja('[data-lib-autor-ver="b1"]'));
+  await p.waitForTimeout(400);
+  ok((await txt(p, ".lib-hoja .lib-ficha-info h4")) === "Brida", "tocar uno de tus libros abre su ficha");
+  await p.click(".lib-hoja .budget-sheet-close");
+  await p.waitForTimeout(300);
+
+  console.log("Sin internet");
+  caido = true;
+  await p.click('[data-lib-ver="b3"]');
+  await p.waitForTimeout(300);
+  await p.click(".lib-hoja [data-lib-autor]");
+  await p.waitForTimeout(600);
+  ok(/No pude buscar sus datos \(¿estás sin internet\?\)/.test(await txt(p, hoja("[data-lib-autor-estado]"))) && (await p.$$(hoja("[data-lib-autor-ver]"))).length === 1, "lo dice y muestra igual tus libros de ese autor");
+  ok((await sobra(p, "html")) <= 0 && (await sobra(p, ".lib-autor-hoja .budget-sheet-panel")) <= 0, "nada se sale de ancho");
+  ok(!p.errores.length, `sin errores de página${p.errores.length ? `: ${p.errores[0]}` : ""}`);
+  await p.context().close();
+}
+
 (async () => {
   const srv = await servidor();
   const base = `http://localhost:${srv.address().port}`;
   const browser = await chromium.launch();
   for (const ancho of [390, 320, 1280]) await prueba(browser, base, ancho);
   for (const ancho of [390, 320]) await fase2(browser, base, ancho);
+  for (const ancho of [390, 320]) await fase3(browser, base, ancho);
   await terminar(browser, srv);
 })();

@@ -12,7 +12,7 @@ publicada, con pruebas y su lista para el iPhone.
 | 0 | Auditoría con 20 libros reales y plan | ✅ |
 | 1 | Buscar bien: título en español, autor correcto, el libro de verdad primero; buscar también por autor | ✅ (D-129) |
 | 2 | Las páginas de tu edición: elegir la edición (editorial, año, tapa y páginas), la recomendada, el ISBN exacto y cuántas páginas por día para terminarlo | ✅ (D-130) |
-| 3 | Ficha del autor: foto, quién es (en español), tus libros de él y sus otros libros con "＋ Quiero leer" | |
+| 3 | Ficha del autor: foto, quién es (en español), tus libros de él y sus otros libros con "＋ Quiero leer" | ✅ (D-131) |
 | 4 | Género y temas en español, "De qué trata" y estadísticas por género | |
 | 5 | Completar tu biblioteca: arreglar los libros que ya tienes (títulos en inglés, sin autor, páginas, género o portada), siempre con tu OK | |
 | 6 | Recomendaciones: "Si te gustó…", del mismo autor y de los mismos temas; "¿Qué leo después?" más inteligente | |
@@ -114,7 +114,13 @@ años de soledad → 512 (de 494 a 512, 7 ediciones).
 - Cambiar las páginas de un libro que vas leyendo respeta la página en la
   que vas.
 
-### Fase 3 — Ficha del autor
+### Fase 3 — Ficha del autor ✅ (D-131)
+Hecho en `js/libros-fuentes.js` y `js/libros-autor-ui.js`. Con las
+respuestas reales: "Paulo Coelho" → el de 767 obras (no "Paulo Coelho
+Netto"), "Escritor brasileño · 1947", su resumen de Wikipedia y sus libros
+más leídos en español (A orillas del río Piedra, La bruja de Portobello,
+Brida, El Zahir…).
+
 - Tocar el autor (en la ficha del libro o en la lista) abre su ficha:
   foto, quién es y de dónde, años; **tus libros de él** (con estado y
   estrellas) y **sus otros libros** (más leídos primero, títulos en

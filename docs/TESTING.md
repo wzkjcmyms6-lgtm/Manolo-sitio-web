@@ -1,6 +1,13 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (Libros nivel 3, fase 3, D-131): `npm test` → **719
+  pruebas**. Más en `libros-fuentes` (el autor por su nombre, su ficha, su
+  Wikipedia emparejada por Wikidata y sin homónimos, sus libros más leídos
+  sin los que ya tienes; respuestas reales). E2E `libros-n3` con la fase 3
+  (tocar el autor, quién es, foto y resumen, tus libros de él, sus libros
+  más leídos, «＋ Quiero leer», la segunda vez sin pedir nada, sin
+  internet; 390 y 320 px).
 - 2026-11-16 (Libros nivel 3, fase 2, D-130): `npm test` → **716
   pruebas**. Más en `libros-fuentes` (ediciones reales: páginas,
   editorial, año, tapa; grupos por largo; la recomendada; ISBN exacto; sin
@@ -359,6 +366,14 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Libros: la ficha del autor (2026-11)**
+- [ ] Abre un libro tuyo y toca el nombre del autor: ¿sale su foto, quién
+  es y un resumen en español? ¿Es la persona correcta?
+- [ ] Abajo, "Sus libros más leídos": toca "＋ Quiero leer" en uno: se
+  abre "Agregar libro" con todo lleno. Guárdalo.
+- [ ] Vuelve a abrir la ficha del mismo autor con el modo avión: abre
+  igual.
 
 **Libros: las páginas de tu edición (2026-11)**
 - [ ] "Agregar libro" › busca "habitos atomicos" y toca el primero: debajo

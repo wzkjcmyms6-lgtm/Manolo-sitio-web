@@ -66,6 +66,7 @@ suma campos (lo comprueba `scripts/e2e/lectura-qa.js`, D-115).
 | `js/libros-motor.js` | UMD sin DOM: validar libros y frases, ordenar, buscar, resumen, color de la tapa genérica, exportar. Pruebas: `tests/libros-motor.test.js` |
 | `js/libros-fuentes.js` | UMD sin DOM (nivel 3): buscar en Open Library en español, el orden de los resultados, sin repetidos, el autor en nuestro alfabeto; las ediciones con sus páginas, agrupadas, y la recomendada. Pruebas: `tests/libros-fuentes.test.js` (respuestas reales en `tests/fixtures/libros/`) |
 | `js/libros-ediciones-ui.js` | "¿Cuántas páginas tiene tu libro?" (elegir la edición) en el formulario y "¿Para cuándo lo quieres terminar?" en la ficha |
+| `js/libros-autor-ui.js` | Ficha del autor (tocar el autor en la ficha de un libro): quién es, tus libros de él y sus libros más leídos con "＋ Quiero leer"; guardada en el teléfono 30 días |
 | `js/libros.js` | Pantalla de Libros. Registra su ícono (`ICONS.libro`) |
 | `js/libros-progreso.js` | UMD: páginas por día, meta, racha, ritmo y cuándo terminas cada libro. Pruebas: `tests/libros-progreso.test.js` |
 | `js/libros-sesiones.js` + `js/libros-sesion.js` | "Leer ahora": cronómetro por marcas de tiempo, sesiones, velocidad y el tiempo que falta. Pruebas: `tests/libros-sesiones.test.js` |

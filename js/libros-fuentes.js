@@ -15,6 +15,9 @@
 // Fase 2 (D-130) — las páginas de tu edición: las ediciones en español de
 // la obra (editorial, año, tapa y páginas), agrupadas por largo parecido
 // ("326–338 págs."), con la recomendada; con el ISBN, tu edición exacta.
+// Fase 3 (D-131) — ficha del autor: su ficha de Open Library, su página de
+// Wikipedia en español (emparejada por Wikidata para no confundirlo con
+// otro del mismo nombre) y sus libros más leídos, en español.
 // Sin DOM ni Firebase: tests/libros-fuentes.test.js, con respuestas reales
 // guardadas en tests/fixtures/libros/.
 (function (root, factory) {
@@ -99,7 +102,7 @@ function leerBusqueda(json, q, max) {
         genero: L.generoDesdeTemas(d.subject),
         olKey: /^\/works\/OL\d+W$/.test(String(d.key || "")) ? d.key : null,
         edicionKey: ed && /^\/books\/OL\d+M$/.test(String(ed.key || "")) ? ed.key : null,
-        ediciones, derivado
+        ediciones, derivado, enEspanol: enEsp
       }
     };
   }).sort((a, b) => b.puntos - a.puntos || a.i - b.i);
@@ -233,7 +236,78 @@ const pedirMas = (json, leidas, enEsp) => !!(json && json.links && json.links.ne
 // "Diana 2025 · tapa blanda".
 const textoEdicion = e => (e ? [e.editorial, e.anio, NOMBRE_FORMATO[e.formato]].filter(Boolean).join(" · ") : "");
 
+// ---- Fase 3 (D-131): la ficha del autor ----
+// Sus libros, los más leídos primero (con la edición en español si hay).
+const urlLibrosDeAutor = key => (/^OL\d+A$/.test(String(key || "")) ? `${OL}/search.json?q=${encodeURIComponent(`author_key:${key}`)}&lang=es&sort=editions&limit=30&fields=${CAMPOS}` : null);
+// Para un libro sin autorKey: buscar al autor por su nombre.
+const urlBuscarAutor = nombre => `${OL}/search/authors.json?q=${encodeURIComponent(String(nombre || "").trim())}&limit=8`;
+// De los que se llaman igual, el que más obras tiene ("Paulo Coelho", 767
+// obras, y no "Paulo Coelho Netto").
+function elegirAutor(json, nombre) {
+  const docs = ((json && json.docs) || []).filter(d => d && /^OL\d+A$/.test(String(d.key || "")) && d.name);
+  const n = limpio(nombre);
+  let lista = docs.filter(d => limpio(d.name) === n);
+  if (!lista.length) lista = docs.filter(d => mismoAutor(d.name, nombre));
+  lista.sort((a, b) => (b.work_count || 0) - (a.work_count || 0));
+  return lista.length ? lista[0].key : null;
+}
+// ¿Es el mismo autor? Mismo apellido y mismo nombre (o su inicial):
+// "Robert T. Kiyosaki" = "Robert Kiyosaki" = "R. Kiyosaki".
+function mismoAutor(a, b) {
+  const x = palabras(a), y = palabras(b);
+  if (!x.length || !y.length) return false;
+  if (x[x.length - 1] !== y[y.length - 1]) return false;
+  if (x.length === 1 || y.length === 1) return x.length === y.length;
+  return x[0] === y[0] || (x[0].length === 1 && y[0].startsWith(x[0])) || (y[0].length === 1 && x[0].startsWith(y[0]));
+}
+function leerAutor(json) {
+  if (!json || typeof json !== "object" || !json.name) return null;
+  const bio = typeof json.bio === "string" ? json.bio : json.bio && typeof json.bio.value === "string" ? json.bio.value : "";
+  const foto = Array.isArray(json.photos) ? json.photos.find(x => Number(x) > 0) : null;
+  return {
+    key: (String(json.key || "").match(/OL\d+A/) || [])[0] || null,
+    nombre: nombreDeFicha(json) || String(json.name).trim(),
+    nacio: anioDe(json.birth_date), murio: anioDe(json.death_date),
+    bio: bio.replace(/\s+/g, " ").trim().slice(0, 1200),
+    foto: foto ? `https://covers.openlibrary.org/a/id/${foto}-M.jpg` : "",
+    wikidata: json.remote_ids && /^Q\d+$/.test(String(json.remote_ids.wikidata || "")) ? json.remote_ids.wikidata : null
+  };
+}
+// Wikipedia en español: se busca por el nombre y se toma la página cuyo
+// Wikidata es el del autor. Sin Wikidata, solo si el título lleva su
+// apellido y dice que escribe ("escritor brasileño", "psicóloga…"): así
+// "George Hill" no trae al basquetbolista.
+const urlWikiAutor = nombre => `https://es.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=${encodeURIComponent(String(nombre || "").trim())}&gsrlimit=5&prop=pageprops%7Cpageimages%7Cextracts%7Cdescription&ppprop=wikibase_item&exintro=1&explaintext=1&exsentences=3&piprop=thumbnail&pithumbsize=240`;
+const OFICIOS = /escritor|novelista|autor|poeta|ensayista|periodista|filosof|psicolog|psiquiatra|teolog|pastor|predicador|historiador|profesor|conferencista|divulgador|empresari|economista|cientific|guionista|dramaturgo|biograf|lider espiritual|guia espiritual|monje|sacerdote|coach/;
+function leerWiki(json, autor) {
+  const paginas = json && json.query && json.query.pages ? Object.values(json.query.pages).sort((a, b) => (a.index || 0) - (b.index || 0)) : [];
+  if (!autor) return null;
+  let p = autor.wikidata ? paginas.find(x => x.pageprops && x.pageprops.wikibase_item === autor.wikidata) : null;
+  if (!p && !autor.wikidata) {
+    const apellido = palabras(autor.nombre).slice(-1)[0];
+    p = paginas.find(x => apellido && palabras(x.title).includes(apellido) && OFICIOS.test(L.normalizar(x.description || ""))) || null;
+  }
+  if (!p || !p.title) return null;
+  return {
+    titulo: String(p.title), descripcion: String(p.description || "").trim().slice(0, 140),
+    extracto: String(p.extract || "").replace(/\[(?:cita requerida|nota \d+|n\. \d+|\d+)\]/gi, "").replace(/\s+/g, " ").replace(/\s*\u200b\s*/g, " ").replace(/\s+([.,;:])/g, "$1").trim().slice(0, 900),
+    foto: p.thumbnail && /^https:\/\/(?:upload|thumb)\.wikimedia\.org\//.test(String(p.thumbnail.source || "")) ? p.thumbnail.source : "",
+    url: `https://es.wikipedia.org/wiki/${encodeURIComponent(String(p.title).replace(/ /g, "_"))}`
+  };
+}
+// Sus libros: primero los que tienen edición en español; los muy leídos (5
+// o más ediciones) aunque no la tengan; sin resúmenes ni repetidos.
+function librosDeAutor(json, max) {
+  const r = leerBusqueda(json, "", 60).libros.filter(x => !x.derivado && (x.enEspanol || x.ediciones >= 5));
+  return r.sort((a, b) => Number(b.enEspanol) - Number(a.enEspanol) || b.ediciones - a.ediciones).slice(0, max || 12);
+}
+// Lo que ya tienes no se ofrece: misma obra o mismo título.
+const loTienes = (x, libros) => (libros || []).some(l => (x.olKey && l.olKey === x.olKey) || (limpio(l.titulo) && limpio(l.titulo) === limpio(x.titulo)) || (x.tituloOriginal && limpio(l.titulo) === limpio(x.tituloOriginal)));
+// "1947" o "1927–2014".
+const anios = a => (a && a.nacio ? (a.murio ? `${a.nacio}–${a.murio}` : String(a.nacio)) : "");
+
 return { OL, CAMPOS, urlBuscar, parecido, esDerivado, esLatino, limpiarTitulo, leerBusqueda, urlFichaAutor, nombreDeFicha,
   urlEdiciones, urlIsbn, urlEdicion, formatoDe, NOMBRE_FORMATO, paginasDe, anioDe, limpiarEditorial, leerEdicion, leerEdiciones, enEspanol,
-  gruposDePaginas, recomendar, pedirMas, textoEdicion };
+  gruposDePaginas, recomendar, pedirMas, textoEdicion,
+  urlLibrosDeAutor, urlBuscarAutor, elegirAutor, mismoAutor, leerAutor, urlWikiAutor, leerWiki, librosDeAutor, loTienes, anios };
 });

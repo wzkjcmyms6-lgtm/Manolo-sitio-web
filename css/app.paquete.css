@@ -5854,6 +5854,31 @@ input[type="date"].lib-input, input[type="time"].lib-input { -webkit-appearance:
 .lib-fin-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .lib-fin-otra { position: relative; overflow: hidden; }
 .lib-fin-otra input { position: absolute; inset: 0; opacity: 0; font-size: 16px; }
+/* Nivel 3, fase 3 (D-131): la ficha del autor */
+.lib-autor-link { padding: 0.15rem 0; min-height: 44px; font: inherit; color: var(--muted); background: none; border: 0; text-align: left; cursor: pointer;
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.lib-autor { display: flex; flex-direction: column; gap: 0.6rem; }
+.lib-autor-cab { display: flex; align-items: center; gap: 0.9rem; }
+.lib-autor-foto { flex-shrink: 0; width: 84px; height: 84px; border-radius: 50%; overflow: hidden; display: grid; place-items: center;
+  background: var(--surface-raised); border: 1px solid var(--border); }
+.lib-autor-foto img { width: 100%; height: 100%; object-fit: cover; }
+.lib-autor-foto b { font-family: var(--font-display); font-size: 1.6rem; color: var(--muted); }
+.lib-autor-quien { min-width: 0; }
+.lib-autor-quien h4 { margin: 0; font-family: var(--font-display); font-size: 1.3rem; line-height: 1.2; overflow-wrap: anywhere; }
+.lib-autor-quien p { margin: 0.15rem 0 0; color: var(--muted); font-size: 0.9rem; }
+.lib-autor-bio { margin: 0; line-height: 1.5; font-size: 0.95rem; }
+.lib-autor-lista { display: flex; flex-direction: column; gap: 0.45rem; }
+.lib-autor-libro, .lib-autor-otro { display: flex; align-items: center; gap: 0.7rem; width: 100%; padding: 0.5rem; text-align: left; font: inherit; color: var(--ink);
+  background: var(--surface-raised); border: 1px solid var(--border); border-radius: 12px; }
+.lib-autor-libro { cursor: pointer; min-height: 44px; }
+.lib-autor-libro .lib-portada, .lib-autor-otro-portada { flex-shrink: 0; width: 40px; margin: 0; box-shadow: none; }
+.lib-autor-libro .lib-tapa b, .lib-autor-otro .lib-tapa b { font-size: 0.42rem; }
+.lib-autor-libro .lib-tapa small, .lib-autor-otro .lib-tapa small { display: none; }
+.lib-autor-otro-portada img { display: block; width: 40px; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 3px 5px 5px 3px; background: var(--surface); }
+.lib-autor-libro-t { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; flex: 1; }
+.lib-autor-libro-t b { font-size: 0.92rem; line-height: 1.25; overflow-wrap: anywhere; }
+.lib-autor-libro-t small { color: var(--muted); font-size: 0.78rem; }
+.lib-autor-otro .lib-btn-chico { flex-shrink: 0; }
 .lib-aviso-dup { color: #ffcf85; }
 .lib-aviso-dup[hidden] { display: none; }
 

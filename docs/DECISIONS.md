@@ -1844,3 +1844,28 @@ editar, no se puede poner menos páginas que la página en la que vas.
 Lógica en `js/libros-fuentes.js` (ediciones) y `js/libros-progreso.js`
 (`paraTerminar`, `sugerenciasFin`); pantalla en `js/libros-ediciones-ui.js`.
 
+**D-131 (2026-11-16) · Libros nivel 3, fase 3: la ficha del autor.** En
+la ficha de un libro, el autor se toca ("Paulo Coelho ›") y abre su ficha.
+(1) Quién es: su ficha de Open Library (`/authors/{key}.json`: nombre en
+nuestro alfabeto, años, foto, biografía) y su página de **Wikipedia en
+español** (búsqueda + `pageprops.wikibase_item`): se toma la página cuyo
+Wikidata es el que Open Library tiene para ese autor, así no se confunde
+con otro del mismo nombre. Sin Wikidata, solo si el título lleva su
+apellido y la descripción dice que escribe ("escritor", "psicóloga",
+"pastor"…): "George Hill" no trae al basquetbolista. Se muestran foto,
+"Escritor brasileño", años y tres frases (sin "[cita requerida]"), con
+"Leer más en Wikipedia". (2) **Tus libros de él**: los tuyos con su
+`autorKey` o el mismo nombre ("Robert T. Kiyosaki" = "Robert Kiyosaki" =
+"R. Kiyosaki"); tocar uno abre su ficha. (3) **Sus libros más leídos**
+(`author_key:` con `lang=es`, por ediciones): primero los que tienen
+edición en español, con el título en español; sin resúmenes ni los que ya
+tienes. "＋ Quiero leer" abre "Agregar libro" con todo lleno (y sus
+ediciones, D-130), en "Por leer". (4) Un libro sin `autorKey` busca al
+autor por su nombre (`/search/authors.json`): de los que se llaman igual,
+el que más obras tiene ("Paulo Coelho", 767, y no "Paulo Coelho Netto").
+(5) Lo bajado se guarda en el teléfono (`localStorage`
+"manolo.libros.autores", 30 días, hasta 40 autores): la segunda vez abre
+al instante y sin internet. Sin internet y sin nada guardado, lo dice y
+muestra igual tus libros de él. Lógica en `js/libros-fuentes.js`;
+pantalla en `js/libros-autor-ui.js`.
+
