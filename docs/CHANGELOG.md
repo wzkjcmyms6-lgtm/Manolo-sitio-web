@@ -1,5 +1,15 @@
 # Cambios
 
+## 2026-11-16 · Modo claro
+- Inicio (abajo) y el menú ☰ › **"Apariencia"**: Automático (como tu
+  iPhone), Claro u Oscuro. Se aplica al tocar.
+- El modo oscuro queda igual que siempre.
+- En el modo claro todos los textos se leen bien (revisado pantalla por
+  pantalla). La franja de la hora y la batería queda oscura en la app
+  instalada, para que se lean esos números.
+- Arreglado: sin hábitos, el ícono de la moneda en Hábitos a veces no
+  aparecía.
+
 ## 2026-11-16 · Rutinas del gimnasio: guardar lo que cambiaste
 - Al terminar un entreno de una rutina, si hoy agregaste o quitaste
   ejercicios, hiciste otras series o cambiaste el orden, el resumen te

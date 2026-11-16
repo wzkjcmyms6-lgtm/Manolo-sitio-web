@@ -1,0 +1,26 @@
+/* Modo claro: lo que no sale solo del generador (D-126). Va al final de
+   css/tema-claro.css (npm run tema). */
+
+/* La franja de la hora y la batería (app instalada en el iPhone): con la
+   barra "black-translucent" el iPhone escribe esos números en blanco, así
+   que esa franja queda oscura también en el modo claro. Fuera de la app
+   instalada mide 0. */
+html[data-modo="claro"] body::after {
+  content: ""; position: fixed; top: 0; left: 0; right: 0; height: env(safe-area-inset-top, 0px);
+  background: #1c1b18; z-index: 2147483000; pointer-events: none;
+}
+
+/* La escena del personaje de Hábitos es un dibujo (cielo de día o de noche):
+   queda como en el modo oscuro, con su paleta adentro. */
+html[data-modo="claro"] .hb-personaje {
+  --bg: #0a0a0a; --bg-soft: #111111; --surface: #161616; --surface-raised: #1c1c1c;
+  --ink: #f5f4f1; --muted: #9a978f; --border: #2a2a28;
+  --accent-1: #ff7a30; --accent-2: #ffb84d; --gold: #d3a35a;
+  color-scheme: dark;
+}
+/* La barra de experiencia dentro de esa escena oscura. */
+html[data-modo="claro"] .hb-personaje .hb-xp { background: rgba(255, 255, 255, 0.16); }
+
+/* Las pestañas de abajo traen su color en el HTML (js/modules.js): en claro,
+   la versión más oscura que viene al lado (--tab-claro). */
+html[data-modo="claro"] #bottom-nav-links a[data-hash] { --tab-color: var(--tab-claro) !important; }

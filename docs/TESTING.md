@@ -1,6 +1,18 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (modo claro, D-126): `npm test` → **694 pruebas**. Nueva:
+  `tema-claro` (colores, cómo se aclara cada uso, :where(), leer CSS, que
+  `css/tema-claro.css` esté al día y cargue al final). E2E nueva:
+  `tema-claro` (elegir la apariencia, que quede guardada, automático sigue
+  al teléfono, y contraste de cada texto visible en 19 pantallas y 6 hojas).
+  Las E2E corren con el teléfono en oscuro (`comun.js · esquema`).
+  **Después de cambiar cualquier CSS: `npm run tema` y después `npm run
+  sw`** (si no, falla `tests/tema-claro.test.js`). Regresión: las 37
+  suites en verde. De paso, dos pruebas que fallaban a veces (también
+  antes) leen de forma más robusta: `run-progreso` (los totales pedazo por
+  pedazo: innerText a veces juntaba "Tiempo1 h") y `run-feed` (espera las
+  20 carreras siguientes en vez de 600 ms fijos).
 - 2026-11-16 (rutinas del gimnasio desde el entreno, D-125): `npm test` →
   **683 pruebas**. Nueva: `rutina-desde-entreno` (cambios de hoy, aplicar
   solo lo elegido, orden, dos veces el mismo ejercicio, cardio e
@@ -217,7 +229,7 @@
   retiraron en D-033.
 - **Dispositivo real (iPhone)**: pantalla encendida, voz y sonido se validan
   en el teléfono del dueño; nada se da por funcionando sin esa prueba.
-- **Regresión** en cada fase: `npm test` + las 36 suites de `scripts/e2e/`
+- **Regresión** en cada fase: `npm test` + las 37 suites de `scripts/e2e/`
   (ver "Cómo correr todo"; D-115: una prueba que quedó fuera de la lista
   corta se rompió sin que se viera).
 
@@ -229,7 +241,7 @@ for f in fase1 regresion hojas sw-instala emojis scalping inversiones tarjetas m
   running run-importar run-detalle run-feed run-progreso run-inteligencia run-segmentos \
   run-compartir run-qa habitos mi-dia ej-calendario ejercicio libros-progreso lectura \
   lectura-qa tiempos finanzas-diario lugares respaldo sin-internet pantalla tarjetas-minimo \
-  biblia-marcar biblia-audio rr-editor rutina-entreno; do node scripts/e2e/$f.js || break; done
+  biblia-marcar biblia-audio rr-editor rutina-entreno tema-claro; do node scripts/e2e/$f.js || break; done
 ```
 Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
 
@@ -291,6 +303,15 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Modo claro (2026-11)**
+- [ ] Inicio › abajo "Apariencia" › "Claro": todo se pone claro al
+  instante. Recorre Hábitos, Ejercicio, Finanzas y la Biblia: ¿algo no se
+  lee o se ve raro? Avísame con una captura.
+- [ ] Arriba, la hora y la batería se leen (la franja queda oscura).
+- [ ] "Automático": en Ajustes del iPhone › Pantalla y brillo, cambia entre
+  Claro y Oscuro y vuelve a Manolo: cambia solo.
+- [ ] "Oscuro": la app queda como siempre.
 
 **Rutinas del gimnasio: guardar lo que cambiaste (2026-11)**
 - [ ] Empieza una rutina, quita un ejercicio, agrega otro y haz una serie de

@@ -1711,3 +1711,40 @@ pregunta "¿Salir sin guardar?" (también al deslizar: la hoja usa la misma
 ✕). Lógica en `js/rutina-desde-entreno.js`
 (`tests/rutina-desde-entreno.test.js`); pantalla en
 `js/rutina-desde-entreno-ui.js`; E2E `scripts/e2e/rutina-entreno.js`.
+
+**D-126 (2026-11-16) · Modo claro: automático (como el iPhone), claro u
+oscuro.** Pedido del dueño (mejoras sin servidor). (1) Inicio (abajo) y el
+menú ☰ › "Apariencia": Automático (sigue al iPhone, y cambia solo si el
+iPhone cambia), Claro u Oscuro. Se aplica al tocar y queda en este teléfono
+(`localStorage` "manolo.tema"); al principio, Automático. (2) El modo oscuro
+queda idéntico: los estilos de siempre no se tocan. `css/tema-claro.css` se
+GENERA con `npm run tema` (`scripts/tema-claro.js`): lee los CSS que carga
+index.html y, por cada color escrito a mano, según para qué se usa, calcula
+el claro: fondos oscuros → tonos claros de la paleta (página #f4f2ec,
+tarjetas blancas, campos #f1eee7); textos claros → tinta; textos de color
+pastel → el mismo tono más oscuro hasta 4,5:1 sobre la superficie clara más
+oscura; bordes y líneas → beige claro; sombras más suaves; el velo detrás
+de una hoja sigue oscuro; un fondo de color (botón naranja) deja su texto
+como está; una "pastilla" sobre var(--ink) pasa a texto blanco. Dibujos
+(figuras del cuerpo, insignias, la escena del personaje de Hábitos) no se
+tocan: la escena queda como "isla oscura" (su paleta adentro). Lo que no
+sale solo está en `scripts/tema-claro-manual.css`. (3) Cada regla clara usa
+`:where(html[data-modo="claro"])`: pesa lo mismo que la original, y como la
+hoja va al final, gana a la original; entre ellas manda el orden de siempre.
+Para no romper ese orden, una regla posterior del mismo componente (prefijo
+de clase, p. ej. `txn-`) que pone la misma propiedad con variables se repite
+tal cual (así `.txn-save-otro` sigue ganando a `.txn-save`). (4)
+`js/tema.js` va al final de `<head>`, sin defer, después de la hoja clara:
+pone `html[data-modo]` antes de pintar (sin parpadeo), apaga la hoja clara
+en oscuro (no cuesta nada) y cambia `theme-color`. (5) En la app instalada,
+la barra de la hora y la batería es "black-translucent" (el iPhone escribe
+en blanco): en claro, esa franja (`env(safe-area-inset-top)`) queda oscura
+para que se lea. (6) Las pestañas de abajo traen su color en el HTML; en
+claro usan una versión más oscura (`--tab-claro`). (7) Verificado: prueba
+de contraste de cada texto visible (como Lighthouse) en 19 pantallas y 6
+hojas, sin fallas; en oscuro, 13 de 14 pantallas idénticas píxel a píxel y
+la otra por un error de antes que se arregló (sin hábitos, el ícono de la
+moneda del personaje a veces no se dibujaba). Las pruebas E2E corren con el
+teléfono en oscuro (`comun.js · esquema`). Pruebas:
+`tests/tema-claro.test.js` (incluye que `css/tema-claro.css` esté al día) y
+`scripts/e2e/tema-claro.js`.

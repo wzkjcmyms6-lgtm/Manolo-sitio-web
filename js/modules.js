@@ -224,6 +224,8 @@ function renderNav() {
       MODULES.map(m => linkHTML(m, "nav-icon", current)).join("") +
       // Copia de seguridad de todo (D-118, js/respaldo.js): solo en el menú del teléfono.
       `<button type="button" class="nav-extra-btn" data-respaldo-abrir><span class="nav-icon" data-icon="respaldo"></span>Copia de seguridad</button>` +
+      // Apariencia: claro, oscuro o como el iPhone (D-126, js/tema-ui.js).
+      `<button type="button" class="nav-extra-btn" data-tema-abrir><span class="nav-icon" data-icon="tema"></span>Apariencia</button>` +
       `<button type="button" id="logout-btn" class="logout-btn">Cerrar sesión</button>`;
   }
 
@@ -248,6 +250,12 @@ function renderNav() {
 // reutiliza para que el indicador de vidrio pueda deslizarse desde la anterior.
 let glassIndex = null;
 
+// El color de cada pestaña, más oscuro para el modo claro (D-126): sobre
+// fondo claro, el celeste o el ámbar de siempre casi no se leen.
+const TAB_CLARO = {
+  "#ff6b7a": "#b5303f", "#ffb84d": "#a35200", "#3d8bff": "#1a63c0", "#5cc98a": "#1a7340",
+  "#4da3ff": "#1a63c0", "#4cc38a": "#1a7340", "#ff7a30": "#b93c0b"
+};
 function renderTabBar(nav, mode, tabs, activeHash) {
   if (nav.dataset.mode !== mode) {
     glassIndex = null;
@@ -256,7 +264,7 @@ function renderTabBar(nav, mode, tabs, activeHash) {
     nav.style.setProperty("--tabs", tabs.length);
     nav.innerHTML = `<span class="tab-glass" aria-hidden="true"></span>` + tabs.map(m => m.accion
       ? `<button type="button" class="tab-accion" data-${m.accion} aria-label="${m.label}"><span class="icon" data-icon="${m.icon}"></span></button>`
-      : `<a href="#${m.hash}" data-nav-link data-hash="${m.hash}" style="--tab-color:${m.color}">` +
+      : `<a href="#${m.hash}" data-nav-link data-hash="${m.hash}" style="--tab-color:${m.color};--tab-claro:${TAB_CLARO[m.color] || m.color}">` +
         `<span class="icon" data-icon="${m.icon}"></span>${m.label}</a>`).join("");
   }
   nav.querySelectorAll("a[data-hash]").forEach(a => a.classList.toggle("active", a.dataset.hash === activeHash));

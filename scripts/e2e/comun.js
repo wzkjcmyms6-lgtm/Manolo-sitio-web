@@ -51,11 +51,14 @@ function servidor() {
 // carga (__SEED__, __USERS__, __SESION__…); opciones: { reloj, voz, ancho, alto, hash,
 // zona (huso horario, p. ej. "America/La_Paz"), fecha (Date fija, los timers siguen),
 // relojFalso (fecha de inicio de un reloj falso que se adelanta con p.clock.fastForward),
-// init (función que corre en la página antes que la app, p. ej. una voz falsa) }.
+// init (función que corre en la página antes que la app, p. ej. una voz falsa),
+// esquema ("light" o "dark", el del teléfono; por defecto "dark") }.
 async function abrir(browser, base, estado, opciones) {
   const o = Object.assign({ ancho: 390, alto: 844, hash: "#inicio" }, opciones || {});
   const movil = o.ancho <= 768;
-  const ctx = await browser.newContext(Object.assign({ viewport: { width: o.ancho, height: o.alto }, deviceScaleFactor: 2, isMobile: movil, hasTouch: movil, serviceWorkers: "block" },
+  // El navegador de prueba arranca en claro; la app (en "Automático", D-126)
+  // se ve oscura como siempre salvo que la prueba pida esquema: "light".
+  const ctx = await browser.newContext(Object.assign({ viewport: { width: o.ancho, height: o.alto }, deviceScaleFactor: 2, isMobile: movil, hasTouch: movil, serviceWorkers: "block", colorScheme: o.esquema || "dark" },
     o.zona ? { timezoneId: o.zona } : {}));
   if (o.fecha) await ctx.clock.setFixedTime(new Date(o.fecha));
   if (o.relojFalso) await ctx.clock.install({ time: new Date(o.relojFalso) });

@@ -1,0 +1,4234 @@
+/* ---------- Modo claro (D-126) ----------
+   GENERADO por scripts/tema-claro.js a partir de los estilos de siempre:
+   no se edita a mano (npm run tema). Lo escrito a mano está en
+   scripts/tema-claro-manual.css (va al final). */
+html[data-modo="claro"] {
+  color-scheme: light;
+  --bg: #f4f2ec;
+  --bg-soft: #faf9f6;
+  --surface: #ffffff;
+  --surface-raised: #f1eee7;
+  --ink: #1c1b18;
+  --muted: #6b675e;
+  --accent-1: #b93c0b;
+  --accent-2: #a35200;
+  --accent-grad: linear-gradient(135deg, #ff7a30 0%, #ffb84d 100%);
+  --gold: #8a5a12;
+  --border: #e2ddd2;
+  --danger: #b3311c;
+  --musculo-1: #f6c177;
+  --musculo-2: #ff9a3c;
+  --musculo-3: #ff5a1f;
+  --radar-anterior: #8a867c;
+  --estado-ok: #1a7340;
+  --estado-ok-fondo: rgba(26, 115, 64, 0.1);
+  --estado-aviso: #9a4d00;
+  --estado-aviso-fondo: rgba(240, 168, 71, 0.16);
+  --estado-mal: #b3311c;
+  --estado-mal-fondo: rgba(226, 89, 63, 0.12);
+  --sombra-flotante: 0 10px 30px rgba(60, 50, 30, 0.14);
+}
+
+/* ---- css/style.css ---- */
+:where(html[data-modo="claro"]) .verse-banner {
+  background: radial-gradient(120% 160% at 100% 0%, #f7e6de 0%, transparent 55%), #f4f2ec;
+  color: #161513;
+}
+:where(html[data-modo="claro"]) .verse-banner::after {
+  background: radial-gradient(circle, var(--accent-1) 0%, #b34a1e 35%, transparent 70%);
+}
+:where(html[data-modo="claro"]) .verse-banner .verse-ref {
+  color: var(--gold);
+}
+:where(html[data-modo="claro"]) .body-banner {
+  background: radial-gradient(120% 160% at 100% 0%, #f7e6de 0%, transparent 55%), #f4f2ec;
+}
+:where(html[data-modo="claro"]) .body-banner::after {
+  background: radial-gradient(circle, var(--accent-1) 0%, #b34a1e 35%, transparent 70%);
+}
+:where(html[data-modo="claro"]) .body-day {
+  background: rgba(0, 0, 0, 0.028);
+}
+:where(html[data-modo="claro"]) .body-day .dot {
+  background: transparent;
+}
+:where(html[data-modo="claro"]) .body-day.has-data .dot {
+  background: var(--accent-1);
+}
+:where(html[data-modo="claro"]) .body-scale .sw.n1 {
+  background: var(--musculo-1);
+}
+:where(html[data-modo="claro"]) .body-scale .sw.n2 {
+  background: var(--musculo-2);
+}
+:where(html[data-modo="claro"]) .body-scale .sw.n3 {
+  background: var(--musculo-3);
+}
+:where(html[data-modo="claro"]) .body-scale .sw.suave {
+  background: #b8b3a6;
+}
+:where(html[data-modo="claro"]) .body-scale .sw.suave::after {
+  background: var(--musculo-2);
+}
+:where(html[data-modo="claro"]) .body-legend-chip {
+  background: rgba(0, 0, 0, 0.042);
+}
+:where(html[data-modo="claro"]) .muscle-sheet-overlay {
+  background: rgba(0, 0, 0, 0.33);
+}
+:where(html[data-modo="claro"]) .muscle-sheet-panel {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .muscle-sheet-grip {
+  background: var(--border);
+}
+@media (hover: none) and (pointer: coarse) {
+  :where(html[data-modo="claro"]) .budget-sheet-panel::before {
+    background: rgba(0, 0, 0, 0.14);
+  }
+}
+:where(html[data-modo="claro"]) .muscle-sheet-close {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .muscle-level-pill {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .muscle-level-pill[data-nivel="1"] {
+  background: var(--musculo-1);
+}
+:where(html[data-modo="claro"]) .muscle-level-pill[data-nivel="2"] {
+  background: var(--musculo-2);
+}
+:where(html[data-modo="claro"]) .muscle-level-pill[data-nivel="3"] {
+  background: var(--musculo-3);
+}
+:where(html[data-modo="claro"]) .muscle-level-pill[data-suave] {
+  background: rgba(255, 154, 60, 0.35);
+}
+:where(html[data-modo="claro"]) .muscle-stat {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .muscle-sheet-list li {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .muscle-ex-role.primario {
+  background: var(--musculo-2);
+}
+:where(html[data-modo="claro"]) .muscle-ex-role.secundario {
+  background: rgba(255, 154, 60, 0.18);
+}
+:where(html[data-modo="claro"]) .radar-grid polygon {
+  stroke: #d6d0c4;
+}
+:where(html[data-modo="claro"]) .radar-grid line {
+  stroke: #d6d0c4;
+}
+:where(html[data-modo="claro"]) .radar-area.actual {
+  fill: rgba(237, 85, 0, 0.28);
+  stroke: var(--accent-1);
+}
+:where(html[data-modo="claro"]) .radar-area.anterior {
+  fill: rgba(112, 108, 96, 0.16);
+  stroke: var(--radar-anterior);
+}
+:where(html[data-modo="claro"]) .radar-vertex {
+  fill: var(--accent-1);
+  stroke: var(--surface);
+}
+:where(html[data-modo="claro"]) .radar-label {
+  fill: var(--muted);
+}
+:where(html[data-modo="claro"]) .radar-label.is-selected {
+  fill: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .radar-hit {
+  fill: transparent;
+}
+:where(html[data-modo="claro"]) .radar-hit:focus-visible {
+  fill: rgba(194, 117, 0, 0.12);
+}
+:where(html[data-modo="claro"]) .radar-delta.sube {
+  color: #257a46;
+}
+:where(html[data-modo="claro"]) .radar-delta.baja {
+  color: var(--danger);
+}
+:where(html[data-modo="claro"]) .radar-delta.igual {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .radar-subtitle {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .radar-top li::before {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .radar-top .m {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .radar-top li.vacio {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ex-sugerencias {
+  box-shadow: 0 14px 34px rgba(60, 50, 30, 0.16);
+}
+:where(html[data-modo="claro"]) .ex-sug:hover,
+:where(html[data-modo="claro"]) .ex-sug:focus-visible {
+  background: rgba(0, 0, 0, 0.042);
+}
+:where(html[data-modo="claro"]) .ex-inline-field select,
+:where(html[data-modo="claro"]) .ex-inline-field input,
+:where(html[data-modo="claro"]) .exercise-extra .ex-notas {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .ex-field input,
+:where(html[data-modo="claro"]) .ex-field select {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .ex-creator-figs {
+  background: radial-gradient(120% 120% at 50% 0%, #faf9f6 0%, transparent 60%), #f4f2ec;
+}
+:where(html[data-modo="claro"]) .ex-creator-resumen .tag.primario {
+  background: var(--musculo-3);
+}
+:where(html[data-modo="claro"]) .ex-creator-resumen .tag.secundario {
+  background: rgba(255, 154, 60, 0.2);
+}
+:where(html[data-modo="claro"]) .ex-btn-primary {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .ej-aviso {
+  color: #257a46;
+}
+:where(html[data-modo="claro"]) .ej-aviso.error {
+  color: var(--danger);
+}
+:where(html[data-modo="claro"]) .rk-figs {
+  background: radial-gradient(120% 120% at 50% 0%, #faf9f6 0%, transparent 60%), #f4f2ec;
+}
+:where(html[data-modo="claro"]) .rk-grupo {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .rk-fila {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .rk-tag {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .rk-tag.aqui {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .rk-chip {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .rk-chip.active {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .rk-sin {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .rk-escalera li.is-aqui {
+  background: rgba(255, 122, 48, 0.12);
+}
+:where(html[data-modo="claro"]) .rk-estado {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .rk-estado.protegido {
+  color: #257a46 !important;
+}
+:where(html[data-modo="claro"]) .rk-estado.bajando {
+  color: var(--danger) !important;
+}
+:where(html[data-modo="claro"]) .rk-meta {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .rk-meta .t {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rk-grafico {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .rk-g-leyenda {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rk-g-leyenda .k-linea {
+  background: var(--accent-1);
+}
+:where(html[data-modo="claro"]) .rk-g-leyenda .k-punto {
+  background: #b8b4aa;
+}
+:where(html[data-modo="claro"]) .rk-g-grid {
+  stroke: #d6d0c4;
+}
+:where(html[data-modo="claro"]) .rk-g-linea {
+  stroke: var(--accent-1);
+}
+:where(html[data-modo="claro"]) .rk-g-meta {
+  stroke: #d6d0c4;
+}
+:where(html[data-modo="claro"]) .rk-g-dot {
+  fill: #545148;
+  stroke: var(--surface);
+}
+:where(html[data-modo="claro"]) .rk-g-hit {
+  fill: transparent;
+}
+:where(html[data-modo="claro"]) .rk-g-pt.is-on .rk-g-dot,
+:where(html[data-modo="claro"]) .rk-g-pt:focus-visible .rk-g-dot {
+  fill: var(--ink);
+}
+:where(html[data-modo="claro"]) .rk-g-tip {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rk-aviso {
+  background: rgba(226, 89, 63, 0.08);
+}
+:where(html[data-modo="claro"]) .rk-aviso p {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rk-sugeridos {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .rk-aviso-modal {
+  background: rgba(0, 0, 0, 0.432);
+}
+:where(html[data-modo="claro"]) .rk-aviso-panel {
+  background: radial-gradient(120% 80% at 50% 0%, rgba(255, 122, 48, 0.18), transparent 60%), var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .rk-sube li {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .rk-sube .c {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .rk-sube-badge::after {
+  background: radial-gradient(circle, rgba(255, 210, 140, 0.55), transparent 65%);
+}
+:where(html[data-modo="claro"]) .topbar {
+  background: rgba(244, 242, 236, 0.85);
+}
+:where(html[data-modo="claro"]) .login-screen {
+  background: radial-gradient(120% 160% at 100% 0%, #f7e6de 0%, transparent 55%), #f4f2ec;
+}
+:where(html[data-modo="claro"]) .login-card {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .login-card input {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .login-card button[type="submit"] {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .login-ver {
+  background: none;
+}
+:where(html[data-modo="claro"]) .login-card .login-teclado {
+  background: none;
+}
+:where(html[data-modo="claro"]) .ex-modo {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .ex-modo button {
+  background: none;
+}
+:where(html[data-modo="claro"]) .ex-modo button.active {
+  background: var(--surface-raised);
+}
+@media (min-width: 769px) {
+  :where(html[data-modo="claro"]) .sidebar {
+    background: rgba(244, 242, 236, 0.85);
+  }
+  :where(html[data-modo="claro"]) .sidebar nav a.active {
+    background: transparent;
+  }
+}
+@media (max-width: 768px) {
+  :where(html[data-modo="claro"]) .sidebar {
+    box-shadow: 2px 0 24px rgba(60, 50, 30, 0.16);
+    background: var(--bg-soft);
+  }
+  :where(html[data-modo="claro"]) .sidebar-overlay {
+    background: rgba(0, 0, 0, 0.36);
+  }
+  :where(html[data-modo="claro"]) #bottom-nav-links.tab-mode {
+    background: rgba(233, 229, 220, 0.55);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 14px 32px rgba(60, 50, 30, 0.16);
+  }
+  :where(html[data-modo="claro"]) #bottom-nav-links.tab-mode a {
+    color: #161513;
+  }
+  :where(html[data-modo="claro"]) #bottom-nav-links.tab-mode a .icon {
+    color: #6e6a5e;
+  }
+  :where(html[data-modo="claro"]) #bottom-nav-links.tab-mode a.active .icon {
+    color: var(--tab-color);
+  }
+  :where(html[data-modo="claro"]) .tab-glass {
+    background: rgba(0, 0, 0, 0.063);
+  }
+  :where(html[data-modo="claro"]) .tab-glass.lens {
+    background: rgba(0, 0, 0, 0.021);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3),
+        inset 0 4px 8px rgba(255, 255, 255, 0.2),
+        inset 0 -4px 8px rgba(120, 200, 255, 0.18),
+        0 8px 22px rgba(60, 50, 30, 0.122);
+  }
+  :where(html[data-modo="claro"]) #bottom-nav-links[data-mode="ejercicio"] {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 -1px 0 rgba(77, 163, 255, 0.35), 0 14px 32px rgba(60, 50, 30, 0.16);
+  }
+  :where(html[data-modo="claro"]) #bottom-nav-links[data-mode="ejercicio"] a .icon {
+    color: #161513;
+  }
+  :where(html[data-modo="claro"]) #bottom-nav-links[data-mode="ejercicio"] a.active,
+  :where(html[data-modo="claro"]) #bottom-nav-links[data-mode="ejercicio"] a.active .icon {
+    color: var(--tab-color);
+  }
+  :where(html[data-modo="claro"]) #bottom-nav-links[data-mode="ejercicio"] .tab-glass:not(.lens) {
+    background: rgba(0, 0, 0, 0.098);
+  }
+}
+:where(html[data-modo="claro"]) .app-aviso {
+  box-shadow: 0 12px 32px rgba(60, 50, 30, 0.16);
+}
+:where(html[data-modo="claro"]) body.in-finanzas .topbar-ajustes[data-engranaje="finanzas"],
+:where(html[data-modo="claro"]) body.in-inversiones .topbar-ajustes[data-engranaje="inversiones"],
+:where(html[data-modo="claro"]) body.in-running .topbar-ajustes[data-engranaje="running"] {
+  background: rgba(0, 0, 0, 0.028);
+}
+:where(html[data-modo="claro"]) .ejd-dash {
+  --ejd-azul: #0068d7;
+}
+:where(html[data-modo="claro"]) .ejd-avatar {
+  color: #6e6a5e;
+}
+:where(html[data-modo="claro"]) .ejd-cifras span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejd-valor {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejd-valor strong {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .ejd-rango-sel {
+  color: var(--ejd-azul);
+}
+:where(html[data-modo="claro"]) .ejd-ejey span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejd-area {
+  border-left: 1px solid #e2ddd2;
+  border-bottom: 1px solid #e2ddd2;
+}
+:where(html[data-modo="claro"]) .ejd-linea {
+  background: #e9e5dc;
+}
+:where(html[data-modo="claro"]) .ejd-col {
+  border: 0;
+  background: none;
+}
+:where(html[data-modo="claro"]) .ejd-col:focus-visible {
+  outline: 2px solid var(--ejd-azul);
+  outline-offset: 2px;
+}
+:where(html[data-modo="claro"]) .ejd-bar {
+  background: var(--ejd-azul);
+  border-radius: 2px 2px 0 0;
+}
+:where(html[data-modo="claro"]) .ejd-ejex em {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejd-pill {
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .ejd-pill.sel {
+  background: var(--ejd-azul);
+  color: #fff;
+}
+:where(html[data-modo="claro"]) .ejd-pill:focus-visible {
+  outline: 2px solid var(--ejd-azul);
+  outline-offset: 2px;
+}
+:where(html[data-modo="claro"]) .ejf-accion:active {
+  background: rgba(0, 0, 0, 0.042);
+}
+:where(html[data-modo="claro"]) .ex-sugerencia {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .ex-sug-ic {
+  background: rgba(0, 0, 0, 0.056);
+}
+:where(html[data-modo="claro"]) .ex-sugerencia.is-subir {
+  background: rgba(95, 207, 138, 0.08);
+}
+:where(html[data-modo="claro"]) .ex-sugerencia.is-subir .ex-sug-ic {
+  background: rgba(95, 207, 138, 0.2);
+  color: #257a46;
+}
+:where(html[data-modo="claro"]) .ex-sugerencia.is-bajar {
+  background: rgba(240, 168, 71, 0.08);
+}
+:where(html[data-modo="claro"]) .ex-sugerencia.is-bajar .ex-sug-ic {
+  background: rgba(240, 168, 71, 0.2);
+  color: #975c0c;
+}
+:where(html[data-modo="claro"]) .ex-sugerencia.is-repetir .ex-sug-ic {
+  background: rgba(255, 184, 77, 0.15);
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .ex-sug-txt small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ex-sug-usar {
+  background: var(--accent-grad);
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .ex-sug-ok {
+  color: #257a46;
+}
+:where(html[data-modo="claro"]) .ex-sug-nuevo {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .imp-aviso {
+  color: #975c0c;
+}
+:where(html[data-modo="claro"]) .imp-listo [data-icon] {
+  color: #257a46;
+}
+:where(html[data-modo="claro"]) #gym-active {
+  --gx-azul: #0068d7;
+  --gx-ok: #257a46;
+}
+:where(html[data-modo="claro"]) .gx-top {
+  background: rgba(244, 242, 236, 0.92);
+}
+:where(html[data-modo="claro"]) .gx-min {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .gx-nombre {
+  background: none;
+}
+:where(html[data-modo="claro"]) .gx-terminar {
+  background: var(--gx-azul);
+}
+:where(html[data-modo="claro"]) .gx-ej {
+  background: none;
+}
+:where(html[data-modo="claro"]) .gx-thumb {
+  background: #f2efe9;
+}
+:where(html[data-modo="claro"]) .gx-thumb.is-vacia {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .gx-mas {
+  background: none;
+}
+:where(html[data-modo="claro"]) .gx-notas {
+  background: none;
+}
+:where(html[data-modo="claro"]) .gx-descanso-btn {
+  background: none;
+}
+:where(html[data-modo="claro"]) .gx-rpe select {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .gx-fila-in {
+  background: var(--bg);
+}
+:where(html[data-modo="claro"]) .gx-borrar {
+  background: var(--danger);
+}
+:where(html[data-modo="claro"]) .gx-fila .set-num {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .gx-fila .set-num.warm {
+  background: rgba(255, 184, 77, 0.12);
+}
+:where(html[data-modo="claro"]) .gx-ant {
+  background: none;
+}
+:where(html[data-modo="claro"]) .gx-fila input {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .gx-check {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .gx-fila.is-hecha .gx-fila-in {
+  background: #e3f2e9;
+}
+:where(html[data-modo="claro"]) .gx-fila.is-hecha .gx-check {
+  background: var(--gx-ok);
+}
+:where(html[data-modo="claro"]) .gx-fila.is-hecha input {
+  background: transparent;
+}
+:where(html[data-modo="claro"]) .gx-fila.is-hecha .set-num {
+  background: transparent;
+}
+:where(html[data-modo="claro"]) .gx-fila.is-hecha .gx-ant {
+  color: #487557;
+}
+:where(html[data-modo="claro"]) .gx-fila.is-warm:not(.is-hecha) input {
+  color: #806836;
+}
+:where(html[data-modo="claro"]) .gx-agregar-serie {
+  background: var(--surface-raised);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .gx-agregar button {
+  background: var(--gx-azul);
+  color: #fff;
+}
+:where(html[data-modo="claro"]) .gx-descartar {
+  background: rgba(226, 89, 63, 0.12);
+  color: var(--danger);
+}
+:where(html[data-modo="claro"]) .gx-hoja-txt {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .gx-btn-azul {
+  background: #4da3ff;
+  color: #fff;
+}
+:where(html[data-modo="claro"]) .gx-btn-sec {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .gx-btn-txt {
+  background: none;
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .gx-descanso-lista button {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .gx-descanso-lista button.active {
+  background: #4da3ff;
+  color: #fff;
+}
+:where(html[data-modo="claro"]) .gx-barra {
+  background: #e9e5dc;
+  box-shadow: 0 12px 30px rgba(60, 50, 30, 0.16);
+}
+:where(html[data-modo="claro"]) .gx-barra-fill {
+  background: rgba(77, 163, 255, 0.28);
+}
+:where(html[data-modo="claro"]) .gx-barra-in button {
+  background: rgba(0, 0, 0, 0.07);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .gx-barra-in .gx-barra-saltar {
+  background: #4da3ff;
+  color: #fff;
+}
+:where(html[data-modo="claro"]) .gx-barra-txt span {
+  color: #506c8f;
+}
+:where(html[data-modo="claro"]) .gx-barra.is-listo {
+  background: #e3f2e9;
+}
+:where(html[data-modo="claro"]) .gx-barra.is-listo .gx-barra-txt strong {
+  color: #257a46;
+}
+:where(html[data-modo="claro"]) .avisos-toast {
+  background: #f7e9de;
+  box-shadow: 0 10px 26px rgba(60, 50, 30, 0.16);
+}
+:where(html[data-modo="claro"]) .act-ok {
+  color: #257a46;
+}
+:where(html[data-modo="claro"]) .act-tag {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .act-manual summary::before {
+  color: var(--accent-1);
+}
+:where(html[data-modo="claro"]) .act-manual summary small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .act-mes {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .dash-grilla {
+  stroke: #d6d0c4;
+}
+:where(html[data-modo="claro"]) .dash-linea {
+  stroke: var(--accent-1);
+}
+:where(html[data-modo="claro"]) .dash-punto {
+  stroke: var(--accent-1);
+}
+:where(html[data-modo="claro"]) .dash-sel-linea {
+  stroke: var(--ink);
+}
+:where(html[data-modo="claro"]) .dash-sel {
+  stroke: var(--surface);
+}
+:where(html[data-modo="claro"]) .act-rutina-borrar {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .act-lbl {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .act-nota {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .act-rut-ctl button {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .act-rut-ctl button[aria-pressed="true"] {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .act-rut {
+  background: #ffffff;
+}
+@supports (background: color-mix(in srgb, red 50%, blue)) {
+  :where(html[data-modo="claro"]) .act-rut {
+    background: color-mix(in srgb, var(--rut) 16%, #faf9f6);
+  }
+}
+:where(html[data-modo="claro"]) .act-rut.is-caminar {
+  --rut: #257a46;
+}
+:where(html[data-modo="claro"]) .act-rut.is-trotar {
+  --rut: #995c00;
+}
+:where(html[data-modo="claro"]) .act-rut.is-correr {
+  --rut: #ba4200;
+}
+:where(html[data-modo="claro"]) .act-rut.is-descanso {
+  --rut: #706c60;
+}
+:where(html[data-modo="claro"]) .act-rut.is-fin {
+  --rut: #257a46;
+}
+:where(html[data-modo="claro"]) .act-rut-cab {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .act-rut-ctl button {
+  background: rgba(244, 242, 236, 0.25);
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .act-rut-ctl button[aria-pressed="true"] {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .act-rut-tipo {
+  color: var(--rut);
+}
+:where(html[data-modo="claro"]) .act-rut-texto {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .act-rut-barra {
+  background: rgba(0, 0, 0, 0.07);
+}
+:where(html[data-modo="claro"]) .act-rut-barra i {
+  background: var(--rut);
+}
+:where(html[data-modo="claro"]) .act-rut-sig {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .act-cuenta {
+  color: #161513;
+  text-shadow: 0 6px 30px rgba(60, 50, 30, 0.16);
+}
+:where(html[data-modo="claro"]) .act-cuenta.is-palabra {
+  background: rgba(244, 242, 236, 0.88);
+  text-shadow: none;
+}
+:where(html[data-modo="claro"]) .act-btn-redondo {
+  background: var(--accent-grad);
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .act-btn-redondo.is-pausa {
+  background: var(--surface-raised);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .act-btn-redondo.is-fin {
+  background: none;
+  color: var(--danger);
+}
+:where(html[data-modo="claro"]) .act-btn-sec {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .act-btn-peligro {
+  background: rgba(226, 89, 63, 0.12);
+  color: var(--danger);
+}
+:where(html[data-modo="claro"]) .act-fecha {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .act-tile {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .act-tile span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .act-extra label {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .act-extra select,
+:where(html[data-modo="claro"]) .act-extra input {
+  background: var(--bg-soft);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .act-ayuda {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .act-btn-grande {
+  background: var(--accent-grad);
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .rr-tipo.is-caminar {
+  color: #257a46;
+}
+:where(html[data-modo="claro"]) .rr-tipo.is-trotar {
+  color: #995c00;
+}
+:where(html[data-modo="claro"]) .rr-tipo.is-correr {
+  color: #ba4200;
+}
+:where(html[data-modo="claro"]) .rr-tipo.is-descanso {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rr-texto {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rr-mal {
+  color: var(--danger);
+}
+:where(html[data-modo="claro"]) .rr-ayuda {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rr-error-nombre {
+  color: var(--danger);
+}
+:where(html[data-modo="claro"]) .rr-lista li.rr-dia {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .cuenta-fila.is-ok .cuenta-ic {
+  color: #257a46;
+}
+:where(html[data-modo="claro"]) .cuenta-fila.is-mal .cuenta-ic {
+  color: #d11b00;
+}
+:where(html[data-modo="claro"]) .md-fila.is-hecho .md-marca {
+  color: #287940;
+}
+:where(html[data-modo="claro"]) .md-fila.is-hecho .md-ico {
+  color: #287940;
+}
+:where(html[data-modo="claro"]) .md-fila.is-hecho b {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .md-fila.is-aviso .md-marca {
+  color: #0067d3;
+}
+:where(html[data-modo="claro"]) .md-fila.is-aviso .md-ico {
+  color: #0067d3;
+}
+:where(html[data-modo="claro"]) .md-fila.is-libre .md-marca::before {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .md-ocultar {
+  color: var(--muted);
+}
+
+/* ---- css/finanzas.css ---- */
+:where(html[data-modo="claro"]) body.in-finanzas {
+  background: radial-gradient(480px 320px at 300px -40px, rgba(255, 122, 48, 0.12), transparent 70%), var(--bg);
+}
+:where(html[data-modo="claro"]) .day-header .pos {
+  color: #28784a;
+}
+:where(html[data-modo="claro"]) .day-header .neg {
+  color: var(--danger);
+}
+:where(html[data-modo="claro"]) .txn-amount.pos {
+  color: #28784a;
+}
+:where(html[data-modo="claro"]) .txn-amount.neg {
+  color: var(--danger);
+}
+:where(html[data-modo="claro"]) .remain-ring-core {
+  color: #161513;
+}
+:where(html[data-modo="claro"]) .remain-label {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .remain-empty {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .budget-summary-card {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .budget-section {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .budget-input-row,
+:where(html[data-modo="claro"]) .budget-add-btn {
+  background: transparent;
+}
+:where(html[data-modo="claro"]) .budget-row-amount {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .budget-add-plus {
+  background: var(--bg);
+}
+:where(html[data-modo="claro"]) .wallet-menu-dropdown {
+  box-shadow: 0 12px 28px rgba(60, 50, 30, 0.158);
+}
+:where(html[data-modo="claro"]) .wallet-detail-icon {
+  color: #161513;
+}
+:where(html[data-modo="claro"]) .wallet-detail-label {
+  color: var(--muted);
+}
+@media (max-width: 768px) {
+  :where(html[data-modo="claro"]) #panel-fin-herramientas-carteras-detalle.wallet-sheet:not([hidden]) {
+    box-shadow: 0 -8px 32px rgba(60, 50, 30, 0.158);
+  }
+}
+:where(html[data-modo="claro"]) .wallet-label {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .wallet-value.neg {
+  color: var(--danger);
+}
+:where(html[data-modo="claro"]) .budget-form > button {
+  background: var(--accent-grad);
+}
+@media (max-width: 768px) {
+  :where(html[data-modo="claro"]) .bottom-nav {
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 12px 28px rgba(60, 50, 30, 0.158);
+  }
+  :where(html[data-modo="claro"]) .bottom-nav a {
+    color: var(--muted);
+  }
+  :where(html[data-modo="claro"]) .bottom-nav a.active {
+    color: var(--ink);
+  }
+  :where(html[data-modo="claro"]) .bottom-nav a.active::before {
+    background: var(--accent-1);
+  }
+}
+:where(html[data-modo="claro"]) .category-selector-overlay {
+  background: rgba(0, 0, 0, 0.42);
+}
+:where(html[data-modo="claro"]) .category-selector-content {
+  background: var(--surface-raised);
+  box-shadow: 0 20px 60px rgba(60, 50, 30, 0.16);
+}
+:where(html[data-modo="claro"]) .category-selector-item {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .category-selector-item:hover {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .category-selector-new-btn {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .category-selector-cancel-btn {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .category-selector-cancel-btn:hover {
+  background: var(--border);
+}
+:where(html[data-modo="claro"]) .budget-add-section-btn {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .category-selector-item-emoji {
+  color: #161513;
+}
+:where(html[data-modo="claro"]) .category-selector-empty {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .budget-sheet-overlay {
+  background: rgba(0, 0, 0, 0.36);
+}
+:where(html[data-modo="claro"]) .budget-sheet-panel {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .budget-sheet-close {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .budget-sheet-hero {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .budget-sheet-type button {
+  background: transparent;
+}
+:where(html[data-modo="claro"]) .budget-sheet-type button.active {
+  background: var(--bg);
+}
+:where(html[data-modo="claro"]) .budget-sheet-row {
+  background: transparent;
+}
+:where(html[data-modo="claro"]) .budget-sheet-choose,
+:where(html[data-modo="claro"]) .budget-sheet-delete {
+  background: transparent;
+}
+:where(html[data-modo="claro"]) .budget-sheet-ok {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .budget-keypad button {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .budget-keypad button:active {
+  background: var(--border);
+}
+:where(html[data-modo="claro"]) button.remain-cat {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .budget-sheet-tipo-options {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .budget-sheet-tipo-options button {
+  background: transparent;
+}
+:where(html[data-modo="claro"]) .budget-sheet-tipo-options button.active {
+  background: var(--bg);
+}
+:where(html[data-modo="claro"]) .app-dialog-overlay {
+  background: rgba(0, 0, 0, 0.39);
+}
+:where(html[data-modo="claro"]) .app-dialog-box {
+  background: var(--bg-soft);
+  box-shadow: 0 20px 60px rgba(60, 50, 30, 0.16);
+}
+:where(html[data-modo="claro"]) .app-dialog-input {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .app-dialog-cancel {
+  background: transparent;
+}
+:where(html[data-modo="claro"]) .app-dialog-ok {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .app-dialog-ok.danger {
+  background: var(--danger);
+}
+:where(html[data-modo="claro"]) .txn-summary strong.neg {
+  color: var(--danger);
+}
+:where(html[data-modo="claro"]) .txn-summary span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .txn-day-total {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .txn-row {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .txn-icon-solid {
+  color: #161513;
+}
+:where(html[data-modo="claro"]) .txn-row .meta {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .txn-row .txn-amount {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .txn-row .txn-amount.pos {
+  color: #28784a;
+}
+:where(html[data-modo="claro"]) .txn-row .txn-amount.muted {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .txn-fab {
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgba(60, 50, 30, 0.158);
+}
+:where(html[data-modo="claro"]) .txn-amount-btn {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .txn-row-icon {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .txn-note-row input {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .txn-note-row input::placeholder {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .txn-date-label {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .txn-date-arrow {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .txn-toggle-label {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .txn-keypad-done {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .txn-save {
+  color: #ffffff;
+}
+:where(html[data-modo="claro"]) .cat-sheet {
+  background: rgba(244, 242, 236, 0.55);
+}
+:where(html[data-modo="claro"]) .cat-sheet-panel {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .cat-sheet-round,
+:where(html[data-modo="claro"]) .cat-sheet-tools {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .cat-sheet-tools button {
+  background: none;
+}
+:where(html[data-modo="claro"]) .cat-sheet-tools button:active,
+:where(html[data-modo="claro"]) .cat-sheet-round:active {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .cat-sheet-eye {
+  background: none;
+}
+:where(html[data-modo="claro"]) .cat-tile {
+  background: none;
+}
+:where(html[data-modo="claro"]) .cat-tile-circle {
+  color: #161513;
+}
+:where(html[data-modo="claro"]) .cat-sheet-empty {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .cat-sheet-search {
+  background: rgba(233, 229, 220, 0.72);
+  border: 1px solid rgba(0, 0, 0, 0.144);
+  border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(60, 50, 30, 0.14);
+}
+:where(html[data-modo="claro"]) .cat-sheet-search [data-icon] {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .cat-sheet-search input {
+  background: transparent;
+  border: none;
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .cat-sheet-search input:focus {
+  outline: none;
+}
+:where(html[data-modo="claro"]) .txn-amount-to-label {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .txn-amount-to-cur {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .txn-amount-to-row input {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .txn-sub-amount {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) #wallet-detail-list .meta {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .wallet-yo-total {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .wallet-yo-part {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .wallet-yo-dot {
+  color: #161513;
+}
+:where(html[data-modo="claro"]) .wallet-yo-name {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .wallet-yo-amount.neg {
+  color: var(--danger);
+}
+:where(html[data-modo="claro"]) .gasto-center-icon {
+  color: #161513;
+}
+:where(html[data-modo="claro"]) .gasto-center-label {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .gasto-view {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .gasto-group-pct {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .gasto-cat-row {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .vg-day-income {
+  color: #28784a;
+}
+:where(html[data-modo="claro"]) .vg-budget-head {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .vg-budget-head [data-icon] {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .vg-link {
+  color: var(--accent-1);
+}
+:where(html[data-modo="claro"]) .vg-tooltip {
+  background: #faf9f6;
+  color: var(--ink);
+  box-shadow: 0 10px 30px rgba(60, 50, 30, 0.158);
+}
+:where(html[data-modo="claro"]) .vg-tip-date {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .txn-search-toggle,
+:where(html[data-modo="claro"]) .txn-search-clear {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .txn-search.open input {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .remain-amount.warn {
+  color: #975c0c;
+}
+:where(html[data-modo="claro"]) .vg-alert {
+  background: rgba(240, 168, 71, 0.12);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .vg-alert.over {
+  background: rgba(226, 89, 63, 0.12);
+}
+:where(html[data-modo="claro"]) .vg-alert-dot {
+  background: #f0a847;
+}
+:where(html[data-modo="claro"]) .vg-alert.over .vg-alert-dot {
+  background: var(--danger);
+}
+:where(html[data-modo="claro"]) .txn-amount-to-label small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .remain-goal {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .remain-amount.income.done,
+:where(html[data-modo="claro"]) .remain-section-amount.income.done {
+  color: #257a46;
+}
+:where(html[data-modo="claro"]) .cat-detail-remaining.income.done {
+  color: #257a46;
+}
+:where(html[data-modo="claro"]) .remain-daily {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .remain-daily strong {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .remain-daily.over strong {
+  color: var(--danger);
+}
+:where(html[data-modo="claro"]) .cat-detail-remaining.warn {
+  color: #975c0c;
+}
+:where(html[data-modo="claro"]) .cat-detail-pace {
+  color: #975c0c;
+}
+:where(html[data-modo="claro"]) .vg-alert.info {
+  background: rgba(0, 0, 0, 0.028);
+}
+:where(html[data-modo="claro"]) .vg-alert.info .vg-alert-dot {
+  background: var(--muted);
+}
+:where(html[data-modo="claro"]) .undo-toast {
+  background: #e9e5dc;
+  box-shadow: 0 12px 28px rgba(60, 50, 30, 0.16);
+}
+:where(html[data-modo="claro"]) .undo-toast-btn {
+  background: none;
+}
+:where(html[data-modo="claro"]) .undo-toast-bar {
+  background: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .txn-toggle-hint {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .reiva-month-amount {
+  color: #28784a;
+}
+:where(html[data-modo="claro"]) .reiva-item-date {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .reiva-item-amount small {
+  color: #28784a;
+}
+:where(html[data-modo="claro"]) .cat-drag {
+  background: none;
+  border: none;
+  border-radius: 50%;
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .cat-drag:active {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) #category-groups.sorting-sections .cat-group[data-section-id] {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) #category-groups.sorting-sections .cat-group.dragging {
+  background: var(--surface-raised);
+  box-shadow: 0 12px 28px rgba(60, 50, 30, 0.16);
+}
+:where(html[data-modo="claro"]) .fin-aj-btn.is-peligro {
+  color: #c7341a;
+}
+:where(html[data-modo="claro"]) .fin-aj-btn.is-texto {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .fin-rec-ico {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .fin-rec-txt {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .fin-rec-txt strong {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .fin-demo-banner {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .fin-demo-salir {
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .txn-sheet-resultado {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .txn-sheet-error {
+  color: #c7341a;
+}
+:where(html[data-modo="claro"]) .txn-chip {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .txn-chip-ico {
+  color: #161513;
+}
+:where(html[data-modo="claro"]) .txn-chip-mas .txn-chip-ico {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .txn-keypad .txn-key-op {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .txn-save-otro {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .txn-filtros-btn {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .txn-filtros-n {
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .txn-filtro-pill {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .txn-filtro-pill span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .txn-filtro-pill.is-limpiar {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .txn-filtros-cuerpo h4 {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .txn-filtro-select,
+:where(html[data-modo="claro"]) .txn-filtro-fechas input {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .txn-filtro-fechas label {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .txn-swipe-acciones button {
+  color: #161513;
+}
+:where(html[data-modo="claro"]) .fin-cartera-btn {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .fin-cartera-ico {
+  color: #161513;
+}
+:where(html[data-modo="claro"]) .fin-cartera-nombre {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .fin-cartera-valor.neg {
+  color: #c7341a;
+}
+:where(html[data-modo="claro"]) .fin-cartera-sub {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .fin-cartera-pagar {
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .category-selector-item-sub {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .fin-pend-n {
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .fin-pend-info {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .fin-pend-sub {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .fin-pend-sub.is-atrasado {
+  color: #975c0c;
+}
+:where(html[data-modo="claro"]) .fin-pend-omitir {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .fin-pend-ok {
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .fin-pend-mas {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .fin-rec-fila {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .txn-repetir {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .an-delta.mal,
+:where(html[data-modo="claro"]) .an-cambio-val.mal {
+  color: #975c0c;
+}
+:where(html[data-modo="claro"]) .an-delta.bien,
+:where(html[data-modo="claro"]) .an-cambio-val.bien,
+:where(html[data-modo="claro"]) .an-item-val.bien {
+  color: #257a46;
+}
+:where(html[data-modo="claro"]) .an-delta.igual {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .an-kpi-t {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .an-kpi strong.neg {
+  color: var(--danger);
+}
+:where(html[data-modo="claro"]) .an-kpi-sub {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .an-kpi-prom {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .an-hallazgo {
+  background: rgba(0, 0, 0, 0.028);
+}
+:where(html[data-modo="claro"]) .an-hallazgo-ic {
+  background: var(--border);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .an-hallazgo.sube .an-hallazgo-ic {
+  background: rgba(240, 168, 71, 0.2);
+  color: #975c0c;
+}
+:where(html[data-modo="claro"]) .an-hallazgo.baja .an-hallazgo-ic {
+  background: rgba(95, 207, 138, 0.18);
+  color: #257a46;
+}
+:where(html[data-modo="claro"]) .an-hallazgo.hormiga .an-hallazgo-ic {
+  background: rgba(255, 184, 77, 0.18);
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .an-leyenda i.an-ing,
+:where(html[data-modo="claro"]) .an-bar.an-ing {
+  background: #5cc98a;
+}
+:where(html[data-modo="claro"]) .an-leyenda i.an-gas,
+:where(html[data-modo="claro"]) .an-bar.an-gas {
+  background: var(--accent-1);
+}
+:where(html[data-modo="claro"]) .an-col {
+  background: none;
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .an-col.sel {
+  background: rgba(0, 0, 0, 0.042);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .an-semana .an-bar {
+  background: #77756f;
+}
+:where(html[data-modo="claro"]) .an-semana .an-col.top .an-bar,
+:where(html[data-modo="claro"]) .an-semana .an-col.sel .an-bar {
+  background: var(--accent-1);
+}
+:where(html[data-modo="claro"]) .an-cambio {
+  background: none;
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .an-div-lado.neg i {
+  background: #5fcf8a;
+}
+:where(html[data-modo="claro"]) .an-div-lado.pos i {
+  background: #f0a847;
+}
+:where(html[data-modo="claro"]) .an-div-ejes {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .an-chip {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .an-item {
+  background: none;
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .an-item-sub {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .an-fecha {
+  color: var(--muted);
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .an-fecha strong {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .an-meta {
+  background: rgba(0, 0, 0, 0.07);
+}
+:where(html[data-modo="claro"]) .an-meta span {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .an-meta i {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .an-meta-ejes {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .pres-card-estado {
+  color: #257a46;
+}
+:where(html[data-modo="claro"]) .pres-card.is-rapido .pres-card-estado,
+:where(html[data-modo="claro"]) .pres-card.is-alerta .pres-card-estado {
+  color: #975c0c;
+}
+:where(html[data-modo="claro"]) .pres-card.is-pasado .pres-card-estado {
+  color: #d11b00;
+}
+:where(html[data-modo="claro"]) .pres-card.is-vacio .pres-card-estado,
+:where(html[data-modo="claro"]) .pres-card.is-sin .pres-card-estado {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .pres-card-queda small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .pres-card.is-pasado .pres-card-queda {
+  color: #d11b00;
+}
+:where(html[data-modo="claro"]) .pres-bar {
+  background: rgba(0, 0, 0, 0.07);
+}
+:where(html[data-modo="claro"]) .pres-bar-fill {
+  background: #5fcf8a;
+}
+:where(html[data-modo="claro"]) .pres-card.is-rapido .pres-bar-fill,
+:where(html[data-modo="claro"]) .pres-card.is-alerta .pres-bar-fill {
+  background: #f0a847;
+}
+:where(html[data-modo="claro"]) .pres-card.is-pasado .pres-bar-fill {
+  background: var(--danger);
+}
+:where(html[data-modo="claro"]) .pres-ritmo {
+  background: var(--ink);
+}
+:where(html[data-modo="claro"]) .pres-card-pie {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .pres-nota {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .pres-sin-txt {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .pres-sin-nom small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .pres-sin-btn {
+  background: var(--surface-raised);
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .budget-sheet-sug {
+  background: rgba(255, 184, 77, 0.08);
+}
+:where(html[data-modo="claro"]) .budget-sheet-arrastre input {
+  background: var(--border);
+}
+:where(html[data-modo="claro"]) .budget-sheet-arrastre input::after {
+  background: var(--ink);
+}
+:where(html[data-modo="claro"]) .budget-sheet-arrastre input:checked {
+  background: var(--accent-1);
+}
+:where(html[data-modo="claro"]) .res-item {
+  background: rgba(0, 0, 0, 0.028);
+}
+:where(html[data-modo="claro"]) .res-item.aviso {
+  background: rgba(240, 168, 71, 0.1);
+}
+:where(html[data-modo="claro"]) .res-item.mal {
+  background: rgba(226, 89, 63, 0.1);
+}
+:where(html[data-modo="claro"]) .res-item-ic {
+  background: var(--border);
+}
+:where(html[data-modo="claro"]) .res-item.aviso .res-item-ic {
+  background: rgba(240, 168, 71, 0.25);
+  color: #975c0c;
+}
+:where(html[data-modo="claro"]) .res-item.mal .res-item-ic {
+  background: rgba(226, 89, 63, 0.25);
+  color: #d11b00;
+}
+:where(html[data-modo="claro"]) .res-item-ic.bien {
+  background: rgba(95, 207, 138, 0.2);
+  color: #257a46;
+}
+:where(html[data-modo="claro"]) .res-cat {
+  background: none;
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .res-cat-pct {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .dia-queda strong.neg,
+:where(html[data-modo="claro"]) .res-hero .neg {
+  color: var(--estado-mal);
+}
+:where(html[data-modo="claro"]) .dia-estado.is-cerrado {
+  background: rgba(0, 0, 0, 0.028);
+}
+:where(html[data-modo="claro"]) .dia-estado.is-cerrado .dia-estado-ico {
+  background: var(--border);
+}
+:where(html[data-modo="claro"]) .dia-como {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .txn-sheet.is-transfer .txn-swap {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .fin-tc-ico {
+  color: #161513;
+}
+:where(html[data-modo="claro"]) .fin-tc-chip {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .fin-tc-editar {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .fin-tc-cifras span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .fin-tc-cifras strong.neg {
+  color: #c7341a;
+}
+:where(html[data-modo="claro"]) .fin-tc-pie {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .fin-tc-alerta {
+  color: #c7341a;
+}
+:where(html[data-modo="claro"]) .fin-tc-alerta.is-aviso {
+  color: #995d00;
+}
+:where(html[data-modo="claro"]) .fin-tc-pagar {
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .fin-tc-pagar.is-sec {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .fin-tc-min small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .fin-tc-min-ic {
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .fin-tc-min-agregar {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .fin-cartera-min.is-mal {
+  color: var(--estado-mal);
+}
+:where(html[data-modo="claro"]) .fin-cartera-min.is-aviso {
+  color: var(--estado-aviso);
+}
+:where(html[data-modo="claro"]) .fin-cartera-min.is-ok {
+  color: var(--estado-ok);
+}
+:where(html[data-modo="claro"]) .fin-tc-nota {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .fin-tc-vacio p {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .fin-tc-vacio-ico {
+  color: #fff;
+}
+
+/* ---- css/habitos.css ---- */
+:where(html[data-modo="claro"]) .hb-xp {
+  background: rgba(0, 0, 0, 0.112);
+}
+:where(html[data-modo="claro"]) .hb-xp span {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .hb-ahora {
+  background: rgba(255, 184, 77, 0.12);
+}
+:where(html[data-modo="claro"]) .hb-fila {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-fila-info {
+  background: none;
+}
+:where(html[data-modo="claro"]) .hb-fila-info:active {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .hb-check {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .hb-check.is-hecho {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .hb-recaida {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .hb-recaida.is-on {
+  background: rgba(226, 89, 63, 0.12);
+}
+:where(html[data-modo="claro"]) .hb-fab {
+  background: var(--accent-grad);
+  box-shadow: 0 10px 26px rgba(255, 122, 48, 0.35), 0 4px 10px rgba(60, 50, 30, 0.14);
+}
+:where(html[data-modo="claro"]) .hb-btn {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .hb-btn-sec {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-btn.is-peligro {
+  background: var(--danger);
+}
+:where(html[data-modo="claro"]) .hb-stat {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-aviso {
+  background: rgba(255, 184, 77, 0.1);
+}
+:where(html[data-modo="claro"]) .hb-chip {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-chip.is-on {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .hb-step {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-step-val input {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .hb-campo input,
+:where(html[data-modo="claro"]) .hb-campo textarea {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .hb-descripcion {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .hb-plan-guiado {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-emoji-actual {
+  background: rgba(255, 122, 48, 0.18);
+}
+:where(html[data-modo="claro"]) .hb-emoji-grupo {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .hb-emoji-grupo.is-on {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .hb-emoji-btn {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .hb-emoji-btn.is-on {
+  background: rgba(255, 122, 48, 0.22);
+}
+:where(html[data-modo="claro"]) .hb-dia {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .hb-dia.is-on {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .hb-toast {
+  background: #e9e5dc;
+  box-shadow: 0 12px 30px rgba(60, 50, 30, 0.16);
+}
+:where(html[data-modo="claro"]) .hb-toast-btn {
+  background: none;
+}
+:where(html[data-modo="claro"]) .hb-xp-flota {
+  text-shadow: 0 2px 8px rgba(60, 50, 30, 0.16);
+}
+:where(html[data-modo="claro"]) .hb-campo select,
+:where(html[data-modo="claro"]) .hb-campo input[type="date"] {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .hb-cal-flecha {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-cal-dia {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .c-fallo {
+  color: #c7341a;
+}
+:where(html[data-modo="claro"]) .c-neutral {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .c-comodin {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .c-notoca {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .c-fuera,
+:where(html[data-modo="claro"]) .c-futuro {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-cal-dia.is-hoy::after {
+  background: currentColor;
+}
+:where(html[data-modo="claro"]) .hb-cal-nota {
+  background: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .c-cumple .hb-cal-nota {
+  background: #f4f2ec;
+}
+:where(html[data-modo="claro"]) .hb-crono-box {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-pausas li {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-orden-item {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-orden-item.is-arrastrando {
+  box-shadow: 0 10px 24px rgba(60, 50, 30, 0.16);
+}
+:where(html[data-modo="claro"]) .hb-orden-flecha {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .hb-animo {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-animo.is-on {
+  background: rgba(255, 122, 48, 0.18);
+}
+:where(html[data-modo="claro"]) .hb-rango {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-temporada {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-resumen {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-resumen .hb-xp {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .hb-tab-cuerpo .hb-xp,
+:where(html[data-modo="claro"]) .hb-area .hb-xp,
+:where(html[data-modo="claro"]) .hb-mision .hb-xp,
+:where(html[data-modo="claro"]) .hb-logro .hb-xp {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .hb-tag {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .hb-mision {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-logro {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-logro-ico {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .hb-logro.is-on .hb-logro-ico {
+  background: rgba(211, 163, 90, 0.18);
+}
+:where(html[data-modo="claro"]) .hb-tienda-fila {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-area {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-area .hb-xp > span {
+  background: var(--cat, var(--accent-grad));
+}
+:where(html[data-modo="claro"]) .hb-cel-ico,
+:where(html[data-modo="claro"]) .hb-cel-nivel {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .hb-card {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-kpi,
+:where(html[data-modo="claro"]) .hb-kpi-hero {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-delta.is-mal {
+  color: #c7341a;
+}
+:where(html[data-modo="claro"]) .hb-lista-texto b {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .hbg-hit.is-tip,
+:where(html[data-modo="claro"]) .hbg-hit:focus-visible {
+  fill: rgba(22, 21, 19, 0.05);
+}
+:where(html[data-modo="claro"]) .hbg-radar {
+  fill: rgba(237, 85, 0, 0.15);
+}
+:where(html[data-modo="claro"]) .hbg-radar-prev {
+  fill: none;
+}
+:where(html[data-modo="claro"]) .hbg-eje-radar {
+  fill: var(--ink);
+}
+:where(html[data-modo="claro"]) .hbg-celda.n0 {
+  fill: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .hbg-celda.n1 {
+  fill: rgba(237, 85, 0, 0.28);
+}
+:where(html[data-modo="claro"]) .hbg-celda.n2 {
+  fill: rgba(237, 85, 0, 0.52);
+}
+:where(html[data-modo="claro"]) .hbg-celda.n3 {
+  fill: rgba(228, 94, 0, 0.78);
+}
+:where(html[data-modo="claro"]) .hbg-celda.n4 {
+  fill: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .hbg-celda.nx {
+  fill: none;
+}
+:where(html[data-modo="claro"]) .hb-leyenda-heat {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-leyenda-heat .n0 {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .hb-leyenda-heat .n1 {
+  background: rgba(255, 122, 48, 0.28);
+}
+:where(html[data-modo="claro"]) .hb-leyenda-heat .n2 {
+  background: rgba(255, 122, 48, 0.52);
+}
+:where(html[data-modo="claro"]) .hb-leyenda-heat .n3 {
+  background: rgba(255, 140, 60, 0.78);
+}
+:where(html[data-modo="claro"]) .hb-leyenda-heat .n4 {
+  background: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .hb-leyenda {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-tip {
+  background: #e9e5dc;
+  color: var(--ink);
+  box-shadow: 0 8px 20px rgba(60, 50, 30, 0.158);
+}
+:where(html[data-modo="claro"]) .hb-tabla summary {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-tabla th {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-ranking-fila {
+  background: none;
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .hb-ranking-fila:active {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .hb-ranking-pos {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-tend.is-bien {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .hb-tend.is-mal {
+  color: #c7341a;
+}
+:where(html[data-modo="claro"]) .hb-riesgo .rk-chev,
+:where(html[data-modo="claro"]) .hb-ranking .rk-chev {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-resumen-datos > div {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-resumen-datos .hb-num {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .hb-nota {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .hb-nota span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-inicio-barra {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .hb-inicio-barra span {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .hb-vida {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .hb-vida > span {
+  background: var(--danger);
+}
+:where(html[data-modo="claro"]) .hb-jefe-mini {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .hb-jefe-num small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-jefe-botin {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-jefe-ok {
+  background: var(--accent-grad);
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .hb-jefe {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-jefe-eyebrow {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-jefe-col {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .hb-jefe-col span {
+  background: var(--accent-1);
+}
+:where(html[data-modo="claro"]) .hb-jefe-d {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-jefe-dias li.is-hoy .hb-jefe-d {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .hb-jefe-hist summary {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-wrapped {
+  background: var(--wr-fondo);
+  color: var(--wr-tinta);
+}
+:where(html[data-modo="claro"]) .hb-wrapped[data-tema="oscuro"] {
+  --wr-pista: rgba(22, 21, 19, 0.16);
+}
+:where(html[data-modo="claro"]) .hb-wr-progreso span {
+  background: var(--wr-pista);
+}
+:where(html[data-modo="claro"]) .hb-wr-progreso i {
+  background: var(--wr-tinta);
+}
+:where(html[data-modo="claro"]) .hb-wr-cerrar {
+  background: transparent;
+  color: var(--wr-tinta);
+}
+:where(html[data-modo="claro"]) .hb-wr-zona {
+  background: transparent;
+}
+:where(html[data-modo="claro"]) .hb-wr-eyebrow {
+  color: var(--wr-suave);
+}
+:where(html[data-modo="claro"]) .hb-wr-pista {
+  color: var(--wr-suave);
+}
+:where(html[data-modo="claro"]) .hb-wr-mes-col {
+  background: var(--wr-pista);
+}
+:where(html[data-modo="claro"]) .hb-wr-mes-col span {
+  background: var(--wr-tinta);
+}
+:where(html[data-modo="claro"]) .hb-wr-mes-l {
+  color: var(--wr-suave);
+}
+:where(html[data-modo="claro"]) .hb-wr-btn {
+  background: var(--wr-tinta);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .hb-wrapped[data-tema="oscuro"] .hb-wr-btn {
+  color: var(--bg);
+}
+:where(html[data-modo="claro"]) .hb-wr-btn.is-sec {
+  background: transparent;
+  color: var(--wr-tinta);
+  box-shadow: inset 0 0 0 2px var(--wr-tinta);
+}
+:where(html[data-modo="claro"]) .hb-wr-cuenta {
+  color: var(--wr-suave);
+}
+:where(html[data-modo="claro"]) .sc-g-barra {
+  background: rgba(0, 0, 0, 0.084);
+}
+:where(html[data-modo="claro"]) .sc-g-barra i {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .hb-chip-cat.is-on {
+  background: var(--cat);
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .hb-chip-nueva {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-mas-opciones {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .hb-mas-opciones span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-acciones-fijas {
+  background: linear-gradient(to top, var(--bg-soft) 75%, transparent);
+}
+:where(html[data-modo="claro"]) .hb-ajuste-fila {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .hb-ajuste-emojis span {
+  background: color-mix(in srgb, var(--cat) 30%, var(--surface));
+}
+:where(html[data-modo="claro"]) .hb-ajuste-ir {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-cat-fila {
+  background: none;
+  color: inherit;
+}
+:where(html[data-modo="claro"]) .hb-cat-emoji {
+  background: color-mix(in srgb, var(--cat) 22%, transparent);
+}
+:where(html[data-modo="claro"]) .hb-cat-vista {
+  background: color-mix(in srgb, var(--cat) 16%, var(--surface));
+}
+:where(html[data-modo="claro"]) .hb-color {
+  background: var(--cat);
+}
+:where(html[data-modo="claro"]) .hb-color.is-on {
+  box-shadow: 0 0 0 2px var(--bg-soft) inset;
+}
+:where(html[data-modo="claro"]) .hb-asignar-item {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .hb-paso {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .hb-asignar-item.is-on {
+  background: rgba(255, 122, 48, 0.1);
+}
+:where(html[data-modo="claro"]) .hb-asignar-check {
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .hb-asignar-item.is-on .hb-asignar-check {
+  background: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .hb-filtro {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .hb-filtro b {
+  background: var(--bg-soft);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .hb-filtro-ok {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-filtro.is-on {
+  background: var(--cat, var(--accent-grad));
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .hb-filtro.is-on:not([style]) {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .hb-filtro.is-on b {
+  background: rgba(244, 242, 236, 0.18);
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .hb-filtro.is-on .hb-filtro-ok {
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .hb-seg {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-seg button,
+:where(html[data-modo="claro"]) .hb-ocultar {
+  background: transparent;
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-seg button.is-on {
+  background: var(--surface-raised);
+  color: var(--ink);
+  box-shadow: 0 0 0 1px var(--border);
+}
+:where(html[data-modo="claro"]) .hb-ocultar {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-ocultar.is-on {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .hb-grupo-prog {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-grupo-barra {
+  background: var(--border);
+}
+:where(html[data-modo="claro"]) .hb-grupo-barra > span {
+  background: var(--cat, var(--accent-2));
+}
+:where(html[data-modo="claro"]) .hb-grupo-listo {
+  color: var(--muted);
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-grupo-listo [data-icon] {
+  color: var(--cat, var(--accent-2));
+}
+:where(html[data-modo="claro"]) .hb-cat-head-emoji {
+  background: color-mix(in srgb, var(--cat) 22%, var(--surface));
+}
+:where(html[data-modo="claro"]) .hb-cat-head-txt > span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-cat-nivel .hb-xp {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .hb-cat-nivel .hb-xp > span {
+  background: var(--cat);
+}
+:where(html[data-modo="claro"]) .hb-cat-logros .hb-logro.is-on .hb-logro-ico {
+  color: var(--cat, var(--accent-2));
+}
+:where(html[data-modo="claro"]) .hb-ver-cat {
+  background: color-mix(in srgb, var(--cat) 12%, var(--surface));
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .hb-ver-cat > span:last-child {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-link-cat {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .hb-grupo-link {
+  color: inherit;
+}
+:where(html[data-modo="claro"]) .hb-grupo-ir {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-porcat-fila {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .hb-porcat-fila .hbg-barras-valor {
+  background: var(--cat);
+}
+:where(html[data-modo="claro"]) .hb-auto {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .hb-plant-abrir {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .hb-plant-ir {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-plant {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .hb-plant:active {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .hb-cat-sugerida {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-aviso-momento {
+  background: rgba(255, 184, 77, 0.1);
+}
+:where(html[data-modo="claro"]) .hb-perdones {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-perdones p {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .hb-perdon {
+  background: var(--border);
+}
+:where(html[data-modo="claro"]) .hb-perdon.is-on {
+  background: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .c-fallo.c-perdon {
+  background: rgba(255, 184, 77, 0.08);
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .hb-salvada {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .hb-sug-vinc {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .hb-sug-vinc p {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .hb-sug-vinc b {
+  color: var(--ink);
+}
+
+/* ---- css/inversiones.css ---- */
+:where(html[data-modo="claro"]) .inv-panel,
+:where(html[data-modo="claro"]) .inv-hoja {
+  --inv-verde: #287751;
+}
+:where(html[data-modo="claro"]) .inv-g-tip {
+  box-shadow: 0 6px 18px rgba(60, 50, 30, 0.158);
+}
+:where(html[data-modo="claro"]) .inv-div-pista::before {
+  background: #ddd8cc;
+}
+:where(html[data-modo="claro"]) .inv-div-pista i.is-sube {
+  background: #2fa37a;
+}
+:where(html[data-modo="claro"]) .inv-div-pista i.is-baja {
+  background: #e2593f;
+}
+:where(html[data-modo="claro"]) .inv-dist-pista {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .inv-dist-pista i {
+  background: var(--c);
+}
+:where(html[data-modo="claro"]) .inv-obj {
+  background: var(--ink);
+}
+:where(html[data-modo="claro"]) .inv-stack i {
+  background: var(--c);
+}
+
+/* ---- css/libros.css ---- */
+:where(html[data-modo="claro"]) .bib-hoy.is-hecho {
+  color: #287751;
+}
+:where(html[data-modo="claro"]) .bib-item {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .bib-item-arriba small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bib-nota {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bib-cal-nav {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .bib-cal-dow {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bib-cal-dia {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .bib-cal-dia.is-hecho {
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .lib-portada {
+  box-shadow: 0 8px 18px rgba(60, 50, 30, 0.158);
+}
+:where(html[data-modo="claro"]) .lib-tapa {
+  background: linear-gradient(90deg, rgba(244, 242, 236, 0.35) 0, rgba(0, 0, 0, 0.056) 5%, transparent 9%), linear-gradient(160deg, var(--tapa-a), var(--tapa-b));
+}
+:where(html[data-modo="claro"]) .lib-tapa::after {
+  background: rgba(0, 0, 0, 0.245);
+}
+:where(html[data-modo="claro"]) .lib-chip {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .lib-chip.is-leyendo {
+  background: rgba(57, 135, 229, 0.18);
+  color: #1769d1;
+}
+:where(html[data-modo="claro"]) .lib-chip.is-terminado {
+  background: rgba(76, 195, 138, 0.15);
+  color: #287751;
+}
+:where(html[data-modo="claro"]) .lib-estrellas {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .lib-ficha-info .lib-estrellas {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .lib-ficha-info p {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-datos {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .lib-datos dt {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-h {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-h-fila h5 {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .lib-h-fila h5 span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-frase {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .lib-frase:active {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .lib-frase-t::before {
+  color: var(--accent-1);
+}
+:where(html[data-modo="claro"]) .lib-frase-t::after {
+  color: var(--accent-1);
+}
+:where(html[data-modo="claro"]) .lib-frase small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-segmento {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .lib-segmento button {
+  background: transparent;
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-segmento button.active {
+  background: var(--accent-grad);
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .lib-estrellas-elegir [data-lib-cal]:not(.lib-sin-cal) {
+  background: none;
+  color: var(--border);
+}
+:where(html[data-modo="claro"]) .lib-estrellas-elegir [data-lib-cal].on {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .lib-sin-cal {
+  background: transparent;
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-portada-img {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .lib-resultado {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .lib-resultado.is-elegida {
+  box-shadow: 0 0 0 2px rgba(255, 122, 48, 0.35);
+}
+:where(html[data-modo="claro"]) .lib-barra {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .lib-barra i {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .lib-meta {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .lib-meta:active {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .lib-meta-t {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-meta b small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-meta-sub {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-meta.is-cumplida .lib-meta-sub {
+  color: #287751;
+}
+:where(html[data-modo="claro"]) .lib-sigue {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .lib-sigue-portada {
+  background: none;
+}
+:where(html[data-modo="claro"]) .lib-sigue-portada .lib-portada {
+  box-shadow: 0 4px 10px rgba(60, 50, 30, 0.14);
+}
+:where(html[data-modo="claro"]) .lib-sigue-pag {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .lib-sigue-est {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-progreso {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .lib-enlace {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .lib-buscar-libro {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .lib-encontrado {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .lib-encontrado-portada img {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .lib-encontrado-portada .lib-portada {
+  box-shadow: none;
+}
+:where(html[data-modo="claro"]) .lib-encontrado-txt small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-aviso-dup {
+  color: #995d00;
+}
+:where(html[data-modo="claro"]) .lib-festejo-p {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-estrellas-elegir [data-lib-calificar] {
+  background: none;
+  color: var(--border);
+}
+:where(html[data-modo="claro"]) .lib-estrellas-elegir [data-lib-calificar].on {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .lib-stats-cifras > div {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .lib-stats-cifras span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-stats-cifras small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-graf {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .lib-g-lectura {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .lib-g-tabla {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-g-tabla table {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .lib-genero-fila .lib-barra i {
+  background: #d9732e;
+}
+:where(html[data-modo="claro"]) .lib-curiosos {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-curiosos b {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .lib-chip.is-abandonado {
+  background: rgba(255, 184, 77, 0.14);
+  color: #935e00;
+}
+:where(html[data-modo="claro"]) .lses-listo-t {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .lses-listo-l {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lses-datos {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .lses-total {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lses-lista li span:last-child {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lses-lecturas li {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lses-lecturas b {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .lib-chip.is-prioridad {
+  background: rgba(255, 122, 48, 0.16);
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .lsig-tapa.lib-portada {
+  box-shadow: 0 3px 8px rgba(60, 50, 30, 0.14);
+}
+:where(html[data-modo="claro"]) .lsig-razon {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .lsig-aviso {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .lib-frase-fav {
+  color: #8f6400;
+}
+:where(html[data-modo="claro"]) .lib-frase-etq i,
+:where(html[data-modo="claro"]) .lfr-etiquetas i {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .lib-etq-campo legend {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lfr-listo {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .lfr-paso {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lfr-de {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .lfr-nota {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .lfr-mas .is-fav {
+  color: #8f6400;
+}
+:where(html[data-modo="claro"]) .limp-listo-t {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .lesc-video {
+  background: #f4f2ec;
+}
+:where(html[data-modo="claro"]) .lesc-guia {
+  border: 3px solid #000000;
+  border-radius: 12px;
+  box-shadow: 0 0 0 999px rgba(60, 50, 30, 0.122);
+}
+:where(html[data-modo="claro"]) .lesc-guia::after {
+  background: #ff5a5a;
+  box-shadow: 0 0 8px #ff5a5a;
+}
+:where(html[data-modo="claro"]) .lesc-estado {
+  border-radius: 12px;
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .lesc-estado.is-ok {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .lest-tend.is-sube {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .lest-tend.is-baja {
+  color: #b24c00;
+}
+:where(html[data-modo="claro"]) .lest-nav {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .lest-semana span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lest-dia {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .lest-dia.n3,
+:where(html[data-modo="claro"]) .lest-leyenda .n3 {
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .lest-dia.n4,
+:where(html[data-modo="claro"]) .lest-leyenda .n4 {
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .lest-leyenda {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lanio-hero b {
+  color: #b34d00;
+}
+:where(html[data-modo="claro"]) .lanio-cifras span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lanio-tapa .lib-portada {
+  box-shadow: 0 4px 10px rgba(60, 50, 30, 0.158);
+}
+:where(html[data-modo="claro"]) .lanio-frase cite {
+  color: var(--muted);
+}
+
+/* ---- css/rutinas-listas.css ---- */
+:where(html[data-modo="claro"]) .rl-semana i.is-hecho {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .rl-tarjeta-cuando {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rl-tarjeta-cuando.is-hoy {
+  color: #1a0f05;
+}
+:where(html[data-modo="claro"]) .rl-meta {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .rl-datos dt {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rl-dia-tab {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .rl-dia-tab small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rl-dia-tab.is-hoy small {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .rl-dia-tab.is-activo {
+  color: #1a0f05;
+}
+:where(html[data-modo="claro"]) .rl-dia-tab.is-activo small {
+  color: #3a2410;
+}
+:where(html[data-modo="claro"]) .rl-dia-ok {
+  color: #08130d;
+}
+:where(html[data-modo="claro"]) .rl-aviso {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rl-aviso.is-hoy {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .rl-aviso b {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .rl-guardado {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .rl-progreso {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rl-calent p {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rl-ej-dosis {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .rl-musculos span {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .rl-tip {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rl-serie {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .rl-serie.is-hecha {
+  color: #08130d;
+}
+:where(html[data-modo="claro"]) .rl-terminar {
+  color: #1a0f05;
+}
+:where(html[data-modo="claro"]) .rl-borrar {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rl-ayuda {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rl-progresion b {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .rl-consejos li::marker {
+  color: var(--accent-1);
+}
+
+/* ---- css/biblia.css ---- */
+:where(html[data-modo="claro"]) .bbl-barra {
+  background: rgba(244, 242, 236, 0.92);
+}
+:where(html[data-modo="claro"]) .bbl-icono {
+  background: transparent;
+}
+:where(html[data-modo="claro"]) .bbl-donde {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .bbl-texto {
+  color: #1a1916;
+}
+:where(html[data-modo="claro"]) .bbl-libro {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bbl-cap {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .bbl-v.is-marcado {
+  background: rgba(255, 184, 77, 0.18);
+}
+:where(html[data-modo="claro"]) .bbl-n {
+  color: var(--accent-1);
+}
+:where(html[data-modo="claro"]) .bbl-cargando,
+:where(html[data-modo="claro"]) .bbl-error {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bbl-error b {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .bbl-leido {
+  background: rgba(70, 200, 120, 0.12);
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .bbl-otra {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .bbl-fuente {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bbl-sel-t {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bbl-libro-b {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .bbl-libro-b small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bbl-sel-volver {
+  background: none;
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .bbl-cap-b {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .bbl-cap-b.is-leido {
+  background: rgba(70, 200, 120, 0.14);
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .bbl-libro-b.is-completo small {
+  color: var(--estado-ok);
+}
+:where(html[data-modo="claro"]) .bbl-aa-fila small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bbl-desc-estado {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bbl-desc-estado.is-hecho {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .bbl-v.c-amarillo {
+  background: rgba(255, 209, 102, 0.28);
+}
+:where(html[data-modo="claro"]) .bbl-v.c-naranja {
+  background: rgba(255, 154, 60, 0.3);
+}
+:where(html[data-modo="claro"]) .bbl-v.c-verde {
+  background: rgba(76, 195, 138, 0.28);
+}
+:where(html[data-modo="claro"]) .bbl-v.c-azul {
+  background: rgba(90, 169, 255, 0.28);
+}
+:where(html[data-modo="claro"]) .bbl-v.c-rosa {
+  background: rgba(255, 122, 168, 0.28);
+}
+:where(html[data-modo="claro"]) .bbl-v.is-sel {
+  text-decoration: underline dotted rgba(153, 92, 0, 0.95);
+}
+:where(html[data-modo="claro"]) .bbl-v.is-fav .bbl-n::after {
+  color: #8f6400;
+}
+:where(html[data-modo="claro"]) .bbl-nota-ic {
+  background: rgba(255, 184, 77, 0.12);
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .bbl-selbar {
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 -12px 30px rgba(60, 50, 30, 0.158);
+}
+:where(html[data-modo="claro"]) .bbl-sel-x {
+  background: var(--bg-soft);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .bbl-color {
+  background: var(--c);
+  box-shadow: inset 0 0 0 2px rgba(60, 50, 30, 0.088);
+}
+:where(html[data-modo="claro"]) .bbl-color.is-activo {
+  box-shadow: 0 0 0 2px var(--c);
+}
+:where(html[data-modo="claro"]) .bbl-color.is-quitar {
+  background: var(--bg-soft);
+  color: var(--muted);
+  box-shadow: none;
+}
+:where(html[data-modo="claro"]) .bbl-sel-acciones button {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .bbl-sel-acciones small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bbl-sel-acciones button.is-activo {
+  color: #8f6400;
+}
+:where(html[data-modo="claro"]) .bbl-toast {
+  background: var(--surface-raised);
+  color: var(--ink);
+  box-shadow: 0 8px 24px rgba(60, 50, 30, 0.16);
+}
+:where(html[data-modo="claro"]) .bbl-nota-texto {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bbl-chip {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .bbl-chip span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bbl-chip i {
+  background: var(--c);
+}
+:where(html[data-modo="claro"]) .bbl-chip.is-activo {
+  background: var(--accent-grad);
+  color: #1a0f05;
+}
+:where(html[data-modo="claro"]) .bbl-chip.is-activo span {
+  color: #3a2410;
+}
+:where(html[data-modo="claro"]) .bbl-marcado {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .bbl-punto {
+  background: var(--c);
+}
+:where(html[data-modo="claro"]) .bbl-estrella {
+  color: #8f6400;
+}
+:where(html[data-modo="claro"]) .bbl-lapiz {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .bbl-marcado-t {
+  color: #1a1916;
+}
+:where(html[data-modo="claro"]) .bbl-res {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .bbl-res span {
+  color: #1a1916;
+}
+:where(html[data-modo="claro"]) .bbl-res mark {
+  background: rgba(255, 184, 77, 0.3);
+  color: inherit;
+}
+:where(html[data-modo="claro"]) .bib-auto {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .bib-auto.is-aviso {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .bib-version-tag {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bib-leer-cita {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .bib-accesos a {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .bib-accesos a i {
+  color: #1a0f05;
+}
+:where(html[data-modo="claro"]) .bib-temas i {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .bib-temas-campo legend {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bib-cal-dia.is-hecho.is-leido::after {
+  background: #dbfaeb;
+}
+:where(html[data-modo="claro"]) .bib-cal-leido {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .bpl-hoy.is-hecho .bpl-hoy-t {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .bpl-atraso p {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .bpl-mini {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .bpl-sugerencia {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .bpl-sugerencia small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bpl-quitar {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bpl-tipo p {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bbl-plan {
+  background: rgba(255, 122, 48, 0.08);
+}
+:where(html[data-modo="claro"]) .bpr-libro.is-completo small {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .bbm-listo {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .bbm-item-t {
+  color: #1a1916;
+}
+:where(html[data-modo="claro"]) .bbm-item-pie small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bbm-quitar {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bbm-texto .is-mal {
+  color: #d71100;
+  text-decoration: underline wavy rgba(215, 17, 0, 0.6);
+}
+:where(html[data-modo="claro"]) .bbm-nivel {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bbm-pct {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .bbm-pct.is-ok {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .bbm-pregunta {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .bbm-nota {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .bbm-nota.is-mal {
+  color: #d71100;
+}
+:where(html[data-modo="claro"]) .bbm-nota.is-duda {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .bbm-nota.is-bien {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .bba {
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 -12px 30px rgba(60, 50, 30, 0.158);
+}
+:where(html[data-modo="claro"]) .bba-prog {
+  background: rgba(0, 0, 0, 0.049);
+}
+:where(html[data-modo="claro"]) .bba-prog i {
+  background: var(--accent-grad);
+}
+:where(html[data-modo="claro"]) .bba-b,
+:where(html[data-modo="claro"]) .bba-vel {
+  background: transparent;
+}
+:where(html[data-modo="claro"]) .bba-play {
+  background: var(--accent-grad);
+  box-shadow: 0 6px 18px rgba(255, 122, 48, 0.32);
+}
+:where(html[data-modo="claro"]) .bba-b:active,
+:where(html[data-modo="claro"]) .bba-vel:active {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .bbl-v.is-sonando {
+  color: #161513;
+  background-image: linear-gradient(rgba(255, 184, 77, 0.2), rgba(255, 184, 77, 0.2));
+  box-shadow: 0 0 0 3px rgba(255, 184, 77, 0.2);
+}
+:where(html[data-modo="claro"]) .bba-velop {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .bba-velop.is-activo {
+  background: rgba(255, 184, 77, 0.1);
+}
+:where(html[data-modo="claro"]) .bbl-sel-oir {
+  background: rgba(255, 184, 77, 0.1);
+  color: var(--accent-2);
+}
+
+/* ---- css/rr-editor.css ---- */
+:where(html[data-modo="claro"]) .rre-tipo.is-caminar {
+  color: #257a46;
+}
+:where(html[data-modo="claro"]) .rre-tipo.is-trotar {
+  color: #995c00;
+}
+:where(html[data-modo="claro"]) .rre-tipo.is-correr {
+  color: #ba4200;
+}
+:where(html[data-modo="claro"]) .rre-tipo.is-descanso {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rre-tipo option {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .rre-dur {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rre-ic {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rre-serie-t {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .rre-serie-cab .rre-ic {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .rre-total {
+  color: var(--muted);
+}
+
+/* ---- css/movilidad.css ---- */
+:where(html[data-modo="claro"]) .mov-nota {
+  color: #995d00;
+}
+:where(html[data-modo="claro"]) .mov-guia {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .mov-guia-salir {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .mov-guia-t span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .mov-parte {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .mov-instr {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .mov-reloj-sub {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .mov-guia.is-cuenta .mov-reloj-num {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .mov-cambio {
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .mov-sig {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .mov-fin-nombre {
+  color: var(--ink);
+}
+
+/* ---- css/tiempos.css ---- */
+:where(html[data-modo="claro"]) .tmp-hecho {
+  color: #287751;
+}
+:where(html[data-modo="claro"]) .tmp-campos span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .tmp-fila.is-guardada .tmp-guardar {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .tmp-quitar {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .tmp-cerrada {
+  color: #287751;
+}
+:where(html[data-modo="claro"]) .tmp-ok {
+  color: #287751;
+}
+:where(html[data-modo="claro"]) .tmp-nav button {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .tmp-tabla th {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .tmp-avance-fila span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .tmp-avance small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .tmp-avance small b {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .tmp-dia span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .tmp-tabla tfoot th {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .tmp-resumen-dias span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .tmp-dia-total {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .tmp-sem-b {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .tmp-sem-v {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .tmp-sem-d {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .tmp-sem-b.is-elegida .tmp-sem-v,
+:where(html[data-modo="claro"]) .tmp-sem-b.is-elegida .tmp-sem-d {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .tmp-editar,
+:where(html[data-modo="claro"]) .tmp-medir {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .tmp-auto {
+  color: #9e5d00;
+}
+:where(html[data-modo="claro"]) .tman-link {
+  color: var(--accent-2, #9e5d00);
+}
+:where(html[data-modo="claro"]) .tman-link.is-tenue {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .tman-cuenta {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .tman-reloj.is-pasado {
+  color: #b34d00;
+}
+:where(html[data-modo="claro"]) .tman-prom {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .tman-pasos li small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .tman-pasos li.is-hecho span::before {
+  color: #287751;
+}
+:where(html[data-modo="claro"]) .tman-ok {
+  color: #287751;
+}
+:where(html[data-modo="claro"]) .tman-vs.is-mas,
+:where(html[data-modo="claro"]) .tman-tabla small.is-mas {
+  color: #b34d00;
+}
+:where(html[data-modo="claro"]) .tman-vs.is-menos,
+:where(html[data-modo="claro"]) .tman-tabla small.is-menos {
+  color: #287751;
+}
+:where(html[data-modo="claro"]) .tpl-veredicto.is-sobra {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .tpl-veredicto.is-falta {
+  color: #b24c00;
+}
+:where(html[data-modo="claro"]) .tst-cifras > div {
+  background: var(--bg-soft, rgba(0, 0, 0, 0.021));
+}
+:where(html[data-modo="claro"]) .tst-tend.is-mejor {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .tst-tend.is-peor {
+  color: #b24c00;
+}
+:where(html[data-modo="claro"]) .tst-b {
+  background: rgba(217, 115, 46, 0.55);
+}
+:where(html[data-modo="claro"]) .tst-b.is-mas {
+  background: #d9732e;
+}
+:where(html[data-modo="claro"]) .tst-ejes {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .tex-tarjeta {
+  background: var(--bg-soft, rgba(0, 0, 0, 0.021));
+}
+:where(html[data-modo="claro"]) .tex-lista small.is-mejor {
+  color: #287751;
+}
+:where(html[data-modo="claro"]) .tex-lista small.is-peor {
+  color: #b34d00;
+}
+:where(html[data-modo="claro"]) .tman-plan {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .tman-plan.is-atrasado {
+  color: #b24c00;
+}
+:where(html[data-modo="claro"]) .tman-plan.is-adelantado {
+  color: #1e7a43;
+}
+
+/* ---- css/lugares.css ---- */
+:where(html[data-modo="claro"]) .lug-fab {
+  color: #ffffff;
+}
+:where(html[data-modo="claro"]) .lug-opcion {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .lug-opcion-ic {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .lug-label {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lug-err {
+  color: var(--estado-mal);
+}
+:where(html[data-modo="claro"]) .lug-link {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .lug-estrella {
+  color: #75726b;
+}
+:where(html[data-modo="claro"]) .lug-estrella.is-on {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .lug-seg-op {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .lug-seg-op.is-sel {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .lug-seg-op.is-si.is-sel {
+  color: var(--estado-ok);
+}
+:where(html[data-modo="claro"]) .lug-seg-op.is-tal_vez.is-sel {
+  color: var(--estado-aviso);
+}
+:where(html[data-modo="claro"]) .lug-seg-op.is-no.is-sel {
+  color: var(--estado-mal);
+}
+:where(html[data-modo="claro"]) .lug-mas {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .lug-mini-chip {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .lug-mini-chip.is-sel {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .lug-foto-mini.is-cargando {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lug-foto-quitar {
+  color: #161513;
+}
+:where(html[data-modo="claro"]) .lug-foto-quitar [data-icon] {
+  background: rgba(244, 242, 236, 0.65);
+}
+:where(html[data-modo="claro"]) .lug-sug-tarjeta {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .lug-stat {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .lug-stat span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lug-top-btn {
+  background: none;
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .lug-det-img {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .lug-det-mini {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .lug-det-sinfoto {
+  background: var(--bg-soft);
+}
+:where(html[data-modo="claro"]) .lug-det-estrellas {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .lug-det-estrellas .is-vacia {
+  color: #4f4c47;
+}
+:where(html[data-modo="claro"]) .lug-det-quiero {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .lug-det-quiero p {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lug-det-et {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lug-add {
+  background: none;
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .lug-det-resumen {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lug-det-fila {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .lug-det-fila-n {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lug-fav {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .lug-gusto.is-si {
+  color: var(--estado-ok);
+}
+:where(html[data-modo="claro"]) .lug-gusto.is-no {
+  color: var(--estado-mal);
+}
+:where(html[data-modo="claro"]) .lug-etiqueta {
+  background: var(--surface);
+  color: var(--muted);
+}
+
+/* ---- css/ej-calendario.css ---- */
+:where(html[data-modo="claro"]) .ejc-tarjeta {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.096);
+  border-radius: 22px;
+}
+:where(html[data-modo="claro"]) .ejc-nav {
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.144);
+  background: transparent;
+}
+:where(html[data-modo="claro"]) .ejc-resumen {
+  color: #626c81;
+}
+:where(html[data-modo="claro"]) .ejc-mes-n {
+  color: #161513;
+}
+:where(html[data-modo="claro"]) .ejc-d,
+:where(html[data-modo="claro"]) .ejc-v {
+  border-radius: 3px;
+}
+:where(html[data-modo="claro"]) .ejc-d {
+  border: none;
+  background: #283246;
+}
+:where(html[data-modo="claro"]) .ejc-d.is-on {
+  background: #4da3ff;
+}
+:where(html[data-modo="claro"]) .ejc-d.is-futuro {
+  background: #e4e8f1;
+}
+:where(html[data-modo="claro"]) .ejc-usuario {
+  color: #312f29;
+}
+:where(html[data-modo="claro"]) .ejc-dia {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejc-compartir {
+  border-radius: 999px;
+  border: none;
+  background: #4da3ff;
+  color: #05070d;
+}
+
+/* ---- css/ejercicio.css ---- */
+:where(html[data-modo="claro"]) .gx-thumb-btn {
+  background: none;
+}
+:where(html[data-modo="claro"]) .gx-ej-nombre {
+  background: none;
+  color: inherit;
+}
+:where(html[data-modo="claro"]) .ejf-sin-demo {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .ejf-musculos {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .ejd-demo-marco {
+  border-radius: 16px;
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .ejd-demo-pausa {
+  border-radius: 50%;
+  border: 0;
+  background: rgba(244, 242, 236, 0.62);
+  color: #161513;
+}
+:where(html[data-modo="claro"]) .ejd-ico-pausa {
+  border-left: 4px solid currentColor;
+  border-right: 4px solid currentColor;
+}
+:where(html[data-modo="claro"]) .ejd-demo.is-pausada .ejd-ico-pausa {
+  border-style: solid;
+  border-width: 8px 0 8px 13px;
+  border-color: transparent transparent transparent currentColor;
+}
+:where(html[data-modo="claro"]) .ejd-demo-sinred {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejd-credito {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejd-demo.is-chica .ejd-demo-marco {
+  border-radius: 12px;
+}
+@media (prefers-reduced-motion: reduce) {
+  :where(html[data-modo="claro"]) .ejd-demo-marco {
+    background: none;
+  }
+  :where(html[data-modo="claro"]) .ejd-demo-img {
+    border-radius: 12px;
+  }
+  :where(html[data-modo="claro"]) .ejd-demo-etq {
+    color: var(--muted);
+  }
+}
+:where(html[data-modo="claro"]) .ejf-volver {
+  background: none;
+}
+:where(html[data-modo="claro"]) .ejf-pasos li::before {
+  background: rgba(255, 122, 48, 0.16);
+}
+:where(html[data-modo="claro"]) .ejf-errores li::before {
+  background: rgba(226, 89, 63, 0.18);
+  color: #c7341a;
+}
+:where(html[data-modo="claro"]) .ejf-btn {
+  background: var(--accent-grad);
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .ejf-btn-sec {
+  background: var(--surface-raised);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .ejf-label {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejf-fila input {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .ejf-error {
+  color: #c7341a;
+}
+:where(html[data-modo="claro"]) .ejf-video {
+  background: #f4f2ec;
+}
+:where(html[data-modo="claro"]) .ejf-play {
+  background: rgba(244, 242, 236, 0.72);
+}
+:where(html[data-modo="claro"]) .ejf-link {
+  background: none;
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .ejf-kpi {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .ejf-kpi span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejf-kpi small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejf-graf {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .ejf-tip {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejf-sesiones li span:first-child {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejf-sesiones small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejf-recs thead th {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejf-recs td small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejf-recs tr.is-est td:nth-child(2) {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejf-recs td:last-child {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejf-nota-chica {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejf-rango {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .ejf-rango small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejf-rango em {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejf-ir {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejf-nota {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .ejf-alts button {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .ejf-alts button small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ex-sug-info,
+:where(html[data-modo="claro"]) .rut-item-ficha {
+  background: none;
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .ex-sug-info:hover,
+:where(html[data-modo="claro"]) .ex-sug-info:focus-visible {
+  background: rgba(0, 0, 0, 0.042);
+}
+:where(html[data-modo="claro"]) .gx-porque {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .gx-cal,
+:where(html[data-modo="claro"]) .gx-discos {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .gx-cal > span,
+:where(html[data-modo="claro"]) .gx-discos > span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .gx-link {
+  background: none;
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .gx-rir {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .gx-rir-t {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .gx-rir button {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .gx-rir button.is-on {
+  background: var(--accent-grad);
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .gx-grupo {
+  background: rgba(77, 163, 255, 0.18);
+  color: #0067d3;
+}
+:where(html[data-modo="claro"]) .gx-grupo-t {
+  color: #0067d3;
+}
+:where(html[data-modo="claro"]) .gx-aviso {
+  background: var(--surface-raised);
+  color: var(--ink);
+  box-shadow: 0 12px 30px rgba(60, 50, 30, 0.16);
+}
+:where(html[data-modo="claro"]) .gx-aviso.is-record {
+  background: var(--accent-grad);
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .rut-hoy-ok {
+  color: #287940;
+}
+:where(html[data-modo="claro"]) .rut-hoy-otra {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .ejr-sube {
+  color: #287940;
+}
+:where(html[data-modo="claro"]) .ejr-baja {
+  color: #c7341a;
+}
+:where(html[data-modo="claro"]) .ejr-igual {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejr-contra {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejr-rpe button {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .ejr-rpe button.is-on {
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .ejr-rpe-txt {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .gx-estanca {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .gx-estanca summary {
+  color: #976010;
+}
+:where(html[data-modo="claro"]) .gx-estanca summary::after {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .gx-estanca ul,
+:where(html[data-modo="claro"]) .ejf-estanca ul {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejf-estanca {
+  background: rgba(241, 194, 125, 0.1);
+}
+:where(html[data-modo="claro"]) .ejf-estanca b {
+  color: #976010;
+}
+:where(html[data-modo="claro"]) .ejc-card {
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid rgba(241, 194, 125, 0.4);
+}
+:where(html[data-modo="claro"]) .ejc-card.is-descarga {
+  border-color: rgba(77, 163, 255, 0.45);
+}
+:where(html[data-modo="claro"]) .ejc-eyebrow {
+  color: #976010;
+}
+:where(html[data-modo="claro"]) .ejc-card.is-descarga .ejc-eyebrow {
+  color: #0067d3;
+}
+:where(html[data-modo="claro"]) .ejc-card small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejc-btn,
+:where(html[data-modo="claro"]) .ejc-btn-sec {
+  border-radius: 999px;
+}
+:where(html[data-modo="claro"]) .ejc-btn {
+  border: 0;
+  background: var(--accent-grad);
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .ejc-btn-sec {
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .ejg-borrar {
+  color: #c7341a;
+}
+:where(html[data-modo="claro"]) .ejg-error {
+  color: #c7341a;
+}
+:where(html[data-modo="claro"]) .ejv-bloque {
+  color: #0067d3;
+}
+:where(html[data-modo="claro"]) .ejv-num small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejv-estado {
+  color: #976010;
+}
+:where(html[data-modo="claro"]) .ejv-fila.is-ok .ejv-estado {
+  color: #287940;
+}
+:where(html[data-modo="claro"]) .ejv-fila.is-alto .ejv-estado {
+  color: #c7341a;
+}
+:where(html[data-modo="claro"]) .ejv-leyenda {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejv-eq small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejv-eq-par {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejv-eq-ico {
+  color: #287940;
+}
+:where(html[data-modo="claro"]) .ejv-eq li.is-mal .ejv-eq-ico {
+  color: #976010;
+}
+:where(html[data-modo="claro"]) .ejgen-vol-chip {
+  color: #27793e;
+}
+:where(html[data-modo="claro"]) .ejgen-vol-chip.is-bajo {
+  color: #976010;
+}
+:where(html[data-modo="claro"]) .ejgen-vol-chip.is-alto {
+  color: #c7341a;
+}
+:where(html[data-modo="claro"]) .ejgen-aviso {
+  color: #976010;
+}
+:where(html[data-modo="claro"]) .ejgen-campo-dia select {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .ejgen-nombre {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .ejgen-nombre small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejgen-ico {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .ejgen-pie {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejgen-op small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ejgen-listo-ico {
+  color: #287940;
+}
+:where(html[data-modo="claro"]) .rut-hoy.is-cambio .rut-hoy-eyebrow {
+  color: #0067d3;
+}
+:where(html[data-modo="claro"]) .rut-hoy.is-descanso .rut-hoy-eyebrow {
+  color: #26793f;
+}
+:where(html[data-modo="claro"]) .rut-hoy-manana {
+  color: #0069d8;
+}
+:where(html[data-modo="claro"]) a.rut-hoy-btn {
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .ejr-frases li.is-record {
+  color: #995c00;
+}
+:where(html[data-modo="claro"]) .rde.is-hecho p {
+  color: #1e7a43;
+}
+
+/* ---- css/run.css ---- */
+:where(html[data-modo="claro"]) .ri-fusion {
+  color: #287751;
+}
+:where(html[data-modo="claro"]) .ri-dep {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ri-select {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .ri-mas {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ri-mas-info summary {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ri-errores {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .ri-estirar {
+  color: #287751;
+}
+:where(html[data-modo="claro"]) .act-abrir {
+  color: inherit;
+}
+:where(html[data-modo="claro"]) .rd-menu-lista {
+  box-shadow: 0 12px 30px rgba(60, 50, 30, 0.16);
+}
+:where(html[data-modo="claro"]) .rd-mapa {
+  background: #faf9f6;
+}
+:where(html[data-modo="claro"]) .run-leaflet,
+:where(html[data-modo="claro"]) .rd-mapa .leaflet-container {
+  background: #f1eee7;
+}
+:where(html[data-modo="claro"]) .rd-mapa .run-leaflet .leaflet-control-attribution {
+  background: rgba(244, 242, 236, 0.75);
+  color: #49473f;
+}
+:where(html[data-modo="claro"]) .rd-mapa .run-leaflet .leaflet-control-attribution a {
+  color: #25231f;
+}
+:where(html[data-modo="claro"]) .rd-ampliar {
+  background: rgba(244, 242, 236, 0.8);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) body.rd-mapa-abierto .rd-mapa-caja {
+  background: #f4f2ec;
+}
+:where(html[data-modo="claro"]) .run-ruta-ini {
+  fill: #339968;
+  stroke: #d6d0c4;
+}
+:where(html[data-modo="claro"]) .run-ruta-fin {
+  fill: var(--danger);
+  stroke: #d6d0c4;
+}
+:where(html[data-modo="claro"]) .rd-stat span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rd-stat small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rd-logros small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rd-lectura {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rg-alt {
+  fill: rgba(112, 108, 96, 0.22);
+}
+:where(html[data-modo="claro"]) .rg-alt-sola {
+  fill: rgba(112, 108, 96, 0.35);
+}
+:where(html[data-modo="claro"]) .rg-linea {
+  fill: none;
+}
+:where(html[data-modo="claro"]) .rg-fc {
+  stroke: #ff3b53;
+}
+:where(html[data-modo="claro"]) .rg-base {
+  stroke: var(--border);
+}
+:where(html[data-modo="claro"]) .rg-eje {
+  fill: var(--muted);
+}
+:where(html[data-modo="claro"]) .rg-cursor line {
+  stroke: var(--ink);
+}
+:where(html[data-modo="claro"]) .rg-cursor circle {
+  fill: var(--accent-2);
+  stroke: #d6d0c4;
+}
+:where(html[data-modo="claro"]) .rg-banda {
+  fill: rgba(237, 85, 0, 0.14);
+}
+:where(html[data-modo="claro"]) .rg-banda-trotar {
+  fill: rgba(194, 117, 0, 0.1);
+}
+:where(html[data-modo="claro"]) .rd-leyenda {
+  background: rgba(255, 122, 48, 0.35);
+}
+:where(html[data-modo="claro"]) .rd-tabla th {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rd-tabla td small {
+  color: #287751;
+}
+:where(html[data-modo="claro"]) .rd-parciales td:first-child,
+:where(html[data-modo="claro"]) .rd-vueltas td:first-child {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rd-barra-celda i {
+  background: rgba(255, 122, 48, 0.55);
+}
+:where(html[data-modo="claro"]) .rd-parciales tr.is-rapido .rd-barra-celda i {
+  background: #4cc38a;
+}
+:where(html[data-modo="claro"]) .rd-parciales tr.is-lento .rd-barra-celda i {
+  background: rgba(154, 151, 143, 0.5);
+}
+:where(html[data-modo="claro"]) .rd-zonas small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rd-zonas em {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rd-z-barra {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .rd-z1 .rd-z-barra i {
+  background: #7a8a99;
+}
+:where(html[data-modo="claro"]) .rd-z2 .rd-z-barra i {
+  background: #4da3ff;
+}
+:where(html[data-modo="claro"]) .rd-z3 .rd-z-barra i {
+  background: #4cc38a;
+}
+:where(html[data-modo="claro"]) .rd-z4 .rd-z-barra i {
+  background: #ffb84d;
+}
+:where(html[data-modo="claro"]) .rd-z5 .rd-z-barra i {
+  background: #ff5a6e;
+}
+:where(html[data-modo="claro"]) .rd-detalles dt {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rd-atribucion {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rd-campo {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rd-campo .lib-input {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) #bottom-nav-links.tab-mode .tab-accion {
+  background: transparent;
+}
+:where(html[data-modo="claro"]) #bottom-nav-links.tab-mode .tab-accion .icon {
+  background: var(--accent-grad);
+  color: #0a0a0a;
+  box-shadow: 0 6px 16px rgba(255, 122, 48, 0.35);
+}
+:where(html[data-modo="claro"]) .fin-tab-accion {
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .run-mas-op {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .run-mas-op > .icon {
+  background: rgba(255, 122, 48, 0.14);
+}
+:where(html[data-modo="claro"]) .run-vacio > .icon {
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .run-estirar {
+  background: rgba(76, 195, 138, 0.12);
+}
+:where(html[data-modo="claro"]) .run-estirar a {
+  color: #287751;
+}
+:where(html[data-modo="claro"]) .run-estirar button {
+  background: none;
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .run-movilidad {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .run-movilidad > .icon {
+  background: rgba(76, 195, 138, 0.14);
+  color: #287751;
+}
+:where(html[data-modo="claro"]) .run-movilidad small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rf-filtro.is-sel {
+  color: #ffffff;
+}
+:where(html[data-modo="claro"]) .rf-mes small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rf-link {
+  color: inherit;
+}
+:where(html[data-modo="claro"]) .rf-avatar {
+  color: var(--accent-1);
+}
+:where(html[data-modo="claro"]) .rf-cab-txt small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rf-cifras span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rf-mapa {
+  background: #faf9f6;
+}
+:where(html[data-modo="claro"]) .rf-medallas {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .rf-tag-mano {
+  background: rgba(154, 151, 143, 0.15);
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rf-tag-tipo {
+  background: rgba(77, 163, 255, 0.15);
+  color: #0065de;
+}
+:where(html[data-modo="claro"]) .rp-delta.is-mas {
+  color: #287751;
+}
+:where(html[data-modo="claro"]) .rp-delta.is-menos {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .rp-total-mas span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rp-sec-cab small,
+:where(html[data-modo="claro"]) .rp-sec-cab a {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rp-sec-cab a {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .rp-racha small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rp-meta span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rp-meta span b {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .rp-meta small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rp-cta {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .rp-mes-nav button {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .rp-cal-cab {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rp-dia {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rp-dia.is-con span {
+  color: #0a0a0a;
+}
+:where(html[data-modo="claro"]) .rp-marca {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .rp-marca span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rp-marca small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rp-top a {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .rp-top small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rp-evo circle.rp-pr {
+  stroke: #d6d0c4;
+}
+:where(html[data-modo="claro"]) .rp-pred span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rp-pred small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rp-falta {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rp-ff-cifras span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rp-ff-estado {
+  stroke: var(--accent-1);
+}
+:where(html[data-modo="claro"]) .rp-ff-fatiga {
+  stroke: #ff3b53;
+}
+:where(html[data-modo="claro"]) .rp-ff-pos {
+  fill: rgba(21, 134, 255, 0.55);
+}
+:where(html[data-modo="claro"]) .rp-ff-neg {
+  fill: rgba(21, 134, 255, 0.28);
+}
+:where(html[data-modo="claro"]) .rp-zap-cab small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rp-zap-cab span {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rp-zap-aviso {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .rp-zap.is-cambiar .rp-zap-aviso {
+  color: var(--danger);
+}
+:where(html[data-modo="claro"]) .rd-ia {
+  background: linear-gradient(135deg, rgba(255, 122, 48, 0.12), rgba(255, 184, 77, 0.06));
+}
+:where(html[data-modo="claro"]) .rd-ia h2 {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .rd-recorrido h2 small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rd-rec-fecha {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .rd-rec-lista li.is-esta .rd-rec-fecha {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .rd-rec-barra {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .rd-rec-barra i {
+  background: rgba(255, 122, 48, 0.5);
+}
+:where(html[data-modo="claro"]) .rd-rec-lista li.is-mejor .rd-rec-barra i {
+  background: #4cc38a;
+}
+:where(html[data-modo="claro"]) .rd-rec-lista small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rs-card-mapa {
+  background: #faf9f6;
+}
+:where(html[data-modo="claro"]) .rs-previa {
+  background: #faf9f6;
+}
+:where(html[data-modo="claro"]) .rs-previa-todo {
+  stroke: rgba(112, 108, 96, 0.55);
+}
+:where(html[data-modo="claro"]) .rs-previa-sel {
+  stroke: #339968;
+}
+:where(html[data-modo="claro"]) .rg-banda-seg {
+  fill: rgba(51, 153, 104, 0.22);
+}
+:where(html[data-modo="claro"]) .rd-segs a {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .rd-segs small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .rc-caja {
+  background: #faf9f6;
+}
+:where(html[data-modo="claro"]) .rc-svg polyline {
+  stroke: #ed5500;
+}
+:where(html[data-modo="claro"]) .rc-tarjeta-mapa {
+  background: #faf9f6;
+}
+:where(html[data-modo="claro"]) .rcm-img.is-transparente {
+  background: repeating-conic-gradient(#e9e5dc 0% 25%, #f1eee7 0% 50%) 0 0 / 20px 20px;
+}
+
+/* ---- scripts/tema-claro-manual.css (a mano) ---- */
+/* Modo claro: lo que no sale solo del generador (D-126). Va al final de
+   css/tema-claro.css (npm run tema). */
+
+/* La franja de la hora y la batería (app instalada en el iPhone): con la
+   barra "black-translucent" el iPhone escribe esos números en blanco, así
+   que esa franja queda oscura también en el modo claro. Fuera de la app
+   instalada mide 0. */
+html[data-modo="claro"] body::after {
+  content: ""; position: fixed; top: 0; left: 0; right: 0; height: env(safe-area-inset-top, 0px);
+  background: #1c1b18; z-index: 2147483000; pointer-events: none;
+}
+
+/* La escena del personaje de Hábitos es un dibujo (cielo de día o de noche):
+   queda como en el modo oscuro, con su paleta adentro. */
+html[data-modo="claro"] .hb-personaje {
+  --bg: #0a0a0a; --bg-soft: #111111; --surface: #161616; --surface-raised: #1c1c1c;
+  --ink: #f5f4f1; --muted: #9a978f; --border: #2a2a28;
+  --accent-1: #ff7a30; --accent-2: #ffb84d; --gold: #d3a35a;
+  color-scheme: dark;
+}
+/* La barra de experiencia dentro de esa escena oscura. */
+html[data-modo="claro"] .hb-personaje .hb-xp { background: rgba(255, 255, 255, 0.16); }
+
+/* Las pestañas de abajo traen su color en el HTML (js/modules.js): en claro,
+   la versión más oscura que viene al lado (--tab-claro). */
+html[data-modo="claro"] #bottom-nav-links a[data-hash] { --tab-color: var(--tab-claro) !important; }

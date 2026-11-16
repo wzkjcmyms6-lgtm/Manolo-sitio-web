@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-16 (rutinas del gimnasio desde el entreno, D-125; mejoras sin servidor en curso).
+Actualizado: 2026-11-16 (modo claro, D-126; mejoras sin servidor en curso).
 
 - **Mejoras sin servidor (2026-11-15, en curso)**: fase 1 hecha (D-123):
   **Biblia en audio** en el lector, con las voces del iPhone (sin
@@ -10,8 +10,11 @@ Actualizado: 2026-11-16 (rutinas del gimnasio desde el entreno, D-125; mejoras s
   repiten, menú ⋯ con Editar, Duplicar, Hacer la siguiente y Eliminar).
   Fase 3 hecha (D-125): al terminar un entreno, **guardar en la rutina** lo
   que cambiaste (eligiendo qué; los pesos no cambian), un entreno libre
-  como rutina nueva y el editor pregunta antes de perder cambios. Siguen:
-  modo claro y abrir más rápido (`.claude/CURRENT_PHASE.md`).
+  como rutina nueva y el editor pregunta antes de perder cambios. Fase 4
+  hecha (D-126): **modo claro** (Inicio o menú ☰ › Apariencia: automático,
+  claro u oscuro); `css/tema-claro.css` se genera con `npm run tema` a
+  partir de los estilos de siempre (el oscuro no cambia). Sigue: abrir más
+  rápido (`.claude/CURRENT_PHASE.md`).
 
 - **Ajustes del dueño (2026-11-15)**: pago mínimo por tarjeta con aviso
   (D-121); "Leí en mi Biblia" para marcar lo leído en papel con un toque

@@ -17,7 +17,7 @@
   <!-- Fuentes guardadas en el repo: la app no depende de internet para verse bien -->
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
-  <link rel="stylesheet" href="css/style.css?v=202611160600">
+  <link rel="stylesheet" href="css/style.css?v=202611171200">
   <link rel="stylesheet" href="css/finanzas.css?v=202611160600">
   <link rel="stylesheet" href="css/habitos.css?v=202611061700">
   <link rel="stylesheet" href="css/inversiones.css?v=202610291000">
@@ -34,6 +34,10 @@
   <link rel="stylesheet" href="css/run.css?v=202611040900">
   <!-- Al final de todo: devuelve lo fijo a su lugar en el iPhone (D-120) -->
   <link rel="stylesheet" href="css/viewport.css?v=202611160600">
+  <!-- Modo claro (D-126): generado con "npm run tema"; js/tema.js lo apaga en
+       el modo oscuro y elige el modo antes de pintar (sin "defer": es chico) -->
+  <link rel="stylesheet" href="css/tema-claro.css?v=202611171200" id="tema-claro-css">
+  <script src="js/tema.js?v=202611171200"></script>
 </head>
 <body>
   <!-- Degradado marfil y brillo del maniquí (mapa corporal y creador de ejercicios) -->
@@ -203,6 +207,7 @@
             <button type="button" class="link-btn md-mostrar" id="mi-dia-mostrar" hidden>Mostrar «Mi día»</button>
             <div class="inicio-pie">
               <button type="button" class="link-btn cuenta-estado-btn rsp-abrir" id="respaldo-abrir" data-respaldo-abrir>Copia de seguridad</button>
+              <button type="button" class="link-btn cuenta-estado-btn" data-tema-abrir>Apariencia</button>
               <button type="button" class="link-btn cuenta-estado-btn" id="cuenta-estado-btn">Estado de la cuenta</button>
             </div>
           </section>
@@ -1447,7 +1452,7 @@
   <script defer src="js/accesos.js?v=202610100400"></script>
   <script defer src="js/verses.js?v=202611141900"></script>
   <script defer src="js/icons.js?v=202611040400"></script>
-  <script defer src="js/modules.js?v=202611160300"></script>
+  <script defer src="js/modules.js?v=202611171200"></script>
   <script defer src="js/main.js?v=202611160400"></script>
   <script defer src="js/viewport-ajuste.js?v=202611160600"></script>
   <script defer src="js/muscle-engine.js?v=202609301400"></script>
@@ -1502,7 +1507,7 @@
   <script defer src="js/scalping-avance.js?v=202610230100"></script>
   <script defer src="js/habito-scalping.js?v=202610230100"></script>
   <script defer src="js/habitos-graficos.js?v=202611050500"></script>
-  <script defer src="js/habitos.js?v=202611151900"></script>
+  <script defer src="js/habitos.js?v=202611171200"></script>
   <script defer src="js/habitos-categorias-ui.js?v=202611051100"></script>
   <script defer src="js/habitos-categoria.js?v=202611051100"></script>
   <script defer src="js/habitos-plantillas-ui.js?v=202611050700"></script>
@@ -1554,6 +1559,7 @@
   <script defer src="js/inversiones-graficos.js?v=202610280400"></script>
   <script defer src="js/inversiones.js?v=202610291000"></script>
   <script defer src="js/lectura-comun.js?v=202610290200"></script>
+  <script defer src="js/tema-ui.js?v=202611171200"></script>
   <script defer src="js/biblia-motor.js?v=202611141900"></script>
   <script defer src="js/biblia-planes.js?v=202611141900"></script>
   <script defer src="js/biblia-marcar.js?v=202611160700"></script>

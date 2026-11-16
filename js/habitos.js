@@ -312,6 +312,9 @@ function pintarPersonaje(f) {
         <span class="hb-dato"><span class="hb-ico" data-icon="coin"></span>${fmtNum(monedas)}</span>
       </div>
     </div>`;
+  // Sin hábitos, renderHoy() termina antes de dibujar los íconos: la moneda
+  // y la racha quedaban vacías (D-126, visto al comparar capturas).
+  renderIcons(el.querySelector(".hb-pj"));
 }
 
 function botonCheck(h, x) {
