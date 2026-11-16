@@ -16,7 +16,7 @@ let rutinas = [];          // normalizadas y ordenadas
 let crudas = [];           // tal como están en Firestore (para el respaldo)
 let plan = { dias: {} };
 let migrando = false;
-let editor = null;         // { id, name, orden, items }
+let editor = null;         // { id, name, orden, items, inicial }
 let menuId = null;
 
 function col() { return db.collection("users").doc(currentUser.uid).collection("rutinas"); }
@@ -193,6 +193,7 @@ function abrirEditor(r) {
   editor = r
     ? { id: r.id, name: r.name, orden: r.orden, items: r.items.map(it => Object.assign({}, it)) }
     : { id: null, name: "", orden: null, items: [R.item({}), R.item({})] };
+  editor.inicial = firmaEditor();
   $("rut-editor-t").textContent = r ? "Editar rutina" : "Nueva rutina";
   $("rut-nombre").value = editor.name;
   $("rut-error").hidden = true;
@@ -200,7 +201,15 @@ function abrirEditor(r) {
   abrirHoja($("rut-editor"));
   if (!r) setTimeout(() => $("rut-nombre").focus(), 250);
 }
-function cerrarEditor() {
+// Lo que se ve en el editor, para saber si cambiaste algo (D-125).
+function firmaEditor() {
+  return JSON.stringify({ n: String(editor.name || "").trim(), i: editor.items.map(R.item) });
+}
+// Cerrar sin guardar: si cambiaste algo, pregunta antes (✕, Cancelar,
+// tocar fuera, deslizar o Escape). forzar: después de guardar.
+function cerrarEditor(forzar) {
+  if (!editor) { cerrarHoja($("rut-editor")); return; }
+  if (forzar !== true && editor.inicial !== firmaEditor() && !confirm("¿Salir sin guardar? Se pierden los cambios de la rutina.")) return;
   cerrarHoja($("rut-editor"));
   editor = null;
 }
@@ -270,11 +279,11 @@ $("rut-form").addEventListener("submit", e => {
   const datos = R.aGuardar({ name, orden, items });
   const ref = editor.id ? col().doc(editor.id) : col().doc();
   ref.set(datos).catch(err => console.error("Manolo: no se pudo guardar la rutina", err));
-  cerrarEditor();
+  cerrarEditor(true);
 });
-$("rut-cancelar").addEventListener("click", cerrarEditor);
-$("rut-editor-cerrar").addEventListener("click", cerrarEditor);
-$("rut-editor").querySelector(".budget-sheet-overlay").addEventListener("click", cerrarEditor);
+$("rut-cancelar").addEventListener("click", () => cerrarEditor());
+$("rut-editor-cerrar").addEventListener("click", () => cerrarEditor());
+$("rut-editor").querySelector(".budget-sheet-overlay").addEventListener("click", () => cerrarEditor());
 $("rut-nueva").addEventListener("click", () => abrirEditor(null));
 
 // El importador de Excel/CSV se carga solo cuando se usa (así la app abre

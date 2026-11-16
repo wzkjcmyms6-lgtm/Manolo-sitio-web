@@ -7,6 +7,8 @@
 // Arriba, "En pocas palabras": hasta 4 frases por reglas (récords,
 // comparación, estancamiento, qué queda cansado, lo próximo del plan;
 // js/ej-inteligencia.js, D-097). Abajo, "Compartir imagen" (js/ej-compartir.js).
+// D-125: antes de los botones, guardar los cambios de hoy en la rutina (o
+// un entreno libre como rutina nueva): js/rutina-desde-entreno-ui.js.
 (function () {
 "use strict";
 
@@ -137,6 +139,7 @@ function contenido() {
     <h4 class="ejf-sub">¿Qué tan duro fue el entreno?</h4>
     <div class="ejr-rpe" role="group" aria-label="Esfuerzo de la sesión de 1 a 10">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<button type="button" data-ejr-rpe="${n}" aria-pressed="${rpe === n}"${rpe === n ? ' class="is-on"' : ""}>${n}</button>`).join("")}</div>
     <p class="ejr-rpe-txt">${rpe ? `Esfuerzo ${rpe} de 10 · carga de la sesión <b>${carga}</b> (misma escala que Running).` : "1 = muy fácil · 10 = no podías más. Sirve para medir tu carga junto con Running."}</p>
+    ${window.RutinaDesdeEntrenoUI ? RutinaDesdeEntrenoUI.html(entreno) : ""}
     <div class="ejr-acciones"><button type="button" class="ejf-btn-sec" data-ejr-compartir>Compartir imagen</button><button type="button" class="ejf-btn ejr-listo" data-cerrar>Listo</button></div>`;
 }
 
@@ -157,6 +160,7 @@ function resumen(entreno, antes) {
     document.body.appendChild(hoja);
     hoja.addEventListener("click", e => {
       if (e.target.closest("[data-cerrar]")) { cerrar(); return; }
+      if (window.RutinaDesdeEntrenoUI && actual && RutinaDesdeEntrenoUI.click(e, actual.entreno, pintar)) return;
       const comp = e.target.closest("[data-ejr-compartir]");
       if (comp && actual && window.EjCompartir) {
         comp.disabled = true;

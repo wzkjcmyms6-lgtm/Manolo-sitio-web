@@ -1,6 +1,12 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (rutinas del gimnasio desde el entreno, D-125): `npm test` →
+  **683 pruebas**. Nueva: `rutina-desde-entreno` (cambios de hoy, aplicar
+  solo lo elegido, orden, dos veces el mismo ejercicio, cardio e
+  isométricos, entreno libre como rutina). E2E nueva: `rutina-entreno`
+  (entreno con cambios › elegir › guardar › deshacer, entreno libre ›
+  rutina nueva, el editor pregunta antes de perder cambios).
 - 2026-11-16 (rutinas de Running desde la app, D-124): `npm test` → **675
   pruebas**. Nueva: `rutina-running-editor` (pasos y series, agrupar lo que
   se repite, duración en min y s, límites con el paso que falla, copias y
@@ -211,7 +217,7 @@
   retiraron en D-033.
 - **Dispositivo real (iPhone)**: pantalla encendida, voz y sonido se validan
   en el teléfono del dueño; nada se da por funcionando sin esa prueba.
-- **Regresión** en cada fase: `npm test` + las 35 suites de `scripts/e2e/`
+- **Regresión** en cada fase: `npm test` + las 36 suites de `scripts/e2e/`
   (ver "Cómo correr todo"; D-115: una prueba que quedó fuera de la lista
   corta se rompió sin que se viera).
 
@@ -223,7 +229,7 @@ for f in fase1 regresion hojas sw-instala emojis scalping inversiones tarjetas m
   running run-importar run-detalle run-feed run-progreso run-inteligencia run-segmentos \
   run-compartir run-qa habitos mi-dia ej-calendario ejercicio libros-progreso lectura \
   lectura-qa tiempos finanzas-diario lugares respaldo sin-internet pantalla tarjetas-minimo \
-  biblia-marcar biblia-audio rr-editor; do node scripts/e2e/$f.js || break; done
+  biblia-marcar biblia-audio rr-editor rutina-entreno; do node scripts/e2e/$f.js || break; done
 ```
 Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
 
@@ -285,6 +291,17 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Rutinas del gimnasio: guardar lo que cambiaste (2026-11)**
+- [ ] Empieza una rutina, quita un ejercicio, agrega otro y haz una serie de
+  más en alguno. "Terminar": al final del resumen sale "Hoy cambiaste…" con
+  la lista. Quita la marca de algo y "Guardar en la rutina"; ábrela en el
+  editor: tiene lo marcado y los mismos pesos.
+- [ ] Toca "Deshacer": la rutina vuelve a como estaba.
+- [ ] Entreno libre (sin rutina) › "Terminar" › "Guardar como rutina":
+  aparece en tus rutinas.
+- [ ] Editar una rutina, cambiar algo y tocar la ✕: pregunta "¿Salir sin
+  guardar?".
 
 **Rutinas de Running desde la app (2026-11)**
 - [ ] Running › Rutinas › "＋ Nueva": aparece una rutina de ejemplo (20 min).

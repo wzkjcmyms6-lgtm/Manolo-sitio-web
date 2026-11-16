@@ -1,5 +1,13 @@
 # Cambios
 
+## 2026-11-16 · Rutinas del gimnasio: guardar lo que cambiaste
+- Al terminar un entreno de una rutina, si hoy agregaste o quitaste
+  ejercicios, hiciste otras series o cambiaste el orden, el resumen te
+  pregunta si guardarlo en la rutina (eliges qué). Los pesos no cambian.
+- Un entreno libre se puede **guardar como rutina** desde el resumen.
+- El editor de rutinas pregunta antes de cerrar si cambiaste algo sin
+  guardar.
+
 ## 2026-11-16 · Rutinas de Running desde la app
 - Running › Rutinas: **"＋ Nueva"** crea una rutina guiada sin CSV:
   intervalos (caminar, trotar, correr, descanso, con minutos y segundos) y

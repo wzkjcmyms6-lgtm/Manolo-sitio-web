@@ -9,7 +9,7 @@ con la app cerrada y Strava automático quedan para después ("Ahora no").
 |---|---|---|
 | 1 | Biblia en audio (voces del iPhone) | ✅ (D-123) |
 | 2 | Rutinas de Running: crear y editar en la app (sin CSV) | ✅ (D-124) |
-| 3 | Rutinas del gimnasio: mejorar el editor | ⏳ |
+| 3 | Rutinas del gimnasio: guardar lo cambiado al entrenar, entreno libre como rutina, aviso al cerrar el editor | ✅ (D-125) |
 | 4 | Modo claro (automático o elegido) | ⏳ |
 | 5 | Que la app abra más rápido | ⏳ |
 | 6 | Control final y entrega | ⏳ |

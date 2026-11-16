@@ -326,6 +326,38 @@ reescriben; los Rangos no cambian de calibración.
 - Lista para probar en el iPhone en `docs/TESTING.md` ("Ejercicio
   inteligente").
 
+## Después: tu rutina al terminar el entreno (D-125, 2026-11-16)
+
+Pedido del dueño: "mejorar las rutinas desde la app". El editor de rutinas
+ya tenía casi todo (series, reps, peso, descanso, subida, superserie, notas,
+mover, duplicar); lo que faltaba era no tener que volver a escribir en el
+editor lo que ya cambiaste entrenando.
+
+- **Entreno de una rutina que hoy cambiaste:** al final del resumen,
+  "Hoy cambiaste «Push»" con la lista de cambios, todos marcados:
+  - agregar un ejercicio que hiciste y no estaba;
+  - quitar uno que hoy no hiciste;
+  - otra cantidad de series (solo las de trabajo; el calentamiento no
+    cuenta);
+  - el orden de hoy.
+  Quitas la marca de lo que fue solo por hoy y "Guardar en la rutina".
+  Pesos, reps, descansos, notas y subida de lo que ya estaba **no
+  cambian** (los lleva la progresión). Un ejercicio nuevo entra con lo de
+  hoy (series, reps mín. y máx., el peso más alto). Lo que no hiciste y se
+  queda sigue pegado al ejercicio que tenía antes. Con "Deshacer".
+- **Entreno libre:** "¿Repetir este entreno?" › "Guardar como rutina":
+  queda al final de tus rutinas con su nombre (o "Entreno del 16 nov"; si ya
+  existe ese nombre, "(copia)"). Con "Deshacer".
+- **Editor de rutinas:** si cambiaste algo y lo cierras sin guardar (✕,
+  Cancelar, tocar fuera, deslizar o Escape), pregunta "¿Salir sin
+  guardar?". Sin cambios, cierra sin preguntar.
+- Se guarda con el formato de siempre (`js/rutinas.js · aGuardar`, con
+  merge): nada más del documento se pierde.
+- Lógica en `js/rutina-desde-entreno.js` (`tests/rutina-desde-entreno.test.js`);
+  pantalla en `js/rutina-desde-entreno-ui.js` (dentro del resumen,
+  `js/ej-entreno-ui.js`) y `css/ejercicio.css`; E2E
+  `scripts/e2e/rutina-entreno.js`.
+
 ## Fórmulas
 
 - **1RM estimado (Epley)**: kg × (1 + reps / 30); 1 rep = el peso; reps

@@ -1689,3 +1689,25 @@ dos casillas (min y s) con teclado numérico; letra de 16 px. Lógica en
 pantalla en `js/rutina-running-editor-ui.js` y `css/rr-editor.css`
 (`scripts/e2e/rr-editor.js`); `scripts/e2e/running.js` borra desde el menú
 ⋯.
+
+**D-125 (2026-11-16) · Gimnasio: guardar en la rutina lo que cambiaste al
+entrenar.** Pedido del dueño ("mejorar las rutinas desde la app"). El editor
+ya era completo; faltaba no tener que repetir en él lo hecho entrenando.
+(1) Al terminar un entreno de una rutina, si hoy agregaste o quitaste
+ejercicios, cambiaste las series de trabajo o el orden, el resumen lo lista
+(todo marcado) y "Guardar en la rutina" guarda lo marcado. Pesos, reps,
+descanso, notas y subida de lo que ya estaba no se tocan (la progresión
+manda, D-094); un ejercicio nuevo entra con lo de hoy (series de trabajo,
+reps mín. y máx., peso más alto). Emparejado por ficha (`exerciseId`) o,
+sin ficha, por nombre sin mayúsculas ni tildes; dos veces el mismo
+ejercicio se empareja en orden. Lo que no hiciste y se queda sigue después
+del ejercicio que tenía antes; lo agregado va después del que hiciste antes
+que él. (2) Un entreno libre se puede guardar como rutina nueva (al final;
+nombre del entreno, "Entreno del 16 nov" si era "Entrenamiento", o
+"(copia)" si ya existe). (3) Las dos con "Deshacer" (se vuelve a guardar la
+rutina de antes, o se borra la nueva). Se guarda con `aGuardar` y merge,
+como el editor. (4) Editor de rutinas: con cambios sin guardar, cerrar
+pregunta "¿Salir sin guardar?" (también al deslizar: la hoja usa la misma
+✕). Lógica en `js/rutina-desde-entreno.js`
+(`tests/rutina-desde-entreno.test.js`); pantalla en
+`js/rutina-desde-entreno-ui.js`; E2E `scripts/e2e/rutina-entreno.js`.
