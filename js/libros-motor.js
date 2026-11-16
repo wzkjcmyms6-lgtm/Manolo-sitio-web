@@ -5,6 +5,7 @@
 // con su duración) y lecturas anteriores (releer).
 // Fase 5 (D-108): saga (nombre y número), prioridad y notas por libro.
 // Nivel 3 (D-129): título original y autor de Open Library (js/libros-fuentes.js).
+// Nivel 3, fase 2 (D-130): la edición (editorial, año, tapa) y metaFin.
 // Colecciones: users/{uid}/libros y users/{uid}/libros_frases (docs/DATABASE.md).
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
@@ -88,6 +89,18 @@ const duracionTexto = min => (Number.isInteger(min) && min > 0 ? `${Math.floor(m
 
 // ---- Libros ----
 // Datos del formulario → documento. { ok, errores: [{campo, texto}], doc }.
+// La edición que elegiste (fase 2, D-130): { key, editorial, anio, formato } o null.
+const FORMATOS_EDICION = ["dura", "blanda", "bolsillo", "digital", "audio"];
+function edicionDe(d) {
+  d = d || {};
+  const key = /^\/books\/OL\d+M$/.test(String(d.edicionKey || d.key || "")) ? String(d.edicionKey || d.key) : null;
+  const editorial = texto(d.edicionEditorial != null ? d.edicionEditorial : d.editorial, 80).replace(/\s+/g, " ");
+  const anio = Number(d.edicionAnio != null ? d.edicionAnio : d.anio);
+  const formato = d.edicionFormato != null ? d.edicionFormato : d.formato;
+  if (!key && !editorial) return null;
+  return { key, editorial, anio: Number.isInteger(anio) && anio >= 1400 && anio <= 2100 ? anio : null, formato: FORMATOS_EDICION.includes(formato) ? formato : null };
+}
+
 function validarLibro(datos, opciones) {
   const o = opciones || {};
   const errores = [];
@@ -139,6 +152,7 @@ function validarLibro(datos, opciones) {
       // Nivel 3 (D-129): el título original (si el tuyo está traducido) y el autor en Open Library.
       tituloOriginal: texto(datos.tituloOriginal, 200).replace(/\s+/g, " ") || null,
       autorKey: /^OL\d+A$/.test(String(datos.autorKey || "")) ? datos.autorKey : null,
+      edicion: edicionDe(datos),
       formato, saga: saga || null, sagaN: saga ? sagaN : null, prioridad: datos.prioridad === "alta" || datos.prioridad === "baja" ? datos.prioridad : null };
   // La duración solo con audiolibro (si cambias a papel, la que tenías queda guardada).
   if (formato === "audio") doc.duracionMin = duracionMin;
@@ -162,6 +176,9 @@ function normalizarLibro(id, d) {
     // Nivel 3 (D-129).
     tituloOriginal: typeof d.tituloOriginal === "string" ? d.tituloOriginal : "",
     autorKey: typeof d.autorKey === "string" && /^OL\d+A$/.test(d.autorKey) ? d.autorKey : null,
+    // Nivel 3, fase 2 (D-130).
+    edicion: d.edicion && typeof d.edicion === "object" ? edicionDe(d.edicion) : null,
+    metaFin: fechaOk(d.metaFin) ? d.metaFin : null,
     // Progreso de lectura (js/libros-progreso.js).
     paginaActual: Number.isInteger(d.paginaActual) && d.paginaActual >= 0 ? d.paginaActual : null,
     paginaBase: Number.isInteger(d.paginaBase) && d.paginaBase >= 0 ? d.paginaBase : null,
@@ -436,7 +453,7 @@ function exportarJson(libros, frases, ahora, portadas, ajustes) {
 
 return {
   ESTADOS, ESTADO, FORMATOS, FORMATO, DURACION_MAX, leerDuracion, duracionTexto, PRIORIDADES, TIPOS_NOTA, TIPO_NOTA, validarNota, notasDe, etiquetasOk, ORDENES, GENEROS, GENERO, normalizar, fechaOk, fechaLarga, estrellas,
-  validarLibro, normalizarLibro, ordenar, filtrar, resumen, colorTapa,
+  validarLibro, normalizarLibro, edicionDe, ordenar, filtrar, resumen, colorTapa,
   validarFrase, normalizarFrase, ordenarFrases, filtrarFrases, frasesDe, exportarJson,
   urlBusqueda, leerBusqueda, urlBuscarLibro, esIsbn, leerLibros, generoDesdeTemas, duplicado, urlPortadaOL, portadaUrlOk, medidasFoto, CALIDADES, LIMITE_FOTO, fotoOk, kb, portadaParaGuardar
 };

@@ -189,6 +189,7 @@ function renderLeyendo() {
         ${x.pct != null ? `<span class="lib-barra" aria-hidden="true"><i style="width:${x.pct}%"></i></span>` : ""}
         ${est ? `<small class="lib-sigue-est">${esc(est)}</small>` : ""}
         ${falta ? `<small class="lib-sigue-est">${esc(falta)}</small>` : ""}
+        ${window.LibrosEdicionesUI && LibrosEdicionesUI.finSuelto(l, hoy) ? `<small class="lib-sigue-est">🎯 ${esc(LibrosEdicionesUI.finSuelto(l, hoy))}</small>` : ""}
         ${botonesLeer(l)}
       </div>
     </div>`;
@@ -395,11 +396,13 @@ function ver(id) {
           <b>${esc(textoPagina(x, l))}</b>
           ${x.pct != null ? `<span class="lib-barra" aria-hidden="true"><i style="width:${x.pct}%"></i></span>` : ""}
           ${est ? `<p class="lib-nota">${esc(est)}</p>` : ""}
+          ${window.LibrosEdicionesUI ? LibrosEdicionesUI.metaFin(l, hoyLocal()) : ""}
           ${botonesLeer(l)}
         </div>` : l.estado === "por_leer" && window.LibrosSesion ? `<div class="lib-progreso">${botonesLeer(l)}</div>` : ""}
         ${window.LibrosSesion ? LibrosSesion.ficha(l) : ""}
         <dl class="lib-datos">
           ${dato("Páginas", l.paginas ? String(l.paginas) : "")}
+          ${dato("Edición", l.edicion && window.LibrosFuentes ? LibrosFuentes.textoEdicion(l.edicion) : "")}
           ${dato("Publicado", l.anio ? String(l.anio) : "")}
           ${dato("ISBN", l.isbn || "")}
           ${dato("Lo leíste en", dias ? `${dias} ${dias === 1 ? "día" : "días"}` : "")}
@@ -470,6 +473,7 @@ function formLibro(id) {
             ${L.GENEROS.map(g => `<option value="${g.id}"${g.id === v.genero ? " selected" : ""}>${esc(g.nombre)}</option>`).join("")}
           </select></label>
         </div>
+        <div class="lib-ediciones" data-lib-ediciones hidden></div>
         <div class="lib-par is-saga">
           <label class="lib-campo"><span>Saga (opcional)</span><input type="text" name="saga" maxlength="80" autocomplete="off" list="lib-sagas" value="${esc(v.saga || "")}" class="lib-input" placeholder="Ej: Harry Potter"></label>
           <label class="lib-campo"><span>N.º</span><input type="text" inputmode="decimal" name="sagaN" autocomplete="off" value="${esc(v.sagaN ? String(v.sagaN).replace(".", ",") : "")}" class="lib-input" placeholder="1"></label>
@@ -485,6 +489,10 @@ function formLibro(id) {
         <input type="hidden" name="olKey" value="${esc(v.olKey || "")}">
         <input type="hidden" name="tituloOriginal" value="${esc(v.tituloOriginal || "")}">
         <input type="hidden" name="autorKey" value="${esc(v.autorKey || "")}">
+        <input type="hidden" name="edicionKey" value="${esc((v.edicion && v.edicion.key) || "")}">
+        <input type="hidden" name="edicionEditorial" value="${esc((v.edicion && v.edicion.editorial) || "")}">
+        <input type="hidden" name="edicionAnio" value="${esc((v.edicion && v.edicion.anio) || "")}">
+        <input type="hidden" name="edicionFormato" value="${esc((v.edicion && v.edicion.formato) || "")}">
         <input type="hidden" name="isbn" value="${esc(v.isbn || "")}">
         <div class="lib-campo"><span>Estado</span>
           <div class="lib-segmento is-cuatro" role="radiogroup" aria-label="Estado">
@@ -557,6 +565,11 @@ hoja.el.addEventListener("submit", e => {
     if (f.elements.autorKey && f.elements.autorKey.value && L.normalizar(f.elements.autor.value) !== L.normalizar(f.dataset.autorElegido || "")) f.elements.autorKey.value = "";
     const r = L.validarLibro(leer(f), { hoy });
     if (!r.ok) { window.Lectura.errores(f, r.errores); return; }
+    const vaEn = actual.id ? (libros.find(x => x.id === actual.id) || {}).paginaActual : null;
+    if (r.doc.paginas && Number.isInteger(vaEn) && vaEn > r.doc.paginas && r.doc.estado !== "terminado") {
+      window.Lectura.errores(f, [{ campo: "paginas", texto: `Vas en la página ${vaEn}: el libro no puede tener menos páginas.` }]);
+      return;
+    }
     const dup = !actual.id && L.duplicado(libros, r.doc.titulo, null);
     if (dup && !confirm(`Ya tienes «${dup.titulo}» en tu lista (${L.ESTADO[dup.estado].nombre}). ¿Agregarlo igual?`)) return;
     // Si lo marcas terminado y venías anotando páginas, la última es la final.
@@ -609,6 +622,7 @@ hoja.el.addEventListener("input", e => {
     return;
   }
   if (e.target.name === "titulo" && actual && actual.modo === "libro") avisarDuplicado();
+  if (e.target.name === "paginas" && actual && actual.modo === "libro" && window.LibrosEdicionesUI) LibrosEdicionesUI.aMano(e.target.form);
   if (e.target.type === "date") { const aviso = hoja.el.querySelector("[data-lib-aviso-fecha]"); if (aviso) aviso.hidden = true; }
   // La tapa genérica de la vista previa sigue al título y al autor que escribes.
   if ((e.target.name === "titulo" || e.target.name === "autor") && actual && actual.modo === "libro") {
@@ -663,6 +677,14 @@ hoja.el.addEventListener("click", e => {
   if (pag) { formPagina(pag.dataset.libPagina, "ver"); return; }
   const libroElegido = e.target.closest("[data-lib-elegir-libro]");
   if (libroElegido) { elegirLibro(encontrados[Number(libroElegido.dataset.libElegirLibro)]); return; }
+  if (f && f.matches(".lib-form-libro") && window.LibrosEdicionesUI && LibrosEdicionesUI.click(e, f, { alElegir: portadaDeEdicion })) return;
+  const fin = e.target.closest("[data-lib-fin]");
+  if (fin && actual && actual.id) { guardarMetaFin(actual.id, fin.dataset.libFin || null); return; }
+  if (e.target.closest("[data-lib-fin-cambiar]")) {
+    const mas = hoja.el.querySelector("[data-lib-fin-mas]");
+    if (mas) { mas.hidden = !mas.hidden; e.target.closest("[data-lib-fin-cambiar]").hidden = true; }
+    return;
+  }
   // Etiquetas de la frase (D-109).
   const etq = e.target.closest("[data-lib-etq]");
   if (etq) {
@@ -747,6 +769,7 @@ function mensajePortada(t) {
 function elegirPortada(sel) {
   const f = hoja.el.querySelector(".lib-form-libro");
   if (!f) return;
+  portadaAuto = false;
   portadaSel = sel;
   const datos = { titulo: f.elements.titulo.value.trim() || "Sin título", autor: f.elements.autor.value.trim(), id: actual.id || "" };
   hoja.el.querySelector("[data-lib-prev]").innerHTML = tapa(datos, true, sel);
@@ -870,6 +893,24 @@ function elegirLibro(x) {
   const lista = llenos.length > 1 ? `${llenos.slice(0, -1).join(", ")} y ${llenos[llenos.length - 1]}` : llenos[0] || "los datos";
   mensajeBusqueda(`✓ Completé ${lista}. Revisa y toca Guardar.`);
   avisarDuplicado();
+  portadaAuto = !!(x.url && !tienePortada);
+  if (window.LibrosEdicionesUI && (x.olKey || f.elements.isbn.value)) LibrosEdicionesUI.mostrar(f, x, { isbn: f.elements.isbn.value || null, alElegir: portadaDeEdicion });
+}
+// La portada sigue a la edición elegida, si la puso la búsqueda (no si
+// elegiste otra o subiste una foto).
+let portadaAuto = false;
+function portadaDeEdicion(ed) {
+  if (!portadaAuto || !ed || !ed.url) return;
+  elegirPortada({ tipo: "url", url: ed.url });
+  portadaAuto = true;
+}
+// "¿Para cuándo lo quieres terminar?" (D-130): metaFin en el libro.
+function guardarMetaFin(id, fecha) {
+  const valor = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : null;
+  ref("libros").doc(id).update({ metaFin: valor }).catch(fallo("guardar"));
+  const l = libros.find(x => x.id === id);
+  if (l) l.metaFin = valor;
+  ver(id);
 }
 function avisarDuplicado() {
   const f = hoja.el.querySelector(".lib-form-libro"), aviso = hoja.el.querySelector("[data-lib-dup]");
@@ -971,6 +1012,7 @@ function comprimirFoto(archivo) {
   });
 }
 hoja.el.addEventListener("change", e => {
+  if (e.target.matches("[data-lib-fin-fecha]") && actual && actual.id) { if (e.target.value) guardarMetaFin(actual.id, e.target.value); return; }
   if (!e.target.matches("[data-lib-foto]")) return;
   const archivo = e.target.files && e.target.files[0];
   e.target.value = "";

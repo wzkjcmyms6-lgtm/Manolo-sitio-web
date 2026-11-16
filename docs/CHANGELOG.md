@@ -1,5 +1,14 @@
 # Cambios
 
+## 2026-11-16 · Libros: las páginas de tu edición
+- Al elegir un libro, Manolo te muestra **las ediciones en español con sus
+  páginas** (por ejemplo "De 326 a 338 págs. · 4 ediciones" y "448 págs.,
+  edición especial") y pone la **recomendada**. Tocas la tuya y listo.
+- Con el **código de barras**, va directo a **tu edición exacta**.
+- En un libro que estás leyendo: **"¿Para cuándo lo quieres terminar?"**
+  te dice cuántas páginas leer por día (en 1 semana, 2 semanas, 1 mes u
+  otra fecha) y "Sigue leyendo" te lo recuerda.
+
 ## 2026-11-16 · Libros: buscar un libro trae los datos correctos
 - "Buscar el libro" llena el **título en español** ("Hábitos atómicos",
   no "Atomic Habits"); el original queda en la ficha.

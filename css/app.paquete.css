@@ -5837,6 +5837,23 @@ input[type="date"].lib-input, input[type="time"].lib-input { -webkit-appearance:
 .lib-encontrado-txt .lib-encontrado-orig { font-style: italic; overflow-wrap: anywhere; }
 .lib-encontrado.is-derivado { opacity: 0.78; }
 .lib-ficha-info .lib-orig { font-size: 0.85rem; font-style: italic; overflow-wrap: anywhere; }
+/* Nivel 3, fase 2 (D-130): las ediciones y "¿Para cuándo lo quieres terminar?" */
+.lib-ediciones { display: flex; flex-direction: column; gap: 0.45rem; margin: -0.2rem 0 0.4rem; }
+.lib-ed-pregunta { margin: 0; font-size: 0.88rem; color: var(--muted); }
+.lib-ed-pregunta b { color: var(--ink); }
+.lib-ed-lista { display: flex; flex-direction: column; gap: 0.4rem; }
+.lib-ed { display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: 0.1rem 0.6rem; width: 100%; padding: 0.6rem 0.75rem;
+  text-align: left; font: inherit; color: var(--ink); background: var(--surface-raised); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; min-height: 44px; }
+.lib-ed b { font-size: 1rem; white-space: nowrap; }
+.lib-ed .lib-ed-nota { justify-self: end; font-size: 0.72rem; font-weight: 600; color: var(--accent-2); }
+.lib-ed .lib-ed-t { grid-column: 1 / -1; font-size: 0.84rem; color: var(--ink); }
+.lib-ed small { grid-column: 1 / -1; font-size: 0.76rem; color: var(--muted); overflow-wrap: anywhere; }
+.lib-ed.is-on { border-color: var(--accent-1); box-shadow: inset 0 0 0 1px var(--accent-1); }
+.lib-fin { display: flex; flex-direction: column; align-items: flex-start; gap: 0.4rem; margin: 0.3rem 0 0.5rem; }
+.lib-fin p { margin: 0; font-size: 0.9rem; }
+.lib-fin-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.lib-fin-otra { position: relative; overflow: hidden; }
+.lib-fin-otra input { position: absolute; inset: 0; opacity: 0; font-size: 16px; }
 .lib-aviso-dup { color: #ffcf85; }
 .lib-aviso-dup[hidden] { display: none; }
 

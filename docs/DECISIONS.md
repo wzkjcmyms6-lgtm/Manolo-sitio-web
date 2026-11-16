@@ -1818,3 +1818,29 @@ autor, "Libros de Paulo Coelho, los más leídos primero". (7) Se guarda
 cambias el autor a mano, se borra (ya no es ese). Los resultados dicen
 "N ediciones" en vez de páginas: las páginas de tu edición son la fase 2.
 
+**D-130 (2026-11-16) · Libros nivel 3, fase 2: las páginas de tu
+edición.** Lo que más pedía el dueño ("los libros tienen distintas
+páginas"). (1) Al elegir un libro en "Buscar el libro" se piden sus
+ediciones (`/works/…/editions.json`, de a 100; si casi no hay en español,
+hasta 300) y, debajo de "Páginas", aparece "¿Cuántas páginas tiene tu
+libro? Cambia según la edición": las ediciones en español agrupadas por
+largo parecido (cada grupo llega hasta 6 % más que su más corta: "De 326 a
+338 págs. · 4 ediciones"; las especiales se marcan), sin audiolibros ni
+digitales. (2) La **recomendada** queda puesta: con el código de barras
+(o el ISBN escrito) es **tu edición exacta** (`/isbn/…`); si no, el grupo
+con más ediciones (en empate, el de la edición más nueva), con el número de
+su edición más nueva; si no hay en español, la edición en español que trajo
+la búsqueda (`/books/…`); si no, la mediana de todas, avisando que es
+aproximada (también sin internet). (3) Tocar otra cambia las páginas y la
+portada (si la había puesto la búsqueda; una foto o una portada elegida a
+mano se respetan). Si escribes las páginas, mandan las tuyas (y la
+edición se borra: ya no es esa). (4) Se guarda `edicion` ({ key,
+editorial, anio, formato }); la ficha la muestra ("Editorial Planeta ·
+2023"). (5) **"¿Para cuándo lo quieres terminar?"** en la ficha de un libro
+que lees: tres sugerencias con las páginas por día (1 semana, 2 semanas, 1
+mes; hoy cuenta) u otra fecha; se guarda `metaFin` y "Sigue leyendo" dice
+"🎯 Para el dom 29 nov: 15 páginas por día". Un audiolibro va en %. (6) Al
+editar, no se puede poner menos páginas que la página en la que vas.
+Lógica en `js/libros-fuentes.js` (ediciones) y `js/libros-progreso.js`
+(`paraTerminar`, `sugerenciasFin`); pantalla en `js/libros-ediciones-ui.js`.
+

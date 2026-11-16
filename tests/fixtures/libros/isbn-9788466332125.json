@@ -1,0 +1,25 @@
+{
+ "key": "/books/OL31858128M",
+ "title": "Padre Rico, padre Pobre",
+ "number_of_pages": 264,
+ "publishers": [
+  "Debolsillo",
+  "DEBOLSILLO"
+ ],
+ "publish_date": "Oct 01, 2020",
+ "physical_format": "paperback",
+ "languages": [
+  {
+   "key": "/languages/spa"
+  }
+ ],
+ "isbn_13": [
+  "9788466332125"
+ ],
+ "isbn_10": [
+  "846633212X"
+ ],
+ "covers": [
+  10544593
+ ]
+}

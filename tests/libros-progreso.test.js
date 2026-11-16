@@ -184,3 +184,19 @@ test("abandonar y retomar (D-107)", () => {
   assert.equal(P.registrarPagina(dejado, "60", HOY).cambios.estado, "leyendo", "anotar una página lo retoma");
   assert.equal(P.reto([dejado], 5, HOY).terminados, 0, "abandonado no cuenta como terminado");
 });
+
+// ---- Nivel 3, fase 2 (D-130): ¿para cuándo lo quieres terminar? ----
+test("para terminarlo en una fecha: páginas por día (hoy cuenta) y tres sugerencias", () => {
+  const l = { estado: "leyendo", paginas: 300, paginaActual: 90, progreso: { "2026-11-10": 50, "2026-11-15": 90 }, fechaInicio: "2026-11-10" };
+  const r = P.paraTerminar(l, "2026-11-22", "2026-11-16");
+  assert.deepEqual([r.dias, r.faltan, r.porDia, r.vencida, r.unidad], [7, 210, 30, false, "pag"]);
+  assert.equal(P.paraTerminar(l, "2026-11-16", "2026-11-16").porDia, 210, "terminarlo hoy: todo hoy");
+  assert.equal(P.paraTerminar(l, "2026-11-10", "2026-11-16").vencida, true);
+  assert.equal(P.paraTerminar(l, "mañana", "2026-11-16"), null);
+  assert.equal(P.paraTerminar(Object.assign({}, l, { paginaActual: 300 }), "2026-11-22", "2026-11-16"), null, "si no falta nada, no hay meta");
+  const s = P.sugerenciasFin(l, "2026-11-16");
+  assert.deepEqual(s.map(x => [x.nombre, x.fecha, x.porDia]), [["En 1 semana", "2026-11-22", 30], ["En 2 semanas", "2026-11-29", 15], ["En 1 mes", "2026-12-15", 7]]);
+  // Un audiolibro va en %.
+  const a = { estado: "leyendo", formato: "audio", pctActual: 40, progresoPct: { "2026-11-15": 40 } };
+  assert.deepEqual([P.paraTerminar(a, "2026-11-21", "2026-11-16").porDia, P.paraTerminar(a, "2026-11-21", "2026-11-16").unidad], [10, "pct"]);
+});

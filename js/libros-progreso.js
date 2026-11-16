@@ -10,6 +10,8 @@
 // pctBase; con su duración también se anota por tiempo); "Leer de nuevo"
 // guarda la lectura anterior en lecturas.N (las estadísticas cuentan
 // todas); Abandonado y Retomar.
+// Nivel 3, fase 2 (D-130): para terminarlo en una fecha (metaFin), cuántas
+// páginas (o %) por día; y tres sugerencias (1 semana, 2 semanas, 1 mes).
 // Sin DOM ni Firebase: tests/libros-progreso.test.js.
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
@@ -323,7 +325,26 @@ function fechaCorta(f) {
   return `${Number(f.slice(8, 10))} ${MESES_CORTOS[Number(f.slice(5, 7)) - 1]}`;
 }
 
-return { medida, esAudio, duracionDe, entradas, registrarAvance, registrarPagina, leerAvance, avanceTexto, pasos, sumarAvance, hm,
+// ---- Nivel 3, fase 2 (D-130): ¿para cuándo lo quieres terminar? ----
+// Hoy cuenta como día de lectura: terminarlo hoy = todo lo que falta hoy.
+function paraTerminar(libro, fecha, hoy) {
+  if (!fechaOk(fecha) || !fechaOk(hoy)) return null;
+  const x = lectura(libro, hoy, 0);
+  if (x.faltan == null || !(x.faltan > 0)) return null;
+  const dias = diasEntre(hoy, fecha) + 1;
+  if (dias < 1) return { fecha, dias: 0, porDia: null, vencida: true, faltan: x.faltan, unidad: x.unidad };
+  return { fecha, dias, porDia: Math.ceil(x.faltan / dias), vencida: false, faltan: x.faltan, unidad: x.unidad };
+}
+const SUGERENCIAS_FIN = [[7, "En 1 semana"], [14, "En 2 semanas"], [30, "En 1 mes"]];
+function sugerenciasFin(libro, hoy) {
+  return SUGERENCIAS_FIN.map(([n, nombre]) => {
+    const fecha = sumarDias(hoy, n - 1);
+    const r = paraTerminar(libro, fecha, hoy);
+    return r && { nombre, fecha, porDia: r.porDia, unidad: r.unidad };
+  }).filter(Boolean);
+}
+
+return { paraTerminar, sugerenciasFin, medida, esAudio, duracionDe, entradas, registrarAvance, registrarPagina, leerAvance, avanceTexto, pasos, sumarAvance, hm,
   lecturasDe, nuevaLectura, abandonar, retomar, terminaciones,
   paginasPorDia, racha, lectura, reto, ultimosDias, estadisticas, alTerminar, validarMetas, sumarDias, diasEntre, fechaCorta, MESES_CORTOS };
 });

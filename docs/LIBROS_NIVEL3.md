@@ -11,7 +11,7 @@ publicada, con pruebas y su lista para el iPhone.
 |---|---|---|
 | 0 | Auditoría con 20 libros reales y plan | ✅ |
 | 1 | Buscar bien: título en español, autor correcto, el libro de verdad primero; buscar también por autor | ✅ (D-129) |
-| 2 | Las páginas de tu edición: elegir la edición (editorial, año, tapa y páginas), la recomendada, el ISBN exacto y cuántas páginas por día para terminarlo | |
+| 2 | Las páginas de tu edición: elegir la edición (editorial, año, tapa y páginas), la recomendada, el ISBN exacto y cuántas páginas por día para terminarlo | ✅ (D-130) |
 | 3 | Ficha del autor: foto, quién es (en español), tus libros de él y sus otros libros con "＋ Quiero leer" | |
 | 4 | Género y temas en español, "De qué trata" y estadísticas por género | |
 | 5 | Completar tu biblioteca: arreglar los libros que ya tienes (títulos en inglés, sin autor, páginas, género o portada), siempre con tu OK | |
@@ -93,7 +93,14 @@ primero.
   libros más leídos.
 - Se guarda la clave de la obra y del autor (para las fases siguientes).
 
-### Fase 2 — Las páginas de tu edición
+### Fase 2 — Las páginas de tu edición ✅ (D-130)
+Hecho en `js/libros-fuentes.js` (ediciones), `js/libros-progreso.js`
+(páginas por día) y `js/libros-ediciones-ui.js` (pantalla). Con las
+ediciones reales: Hábitos atómicos → 338 (de 326 a 338, 4 ediciones) y
+aparte 448 (edición especial); Padre rico → 264 (Debolsillo); con el
+código 9788466332125 → 264, tu edición exacta; El alquimista → 192; Cien
+años de soledad → 512 (de 494 a 512, 7 ediciones).
+
 - Al tocar un libro: **"¿Cuál es tu edición?"** con las ediciones en
   español (portada, editorial, año, tapa blanda / dura / bolsillo y
   páginas). Arriba, la **recomendada**: la más común en español (o la que

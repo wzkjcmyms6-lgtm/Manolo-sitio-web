@@ -1,6 +1,16 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (Libros nivel 3, fase 2, D-130): `npm test` → **716
+  pruebas**. Más en `libros-fuentes` (ediciones reales: páginas,
+  editorial, año, tapa; grupos por largo; la recomendada; ISBN exacto; sin
+  ediciones en español), `libros-progreso` (páginas por día para una fecha
+  y las tres sugerencias) y `libros-motor` (la edición y `metaFin`). E2E
+  `libros-n3` con la fase 2 (elegir edición, la portada la sigue, a mano
+  mandan las tuyas, guardar y ver en la ficha, ISBN exacto, «Ver más», sin
+  internet, «¿Para cuándo lo quieres terminar?», no menos páginas que la
+  página en la que vas; 390 y 320 px). `libros-progreso` y `lectura-n2`
+  no piden ediciones (las cortan).
 - 2026-11-16 (Libros nivel 3, fase 1, D-129): `npm test` → **711
   pruebas**. Nueva: `libros-fuentes` (título en español, el libro de
   verdad primero, resúmenes al final, sin repetidos, autor en nuestro
@@ -349,6 +359,17 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Libros: las páginas de tu edición (2026-11)**
+- [ ] "Agregar libro" › busca "habitos atomicos" y toca el primero: debajo
+  de "Páginas" pregunta "¿Cuántas páginas tiene tu libro?" con las
+  ediciones en español. Toca la que se parece a la tuya (o escribe las
+  páginas de tu libro): cambian las páginas.
+- [ ] Escanea el código de barras de un libro que tengas: arriba dice "Tu
+  edición (por el código de barras)" con sus páginas. ¿Coinciden con la
+  última página de tu libro?
+- [ ] En un libro que estás leyendo: ábrelo y toca "En 2 semanas": en
+  "Sigue leyendo" sale "🎯 Para el …: N páginas por día".
 
 **Libros: buscar un libro (2026-11)**
 - [ ] Libros › "Agregar libro" › en "Buscar el libro" escribe "padre rico

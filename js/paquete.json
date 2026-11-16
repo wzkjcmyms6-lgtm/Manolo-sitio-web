@@ -142,6 +142,7 @@
   "js/libros-importar.js",
   "js/libros-estadisticas.js",
   "js/libros.js",
+  "js/libros-ediciones-ui.js",
   "js/libros-sesion.js",
   "js/libros-siguiente-ui.js",
   "js/libros-notas.js",

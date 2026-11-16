@@ -11,12 +11,18 @@ test("validar un libro: título obligatorio, fechas editables y coherentes", () 
   assert.equal(r.ok, true);
   assert.deepEqual(r.doc, { v: 1, titulo: "Cien años de soledad", autor: "Gabriel García Márquez", paginas: 471, estado: "terminado", calificacion: 5,
     opinion: "Una obra maestra.", fechaRegistro: "2025-03-01", fechaInicio: "2025-01-10", fechaFin: "2025-02-20", genero: null, anio: null, olKey: null,
-    tituloOriginal: null, autorKey: null, formato: "papel", saga: null, sagaN: null, prioridad: null });
+    tituloOriginal: null, autorKey: null, edicion: null, formato: "papel", saga: null, sagaN: null, prioridad: null });
   // Nivel 3 (D-129): título original y autor de Open Library, si vienen.
   const n3 = L.validarLibro({ titulo: "Hábitos atómicos", tituloOriginal: " Atomic  Habits ", autorKey: "OL7422948A", fechaRegistro: HOY }, { hoy: HOY });
   assert.deepEqual([n3.doc.tituloOriginal, n3.doc.autorKey], ["Atomic Habits", "OL7422948A"]);
   assert.equal(L.validarLibro({ titulo: "x", autorKey: "/authors/x", fechaRegistro: HOY }, { hoy: HOY }).doc.autorKey, null);
   assert.deepEqual([L.normalizarLibro("a", { tituloOriginal: "Atomic Habits", autorKey: "OL7422948A" }).autorKey, L.normalizarLibro("a", {}).tituloOriginal, L.normalizarLibro("a", { autorKey: 5 }).autorKey], ["OL7422948A", "", null]);
+  // Fase 2 (D-130): la edición elegida y la meta de fecha.
+  const ed = L.validarLibro({ titulo: "x", fechaRegistro: HOY, edicionKey: "/books/OL35694843M", edicionEditorial: " Debolsillo ", edicionAnio: "2020", edicionFormato: "blanda" }, { hoy: HOY });
+  assert.deepEqual(ed.doc.edicion, { key: "/books/OL35694843M", editorial: "Debolsillo", anio: 2020, formato: "blanda" });
+  assert.deepEqual(L.validarLibro({ titulo: "x", fechaRegistro: HOY, edicionEditorial: "Diana", edicionAnio: "año", edicionFormato: "raro" }, { hoy: HOY }).doc.edicion, { key: null, editorial: "Diana", anio: null, formato: null });
+  assert.equal(L.validarLibro({ titulo: "x", fechaRegistro: HOY, edicionKey: "malo" }, { hoy: HOY }).doc.edicion, null);
+  assert.deepEqual([L.normalizarLibro("a", { edicion: { key: "/books/OL1M", editorial: "Diana", anio: 2020, formato: "dura" }, metaFin: "2026-11-30" }).edicion.editorial, L.normalizarLibro("a", { metaFin: "pronto" }).metaFin, L.normalizarLibro("a", {}).edicion], ["Diana", null, null]);
   const min = L.validarLibro({ titulo: "Solo título", fechaRegistro: HOY }, { hoy: HOY });
   assert.deepEqual([min.ok, min.doc.paginas, min.doc.calificacion, min.doc.fechaInicio, min.doc.fechaFin, min.doc.estado], [true, null, null, null, null, "por_leer"], "lo demás es opcional");
   const mal = L.validarLibro({ titulo: "", paginas: "12.5", calificacion: "6", fechaRegistro: "", fechaInicio: "2026-10-20", fechaFin: "2026-10-10" }, { hoy: HOY });

@@ -121,3 +121,80 @@ test("piezas: parecido, alfabeto y títulos", () => {
   assert.deepEqual(F.leerBusqueda(null, "x"), { libros: [], autor: null });
   assert.deepEqual(F.leerBusqueda({ docs: [] }, "x"), { libros: [], autor: null });
 });
+
+// ---- Fase 2 (D-130): las páginas de tu edición ----
+const eds = n => F.leerEdiciones(fx(`ediciones-${n}`));
+
+test("ediciones: páginas, editorial, año, tapa e idioma de cada una", () => {
+  const h = eds("habitos-atomicos");
+  const diana = h.find(e => e.editorial === "Diana" && e.anio === 2025);
+  assert.ok(diana);
+  assert.deepEqual([diana.paginas, diana.formato, diana.idiomas, F.enEspanol(diana)], [448, "blanda", ["spa"], true]);
+  assert.ok(h.some(e => !F.enEspanol(e)), "también vienen las de otros idiomas");
+  assert.equal(F.urlEdiciones("/works/OL17930368W"), "https://openlibrary.org/works/OL17930368W/editions.json?limit=100");
+  assert.equal(F.urlEdiciones("/works/OL17930368W", 100), "https://openlibrary.org/works/OL17930368W/editions.json?limit=100&offset=100");
+  assert.equal(F.urlEdiciones("x"), null);
+  assert.equal(F.urlIsbn("978-84-663-3212-5"), "https://openlibrary.org/isbn/9788466332125.json");
+  assert.equal(F.urlIsbn("123"), null);
+  assert.equal(F.urlEdicion("/books/OL35694843M"), "https://openlibrary.org/books/OL35694843M.json");
+});
+
+test("las ediciones en español se agrupan por largo parecido y se recomienda la más común", () => {
+  const r = F.recomendar(eds("habitos-atomicos"));
+  assert.equal(r.razon, "comun");
+  assert.deepEqual(r.grupos.map(g => [g.min, g.max, g.n]), [[326, 338, 4], [448, 448, 3]]);
+  assert.equal(r.paginas, 338, "el número del grupo es el de su edición más nueva");
+  assert.equal(r.grupos[1].especial, true, "448: la edición especial");
+  assert.equal(r.grupos[0].especial, false);
+  const p = F.recomendar(eds("padre-rico"));
+  assert.equal(p.paginas, 264);
+  assert.equal(p.edicion.editorial, "Debolsillo");
+  const c = F.recomendar(eds("cien-anos"));
+  assert.equal(c.grupos[0].n, 7);
+  assert.ok(c.grupos[0].min >= 494 && c.grupos[0].max <= 512);
+  // Cada grupo llega hasta 6 % más que su más corta.
+  c.grupos.forEach(g => assert.ok(g.max <= g.min * 1.06));
+  // Audiolibros y digitales no cuentan.
+  const a = eds("alquimista");
+  assert.ok(a.some(e => e.formato === "audio"));
+  assert.ok(F.recomendar(a).grupos.every(g => g.ediciones.every(e => e.formato !== "audio")));
+});
+
+test("con el ISBN manda tu edición exacta; si no hay en español, la de la búsqueda o la aproximada", () => {
+  const exacta = F.leerEdicion(fx("isbn-9788466332125"));
+  assert.deepEqual([exacta.titulo, exacta.paginas, exacta.editorial, exacta.anio, exacta.formato, exacta.isbn], ["Padre Rico, padre Pobre", 264, "Debolsillo", 2020, "blanda", "9788466332125"]);
+  const r = F.recomendar(eds("padre-rico"), { exacta });
+  assert.deepEqual([r.razon, r.paginas, r.edicion], ["isbn", 264, exacta]);
+  assert.ok(r.grupos.length > 1, "igual se ven las otras ediciones");
+  const ingles = eds("habitos-atomicos").filter(e => !F.enEspanol(e));
+  assert.deepEqual([F.recomendar(ingles, { deBusqueda: { paginas: 330, editorial: "Paidós" } }).razon, F.recomendar(ingles, { deBusqueda: { paginas: 330 } }).paginas], ["busqueda", 330]);
+  assert.deepEqual([F.recomendar(ingles, { mediana: 322 }).razon, F.recomendar(ingles, { mediana: 322 }).paginas], ["todas", 322]);
+  assert.deepEqual([F.recomendar([], {}).razon, F.recomendar([], {}).paginas], ["ninguna", null]);
+});
+
+test("piezas de las ediciones: formato, páginas, año, editorial y cuándo pedir más", () => {
+  assert.equal(F.formatoDe("Paperback"), "blanda");
+  assert.equal(F.formatoDe("mass market paperback"), "bolsillo");
+  assert.equal(F.formatoDe("Tapa dura"), "dura");
+  assert.equal(F.formatoDe("Rústica"), "blanda");
+  assert.equal(F.formatoDe("Audio Cassette"), "audio");
+  assert.equal(F.formatoDe("Kindle Edition"), "digital");
+  assert.equal(F.formatoDe(""), null);
+  assert.equal(F.paginasDe({ number_of_pages: 320 }), 320);
+  assert.equal(F.paginasDe({ pagination: "xii, 320 p." }), 320);
+  assert.equal(F.paginasDe({ pagination: "448 páginas" }), 448);
+  assert.equal(F.paginasDe({ pagination: "245" }), 245);
+  assert.equal(F.paginasDe({ number_of_pages: 3 }), null);
+  assert.equal(F.paginasDe({}), null);
+  assert.deepEqual(["Mar 16, 2019", "06/02/2012", "2004-01-01", "October 2003", "s. f."].map(F.anioDe), [2019, 2012, 2004, 2003, null]);
+  assert.equal(F.limpiarEditorial("Editorial Planeta, S. A."), "Editorial Planeta");
+  assert.equal(F.limpiarEditorial("Grijalbo Mondadori Sa"), "Grijalbo Mondadori");
+  assert.equal(F.limpiarEditorial("PAIDOS"), "Paidos");
+  assert.equal(F.limpiarEditorial("Editorial Rosa"), "Editorial Rosa", "un nombre que termina en «sa» queda");
+  assert.equal(F.textoEdicion({ editorial: "Diana", anio: 2025, formato: "blanda" }), "Diana · 2025 · tapa blanda");
+  assert.equal(F.textoEdicion(null), "");
+  assert.equal(F.pedirMas({ links: { next: "/x" } }, 100, 1), true);
+  assert.equal(F.pedirMas({ links: { next: "/x" } }, 100, 6), false, "con suficientes en español, no");
+  assert.equal(F.pedirMas({ links: { next: "/x" } }, 300, 0), false, "hasta 300");
+  assert.equal(F.pedirMas({ links: {} }, 100, 0), false);
+});

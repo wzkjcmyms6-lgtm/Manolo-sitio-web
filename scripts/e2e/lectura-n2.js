@@ -1201,6 +1201,8 @@ async function librosEscaner(browser, base, ancho, captura) {
     r.fulfill({ contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: JSON.stringify(/isbn%3A9788478884452/.test(r.request().url()) ? OL_HP : { docs: [] }) });
   });
   await p.context().route(/covers\.openlibrary\.org/, r => r.fulfill({ contentType: "image/png", body: PNG }));
+  // Las ediciones (nivel 3, D-130) no se prueban aquí.
+  await p.context().route(/openlibrary\.org\/(works|isbn|books|authors)\//, r => r.abort());
   const lector = [];
   p.on("request", r => { if (/libros-isbn\.js/.test(r.url())) lector.push(r.url()); });
   await p.waitForTimeout(900);

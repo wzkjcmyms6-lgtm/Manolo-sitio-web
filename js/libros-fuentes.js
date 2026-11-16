@@ -12,6 +12,9 @@
 // - sin repetidos (Open Library tiene la misma obra varias veces);
 // - el autor en nuestro alfabeto (si viene en otro, se usa el de su ficha);
 // - si escribes un autor, salen sus libros más leídos.
+// Fase 2 (D-130) — las páginas de tu edición: las ediciones en español de
+// la obra (editorial, año, tapa y páginas), agrupadas por largo parecido
+// ("326–338 págs."), con la recomendada; con el ISBN, tu edición exacta.
 // Sin DOM ni Firebase: tests/libros-fuentes.test.js, con respuestas reales
 // guardadas en tests/fixtures/libros/.
 (function (root, factory) {
@@ -136,5 +139,101 @@ function nombreDeFicha(json) {
   return n ? String(n).trim().slice(0, 150) : null;
 }
 
-return { OL, CAMPOS, urlBuscar, parecido, esDerivado, esLatino, limpiarTitulo, leerBusqueda, urlFichaAutor, nombreDeFicha };
+// ---- Fase 2 (D-130): las ediciones y sus páginas ----
+const urlEdiciones = (olKey, desde) => (/^\/works\/OL\d+W$/.test(String(olKey || "")) ? `${OL}${olKey}/editions.json?limit=100${desde ? `&offset=${desde}` : ""}` : null);
+const urlIsbn = isbn => { const t = String(isbn || "").replace(/[-\s]/g, "").toUpperCase(); return L.esIsbn(t) ? `${OL}/isbn/${t}.json` : null; };
+const urlEdicion = key => (/^\/books\/OL\d+M$/.test(String(key || "")) ? `${OL}${key}.json` : null);
+
+// Formato de la edición ("Paperback", "Tapa dura", "mass market paperback"…).
+const FORMATOS_ED = [
+  ["audio", /audio|cassette|(^|\s)cd(\s|$)|mp3/],
+  ["digital", /e-?book|kindle|electr|digital|epub|pdf/],
+  ["dura", /hard|dura|cartone|empastad|library binding/],
+  ["bolsillo", /mass market|bolsillo|pocket|booket/],
+  ["blanda", /paper|blanda|rustica|softcover|soft cover|trade/]
+];
+const NOMBRE_FORMATO = { dura: "tapa dura", blanda: "tapa blanda", bolsillo: "bolsillo", digital: "digital", audio: "audiolibro" };
+function formatoDe(t) {
+  const x = L.normalizar(t);
+  if (!x) return null;
+  const f = FORMATOS_ED.find(([, re]) => re.test(x));
+  return f ? f[0] : null;
+}
+// Páginas: number_of_pages, o lo que diga la paginación ("xii, 320 p.").
+function paginasDe(e) {
+  const n = Number(e && e.number_of_pages);
+  if (Number.isInteger(n) && n >= 8 && n <= 20000) return n;
+  const p = String((e && e.pagination) || "");
+  const m = p.match(/(\d{2,5})\s*(?:p\b|p\.|pp|pag|p\u00e1g|pages|paginas|p\u00e1ginas)/i) || p.match(/^\s*(\d{2,5})\s*$/);
+  const v = m ? Number(m[1]) : NaN;
+  return v >= 8 && v <= 20000 ? v : null;
+}
+// El año de "Mar 16, 2019", "06/02/2012" o "2004-01-01".
+const anioDe = t => { const ms = String(t || "").match(/(^|\D)(1[4-9]\d\d|20\d\d)(?!\d)/g); return ms ? Number(ms[ms.length - 1].replace(/\D/g, "")) : null; };
+// "Editorial Planeta, S. A." → "Editorial Planeta"; "PAIDOS" → "Paidos".
+function limpiarEditorial(t) {
+  let s = String(t || "").replace(/\s+/g, " ").trim()
+    .replace(/[,\s]+(?:S\.?\s?A\.?(?:\s?de\s?C\.?\s?V\.?)?|S\.?\s?L\.?U?\.?|LLC|Inc\.?|Ltd\.?|Ltda\.?|S\.?\s?R\.?\s?L\.?)\s*$/i, "")
+    .replace(/[\s,.;:]+$/, "").trim();
+  if (s.length > 3 && s === s.toUpperCase() && /[A-Z]/.test(s)) s = s.toLowerCase().replace(/(^|[\s(])\S/g, c => c.toUpperCase());
+  return s.slice(0, 80);
+}
+function leerEdicion(e) {
+  if (!e || typeof e !== "object") return null;
+  const idiomas = Array.isArray(e.languages) ? e.languages.map(x => String((x && x.key) || "").replace("/languages/", "")).filter(Boolean) : [];
+  const isbn = [].concat(e.isbn_13 || [], e.isbn_10 || []).map(x => String(x).replace(/[-\s]/g, "").toUpperCase()).find(x => L.esIsbn(x)) || null;
+  const portada = Array.isArray(e.covers) ? e.covers.find(c => Number(c) > 0) : null;
+  return {
+    key: /^\/books\/OL\d+M$/.test(String(e.key || "")) ? e.key : null,
+    titulo: limpiarTitulo(e.title || ""), paginas: paginasDe(e),
+    editorial: Array.isArray(e.publishers) && e.publishers[0] ? limpiarEditorial(e.publishers[0]) : "",
+    anio: anioDe(e.publish_date), formato: formatoDe(e.physical_format), idiomas, isbn,
+    url: portada ? L.urlPortadaOL(portada, "M") : "", urlChica: portada ? L.urlPortadaOL(portada, "S") : ""
+  };
+}
+const leerEdiciones = json => ((json && json.entries) || []).map(leerEdicion).filter(Boolean);
+const enEspanol = e => !!e && e.idiomas.includes("spa");
+const ESPECIAL = /edicion especial|ilustrad|aniversario|conmemorativ|de lujo|coleccionista/;
+
+// Ediciones en español con páginas (sin audiolibros ni digitales),
+// agrupadas por largo parecido: cada grupo llega hasta 6 % más que su más
+// corta ("326–338 págs."). Primero el grupo con más ediciones; en empate,
+// el de la edición más nueva. El número de cada grupo es el de su edición
+// más nueva (la que más probablemente compraste).
+function gruposDePaginas(ediciones) {
+  const con = (ediciones || []).filter(e => enEspanol(e) && e.paginas && e.formato !== "audio" && e.formato !== "digital")
+    .sort((a, b) => a.paginas - b.paginas);
+  const grupos = [];
+  con.forEach(e => {
+    const g = grupos[grupos.length - 1];
+    if (g && e.paginas <= g.min * 1.06) { g.ediciones.push(e); g.max = e.paginas; } else grupos.push({ min: e.paginas, max: e.paginas, ediciones: [e] });
+  });
+  grupos.forEach(g => {
+    g.ediciones.sort((a, b) => (b.anio || 0) - (a.anio || 0) || b.paginas - a.paginas);
+    g.edicion = g.ediciones[0];
+    g.paginas = g.edicion.paginas;
+    g.n = g.ediciones.length;
+    g.especial = g.ediciones.some(e => ESPECIAL.test(L.normalizar(e.titulo)));
+  });
+  return grupos.sort((a, b) => b.n - a.n || (b.edicion.anio || 0) - (a.edicion.anio || 0) || a.paginas - b.paginas);
+}
+// La recomendada: tu edición exacta (ISBN); si no, el grupo más común en
+// español; si no hay, la edición en español que trajo la búsqueda; si no,
+// la mediana de todas las ediciones (aproximada).
+function recomendar(ediciones, opciones) {
+  const o = opciones || {};
+  const grupos = gruposDePaginas(ediciones);
+  if (o.exacta && o.exacta.paginas) return { paginas: o.exacta.paginas, edicion: o.exacta, razon: "isbn", grupos };
+  if (grupos.length) return { paginas: grupos[0].paginas, edicion: grupos[0].edicion, razon: grupos[0].n > 1 ? "comun" : "unica", grupos };
+  if (o.deBusqueda && o.deBusqueda.paginas) return { paginas: o.deBusqueda.paginas, edicion: o.deBusqueda, razon: "busqueda", grupos };
+  return { paginas: Number.isInteger(o.mediana) && o.mediana > 0 ? o.mediana : null, edicion: null, razon: o.mediana ? "todas" : "ninguna", grupos };
+}
+// ¿Hace falta pedir más ediciones? (obras con cientos: se piden hasta 300).
+const pedirMas = (json, leidas, enEsp) => !!(json && json.links && json.links.next) && leidas < 300 && enEsp < 4;
+// "Diana 2025 · tapa blanda".
+const textoEdicion = e => (e ? [e.editorial, e.anio, NOMBRE_FORMATO[e.formato]].filter(Boolean).join(" · ") : "");
+
+return { OL, CAMPOS, urlBuscar, parecido, esDerivado, esLatino, limpiarTitulo, leerBusqueda, urlFichaAutor, nombreDeFicha,
+  urlEdiciones, urlIsbn, urlEdicion, formatoDe, NOMBRE_FORMATO, paginasDe, anioDe, limpiarEditorial, leerEdicion, leerEdiciones, enEspanol,
+  gruposDePaginas, recomendar, pedirMas, textoEdicion };
 });

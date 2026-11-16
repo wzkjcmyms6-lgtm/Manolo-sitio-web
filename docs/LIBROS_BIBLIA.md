@@ -64,7 +64,8 @@ suma campos (lo comprueba `scripts/e2e/lectura-qa.js`, D-115).
 | `js/biblia-memoria.js` + `js/biblia-memoria-ui.js` | Memorizar: cajas (1, 2, 4, 8, 16 y 32 días) y tres formas de practicar. Pruebas: `tests/biblia-memoria.test.js` |
 | `data/biblia/rv1909/*.json` | Texto de la Reina-Valera 1909 (dominio público), un archivo por libro; lo arma `npm run biblia` |
 | `js/libros-motor.js` | UMD sin DOM: validar libros y frases, ordenar, buscar, resumen, color de la tapa genérica, exportar. Pruebas: `tests/libros-motor.test.js` |
-| `js/libros-fuentes.js` | UMD sin DOM (nivel 3): buscar en Open Library en español, el orden de los resultados, sin repetidos, el autor en nuestro alfabeto. Pruebas: `tests/libros-fuentes.test.js` (respuestas reales en `tests/fixtures/libros/`) |
+| `js/libros-fuentes.js` | UMD sin DOM (nivel 3): buscar en Open Library en español, el orden de los resultados, sin repetidos, el autor en nuestro alfabeto; las ediciones con sus páginas, agrupadas, y la recomendada. Pruebas: `tests/libros-fuentes.test.js` (respuestas reales en `tests/fixtures/libros/`) |
+| `js/libros-ediciones-ui.js` | "¿Cuántas páginas tiene tu libro?" (elegir la edición) en el formulario y "¿Para cuándo lo quieres terminar?" en la ficha |
 | `js/libros.js` | Pantalla de Libros. Registra su ícono (`ICONS.libro`) |
 | `js/libros-progreso.js` | UMD: páginas por día, meta, racha, ritmo y cuándo terminas cada libro. Pruebas: `tests/libros-progreso.test.js` |
 | `js/libros-sesiones.js` + `js/libros-sesion.js` | "Leer ahora": cronómetro por marcas de tiempo, sesiones, velocidad y el tiempo que falta. Pruebas: `tests/libros-sesiones.test.js` |

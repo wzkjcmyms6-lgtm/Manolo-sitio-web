@@ -38,6 +38,8 @@ const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
     return modoOL === "caido" ? r.abort() : r.fulfill({ contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: JSON.stringify(modoOL === "vacio" ? { docs: [] } : OL) });
   });
   await p.context().route(/covers\.openlibrary\.org/, r => r.fulfill({ contentType: "image/png", body: PNG }));
+  // Las ediciones (nivel 3, D-130) no se prueban aquí: sin respuesta, quedan las páginas aproximadas.
+  await p.context().route(/openlibrary\.org\/(works|isbn|books|authors)\//, r => r.abort());
   await p.waitForTimeout(800);
   const tx = sel => p.$eval(sel, el => el.innerText.replace(/\s+/g, " ").trim());
   const libro = id => p.evaluate(([c, i]) => window.__fakeStore.colMap(c).get(i), [LIB, id]);
