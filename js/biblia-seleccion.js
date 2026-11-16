@@ -7,6 +7,8 @@
 // (si en Biblia › Ajustes está activado).
 // Datos en users/{uid}/biblia_marcas/{libro}; lógica en js/biblia-marcas.js
 // y la imagen en js/biblia-imagen.js. Ver docs/LECTURA_NIVEL2.md (D-105).
+// D-123: "Escuchar" lee en voz alta desde el primer versículo elegido
+// (js/biblia-audio-ui.js).
 (function () {
 const B = window.BibliaMotor, T = window.BibliaTexto, BM = window.BibliaMarcas, BI = window.BibliaImagen, L = window.BibliaLector;
 if (!B || !T || !BM || !L || !window.Lectura) return;
@@ -91,6 +93,7 @@ function pintarBarra() {
   barra.innerHTML = `
     <div class="bbl-sel-cab">
       <b>${esc(citaDe(nums))}</b>
+      ${window.BibliaAudioUI && BibliaAudioUI.disponible() ? `<button type="button" class="bbl-sel-oir" data-bbs="escuchar" aria-label="Escuchar desde el versículo ${nums[0]}"><span class="icon-sm" data-icon="auriculares"></span>Escuchar</button>` : ""}
       <button type="button" class="bbl-sel-x" data-bbs="limpiar" aria-label="Quitar la selección"><span class="icon-sm" data-icon="close"></span></button>
     </div>
     <div class="bbl-colores" role="group" aria-label="Resaltar">
@@ -300,6 +303,7 @@ lector.addEventListener("click", e => {
   else if (a === "memorizar") memorizar();
   else if (a === "compartir") compartir();
   else if (a === "copiar") copiar();
+  else if (a === "escuchar" && window.BibliaAudioUI) { const n = ordenados()[0]; limpiar(); BibliaAudioUI.desde(n); }
 });
 window.addEventListener("biblia:pintado", e => {
   const d = e.detail || {};

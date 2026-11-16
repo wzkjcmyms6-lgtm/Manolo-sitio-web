@@ -1630,3 +1630,37 @@ lo de siempre (`meta/biblia_leidos`, `arrayUnion` por día): cuenta para
 racha, planes, Hábitos y "Mi día". Lógica en `js/biblia-marcar.js`
 (`tests/biblia-marcar.test.js`); pantalla `js/biblia-marcar-ui.js`
 (`scripts/e2e/biblia-marcar.js`).
+
+**D-123 (2026-11-16) · Biblia en audio: escuchar el capítulo con las voces
+del iPhone.** Pedido del dueño (mejoras sin servidor). (1) En el lector, un
+botón de audífonos arriba lee el capítulo en voz alta con `speechSynthesis`:
+las voces del propio teléfono, sin internet ni servicios de nube (nada sale
+del teléfono). Dice "Juan, capítulo 3." ("Salmo 23."; "1 Corintios" →
+"Primera de Corintios") y luego cada versículo, sin los números. (2) Barra
+abajo: ▶/⏸, versículo anterior y siguiente, velocidad (0,8× a 1,25×), voz y
+opciones, ✕. Resalta el versículo que suena y lo trae a la vista, salvo si
+moviste el texto hace menos de 5 s. (3) Al terminar sigue con el siguiente
+capítulo y, si sonó al menos el 80 % de los versículos, lo marca como leído
+hoy con "Deshacer" (lo de siempre: `meta/biblia_leidos`; cuenta para racha,
+planes y Hábitos). Las dos cosas se pueden apagar. (4) Elegir versículos ›
+"Escuchar" lee desde el primero. Si cambias de capítulo mientras suena,
+suena el nuevo desde el comienzo. (5) Fuera de la app o con la pantalla
+bloqueada se pausa (el iPhone congela la página); mientras suena, la
+pantalla queda encendida (Wake Lock de `Avisos`, pedido una sola vez).
+(6) Para que no falle en el iPhone: pausar = cancelar y recordar el trozo
+(pausa y reanudar de iOS no son confiables); después de cancelar espera
+140 ms antes de hablar (iOS a veces se traga lo pedido justo después);
+vigía: si la voz se calla 3 s sin avisar, repite el trozo una vez y si no,
+pausa con aviso; tres errores seguidos también pausan; lo que falló nunca
+cuenta como escuchado. Los versículos de más de 240 letras se parten en
+frases y las palabras en MAYÚSCULAS se dicen como palabras. (7) Voces: solo
+en español, la mejor primero (premium, mejorada, normal; las "de juguete"
+al final), Latinoamérica antes que España; se elige y se prueba en ⚙️.
+Preferencias solo en el teléfono (`localStorage` "manolo-biblia-audio":
+`vel`, `voz`, `seguir`, `marcar`), porque las voces cambian de un aparato a
+otro; ningún dato nuevo en la nube. (8) Arreglado de paso: mientras se abría
+otro libro, un cambio en "leídos" pintaba el texto del libro anterior con
+el nombre del nuevo; `pintar()` ahora espera al libro correcto. Lógica en
+`js/biblia-audio.js` (`tests/biblia-audio.test.js`); pantalla en
+`js/biblia-audio-ui.js` (`scripts/e2e/biblia-audio.js`, con una voz falsa
+que avisa al terminar cada trozo).

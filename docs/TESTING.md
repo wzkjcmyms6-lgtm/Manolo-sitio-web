@@ -1,6 +1,15 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (Biblia en audio, D-123): `npm test` → **665 pruebas**. Nueva:
+  `biblia-audio` (texto para la voz, trozos, "Primera de Corintios",
+  velocidades, qué voz usar, cuándo cuenta como escuchado). E2E nueva:
+  `biblia-audio` (con una voz falsa: botón y barra, ⏮/⏭, pausa,
+  velocidad, voz, seguir con el siguiente, marcar con "Deshacer", desde un
+  versículo, salir de la app, errores y vigía, 320 px). Regresión: las 34
+  suites en verde. De paso: el aviso del audio se crea al usarlo (antes,
+  creado al abrir la app, confundía a la prueba de tarjetas, que lee el
+  primer aviso "Deshacer" de la página).
 - 2026-11-15 (pago mínimo, Biblia en papel y arreglos del iPhone, D-120 a
   D-122): `npm test` → **655 pruebas**. Nuevas: `viewport-ajuste` (cuánto
   mover lo fijo cuando el iPhone deja la pantalla corrida), `biblia-marcar`
@@ -195,7 +204,7 @@
   retiraron en D-033.
 - **Dispositivo real (iPhone)**: pantalla encendida, voz y sonido se validan
   en el teléfono del dueño; nada se da por funcionando sin esa prueba.
-- **Regresión** en cada fase: `npm test` + las 26 suites de `scripts/e2e/`
+- **Regresión** en cada fase: `npm test` + las 34 suites de `scripts/e2e/`
   (ver "Cómo correr todo"; D-115: una prueba que quedó fuera de la lista
   corta se rompió sin que se viera).
 
@@ -207,7 +216,7 @@ for f in fase1 regresion hojas sw-instala emojis scalping inversiones tarjetas m
   running run-importar run-detalle run-feed run-progreso run-inteligencia run-segmentos \
   run-compartir run-qa habitos mi-dia ej-calendario ejercicio libros-progreso lectura \
   lectura-qa tiempos finanzas-diario lugares respaldo sin-internet pantalla tarjetas-minimo \
-  biblia-marcar; do node scripts/e2e/$f.js || break; done
+  biblia-marcar biblia-audio; do node scripts/e2e/$f.js || break; done
 ```
 Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
 
@@ -269,6 +278,19 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Biblia en audio (2026-11)**
+- [ ] Biblia › abre el lector › toca los **audífonos** arriba: se oye
+  "Juan, capítulo 3" (o el que tengas abierto) y luego cada versículo; el
+  que suena se ve resaltado.
+- [ ] Toca ⏸ y después ▶: sigue desde el mismo versículo. Prueba ⏭ y ⏮.
+- [ ] Toca "1×" varias veces: cambia la velocidad.
+- [ ] ⚙️ › elige otra voz y toca "Probar la voz".
+- [ ] Abre el Salmo 117 (es corto) y escúchalo entero: sigue solo con el
+  118 y aparece "quedó como leído hoy" con "Deshacer".
+- [ ] Toca un versículo › "Escuchar": lee desde ahí.
+- [ ] Mientras suena, sal de la app y vuelve: quedó en pausa y lo dice.
+- [ ] Si no se oye nada: sube el volumen, quita el modo silencio y dime.
 
 **Pago mínimo, Biblia en papel y arreglos (2026-11)**
 - [ ] Finanzas › Tarjetas: edita una tarjeta, pon su "Pago mínimo" y

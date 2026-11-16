@@ -50,7 +50,8 @@ function servidor() {
 // Abre una página nueva. estado: claves de localStorage para la primera
 // carga (__SEED__, __USERS__, __SESION__…); opciones: { reloj, voz, ancho, alto, hash,
 // zona (huso horario, p. ej. "America/La_Paz"), fecha (Date fija, los timers siguen),
-// relojFalso (fecha de inicio de un reloj falso que se adelanta con p.clock.fastForward) }.
+// relojFalso (fecha de inicio de un reloj falso que se adelanta con p.clock.fastForward),
+// init (función que corre en la página antes que la app, p. ej. una voz falsa) }.
 async function abrir(browser, base, estado, opciones) {
   const o = Object.assign({ ancho: 390, alto: 844, hash: "#inicio" }, opciones || {});
   const movil = o.ancho <= 768;
@@ -69,6 +70,7 @@ async function abrir(browser, base, estado, opciones) {
   }, estado || {});
   if (o.reloj) await ctx.addInitScript(simuladores);
   if (o.voz) await ctx.addInitScript(simVoz);
+  if (o.init) await ctx.addInitScript(o.init);
   const p = await ctx.newPage();
   p.errores = [];
   p.on("pageerror", err => { p.errores.push(err.message); fallos++; console.log("  error de página:", err.message); });

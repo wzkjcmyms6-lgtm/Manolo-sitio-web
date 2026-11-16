@@ -1,5 +1,19 @@
 # Fase actual
 
+## Mejoras sin servidor (pedido del dueño, 2026-11-15)
+El dueño eligió: app más rápida, rutinas desde la app (Running y gimnasio)
+y "más grandes" sin servidor (modo claro, Biblia en audio). Notificaciones
+con la app cerrada y Strava automático quedan para después ("Ahora no").
+
+| Fase | Qué | Estado |
+|---|---|---|
+| 1 | Biblia en audio (voces del iPhone) | ✅ (D-123) |
+| 2 | Rutinas de Running: crear y editar en la app (sin CSV) | ⏳ |
+| 3 | Rutinas del gimnasio: mejorar el editor | ⏳ |
+| 4 | Modo claro (automático o elegido) | ⏳ |
+| 5 | Que la app abra más rápido | ⏳ |
+| 6 | Control final y entrega | ⏳ |
+
 ## Ajustes del dueño (2026-11-15, después de probar en el iPhone)
 | Qué | Estado |
 |---|---|

@@ -225,6 +225,10 @@ async function irA(libro, cap, o) {
 }
 
 function pintar(marcar) {
+  // Mientras se abre otro libro, lo cargado es todavía el anterior: no se
+  // pinta (antes, un cambio de "leídos" en ese momento mostraba el texto del
+  // libro anterior con el nombre del nuevo). irA() pinta cuando llega.
+  if (!datos || !lugar || datos.libro !== lugar.libro) return;
   const { libro, cap } = lugar;
   const l = B.libro(libro);
   const vs = (datos.caps[cap - 1] || []);

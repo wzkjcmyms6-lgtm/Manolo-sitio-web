@@ -1,5 +1,16 @@
 # Cambios
 
+## 2026-11-16 · Biblia en audio
+- Biblia › lector: botón de **audífonos** arriba: escuchas el capítulo con
+  las voces de tu iPhone (sin internet). El versículo que suena se resalta.
+- Barra abajo: pausar y seguir, versículo anterior y siguiente, velocidad
+  (0,8× a 1,25×), elegir y probar la voz.
+- Al terminar sigue con el siguiente capítulo y, si lo oíste completo, lo
+  marca como leído hoy (con "Deshacer"). Las dos cosas se pueden apagar.
+- Tocar un versículo › "Escuchar": lee desde ahí.
+- Arreglado: al pasar a otro libro, el lector podía mostrar un instante el
+  texto del libro anterior.
+
 ## 2026-11-15 · Pago mínimo, Biblia en papel y arreglos del iPhone
 - Tarjetas de crédito: cada tarjeta puede tener su **pago mínimo** (lo que
   sí o sí hay que pagar para no caer en el buró). Muestra cuánto falta y

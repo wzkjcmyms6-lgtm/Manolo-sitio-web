@@ -375,3 +375,68 @@ body.bbl-leyendo { overflow: hidden; }
   .bbl-lector.con-sel .bbl-texto { padding-bottom: 360px; }
   .bbl-lector.con-sel .bbl-toast { bottom: calc(env(safe-area-inset-bottom) + 285px); }
 }
+
+/* Escuchar el capítulo (D-123): botón arriba, barra abajo y versículo que suena */
+.bba-abrir.is-activo { color: var(--accent-2); background: rgba(255, 184, 77, 0.12); }
+.bba {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; display: flex; flex-direction: column; gap: 0.2rem;
+  padding: 0 0.75rem calc(env(safe-area-inset-bottom) + 0.5rem); border-top: 1px solid var(--border);
+  background: rgba(22, 22, 22, 0.97); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.45); font-family: var(--font-body);
+}
+.bba[hidden], .bbl-lector.con-sel .bba { display: none; }
+.bba-prog { height: 3px; margin: 0 -0.75rem; background: rgba(255, 255, 255, 0.07); overflow: hidden; }
+.bba-prog i { display: block; height: 100%; width: 0; background: var(--accent-grad); transition: width 0.35s; }
+.bba-info { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; padding-top: 0.45rem; font-size: 0.92rem; line-height: 1.3; }
+.bba-info b { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bba-v { flex: 0 1 auto; min-width: 0; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bba-v.is-aviso { color: var(--accent-2); white-space: normal; text-align: right; }
+.bba-botones { display: flex; align-items: center; justify-content: space-between; gap: 0.2rem; }
+.bba-b, .bba-vel {
+  flex: 0 0 auto; display: grid; place-items: center; min-width: 44px; height: 44px; padding: 0; border: 0; border-radius: 12px;
+  background: transparent; color: var(--ink); font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.bba-b .icon-sm { width: 22px; height: 22px; display: inline-flex; }
+.bba-vel { min-width: 54px; padding: 0 0.3rem; font-weight: 700; font-size: 0.95rem; color: var(--accent-2); }
+.bba-play {
+  flex: 0 0 auto; display: grid; place-items: center; width: 58px; height: 58px; border: 0; border-radius: 50%;
+  background: var(--accent-grad); color: #1d1206; cursor: pointer; box-shadow: 0 6px 18px rgba(255, 122, 48, 0.32); -webkit-tap-highlight-color: transparent;
+}
+.bba-play .icon-sm { width: 26px; height: 26px; display: inline-flex; }
+.bba-b:active, .bba-vel:active { background: var(--bg-soft); }
+.bba-play:active { transform: scale(0.96); }
+.bbl-v.is-sonando {
+  color: #fff; background-image: linear-gradient(rgba(255, 184, 77, 0.2), rgba(255, 184, 77, 0.2));
+  box-shadow: 0 0 0 3px rgba(255, 184, 77, 0.2);
+}
+.bbl-lector.con-audio .bbl-texto { padding-bottom: calc(env(safe-area-inset-bottom) + 10rem); }
+.bbl-lector.con-audio:not(.con-sel) .bbl-toast { bottom: calc(env(safe-area-inset-bottom) + 140px); }
+.bba-toast { position: absolute; left: 12px; right: 12px; margin: 0 auto; bottom: calc(env(safe-area-inset-bottom) + 132px); z-index: 4; }
+.bba-toast .undo-toast-btn { min-height: 44px; min-width: 44px; margin: -0.6rem -0.3rem -0.6rem 0; padding: 0 0.6rem; }
+.bbl-lector:not(.con-audio) .bba-toast { bottom: calc(env(safe-area-inset-bottom) + 18px); }
+.bbl-lector.con-sel .bba-toast { bottom: calc(env(safe-area-inset-bottom) + 230px); }
+.bba-hoja .lib-nota { margin-top: 0.8rem; }
+.bba-probar { width: 100%; margin-top: 0.6rem; }
+.bba-sub { margin: 1rem 0 0.4rem; font-weight: 700; }
+.bba-vels { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.4rem; margin-bottom: 0.4rem; }
+.bba-velop {
+  min-height: 44px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--ink);
+  font: inherit; font-weight: 700; cursor: pointer; padding: 0;
+}
+.bba-velop.is-activo { border-color: var(--accent-2); color: var(--accent-2); background: rgba(255, 184, 77, 0.1); }
+/* "Escuchar" en la barra de versículos elegidos */
+.bbl-sel-oir {
+  flex: 0 0 auto; margin-left: auto; display: inline-flex; align-items: center; gap: 0.35rem; min-height: 40px; padding: 0 0.85rem;
+  border: 1px solid rgba(255, 184, 77, 0.4); border-radius: 999px; background: rgba(255, 184, 77, 0.1); color: var(--accent-2);
+  font: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer;
+}
+.bbl-sel-oir .icon-sm { width: 18px; height: 18px; display: inline-flex; }
+/* Cinco botones arriba: en teléfonos angostos, un poco más juntos */
+@media (max-width: 420px) {
+  .bbl-lector.con-sel .bba-toast { bottom: calc(env(safe-area-inset-bottom) + 285px); }
+}
+@media (max-width: 400px) {
+  .bbl-barra { gap: 0.3rem; padding-left: 0.5rem; padding-right: 0.5rem; }
+  .bbl-icono { width: 40px; }
+  .bbl-donde { padding: 0 0.7rem; }
+}

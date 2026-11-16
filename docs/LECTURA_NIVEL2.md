@@ -365,3 +365,42 @@ El dueño casi siempre lee en su Biblia de papel.
 Archivos y pruebas:
 - Lógica: `js/biblia-marcar.js` (`tests/biblia-marcar.test.js`).
 - Pantalla: `js/biblia-marcar-ui.js` (`scripts/e2e/biblia-marcar.js`).
+
+## Después: Biblia en audio (D-123, 2026-11-16)
+
+Para los días sin la Biblia de papel, o para escuchar mientras haces otra
+cosa.
+
+**Cómo se usa:**
+- En el lector, el botón de **audífonos** (arriba, junto a la lupa) empieza
+  a leer el capítulo: primero "Juan, capítulo 3." y luego cada versículo.
+- El versículo que suena se resalta y se mantiene a la vista. Si mueves el
+  texto con el dedo, no se mueve solo durante 5 segundos.
+- Barra de abajo:
+  - **▶/⏸**: pausar y seguir desde el mismo versículo;
+  - **⏮/⏭**: versículo anterior o siguiente (después del último, el
+    capítulo siguiente);
+  - **1×**: velocidad (0,8×, 0,9×, 1×, 1,1×, 1,25×);
+  - **⚙️**: voz (con "Probar la voz"), velocidad y dos opciones;
+  - **✕**: dejar de escuchar.
+- Tocar un versículo › **"Escuchar"**: lee desde ese versículo.
+
+**Opciones (⚙️), las dos encendidas al principio:**
+- "Seguir con el siguiente capítulo".
+- "Marcar como leído al escucharlo": si sonó al menos el 80 % de los
+  versículos, queda como leído hoy (con "Deshacer"). Cuenta para la racha,
+  los planes y Hábitos, igual que "Marcar como leído".
+
+**Cómo funciona por dentro:**
+- Voces del iPhone (`speechSynthesis`): sin internet y sin enviar nada
+  afuera. La lista muestra solo voces en español, la mejor primero.
+- Para una voz más natural: Ajustes del iPhone › Accesibilidad › Contenido
+  leído › Voces › Español, y descargar una voz "Mejorada".
+- Fuera de la app o con la pantalla bloqueada, el iPhone deja de hablar:
+  el audio se pausa y lo dice. Mientras suena, la pantalla queda encendida.
+- Preferencias (velocidad, voz, opciones) solo en el teléfono:
+  `localStorage` "manolo-biblia-audio". Ningún dato nuevo en la nube.
+
+Archivos y pruebas:
+- Lógica: `js/biblia-audio.js` (`tests/biblia-audio.test.js`).
+- Pantalla: `js/biblia-audio-ui.js` (`scripts/e2e/biblia-audio.js`).
