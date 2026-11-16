@@ -12,7 +12,8 @@
 // bici, en cada rodada con Editar, al anotar a mano, retirar), el
 // mantenimiento (aviso arriba del feed, «Hecho hoy», cada cuánto) y los
 // segmentos de bici (crear desde una rodada, buscarlo en tus rodadas, su
-// página con la velocidad, la pestaña Segmentos de Bici y no en Running).
+// página con la velocidad, la pestaña Segmentos de Bici y no en Running, y
+// la rodada que importes después se suma sola).
 // Uso: node scripts/e2e/bici.js [carpeta-para-capturas]
 const { chromium, servidor, abrir, ok, captura: capturar, terminar } = require("./comun.js");
 const X = require("../../tests/run-fixtures.js");
@@ -37,6 +38,8 @@ function rodada(id, inicio, segundos, vel, extra) {
 const A = rodada("a", "2026-11-03T07:00:00-04:00", 3600, 7, { titulo: "Subida a La Cumbre", subida: 650 });   // 25,2 km
 const Bm = rodada("b", "2026-11-10T07:00:00-04:00", 3360, 7.5, { titulo: "Subida a La Cumbre" });             // mismo recorrido (25,2 km), más rápida
 const C = rodada("c", "2026-10-20T07:00:00-04:00", 8200, 6.5, { titulo: "Fondo a Tiwanaku" });                // 53,3 km, más lenta
+// Una rodada nueva por el mismo camino, más rápida: se importa después de crear el segmento.
+const NUEVA = X.gpx(X.puntos({ segundos: 3000, vel: 8, inicio: t("2026-11-16T17:00:00-04:00") }), { nombre: "Rodada rápida", tipo: "cycling" });
 const SEED = {
   "users/test/bicicleta": {
     imp_a: A.doc, imp_b: Bm.doc, imp_c: C.doc,
@@ -329,6 +332,23 @@ async function fase7(browser, base, ancho) {
   await p.evaluate(() => { location.hash = "#run-segmentos"; });
   await p.waitForTimeout(400);
   ok(!/Subida a La Cumbre/.test(await txt(p, "#rs-app")), "y no aparece en los de Running");
+  // La rodada que importes después se suma sola al segmento (como en Running).
+  await p.evaluate(() => { location.hash = "#bicicleta"; });
+  await p.waitForTimeout(400);
+  await p.evaluate(() => document.querySelector("[data-bici-mas]").click());
+  await p.waitForTimeout(250);
+  await p.click('[data-bici-op="importar"]');
+  await p.waitForTimeout(300);
+  await p.setInputFiles("#ri-archivos", [{ name: "rapida.gpx", mimeType: "application/octet-stream", buffer: Buffer.from(NUEVA) }]);
+  await p.waitForSelector(".ri-resumen", { timeout: 10000 });
+  await p.click('[data-ri="importar"]');
+  await p.waitForFunction(() => /Listo/.test(document.getElementById("ri-cuerpo").innerText), null, { timeout: 15000 });
+  await p.waitForTimeout(800);
+  const seg2 = await p.evaluate(() => [...window.__fakeStore.colMap("users/test/run_segmentos").values()][0]);
+  const nuevaId = Object.keys(seg2.esfuerzos).find(k => !/^imp_[abc]$/.test(k));
+  const tNueva = nuevaId ? seg2.esfuerzos[nuevaId].t : null;
+  ok(nuevaId && Math.abs(tNueva - seg2.distanciaM / 8) <= 5, `la rodada que importes después se suma sola (${tNueva} s para ${seg2.distanciaM} m)`);
+  await p.click('#ri-acciones [data-ri="cerrar"]');
   ok(!p.errores.length, `sin errores de página${p.errores.length ? `: ${p.errores[0]}` : ""}`);
   await p.context().close();
 }

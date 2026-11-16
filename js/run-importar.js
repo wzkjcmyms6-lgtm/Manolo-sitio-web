@@ -424,6 +424,9 @@ async function guardar() {
   estado.avisos = [];
   const ahora = Date.now();
   const guardadas = [];
+  // Los deportes que tienen segmentos (Running o Bici, D-143): la ruta de lo
+  // nuevo se guarda en memoria solo para compararla con ellos.
+  const conSegmentos = new Set((window.RunDatos ? RunDatos.segmentos() : []).map(s => (s.deporte === "bicicleta" ? "bicicleta" : "running")));
   let ops = [], tam = 0;
   try {
     for (let i = 0; i < lista.length; i++) {
@@ -437,8 +440,8 @@ async function guardar() {
       if (bic && nueva.deporte === "bicicleta" && !nueva.biciId && nueva.campos.inicio >= (bic.creado || 0)) nueva.biciId = bic.id;
       const o = G.operaciones(nueva, lista[i].clase, lista[i].existente, ahora);
       o.ops.forEach(op => { ops.push(op); tam += JSON.stringify(op.datos).length; });
-      // La ruta se guarda en memoria solo si hay segmentos con los que compararla.
-      const conSeg = window.RunDatos && RunDatos.segmentos().length && o.col === "running" && o.doc.mini;
+      // La ruta se guarda en memoria solo si hay segmentos de su deporte con los que compararla.
+      const conSeg = conSegmentos.has(o.col) && o.doc.mini;
       guardadas.push({ id: o.id, col: o.col, doc: o.doc, ruta: conSeg ? nueva.ruta : null });
       if (ops.length >= G.LOTE_OPS || tam >= G.LOTE_BYTES) { await aplicar(ops); ops = []; tam = 0; }
     }
