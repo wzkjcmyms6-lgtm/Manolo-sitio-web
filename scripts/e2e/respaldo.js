@@ -215,9 +215,10 @@ async function cerrarHoja(p) {
   ok(await p.$eval("#sidebar", el => getComputedStyle(el).visibility === "hidden"), "con el menú cerrado, sus enlaces no reciben el foco (QA, D-119)");
   await p.click("#menu-toggle");
   await p.waitForTimeout(300);
-  ok(await p.isVisible("#sidebar .nav-extra-btn") && /Copia de seguridad/.test(await txt(p, "#sidebar .nav-extra-btn")), "«Copia de seguridad» en el menú ☰ (antes de Cerrar sesión)");
+  // El botón por sí mismo: en el menú hay otros extra («Tu semana», «Tu año»…).
+  ok(await p.isVisible("#sidebar [data-respaldo-abrir]") && /Copia de seguridad/.test(await txt(p, "#sidebar [data-respaldo-abrir]")), "«Copia de seguridad» en el menú ☰ (antes de Cerrar sesión)");
   await captura(p, "respaldo-menu-375.png");
-  await p.click("#sidebar .nav-extra-btn");
+  await p.click("#sidebar [data-respaldo-abrir]");
   await p.waitForTimeout(450);
   ok(await abierta(p) && !(await p.$eval("#sidebar", el => el.classList.contains("open"))), "abre la hoja y cierra el menú");
   await p.waitForTimeout(300);
@@ -232,7 +233,8 @@ async function cerrarHoja(p) {
   await q.emulateMedia({ reducedMotion: "reduce" });
   await q.waitForTimeout(1000);
   ok(!(await q.isVisible("#sidebar .nav-extra-btn")), "en la barra de arriba de la compu no se amontona (está abajo en Inicio)");
-  const alto = await q.$$eval("#nav-links > a, #logout-btn", els => els.map(e => Math.round(e.getBoundingClientRect().top)));
+  // Solo lo que se ve (los extra del menú ☰, como «Tu semana», están ocultos en la compu).
+  const alto = await q.$$eval("#nav-links > a, #logout-btn", els => els.filter(e => e.getClientRects().length).map(e => Math.round(e.getBoundingClientRect().top)));
   ok(Math.max(...alto) - Math.min(...alto) <= 12, `«Cerrar sesión» sigue alineado en la barra de arriba (${alto.join(", ")})`);
   await abrirHoja(q);
   ok(await abierta(q), "abre desde Inicio también en la compu");

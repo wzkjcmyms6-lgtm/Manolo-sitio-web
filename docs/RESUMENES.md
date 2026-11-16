@@ -132,6 +132,11 @@ Para esta semana
 `tests/resumen-motor.test.js` y `scripts/e2e/resumenes.js` (los datos de
 las 10 secciones llegan al motor en la app).
 
+### Hecho en la fase 2 (D-138)
+`js/resumen-semana-ui.js` (tarjeta de Inicio y `#semana`),
+`js/resumen-imagen.js` (imagen sin dinero) y `css/resumenes.css`; "Tu
+semana" en el menú ☰ y al pie de Inicio.
+
 ### Datos
 
 Ningún campo nuevo en Firestore para los resúmenes. En el teléfono:

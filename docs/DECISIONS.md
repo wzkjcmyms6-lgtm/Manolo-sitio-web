@@ -2002,3 +2002,21 @@ ya tiene en memoria (sin lecturas nuevas); Finanzas suma una función de
 solo lectura (`FinanzasResumen.movimientos()`, gastos e ingresos en
 centavos sin transferencias ni lo excluido, como en Análisis).
 
+**D-138 (2026-11-16) · Resúmenes, fase 2: "Tu semana".** (1) **Inicio**:
+lunes y martes, arriba (debajo de "Mi día"), una tarjeta con la semana que
+terminó: el titular, 3 cifras (nunca dinero) y "Ver mi semana" / "Listo";
+"Listo" la oculta hasta el lunes siguiente (en el teléfono,
+"manolo.semana.vista"). Si la semana no tiene nada, no aparece. (2) **La
+pantalla `#semana/AAAA-MM-DD`** (también en el menú ☰ y al pie de Inicio):
+‹ › para ir a otras semanas (hasta la que va); lunes y martes abre en la
+semana pasada y el resto de los días en la que va ("hasta el miércoles").
+Titular, "Lo mejor", "Por área" (cada una con su cambio en verde si mejoró
+o en ámbar si bajó, y lleva a su sección), "Se quedó atrás" y "Para esta
+semana" (solo en la pasada y la que va: para una semana vieja no tiene
+sentido). (3) **"Compartir mi semana"**: imagen vertical 1080 × 1920 con
+el titular, lo mejor y cada área con lo que mejoró; **sin dinero**
+(Finanzas y lo que habla de gastos no entra) y sin lo que no hiciste. En el
+iPhone abre el menú de compartir; en la compu se descarga. Pantalla en
+`js/resumen-semana-ui.js`, imagen en `js/resumen-imagen.js`, estilos en
+`css/resumenes.css`.
+

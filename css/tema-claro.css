@@ -4289,6 +4289,17 @@ html[data-modo="claro"] {
   background: repeating-conic-gradient(#e9e5dc 0% 25%, #f1eee7 0% 50%) 0 0 / 20px 20px;
 }
 
+/* ---- css/resumenes.css ---- */
+:where(html[data-modo="claro"]) .sem-area-t .sem-cambio.is-bien {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .sem-area-t .sem-cambio.is-mal {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .sem-area-ir {
+  color: var(--muted);
+}
+
 /* ---- scripts/tema-claro-manual.css (a mano) ---- */
 /* Modo claro: lo que no sale solo del generador (D-126). Va al final de
    css/tema-claro.css (npm run tema). */

@@ -1,6 +1,16 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (Resúmenes, fase 2, D-138): `npm test` → **740
+  pruebas**. Nuevo `resumen-imagen` (la imagen de la semana sin dinero, solo
+  lo que mejoró, todo dentro). Suite `resumenes` con la fase 2 (la tarjeta
+  de Inicio el lunes, la pantalla, ‹ ›, compartir, «Listo», el menú; el
+  miércoles sin tarjeta; sin datos; 390 y 320 px). La revisión completa
+  encontró dos cosas: en la compu «Tu semana» se colaba en la barra de
+  arriba (ya no: va al pie de Inicio) y, los lunes y martes, la tarjeta se
+  recalculaba al abrir cualquier sección (ahora solo con Inicio a la
+  vista; `lectura-qa` Biblia con 1.500 versículos volvió a 1,3–1,5 s).
+  `respaldo` busca su botón por sí mismo (en el menú ☰ hay otros extra).
 - 2026-11-16 (Resúmenes, fase 1, D-137): `npm test` → **738 pruebas**.
   Nuevo `resumen-motor` (cifras de cada sección, la semana contra la
   anterior y tu promedio, a mitad de semana, lo mejor, lo que se quedó
@@ -409,6 +419,15 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Tu semana (2026-11)**
+- [ ] El lunes, en Inicio: la tarjeta "Tu semana" con la semana pasada.
+  Toca "Ver mi semana".
+- [ ] Mira cada área (toca una: va a su sección), "Lo mejor", "Se quedó
+  atrás" y "Para esta semana". Con ‹ › ve semanas anteriores.
+- [ ] "Compartir mi semana": la imagen no tiene montos de dinero.
+- [ ] De vuelta en Inicio, "Listo": la tarjeta no vuelve hasta el lunes
+  siguiente. "Tu semana" sigue en el menú ☰.
 
 **Libros nivel 3: lista para el iPhone (2026-11-16)**
 Un recorrido corto por todo lo nuevo (más detalle en cada lista de abajo):

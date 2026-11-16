@@ -18,7 +18,7 @@
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
   <!-- Todos los estilos de la app en un archivo (D-127): js/paquete.json › npm run listo -->
-  <link rel="stylesheet" href="css/app.paquete.css?v=eaf328c4c1e2">
+  <link rel="stylesheet" href="css/app.paquete.css?v=9ec8b0083f03">
   <!-- Modo claro (D-126): generado con "npm run tema"; js/tema.js lo apaga en
        el modo oscuro y elige el modo antes de pintar (sin "defer": es chico) -->
   <link rel="stylesheet" href="css/tema-claro.css?v=202611171200" id="tema-claro-css">
@@ -130,6 +130,7 @@
             </div>
             <p class="panel-sub">Tu panel de control personal. Elige una sección para empezar.</p>
             <section class="mi-dia" id="mi-dia" hidden aria-labelledby="mi-dia-t"></section>
+            <section class="sem-inicio" id="sem-inicio" hidden aria-labelledby="sem-ini-t"></section>
 
             <a class="gym-en-curso act-en-curso-aviso" href="#run-rutinas" data-act-en-curso="run-rutinas" hidden><span class="gym-en-curso-punto" aria-hidden="true"></span><span>Tienes una <strong>rutina</strong> sin terminar</span><span class="gym-en-curso-ir">Continuar</span></a>
             <div class="card-grid card-grid-home">
@@ -191,6 +192,7 @@
             </div>
             <button type="button" class="link-btn md-mostrar" id="mi-dia-mostrar" hidden>Mostrar «Mi día»</button>
             <div class="inicio-pie">
+              <a class="link-btn cuenta-estado-btn sem-pie" href="#semana">Tu semana</a>
               <button type="button" class="link-btn cuenta-estado-btn rsp-abrir" id="respaldo-abrir" data-respaldo-abrir>Copia de seguridad</button>
               <button type="button" class="link-btn cuenta-estado-btn" data-tema-abrir>Apariencia</button>
               <button type="button" class="link-btn cuenta-estado-btn" id="cuenta-estado-btn">Estado de la cuenta</button>
@@ -479,6 +481,13 @@
             <a class="back-link lib-volver" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
             <h1 class="page-title">Lugares</h1>
             <div class="lug-app" id="lug-app"></div>
+          </section>
+
+          <!-- ===== Tu semana (D-136): js/resumen-semana-ui.js ===== -->
+          <section id="panel-semana" hidden>
+            <a class="back-link lib-volver" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
+            <h1 class="page-title">Tu semana</h1>
+            <div class="sem-app" id="sem-app"></div>
           </section>
 
           <!-- ===== Running (D-061): Actividades · Progreso · (+) · Segmentos · Rutinas ===== -->
@@ -1432,6 +1441,6 @@
   <script defer src="vendor/firebase-10.7.1/firebase-firestore-compat.js"></script>
   <!-- Todos los módulos de la app en un archivo (D-127): cada uno corre como su
        propio <script>. Se editan los de js/ y después: npm run listo -->
-  <script defer src="js/app.paquete.js?v=5a80dbe8e04e"></script>
+  <script defer src="js/app.paquete.js?v=b3530a58298a"></script>
 </body>
 </html>

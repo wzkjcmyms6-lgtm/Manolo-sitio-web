@@ -2,6 +2,8 @@
 // Fase 1: los datos de todas las secciones llegan al motor sin leer nada
 // nuevo (lo que cada sección ya tiene en memoria) y Finanzas solo cuenta
 // gastos e ingresos (sin transferencias ni lo excluido).
+// Fase 2: "Tu semana" (la tarjeta de Inicio los lunes, la pantalla, ‹ ›,
+// compartir, «Listo», el menú; miércoles y sin datos).
 // Uso: node scripts/e2e/resumenes.js [carpeta-para-capturas]
 const fs = require("fs");
 const { chromium, servidor, abrir, ok, terminar } = require("./comun.js");
@@ -91,10 +93,90 @@ async function fase1(browser, base) {
   await p.context().close();
 }
 
+// ---- Fase 2 (D-138): "Tu semana" ----
+const txt = (p, sel) => p.$eval(sel, el => el.innerText.replace(/\s+/g, " ").trim()).catch(() => "");
+const sobra = p => p.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+async function fase2(browser, base, ancho) {
+  console.log(`\nResúmenes, fase 2: «Tu semana» (${ancho} px)`);
+  let p = await abrir(browser, base, semilla(), { hash: "#inicio", zona: ZONA, fecha: FECHA, ancho });
+  await p.waitForTimeout(2200);
+  const tarjeta = await txt(p, "#sem-inicio");
+  ok(await p.isVisible("#sem-inicio") && /^Tu semana · 9 – 15 nov /i.test(tarjeta), `lunes: la tarjeta de la semana que terminó (${tarjeta.slice(0, 60)}…)`);
+  const cifras = await p.$$eval("#sem-inicio .sem-ini-cifras div", els => els.map(e => e.innerText.replace(/\s+/g, " ").trim()));
+  ok(cifras.length === 3 && !cifras.some(c => /Bs/.test(c)), `3 cifras, sin dinero (${cifras.join(" | ")})`);
+  const esperado = await p.evaluate(() => window.ResumenMotor.semana(window.ResumenFuentes.datos(), "2026-11-09"));
+  ok(tarjeta.includes(esperado.titular), "con el titular de la semana");
+  if (CAPTURAS) await (await p.$("#sem-inicio")).screenshot({ path: `${CAPTURAS}/semana-inicio-${ancho}.png` });
+
+  await p.click("#sem-inicio a[href='#semana/2026-11-09']");
+  await p.waitForTimeout(500);
+  ok(await p.evaluate(() => location.hash) === "#semana/2026-11-09" && await p.isVisible("#panel-semana"), "«Ver mi semana» abre la pantalla");
+  ok(/^9 – 15 nov La semana pasada$/.test(await txt(p, ".sem-nav-t")), `arriba, la semana (${await txt(p, ".sem-nav-t")})`);
+  ok((await txt(p, ".sem-titular")) === esperado.titular, "el titular");
+  const areas = await p.$$eval(".sem-area", els => els.map(e => ({ href: e.getAttribute("href"), t: e.innerText.replace(/\s+/g, " ").trim() })));
+  ok(areas.length === esperado.areas.length && areas.length >= 8, `cada área (${areas.length})`);
+  ok(areas.some(a => a.href === "#bicicleta" && /^Bici 32,5 km · 1 rodada · 1:35 h/.test(a.t)) && areas.some(a => a.href === "#finanzas"), "cada una lleva a su sección");
+  ok((await p.$$(".sem-lista li")).length === esperado.mejor.length + esperado.atras.length, "lo mejor y lo que se quedó atrás");
+  ok(!esperado.sugerencia || (await txt(p, ".sem-sug")).includes(esperado.sugerencia.texto), "y la sugerencia para esta semana");
+  if (CAPTURAS) await p.screenshot({ path: `${CAPTURAS}/semana-${ancho}.png`, fullPage: true });
+  ok((await sobra(p)) <= 0, "nada se sale de ancho");
+
+  // ‹ › para ir a otras semanas.
+  await p.click(".sem-nav a[aria-label='Semana anterior']");
+  await p.waitForTimeout(400);
+  ok(await p.evaluate(() => location.hash) === "#semana/2026-11-02" && /^2 – 8 nov$/.test(await txt(p, ".sem-nav-t")), "‹ la semana anterior");
+  ok(!(await p.$(".sem-sug")), "una semana vieja no trae sugerencia");
+  await p.click(".sem-nav a[aria-label='Semana siguiente']");
+  await p.waitForTimeout(300);
+  await p.click(".sem-nav a[aria-label='Semana siguiente']");
+  await p.waitForTimeout(400);
+  ok(/^16 – 22 nov Esta semana, hasta el lunes$/.test(await txt(p, ".sem-nav-t")) && await p.$(".sem-nav .sem-flecha.is-off") !== null, "› hasta esta semana; más allá no");
+
+  // Compartir: una imagen (aquí se descarga, en el iPhone abre el menú de compartir).
+  await p.goto(`${base}/index.html#semana/2026-11-09`);
+  await p.waitForTimeout(1800);
+  const [descarga] = await Promise.all([p.waitForEvent("download", { timeout: 5000 }).catch(() => null), p.click("[data-sem-compartir]")]);
+  ok(descarga && descarga.suggestedFilename() === "mi-semana-2026-11-09.png", `«Compartir mi semana»: la imagen (${descarga && descarga.suggestedFilename()})`);
+  if (CAPTURAS && descarga) await descarga.saveAs(`${CAPTURAS}/semana-imagen.png`);
+
+  // Inicio: «Listo» la oculta (y no vuelve hasta el lunes siguiente).
+  await p.evaluate(() => { location.hash = "#inicio"; });
+  await p.waitForTimeout(500);
+  await p.click("[data-sem-listo]");
+  await p.waitForTimeout(300);
+  ok(!(await p.isVisible("#sem-inicio")), "«Listo» la oculta");
+  await p.reload();
+  await p.waitForTimeout(2000);
+  ok(!(await p.isVisible("#sem-inicio")), "y sigue oculta al volver");
+  ok(await p.$("#nav-links a[href='#semana']") !== null && await p.$(".inicio-pie a[href='#semana']") !== null, "«Tu semana» en el menú ☰ y al pie de Inicio");
+  ok(!p.errores.length, `sin errores de página${p.errores.length ? `: ${p.errores[0]}` : ""}`);
+  await p.context().close();
+
+  // Miércoles: sin tarjeta; la pantalla muestra la semana que va.
+  p = await abrir(browser, base, semilla(), { hash: "#inicio", zona: ZONA, fecha: "2026-11-18T09:30:00-04:00", ancho });
+  await p.waitForTimeout(2000);
+  ok(!(await p.isVisible("#sem-inicio")), "miércoles: Inicio no muestra la tarjeta");
+  await p.click(".inicio-pie a[href='#semana']");
+  await p.waitForTimeout(500);
+  ok(/^16 – 22 nov Esta semana, hasta el miércoles$/.test(await txt(p, ".sem-nav-t")) && /^Tu semana hasta hoy: /.test(await txt(p, ".sem-titular")), "la pantalla abre en la semana que va");
+  await p.context().close();
+
+  // Sin datos: ni tarjeta ni áreas.
+  p = await abrir(browser, base, { __SEED__: {} }, { hash: "#inicio", zona: ZONA, fecha: FECHA, ancho });
+  await p.waitForTimeout(1500);
+  ok(!(await p.isVisible("#sem-inicio")), "sin datos, no hay tarjeta");
+  await p.evaluate(() => { location.hash = "#semana"; });
+  await p.waitForTimeout(500);
+  ok(/No hay nada anotado esta semana/.test(await txt(p, "#sem-app")) && !(await p.$("[data-sem-compartir]")), "y la pantalla lo dice (sin «Compartir»)");
+  ok(!p.errores.length, "sin errores de página");
+  await p.context().close();
+}
+
 (async () => {
   const srv = await servidor();
   const base = `http://localhost:${srv.address().port}`;
   const browser = await chromium.launch();
   await fase1(browser, base);
+  for (const ancho of [390, 320]) await fase2(browser, base, ancho);
   await terminar(browser, srv);
 })();

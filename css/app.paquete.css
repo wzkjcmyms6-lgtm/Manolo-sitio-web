@@ -8383,6 +8383,75 @@ body.rd-mapa-abierto .rd-ampliar { top: max(12px, env(safe-area-inset-top)); bot
 /* Damero para que se note lo transparente. */
 .rcm-img.is-transparente { background: repeating-conic-gradient(#2a2a28 0% 25%, #1a1a1a 0% 50%) 0 0 / 20px 20px; }
 
+/* ---- css/resumenes.css ---- */
+/* ---------- Tu semana y Tu año (D-136) ----------
+   Pantallas de js/resumen-semana-ui.js (y, más adelante, js/resumen-anio-ui.js).
+   Solo usa las variables de :root (css/style.css); el modo claro se genera
+   con npm run tema. */
+
+/* Inicio: la tarjeta de los lunes y martes */
+.sem-inicio {
+  margin: 0 0 1rem; padding: 1rem 1.05rem; border-radius: 18px; border: 1px solid rgba(255, 184, 77, 0.35);
+  background: radial-gradient(120% 140% at 100% 0%, rgba(255, 122, 48, 0.16) 0%, var(--surface) 60%);
+}
+.sem-ini-eyebrow { display: flex; align-items: center; gap: 0.35rem; margin: 0 0 0.35rem; color: var(--accent-2); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.sem-ini-t { margin: 0 0 0.75rem; font-size: 1.02rem; font-weight: 600; line-height: 1.35; }
+.sem-ini-cifras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin-bottom: 0.85rem; }
+.sem-ini-cifras div { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; padding: 0.5rem 0.6rem; border-radius: 12px; background: var(--surface-raised); }
+.sem-ini-cifras span { color: var(--muted); font-size: 0.72rem; }
+.sem-ini-cifras b { font-size: 0.92rem; overflow-wrap: anywhere; }
+.sem-ini-acciones { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.inicio-pie .sem-pie { color: var(--accent-2); text-decoration: none; }
+/* «Tu semana» es un enlace en el menú ☰ (los otros extra son botones): que
+   se vea igual que ellos. En la compu no va arriba: está al pie de Inicio. */
+.sidebar nav a.nav-extra-btn { display: flex; margin-bottom: 0; padding: 0.6rem 0.75rem; color: var(--ink); font-size: 0.92rem; }
+@media (min-width: 769px) { .sidebar nav a.nav-extra-btn, .sidebar nav .nav-extra-btn { display: none; } }
+
+/* La pantalla #semana */
+.sem-app { max-width: 720px; }
+.sem-nav { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin: 0.2rem 0 0.9rem; }
+.sem-flecha {
+  display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; width: 44px; height: 44px;
+  border: 1px solid var(--border); border-radius: 12px; color: var(--ink); text-decoration: none;
+}
+.sem-flecha.is-off { opacity: 0.35; }
+.sem-nav-t { display: flex; flex-direction: column; align-items: center; min-width: 0; text-align: center; }
+.sem-nav-t b { font-size: 1.1rem; }
+.sem-nav-t small { color: var(--muted); font-size: 0.8rem; }
+.sem-titular { margin: 0 0 1.1rem; font-size: 1.15rem; font-weight: 600; line-height: 1.4; }
+.sem-bloque { margin: 0 0 1.2rem; }
+.sem-h { margin: 0 0 0.55rem; color: var(--accent-2); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.sem-lista { list-style: none; display: flex; flex-direction: column; gap: 0.45rem; margin: 0; padding: 0; }
+.sem-lista li {
+  display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.65rem 0.8rem; line-height: 1.35;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+}
+.sem-lista.is-atras li { border-color: rgba(255, 184, 77, 0.3); }
+.sem-emoji { flex-shrink: 0; width: 1.4rem; text-align: center; }
+.sem-areas { display: flex; flex-direction: column; gap: 0.45rem; }
+.sem-area {
+  display: flex; align-items: center; gap: 0.7rem; min-height: 44px; padding: 0.7rem 0.8rem;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px; color: var(--ink); text-decoration: none;
+}
+.sem-area:active { background: var(--surface-raised); }
+.sem-area-ico {
+  display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; width: 36px; height: 36px;
+  border-radius: 10px; background: var(--surface-raised); color: var(--accent-2);
+}
+.sem-area-ico svg { width: 20px; height: 20px; }
+.sem-area-t { display: flex; flex: 1; flex-direction: column; gap: 0.12rem; min-width: 0; }
+.sem-area-t b { color: var(--muted); font-size: 0.82rem; font-weight: 600; }
+.sem-area-t > span { font-size: 0.98rem; font-weight: 600; overflow-wrap: anywhere; }
+.sem-area-t small { color: var(--muted); font-size: 0.8rem; }
+.sem-area-t .sem-cambio { font-weight: 700; }
+.sem-area-t .sem-cambio.is-bien { color: #7fe0a6; }
+.sem-area-t .sem-cambio.is-mal { color: var(--accent-2); }
+.sem-area-ir { color: var(--muted); font-size: 1.2rem; }
+.sem-sug { margin: 0 0 1.2rem; padding: 0.9rem 1rem; background: rgba(255, 122, 48, 0.1); border: 1px solid rgba(255, 122, 48, 0.35); border-radius: 16px; }
+.sem-sug p { margin: 0 0 0.6rem; font-weight: 600; line-height: 1.4; }
+.sem-compartir { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; }
+.sem-nota { margin-top: 0.4rem; text-align: center; }
+
 /* ---- css/viewport.css ---- */
 /* ---------- iPhone: lo fijo vuelve a su lugar (D-120) ----------
    Cuando el iPhone deja la pantalla "corrida" después de escribir,

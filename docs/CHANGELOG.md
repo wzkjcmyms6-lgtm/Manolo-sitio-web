@@ -1,5 +1,14 @@
 # Cambios
 
+## 2026-11-16 · Tu semana
+- Los **lunes y martes**, en Inicio: "Tu semana" con lo que hiciste la
+  semana pasada. "Listo" la guarda hasta el lunes siguiente.
+- **"Tu semana"** (menú ☰ o al pie de Inicio): cada área contra la semana
+  anterior, lo mejor, lo que se quedó atrás y una sugerencia para esta
+  semana. Con ‹ › ves las semanas anteriores.
+- **"Compartir mi semana"**: una imagen para tus historias, sin montos de
+  dinero.
+
 ## 2026-11-16 · Libros: control final
 - Todo lo nuevo de Libros revisado en el iPhone (tamaño de pantalla), en
   modo claro y oscuro.

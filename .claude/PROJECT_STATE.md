@@ -11,7 +11,9 @@ Actualizado: 2026-11-16 (Tu semana, Tu año y Bici en curso, D-136).
   y `docs/CYCLING.md` (D-136); fases en `.claude/CURRENT_PHASE.md`.
   Fase 1 hecha (D-137): el motor de resúmenes (las 10 secciones, la semana
   contra la anterior y tu promedio, lo mejor, lo que se quedó atrás y una
-  sugerencia), sin lecturas nuevas.
+  sugerencia), sin lecturas nuevas. Fase 2 hecha (D-138): **"Tu semana"**
+  (tarjeta en Inicio lunes y martes, pantalla `#semana` con semanas
+  anteriores y "Compartir mi semana" sin dinero).
 
 - **Libros nivel 3 (2026-11-16, terminado)**: que al poner un libro se
   traigan bien el título en español, el autor, el género y las páginas de

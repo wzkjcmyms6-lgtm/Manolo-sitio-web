@@ -180,7 +180,9 @@
   "js/mi-dia-motor.js",
   "js/mi-dia.js",
   "js/resumen-motor.js",
-  "js/resumen-fuentes.js"
+  "js/resumen-fuentes.js",
+  "js/resumen-imagen.js",
+  "js/resumen-semana-ui.js"
  ],
  "css": [
   "css/style.css",
@@ -198,6 +200,7 @@
   "css/ej-calendario.css",
   "css/ejercicio.css",
   "css/run.css",
+  "css/resumenes.css",
   "css/viewport.css"
  ]
 }
