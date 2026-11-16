@@ -8,7 +8,9 @@
 // - el largo contra tu ritmo real (páginas por día de los últimos 30 días;
 //   si casi no hay, tu meta): los cortos suben un poco, los muy largos
 //   bajan; si vas atrasado con el reto, los cortos suben más;
-// - cuánto hace que lo tienes en la lista.
+// - cuánto hace que lo tienes en la lista;
+// - (nivel 3, fase 6, D-134) del mismo autor o de los mismos temas que un
+//   libro que te gustó (4 o 5 estrellas).
 // Sin IA: solo cuentas. Sin DOM ni Firebase: tests/libros-siguiente.test.js.
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory(require("./libros-progreso.js"), require("./libros-motor.js"));
@@ -16,7 +18,7 @@
 })(typeof self !== "undefined" ? self : this, function (P, L) {
 "use strict";
 
-const PUNTOS = { alta: 30, baja: -15, sigueSaga: 25, faltaAnterior: -20, empiezaSaga: 3, generoNuevo: 12, mismoGenero: -8, corto: 8, largo: -5, reto: 6 };
+const PUNTOS = { alta: 30, baja: -15, sigueSaga: 25, faltaAnterior: -20, empiezaSaga: 3, generoNuevo: 12, mismoGenero: -8, corto: 8, largo: -5, reto: 6, autorGusta: 10, temaGusta: 6 };
 
 // Páginas por día a tu ritmo (últimos 30 días) o, si casi no anotaste, tu meta.
 function ritmoDiario(libros, hoy, metaDia) {
@@ -45,6 +47,9 @@ function siguientes(libros, hoy, o) {
   // Sagas: los libros de cada una que tienes en la lista.
   const sagas = {};
   lista.forEach(l => { if (l.saga && l.sagaN) (sagas[clave(l.saga)] = sagas[clave(l.saga)] || []).push(l); });
+  // Lo que te gustó (4 o 5 estrellas), lo último primero.
+  const gustos = lista.filter(l => l.estado === "terminado" && Number(l.calificacion) >= 4)
+    .sort((a, b) => String(b.fechaFin || "").localeCompare(String(a.fechaFin || "")) || (b.calificacion || 0) - (a.calificacion || 0));
 
   return cand.map(l => {
     let puntos = 0;
@@ -58,6 +63,13 @@ function siguientes(libros, hoy, o) {
       if (faltan.length) sumar(PUNTOS.faltaAnterior, `Antes va el ${numero(faltan[0].sagaN)} de «${l.saga}».`);
       else if (antes.length) sumar(PUNTOS.sigueSaga, `Sigue la saga «${l.saga}»: es el ${numero(l.sagaN)}.`);
       else if (l.sagaN === 1) sumar(PUNTOS.empiezaSaga, `Empieza la saga «${l.saga}».`);
+    }
+    // Del mismo autor que uno que te gustó; si no, de los mismos temas.
+    const gAutor = l.autor ? gustos.find(g => g.autor && clave(g.autor) === clave(l.autor)) : null;
+    if (gAutor) sumar(PUNTOS.autorGusta, `Es de ${l.autor}, como «${gAutor.titulo}», que te gustó.`);
+    else if (l.temas && l.temas.length) {
+      const g = gustos.find(x => x.temas && x.temas.some(t => l.temas.includes(t)));
+      if (g) sumar(PUNTOS.temaGusta, `Trata de ${g.temas.find(t => l.temas.includes(t))}, como «${g.titulo}», que te gustó.`);
     }
     if (l.genero) {
       if (recientes.length >= 2 && !recientes.includes(l.genero)) sumar(PUNTOS.generoNuevo, `Hace rato no lees ${nombreGenero(l.genero)}: equilibra.`);

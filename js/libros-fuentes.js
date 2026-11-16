@@ -421,9 +421,28 @@ function leerGoogle(json, titulo, autor) {
   return { texto: limpiarSinopsis(v.description), fuente: "google", url: /^https:\/\/books\.google\.[a-z.]+\//.test(u) ? u : "" };
 }
 
+// ---- Fase 6 (D-134): ideas de libros por tema ----
+// El tema de Open Library (en inglés) que se busca para cada tema en
+// español. Solo los específicos: los amplios ("éxito", "filosofía",
+// "misterio") traen clásicos que no tienen que ver. En orden: se busca el
+// primero que tenga tu libro.
+const SUJETOS = [
+  ["romper hábitos", "habit breaking"], ["finanzas personales", "personal finance"], ["inversiones", "investments"],
+  ["realismo mágico", "magic realism"], ["estoicismo", "stoics"], ["Holocausto", "holocaust"], ["distopía", "dystopias"],
+  ["productividad", "time management"], ["emprendimiento", "entrepreneurship"], ["neurociencia", "neurosciences"],
+  ["vida cristiana", "christian life"], ["oración", "prayer"], ["meditación", "meditation"],
+  ["motivación", "motivation (psychology)"], ["autoayuda", "self-help techniques"], ["hábitos", "habits"],
+  ["inteligencia artificial", "artificial intelligence"], ["nutrición", "nutrition"], ["liderazgo", "leadership"]
+];
+// → [tema en español, tema de Open Library] o null.
+const sujetoDe = temas => SUJETOS.find(([es]) => (Array.isArray(temas) ? temas : []).includes(es)) || null;
+// Libros de ese tema que tienen edición en español.
+const urlIdeasTema = sujeto => (sujeto ? `${OL}/search.json?q=${encodeURIComponent(`subject:"${sujeto}" language:spa`)}&lang=es&limit=30&fields=${CAMPOS}` : null);
+
 return { OL, CAMPOS, urlBuscar, parecido, esDerivado, esLatino, limpiarTitulo, leerBusqueda, urlFichaAutor, nombreDeFicha,
   urlEdiciones, urlIsbn, urlEdicion, formatoDe, NOMBRE_FORMATO, paginasDe, anioDe, limpiarEditorial, leerEdicion, leerEdiciones, enEspanol,
   gruposDePaginas, recomendar, pedirMas, textoEdicion,
   urlLibrosDeAutor, urlBuscarAutor, elegirAutor, mismoAutor, leerAutor, urlWikiAutor, leerWiki, librosDeAutor, loTienes, anios,
-  TEMAS, temasDe, urlWikiLibro, leerWikiLibro, generoDesdeDescripcion, limpiarSinopsis, esEspanol, urlObra, leerObra, urlGoogle, leerGoogle };
+  TEMAS, temasDe, urlWikiLibro, leerWikiLibro, generoDesdeDescripcion, limpiarSinopsis, esEspanol, urlObra, leerObra, urlGoogle, leerGoogle,
+  SUJETOS, sujetoDe, urlIdeasTema };
 });

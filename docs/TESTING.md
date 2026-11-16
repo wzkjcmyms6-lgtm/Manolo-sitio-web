@@ -1,6 +1,16 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (Libros nivel 3, fase 6, D-134): `npm test` → **732
+  pruebas**. Nuevo `libros-recomendar` (de qué libros se parte, los mismos
+  temas sin cuentos infantiles ni el mismo autor, uno por autor, títulos en
+  inglés no, intercalar sin repetir ni lo que tienes ni lo descartado) y en
+  `libros-siguiente` (del mismo autor o temas que uno que te gustó). E2E
+  `libros-n3` con la fase 6 (la sección con 2 y "Ver las 12", sus razones,
+  sin lo que tienes, "✕", "＋ Quiero leer" abre Agregar libro lleno, al
+  volver sin pedir nada; "¿Qué leo después?" con lo que te gustó; 390 y 320
+  px). Las pruebas de pantalla ya no salen a internet a buscar libros
+  (`scripts/e2e/comun.js`).
 - 2026-11-16 (Libros nivel 3, fase 5, D-133): `npm test` → **727
   pruebas**. Nuevo `libros-completar` (qué libros revisar, el título en
   español con el tuyo como original, solo se suma lo que falta, con otro
@@ -382,6 +392,13 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Libros: "Si te gustó…" (2026-11)**
+- [ ] Califica con 4 o 5 estrellas un libro que terminaste.
+- [ ] En Libros, debajo de "¿Qué leo después?", mira "Si te gustó…": cada
+  idea dice por qué. Toca "Ver las…" para verlas todas.
+- [ ] Toca "✕" en una que no te interese: desaparece. Toca "＋ Quiero
+  leer" en otra: se abre "Agregar libro" lleno; guárdalo.
 
 **Libros: completar tu biblioteca (2026-11)**
 - [ ] Arriba de tu lista de libros, toca "Completar mi biblioteca".

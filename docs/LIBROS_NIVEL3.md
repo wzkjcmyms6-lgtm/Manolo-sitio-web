@@ -15,7 +15,7 @@ publicada, con pruebas y su lista para el iPhone.
 | 3 | Ficha del autor: foto, quién es (en español), tus libros de él y sus otros libros con "＋ Quiero leer" | ✅ (D-131) |
 | 4 | Género y temas en español, "De qué trata" y estadísticas por género | ✅ (D-132) |
 | 5 | Completar tu biblioteca: arreglar los libros que ya tienes (títulos en inglés, sin autor, páginas, género o portada), siempre con tu OK | ✅ (D-133) |
-| 6 | Recomendaciones: "Si te gustó…", del mismo autor y de los mismos temas; "¿Qué leo después?" más inteligente | |
+| 6 | Recomendaciones: "Si te gustó…", del mismo autor y de los mismos temas; "¿Qué leo después?" más inteligente | ✅ (D-134) |
 | 7 | Control final y lista para el iPhone | |
 
 ## Auditoría (fase 0, 2026-11-16)
@@ -156,7 +156,15 @@ Lorenzo Silva → "El alquimista impaciente", con duda; con otro autor, nada.
   está", uno por uno o todos los seguros de una vez. Nunca se borra ni se
   cambia nada sin tu OK (solo se suman datos).
 
-### Fase 6 — Recomendaciones
+### Fase 6 — Recomendaciones ✅ (D-134)
+Hecho en `js/libros-recomendar.js` y `js/libros-ideas-ui.js`. Con las
+respuestas reales: si te gustó "Padre rico, padre pobre" → "El hombre más
+rico de Babilonia", "La ciencia de hacerse rico", "Inversor inteligente" y
+los otros de Kiyosaki; "Hábitos atómicos" → "El poder de los hábitos";
+"Cien años de soledad" → "La casa de los espíritus", "Hijos de la
+medianoche" (los cuentos infantiles que también traen "hábitos" quedan
+fuera).
+
 - **"Si te gustó…"**: a partir de tus libros de 4 y 5 estrellas, libros del
   mismo autor y de los mismos temas que todavía no tienes, con la razón.
 - "¿Qué leo después?" usa también el género y los temas.

@@ -14,6 +14,9 @@
 // trata" (Wikipedia; Google Books como extra), guardado, páginas por género.
 // Fase 5 (D-133): "Completar mi biblioteca" (propuestas, usar, los seguros,
 // deshacer, dejar como está, no encontrado).
+// Fase 6 (D-134): "Si te gustó…" (ideas del mismo autor y de los mismos
+// temas, "Ver las N", "✕", "＋ Quiero leer", guardado) y "¿Qué leo después?"
+// con lo que te gustó.
 // Uso: node scripts/e2e/libros-n3.js [carpeta-para-capturas]
 const fs = require("node:fs");
 const path = require("node:path");
@@ -512,6 +515,86 @@ async function fase5(browser, base, ancho) {
   await p.context().close();
 }
 
+// ---- Fase 6 (D-134): "Si te gustó…" ----
+const SEED6 = { [LIB]: {
+  c1: lb({ titulo: "Padre rico, padre pobre", autor: "Robert T. Kiyosaki", autorKey: "OL242220A", genero: "finanzas", temas: ["riqueza", "finanzas personales", "inversiones", "éxito"], olKey: "/works/OL2010879W", paginas: 207, estado: "terminado", calificacion: 5, fechaFin: "2026-11-01" }),
+  c2: lb({ titulo: "El alquimista", autor: "Paulo Coelho", autorKey: "OL66700A", genero: "novela", temas: ["viajes"], olKey: "/works/OL796465W", paginas: 192, estado: "terminado", calificacion: 4, fechaFin: "2026-10-01" }),
+  c3: lb({ titulo: "Brida", autor: "Paulo Coelho", olKey: "/works/OL796480W", estado: "por_leer" }),
+  c4: lb({ titulo: "Piense y hágase rico", autor: "Napoleon Hill", temas: ["riqueza", "éxito"], estado: "por_leer" }),
+  c5: lb({ titulo: "Un libro flojo", autor: "Ana Soto", temas: ["autoayuda"], estado: "terminado", calificacion: 2, fechaFin: "2026-11-10" })
+} };
+async function fase6(browser, base, ancho) {
+  console.log(`\nLibros nivel 3, fase 6: «Si te gustó…» (${ancho} px)`);
+  const p = await abrir(browser, base, { __SEED__: SEED6 }, { hash: "#inicio", zona: ZONA, fecha: HOY, ancho, alto: ancho > 800 ? 900 : 844 });
+  const json = (r, cuerpo) => r.fulfill({ contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: cuerpo });
+  const pedidos = [];
+  await p.context().route(/openlibrary\.org\/search\.json/, r => {
+    const q = (decodeURIComponent(r.request().url()).match(/[?&]q=([^&]*)/) || [])[1] || "";
+    pedidos.push(q);
+    json(r, /subject:"personal finance"/.test(q) ? FX("ideas-finanzas") : /author_key:OL242220A/.test(q) ? FX("libros-de-kiyosaki") : /author_key:OL66700A/.test(q) ? FX("libros-de-coelho") : JSON.stringify({ docs: [] }));
+  });
+  await p.context().route(/covers\.openlibrary\.org/, r => r.fulfill({ contentType: "image/png", body: PNG }));
+  await p.evaluate(() => { location.hash = "#libros"; });
+  for (let i = 0; i < 40 && !(await p.$(".lid")); i++) await p.waitForTimeout(150);
+  const items = () => p.$$eval("#lib-ideas .lid-item", els => els.map(e => ({ t: e.innerText.replace(/\s+/g, " ").trim(), k: (e.querySelector("[data-lid-quiero]") || {}).dataset.lidQuiero })));
+  const libros = () => p.evaluate(c => Array.from(window.__fakeStore.colMap(c).values()), LIB);
+
+  // "¿Qué leo después?" también mira lo que te gustó.
+  const sig = await txt(p, "#lib-siguiente");
+  ok(/Brida Es de Paulo Coelho, como «El alquimista», que te gustó\./.test(sig), "«¿Qué leo después?»: Brida, «Es de Paulo Coelho, como «El alquimista», que te gustó»");
+  ok(/Piense y hágase rico Trata de riqueza, como «Padre rico, padre pobre», que te gustó\./.test(sig), "y «Piense y hágase rico»: «Trata de riqueza, como «Padre rico, padre pobre»…»");
+
+  ok(/^Si te gustó… Ver las 12 ›/.test(await txt(p, "#lib-ideas")), "«Si te gustó…» debajo, con «Ver las 12»");
+  ok(pedidos.length === 3 && pedidos.some(q => /subject:"personal finance" language:spa/.test(q)) && pedidos.some(q => /author_key:OL242220A/.test(q)) && pedidos.some(q => /author_key:OL66700A/.test(q)),
+    `busca el tema de «Padre rico» y los autores de tus libros de 4 y 5 estrellas (${pedidos.length} pedidos; el de 2 estrellas no)`);
+  let xs = await items();
+  ok(xs.length === 2, "muestra 2 (las demás, en «Ver las 12»)");
+  ok(/^El hombre más rico de Babilonia George S\. Clason Como «Padre rico, padre pobre»: también trata de finanzas personales y riqueza/.test(xs[0].t), `de los mismos temas, con la razón (${xs[0].t.slice(0, 70)})`);
+  ok(/^Padre rico, padre pobre para jóvenes Robert T\. Kiyosaki Como «Padre rico, padre pobre»: también de Robert T\. Kiyosaki/.test(xs[1].t), "del mismo autor");
+  ok(await p.$eval("#lib-ideas .lid-tapa img", i => /covers\.openlibrary\.org/.test(i.src)).catch(() => false), "con su portada");
+  await captura(p, `libros-n3-ideas-${ancho}.png`);
+
+  await p.click('[data-lid="todas"]');
+  await p.waitForTimeout(300);
+  const todas = await p.$$eval(".lid-hoja .lid-item b", els => els.map(e => e.textContent));
+  const tercera = await txt(p, ".lid-hoja .lid-item:nth-child(3)");
+  ok(/^A Orillas Del Rio Piedra Me Sente Y Llore Paulo Coelho Como «El alquimista»: también de Paulo Coelho/.test(tercera), "y las de tu otro libro favorito, intercaladas");
+  ok(todas.length === 12 && !todas.some(t => /^(Brida|Piense y hágase rico|El alquimista|Papá rico, papá pobre)$/.test(t)), "«Ver las 12»: sin los que ya tienes (Brida, Piense y hágase rico ni el mismo «Padre rico»)");
+  ok(todas.includes("Peregrino") && !todas.some(t => /\//.test(t)), "títulos limpios («Peregrino / the Pilgrimage» → «Peregrino»)");
+  await p.click(".lid-hoja .budget-sheet-close");
+  await p.waitForTimeout(300);
+
+  // ✕: no me interesa.
+  await p.click(`#lib-ideas [data-lid-no="${xs[0].k}"]`);
+  await p.waitForTimeout(250);
+  xs = await items();
+  ok(!xs.some(x => /Babilonia/.test(x.t)) && /Ver las 11/.test(await txt(p, "#lib-ideas")), "«✕» la quita (quedan 11)");
+
+  // ＋ Quiero leer (desde «Ver las 11»): abre "Agregar libro" con todo puesto.
+  await p.click('[data-lid="todas"]');
+  await p.waitForTimeout(300);
+  const enHoja = await p.$$eval(".lid-hoja .lid-item", els => els.map(e => ({ t: e.innerText.replace(/\s+/g, " ").trim(), k: e.querySelector("[data-lid-quiero]").dataset.lidQuiero })));
+  const ciencia = enHoja.find(x => /^La ciencia de hacerse rico/.test(x.t));
+  ok(!!ciencia && enHoja.length === 11, "en «Ver las 11» está «La ciencia de hacerse rico»");
+  await p.click(`.lid-hoja [data-lid-quiero="${ciencia.k}"]`);
+  await p.waitForTimeout(700);
+  const campo = n => p.$eval(`.lib-hoja [name="${n}"]`, i => i.value).catch(() => "");
+  ok((await txt(p, ".lib-hoja h3")) === "Agregar libro" && (await campo("titulo")) === "La ciencia de hacerse rico" && (await campo("autor")) === "Wallace D. Wattles" && (await campo("estado")) === "por_leer", "«＋ Quiero leer» abre Agregar libro con todo lleno y en «Por leer»");
+  await p.click(".lib-hoja .lib-form-libro [type=submit]");
+  await p.waitForTimeout(500);
+  ok((await libros()).some(d => d.titulo === "La ciencia de hacerse rico" && d.estado === "por_leer" && d.autor === "Wallace D. Wattles"), "se agrega a tu lista");
+  if (await p.$eval(".lib-hoja", el => !el.hidden).catch(() => false)) { await p.click(".lib-hoja .budget-sheet-close"); await p.waitForTimeout(300); }
+  ok(!(await items()).some(x => /La ciencia de hacerse rico/.test(x.t)) && /Ver las 10/.test(await txt(p, "#lib-ideas")), "y ya no se ofrece (quedan 10)");
+
+  // Al volver: lo guardado, sin pedir nada (vale una semana).
+  await p.reload();
+  for (let i = 0; i < 30 && !(await p.$(".lid")); i++) await p.waitForTimeout(150);
+  ok(pedidos.length === 3 && /Ver las 10/.test(await txt(p, "#lib-ideas")) && !(await items()).some(x => /Babilonia/.test(x.t)), "al volver, lo guardado al instante, sin pedir nada (y lo que quitaste sigue fuera)");
+  ok((await sobra(p, "html")) <= 0, "nada se sale de ancho");
+  ok(!p.errores.length, `sin errores de página${p.errores.length ? `: ${p.errores[0]}` : ""}`);
+  await p.context().close();
+}
+
 (async () => {
   const srv = await servidor();
   const base = `http://localhost:${srv.address().port}`;
@@ -521,5 +604,6 @@ async function fase5(browser, base, ancho) {
   for (const ancho of [390, 320]) await fase3(browser, base, ancho);
   for (const ancho of [390, 320]) await fase4(browser, base, ancho);
   for (const ancho of [390, 320]) await fase5(browser, base, ancho);
+  for (const ancho of [390, 320]) await fase6(browser, base, ancho);
   await terminar(browser, srv);
 })();

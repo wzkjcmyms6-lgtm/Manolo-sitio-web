@@ -1917,3 +1917,31 @@ encontré no vuelve a aparecer (queda anotado en el teléfono), salvo que
 cambies el título o el autor; lo que no se pudo buscar (sin internet), sí.
 Lógica en `js/libros-completar.js`; pantalla en `js/libros-completar-ui.js`.
 
+**D-134 (2026-11-16) · Libros nivel 3, fase 6: "Si te gustó…".** En la
+pantalla de Libros, debajo de "¿Qué leo después?", **ideas de libros que no
+tienes**, a partir de tus **últimos 3 libros de 4 y 5 estrellas**: (1) del
+**mismo autor** (sus libros más leídos en Open Library) y (2) de los
+**mismos temas**: se busca en Open Library el tema más específico del libro
+(una lista de temas que dan buenos resultados, como "finanzas personales",
+"romper hábitos", "realismo mágico", "estoicismo"; los amplios como
+"éxito" o "viajes" no, porque traen clásicos que no tienen que ver), y de
+lo que vuelve quedan los de **otro autor**, con al menos 2 temas en común
+con el tuyo (o el único que tenga), novela con novela, sin infantiles, uno
+por autor, los más conocidos primero. Siempre con **edición en español**
+(los que dicen serlo pero tienen el título en inglés, no) y sin lo que ya
+tienes. Cada idea dice **por qué** ("Como «Padre rico, padre pobre»:
+también trata de finanzas personales y riqueza"). Se muestran 2 (intercalando
+tema y autor de cada libro, para no empujar tu lista hacia abajo) y "Ver
+las N" abre todas (hasta 12). **"＋
+Quiero leer"** abre "Agregar libro" con todo puesto (las páginas de tu
+edición incluidas, D-130); **"✕"** la quita para siempre. Se busca **solo
+con Libros a la vista** (no al abrir la app), de a una con pausas, y lo
+encontrado queda en el teléfono **una semana** (o hasta que cambien tus
+favoritos); sin internet se muestra lo guardado. Además, **"¿Qué leo
+después?"** sube los "Por leer" del mismo autor que uno que te gustó ("Es de
+Paulo Coelho, como «El alquimista», que te gustó") o de sus mismos temas.
+En las pruebas de pantalla, Open Library, Wikipedia y Google Libros no salen
+a internet: cada prueba simula lo que usa. Lógica en
+`js/libros-recomendar.js` (y los temas a buscar en `js/libros-fuentes.js`);
+pantalla en `js/libros-ideas-ui.js`.
+

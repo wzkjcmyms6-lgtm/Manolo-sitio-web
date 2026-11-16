@@ -1,5 +1,13 @@
 # Cambios
 
+## 2026-11-16 · Libros: "Si te gustó…"
+- En Libros, debajo de "¿Qué leo después?", **ideas de libros** a partir
+  de los que te gustaron (4 y 5 estrellas): del mismo autor y de los mismos
+  temas, en español, con el porqué.
+- **"＋ Quiero leer"** lo agrega con todo puesto; **"✕"** quita la idea.
+- "¿Qué leo después?" ahora también sube los libros del mismo autor o de
+  los mismos temas que uno que te gustó.
+
 ## 2026-11-16 · Libros: completar tu biblioteca
 - Arriba de tu lista, **"Completar mi biblioteca"**: revisa los libros que
   ya tenías y te propone lo que les falta (título en español, autor,

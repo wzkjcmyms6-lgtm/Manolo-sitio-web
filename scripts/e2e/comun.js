@@ -66,6 +66,10 @@ async function abrir(browser, base, estado, opciones) {
     ? r.fulfill({ contentType: "text/javascript", body: FAKE })
     : r.fulfill({ contentType: "text/javascript", body: "" }));
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+  // Las fuentes de datos de libros (Open Library, Wikipedia, Google Libros) no
+  // salen a internet en las pruebas: cada prueba simula las que usa (sus
+  // rutas se registran después y mandan). Las portadas no se tocan.
+  await ctx.route(/openlibrary\.org\/(search|works|books|authors|isbn)|es\.wikipedia\.org\/w\/api\.php|www\.googleapis\.com\/books/, r => r.abort());
   await ctx.addInitScript(e => {
     if (localStorage.getItem("__INIT__")) return;
     localStorage.setItem("__INIT__", "1");

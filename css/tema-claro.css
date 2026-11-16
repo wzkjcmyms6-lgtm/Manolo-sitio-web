@@ -2656,6 +2656,15 @@ html[data-modo="claro"] {
 :where(html[data-modo="claro"]) .lsig-razon {
   color: #1e7a43;
 }
+:where(html[data-modo="claro"]) .lid-tapa img {
+  box-shadow: 0 3px 8px rgba(60, 50, 30, 0.14);
+}
+:where(html[data-modo="claro"]) .lid-c > small.lid-razon {
+  color: #1e7a43;
+}
+:where(html[data-modo="claro"]) .lid-no {
+  color: var(--muted);
+}
 :where(html[data-modo="claro"]) .lsig-aviso {
   color: var(--accent-2);
 }

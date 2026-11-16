@@ -67,3 +67,20 @@ test("ritmo: tus páginas de los últimos 30 días o tu meta", () => {
   assert.equal(S.ritmoDiario([leido("a", {})], "2026-11-14", 30), 20);
   assert.equal(S.ritmoDiario([], HOY, 45), 45, "sin lectura anotada, la meta");
 });
+
+test("nivel 3 (D-134): del mismo autor o de los mismos temas que uno que te gustó", () => {
+  const lista = [
+    leido("gusto", { titulo: "El alquimista", autor: "Paulo Coelho", calificacion: 5, temas: ["viajes"] }),
+    leido("habitos", { titulo: "Hábitos atómicos", autor: "James Clear", calificacion: 4, temas: ["hábitos", "autoayuda"], fechaFin: "2026-11-10" }),
+    leido("meh", { titulo: "Otro de Clear", autor: "Ana Pérez", calificacion: 2, temas: ["finanzas personales"] }),
+    libro("brida", { titulo: "Brida", autor: "Paulo Coelho", paginas: 400 }),
+    libro("poder", { titulo: "El poder de los hábitos", autor: "Charles Duhigg", paginas: 400, temas: ["hábitos"] }),
+    libro("plata", { titulo: "Finanzas", autor: "X", paginas: 400, temas: ["finanzas personales"] }),
+    libro("nada", { titulo: "Nada", autor: "Y", paginas: 400 })
+  ];
+  const r = S.siguientes(lista, HOY, { metaDia: 30 });
+  assert.deepEqual(r.slice(0, 2).map(x => x.id), ["brida", "poder"]);
+  assert.equal(r[0].razones[0], "Es de Paulo Coelho, como «El alquimista», que te gustó.");
+  assert.ok(r[1].razones.includes("Trata de hábitos, como «Hábitos atómicos», que te gustó."));
+  assert.ok(!r.find(x => x.id === "plata").razones.some(t => /te gustó/.test(t)), "de un libro de 2 estrellas, no");
+});

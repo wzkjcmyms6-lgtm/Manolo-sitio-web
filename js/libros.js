@@ -53,6 +53,7 @@ app.innerHTML = `
   <div id="lib-leyendo"></div>
   <div id="lib-repaso"></div>
   <div id="lib-siguiente"></div>
+  <div id="lib-ideas"></div>
   <button type="button" class="lib-btn lib-btn-ancho" data-lib="nuevo">＋ Agregar libro</button>
   <div class="fin-tabs lib-tabs" role="tablist" aria-label="Libros">
     <button type="button" class="fin-tab active" role="tab" data-lib-vista="libros" aria-selected="true">Mis libros</button>
