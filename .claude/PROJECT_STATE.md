@@ -16,6 +16,8 @@ Actualizado: 2026-11-16 (Libros nivel 3 en curso, D-128).
   español, tus libros de él y sus libros más leídos con "＋ Quiero leer").
   Fase 4 hecha (D-132): **temas en español** (tocar uno filtra la lista) y
   **"De qué trata"** (Wikipedia, Open Library o Google Books, con fuente).
+  Fase 5 hecha (D-133): **"Completar mi biblioteca"** (propone lo que les
+  falta a tus libros, páginas incluidas, siempre con tu OK).
 
 - **Mejoras sin servidor (2026-11-15, terminado)**: fase 1 hecha (D-123):
   **Biblia en audio** en el lector, con las voces del iPhone (sin

@@ -2556,6 +2556,28 @@ html[data-modo="claro"] {
 :where(html[data-modo="claro"]) .lib-genero-fila small {
   color: var(--muted);
 }
+:where(html[data-modo="claro"]) .lib-completar-tarjeta {
+  color: var(--ink);
+  background: var(--surface);
+}
+:where(html[data-modo="claro"]) .lib-completar-tarjeta small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-cpl-fila {
+  background: var(--surface-raised);
+}
+:where(html[data-modo="claro"]) .lib-cpl-cab .lib-portada {
+  box-shadow: none;
+}
+:where(html[data-modo="claro"]) .lib-cpl-t small {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .lib-cpl-duda {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .lib-cpl-ok {
+  color: var(--estado-ok, #287751);
+}
 :where(html[data-modo="claro"]) .lib-aviso-dup {
   color: #995d00;
 }

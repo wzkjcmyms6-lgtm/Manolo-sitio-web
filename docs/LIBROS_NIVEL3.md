@@ -14,7 +14,7 @@ publicada, con pruebas y su lista para el iPhone.
 | 2 | Las páginas de tu edición: elegir la edición (editorial, año, tapa y páginas), la recomendada, el ISBN exacto y cuántas páginas por día para terminarlo | ✅ (D-130) |
 | 3 | Ficha del autor: foto, quién es (en español), tus libros de él y sus otros libros con "＋ Quiero leer" | ✅ (D-131) |
 | 4 | Género y temas en español, "De qué trata" y estadísticas por género | ✅ (D-132) |
-| 5 | Completar tu biblioteca: arreglar los libros que ya tienes (títulos en inglés, sin autor, páginas, género o portada), siempre con tu OK | |
+| 5 | Completar tu biblioteca: arreglar los libros que ya tienes (títulos en inglés, sin autor, páginas, género o portada), siempre con tu OK | ✅ (D-133) |
 | 6 | Recomendaciones: "Si te gustó…", del mismo autor y de los mismos temas; "¿Qué leo después?" más inteligente | |
 | 7 | Control final y lista para el iPhone | |
 
@@ -143,7 +143,13 @@ quedan fuera).
   inventa).
 - Estadísticas por género (libros y páginas) y filtro por tema.
 
-### Fase 5 — Completar tu biblioteca
+### Fase 5 — Completar tu biblioteca ✅ (D-133)
+Hecho en `js/libros-completar.js` y `js/libros-completar-ui.js`. Con las
+respuestas reales: "Atomic Habits" → "Hábitos atómicos" con género, temas
+y portada; "El alquimista" sin autor → Paulo Coelho y 192 páginas (6
+ediciones en español; la mediana de todas era 197); "El alquimista" de
+Lorenzo Silva → "El alquimista impaciente", con duda; con otro autor, nada.
+
 - Un asistente revisa tus libros guardados (escritos a mano o importados)
   y propone lo que falta o está en otro idioma: título en español, autor,
   páginas de tu edición, género y portada. Tocas "Usar" o "Dejar como

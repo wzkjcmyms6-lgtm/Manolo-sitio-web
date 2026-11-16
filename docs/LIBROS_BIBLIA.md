@@ -66,6 +66,8 @@ suma campos (lo comprueba `scripts/e2e/lectura-qa.js`, D-115).
 | `js/libros-motor.js` | UMD sin DOM: validar libros y frases, ordenar, buscar, resumen, color de la tapa genérica, exportar. Pruebas: `tests/libros-motor.test.js` |
 | `js/libros-fuentes.js` | UMD sin DOM (nivel 3): buscar en Open Library en español, el orden de los resultados, sin repetidos, el autor en nuestro alfabeto; las ediciones con sus páginas, agrupadas, y la recomendada. Pruebas: `tests/libros-fuentes.test.js` (respuestas reales en `tests/fixtures/libros/`) |
 | `js/libros-ediciones-ui.js` | "¿Cuántas páginas tiene tu libro?" (elegir la edición) en el formulario y "¿Para cuándo lo quieres terminar?" en la ficha |
+| `js/libros-completar.js` | "Completar mi biblioteca" sin pantalla: qué les falta a tus libros, con qué libro de Open Library se emparejan (seguro o con duda) y qué se les suma |
+| `js/libros-completar-ui.js` | La tarjeta arriba de tu lista y la hoja del asistente ("Usar", "Dejar como está", "Usar los N seguros", "Deshacer") |
 | `js/libros-trata-ui.js` | Temas (chips que filtran la lista) y "De qué trata" en la ficha del libro (Wikipedia, Open Library en español o Google Books), guardado en el teléfono |
 | `js/libros-autor-ui.js` | Ficha del autor (tocar el autor en la ficha de un libro): quién es, tus libros de él y sus libros más leídos con "＋ Quiero leer"; guardada en el teléfono 30 días |
 | `js/libros.js` | Pantalla de Libros. Registra su ícono (`ICONS.libro`) |

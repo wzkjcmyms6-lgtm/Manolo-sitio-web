@@ -12,6 +12,8 @@
 // teléfono y sin internet.
 // Fase 4 (D-132): temas en español (tocar uno filtra la lista), "De qué
 // trata" (Wikipedia; Google Books como extra), guardado, páginas por género.
+// Fase 5 (D-133): "Completar mi biblioteca" (propuestas, usar, los seguros,
+// deshacer, dejar como está, no encontrado).
 // Uso: node scripts/e2e/libros-n3.js [carpeta-para-capturas]
 const fs = require("node:fs");
 const path = require("node:path");
@@ -437,6 +439,79 @@ async function fase4(browser, base, ancho) {
   await p.context().close();
 }
 
+// ---- Fase 5 (D-133): completar tu biblioteca ----
+const SEED5 = { [LIB]: {
+  a1: lb({ titulo: "Atomic Habits", autor: "James Clear", paginas: 320, estado: "terminado", calificacion: 4, fechaFin: "2026-10-01" }),
+  a2: lb({ titulo: "El alquimista", autor: "", estado: "por_leer" }),
+  a3: lb({ titulo: "Mis apuntes de la abuela", autor: "Rosa Pérez", estado: "por_leer" }),
+  a4: lb({ titulo: "Cien años de soledad", autor: "Gabriel García Márquez", paginas: 471, genero: "novela", temas: ["realismo mágico"], portada: { tipo: "url", url: "https://covers.openlibrary.org/b/id/1-M.jpg", fuente: "openlibrary" }, anio: 1967, olKey: "/works/OL274505W", estado: "terminado", fechaFin: "2026-09-01" }),
+  a5: lb({ titulo: "Un libro sin señal", autor: "Ana Soto", paginas: 150, estado: "por_leer" })
+} };
+async function fase5(browser, base, ancho) {
+  console.log(`\nLibros nivel 3, fase 5: completar tu biblioteca (${ancho} px)`);
+  const p = await abrir(browser, base, { __SEED__: SEED5 }, { hash: "#libros", zona: ZONA, fecha: HOY, ancho, alto: ancho > 800 ? 900 : 844 });
+  const json = (r, cuerpo) => r.fulfill({ contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: cuerpo });
+  const busquedas = [], ediciones = [];
+  await p.context().route(/es\.wikipedia\.org|www\.googleapis\.com|openlibrary\.org\/(works|isbn|books|authors)/, r => json(r, JSON.stringify({})));
+  await p.context().route(/openlibrary\.org\/works\/OL\d+W\/editions\.json/, r => {
+    ediciones.push(r.request().url());
+    json(r, /OL796465W/.test(r.request().url()) ? FX("ediciones-alquimista") : JSON.stringify({ entries: [] }));
+  });
+  await p.context().route(/openlibrary\.org\/search\.json/, r => {
+    const q = (decodeURIComponent(r.request().url()).match(/[?&]q=([^&]*)/) || [])[1] || "";
+    busquedas.push(q);
+    if (/sin señal/i.test(q)) return r.abort();
+    json(r, /atomic habits/i.test(q) ? FX("buscar-habitos-atomicos") : /alquimista/i.test(q) ? FX("buscar-alquimista") : JSON.stringify({ docs: [] }));
+  });
+  await p.context().route(/covers\.openlibrary\.org/, r => r.fulfill({ contentType: "image/png", body: PNG }));
+  await p.waitForTimeout(800);
+  const hoja = sel => `.lib-completar-hoja ${sel}`;
+  const libro = id => p.evaluate(([c, i]) => window.__fakeStore.colMap(c).get(i), [LIB, id]);
+  const fila = async re => (await p.$$eval(hoja("[data-lib-cpl-fila]"), els => els.map(e => ({ i: e.dataset.libCplFila, t: e.innerText.replace(/\s+/g, " ").trim() }))))
+    .find(f => re.test(f.t)) || { i: "x", t: "" };
+  const progreso = () => txt(p, hoja("[data-lib-cpl-progreso]"));
+
+  ok(/Completar mi biblioteca 4 libros con datos por completar/.test(await txt(p, "#lib-completar")), "arriba de tu lista: «Completar mi biblioteca · 4 libros…» (el completo no cuenta)");
+  await p.click("[data-lib-completar]");
+  await p.waitForTimeout(200);
+  ok(/Nada cambia sin tu OK/.test(await txt(p, hoja(".lib-hoja-cuerpo"))) && /Revisando [12] de 4…/.test(await progreso()), "explica que nada cambia sin tu OK y va revisando de a uno");
+  for (let i = 0; i < 60 && !/Revisé 4 libros/.test(await progreso()); i++) await p.waitForTimeout(150);
+  ok(/Revisé 4 libros/.test(await progreso()), "revisa los 4");
+  ok(busquedas.includes("Atomic Habits clear") && busquedas.includes("El alquimista") && busquedas.includes("Mis apuntes de la abuela perez"), "busca por el título y el apellido del autor");
+  ok(ediciones.length === 1 && /OL796465W/.test(ediciones[0]), "las ediciones, solo del que no tiene páginas");
+  const f1 = await fila(/Atomic Habits/);
+  ok(/Encontré: Hábitos atómicos · James Clear/.test(f1.t) && /＋ Título en español: «Hábitos atómicos» \(el tuyo queda como original\)/.test(f1.t) && /＋ Género: Desarrollo personal/.test(f1.t) && /＋ Temas: hábitos/.test(f1.t) && /＋ Portada/.test(f1.t) && !/Páginas/.test(f1.t), "Atomic Habits: título en español, género, temas y portada (sus páginas no se tocan)");
+  const f2 = await fila(/El alquimista/);
+  ok(/＋ Autor: Paulo Coelho/.test(f2.t) && /＋ Páginas: 192 \(la edición en español más común\)/.test(f2.t), "El alquimista: su autor y las páginas de la edición en español más común (192)");
+  ok(/No encontré este libro/.test((await fila(/abuela/)).t), "lo que no está en Open Library lo dice");
+  ok(/No pude buscarlo/.test((await fila(/sin señal/)).t), "sin internet lo dice");
+  await captura(p, `libros-n3-completar-${ancho}.png`);
+  ok(/Usar los 2 seguros/.test(await txt(p, hoja("[data-lib-cpl-seguras]"))), "«Usar los 2 seguros»");
+  await p.click(hoja("[data-lib-cpl-seguras]"));
+  await p.waitForTimeout(400);
+  let a1 = await libro("a1");
+  const a2 = await libro("a2");
+  ok(a1.titulo === "Hábitos atómicos" && a1.tituloOriginal === "Atomic Habits" && a1.genero === "desarrollo" && a1.temas.includes("hábitos") && a1.portada && a1.portada.tipo === "url" && a1.autor === "James Clear", "Atomic Habits queda completo y en español");
+  ok(a2.autor === "Paulo Coelho" && a2.autorKey === "OL66700A" && a2.genero === "novela" && a2.paginas === 192, "El alquimista queda con su autor y sus páginas");
+  ok(a1.paginas === 320 && a1.calificacion === 4 && a1.estado === "terminado" && a1.fechaFin === "2026-10-01", "lo tuyo (páginas, estrellas, estado, fecha) no cambia");
+  const u1 = await fila(/Atomic Habits/);
+  ok(/✓ Listo: título en español, género, temas, portada/.test(u1.t) && /✓ Listo/.test((await fila(/El alquimista/)).t) && await p.$(hoja(`[data-lib-cpl-deshacer="${u1.i}"]`)) !== null, "cada uno dice «Listo» con «Deshacer»");
+  await p.click(hoja(`[data-lib-cpl-deshacer="${u1.i}"]`));
+  await p.waitForTimeout(400);
+  a1 = await libro("a1");
+  ok(a1.titulo === "Atomic Habits" && a1.tituloOriginal === null && a1.genero === null && a1.temas === null && a1.portada === null && a1.paginas === 320, "«Deshacer» lo deja como estaba");
+  ok(/Usar/.test((await fila(/Atomic Habits/)).t), "y vuelve a mostrar la propuesta");
+  await p.click(hoja(`[data-lib-cpl-dejar="${u1.i}"]`));
+  await p.waitForTimeout(300);
+  ok(/Quedó como está/.test((await fila(/Atomic Habits/)).t), "«Dejar como está»");
+  await p.click(".lib-completar-hoja .budget-sheet-close");
+  await p.waitForTimeout(400);
+  ok(/Completar mi biblioteca 1 libro con datos por completar/.test(await txt(p, "#lib-completar")), "después queda 1 (el sin internet): lo que dejaste o no encontré no vuelve");
+  ok((await sobra(p, "html")) <= 0, "nada se sale de ancho");
+  ok(!p.errores.length, `sin errores de página${p.errores.length ? `: ${p.errores[0]}` : ""}`);
+  await p.context().close();
+}
+
 (async () => {
   const srv = await servidor();
   const base = `http://localhost:${srv.address().port}`;
@@ -445,5 +520,6 @@ async function fase4(browser, base, ancho) {
   for (const ancho of [390, 320]) await fase2(browser, base, ancho);
   for (const ancho of [390, 320]) await fase3(browser, base, ancho);
   for (const ancho of [390, 320]) await fase4(browser, base, ancho);
+  for (const ancho of [390, 320]) await fase5(browser, base, ancho);
   await terminar(browser, srv);
 })();

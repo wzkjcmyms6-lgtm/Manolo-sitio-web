@@ -1,5 +1,12 @@
 # Cambios
 
+## 2026-11-16 · Libros: completar tu biblioteca
+- Arriba de tu lista, **"Completar mi biblioteca"**: revisa los libros que
+  ya tenías y te propone lo que les falta (título en español, autor,
+  género, temas, portada y páginas).
+- Tocas **"Usar"** o **"Dejar como está"** (o "Usar los seguros" de una
+  vez). Cada cambio tiene "Deshacer". Nada cambia sin tu OK.
+
 ## 2026-11-16 · Libros: temas y "De qué trata"
 - Cada libro trae sus **temas en español** (por ejemplo "finanzas
   personales", "hábitos"). Toca un tema y ves tus libros de ese tema.

@@ -12,7 +12,7 @@ libros tienen distintas páginas). Hazlo mucho mejor." Plan, auditoría con
 | 2 | Las páginas de tu edición (elegir edición, recomendada, ISBN exacto) y páginas por día | ✅ (D-130) |
 | 3 | Ficha del autor: quién es, tus libros de él y sus otros libros | ✅ (D-131) |
 | 4 | Género y temas en español, "De qué trata", estadísticas por género | ✅ (D-132) |
-| 5 | Completar tu biblioteca (con tu OK) | ⏳ |
+| 5 | Completar tu biblioteca (con tu OK) | ✅ (D-133) |
 | 6 | Recomendaciones: "Si te gustó…" | ⏳ |
 | 7 | Control final y lista para el iPhone | ⏳ |
 

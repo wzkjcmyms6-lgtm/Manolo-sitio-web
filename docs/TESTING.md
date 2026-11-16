@@ -1,6 +1,14 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (Libros nivel 3, fase 5, D-133): `npm test` → **727
+  pruebas**. Nuevo `libros-completar` (qué libros revisar, el título en
+  español con el tuyo como original, solo se suma lo que falta, con otro
+  autor o un resumen no, las páginas de la edición en español más común y
+  nunca la mediana de todos los idiomas). E2E `libros-n3` con la fase 5 (la
+  tarjeta con cuántos, revisa de a uno, propuestas, "Usar los 2 seguros",
+  lo tuyo no cambia, "Deshacer", "Dejar como está", no encontrado, sin
+  internet, lo que dejaste no vuelve; 390 y 320 px).
 - 2026-11-16 (Libros nivel 3, fase 4, D-132): `npm test` → **722
   pruebas**. Más en `libros-fuentes` (temas en español, "sport" no es
   "transport", "De qué trata" de Wikipedia sin la serie ni la película,
@@ -374,6 +382,13 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Libros: completar tu biblioteca (2026-11)**
+- [ ] Arriba de tu lista de libros, toca "Completar mi biblioteca".
+- [ ] Mira lo que propone para cada libro. Toca "Usar" en uno y "Dejar como
+  está" en otro.
+- [ ] Abre el libro que usaste: tiene lo nuevo, y tus páginas, estrellas y
+  fechas siguen igual. Si algo no te gustó, vuelve y toca "Deshacer".
 
 **Libros: temas y "De qué trata" (2026-11)**
 - [ ] Agrega un libro buscándolo: en su ficha salen sus temas en español.

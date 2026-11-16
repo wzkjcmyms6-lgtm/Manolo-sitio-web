@@ -5886,6 +5886,26 @@ input[type="date"].lib-input, input[type="time"].lib-input { -webkit-appearance:
 .lib-trata.is-corto { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
 .lib-trata-caja .lib-btn-chico { margin-top: 0.3rem; }
 .lib-genero-fila small { color: var(--muted); font-size: 0.75rem; }
+/* Nivel 3, fase 5 (D-133): completar mi biblioteca */
+.lib-completar-tarjeta { display: flex; align-items: center; gap: 0.7rem; width: 100%; margin: 0 0 0.8rem; padding: 0.75rem 0.9rem; min-height: 44px;
+  font: inherit; color: var(--ink); text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; cursor: pointer; }
+.lib-completar-tarjeta > span:nth-child(2) { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.lib-completar-tarjeta small { color: var(--muted); font-size: 0.8rem; }
+.lib-cpl-progreso { margin: 0.2rem 0 0.6rem; font-weight: 600; }
+.lib-cpl-filas { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.6rem; }
+.lib-cpl-fila { padding: 0.7rem; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 12px; }
+.lib-cpl-cab { display: flex; align-items: center; gap: 0.7rem; }
+.lib-cpl-cab .lib-portada { flex-shrink: 0; width: 38px; margin: 0; box-shadow: none; }
+.lib-cpl-cab .lib-tapa b { font-size: 0.4rem; }
+.lib-cpl-cab .lib-tapa small { display: none; }
+.lib-cpl-t { display: flex; flex-direction: column; min-width: 0; }
+.lib-cpl-t b { overflow-wrap: anywhere; }
+.lib-cpl-t small { color: var(--muted); font-size: 0.8rem; }
+.lib-cpl-de { margin: 0.55rem 0 0.2rem; font-size: 0.9rem; }
+.lib-cpl-duda { color: var(--accent-2); font-size: 0.8rem; }
+.lib-cpl-lista { margin: 0.2rem 0 0.5rem; padding-left: 0.2rem; list-style: none; font-size: 0.88rem; display: flex; flex-direction: column; gap: 0.15rem; }
+.lib-cpl-acciones { display: flex; justify-content: flex-end; gap: 0.5rem; flex-wrap: wrap; }
+.lib-cpl-ok { margin: 0.5rem 0 0.3rem; color: var(--estado-ok, #4cc38a); font-size: 0.9rem; }
 .lib-aviso-dup { color: #ffcf85; }
 .lib-aviso-dup[hidden] { display: none; }
 

@@ -1892,3 +1892,28 @@ teléfono (90 días; "no hay", 7). (3) Estadísticas: "Lo que más lees"
 también dice las páginas de cada género. Lógica en `js/libros-fuentes.js`;
 pantalla en `js/libros-trata-ui.js`.
 
+**D-133 (2026-11-16) · Libros nivel 3, fase 5: "Completar mi biblioteca".**
+Arriba de tu lista, si hay libros sin obra de Open Library o sin autor,
+género, temas, portada o páginas (los audiolibros no necesitan páginas),
+una tarjeta "Completar mi biblioteca · N libros con datos por completar"
+abre un asistente. Revisa tus libros **de a uno, con una pausa** (Open
+Library es gratis para todos), buscando el título y el apellido del autor.
+Empareja solo si es el mismo libro: **seguro** si el título es casi igual
+(el tuyo o el original) y el autor coincide; **con duda** si se parece
+(dice "revisa que sea el mismo"); con otro autor, o si es un resumen, no
+propone nada. De cada uno muestra lo que le sumaría: el **título en
+español** (solo si el tuyo es el original de una edición en español:
+"Atomic Habits" → "Hábitos atómicos", y el tuyo queda como título
+original), el autor (si no tenía), género, temas, portada, año y las
+**páginas** (a los que no tienen: las de la edición en español más común,
+como al agregar un libro, D-130; la mediana de todos los idiomas no, y
+nunca menos que la página en la que vas). También se guardan la clave de
+la obra y la del autor. Tocas **"Usar"** o **"Dejar como está"**; "Usar los
+N seguros" aplica los seguros de una vez; cada uno tiene **"Deshacer"**
+(vuelve cada campo a como estaba). **Nada cambia sin tu OK y solo se suma lo
+que falta**: tus páginas, estrellas, estado, fechas, tu género o tu portada
+no se tocan (`update` solo de esos campos). Lo que dejaste como está o no
+encontré no vuelve a aparecer (queda anotado en el teléfono), salvo que
+cambies el título o el autor; lo que no se pudo buscar (sin internet), sí.
+Lógica en `js/libros-completar.js`; pantalla en `js/libros-completar-ui.js`.
+

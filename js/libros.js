@@ -60,6 +60,7 @@ app.innerHTML = `
     <button type="button" class="fin-tab" role="tab" data-lib-vista="stats" aria-selected="false">Estadísticas</button>
   </div>
   <div id="lib-vista-libros">
+    <div id="lib-completar"></div>
     <div class="lib-filtros">
       <input type="search" id="lib-buscar" class="lib-input" placeholder="Buscar por título, autor o tema" autocomplete="off" aria-label="Buscar libros">
       <select id="lib-orden" class="lib-input" aria-label="Ordenar">${L.ORDENES.map(o => `<option value="${o.id}">${esc(o.nombre)}</option>`).join("")}</select>
@@ -212,6 +213,8 @@ function renderGeneros() {
 }
 
 function renderLista() {
+  // Nivel 3, fase 5 (D-133): "Completar mi biblioteca" si hay libros con datos por completar.
+  if ($("lib-completar")) $("lib-completar").innerHTML = window.LibrosCompletarUI && cargados >= 2 ? LibrosCompletarUI.tarjeta() : "";
   const el = $("lib-lista");
   if (cargados < 2) { el.innerHTML = ""; return; }
   if (!libros.length) { el.innerHTML = `<p class="empty-state">Todavía no agregaste libros. Toca «Agregar libro»; puedes cargar también los que leíste antes (la fecha se cambia).</p>`; return; }
@@ -1146,6 +1149,8 @@ window.LibrosDatos = {
   metaDia, metaAnio,
   tapa: l => tapa(l),
   ver: id => ver(id),
+  // Nivel 3 (D-133): el asistente suma lo que falta (solo esos campos).
+  actualizar: (id, cambios) => ref("libros").doc(id).update(cambios).catch(fallo("guardar")),
   // Nivel 3 (D-131): "＋ Quiero leer" desde la ficha del autor.
   agregarCon: x => { formLibro(null); setTimeout(() => elegirLibro(x), 0); },
   // Un gráfico de barras como los de Estadísticas (tocar una barra dice su valor).
