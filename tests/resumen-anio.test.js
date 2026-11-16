@@ -117,4 +117,34 @@ test("con el Wrapped de Hábitos y «Tu año en libros» (si están)", () => {
   assert.equal(A.equivalencia(700, "corriendo"), "Como ir corriendo de La Paz a Cochabamba y volver.");
   assert.equal(A.equivalencia(100, "corriendo"), "Equivale a 2,4 maratones.");
   assert.equal(A.equivalencia(900, "en bici"), "Como ir en bici de La Paz a Santa Cruz.");
+  // En bici, lugares más cerca y nunca maratones (fase 4).
+  assert.equal(A.equivalencia(52.5, "en bici"), "");
+  assert.equal(A.equivalencia(100, "en bici"), "Como ir en bici de La Paz a Coroico.");
+  assert.equal(A.equivalencia(160, "en bici"), "Como ir en bici de La Paz a Copacabana.");
+});
+
+// ---- Las diapositivas (fase 4, D-140) ----
+test("las diapositivas: solo lo que usaste, en orden, Finanzas solo para ti y el cierre", () => {
+  const y = A.anio(datos(), 2026);
+  const ds = A.diapositivas(y);
+  assert.deepEqual(ds.map(s => s.id), ["portada", "numeros", "habitos", "gimnasio", "running", "bici", "movilidad", "libros", "biblia", "finanzas", "manana", "lugares", "ritmo", "contra", "cierre"]);
+  const por = id => ds.find(s => s.id === id);
+  assert.deepEqual(por("portada").lineas, ["Lo que va del año, hasta el 16 de noviembre.", "Anotaste algo en 269 días."]);
+  assert.ok(por("portada").pista && por("cierre").cierre && por("habitos").habitos);
+  assert.deepEqual([por("running").grande, por("running").titulo], ["411,1", "km corriendo"]);
+  assert.ok(por("running").lineas.includes("Tus mejores marcas: 5K 24:10 · 10K 50:00."));
+  assert.equal(por("running").barras.length, 11, "una barra por mes, hasta noviembre");
+  assert.ok(por("gimnasio").lineas.includes("Tu ejercicio del año: Sentadilla, 80 veces."));
+  assert.equal(por("bici").lineas[por("bici").lineas.length - 1], "Como ir en bici de La Paz a Tiwanaku.");
+  assert.equal(por("numeros").numeros[0].etiqueta, "días con algo anotado");
+  const fin = por("finanzas");
+  assert.ok(fin.privado && fin.grande === "28 %" && !fin.lineas.concat(fin.titulo).some(t => /Bs|\d{3}\.\d{3}/.test(t)), "Finanzas: solo para ti y en porcentajes");
+  assert.deepEqual(por("contra").lista.map(x => x.texto), ["+211,1 km corriendo", "+1 libro"]);
+  assert.equal(por("cierre").titulo, "Y el año todavía no termina");
+  // Un año entero dice otra cosa; uno sin nada: portada y cierre.
+  assert.equal(A.diapositivas(A.anio(datos(), 2025)).find(s => s.id === "cierre").titulo, "Gracias por un año más");
+  const vacio = A.diapositivas(A.anio({ hoy: "2026-11-16" }, 2026));
+  assert.deepEqual(vacio.map(s => s.id), ["portada", "cierre"]);
+  assert.equal(vacio[1].titulo, "Este año todavía está en blanco");
+  assert.deepEqual(A.diapositivas(null), []);
 });

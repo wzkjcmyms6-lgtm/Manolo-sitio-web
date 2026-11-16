@@ -2041,3 +2041,26 @@ dinero). Si están, usa lo que ya calculan Hábitos (su "Manolo Wrapped") y
 Libros ("Tu año en libros"), así las cifras son las mismas que en esas
 pantallas.
 
+**D-140 (2026-11-16) · Resúmenes, fase 4: "Tu año en Manolo" en
+diapositivas.** (1) **El visor** (`js/resumen-anio-ui.js`): a pantalla
+completa, con los mismos estilos y gestos que el "Manolo Wrapped" de
+Hábitos (tocar a la derecha avanza, a la izquierda vuelve; flechas y Escape
+con teclado; el foco no se sale). Solo aparecen las diapositivas de lo que
+usaste ese año (portada, el año en números, Hábitos, Gimnasio, Running,
+Bici, Movilidad, Libros con la frase del año, Biblia, Finanzas, Mi mañana,
+Lugares, tu ritmo, contra el año anterior y el cierre). Si una no entra en
+un teléfono chico, se desliza (y tocarla sigue avanzando). En Hábitos,
+"Ver tu año en hábitos" abre el Wrapped completo de Hábitos. (2)
+**Compartir**: cada diapositiva tiene "Compartir" (imagen vertical 1080 ×
+1920, se ve como la diapositiva); el cierre tiene "Compartir tu año" (lo
+más destacado, tu libro y tu mejor mes) y "Verlo otra vez". **Nunca un
+monto de dinero**: Finanzas dice "Solo para ti", su imagen lleva solo
+porcentajes y no entra en la del año. (3) **Cuándo**: siempre en el menú ☰
+y al pie de Inicio ("Tu año"; si el año no terminó dice "hasta hoy"); del
+1 de diciembre al 31 de enero, además, una tarjeta en Inicio (en enero, la
+del año que terminó); "Ahora no" la cierra para ese año (en el teléfono,
+"manolo.anio.visto"). Los años anteriores con datos se eligen al final.
+Imágenes en `js/resumen-imagen.js` (`planDiapositiva`, `planAnio`). En
+Bici, la equivalencia es con lugares más cerca de La Paz (Tiwanaku, Coroico,
+Copacabana y después Oruro, Cochabamba, Santa Cruz), nunca maratones.
+

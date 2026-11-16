@@ -1,5 +1,15 @@
 # Cambios
 
+## 2026-11-16 · Tu año en Manolo
+- **"Tu año"** (menú ☰ o al pie de Inicio): tu año entero en diapositivas,
+  como una historia. Toca a la derecha para avanzar: el año en números,
+  tus hábitos, entrenos, kilómetros, libros (con la frase del año), la
+  Biblia, tus ahorros (solo para ti), tu mañana, tus lugares, tu mejor mes
+  y cómo te fue contra el año pasado.
+- **Compartir** cada diapositiva o, al final, **"Compartir tu año"**: una
+  imagen con lo mejor del año, sin montos de dinero.
+- En **diciembre y enero** aparece una tarjeta en Inicio para verlo.
+
 ## 2026-11-16 · Tu semana
 - Los **lunes y martes**, en Inicio: "Tu semana" con lo que hiciste la
   semana pasada. "Listo" la guarda hasta el lunes siguiente.

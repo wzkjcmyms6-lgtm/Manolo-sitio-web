@@ -1,6 +1,17 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (Resúmenes, fase 4, D-140): `npm test` → **748
+  pruebas**. En `resumen-imagen`: cada diapositiva del año se comparte como
+  se ve, todo dentro de la imagen y sin montos; la imagen final con lo
+  destacado, sin Finanzas ni dinero. Suite `resumenes` con la fase 4 (la
+  tarjeta en diciembre y enero y no en noviembre, todas las diapositivas
+  sin salirse a lo ancho y con el principio a la vista, compartir una y el
+  año, «Verlo otra vez», tocar para avanzar y volver, el Wrapped de
+  Hábitos, «Ahora no», el menú ☰ y el foco, sin datos; 390 × 844 y 320 ×
+  568). Revisión completa: 38 de 39; solo `lectura-qa` «Biblia con 1.500
+  versículos» (2,4 s en este entorno; ver la fase 3: también la versión
+  anterior tarda eso aquí).
 - 2026-11-16 (Resúmenes, fase 3, D-139): `npm test` → **745
   pruebas**. Nuevo `resumen-anio` (años con datos, el año en curso hasta
   hoy, cada sección con sus récords y su mejor mes, equivalencias, el año
@@ -432,6 +443,15 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Tu año en Manolo (2026-11)**
+- [ ] Menú ☰ › "Tu año": se abre a pantalla completa. Toca a la derecha
+  para avanzar y a la izquierda para volver.
+- [ ] Mira que cada diapositiva entre en la pantalla (si no, se desliza).
+- [ ] En Hábitos, "Ver tu año en hábitos" abre el Wrapped de Hábitos.
+- [ ] "Compartir" en una diapositiva y, al final, "Compartir tu año": las
+  imágenes no tienen montos de dinero.
+- [ ] En diciembre: la tarjeta "Tu año" en Inicio; "Ahora no" la cierra.
 
 **Tu semana (2026-11)**
 - [ ] El lunes, en Inicio: la tarjeta "Tu semana" con la semana pasada.

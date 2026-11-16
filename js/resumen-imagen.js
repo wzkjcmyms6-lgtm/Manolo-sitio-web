@@ -1,8 +1,9 @@
 // ---------- Resúmenes: imágenes para compartir (D-136) ----------
-// Una imagen vertical tipo historia (1080 × 1920) de "Tu semana" (y, en la
-// fase 4, de cada diapositiva de "Tu año"). `planSemana()` arma el dibujo
-// sin pantalla (tests/resumen-imagen.test.js); `dibujar()` lo pinta en un
-// canvas. Para compartir se usa el menú del teléfono (RunCompartir.compartir).
+// Una imagen vertical tipo historia (1080 × 1920) de "Tu semana" y de cada
+// diapositiva de "Tu año" (más la final, con lo mejor del año). `planSemana()`,
+// `planDiapositiva()` y `planAnio()` arman el dibujo sin pantalla
+// (tests/resumen-imagen.test.js); `dibujar()` lo pinta en un canvas. Para
+// compartir se usa el menú del teléfono (RunCompartir.compartir).
 // **Sin montos de dinero**: Finanzas y lo que habla de gastos no entra.
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
@@ -12,6 +13,7 @@
 
 const ANCHO = 1080, ALTO = 1920, MARGEN = 96;
 const COLOR = { tinta: "#f5f4f1", suave: "rgba(245,244,241,0.66)", acento1: "#ff7a30", acento2: "#ffb84d", bueno: "#7fe0a6", fondo1: "#1d1611", fondo2: "#0a0a0a" };
+const MESES_LARGOS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 // Lo que no se comparte: dinero.
 const ES_DINERO = t => /\bBs\b|gast|ingres|ahorr/i.test(String(t || ""));
 
@@ -81,6 +83,138 @@ function planSemana(s, medir) {
   return { ancho: ANCHO, alto: ALTO, textos, rayas };
 }
 
+// ---- "Tu año" (fase 4, D-140) ----
+// Un monto de dinero ("Bs 1.240"): nunca entra en una imagen. Los
+// porcentajes de Finanzas sí (es lo único que su diapositiva comparte).
+const ES_MONTO = t => /\bBs\b|\$\s?\d/i.test(String(t || ""));
+// El tamaño más grande (desde `tam`) con el que el texto entra en `ancho`.
+function ajustar(t, tam, peso, ancho, medir, minimo) {
+  let x = tam;
+  while (x > (minimo || 40) && medir(t, x, peso) > ancho) x -= 4;
+  return x;
+}
+
+// s: una diapositiva de ResumenAnio.diapositivas(); anio: el año. Se ve
+// como la diapositiva (lo que ves es lo que compartes), sin montos.
+function planDiapositiva(s, medir, anio) {
+  const m = medir || medirAprox;
+  const textos = [], rayas = [];
+  const util = ANCHO - 2 * MARGEN, tope = ALTO - 230;
+  let y = 210;
+  const poner = (t, tam, peso, color, extra) => { textos.push(Object.assign({ t, x: MARGEN, y, tam, peso, color }, extra || {})); };
+  poner(`MI ${anio || ""} EN MANOLO`.replace("  ", " "), 38, 800, COLOR.acento2, { espaciado: 6 });
+  y += 100;
+  if (s.eyebrow && String(s.eyebrow) !== String(anio)) { poner(s.eyebrow, 64, 800, COLOR.tinta); y += 40; }
+  rayas.push({ x: MARGEN, y, w: 160, h: 10, color: COLOR.acento1 });
+  y += 70;
+  if (s.grande) {
+    const tam = ajustar(s.grande, 230, 800, util, m, 96);
+    y += Math.round(tam * 0.78);
+    poner(s.grande, tam, 800, COLOR.acento1);
+    y += 84;
+    lineas(s.titulo, 54, 700, util, m).slice(0, 3).forEach(l => { poner(l, 54, 700, COLOR.tinta); y += 68; });
+  } else if (s.titulo) {
+    y += 70;
+    lineas(s.titulo, 76, 800, util, m).slice(0, 4).forEach(l => { poner(l, 76, 800, COLOR.tinta); y += 92; });
+  }
+  // El año en números: de a dos por fila.
+  if (s.numeros && s.numeros.length) {
+    y += 40;
+    const col = util / 2;
+    s.numeros.filter(n => !ES_MONTO(`${n.valor} ${n.etiqueta}`)).slice(0, 8).forEach((n, k) => {
+      const x = MARGEN + (k % 2) * col;
+      if (k % 2 === 0 && k) y += 210;
+      if (y > tope - 60) return;
+      const tam = ajustar(n.valor, 104, 800, col - 30, m, 56);
+      textos.push({ t: n.valor, x, y: y + 96, tam, peso: 800, color: COLOR.acento1 });
+      lineas(n.etiqueta, 34, 600, col - 30, m).slice(0, 2).forEach((l, i) => textos.push({ t: l, x, y: y + 150 + i * 42, tam: 34, peso: 600, color: COLOR.suave }));
+    });
+    y += 280;
+  }
+  // Las barras por mes.
+  if (s.barras && s.barras.some(b => b.valor > 0) && y < tope - 340) {
+    y += 40;
+    const alto = 230, n = s.barras.length, paso = util / n, w = Math.min(54, paso - 18);
+    s.barras.forEach((b, k) => {
+      const x = MARGEN + k * paso + (paso - w) / 2, h = b.valor > 0 ? Math.max(10, Math.round(b.valor * alto)) : 4;
+      rayas.push({ x, y: y + alto - h, w, h, color: b.valor > 0 ? COLOR.acento1 : "rgba(245,244,241,0.18)" });
+      textos.push({ t: b.etiqueta, x: x + w / 2, y: y + alto + 46, tam: 28, peso: 700, color: COLOR.suave, alinear: "center" });
+    });
+    y += alto + 110;
+  }
+  // Las líneas (sin montos).
+  (s.lineas || []).filter(l => !ES_MONTO(l)).forEach(l => {
+    if (y > tope) return;
+    lineas(l, 42, 500, util, m).slice(0, 3).forEach(t => { if (y <= tope) { poner(t, 42, 500, COLOR.tinta); y += 56; } });
+    y += 18;
+  });
+  // La frase del año.
+  if (s.frase && s.frase.texto && y < tope - 140) {
+    y += 30;
+    lineas(`«${s.frase.texto}»`, 46, 600, util, m).slice(0, 5).forEach(t => { if (y <= tope) { poner(t, 46, 600, COLOR.acento2); y += 60; } });
+    if (s.frase.de && y <= tope) { y += 6; poner(`— ${s.frase.de}`, 34, 600, COLOR.suave); y += 50; }
+  }
+  // Contra el año anterior.
+  if (s.lista && s.lista.length) {
+    y += 20;
+    s.lista.filter(x => !ES_MONTO(x.texto)).slice(0, 6).forEach(x => {
+      if (y > tope) return;
+      poner(`${x.signo > 0 ? "▲" : "▼"} ${x.texto}`, 50, 700, x.signo > 0 ? COLOR.bueno : COLOR.acento2);
+      y += 78;
+    });
+  }
+  textos.push({ t: "Manolo", x: ANCHO / 2, y: ALTO - 110, tam: 36, peso: 800, color: COLOR.suave, alinear: "center", espaciado: 2 });
+  return { ancho: ANCHO, alto: ALTO, textos, rayas };
+}
+
+// y: resultado de ResumenAnio.anio(). La imagen final con lo mejor del año:
+// sin Finanzas y sin dinero.
+function planAnio(y, medir) {
+  const m = medir || medirAprox;
+  const textos = [], rayas = [];
+  const util = ANCHO - 2 * MARGEN, tope = ALTO - 230;
+  let h = 210;
+  const poner = (t, tam, peso, color, extra) => { textos.push(Object.assign({ t, x: MARGEN, y: h, tam, peso, color }, extra || {})); };
+  poner("MI AÑO EN MANOLO", 40, 800, COLOR.acento2, { espaciado: 6 });
+  h += 200;
+  poner(String(y.anio), 200, 800, COLOR.acento1);
+  h += 76;
+  if (!y.completo && y.hasta) {
+    poner(`Hasta el ${Number(y.hasta.slice(8, 10))} de ${MESES_LARGOS[Number(y.hasta.slice(5, 7)) - 1]}`, 40, 600, COLOR.suave);
+    h += 56;
+  }
+  rayas.push({ x: MARGEN, y: h, w: 160, h: 10, color: COLOR.acento1 });
+  h += 150;
+  if (y.diasActivos) {
+    poner(String(y.diasActivos).replace(/\B(?=(\d{3})+(?!\d))/g, "."), 150, 800, COLOR.tinta);
+    h += 66;
+    poner(y.diasActivos === 1 ? "día con algo anotado" : "días con algo anotado", 44, 600, COLOR.suave);
+    h += 70;
+  }
+  const dest = (y.destacados || []).filter(x => !ES_DINERO(x.texto)).slice(0, 6);
+  if (dest.length) {
+    h += 50;
+    poner("LO MÁS DESTACADO", 34, 800, COLOR.acento2, { espaciado: 4 });
+    h += 76;
+    dest.forEach(x => {
+      if (h > tope) return;
+      lineas(`${x.icono} ${x.texto}`, 50, 700, util, m).slice(0, 2).forEach(t => { if (h <= tope) { poner(t, 50, 700, COLOR.tinta); h += 66; } });
+      h += 16;
+    });
+  }
+  const S = y.secciones || {};
+  const extra = [];
+  if (S.libros && S.libros.libroDelAnio) extra.push(`📚 Libro del año: «${S.libros.libroDelAnio.titulo}»`);
+  if (y.mejorMes) extra.push(`🗓️ Mi mejor mes: ${y.mejorMes.nombre}`);
+  extra.filter(t => !ES_DINERO(t)).forEach(t => {
+    if (h > tope - 60) return;
+    h += 10;
+    lineas(t, 40, 600, util, m).slice(0, 2).forEach(l => { if (h <= tope) { poner(l, 40, 600, COLOR.suave); h += 54; } });
+  });
+  textos.push({ t: "Manolo", x: ANCHO / 2, y: ALTO - 110, tam: 36, peso: 800, color: COLOR.suave, alinear: "center", espaciado: 2 });
+  return { ancho: ANCHO, alto: ALTO, textos, rayas };
+}
+
 function dibujar(canvas, p) {
   canvas.width = p.ancho;
   canvas.height = p.alto;
@@ -114,5 +248,5 @@ function medidor(canvas) {
   return (t, tam, peso) => { c.font = `${peso || 400} ${tam}px "DM Sans", system-ui, sans-serif`; return c.measureText(t).width; };
 }
 
-return { ANCHO, ALTO, ES_DINERO, lineas, medirAprox, planSemana, dibujar, medidor };
+return { ANCHO, ALTO, ES_DINERO, ES_MONTO, lineas, medirAprox, planSemana, planDiapositiva, planAnio, dibujar, medidor };
 });

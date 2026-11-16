@@ -183,7 +183,8 @@
   "js/resumen-anio.js",
   "js/resumen-fuentes.js",
   "js/resumen-imagen.js",
-  "js/resumen-semana-ui.js"
+  "js/resumen-semana-ui.js",
+  "js/resumen-anio-ui.js"
  ],
  "css": [
   "css/style.css",

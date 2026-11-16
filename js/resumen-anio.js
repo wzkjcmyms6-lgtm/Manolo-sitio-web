@@ -25,10 +25,13 @@ const en = (xs, desde, hasta) => (xs || []).filter(x => x && R.fechaOk(x.fecha) 
 
 // Equivalencias para que los km se sientan (distancias por carretera, aprox.).
 const LUGARES_KM = [[230, "de La Paz a Oruro"], [380, "de La Paz a Cochabamba"], [870, "de La Paz a Santa Cruz"]];
+// En bici, también lugares más cerca (las maratones son de correr).
+const LUGARES_BICI_KM = [[70, "de La Paz a Tiwanaku"], [95, "de La Paz a Coroico"], [150, "de La Paz a Copacabana"]];
 function equivalencia(km, verbo) {
-  const lugar = LUGARES_KM.filter(([k]) => km >= k).pop();
+  const bici = verbo === "en bici";
+  const lugar = (bici ? LUGARES_BICI_KM.concat(LUGARES_KM) : LUGARES_KM).filter(([k]) => km >= k).pop();
   if (lugar) return `Como ir ${verbo} ${lugar[1]}${km >= lugar[0] * 1.8 ? ` y volver${km >= lugar[0] * 3.6 ? " (más de una vez)" : ""}` : ""}.`;
-  if (km >= 42.195) return `Equivale a ${R.dec1(km / 42.195)} maratones.`;
+  if (!bici && km >= 42.195) return `Equivale a ${R.dec1(km / 42.195)} maratones.`;
   return "";
 }
 
@@ -253,5 +256,115 @@ function anio(d, anioN) {
   return out;
 }
 
-return { MARCAS, CAPITULOS_BIBLIA, aniosConDatos, anio, equivalencia, mejorMes };
+
+// ---- Las diapositivas (fase 4, D-140) ----
+// y: resultado de anio(). → [{ id, tema ("fuego" | "oscuro" | "oro"),
+// eyebrow, grande?, titulo?, lineas: [texto], barras?: [{ etiqueta, valor (0–1), texto }],
+// numeros?: [{ valor, etiqueta }], lista?: [{ texto, signo }], frase?: { texto, de },
+// privado? (Finanzas: no entra en la imagen del año), habitos? (botón al Wrapped de Hábitos) }]
+const INICIAL = ["E", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
+const estrellas = n => "★".repeat(Math.max(0, Math.round(num(n))));
+function fechaCorta(f) { return `${Number(f.slice(8, 10))} de ${R.MESES_LARGOS[Number(f.slice(5, 7)) - 1]}`; }
+function barrasDe(porMes, fmt) {
+  const max = Math.max(0, ...porMes.map(m => num(m.valor)));
+  return porMes.map(m => ({ etiqueta: INICIAL[m.mes - 1], valor: max > 0 ? num(m.valor) / max : 0, texto: `${R.MESES_LARGOS[m.mes - 1]}: ${fmt(m.valor)}` }));
+}
+function diapositivas(y) {
+  if (!y) return [];
+  const S = y.secciones, out = [];
+  const pon = d => out.push(Object.assign({ lineas: [] }, d));
+  pon({ id: "portada", tema: "fuego", eyebrow: "Manolo", titulo: `Tu ${y.anio} en Manolo`,
+    lineas: [y.completo ? "Un año entero, en un resumen." : `Lo que va del año, hasta el ${fechaCorta(y.hasta)}.`,
+      y.diasActivos ? `Anotaste algo en ${R.plural(y.diasActivos, "día", "días")}.` : "Todavía no anotaste nada este año."], pista: true });
+  if (!y.hayDatos) {
+    pon({ id: "cierre", tema: "oro", eyebrow: String(y.anio), titulo: "Este año todavía está en blanco", lineas: ["Anota un entreno, una lectura o un hábito y este resumen empezará a llenarse."], cierre: true });
+    return out;
+  }
+  if (y.numeros.length > 1) pon({ id: "numeros", tema: "oscuro", eyebrow: "Tu año en números", numeros: y.numeros.slice(0, 8) });
+  if (S.habitos) {
+    const h = S.habitos, l = [];
+    if (h.mejorMes) l.push(`Tu mejor mes fue ${h.mejorMes.nombre}, con el ${R.pct(h.mejorMes.pct)}.`);
+    if (h.estrella) l.push(`Tu hábito estrella: ${h.estrella.emoji ? `${h.estrella.emoji} ` : ""}${h.estrella.nombre} (${R.plural(h.estrella.veces, "vez", "veces")}).`);
+    if (h.racha && h.racha.n >= 3) l.push(`Tu mejor racha: ${R.plural(h.racha.n, h.racha.unidad === "semanas" ? "semana seguida" : "día seguido", h.racha.unidad === "semanas" ? "semanas seguidas" : "días seguidos")}${h.racha.nombre ? ` con ${h.racha.nombre}` : ""}.`);
+    if (h.perfectos) l.push(`${R.plural(h.perfectos, "día perfecto", "días perfectos")}, sin dejar nada pendiente.`);
+    pon({ id: "habitos", tema: "fuego", eyebrow: "Hábitos", grande: h.pct != null ? R.pct(h.pct) : R.miles(h.cumplidos), titulo: h.pct != null ? "de lo que te propusiste" : "hábitos cumplidos",
+      barras: barrasDe(h.porMes.map(m => ({ mes: m.mes, valor: m.pct || 0 })), v => R.pct(v)), lineas: l, habitos: true });
+  }
+  if (S.gimnasio) {
+    const g = S.gimnasio, l = [`${R.dec1(g.horas)} horas · ${R.plural(g.series, "serie", "series")}${g.volumen ? ` · ${R.miles(g.volumen)} kg movidos` : ""}.`];
+    if (g.records) l.push(`${R.plural(g.records, "récord nuevo", "récords nuevos")}.`);
+    if (g.ejercicioTop) l.push(`Tu ejercicio del año: ${g.ejercicioTop.nombre}, ${R.plural(g.ejercicioTop.veces, "vez", "veces")}.`);
+    if (g.mejorMes) l.push(`Tu mejor mes: ${g.mejorMes.nombre}, con ${R.plural(g.mejorMes.valor, "entreno", "entrenos")}.`);
+    pon({ id: "gimnasio", tema: "oscuro", eyebrow: "Gimnasio", grande: R.miles(g.n), titulo: g.n === 1 ? "entreno" : "entrenos", barras: barrasDe(g.porMes, v => R.plural(v, "entreno", "entrenos")), lineas: l });
+  }
+  [["running", "Running", "km corriendo", "carrera", "carreras", "fuego"], ["bici", "Bici", "km en bici", "rodada", "rodadas", "oro"]].forEach(([k, nombre, unidad, uno, varios, tema]) => {
+    const a = S[k];
+    if (!a) return;
+    const l = [`${R.plural(a.n, uno, varios)} · ${R.dec1(a.horas)} horas${a.desnivel >= 1 ? ` · ${R.miles(a.desnivel)} m de desnivel` : ""}.`];
+    if (a.larga) l.push(`La más larga: ${R.km(a.larga.km)}, el ${fechaCorta(a.larga.fecha)}.`);
+    if (a.marcas && a.marcas.length) l.push(`Tus mejores marcas: ${a.marcas.map(m => `${m.nombre} ${R.mmss(m.t)}`).join(" · ")}.`);
+    if (a.equivalencia) l.push(a.equivalencia);
+    pon({ id: k, tema, eyebrow: nombre, grande: R.dec1(a.km), titulo: unidad, barras: barrasDe(a.porMes, v => R.km(v)), lineas: l });
+  });
+  if (S.movilidad) {
+    const m = S.movilidad;
+    pon({ id: "movilidad", tema: "oscuro", eyebrow: "Movilidad", grande: R.miles(m.n), titulo: m.n === 1 ? "rutina de movilidad" : "rutinas de movilidad",
+      lineas: [`${R.duracion(m.min)} soltando el cuerpo.`].concat(m.mejorMes ? [`Tu mejor mes: ${m.mejorMes.nombre}.`] : []) });
+  }
+  if (S.libros) {
+    const b = S.libros, l = [];
+    if (b.paginas) l.push(`${R.plural(b.paginas, "página", "páginas")}${b.dias ? ` en ${R.plural(b.dias, "día", "días")} de lectura` : ""}.`);
+    if (b.libroDelAnio) l.push(`Tu libro del año: «${b.libroDelAnio.titulo}»${b.libroDelAnio.autor ? `, de ${b.libroDelAnio.autor}` : ""}${b.libroDelAnio.calificacion ? ` ${estrellas(b.libroDelAnio.calificacion)}` : ""}.`);
+    if (b.autorTop && b.autorTop.nombre) l.push(`Tu autor del año: ${b.autorTop.nombre} (${R.plural(b.autorTop.libros, "libro", "libros")}).`);
+    if (b.masLargo) l.push(`El más largo: «${b.masLargo.titulo}» (${R.plural(b.masLargo.paginas, "página", "páginas")}).`);
+    pon({ id: "libros", tema: "oro", eyebrow: "Libros", grande: R.miles(b.terminados), titulo: b.terminados === 1 ? "libro terminado" : "libros terminados", lineas: l,
+      frase: b.frase ? { texto: b.frase.texto, de: b.frase.libro || "" } : null });
+  }
+  if (S.biblia) {
+    const b = S.biblia, l = [];
+    if (b.unicos) l.push(`${R.plural(b.unicos, "capítulo distinto", "capítulos distintos")}: el ${b.pctBiblia >= 0.1 ? Math.round(b.pctBiblia * 100) : R.dec1(b.pctBiblia * 100)} % de la Biblia.`);
+    l.push(`${R.plural(b.dias, "día", "días")} con lectura${b.mejorRacha >= 3 ? `; tu mejor racha, ${R.plural(b.mejorRacha, "día seguido", "días seguidos")}` : ""}.`);
+    if (b.libroTop) l.push(`El libro que más leíste: ${b.libroTop.nombre} (${R.plural(b.libroTop.capitulos, "capítulo", "capítulos")}).`);
+    if (b.versiculos) l.push(`${R.plural(b.versiculos, "versículo guardado", "versículos guardados")}.`);
+    pon({ id: "biblia", tema: "oscuro", eyebrow: "Biblia", grande: R.miles(b.capitulos), titulo: b.capitulos === 1 ? "capítulo leído" : "capítulos leídos", lineas: l });
+  }
+  if (S.finanzas) {
+    const f = S.finanzas, l = [];
+    const ahorro = f.pctAhorro != null && f.pctAhorro > 0;
+    if (f.mejorMesAhorro) l.push(`El mes que más ahorraste: ${f.mejorMesAhorro.nombre}.`);
+    if (f.catTop) l.push(`En qué se fue más: ${f.catTop.nombre} (el ${R.pct(f.catTop.pct)} de tus gastos).`);
+    if (f.diasSinGasto) l.push(`${R.plural(f.diasSinGasto, "día sin gastar", "días sin gastar")}.`);
+    pon({ id: "finanzas", tema: "fuego", eyebrow: "Finanzas", privado: true,
+      grande: f.pctAhorro != null ? R.pct(Math.max(0, f.pctAhorro)) : null,
+      titulo: f.pctAhorro == null ? "Tus gastos del año" : ahorro ? "de lo que ganaste, lo ahorraste" : "Este año gastaste todo lo que ganaste",
+      lineas: l });
+  }
+  if (S.manana) {
+    const m = S.manana, l = [`${R.plural(m.n, "mañana medida", "mañanas medidas")}.`];
+    if (m.mejora && m.mejora.hasta < m.mejora.desde - 60) l.push(`Bajó de ${R.duracion(m.mejora.desde / 60)} en ${m.mejora.mesDesde} a ${R.duracion(m.mejora.hasta / 60)} en ${m.mejora.mesHasta}.`);
+    if (m.mejor) l.push(`La más rápida: ${R.duracion(m.mejor.seg / 60)}, el ${fechaCorta(m.mejor.fecha)}.`);
+    pon({ id: "manana", tema: "fuego", eyebrow: "Mi mañana", grande: R.duracion(m.promedio / 60), titulo: "de promedio", lineas: l });
+  }
+  if (S.lugares) {
+    const g = S.lugares, l = [`${R.plural(g.visitas, "visita", "visitas")} en el año.`];
+    if (g.mejor) l.push(`El mejor: ${g.mejor.nombre}${g.mejor.calificacion ? ` ${estrellas(g.mejor.calificacion)}` : ""}.`);
+    if (g.zonaTop) l.push(`Tu zona: ${g.zonaTop.nombre}.`);
+    pon({ id: "lugares", tema: "oro", eyebrow: "Lugares", grande: R.miles(g.nuevos), titulo: g.nuevos === 1 ? "lugar nuevo" : "lugares nuevos", lineas: l });
+  }
+  if (y.mejorMes || y.diaSemana) {
+    const l = [];
+    if (y.mejorMes) l.push(`Anotaste algo en ${R.plural(y.mejorMes.valor, "día", "días")} de ${y.mejorMes.nombre}.`);
+    if (y.diaSemana) l.push(`Los ${y.diaSemana.plural} fueron tu día más activo.`);
+    pon({ id: "ritmo", tema: "oscuro", eyebrow: "Tu ritmo", titulo: y.mejorMes ? `Tu mejor mes fue ${y.mejorMes.nombre}` : "Tu ritmo", lineas: l });
+  }
+  if (y.vsAnterior && y.vsAnterior.lista.length) {
+    pon({ id: "contra", tema: "fuego", eyebrow: `Contra ${y.vsAnterior.anio}`, titulo: y.completo ? "Así te fue contra el año pasado" : "Contra el año pasado, a esta altura",
+      lista: y.vsAnterior.lista.slice(0, 6) });
+  }
+  pon({ id: "cierre", tema: "oro", eyebrow: String(y.anio), titulo: y.completo ? "Gracias por un año más" : "Y el año todavía no termina",
+    lineas: [y.completo ? `Lo que repites se vuelve parte de ti. Nos vemos en ${y.anio + 1}.` : "Cada cosa que anotes suma a este resumen."], cierre: true });
+  return out;
+}
+
+return { MARCAS, CAPITULOS_BIBLIA, aniosConDatos, anio, equivalencia, mejorMes, diapositivas };
 });

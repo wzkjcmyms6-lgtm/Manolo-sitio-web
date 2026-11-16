@@ -3040,6 +3040,8 @@ window.Habitos = { evaluar: () => res, recalcular: actualizar, resumenHoy };
 // Para las pantallas en archivos aparte (categorías, Hoy por categoría…).
 window.HabitosApp = {
   estado: () => ({ docs, normal, res, juego, cargado: cargado && juegoCargado }),
+  // "Ver tu año en hábitos" desde "Tu año en Manolo" (D-140, js/resumen-anio-ui.js).
+  abrirWrapped: anio => abrirWrapped(anio),
   areasDef, categoriasActivas, guardarCategorias, activos, coleccion, metaJuego,
   abrirHoja, cerrarHoja, cabecera, hojaActual: () => hojaActual, toast, errorGuardar, actualizar,
   escapeHtml, plural, fmtNum, fechaCorta, pctTexto: v => pctTexto(v), enTiempo,

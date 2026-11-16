@@ -143,6 +143,12 @@ en `js/resumen-fuentes.js`, `datos({ anio })` con el Wrapped de Hábitos y
 "Tu año en libros"; las carreras traen sus mejores marcas y la Biblia los
 nombres de sus libros.
 
+### Hecho en la fase 4 (D-140)
+`js/resumen-anio-ui.js` (el visor, la tarjeta de Inicio de diciembre y
+enero, "Tu año" en el menú ☰ y al pie de Inicio), las imágenes de cada
+diapositiva y la del año en `js/resumen-imagen.js` y, en Hábitos,
+`HabitosApp.abrirWrapped(año)` para "Ver tu año en hábitos".
+
 ### Datos
 
 Ningún campo nuevo en Firestore para los resúmenes. En el teléfono:

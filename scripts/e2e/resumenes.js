@@ -6,6 +6,10 @@
 // compartir, «Listo», el menú; miércoles y sin datos).
 // Fase 3: el contenido de "Tu año" con los datos de la app (con el Wrapped
 // de Hábitos y "Tu año en libros").
+// Fase 4: "Tu año" en diapositivas (la tarjeta de diciembre y enero, todas
+// las diapositivas sin salirse, compartir cada una y el año, «Verlo otra
+// vez», tocar para avanzar, el Wrapped de Hábitos, «Ahora no», el menú ☰,
+// sin datos; 390 × 844 y 320 × 568).
 // Uso: node scripts/e2e/resumenes.js [carpeta-para-capturas]
 const fs = require("fs");
 const { chromium, servidor, abrir, ok, terminar } = require("./comun.js");
@@ -207,6 +211,124 @@ async function fase3(browser, base) {
   await p.context().close();
 }
 
+// ---- Fase 4: «Tu año» en diapositivas (D-140) ----
+async function recorrer(p) {
+  // De la primera a la última con la flecha del teclado; por cada una: su id,
+  // si tiene «Compartir», si algo se sale a lo ancho y si el principio se ve.
+  const vistas = [];
+  for (let k = 0; k < 30; k++) {
+    vistas.push(await p.evaluate(() => {
+      const el = document.querySelector(".anio-wrapped"), sl = el.querySelector(".hb-wr-slide");
+      const r = sl.getBoundingClientRect(), primero = sl.firstElementChild.getBoundingClientRect();
+      const ancho = [...sl.querySelectorAll("*")].some(x => x.getBoundingClientRect().right > innerWidth + 1);
+      return { id: el.dataset.diapo, cuenta: el.querySelector(".hb-wr-cuenta").textContent, compartir: !!sl.querySelector("[data-anio-compartir]"),
+        texto: sl.innerText.replace(/\s+/g, " ").trim(), ancho, arriba: primero.top >= r.top - 1, desliza: sl.scrollHeight > sl.clientHeight + 1 };
+    }));
+    const [a, b] = vistas[vistas.length - 1].cuenta.split(" de ").map(Number);
+    if (a === b) break;
+    await p.keyboard.press("ArrowRight");
+    await p.waitForTimeout(120);
+  }
+  return vistas;
+}
+async function fase4(browser, base, ancho, alto) {
+  console.log(`\nResúmenes, fase 4: «Tu año» en diapositivas (${ancho} × ${alto})`);
+  // Diciembre: la tarjeta en Inicio (del año que va, «hasta hoy»).
+  let p = await abrir(browser, base, semilla(), { hash: "#inicio", zona: ZONA, fecha: "2026-12-02T09:30:00-04:00", ancho, alto });
+  await p.waitForTimeout(2200);
+  ok(await p.isVisible("#anio-inicio") && /Tu 2026 en Manolo, hasta hoy/.test(await txt(p, "#anio-inicio")), `diciembre: la tarjeta «Tu año» en Inicio (${await txt(p, "#anio-inicio")})`);
+  await p.click("#anio-inicio [data-anio-abrir]");
+  await p.waitForTimeout(600);
+  ok(await p.isVisible(".anio-wrapped") && /Tu 2026 en Manolo/.test(await txt(p, ".anio-wrapped .hb-wr-slide")) && /Toca a la derecha/.test(await txt(p, ".anio-wrapped .hb-wr-slide")), "«Ver mi año» abre la portada a pantalla completa");
+  ok(await p.evaluate(() => document.activeElement && document.activeElement.matches(".anio-wrapped .hb-wr-cerrar")), "el foco queda en «Cerrar»");
+  if (CAPTURAS) await p.screenshot({ path: `${CAPTURAS}/anio-portada-${ancho}.png` });
+  const vs = await recorrer(p);
+  const ids = vs.map(v => v.id);
+  ok(ids[0] === "portada" && ids[ids.length - 1] === "cierre" && ["numeros", "habitos", "gimnasio", "running", "bici", "libros", "biblia", "finanzas", "lugares"].every(x => ids.includes(x)), `todas las diapositivas (${ids.join(", ")})`);
+  ok(vs.every(v => !v.ancho), `nada se sale a lo ancho${vs.filter(v => v.ancho).map(v => `: ${v.id}`).join("")}`);
+  ok(vs.every(v => v.arriba), `el principio de cada una se ve${vs.filter(v => !v.arriba).map(v => `: ${v.id}`).join("")}`);
+  ok(vs.filter(v => !["portada", "cierre"].includes(v.id)).every(v => v.compartir) && !vs.find(v => v.id === "portada").compartir, "«Compartir» en cada diapositiva (menos la portada y el cierre)");
+  const fin = vs.find(v => v.id === "finanzas");
+  ok(fin && /Solo para ti/.test(fin.texto) && !/Bs\s?\d/.test(fin.texto), "Finanzas: «Solo para ti» y sin montos");
+  ok(/km corriendo/.test(vs.find(v => v.id === "running").texto), "Running con sus km");
+  if (CAPTURAS) await p.screenshot({ path: `${CAPTURAS}/anio-cierre-${ancho}.png` });
+  // El cierre: «Compartir tu año» (la imagen) y «Verlo otra vez».
+  const [d1] = await Promise.all([p.waitForEvent("download", { timeout: 15000 }).catch(() => null), p.click("[data-anio-compartir-todo]")]);
+  ok(d1 && d1.suggestedFilename() === "mi-2026-en-manolo.png", `«Compartir tu año»: la imagen (${d1 && d1.suggestedFilename()})`);
+  if (CAPTURAS && d1) await d1.saveAs(`${CAPTURAS}/anio-imagen-${ancho}.png`);
+  await p.click("[data-anio-ir='0']");
+  await p.waitForTimeout(300);
+  ok((await p.$eval(".anio-wrapped", el => el.dataset.diapo)) === "portada", "«Verlo otra vez» vuelve a la portada");
+  // Tocar a la derecha avanza; a la izquierda, vuelve.
+  await p.mouse.click(ancho - 30, Math.round(alto / 2));
+  await p.waitForTimeout(250);
+  const tras = await p.$eval(".anio-wrapped", el => el.dataset.diapo);
+  await p.mouse.click(20, Math.round(alto / 2));
+  await p.waitForTimeout(250);
+  ok(tras === ids[1] && (await p.$eval(".anio-wrapped", el => el.dataset.diapo)) === "portada", `tocar a la derecha avanza (${tras}) y a la izquierda vuelve`);
+  // Compartir una diapositiva: la de Running.
+  for (let k = 0; k < ids.indexOf("running"); k++) await p.keyboard.press("ArrowRight");
+  await p.waitForTimeout(250);
+  const [d2] = await Promise.all([p.waitForEvent("download", { timeout: 15000 }).catch(() => null), p.click("[data-anio-compartir]")]);
+  ok(d2 && d2.suggestedFilename() === "mi-2026-running.png", `«Compartir» una diapositiva (${d2 && d2.suggestedFilename()})`);
+  if (CAPTURAS && d2) await d2.saveAs(`${CAPTURAS}/anio-running-${ancho}.png`);
+  // Hábitos: «Ver tu año en hábitos» abre el Wrapped de Hábitos.
+  for (let k = 0; k < 20 && (await p.$eval(".anio-wrapped", el => el.dataset.diapo)) !== "habitos"; k++) await p.keyboard.press("ArrowLeft");
+  await p.waitForTimeout(250);
+  await p.click("[data-anio-hab]");
+  await p.waitForTimeout(600);
+  ok(!(await p.$(".anio-wrapped")) && await p.isVisible(".hb-wrapped") && /hábitos/i.test(await p.$eval(".hb-wrapped", el => el.getAttribute("aria-label"))), "«Ver tu año en hábitos» abre el de Hábitos");
+  await p.keyboard.press("Escape");
+  await p.waitForTimeout(400);
+  ok(!(await p.$(".hb-wrapped")) && !(await p.evaluate(() => document.body.classList.contains("sheet-open"))), "Escape lo cierra y la página vuelve a moverse");
+  // «Ahora no»: la tarjeta no vuelve ese año.
+  await p.click("#anio-inicio [data-anio-listo]");
+  await p.waitForTimeout(300);
+  ok(!(await p.isVisible("#anio-inicio")), "«Ahora no» oculta la tarjeta");
+  await p.reload();
+  await p.waitForTimeout(2000);
+  ok(!(await p.isVisible("#anio-inicio")) && await p.$(".inicio-pie [data-anio-abrir]") !== null, "y sigue oculta al volver («Tu año» queda al pie de Inicio)");
+  // El menú ☰: abre «Tu año», el menú se cierra y al salir el foco vuelve al botón del menú.
+  if (ancho <= 768) {
+    await p.click("#menu-toggle");
+    await p.waitForTimeout(350);
+    await p.click("#nav-links [data-anio-abrir]");
+    await p.waitForTimeout(600);
+    ok(await p.isVisible(".anio-wrapped") && !(await p.$eval("#sidebar", el => el.classList.contains("open"))), "menú ☰ › «Tu año» lo abre y el menú se cierra");
+    await p.click(".anio-wrapped .hb-wr-cerrar");
+    await p.waitForTimeout(400);
+    ok(!(await p.$(".anio-wrapped")) && await p.evaluate(() => document.activeElement && document.activeElement.id === "menu-toggle"), "al cerrar, el foco vuelve al botón del menú");
+  }
+  ok(!p.errores.length, `sin errores de página${p.errores.length ? `: ${p.errores[0]}` : ""}`);
+  await p.context().close();
+
+  // Enero: la tarjeta es del año que terminó (sin «hasta hoy»); noviembre: sin tarjeta.
+  p = await abrir(browser, base, semilla(), { hash: "#inicio", zona: ZONA, fecha: "2027-01-10T09:30:00-04:00", ancho, alto });
+  await p.waitForTimeout(2200);
+  const ene = await txt(p, "#anio-inicio");
+  ok(await p.isVisible("#anio-inicio") && /Tu 2026 en Manolo/.test(ene) && !/hasta hoy/.test(ene), `enero: la tarjeta del año que terminó (${ene})`);
+  await p.click("#anio-inicio [data-anio-abrir]");
+  await p.waitForTimeout(600);
+  ok(/Un año entero/.test(await txt(p, ".anio-wrapped .hb-wr-slide")), "y la portada dice que es el año entero");
+  await p.context().close();
+  p = await abrir(browser, base, semilla(), { hash: "#inicio", zona: ZONA, fecha: FECHA, ancho, alto });
+  await p.waitForTimeout(2000);
+  ok(!(await p.isVisible("#anio-inicio")), "noviembre: sin tarjeta (está en el menú y al pie)");
+  await p.context().close();
+
+  // Sin datos: la portada y un cierre que invita a empezar.
+  p = await abrir(browser, base, { __SEED__: {} }, { hash: "#inicio", zona: ZONA, fecha: "2026-12-02T09:30:00-04:00", ancho, alto });
+  await p.waitForTimeout(1800);
+  ok(!(await p.isVisible("#anio-inicio")), "sin datos: sin tarjeta");
+  await p.click(".inicio-pie [data-anio-abrir]");
+  await p.waitForTimeout(500);
+  await p.keyboard.press("ArrowRight");
+  await p.waitForTimeout(250);
+  ok(/todavía está en blanco/.test(await txt(p, ".anio-wrapped .hb-wr-slide")) && (await txt(p, ".anio-wrapped .hb-wr-cuenta")) === "2 de 2", "y «Tu año» dice que todavía está en blanco");
+  ok(!p.errores.length, `sin errores de página${p.errores.length ? `: ${p.errores[0]}` : ""}`);
+  await p.context().close();
+}
+
 (async () => {
   const srv = await servidor();
   const base = `http://localhost:${srv.address().port}`;
@@ -214,5 +336,6 @@ async function fase3(browser, base) {
   await fase1(browser, base);
   for (const ancho of [390, 320]) await fase2(browser, base, ancho);
   await fase3(browser, base);
+  for (const [ancho, alto] of [[390, 844], [320, 568]]) await fase4(browser, base, ancho, alto);
   await terminar(browser, srv);
 })();

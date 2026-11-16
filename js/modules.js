@@ -225,6 +225,8 @@ function renderNav() {
       MODULES.map(m => linkHTML(m, "nav-icon", current)).join("") +
       // Tu semana (D-136, js/resumen-semana-ui.js).
       `<a href="#semana" class="nav-extra-btn" data-nav-link data-hash="semana"><span class="nav-icon" data-icon="calendar"></span>Tu semana</a>` +
+      // Tu año (D-140, js/resumen-anio-ui.js): diapositivas a pantalla completa.
+      `<button type="button" class="nav-extra-btn" data-anio-abrir><span class="nav-icon" data-icon="sparkle"></span>Tu año</button>` +
       // Copia de seguridad de todo (D-118, js/respaldo.js): solo en el menú del teléfono.
       `<button type="button" class="nav-extra-btn" data-respaldo-abrir><span class="nav-icon" data-icon="respaldo"></span>Copia de seguridad</button>` +
       // Apariencia: claro, oscuro o como el iPhone (D-126, js/tema-ui.js).

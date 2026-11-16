@@ -8385,7 +8385,7 @@ body.rd-mapa-abierto .rd-ampliar { top: max(12px, env(safe-area-inset-top)); bot
 
 /* ---- css/resumenes.css ---- */
 /* ---------- Tu semana y Tu año (D-136) ----------
-   Pantallas de js/resumen-semana-ui.js (y, más adelante, js/resumen-anio-ui.js).
+   Pantallas de js/resumen-semana-ui.js y js/resumen-anio-ui.js.
    Solo usa las variables de :root (css/style.css); el modo claro se genera
    con npm run tema. */
 
@@ -8451,6 +8451,54 @@ body.rd-mapa-abierto .rd-ampliar { top: max(12px, env(safe-area-inset-top)); bot
 .sem-sug p { margin: 0 0 0.6rem; font-weight: 600; line-height: 1.4; }
 .sem-compartir { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; }
 .sem-nota { margin-top: 0.4rem; text-align: center; }
+
+/* ---------- Tu año (D-140) ----------
+   El visor usa los estilos del "Manolo Wrapped" de Hábitos (.hb-wrapped,
+   .hb-wr-*, en css/habitos.css); aquí solo lo propio. */
+.anio-ini-sub { margin: -0.4rem 0 0.8rem; color: var(--muted); font-size: 0.9rem; line-height: 1.4; }
+.inicio-pie .anio-pie { color: var(--accent-2); }
+/* Si una diapositiva no entra (teléfono chico), se desliza; tocarla sigue
+   avanzando (js/resumen-anio-ui.js). Los márgenes automáticos la centran
+   cuando sí entra, sin cortar el principio cuando no. */
+.anio-wrapped .hb-wr-slide {
+  pointer-events: auto; justify-content: flex-start; overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: none; cursor: pointer;
+}
+.anio-wrapped .hb-wr-slide::-webkit-scrollbar { display: none; }
+.anio-wrapped .hb-wr-slide > :first-child { margin-top: auto !important; }
+.anio-wrapped .hb-wr-slide > :last-child { margin-bottom: auto !important; }
+.anio-wrapped .hb-wr-p { overflow-wrap: anywhere; }
+/* En las diapositivas oscuras, el Wrapped de Hábitos pinta los botones con
+   el color del fondo (para el botón lleno); el de contorno va con la tinta. */
+.anio-wrapped[data-tema="oscuro"] .hb-wr-btn.is-sec { color: var(--wr-tinta); }
+.anio-numeros { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 1.2rem; margin-top: 0.4rem !important; }
+.anio-numeros div { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+.anio-numeros b {
+  font-family: var(--font-display); font-size: clamp(1.7rem, 9vw, 2.4rem); font-weight: 600; line-height: 1;
+  letter-spacing: -0.01em; overflow-wrap: anywhere;
+}
+.anio-numeros span { color: var(--wr-suave); font-size: 0.88rem; line-height: 1.3; }
+.anio-frase { margin-top: 0.3rem !important; padding: 0.15rem 0 0.15rem 0.9rem; border-left: 3px solid currentColor; }
+.anio-frase p { margin: 0; font-size: 1.1rem; font-style: italic; line-height: 1.45; }
+.anio-frase cite { display: block; margin-top: 0.35rem; color: var(--wr-suave); font-size: 0.85rem; font-style: normal; }
+.anio-lista { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.3rem !important; padding: 0; }
+.anio-lista li { display: flex; align-items: baseline; gap: 0.5rem; font-size: 1.2rem; font-weight: 700; line-height: 1.3; }
+.anio-lista li span { flex-shrink: 0; font-size: 0.85rem; }
+.anio-lista li.is-mal { color: var(--wr-suave); }
+.anio-privado { color: var(--wr-suave); font-size: 0.82rem; line-height: 1.4; }
+.anio-compartir { display: inline-flex; align-items: center; gap: 0.45rem; }
+.anio-compartir [data-icon] { display: inline-flex; width: 18px; height: 18px; }
+.anio-otros { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.9rem !important; }
+.anio-otros span { width: 100%; color: var(--wr-suave); font-size: 0.85rem; }
+.anio-otros .hb-wr-btn { min-height: 44px; padding: 0 1.1rem; }
+/* Pantallas bajitas (iPhone SE): todo un poco más chico para que entre. */
+@media (max-height: 700px) {
+  .anio-wrapped .hb-wr-grande { font-size: clamp(3.4rem, 19vw, 5.2rem); }
+  .anio-wrapped .hb-wr-t { font-size: 1.6rem; }
+  .anio-wrapped .hb-wr-p { font-size: 0.98rem; }
+  .anio-wrapped .hb-wr-mes-col { height: 52px; }
+  .anio-wrapped .hb-wr-acciones { margin-top: 0.9rem !important; }
+}
 
 /* ---- css/viewport.css ---- */
 /* ---------- iPhone: lo fijo vuelve a su lugar (D-120) ----------

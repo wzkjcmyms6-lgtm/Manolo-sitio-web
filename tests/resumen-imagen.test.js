@@ -49,3 +49,79 @@ test("cortar líneas y reconocer el dinero", () => {
   const largo = I.planSemana(Object.assign({}, SEMANA, { titular: "palabra ".repeat(200) }));
   assert.ok(largo.textos.filter(t => /^palabra/.test(t.t)).length <= 4);
 });
+
+// ---- "Tu año" (fase 4, D-140): cada diapositiva y la imagen final ----
+const A = require("../js/resumen-anio.js");
+const pad = n => String(n).padStart(2, "0");
+function anioEjemplo() {
+  const d = {
+    hoy: "2026-11-16", running: [], bici: [], gimnasio: [], movilidad: [],
+    habitos: { dias: {}, perfectos: [], lista: [] }, libros: { dias: {}, terminados: [] },
+    biblia: { caps: [], vers: [], nombres: {} }, finanzas: { movs: [], cats: { casa: "Casa" } }, manana: [], lugares: []
+  };
+  for (let m = 1; m <= 10; m++) {
+    const f = `2026-${pad(m)}-05`;
+    d.running.push({ id: `r${m}`, fecha: f, km: 12.5, min: 70, desnivel: 80, mejores: { "5000": 1400 }, records: [] });
+    d.gimnasio.push({ fecha: f, nombre: "Pierna", min: 50, series: 20, volumen: 5000, records: 1, ejercicios: ["Sentadilla"] });
+    d.finanzas.movs.push({ fecha: f, tipo: "ingreso", cent: 900000, cat: "sueldo" }, { fecha: R2(f), tipo: "gasto", cent: 412345, cat: "casa" });
+  }
+  d.running.push({ id: "v1", fecha: "2025-03-03", km: 40, min: 220, desnivel: 10, records: [] });
+  d.libros.terminados.push({ titulo: "Cien años de soledad", autor: "Gabriel García Márquez", fecha: "2026-06-01", calificacion: 5, paginas: 471 });
+  d.extras = { libros: { terminados: 1, paginas: 471, diasLeidos: 30,
+    fraseFav: { texto: "La vida no es la que uno vivió, sino la que uno recuerda y cómo la recuerda para contarla.", libro: "Vivir para contarla" } } };
+  return A.anio(d, 2026);
+}
+function R2(f) { return f.slice(0, 8) + "20"; }
+function dentro(p) {
+  p.textos.forEach(t => {
+    const w = I.medirAprox(t.t, t.tam);
+    const izq = t.alinear === "center" ? t.x - w / 2 : t.x;
+    assert.ok(izq >= 0 && izq + w <= p.ancho + 1 && t.y > 0 && t.y < p.alto - 60, `dentro: ${t.t}`);
+  });
+  (p.rayas || []).forEach(r => assert.ok(r.x >= 0 && r.x + r.w <= p.ancho && r.y >= 0 && r.y + r.h <= p.alto, "raya dentro"));
+}
+
+test("cada diapositiva del año se comparte como se ve, todo dentro y sin montos", () => {
+  const y = anioEjemplo();
+  const ds = A.diapositivas(y);
+  assert.ok(ds.length >= 8);
+  ds.forEach(s => {
+    const p = I.planDiapositiva(s, null, 2026);
+    dentro(p);
+    const todo = p.textos.map(t => t.t).join(" | ");
+    assert.ok(todo.startsWith("MI 2026 EN MANOLO") && /Manolo$/.test(todo), s.id);
+    assert.ok(!/\bBs\b/.test(todo), `sin montos: ${s.id}`);
+  });
+  const run = I.planDiapositiva(ds.find(s => s.id === "running"), null, 2026);
+  const tRun = run.textos.map(t => t.t);
+  assert.ok(tRun.includes("Running") && tRun.includes("125") && tRun.includes("km corriendo"), tRun.join(" | "));
+  assert.equal(run.rayas.length, 12, "la raya y una barra por mes hasta noviembre (el año va)");
+  assert.ok(run.textos.some(t => /La más larga: 12,5 km/.test(t.t)));
+  // Libros: la frase del año entra entera (en varias líneas) con su libro.
+  const lib = I.planDiapositiva(ds.find(s => s.id === "libros"), null, 2026).textos.map(t => t.t).join(" ");
+  assert.ok(/«La vida no es/.test(lib) && /contarla\.»/.test(lib) && /— Vivir para contarla/.test(lib), lib);
+  // Finanzas: solo el porcentaje (es lo que la diapositiva comparte).
+  const fin = I.planDiapositiva(ds.find(s => s.id === "finanzas"), null, 2026).textos.map(t => t.t);
+  assert.ok(fin.includes("54 %") && !fin.some(t => /\d{3}\.\d{3}|Bs/.test(t)), fin.join(" | "));
+  // Contra el año anterior: con su flecha.
+  const vs = I.planDiapositiva(ds.find(s => s.id === "contra"), null, 2026).textos.map(t => t.t);
+  assert.ok(vs.includes("▲ +85 km corriendo"), vs.join(" | "));
+  // El año en números: de a dos, sin salirse.
+  const nums = I.planDiapositiva(ds.find(s => s.id === "numeros"), null, 2026);
+  assert.ok(nums.textos.some(t => t.t === "días con algo anotado"));
+});
+
+test("la imagen final del año: lo destacado, sin Finanzas ni dinero", () => {
+  const y = anioEjemplo();
+  const p = I.planAnio(y);
+  dentro(p);
+  const todo = p.textos.map(t => t.t).join(" | ");
+  assert.ok(/^MI AÑO EN MANOLO \| 2026 \| Hasta el 16 de noviembre/.test(todo), todo);
+  assert.ok(/🏃 125 km corriendo/.test(todo) && /🏋️ 10 entrenos/.test(todo) && /📚 1 libro/.test(todo), todo);
+  assert.ok(/Libro del año: «Cien años de soledad»/.test(todo), todo);
+  assert.ok(!/Bs|ahorr|gast|ingres|Finanzas/i.test(todo), "sin dinero");
+  // Un año que terminó no dice "hasta".
+  const viejo = I.planAnio(Object.assign({}, y, { completo: true }));
+  assert.ok(!viejo.textos.some(t => /^Hasta el/.test(t.t)));
+  assert.ok(I.ES_MONTO("Bs 1.240") && !I.ES_MONTO("54 % de lo que ganaste"));
+});
