@@ -2081,3 +2081,20 @@ dice los km de la semana y la última rodada. El resumen semanal de siempre
 pasa a Progreso y anotar a mano, al "+". Cálculos en `js/bici-analisis.js`
 (sin pantalla, con pruebas).
 
+**D-142 (2026-11-16) · Bici, fase 6: Progreso.** `js/bici-progreso.js`,
+como Running › Progreso: arriba la semana, el mes, el año o todo (km,
+tiempo, rodadas, desnivel y velocidad media) contra el período anterior;
+el resumen semanal de siempre; racha de semanas y metas con anillos; el
+diario; **tus récords** (la más larga, la de más desnivel, la más rápida de
+20 km o más, la velocidad máxima y los mejores tiempos de 5 a 160 km con el
+top 3 y cómo fue mejorando); el **número de Eddington** (el E más grande con
+E días de al menos E km, y cuántos días faltan para el siguiente); forma y
+fatiga (con tus rodadas) y el **mapa de calor** de tus rodadas
+(`#bici-calor`, `js/run-calor.js` sirve a los dos). Los récords por
+distancia de las rodadas importadas antes se calculan **una sola vez** con
+su ruta (`rutas/{id}`) mientras Bici está a la vista, de a una, y se guardan
+en la rodada (`mejoresBici`, `{}` si no alcanza): después no se vuelve a
+leer nada. **Ajustes de Bici** (engranaje de arriba, `js/bici-ajustes.js`):
+metas de km por semana, mes y año en `meta/bici_ajustes` (aparte de las de
+Running).
+

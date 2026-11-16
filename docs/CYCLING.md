@@ -71,6 +71,12 @@ inteligente, Inicio) y `js/bici-feed.js` (Actividades, "+", Inicio); en
 `js/run-detalle.js`, lo de bici contra tus rodadas; barra propia en
 `js/modules.js`; estilos en `css/bici.css`.
 
+### Hecho en la fase 6 (D-142)
+`js/bici-progreso.js` (Progreso y completar los récords con las rutas),
+`js/bici-ajustes.js` (metas); en `js/bici-analisis.js`, `evolucion`,
+`mejoresDeRuta` y `sinRecords`; en `js/run-datos.js`, `ajustesBici()`
+(`meta/bici_ajustes`); `js/run-calor.js` con el mapa de calor de Bici.
+
 ### Datos (solo se suman campos)
 - `users/{uid}/bicicleta/{id}`: `mejoresBici` ({ "5000": segundos, … }),
   `biciId` (la bici con la que saliste). Las rodadas a mano siguen igual.

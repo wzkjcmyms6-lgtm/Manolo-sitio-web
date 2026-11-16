@@ -18,7 +18,7 @@
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
   <!-- Todos los estilos de la app en un archivo (D-127): js/paquete.json › npm run listo -->
-  <link rel="stylesheet" href="css/app.paquete.css?v=c4a3f6c23b92">
+  <link rel="stylesheet" href="css/app.paquete.css?v=21c7ceac3762">
   <!-- Modo claro (D-126): generado con "npm run tema"; js/tema.js lo apaga en
        el modo oscuro y elige el modo antes de pintar (sin "defer": es chico) -->
   <link rel="stylesheet" href="css/tema-claro.css?v=202611171200" id="tema-claro-css">
@@ -65,6 +65,7 @@
       <a href="#fin-ajustes" class="topbar-ajustes" data-engranaje="finanzas" aria-label="Ajustes de Finanzas"><span data-icon="gear"></span></a>
       <a href="#inv-ajustes" class="topbar-ajustes" data-engranaje="inversiones" aria-label="Ajustes de Inversiones"><span data-icon="gear"></span></a>
       <a href="#run-ajustes" class="topbar-ajustes" data-engranaje="running" aria-label="Ajustes de Running"><span data-icon="gear"></span></a>
+      <a href="#bici-ajustes" class="topbar-ajustes" data-engranaje="bicicleta" aria-label="Ajustes de Bici"><span data-icon="gear"></span></a>
       <button class="menu-toggle" id="menu-toggle" data-icon="menu" aria-expanded="false" aria-label="Abrir menú"></button>
     </div>
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
@@ -606,8 +607,21 @@
 
           <section id="panel-bici-progreso" hidden>
             <h1 class="page-title">Progreso</h1>
+            <div id="bp-arriba" class="rp-app"></div>
             <section class="dash" id="cycling-dash" aria-label="Resumen semanal"></section>
             <div id="bp-app" class="rp-app"></div>
+          </section>
+
+          <section id="panel-bici-ajustes" hidden>
+            <a class="back-link" href="#bici-progreso"><span class="icon-sm" data-icon="chevronLeft"></span>Progreso</a>
+            <h1 class="page-title">Ajustes de Bici</h1>
+            <div id="ba-app" class="ra-app"></div>
+          </section>
+
+          <section id="panel-bici-calor" hidden>
+            <a class="back-link" href="#bici-progreso"><span class="icon-sm" data-icon="chevronLeft"></span>Progreso</a>
+            <h1 class="page-title">Mapa de calor</h1>
+            <div id="bc-app" class="rc-app"></div>
           </section>
 
           <!-- "+" de Bici: Importar · Anotar a mano -->
@@ -1468,6 +1482,6 @@
   <script defer src="vendor/firebase-10.7.1/firebase-firestore-compat.js"></script>
   <!-- Todos los módulos de la app en un archivo (D-127): cada uno corre como su
        propio <script>. Se editan los de js/ y después: npm run listo -->
-  <script defer src="js/app.paquete.js?v=d920b385b475"></script>
+  <script defer src="js/app.paquete.js?v=4ab247f19fac"></script>
 </body>
 </html>

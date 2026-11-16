@@ -19,7 +19,9 @@ Actualizado: 2026-11-16 (Tu semana, Tu año y Bici en curso, D-136).
   (menú ☰, pie de Inicio y tarjeta en diciembre y enero; compartir cada
   una y el año sin dinero). Bici fase 5 hecha (D-141): **Actividades**
   con barra propia, tarjetas con velocidad, mapa y récords de bici, filtros
-  y el detalle contra tus rodadas.
+  y el detalle contra tus rodadas. Fase 6 hecha (D-142): **Progreso** de
+  Bici (récords, Eddington, metas, mapa de calor; los récords de las rodadas
+  viejas se calculan una vez con su ruta).
 
 - **Libros nivel 3 (2026-11-16, terminado)**: que al poner un libro se
   traigan bien el título en español, el autor, el género y las páginas de

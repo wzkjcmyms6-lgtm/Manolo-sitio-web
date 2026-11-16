@@ -8401,6 +8401,33 @@ body.rd-mapa-abierto .rd-ampliar { top: max(12px, env(safe-area-inset-top)); bot
 .bf-avatar { background: rgba(255, 184, 77, 0.14); color: var(--accent-2); }
 .rf-filtro small { font-weight: 400; opacity: 0.8; }
 
+/* El engranaje de arriba (Ajustes de Bici), como el de Running. */
+body.in-bici .topbar-ajustes[data-engranaje="bicicleta"] {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 44px; height: 44px; margin-left: 0.4rem; border-radius: 50%; color: var(--ink);
+  border: 1px solid var(--border); background: rgba(255, 255, 255, 0.04);
+}
+body.in-bici .topbar-ajustes[data-engranaje="bicicleta"] span { width: 20px; height: 20px; display: flex; }
+
+/* Progreso (D-142): cuatro cifras arriba, los récords y Eddington. */
+.bp-total-mas { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 400px) { .bp-total-mas { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.bp-records { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; margin: 0.4rem 0 0.9rem; }
+.bp-record {
+  display: flex; flex-direction: column; gap: 0.12rem; min-width: 0; padding: 0.7rem 0.8rem; border-radius: 14px;
+  background: var(--surface-raised); color: var(--ink); text-decoration: none;
+}
+.bp-record span { color: var(--muted); font-size: 0.78rem; }
+.bp-record b { font-size: 1.08rem; font-variant-numeric: tabular-nums; }
+.bp-record small { color: var(--muted); font-size: 0.75rem; overflow-wrap: anywhere; }
+.bp-sub { margin: 0.4rem 0 0.5rem; font-size: 0.95rem; }
+.bp-edd-caja { display: flex; align-items: center; gap: 0.9rem; margin: 0.3rem 0 0.5rem; }
+.bp-edd-caja b {
+  flex-shrink: 0; min-width: 64px; height: 64px; padding: 0 0.6rem; border-radius: 18px; display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 184, 77, 0.14); color: var(--accent-2); font-size: 1.9rem; font-variant-numeric: tabular-nums;
+}
+.bp-edd-caja span { line-height: 1.4; }
+
 /* ---- css/resumenes.css ---- */
 /* ---------- Tu semana y Tu año (D-136) ----------
    Pantallas de js/resumen-semana-ui.js y js/resumen-anio-ui.js.

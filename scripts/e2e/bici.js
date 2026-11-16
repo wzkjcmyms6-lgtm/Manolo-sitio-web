@@ -5,6 +5,9 @@
 // la tarjeta de Inicio, el detalle de una rodada (medallas, resumen
 // inteligente y mismo recorrido contra tus rodadas), Progreso con el
 // resumen semanal, sin rodadas, 320 px y la compu.
+// Fase 6: Progreso (totales con la velocidad, racha, metas, diario, récords
+// sueltos y mejores tiempos con su evolución, Eddington, los récords de una
+// rodada vieja calculados con su ruta, mapa de calor) y Ajustes de Bici.
 // Uso: node scripts/e2e/bici.js [carpeta-para-capturas]
 const { chromium, servidor, abrir, ok, captura: capturar, terminar } = require("./comun.js");
 const X = require("../../tests/run-fixtures.js");
@@ -139,12 +142,70 @@ async function fase5(browser, base, ancho) {
   await p.context().close();
 }
 
+// ---- Fase 6: Progreso (D-142) ----
+async function fase6(browser, base, ancho) {
+  console.log(`\nBici, fase 6: Progreso (${ancho} px)`);
+  // imp_a importada antes (sin récords de bici): se calculan con su ruta al abrir Bici.
+  const viejo = JSON.parse(JSON.stringify(A.doc));
+  delete viejo.mejoresBici;
+  const seed = JSON.parse(JSON.stringify(SEED));
+  seed["users/test/bicicleta"].imp_a = viejo;
+  seed["users/test/meta"] = { bici_ajustes: { metas: { semanaKm: 100, mesKm: 300 } } };
+  const p = await abrir(browser, base, { __SEED__: seed }, { hash: "#bici-progreso", zona: ZONA, fecha: FECHA, ancho });
+  await p.waitForTimeout(900);
+  const arriba = await txt(p, "#bp-arriba");
+  ok(/Esta semana 30,5 km/.test(arriba) && /Rodadas 2/.test(arriba) && /Velocidad [\d,]+ km\/h/.test(arriba), `totales de la semana con la velocidad (${arriba})`);
+  await p.click('[data-bp-periodo="mes"]');
+  ok(/Este mes 80,9 km/.test(await txt(p, "#bp-arriba")) && /vs el mes pasado/.test(await txt(p, "#bp-arriba")), "el mes contra el anterior");
+  const app = await txt(p, "#bp-app");
+  ok(/🔥 \d+ semanas? seguidas?/.test(app), "la racha de semanas");
+  ok(/30,5\/100 km Semana/.test(app) && /80,9\/300 km Mes/.test(app), `las metas con anillos (${(app.match(/[\d,]+\/\d+ km \w+/g) || []).join(" · ")})`);
+  ok(/Diario/.test(app) && await p.$('#bp-app .rp-dia.is-con[href^="#run-actividad/bicicleta/"]') !== null, "el diario lleva a las rodadas");
+  ok(/La más larga 53,3 km/.test(app) && /Velocidad máxima [\d,]+ km\/h/.test(app) && /La más rápida [\d,]+ km\/h/.test(app), "los récords sueltos");
+  ok(/Número de Eddington 5 Saliste 5 días con al menos 5 km\./.test(app) && /Para llegar a 6: te falta 1 día de 6 km o más \(llevas 5\)/.test(app), `el número de Eddington (${(app.match(/Número de Eddington.{0,140}/) || [""])[0]})`);
+  // La rodada vieja: sus récords se calculan con la ruta y se guardan.
+  await p.waitForFunction(() => { const d = window.__fakeStore.colMap("users/test/bicicleta").get("imp_a"); return d && d.mejoresBici && d.mejoresBici["5000"] > 0; }, null, { timeout: 6000 }).catch(() => {});
+  const mb = await p.evaluate(() => window.__fakeStore.colMap("users/test/bicicleta").get("imp_a").mejoresBici);
+  ok(mb && mb["5000"] > 0 && mb["20000"] > 0 && !mb["50000"], `la rodada vieja ya tiene sus récords (${JSON.stringify(mb)})`);
+  await p.waitForTimeout(400);
+  const marcas = await p.$$eval("#bp-app [data-bp-marca]", bs => bs.map(b => b.dataset.bpMarca));
+  ok(marcas.join(",") === "5000,10000,20000,30000,40000,50000", `mejores tiempos de 5 a 50 km (${marcas.join(", ")})`);
+  await p.click('[data-bp-marca="5000"]');
+  ok(/5 km: tus 3 mejores/.test(await txt(p, "#bp-app")) && (await p.$$("#bp-app .rp-top li")).length === 3, "el top 3 de 5 km");
+  ok(await p.$("#bp-app .rp-evo") !== null, "y cómo fue mejorando");
+  await captura(p, `bici-progreso-${ancho}.png`);
+  // El mapa de calor de tus rodadas.
+  await p.click('#bp-app a[href="#bici-calor"]');
+  await p.waitForTimeout(400);
+  ok(/3 rodadas con ruta/.test(await txt(p, "#bc-app")) && await p.$("#bc-app svg.rc-svg") !== null, "mapa de calor de tus rodadas");
+  // Ajustes de Bici (el engranaje): cambiar las metas.
+  await p.evaluate(() => { location.hash = "#bici-progreso"; });
+  await p.waitForTimeout(300);
+  if (ancho <= 768) {
+    ok(await p.isVisible('.topbar-ajustes[data-engranaje="bicicleta"]') && !(await p.isVisible('.topbar-ajustes[data-engranaje="running"]')), "el engranaje de Bici arriba");
+    await p.click('.topbar-ajustes[data-engranaje="bicicleta"]');
+  } else await p.evaluate(() => { location.hash = "#bici-ajustes"; });
+  await p.waitForTimeout(400);
+  await p.fill('#ba-form [name="semanaKm"]', "120");
+  await p.fill('#ba-form [name="anioKm"]', "3000");
+  await p.click("#ba-form button[type=submit]");
+  await p.waitForTimeout(400);
+  const metas = await p.evaluate(() => window.__fakeStore.colMap("users/test/meta").get("bici_ajustes").metas);
+  ok(metas.semanaKm === 120 && metas.mesKm === 300 && metas.anioKm === 3000 && /Metas guardadas/.test(await txt(p, "#ba-app")), `metas guardadas (${JSON.stringify(metas)})`);
+  await p.fill('#ba-form [name="mesKm"]', "-3");
+  await p.click("#ba-form button[type=submit]");
+  ok(/Las metas son km mayores que 0/.test(await txt(p, "#ba-app")), "una meta mal escrita avisa");
+  ok(await sobra(p) <= 0, "nada se sale a lo ancho");
+  ok(!p.errores.length, `sin errores de página${p.errores.length ? `: ${p.errores[0]}` : ""}`);
+  await p.context().close();
+}
+
 async function compu(browser, base) {
   console.log("\nBici en la compu (1280 px)");
   const p = await abrir(browser, base, { __SEED__: SEED }, { hash: "#bicicleta", zona: ZONA, fecha: FECHA, ancho: 1280, alto: 900 });
   await p.waitForTimeout(600);
-  const pills = await p.$$eval("#panel-bicicleta .fin-outer-tabs a, #panel-bicicleta .fin-outer-tabs button", els => els.map(e => e.textContent.trim()));
-  ok(pills.join(",") === "Actividades,+ Agregar,Progreso", `las secciones como pills arriba (${pills.join(", ")})`);
+  const pills = await p.$$eval("#panel-bicicleta .fin-outer-tabs a, #panel-bicicleta .fin-outer-tabs button", els => els.map(e => e.textContent.trim() || e.getAttribute("aria-label")));
+  ok(pills.join(",") === "Actividades,+ Agregar,Progreso,Ajustes de Bici", `las secciones como pills arriba, con el engranaje (${pills.join(", ")})`);
   ok(await sobra(p) <= 0, "nada se sale a lo ancho");
   const fila = await p.$eval("#bf-feed .bf-card .bf-cifras", el => { const r = [...el.children].map(c => Math.round(c.getBoundingClientRect().top)); return new Set(r).size; });
   ok(fila === 1, "las cifras en una fila");
@@ -158,6 +219,7 @@ async function compu(browser, base) {
   const base = `http://localhost:${srv.address().port}`;
   const browser = await chromium.launch();
   for (const ancho of [390, 320]) await fase5(browser, base, ancho);
+  for (const ancho of [390, 320]) await fase6(browser, base, ancho);
   await compu(browser, base);
   await terminar(browser, srv);
 })();

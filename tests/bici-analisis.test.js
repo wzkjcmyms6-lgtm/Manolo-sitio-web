@@ -104,3 +104,33 @@ test("la tarjeta de Inicio", () => {
   assert.equal(r.ultima.id, "b");
   assert.equal(B.inicio([], "2026-11-18"), null);
 });
+
+// ---- Fase 6 (D-142): récords desde la ruta guardada y su evolución ----
+const X = require("./run-fixtures.js");
+const F = require("../js/run-formatos.js");
+
+test("los récords de bici de una rodada vieja salen de su ruta (igual que al importar)", () => {
+  const ps = X.puntos({ segundos: 3000, vel: 8, inicio: Date.parse("2026-10-05T07:00:00-04:00") });   // 24 km a 28,8 km/h
+  const act = F.leer(X.fit(ps), "x.fit");
+  act.deporte = "bicicleta";
+  const r = M.calcular(act, {});
+  assert.deepEqual(Object.keys(r.campos.mejoresBici), ["5000", "10000", "20000"], "al importar, ya vienen");
+  const deRuta = B.mejoresDeRuta(r.ruta);
+  assert.deepEqual(Object.keys(deRuta), ["5000", "10000", "20000"]);
+  Object.keys(deRuta).forEach(k => assert.ok(Math.abs(deRuta[k] - r.campos.mejoresBici[k]) <= 5, `${k}: ${deRuta[k]} contra ${r.campos.mejoresBici[k]}`));
+  assert.deepEqual(B.mejoresDeRuta(null), {});
+  assert.deepEqual(B.mejoresDeRuta({ v: 2, inicio: 1, enc: "" }), {});
+});
+
+test("cuáles faltan por calcular y cómo fue mejorando", () => {
+  const xs = [
+    imp("a", "2026-01-05", 30, 70, { mejoresBici: { 5000: 700 } }),
+    imp("b", "2026-02-05", 30, 70),
+    imp("c", "2026-03-05", 30, 70, { mejoresBici: {} }),
+    mano("m", "2026-03-06", 30, 70),
+    imp("d", "2026-04-05", 30, 70, { mejoresBici: { 5000: 650 } }),
+    imp("e", "2026-05-05", 30, 70, { mejoresBici: { 5000: 690 } })
+  ];
+  assert.deepEqual(B.sinRecords(xs).map(d => d.id), ["b"], "con ruta y sin calcular ({} ya cuenta como calculado)");
+  assert.deepEqual(B.evolucion(xs, "5000").map(e => [e.id, e.t, e.mejor]), [["a", 700, 700], ["d", 650, 650], ["e", 690, 650]]);
+});

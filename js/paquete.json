@@ -103,6 +103,8 @@
   "js/bici-feed.js",
   "js/run-progreso.js",
   "js/run-ajustes.js",
+  "js/bici-progreso.js",
+  "js/bici-ajustes.js",
   "js/running.js",
   "js/bicicleta.js",
   "js/finanzas/datos.js",

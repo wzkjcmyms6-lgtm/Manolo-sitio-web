@@ -77,6 +77,34 @@ function mejoresTiempos(docs, n) {
     return { clave, nombre, m, top };
   }).filter(x => x.top.length);
 }
+// Cómo fue mejorando una distancia: cada esfuerzo con la mejor marca hasta ese día.
+function evolucion(docs, clave) {
+  const lista = (docs || []).filter(d => d.mejoresBici && d.mejoresBici[clave] > 0)
+    .map(d => ({ id: d.id, inicio: A.momento(d), date: d.date, t: d.mejoresBici[clave] }))
+    .sort((a, b) => a.inicio - b.inicio);
+  let mejor = Infinity;
+  return lista.map(e => { mejor = Math.min(mejor, e.t); return Object.assign(e, { mejor }); });
+}
+// Los récords de bici de una rodada a partir de su ruta guardada (rutas/{id}),
+// para las que se importaron antes (D-142): se calculan una vez y se guardan.
+// → { "5000": segundos, … } ({} si la ruta no sirve o es corta).
+function mejoresDeRuta(ruta) {
+  const pts = [].concat(...M.leerRuta(ruta)).filter(p => p && p.t > 0);
+  if (pts.length < 2) return {};
+  const D = [], T = [];
+  let acum = 0;
+  pts.forEach((p, i) => {
+    // La distancia acumulada guardada; si no está (rutas viejas), por GPS.
+    if (p.d != null) acum = p.d;
+    else if (i && p.lat != null && pts[i - 1].lat != null) acum += M.haversine(pts[i - 1], p);
+    D.push(acum);
+    T.push((p.t - pts[0].t) / 1000);
+  });
+  for (let i = 1; i < D.length; i++) if (D[i] < D[i - 1]) D[i] = D[i - 1];
+  return M.mejoresMarcas(D, T, DIST);
+}
+// Las rodadas a las que les faltan los récords de bici (con ruta y sin calcular).
+const sinRecords = docs => (docs || []).filter(d => d.conRuta && !d.mejoresBici);
 // Los récords sueltos: { larga, subida, rapida (≥ 20 km), vmax } → { doc, valor } o null.
 function records(docs) {
   const xs = docs || [];
@@ -162,5 +190,5 @@ function inicio(docs, hoy) {
   return { kmSemana, ultima, kmUltima: distM(ultima) / 1000 };
 }
 
-return { DIST, NOMBRES, FILTROS, PASA, LARGA_KM, distM, movS, desn, velocidad, esManual, logrosPorId, logros, mejoresTiempos, records, eddington, resumen, inicio };
+return { DIST, NOMBRES, FILTROS, PASA, LARGA_KM, distM, movS, desn, velocidad, esManual, logrosPorId, logros, mejoresTiempos, evolucion, mejoresDeRuta, sinRecords, records, eddington, resumen, inicio };
 });

@@ -1,6 +1,13 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (Bici, fase 6, D-142): `npm test` → **757 pruebas**.
+  En `bici-analisis`: los récords de una rodada vieja salen de su ruta
+  (igual que al importar, ±5 s), cuáles faltan por calcular y la
+  evolución. Suite `bici` con la fase 6 (totales con la velocidad, racha,
+  metas, diario, récords sueltos, mejores tiempos con top 3 y evolución,
+  Eddington, los récords de la rodada vieja se guardan solos, mapa de
+  calor, Ajustes de Bici con sus metas y el engranaje; 390 y 320 px).
 - 2026-11-16 (Bici, fase 5, D-141): `npm test` → **755 pruebas**.
   Nuevo `bici-analisis` (velocidad, filtros, récords de bici al importar
   aparte de los de correr, medallas, récords sueltos, Eddington, el resumen
@@ -456,6 +463,10 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
 
 **Bici (2026-11)**
+- [ ] Progreso: tus récords y el número de Eddington; los mejores tiempos
+  aparecen también para tus rodadas importadas antes (tarda un poco la
+  primera vez).
+- [ ] El engranaje de arriba: ponte una meta y mira el anillo en Progreso.
 - [ ] Bicicleta: la barra de abajo es Actividades · + · Progreso.
 - [ ] Actividades: tarjetas con velocidad, mapa y medallas; prueba los
   filtros. Toca una rodada: abajo sigue la barra de Bici.

@@ -3,17 +3,24 @@
 // corres se ve más intenso. Primero un dibujo propio (sirve sin internet) y,
 // con "Ver con calles", Leaflet con las teselas de OpenStreetMap. Usa la mini
 // ruta de cada carrera (no lee rutas completas). #run-calor y una tarjeta en
-// Progreso.
+// Progreso. Bici tiene el suyo con sus rodadas (#bici-calor, D-142).
 (function () {
 "use strict";
 const V = window.RunVista, M = window.RunMetricas, A = window.RunAnalisis;
 const FILTROS = [["todas", "Todas"], ["anio", "Este año"], ["90", "Últimos 90 días"]];
+const DEPORTE = {
+  running: { hash: "run-calor", app: "rc-app", uno: "carrera con ruta", varios: "carreras con ruta", verbo: "corres", vacio: "Importa carreras con GPS (archivos del reloj o de Strava) y aparecerán en este mapa." },
+  bicicleta: { hash: "bici-calor", app: "bc-app", uno: "rodada con ruta", varios: "rodadas con ruta", verbo: "andas en bici", vacio: "Importa rodadas con GPS (archivos del reloj o de Strava) y aparecerán en este mapa." }
+};
 let filtro = "todas", mapa = null;
 
-const visible = () => location.hash.replace(/^#/, "").split("/")[0] === "run-calor";
+const pantalla = () => location.hash.replace(/^#/, "").split("/")[0];
+// El deporte del mapa que está a la vista (o null).
+const col = () => Object.keys(DEPORTE).find(k => DEPORTE[k].hash === pantalla()) || null;
+const visible = () => !!col();
 function rutas() {
   const ahora = Date.now(), anio = new Date().getFullYear();
-  return RunDatos.lista("running").filter(d => d.mini).filter(d => {
+  return RunDatos.lista(col() || "running").filter(d => d.mini).filter(d => {
     if (filtro === "anio") return String(d.date || "").startsWith(String(anio));
     if (filtro === "90") return ahora - A.momento(d) <= 90 * 86400000;
     return true;
@@ -32,17 +39,18 @@ function svg(lista, ancho, alto) {
 }
 function pintar() {
   if (!visible()) { if (mapa) { mapa.remove(); mapa = null; } return; }
-  const app = document.getElementById("rc-app");
+  const dep = DEPORTE[col()];
+  const app = document.getElementById(dep.app);
   if (!app) return;
   const lista = rutas();
   if (mapa) { mapa.remove(); mapa = null; }
   app.innerHTML = `
     <div class="fin-tabs rp-periodos" role="tablist">${FILTROS.map(([k, t]) => `<button type="button" role="tab" class="fin-tab${k === filtro ? " active" : ""}" aria-selected="${k === filtro}" data-rc-filtro="${k}">${t}</button>`).join("")}</div>
     ${lista.length ? `<div class="rc-caja" id="rc-caja">${svg(lista, 340, 340)}</div>
-      <p class="rd-nota">${lista.length} ${lista.length === 1 ? "carrera con ruta" : "carreras con ruta"}. Donde más corres se ve más intenso.</p>
+      <p class="rd-nota">${lista.length} ${lista.length === 1 ? dep.uno : dep.varios}. Donde más ${dep.verbo} se ve más intenso.</p>
       <button type="button" class="lib-btn-sec rd-btn" data-rc-calles>Ver con calles</button>
       <p class="rd-atribucion">Mapas: © OpenStreetMap</p>`
-    : `<div class="run-vacio"><p><b>Todavía no hay rutas aquí.</b></p><p>Importa carreras con GPS (archivos del reloj o de Strava) y aparecerán en este mapa.</p></div>`}`;
+    : `<div class="run-vacio"><p><b>Todavía no hay rutas aquí.</b></p><p>${dep.vacio}</p></div>`}`;
 }
 function conCalles() {
   const caja = document.getElementById("rc-caja");
@@ -62,11 +70,12 @@ function conCalles() {
     if (b) b.remove();
   }).catch(() => alert("No se pudo cargar el mapa."));
 }
-// Tarjeta en Progreso con una vista previa.
-function tarjeta() {
-  const lista = RunDatos.lista("running").filter(d => d.mini).map(d => M.leerMini(d.mini)).filter(p => p.length > 1);
+// Tarjeta en Progreso con una vista previa (de Running o de Bici).
+function tarjeta(deporte) {
+  const c = DEPORTE[deporte] ? deporte : "running";
+  const lista = RunDatos.lista(c).filter(d => d.mini).map(d => M.leerMini(d.mini)).filter(p => p.length > 1);
   if (!lista.length) return "";
-  return `<a class="rd-sec rc-tarjeta" href="#run-calor"><span class="rc-tarjeta-mapa">${svg(lista.slice(0, 300), 120, 90)}</span>
+  return `<a class="rd-sec rc-tarjeta" href="#${DEPORTE[c].hash}"><span class="rc-tarjeta-mapa">${svg(lista.slice(0, 300), 120, 90)}</span>
     <span><b>Mapa de calor</b><small>Todas tus rutas en un mapa (${lista.length})</small></span><span class="icon-sm" data-icon="chevronRight"></span></a>`;
 }
 

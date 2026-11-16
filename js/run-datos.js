@@ -2,12 +2,14 @@
 // Las listas de running/ y bicicleta/ ya las escucha js/actividad-registro.js
 // (avisa con el evento "manolo:actividades"); aquí se guardan para el
 // detalle, el feed y el progreso sin leer nada dos veces. También los ajustes
-// de Running (meta/running_ajustes). RunDatos.al(fn) avisa cada cambio.
+// de Running (meta/running_ajustes) y los de Bici (meta/bici_ajustes: metas,
+// tus bicis y su mantenimiento, D-142). RunDatos.al(fn) avisa cada cambio.
 (function () {
 "use strict";
 const listas = { running: [], bicicleta: [] };
 const cargadas = {};
 let ajustes = {};
+let ajustesBici = {};
 let segmentos = [];
 let segmentosCargados = false;
 const oyentes = new Set();
@@ -23,6 +25,8 @@ window.addEventListener("manolo:actividades", e => {
 if (typeof onAuthReady === "function") onAuthReady(() => {
   db.collection("users").doc(currentUser.uid).collection("meta").doc("running_ajustes")
     .onSnapshot(s => { ajustes = s.exists ? s.data() || {} : {}; avisar(); }, () => {});
+  db.collection("users").doc(currentUser.uid).collection("meta").doc("bici_ajustes")
+    .onSnapshot(s => { ajustesBici = s.exists ? s.data() || {} : {}; avisar(); }, () => {});
   // Segmentos (fase 6): pocos documentos chicos; se escuchan siempre.
   db.collection("users").doc(currentUser.uid).collection("run_segmentos")
     .onSnapshot(s => { segmentos = s.docs.map(d => Object.assign({ id: d.id }, d.data())); segmentosCargados = true; avisar(); }, () => {});
@@ -33,6 +37,7 @@ window.RunDatos = {
   cargada: col => !!cargadas[col],
   doc: (col, id) => (listas[col] || []).find(d => d.id === id) || null,
   ajustes: () => ajustes,
+  ajustesBici: () => ajustesBici,
   segmentos: () => segmentos,
   segmentosCargados: () => segmentosCargados,
   // FC máx: la de Ajustes o la más alta vista (estimada, D-065).

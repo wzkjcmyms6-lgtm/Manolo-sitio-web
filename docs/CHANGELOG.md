@@ -1,5 +1,15 @@
 # Cambios
 
+## 2026-11-16 · Bici: Progreso
+- **Progreso** de Bici: tus km, tiempo, rodadas, desnivel y velocidad de la
+  semana, el mes o el año contra el anterior; racha; metas con anillos (el
+  engranaje de arriba); calendario.
+- **Tus récords**: la más larga, la de más desnivel, la más rápida, la
+  velocidad máxima y tus mejores tiempos de 5 a 160 km (con tus rodadas de
+  antes también: Manolo los calcula una vez con sus rutas).
+- **Número de Eddington**: cuántos días saliste con al menos esos km.
+- **Mapa de calor** de tus rodadas.
+
 ## 2026-11-16 · Bici: Actividades
 - **Bicicleta** tiene su propia barra abajo: **Actividades**, **"+"**
   (Importar o Anotar a mano) y **Progreso** (el resumen semanal de

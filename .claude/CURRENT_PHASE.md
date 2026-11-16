@@ -13,7 +13,7 @@ Diseño en `docs/RESUMENES.md` (Tu semana y Tu año) y `docs/CYCLING.md`
 | 3 | "Tu año": el contenido (cada sección, récords, mejor mes, rachas, contra el año anterior) | ✅ (D-139) |
 | 4 | "Tu año": las diapositivas a pantalla completa, compartir cada una, tarjeta en Inicio en diciembre y enero, años anteriores | ✅ (D-140) |
 | 5 | Bici: Actividades (barra propia, tarjetas con mapa, filtros, "+", Inicio, detalle con lo de bici) | ✅ (D-141) |
-| 6 | Bici: Progreso (períodos, calendario, récords de bici, Eddington, metas, racha, mapa de calor) | ⏳ |
+| 6 | Bici: Progreso (períodos, calendario, récords de bici, Eddington, metas, racha, mapa de calor) | ✅ (D-142) |
 | 7 | Bici: tus bicis y mantenimiento, segmentos de bici | ⏳ |
 | 8 | Control final y lista para el iPhone | ⏳ |
 

@@ -4289,6 +4289,11 @@ html[data-modo="claro"] {
   background: repeating-conic-gradient(#e9e5dc 0% 25%, #f1eee7 0% 50%) 0 0 / 20px 20px;
 }
 
+/* ---- css/bici.css ---- */
+:where(html[data-modo="claro"]) body.in-bici .topbar-ajustes[data-engranaje="bicicleta"] {
+  background: rgba(0, 0, 0, 0.028);
+}
+
 /* ---- css/resumenes.css ---- */
 :where(html[data-modo="claro"]) .sem-area-t .sem-cambio.is-bien {
   color: #1e7a43;
