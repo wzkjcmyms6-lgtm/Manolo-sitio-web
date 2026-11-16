@@ -1,6 +1,14 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (Libros nivel 3, fase 1, D-129): `npm test` → **711
+  pruebas**. Nueva: `libros-fuentes` (título en español, el libro de
+  verdad primero, resúmenes al final, sin repetidos, autor en nuestro
+  alfabeto, buscar por autor, ISBN; con respuestas reales de Open Library
+  en `tests/fixtures/libros/`). E2E nueva: `libros-n3` (buscar, elegir y
+  guardar con título original y autor, cambiar el autor a mano, por autor,
+  autor en otro alfabeto, ISBN; 390, 320 y 1280 px). `libros-progreso`: el
+  resultado dice ediciones en vez de páginas.
 - 2026-11-16 (control final de las mejoras sin servidor): `npm test` →
   **702 pruebas**; las 37 suites de `scripts/e2e/` en verde con la app
   empaquetada (2.908 comprobaciones, 0 fallas); Lighthouse 100 / 100 en las
@@ -245,7 +253,7 @@
   retiraron en D-033.
 - **Dispositivo real (iPhone)**: pantalla encendida, voz y sonido se validan
   en el teléfono del dueño; nada se da por funcionando sin esa prueba.
-- **Regresión** en cada fase: `npm test` + las 37 suites de `scripts/e2e/`
+- **Regresión** en cada fase: `npm test` + las 38 suites de `scripts/e2e/`
   (ver "Cómo correr todo"; D-115: una prueba que quedó fuera de la lista
   corta se rompió sin que se viera).
 
@@ -257,7 +265,7 @@ for f in fase1 regresion hojas sw-instala emojis scalping inversiones tarjetas m
   running run-importar run-detalle run-feed run-progreso run-inteligencia run-segmentos \
   run-compartir run-qa habitos mi-dia ej-calendario ejercicio libros-progreso lectura \
   lectura-qa tiempos finanzas-diario lugares respaldo sin-internet pantalla tarjetas-minimo \
-  biblia-marcar biblia-audio rr-editor rutina-entreno tema-claro; do node scripts/e2e/$f.js || break; done
+  biblia-marcar biblia-audio rr-editor rutina-entreno tema-claro libros-n3; do node scripts/e2e/$f.js || break; done
 ```
 Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
 
@@ -341,6 +349,17 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Libros: buscar un libro (2026-11)**
+- [ ] Libros › "Agregar libro" › en "Buscar el libro" escribe "padre rico
+  padre pobre": el primero es "Padre rico, padre pobre" de Robert T.
+  Kiyosaki y abajo dice "Original: Rich Dad, Poor Dad". Tócalo: se llenan
+  el título en español, el autor y el género. Guárdalo y abre su ficha:
+  dice el título original.
+- [ ] Escribe "paulo coelho": dice "Libros de Paulo Coelho" y salen sus
+  libros, El alquimista primero.
+- [ ] Busca un libro que tengas en casa: ¿sale primero el de verdad y con
+  el título como lo tienes? Si no, mándame una captura.
 
 **La app abre más rápido (2026-11)**
 - [ ] Cuando aparezca "Nueva versión disponible", toca "Actualizar".

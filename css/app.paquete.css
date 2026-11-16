@@ -5833,6 +5833,10 @@ input[type="date"].lib-input, input[type="time"].lib-input { -webkit-appearance:
 .lib-encontrado-txt { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
 .lib-encontrado-txt b { font-size: 0.92rem; line-height: 1.25; overflow-wrap: anywhere; }
 .lib-encontrado-txt small { color: var(--muted); font-size: 0.78rem; }
+/* Nivel 3 (D-129): título original y resúmenes o guías de otro libro. */
+.lib-encontrado-txt .lib-encontrado-orig { font-style: italic; overflow-wrap: anywhere; }
+.lib-encontrado.is-derivado { opacity: 0.78; }
+.lib-ficha-info .lib-orig { font-size: 0.85rem; font-style: italic; overflow-wrap: anywhere; }
 .lib-aviso-dup { color: #ffcf85; }
 .lib-aviso-dup[hidden] { display: none; }
 

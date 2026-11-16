@@ -1,0 +1,229 @@
+{
+ "numFound": 8,
+ "q": "el hombre mas rico de babilonia",
+ "docs": [
+  {
+   "key": "/works/OL1740783W",
+   "title": "El hombre mas rico de Babilonia para nuestra epoca",
+   "cover_i": 3356007,
+   "first_publish_year": 2006,
+   "number_of_pages_median": 110,
+   "edition_count": 2,
+   "author_name": [
+    "George Hill"
+   ],
+   "author_key": [
+    "OL200940A"
+   ],
+   "subject": [
+    "Finance, personal"
+   ],
+   "editions": {
+    "numFound": 2,
+    "docs": [
+     {
+      "key": "/books/OL35824630M",
+      "title": "El hombre más rico de Babilonia",
+      "language": [
+       "spa"
+      ],
+      "cover_i": 12496844
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL8165007W",
+   "title": "The Richest Man in Babylon",
+   "cover_i": 10491331,
+   "first_publish_year": 1926,
+   "number_of_pages_median": 124,
+   "edition_count": 262,
+   "author_name": [
+    "George S. Clason"
+   ],
+   "author_key": [
+    "OL2280043A"
+   ],
+   "subject": [
+    "Business ethics",
+    "Personal Finance",
+    "Moral and ethical aspects",
+    "Wealth",
+    "Finance, Personal",
+    "Wealth, moral and ethical aspects",
+    "Financial Management",
+    "Morale des affaires",
+    "Richesse",
+    "Aspect moral",
+    "Business",
+    "Etica de los negocios"
+   ],
+   "editions": {
+    "numFound": 262,
+    "docs": [
+     {
+      "key": "/books/OL9140914M",
+      "title": "El hombre más rico de Babilonia",
+      "language": [
+       "spa"
+      ],
+      "cover_i": 1048104
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL15048027W",
+   "title": "Piense y Hagase Rico by Napoleon Hill & El Hombre Mas Rico de Babilonia by George S. Clason",
+   "cover_i": 3350376,
+   "first_publish_year": 2007,
+   "number_of_pages_median": 396,
+   "edition_count": 2,
+   "author_name": [
+    "Napoleon Hill"
+   ],
+   "author_key": [
+    "OL37117A"
+   ],
+   "editions": {
+    "numFound": 2,
+    "docs": [
+     {
+      "key": "/books/OL13057544M",
+      "title": "Piense y Hagase Rico by Napoleon Hill & El Hombre Mas Rico de Babilonia by George S. Clason",
+      "language": [
+       "spa"
+      ],
+      "cover_i": 3350376
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL29506382W",
+   "title": "Resumen : el Hombre Más Rico de Babilonia",
+   "first_publish_year": 2018,
+   "edition_count": 1,
+   "author_name": [
+    "Los Puntos Clave"
+   ],
+   "author_key": [
+    "OL8400911A"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL40610519M",
+      "title": "Resumen : el Hombre Más Rico de Babilonia",
+      "language": [
+       "spa"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL29852558W",
+   "title": "Resumen Extendido de el Hombre Mas Rico de Babilonia (the Richest Man in Babylon)",
+   "first_publish_year": 2018,
+   "edition_count": 1,
+   "author_name": [
+    "Libros Mentores"
+   ],
+   "author_key": [
+    "OL10904448A"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL41049667M",
+      "title": "Resumen Extendido de el Hombre Mas Rico de Babilonia (the Richest Man in Babylon)",
+      "language": [
+       "spa"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL22041855W",
+   "title": "Resumen",
+   "first_publish_year": 2018,
+   "number_of_pages_median": 122,
+   "edition_count": 8,
+   "author_name": [
+    "Los Puntos Clave"
+   ],
+   "author_key": [
+    "OL8400911A"
+   ],
+   "editions": {
+    "numFound": 8,
+    "docs": [
+     {
+      "key": "/books/OL41129751M",
+      "title": "Resumen",
+      "language": [
+       "spa"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL29737438W",
+   "title": "Resumen de el Hombre Mas Rico de Babilonia (the Richest Man in Babylon), de George S. Clason",
+   "first_publish_year": 2017,
+   "edition_count": 1,
+   "author_name": [
+    "Sapiens Editorial"
+   ],
+   "author_key": [
+    "OL10867122A"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL40905290M",
+      "title": "Resumen de el Hombre Mas Rico de Babilonia (the Richest Man in Babylon), de George S. Clason",
+      "language": [
+       "spa"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL21963704W",
+   "title": "Los Puntos Clave de",
+   "first_publish_year": 2019,
+   "number_of_pages_median": 86,
+   "edition_count": 26,
+   "author_name": [
+    "Los Puntos Clave"
+   ],
+   "author_key": [
+    "OL8400911A"
+   ],
+   "subject": [
+    "Estado legal, leyes"
+   ],
+   "editions": {
+    "numFound": 26,
+    "docs": [
+     {
+      "key": "/books/OL41004085M",
+      "title": "Los Puntos Clave de",
+      "language": [
+       "spa"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

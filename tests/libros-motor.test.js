@@ -10,7 +10,13 @@ test("validar un libro: título obligatorio, fechas editables y coherentes", () 
     opinion: " Una obra maestra. ", fechaRegistro: "2025-03-01", fechaInicio: "2025-01-10", fechaFin: "2025-02-20" }, { hoy: HOY });
   assert.equal(r.ok, true);
   assert.deepEqual(r.doc, { v: 1, titulo: "Cien años de soledad", autor: "Gabriel García Márquez", paginas: 471, estado: "terminado", calificacion: 5,
-    opinion: "Una obra maestra.", fechaRegistro: "2025-03-01", fechaInicio: "2025-01-10", fechaFin: "2025-02-20", genero: null, anio: null, olKey: null, formato: "papel", saga: null, sagaN: null, prioridad: null });
+    opinion: "Una obra maestra.", fechaRegistro: "2025-03-01", fechaInicio: "2025-01-10", fechaFin: "2025-02-20", genero: null, anio: null, olKey: null,
+    tituloOriginal: null, autorKey: null, formato: "papel", saga: null, sagaN: null, prioridad: null });
+  // Nivel 3 (D-129): título original y autor de Open Library, si vienen.
+  const n3 = L.validarLibro({ titulo: "Hábitos atómicos", tituloOriginal: " Atomic  Habits ", autorKey: "OL7422948A", fechaRegistro: HOY }, { hoy: HOY });
+  assert.deepEqual([n3.doc.tituloOriginal, n3.doc.autorKey], ["Atomic Habits", "OL7422948A"]);
+  assert.equal(L.validarLibro({ titulo: "x", autorKey: "/authors/x", fechaRegistro: HOY }, { hoy: HOY }).doc.autorKey, null);
+  assert.deepEqual([L.normalizarLibro("a", { tituloOriginal: "Atomic Habits", autorKey: "OL7422948A" }).autorKey, L.normalizarLibro("a", {}).tituloOriginal, L.normalizarLibro("a", { autorKey: 5 }).autorKey], ["OL7422948A", "", null]);
   const min = L.validarLibro({ titulo: "Solo título", fechaRegistro: HOY }, { hoy: HOY });
   assert.deepEqual([min.ok, min.doc.paginas, min.doc.calificacion, min.doc.fechaInicio, min.doc.fechaFin, min.doc.estado], [true, null, null, null, null, "por_leer"], "lo demás es opcional");
   const mal = L.validarLibro({ titulo: "", paginas: "12.5", calificacion: "6", fechaRegistro: "", fechaInicio: "2026-10-20", fechaFin: "2026-10-10" }, { hoy: HOY });

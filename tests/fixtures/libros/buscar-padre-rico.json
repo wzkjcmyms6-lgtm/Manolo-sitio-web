@@ -1,0 +1,356 @@
+{
+ "numFound": 26,
+ "q": "padre rico padre pobre",
+ "docs": [
+  {
+   "key": "/works/OL2010879W",
+   "title": "Rich Dad, Poor Dad",
+   "cover_i": 8315603,
+   "first_publish_year": 1990,
+   "number_of_pages_median": 241,
+   "edition_count": 115,
+   "author_name": [
+    "Robert T. Kiyosaki"
+   ],
+   "author_key": [
+    "OL242220A"
+   ],
+   "subject": [
+    "Rich people",
+    "Personal Finance",
+    "Investments",
+    "Finanzas personales",
+    "Inversiones",
+    "Ricos",
+    "Riqueza",
+    "Financial security",
+    "Success",
+    "Financiering",
+    "Huishoudingen",
+    "Finance, personal"
+   ],
+   "editions": {
+    "numFound": 115,
+    "docs": [
+     {
+      "key": "/books/OL35694843M",
+      "title": "Padre rico, padre pobre",
+      "language": [
+       "spa"
+      ],
+      "cover_i": 15217276
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL2010893W",
+   "title": "Rich Dad, Poor Dad for Teens",
+   "cover_i": 1174758,
+   "first_publish_year": 2004,
+   "number_of_pages_median": 144,
+   "edition_count": 27,
+   "author_name": [
+    "Robert T. Kiyosaki",
+    "Sharon L. Lechter"
+   ],
+   "author_key": [
+    "OL242220A",
+    "OL2711033A"
+   ],
+   "subject": [
+    "Rich people",
+    "Wealth",
+    "Business",
+    "Aptitudes empresariales",
+    "Juvenile literature",
+    "Teenagers",
+    "Riqueza",
+    "Finance, Personal",
+    "Personal Finance",
+    "Finanzas personales",
+    "Inversiones",
+    "Nonfiction"
+   ],
+   "editions": {
+    "numFound": 27,
+    "docs": [
+     {
+      "key": "/books/OL47483018M",
+      "title": "Padre rico, padre pobre para jóvenes",
+      "language": [
+       "spa"
+      ],
+      "cover_i": 14091519
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL30176616W",
+   "title": "AnÁlisis de Padre Rico, Padre Pobre. por JosÉ Sanabria",
+   "first_publish_year": 2019,
+   "edition_count": 1,
+   "author_name": [
+    "JOSÉ SANABRIA GONZÁLEZ"
+   ],
+   "author_key": [
+    "OL9319369A"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL41477952M",
+      "title": "AnÁlisis de Padre Rico, Padre Pobre. por JosÉ Sanabria",
+      "language": [
+       "spa"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL29432146W",
+   "title": "Resumen de Padre Rico, Padre Pobre , de Robert Kiyosaki",
+   "first_publish_year": 2017,
+   "edition_count": 1,
+   "author_name": [
+    "Sapiens Editorial"
+   ],
+   "author_key": [
+    "OL10867122A"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL40523690M",
+      "title": "Resumen de Padre Rico, Padre Pobre , de Robert Kiyosaki",
+      "language": [
+       "spa"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL44983922W",
+   "title": "Padre Rico , Padre Pobre",
+   "first_publish_year": 1997,
+   "edition_count": 1,
+   "author_name": [
+    "Robert Kiyosaki"
+   ],
+   "author_key": [
+    "OL15008055A"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL61375357M",
+      "title": "Padre Rico , Padre Pobre"
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL37863747W",
+   "title": "¿Porqué soy pobre si mi Padre es Rico?",
+   "first_publish_year": 2023,
+   "edition_count": 3,
+   "author_name": [
+    "Gaddi Gabriel Angeles Montaño",
+    "Barker Publishing LLC"
+   ],
+   "author_key": [
+    "OL13615776A",
+    "OL13584631A"
+   ],
+   "subject": [
+    "Finance, personal",
+    "Spirituality"
+   ],
+   "editions": {
+    "numFound": 3,
+    "docs": [
+     {
+      "key": "/books/OL51109443M",
+      "title": "¿Porqué Soy Pobre Si Mi Padre Es Rico?",
+      "language": [
+       "eng"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL33047466W",
+   "title": "Padres trabajadores, hijos ricos, nietos pobres",
+   "first_publish_year": 2007,
+   "number_of_pages_median": 121,
+   "edition_count": 1,
+   "author_name": [
+    "Roger Javier Urey Higazy"
+   ],
+   "author_key": [
+    "OL11987358A"
+   ],
+   "subject": [
+    "Family-owned business enterprises"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL44910245M",
+      "title": "Padres trabajadores, hijos ricos, nietos pobres",
+      "language": [
+       "spa"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL44983923W",
+   "title": "Padre Rico , Padre Pobre",
+   "first_publish_year": 1997,
+   "edition_count": 1,
+   "author_name": [
+    "Robert Kiyosaki"
+   ],
+   "author_key": [
+    "OL15008055A"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL61375358M",
+      "title": "Padre Rico , Padre Pobre"
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL2010894W",
+   "title": "Rich dad's guide to investing",
+   "cover_i": 8013287,
+   "first_publish_year": 2000,
+   "number_of_pages_median": 406,
+   "edition_count": 23,
+   "author_name": [
+    "Robert T. Kiyosaki",
+    "Sharon L. Lechter"
+   ],
+   "author_key": [
+    "OL242220A",
+    "OL2711033A"
+   ],
+   "subject": [
+    "Business",
+    "Finance, Personal",
+    "Finanzas personales",
+    "Handbooks, manuals",
+    "Handbooks, manuals, etc",
+    "Inversiones",
+    "Investments",
+    "Nonfiction",
+    "Personal Finance"
+   ],
+   "editions": {
+    "numFound": 23,
+    "docs": [
+     {
+      "key": "/books/OL23093260M",
+      "title": "Guía para invertir",
+      "language": [
+       "spa"
+      ],
+      "cover_i": 11963767
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL44182340W",
+   "title": "De Padres Pobres a Hijos Ricos",
+   "first_publish_year": 2014,
+   "edition_count": 1,
+   "author_name": [
+    "Miguel Angel Vidal Gonzalez"
+   ],
+   "author_key": [
+    "OL15861480A"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL60408367M",
+      "title": "De Padres Pobres a Hijos Ricos"
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL30011448W",
+   "title": "Padre Rico, Hijo Pobre",
+   "first_publish_year": 2019,
+   "edition_count": 1,
+   "author_name": [
+    "Mario Quintero"
+   ],
+   "author_key": [
+    "OL11042799A"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL41256386M",
+      "title": "Padre Rico, Hijo Pobre",
+      "language": [
+       "spa"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL914869W",
+   "title": "Comedias",
+   "cover_i": 119095,
+   "first_publish_year": 1604,
+   "number_of_pages_median": 297,
+   "edition_count": 52,
+   "author_name": [
+    "Lope de Vega"
+   ],
+   "author_key": [
+    "OL80534A"
+   ],
+   "subject": [
+    "Spanish drama",
+    "Textual Criticism",
+    "Continental european drama (dramatic works by one author)",
+    "British and irish drama (dramatic works by one author)",
+    "18.32 Spanish literature"
+   ],
+   "editions": {
+    "numFound": 52,
+    "docs": [
+     {
+      "key": "/books/OL17469805M",
+      "title": "Comedias escogidas de Frey Lope Félix de Vega Carpio",
+      "language": [
+       "spa"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -380,6 +380,7 @@ function ver(id) {
           <span class="lib-portada is-grande">${tapa(l, true)}</span>
           <div class="lib-ficha-info">
             <h4>${esc(l.titulo)}</h4>
+            ${l.tituloOriginal ? `<p class="lib-orig">Título original: ${esc(l.tituloOriginal)}</p>` : ""}
             ${l.autor ? `<p>${esc(l.autor)}</p>` : ""}
             ${chipEstado(l.estado)}
             ${l.calificacion ? `<p class="lib-estrellas is-grande" aria-label="${l.calificacion} de 5">${L.estrellas(l.calificacion)}</p>` : ""}
@@ -422,7 +423,7 @@ function ver(id) {
 function formLibro(id) {
   const l = id ? libros.find(x => x.id === id) : null;
   actual = { modo: "libro", id: l ? l.id : null };
-  const v = l || { titulo: "", autor: "", paginas: null, estado: "por_leer", calificacion: null, opinion: "", fechaRegistro: hoyLocal(), fechaInicio: null, fechaFin: null, genero: null, anio: null, olKey: null, formato: "papel", duracionMin: null, saga: "", sagaN: null, prioridad: null };
+  const v = l || { titulo: "", autor: "", paginas: null, estado: "por_leer", calificacion: null, opinion: "", fechaRegistro: hoyLocal(), fechaInicio: null, fechaFin: null, genero: null, anio: null, olKey: null, tituloOriginal: "", autorKey: null, formato: "papel", duracionMin: null, saga: "", sagaN: null, prioridad: null };
   const audio = v.formato === "audio";
   const sagas = Array.from(new Set(libros.map(x => x.saga).filter(Boolean))).sort((a, b) => a.localeCompare(b, "es"));
   encontrados = [];
@@ -430,7 +431,7 @@ function formLibro(id) {
   const fecha = (name, etiqueta, valor) => `<label class="lib-campo"><span>${etiqueta}</span><input type="date" name="${name}" max="${hoy}" value="${esc(valor || "")}" class="lib-input"></label>`;
   portadaSel = undefined;
   hoja.abrir(l ? "Editar libro" : "Agregar libro", `
-      <form class="lib-form lib-form-libro" novalidate>
+      <form class="lib-form lib-form-libro" novalidate data-autor-elegido="${esc(v.autor || "")}">
         <div class="lib-campo lib-buscar-libro"><span>Buscar el libro</span>
           <div class="lib-buscar-fila">
             <input type="search" class="lib-input" data-lib-q placeholder="Título, autor o ISBN" autocomplete="off" enterkeyhint="search" aria-label="Buscar el libro en Open Library">
@@ -482,6 +483,8 @@ function formLibro(id) {
         </div>
         <input type="hidden" name="anio" value="${esc(v.anio || "")}">
         <input type="hidden" name="olKey" value="${esc(v.olKey || "")}">
+        <input type="hidden" name="tituloOriginal" value="${esc(v.tituloOriginal || "")}">
+        <input type="hidden" name="autorKey" value="${esc(v.autorKey || "")}">
         <input type="hidden" name="isbn" value="${esc(v.isbn || "")}">
         <div class="lib-campo"><span>Estado</span>
           <div class="lib-segmento is-cuatro" role="radiogroup" aria-label="Estado">
@@ -551,6 +554,7 @@ hoja.el.addEventListener("submit", e => {
   e.preventDefault();
   const f = e.target, hoy = hoyLocal();
   if (actual && actual.modo === "libro") {
+    if (f.elements.autorKey && f.elements.autorKey.value && L.normalizar(f.elements.autor.value) !== L.normalizar(f.dataset.autorElegido || "")) f.elements.autorKey.value = "";
     const r = L.validarLibro(leer(f), { hoy });
     if (!r.ok) { window.Lectura.errores(f, r.errores); return; }
     const dup = !actual.id && L.duplicado(libros, r.doc.titulo, null);
@@ -794,26 +798,57 @@ function buscarLibro() {
   busquedaEnCurso = corte;
   const reloj = setTimeout(() => corte && corte.abort(), 12000);
   mensajeBusqueda("Buscando…");
-  fetch(L.urlBuscarLibro(texto), corte ? { signal: corte.signal } : {})
+  const F = window.LibrosFuentes;
+  fetch(F ? F.urlBuscar(texto) : L.urlBuscarLibro(texto), corte ? { signal: corte.signal } : {})
     .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
     .then(json => {
       if (!hoja.el.contains(caja) || busquedaEnCurso !== corte) return;
-      encontrados = L.leerLibros(json, 8);
+      const res = F ? F.leerBusqueda(json, texto, 8) : { libros: L.leerLibros(json, 8), autor: null };
+      encontrados = res.libros;
       if (!encontrados.length) { caja.innerHTML = ""; mensajeBusqueda(isbn ? "No encontré ese ISBN en Open Library. Búscalo por el título o escribe los datos abajo (el ISBN queda guardado)." : "No encontré ese libro. Prueba con menos palabras, con el título original o escríbelo a mano abajo."); return; }
-      mensajeBusqueda("Toca tu libro:");
+      mensajeBusqueda(res.autor ? `Libros de ${res.autor}, los más leídos primero. Toca el tuyo:` : "Toca tu libro:");
       caja.innerHTML = encontrados.map((x, i) => `
-          <button type="button" class="lib-encontrado" data-lib-elegir-libro="${i}">
+          <button type="button" class="lib-encontrado${x.derivado ? " is-derivado" : ""}" data-lib-elegir-libro="${i}">
             <span class="lib-encontrado-portada">${x.url ? `<img src="${esc(x.url)}" alt="" loading="lazy" decoding="async">` : `<span class="lib-portada">${tapa({ titulo: x.titulo, autor: x.autor })}</span>`}</span>
-            <span class="lib-encontrado-txt"><b>${esc(x.titulo)}</b>${x.autor ? `<small>${esc(x.autor)}</small>` : ""}
-              <small>${esc([x.anio, x.paginas ? `${x.paginas} págs.` : "", x.genero ? L.GENERO[x.genero].nombre : ""].filter(Boolean).join(" · "))}</small></span>
+            <span class="lib-encontrado-txt"><b>${esc(x.titulo)}</b>${x.autor ? `<small data-lib-autor-de="${i}">${esc(nombresAutor[x.autorKey] || x.autor)}</small>` : ""}
+              <small>${esc([x.anio, x.ediciones > 1 ? `${x.ediciones} ediciones` : "", x.genero ? L.GENERO[x.genero].nombre : ""].filter(Boolean).join(" · "))}</small>
+              ${x.tituloOriginal ? `<small class="lib-encontrado-orig">Original: ${esc(x.tituloOriginal)}</small>` : ""}
+              ${x.derivado ? `<small class="lib-encontrado-orig">Resumen o guía de otro libro</small>` : ""}</span>
           </button>`).join("");
+      corregirAutores(corte);
     })
     .catch(err => { if (err && err.name === "AbortError" && busquedaEnCurso !== corte) return; mensajeBusqueda("No se pudo buscar (¿estás sin internet?). Puedes escribir los datos a mano."); })
     .finally(() => clearTimeout(reloj));
 }
+// Un autor que Open Library tiene en otro alfabeto ("Фёдор Достоевский"):
+// se pide su ficha y se usa el nombre en nuestro alfabeto (D-129).
+const nombresAutor = {};
+function corregirAutores(corte) {
+  const F = window.LibrosFuentes;
+  if (!F) return;
+  const claves = Array.from(new Set(encontrados.filter(x => x.autorRaro && x.autorKey && !nombresAutor[x.autorKey]).map(x => x.autorKey))).slice(0, 4);
+  claves.forEach(key => {
+    fetch(F.urlFichaAutor(key), corte ? { signal: corte.signal } : {})
+      .then(r => (r.ok ? r.json() : null))
+      .then(json => {
+        const nombre = F.nombreDeFicha(json);
+        if (!nombre || busquedaEnCurso !== corte) return;
+        nombresAutor[key] = nombre;
+        encontrados.forEach((x, i) => {
+          if (x.autorKey !== key) return;
+          x.autor = nombre;
+          x.autorRaro = false;
+          const s = hoja.el.querySelector(`[data-lib-autor-de="${i}"]`);
+          if (s) s.textContent = nombre;
+        });
+      })
+      .catch(() => {});
+  });
+}
 function elegirLibro(x) {
   const f = hoja.el.querySelector(".lib-form-libro");
   if (!f || !x) return;
+  if (x.autorKey && nombresAutor[x.autorKey]) x.autor = nombresAutor[x.autorKey];
   const llenos = [];
   const poner = (campo, valor, nombre) => { if (valor == null || valor === "") return; f.elements[campo].value = String(valor); if (nombre) llenos.push(nombre); };
   poner("titulo", x.titulo, "el título");
@@ -822,6 +857,9 @@ function elegirLibro(x) {
   poner("genero", x.genero, "el género");
   f.elements.anio.value = x.anio || "";
   f.elements.olKey.value = x.olKey || "";
+  if (f.elements.tituloOriginal) f.elements.tituloOriginal.value = x.tituloOriginal || "";
+  if (f.elements.autorKey) f.elements.autorKey.value = x.autorKey || "";
+  f.dataset.autorElegido = x.autor || "";
   // Al editar, una portada que ya tenías se respeta.
   const original = actual.id ? (libros.find(y => y.id === actual.id) || {}).portada : null;
   const tienePortada = portadaSel !== undefined ? !!portadaSel : !!original;

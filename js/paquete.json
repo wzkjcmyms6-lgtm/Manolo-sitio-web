@@ -134,6 +134,7 @@
   "js/biblia-progreso-ui.js",
   "js/biblia.js",
   "js/libros-motor.js",
+  "js/libros-fuentes.js",
   "js/libros-progreso.js",
   "js/libros-sesiones.js",
   "js/libros-siguiente.js",

@@ -10,7 +10,7 @@ publicada, con pruebas y su lista para el iPhone.
 | Fase | Qué | Estado |
 |---|---|---|
 | 0 | Auditoría con 20 libros reales y plan | ✅ |
-| 1 | Buscar bien: título en español, autor correcto, el libro de verdad primero; buscar también por autor | ⏳ |
+| 1 | Buscar bien: título en español, autor correcto, el libro de verdad primero; buscar también por autor | ✅ (D-129) |
 | 2 | Las páginas de tu edición: elegir la edición (editorial, año, tapa y páginas), la recomendada, el ISBN exacto y cuántas páginas por día para terminarlo | |
 | 3 | Ficha del autor: foto, quién es (en español), tus libros de él y sus otros libros con "＋ Quiero leer" | |
 | 4 | Género y temas en español, "De qué trata" y estadísticas por género | |
@@ -73,7 +73,15 @@ hombre más rico de Babilonia y Deja de ser tú):
 
 ## Diseño por fase
 
-### Fase 1 — Buscar bien
+### Fase 1 — Buscar bien ✅ (D-129)
+Hecho en `js/libros-fuentes.js` (pruebas: `tests/libros-fuentes.test.js`
+con respuestas reales; pantalla: `scripts/e2e/libros-n3.js`). Con las
+respuestas reales: "habitos atomicos" → "Hábitos atómicos" (original:
+Atomic Habits) y los 4 resúmenes al final; "el hombre mas rico de
+babilonia" → George S. Clason primero; "crimen y castigo" → un solo
+resultado, "Fiódor Dostoievski"; "paulo coelho" → sus libros, El alquimista
+primero.
+
 - Se busca con `lang=es`: el título que se llena es el de la **edición en
   español**; el original queda guardado aparte (`tituloOriginal`).
 - **Orden de los resultados**: primero el libro de verdad (más ediciones,

@@ -1,0 +1,346 @@
+{
+ "numFound": 195,
+ "q": "cien años de soledad",
+ "docs": [
+  {
+   "key": "/works/OL274505W",
+   "title": "Cien años de soledad",
+   "cover_i": 12627383,
+   "first_publish_year": 1967,
+   "number_of_pages_median": 432,
+   "edition_count": 209,
+   "author_name": [
+    "Gabriel García Márquez"
+   ],
+   "author_key": [
+    "OL27363A"
+   ],
+   "subject": [
+    "Spanish language books",
+    "Fiction",
+    "Social conditions",
+    "Macondo (Imaginary place)",
+    "novel",
+    "magic realism",
+    "Latinamerican literature",
+    "Condiciones sociales",
+    "Novela",
+    "Literatura épica",
+    "Epic literature",
+    "Macondo (Lugar imaginario)"
+   ],
+   "editions": {
+    "numFound": 209,
+    "docs": [
+     {
+      "key": "/books/OL17228124M",
+      "title": "Cien años de soledad",
+      "language": [
+       "spa"
+      ],
+      "cover_i": 15219095
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL17994053W",
+   "title": "Cien años de soledad",
+   "cover_i": 9886522,
+   "first_publish_year": 1985,
+   "number_of_pages_median": 151,
+   "edition_count": 1,
+   "author_name": [
+    "Josefina Ludmer"
+   ],
+   "author_key": [
+    "OL66624A"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL26575304M",
+      "title": "Cien años de soledad",
+      "language": [
+       "spa"
+      ],
+      "cover_i": 9886522
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL40848841W",
+   "title": "Cien años de Soledad",
+   "first_publish_year": 2015,
+   "number_of_pages_median": 286,
+   "edition_count": 2,
+   "author_name": [
+    "Gabriel Marquez"
+   ],
+   "author_key": [
+    "OL14454691A"
+   ],
+   "editions": {
+    "numFound": 2,
+    "docs": [
+     {
+      "key": "/books/OL56834967M",
+      "title": "Cien años de Soledad",
+      "language": [
+       "spa"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL2454505W",
+   "title": "Cien años de soledad [de] Gabriel García Márquez",
+   "cover_i": 4104330,
+   "first_publish_year": 1989,
+   "number_of_pages_median": 107,
+   "edition_count": 1,
+   "author_name": [
+    "Juan Manuel García Ramos"
+   ],
+   "author_key": [
+    "OL340795A"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL2267473M",
+      "title": "Cien años de soledad [de] Gabriel García Márquez",
+      "language": [
+       "spa"
+      ],
+      "cover_i": 4104330
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL43144891W",
+   "title": "Cien Años De Soledad",
+   "first_publish_year": 1972,
+   "number_of_pages_median": 354,
+   "edition_count": 1,
+   "author_name": [
+    "Gabriel García Márquez"
+   ],
+   "author_key": [
+    "OL15193084A"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL58761792M",
+      "title": "Cien Años De Soledad",
+      "language": [
+       "eng"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL795855W",
+   "title": "Cien años de soledad",
+   "first_publish_year": 1972,
+   "number_of_pages_median": 222,
+   "edition_count": 2,
+   "author_name": [
+    "Josefina Ludmer"
+   ],
+   "author_key": [
+    "OL66624A"
+   ],
+   "subject": [
+    "Macondo (Imaginary place)"
+   ],
+   "editions": {
+    "numFound": 2,
+    "docs": [
+     {
+      "key": "/books/OL17183856M",
+      "title": "Cien años de soledad",
+      "language": [
+       "spa"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL13592321W",
+   "title": "Cien años de soledad, Gabriel García Márquez",
+   "first_publish_year": 2001,
+   "number_of_pages_median": 54,
+   "edition_count": 1,
+   "author_name": [
+    "Gustavo Reyes"
+   ],
+   "author_key": [
+    "OL6452492A"
+   ],
+   "subject": [
+    "Criticism and interpretation",
+    "Crítica e interpretación"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL22468051M",
+      "title": "Cien años de soledad, Gabriel García Márquez",
+      "language": [
+       "spa"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL26187580W",
+   "title": "Sto godina samoće",
+   "cover_i": 12161302,
+   "first_publish_year": 2006,
+   "number_of_pages_median": 272,
+   "edition_count": 1,
+   "author_name": [
+    "Gabriel García Márquez"
+   ],
+   "author_key": [
+    "OL27363A"
+   ],
+   "subject": [
+    "Fiction",
+    "Social conditions"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL35337691M",
+      "title": "Sto godina samoće",
+      "language": [
+       "hrv"
+      ],
+      "cover_i": 12161302
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL25917022W",
+   "title": "Cien años de Soledad. Edición Conmemorativa de la RAE / One Hundred Years of Sol Itude. Conmemorative Edition",
+   "cover_i": 13215914,
+   "first_publish_year": 2021,
+   "edition_count": 1,
+   "author_name": [
+    "Gabriel García Márquez"
+   ],
+   "author_key": [
+    "OL27363A"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL34980171M",
+      "title": "Cien años de Soledad. Edición Conmemorativa de la RAE / One Hundred Years of Sol Itude. Conmemorative Edition",
+      "language": [
+       "spa"
+      ],
+      "cover_i": 13215914
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL40332828W",
+   "title": "Cien años de Soledad",
+   "first_publish_year": 2015,
+   "number_of_pages_median": 270,
+   "edition_count": 2,
+   "author_name": [
+    "Gabriel Márquez"
+   ],
+   "author_key": [
+    "OL14413557A"
+   ],
+   "editions": {
+    "numFound": 2,
+    "docs": [
+     {
+      "key": "/books/OL54861597M",
+      "title": "Cien años de Soledad",
+      "language": [
+       "spa"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL3857714W",
+   "title": "Cien años de soledad",
+   "cover_i": 4103529,
+   "first_publish_year": 1988,
+   "number_of_pages_median": 95,
+   "edition_count": 1,
+   "author_name": [
+    "Diana Morán Garay"
+   ],
+   "author_key": [
+    "OL692287A"
+   ],
+   "subject": [
+    "Macondo (Imaginary place)",
+    "Cien años de soledad (García Márquez, Gabriel)"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL2262656M",
+      "title": "Cien años de soledad",
+      "language": [
+       "spa"
+      ],
+      "cover_i": 4103529
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL795849W",
+   "title": "Cien años de soledad",
+   "first_publish_year": 1974,
+   "number_of_pages_median": 222,
+   "edition_count": 1,
+   "author_name": [
+    "Josefina Ludmer"
+   ],
+   "author_key": [
+    "OL66624A"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL16225149M",
+      "title": "Cien años de soledad: una interpretación.",
+      "language": [
+       "spa"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

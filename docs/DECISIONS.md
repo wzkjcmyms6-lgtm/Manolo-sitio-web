@@ -1795,3 +1795,26 @@ nombre. Google Books (sin clave) solo como extra para la sinopsis: desde
 servidores respondió "cuota excedida". Siete fases: buscar bien, páginas
 de tu edición, ficha del autor, género y temas, completar la biblioteca,
 recomendaciones y control final. Solo se suman campos al libro.
+
+**D-129 (2026-11-16) · Libros nivel 3, fase 1: buscar bien.** "Buscar el
+libro" usa `js/libros-fuentes.js` (UMD, pruebas con respuestas reales de
+Open Library en `tests/fixtures/libros/`). (1) Se busca con `lang=es`: el
+título que se llena es el de la edición en español ("Hábitos atómicos", no
+"Atomic Habits") y el original queda aparte (`tituloOriginal`, se ve en la
+ficha). La portada es la de esa edición. (2) Orden: parecido a lo que
+escribiste (×4) + ediciones (log, ×1,6) + portada y autor; resúmenes,
+análisis, guías de estudio y "libros de trabajo" restan y van al final
+marcados "Resumen o guía de otro libro" (salvo que busques un resumen).
+Así "El hombre más rico de Babilonia" trae primero a George S. Clason (262
+ediciones) y no un librito de 2. (3) Sin repetidos: misma obra = mismo
+título y mismo apellido (un nombre en otro alfabeto puede ser el mismo);
+la que queda toma de sus repetidas el autor en nuestro alfabeto, la
+portada o el género que le falte. (4) Lo que no se parece en nada (ni
+título ni autor) no se muestra si hay otra cosa; un ISBN no se compara.
+(5) Un autor que Open Library tiene en otro alfabeto se corrige con su
+ficha (`/authors/{key}.json`: "Fiódor Dostoievski"). (6) Si escribes un
+autor, "Libros de Paulo Coelho, los más leídos primero". (7) Se guarda
+`autorKey` (el autor en Open Library, para su ficha en la fase 3); si
+cambias el autor a mano, se borra (ya no es ese). Los resultados dicen
+"N ediciones" en vez de páginas: las páginas de tu edición son la fase 2.
+

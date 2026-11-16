@@ -7,6 +7,9 @@ Actualizado: 2026-11-16 (Libros nivel 3 en curso, D-128).
   tu edición; ficha del autor, temas, completar la biblioteca y
   recomendaciones. Plan y auditoría con 20 libros reales en
   `docs/LIBROS_NIVEL3.md` (D-128); fases en `.claude/CURRENT_PHASE.md`.
+  Fase 1 hecha (D-129): "Buscar el libro" trae el título en español, el
+  libro de verdad primero, sin repetidos, el autor bien escrito y busca
+  por autor (`js/libros-fuentes.js`).
 
 - **Mejoras sin servidor (2026-11-15, terminado)**: fase 1 hecha (D-123):
   **Biblia en audio** en el lector, con las voces del iPhone (sin

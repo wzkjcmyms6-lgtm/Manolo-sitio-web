@@ -1,0 +1,455 @@
+{
+ "numFound": 1254,
+ "q": "paulo coelho",
+ "docs": [
+  {
+   "key": "/works/OL796465W",
+   "title": "O Alquimista",
+   "cover_i": 7414780,
+   "first_publish_year": 1988,
+   "number_of_pages_median": 197,
+   "edition_count": 141,
+   "author_name": [
+    "Paulo Coelho"
+   ],
+   "author_key": [
+    "OL66700A"
+   ],
+   "subject": [
+    "Translations into Indonesian",
+    "Voyages and travels",
+    "Fiction",
+    "Portuguese Fiction",
+    "Self-realization",
+    "Alchemists",
+    "Young men",
+    "Shepherds",
+    "New York Times bestseller",
+    "nyt:trade_fiction_paperback=2008-01-05",
+    "nyt:trade_fiction_paperback=2007-12-02",
+    "Fiction, visionary & metaphysical"
+   ],
+   "editions": {
+    "numFound": 141,
+    "docs": [
+     {
+      "key": "/books/OL9178260M",
+      "title": "El alquimista",
+      "language": [
+       "spa"
+      ],
+      "cover_i": 1054120
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL796601W",
+   "title": "Eleven Minutes",
+   "cover_i": 31228,
+   "first_publish_year": 2003,
+   "number_of_pages_median": 304,
+   "edition_count": 22,
+   "author_name": [
+    "Paulo Coelho"
+   ],
+   "author_key": [
+    "OL66700A"
+   ],
+   "subject": [
+    "Brazilians",
+    "Love",
+    "Prostitutes",
+    "Sex",
+    "Fiction",
+    "Romance fiction",
+    "Fiction, visionary & metaphysical",
+    "Brazil, fiction",
+    "Love stories"
+   ],
+   "editions": {
+    "numFound": 22,
+    "docs": [
+     {
+      "key": "/books/OL16199571M",
+      "title": "Eleven minutes",
+      "language": [
+       "eng"
+      ],
+      "cover_i": 11625598
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL796597W",
+   "title": "Veronika decide morrer",
+   "cover_i": 6421209,
+   "first_publish_year": 1998,
+   "number_of_pages_median": 220,
+   "edition_count": 13,
+   "author_name": [
+    "Paulo Coelho"
+   ],
+   "author_key": [
+    "OL66700A"
+   ],
+   "subject": [
+    "Suicide",
+    "Translations into Russian",
+    "Quality of life",
+    "Literature",
+    "Suicidal behavior",
+    "Portuguese fiction",
+    "Mental illness",
+    "Fiction",
+    "Self-realization",
+    "Young women",
+    "Psychological fiction",
+    "Self-actualization (Psychology)"
+   ],
+   "editions": {
+    "numFound": 13,
+    "docs": [
+     {
+      "key": "/books/OL502289M",
+      "title": "Veronika decide morrer",
+      "language": [
+       "por",
+       "spa"
+      ],
+      "cover_i": 9517783
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL796480W",
+   "title": "Brida",
+   "cover_i": 1051985,
+   "first_publish_year": 1990,
+   "number_of_pages_median": 263,
+   "edition_count": 32,
+   "author_name": [
+    "Paulo Coelho"
+   ],
+   "author_key": [
+    "OL66700A"
+   ],
+   "subject": [
+    "Fiction",
+    "Magic",
+    "Witchcraft",
+    "Portuguese fiction",
+    "Amor",
+    "Ficción",
+    "Brazilian literature",
+    "Translations into Russian",
+    "Literatura brasileña",
+    "Literature",
+    "General",
+    "Spanish: Adult Fiction"
+   ],
+   "editions": {
+    "numFound": 32,
+    "docs": [
+     {
+      "key": "/books/OL23046640M",
+      "title": "Brida",
+      "language": [
+       "spa"
+      ],
+      "cover_i": 12137228
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL796600W",
+   "title": "Zahir",
+   "cover_i": 37135,
+   "first_publish_year": 2005,
+   "number_of_pages_median": 320,
+   "edition_count": 21,
+   "author_name": [
+    "Paulo Coelho"
+   ],
+   "author_key": [
+    "OL66700A"
+   ],
+   "subject": [
+    "Fiction",
+    "Missing persons",
+    "Compulsive behavior",
+    "Marriage",
+    "Ficción",
+    "Psychological fiction",
+    "Husband and wife",
+    "Matrimonio",
+    "Conducta compulsiva",
+    "Personas desaparecidas",
+    "Translations into Czech",
+    "Literature"
+   ],
+   "editions": {
+    "numFound": 21,
+    "docs": [
+     {
+      "key": "/books/OL22998444M",
+      "title": "El Zahir",
+      "language": [
+       "spa"
+      ],
+      "cover_i": 7950456
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL24793569W",
+   "title": "The Alchemist Graphic Novel",
+   "cover_i": 11556106,
+   "first_publish_year": 2010,
+   "number_of_pages_median": 208,
+   "edition_count": 3,
+   "author_name": [
+    "Paulo Coelho"
+   ],
+   "author_key": [
+    "OL66700A"
+   ],
+   "subject": [
+    "Comics & graphic novels, general",
+    "Fables"
+   ],
+   "editions": {
+    "numFound": 3,
+    "docs": [
+     {
+      "key": "/books/OL24548171M",
+      "title": "The Alchemist",
+      "language": [
+       "eng"
+      ],
+      "cover_i": 15173647
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL796473W",
+   "title": "Am Ufer des Rio Piedra saß ich und weinte",
+   "cover_i": 999131,
+   "first_publish_year": 1975,
+   "number_of_pages_median": 224,
+   "edition_count": 72,
+   "author_name": [
+    "Paulo Coelho"
+   ],
+   "author_key": [
+    "OL66700A"
+   ],
+   "subject": [
+    "General",
+    "Cuentos de amor",
+    "Spanish language materials",
+    "Amistad",
+    "Fiction",
+    "Novela",
+    "Friendship",
+    "Vida espiritual",
+    "Spiritual life",
+    "Literature",
+    "European literature",
+    "Fiction, romance, general"
+   ],
+   "editions": {
+    "numFound": 72,
+    "docs": [
+     {
+      "key": "/books/OL13189137M",
+      "title": "A Orillas Del Rio Piedra Me Sente Y Llore",
+      "language": [
+       "spa"
+      ],
+      "cover_i": 3324733
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL27298042W",
+   "title": "ClassicNotes GradeSaver on The Alchemist by Paulo Coelho",
+   "cover_i": 12630082,
+   "first_publish_year": 2009,
+   "number_of_pages_median": 80,
+   "edition_count": 1,
+   "author_name": [
+    "Anthony Arroyo"
+   ],
+   "author_key": [
+    "OL10218477A"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL37054833M",
+      "title": "ClassicNotes GradeSaver on The Alchemist by Paulo Coelho",
+      "language": [
+       "eng"
+      ],
+      "cover_i": 12630082
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL796594W",
+   "title": "Diário de um mago",
+   "cover_i": 48619,
+   "first_publish_year": 1995,
+   "number_of_pages_median": 265,
+   "edition_count": 16,
+   "author_name": [
+    "Paulo Coelho"
+   ],
+   "author_key": [
+    "OL66700A"
+   ],
+   "subject": [
+    "Pilgrims and pilgrimages",
+    "Occultism",
+    "Peregrinaciones",
+    "Christian pilgrims and pilgrimages",
+    "Nonfiction",
+    "Travel",
+    "Spiritual biography"
+   ],
+   "editions": {
+    "numFound": 16,
+    "docs": [
+     {
+      "key": "/books/OL39412824M",
+      "title": "Peregrino / the Pilgrimage",
+      "language": [
+       "spa"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL796596W",
+   "title": "The Devil and Miss Prym",
+   "cover_i": 8811,
+   "first_publish_year": 2000,
+   "number_of_pages_median": 224,
+   "edition_count": 12,
+   "author_name": [
+    "Paulo Coelho"
+   ],
+   "author_key": [
+    "OL66700A"
+   ],
+   "subject": [
+    "Fiction",
+    "Suspense",
+    "Good and evil",
+    "Translations into English",
+    "Social life and customs",
+    "Portuguese fiction",
+    "Manners and customs",
+    "Fiction, visionary & metaphysical"
+   ],
+   "editions": {
+    "numFound": 12,
+    "docs": [
+     {
+      "key": "/books/OL3432258M",
+      "title": "The Devil and Miss Prym",
+      "language": [
+       "eng"
+      ],
+      "cover_i": 27537
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL27302828W",
+   "title": "Nhà giả kim",
+   "cover_i": 12634885,
+   "first_publish_year": 2016,
+   "number_of_pages_median": 225,
+   "edition_count": 1,
+   "author_name": [
+    "Paulo Coelho"
+   ],
+   "author_key": [
+    "OL66700A"
+   ],
+   "subject": [
+    "Alchemists",
+    "Fiction",
+    "Shepherds",
+    "Alkemister",
+    "Fåraherdar"
+   ],
+   "editions": {
+    "numFound": 1,
+    "docs": [
+     {
+      "key": "/books/OL37063643M",
+      "title": "Nhà giả kim",
+      "language": [
+       "vie"
+      ],
+      "cover_i": 12634885
+     }
+    ]
+   }
+  },
+  {
+   "key": "/works/OL796582W",
+   "title": "A bruxa de Portobello",
+   "cover_i": 47997,
+   "first_publish_year": 2006,
+   "number_of_pages_median": 296,
+   "edition_count": 32,
+   "author_name": [
+    "Paulo Coelho"
+   ],
+   "author_key": [
+    "OL66700A"
+   ],
+   "subject": [
+    "Fiction",
+    "Missing persons",
+    "Psychics",
+    "Orphans",
+    "Fiction Orphans",
+    "Spanish language materials",
+    "Personas desaparecidas",
+    "Novela",
+    "Psíquicos",
+    "Ficción",
+    "Literatura brasileña",
+    "Novela brasileña"
+   ],
+   "editions": {
+    "numFound": 32,
+    "docs": [
+     {
+      "key": "/books/OL26690291M",
+      "title": "La bruja de Portobello",
+      "language": [
+       "spa"
+      ],
+      "cover_i": 8359866
+     }
+    ]
+   }
+  }
+ ]
+}

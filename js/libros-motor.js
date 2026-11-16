@@ -4,6 +4,7 @@
 // Fase 4 (D-107): estado Abandonado, formato (papel, digital o audiolibro
 // con su duración) y lecturas anteriores (releer).
 // Fase 5 (D-108): saga (nombre y número), prioridad y notas por libro.
+// Nivel 3 (D-129): título original y autor de Open Library (js/libros-fuentes.js).
 // Colecciones: users/{uid}/libros y users/{uid}/libros_frases (docs/DATABASE.md).
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
@@ -135,6 +136,9 @@ function validarLibro(datos, opciones) {
       genero: GENERO[datos.genero] ? datos.genero : null,
       anio: Number.isInteger(anio) && anio >= 1 && anio <= 2100 ? anio : null,
       olKey: /^\/works\/OL\d+W$/.test(String(datos.olKey || "")) ? datos.olKey : null,
+      // Nivel 3 (D-129): el título original (si el tuyo está traducido) y el autor en Open Library.
+      tituloOriginal: texto(datos.tituloOriginal, 200).replace(/\s+/g, " ") || null,
+      autorKey: /^OL\d+A$/.test(String(datos.autorKey || "")) ? datos.autorKey : null,
       formato, saga: saga || null, sagaN: saga ? sagaN : null, prioridad: datos.prioridad === "alta" || datos.prioridad === "baja" ? datos.prioridad : null };
   // La duración solo con audiolibro (si cambias a papel, la que tenías queda guardada).
   if (formato === "audio") doc.duracionMin = duracionMin;
@@ -155,6 +159,9 @@ function normalizarLibro(id, d) {
     portada: d.portada && typeof d.portada === "object" ? d.portada : null,
     creado: typeof d.creado === "number" ? d.creado : 0,
     genero: GENERO[d.genero] ? d.genero : null, anio: Number.isInteger(d.anio) ? d.anio : null, olKey: typeof d.olKey === "string" ? d.olKey : null,
+    // Nivel 3 (D-129).
+    tituloOriginal: typeof d.tituloOriginal === "string" ? d.tituloOriginal : "",
+    autorKey: typeof d.autorKey === "string" && /^OL\d+A$/.test(d.autorKey) ? d.autorKey : null,
     // Progreso de lectura (js/libros-progreso.js).
     paginaActual: Number.isInteger(d.paginaActual) && d.paginaActual >= 0 ? d.paginaActual : null,
     paginaBase: Number.isInteger(d.paginaBase) && d.paginaBase >= 0 ? d.paginaBase : null,

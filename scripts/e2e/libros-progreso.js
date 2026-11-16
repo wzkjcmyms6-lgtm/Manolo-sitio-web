@@ -117,7 +117,7 @@ const sobra = (p, sel) => p.$eval(sel, el => el.scrollWidth - el.clientWidth);
   await p.waitForTimeout(1100);
   ok(pedidos.some(u => u.includes("q=el amor en los tiempos")), "busca solo al dejar de escribir (sin tocar Buscar)");
   const filas = await p.$$eval(hoja("[data-lib-elegir-libro]"), els => els.map(e => e.innerText.replace(/\s+/g, " ").trim()));
-  ok(filas.length === 3 && /^El amor en los tiempos del cólera Gabriel García Márquez 1985 · 451 págs\. · Novela$/.test(filas[0]), `primero el libro completo, con año, páginas y género (${filas[0]})`);
+  ok(filas.length === 3 && /^El amor en los tiempos del cólera Gabriel García Márquez 1985 · 130 ediciones · Novela$/.test(filas[0]), `primero el libro de verdad, con año, ediciones y género (${filas[0]})`);
   ok(/Fe y espiritualidad/.test(filas[1]) && /Motivos y tópicos/.test(filas[2]), "el análisis sin portada queda al final; otro sale como Fe y espiritualidad");
   await p.click(hoja('[data-lib-elegir-libro="0"]'));
   await p.waitForTimeout(300);

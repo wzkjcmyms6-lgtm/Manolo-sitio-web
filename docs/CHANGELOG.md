@@ -1,5 +1,14 @@
 # Cambios
 
+## 2026-11-16 · Libros: buscar un libro trae los datos correctos
+- "Buscar el libro" llena el **título en español** ("Hábitos atómicos",
+  no "Atomic Habits"); el original queda en la ficha.
+- Primero sale **el libro de verdad**; los resúmenes y guías de otros
+  libros van al final y dicen "Resumen o guía de otro libro".
+- Sin resultados repetidos y con el **autor bien escrito** (por ejemplo
+  "Fiódor Dostoievski", no en ruso).
+- Si escribes **un autor**, salen sus libros más leídos.
+
 ## 2026-11-16 · La app abre más rápido
 - Al abrir, Manolo carga 14 archivos en vez de 198: Inicio aparece en
   unos 400 ms en vez de 640 ms (medido como en un teléfono).

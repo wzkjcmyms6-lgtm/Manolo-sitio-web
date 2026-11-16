@@ -8,7 +8,7 @@ libros tienen distintas páginas). Hazlo mucho mejor." Plan, auditoría con
 | Fase | Qué | Estado |
 |---|---|---|
 | 0 | Auditoría con 20 libros reales y plan | ✅ (D-128) |
-| 1 | Buscar bien: título en español, autor correcto, el libro de verdad primero; buscar por autor | ⏳ |
+| 1 | Buscar bien: título en español, autor correcto, el libro de verdad primero; buscar por autor | ✅ (D-129) |
 | 2 | Las páginas de tu edición (elegir edición, recomendada, ISBN exacto) y páginas por día | ⏳ |
 | 3 | Ficha del autor: quién es, tus libros de él y sus otros libros | ⏳ |
 | 4 | Género y temas en español, "De qué trata", estadísticas por género | ⏳ |
