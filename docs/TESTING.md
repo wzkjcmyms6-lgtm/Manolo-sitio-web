@@ -1,6 +1,17 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (Resúmenes, fase 1, D-137): `npm test` → **738 pruebas**.
+  Nuevo `resumen-motor` (cifras de cada sección, la semana contra la
+  anterior y tu promedio, a mitad de semana, lo mejor, lo que se quedó
+  atrás, la sugerencia, hábitos "X veces por semana", formatos). Nueva
+  suite de pantalla `resumenes` (los datos de las 10 secciones llegan al
+  motor; Finanzas sin transferencias ni excluidos): ahora son 39 suites.
+  `run-feed` «se cargan 20 más solas» fallaba a veces: al abrir, la base
+  de datos de prueba avisa a todas las pantallas con cada cosa que se
+  guarda, la lista de carreras se vuelve a dibujar varias veces y la
+  prueba bajaba con el botón «Ver más» ya reemplazado (en la app real no
+  pasa: cada colección avisa solo lo suyo). Ahora la prueba reintenta.
 - 2026-11-16 (Libros nivel 3, control final, D-135): `npm test` → **732
   pruebas**; las 38 pruebas de pantalla pasan (3161 comprobaciones);
   Lighthouse de las pantallas nuevas de Libros en oscuro y en claro: 100 en accesibilidad y en buenas prácticas en las 12 pantallas

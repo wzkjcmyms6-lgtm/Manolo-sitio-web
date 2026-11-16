@@ -141,9 +141,17 @@ for (let i = 0; i < 45; i++) { const d = new Date(2026, 9, 31 - i); MUCHAS[`v${i
   await p.context().close();
   p = await abrir(browser, base, { __SEED__: { "users/test/running": MUCHAS } }, { hash: "#running", zona: ZONA, fecha: "2026-11-04T09:00:00-04:00" });
   ok((await p.$$("#rf-feed .rf-card")).length === 20 && /Ver más \(25\)/.test(await p.$eval("[data-rf-mas]", b => b.textContent)), "45 carreras: primero 20 y «Ver más (25)»");
-  await p.$eval("[data-rf-mas]", b => b.scrollIntoView());
-  // Espera a que lleguen (antes, 600 ms fijos: con la máquina ocupada no alcanzaba).
-  await p.waitForFunction(() => document.querySelectorAll("#rf-feed .rf-card").length >= 40, null, { timeout: 5000 }).catch(() => {});
+  // Baja hasta «Ver más» y espera a que lleguen. Se reintenta: al abrir, la
+  // base de datos de prueba avisa a todas las pantallas con cada cosa que se
+  // guarda y la lista se vuelve a dibujar varias veces; si se baja con el
+  // botón viejo (ya reemplazado), no pasa nada (antes, una sola vez: fallaba
+  // a veces). Primero se mira si llegaron, para no bajar al «Ver más» nuevo.
+  await p.waitForFunction(() => {
+    if (document.querySelectorAll("#rf-feed .rf-card").length >= 40) return true;
+    const b = document.querySelector("[data-rf-mas]");
+    if (b) b.scrollIntoView();
+    return false;
+  }, null, { timeout: 5000, polling: 250 }).catch(() => {});
   ok((await p.$$("#rf-feed .rf-card")).length === 40, "al llegar al final se cargan 20 más solas");
   ok(p.errores.length === 0, "sin errores");
   await p.context().close();

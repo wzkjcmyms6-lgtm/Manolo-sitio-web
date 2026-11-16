@@ -9,6 +9,9 @@ Actualizado: 2026-11-16 (Tu semana, Tu año y Bici en curso, D-136).
   mismas pantallas que Running (tarjetas con mapa, progreso, récords de
   bici, Eddington, tus bicis y mantenimiento). Plan en `docs/RESUMENES.md`
   y `docs/CYCLING.md` (D-136); fases en `.claude/CURRENT_PHASE.md`.
+  Fase 1 hecha (D-137): el motor de resúmenes (las 10 secciones, la semana
+  contra la anterior y tu promedio, lo mejor, lo que se quedó atrás y una
+  sugerencia), sin lecturas nuevas.
 
 - **Libros nivel 3 (2026-11-16, terminado)**: que al poner un libro se
   traigan bien el título en español, el autor, el género y las páginas de

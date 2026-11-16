@@ -178,7 +178,9 @@
   "js/respaldo-motor.js",
   "js/respaldo.js",
   "js/mi-dia-motor.js",
-  "js/mi-dia.js"
+  "js/mi-dia.js",
+  "js/resumen-motor.js",
+  "js/resumen-fuentes.js"
  ],
  "css": [
   "css/style.css",

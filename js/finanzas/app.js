@@ -5483,6 +5483,20 @@ window.FinanzasNuevo = {
 // en el periodo de hoy, con la misma cuenta que Presupuesto › Información
 // (aunque estés mirando otro mes). Solo lee; no cambia nada.
 window.FinanzasResumen = {
+  // "Tu semana" y "Tu año" (D-136): los gastos e ingresos que cuentan (sin
+  // transferencias ni lo marcado "Excluir del presupuesto"), en centavos,
+  // como en Análisis. null si todavía no llegaron. Solo lee.
+  movimientos() {
+    if (!financeCache.length && !delServidor.finanzas) return null;
+    return financeCache.filter(m => (m.type === "gasto" || m.type === "ingreso") && !m.excluded && Number.isInteger(m.montoCent) && m.montoCent > 0)
+      .map(m => ({ fecha: m.date, tipo: m.type, cent: m.montoCent, cat: m.category || "" }));
+  },
+  // Nombres de las categorías de gasto (id → nombre).
+  categorias() {
+    const o = {};
+    gastoCategoriesCache.forEach(c => { o[c.id] = c.label; });
+    return o;
+  },
   // D-121: pagos mínimos que faltan y vencen en 3 días o menos.
   tarjetas() {
     if (!tarjetasCache.length) return [];

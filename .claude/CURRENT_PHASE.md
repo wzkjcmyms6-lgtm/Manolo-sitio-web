@@ -8,7 +8,7 @@ Diseño en `docs/RESUMENES.md` (Tu semana y Tu año) y `docs/CYCLING.md`
 | Fase | Qué | Estado |
 |---|---|---|
 | 0 | Auditoría y diseño | ✅ (D-136) |
-| 1 | Motor de resúmenes: tus datos de todas las secciones para cualquier semana o año (sin pantalla) | ⏳ |
+| 1 | Motor de resúmenes: tus datos de todas las secciones para cualquier semana o año (sin pantalla) | ✅ (D-137) |
 | 2 | "Tu semana": tarjeta en Inicio los lunes, pantalla con semanas anteriores, lo mejor, lo que se quedó atrás, una sugerencia, compartir | ⏳ |
 | 3 | "Tu año": el contenido (cada sección, récords, mejor mes, rachas, contra el año anterior) | ⏳ |
 | 4 | "Tu año": las diapositivas a pantalla completa, compartir cada una, tarjeta en Inicio en diciembre y enero, años anteriores | ⏳ |

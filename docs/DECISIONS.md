@@ -1984,3 +1984,21 @@ lo propio de bici (velocidad, desnivel, récords por distancia de bici
 calculados una vez por rodada y guardados, número de Eddington, tus bicis
 con mantenimiento); datos solo aditivos.
 
+**D-137 (2026-11-16) · Resúmenes, fase 1: el motor.** `js/resumen-motor.js`
+(sin pantalla, con pruebas) arma las cifras de cualquier período para las
+10 secciones (Hábitos, Gimnasio, Running, Bici, Movilidad, Libros, Biblia,
+Finanzas, Mi mañana y Lugares) y la semana: por área contra la semana
+anterior (si la semana va por la mitad, contra los mismos días) y contra
+tu promedio de las 4 anteriores; **lo mejor** (récords de Running y del
+gimnasio, libros terminados, días perfectos, la Biblia los 7 días, la más
+larga del año, gastar menos que tu promedio, tu mañana más rápida, un
+lugar nuevo que te encantó); **lo que se quedó atrás** (hasta 3, primero lo
+que dejaste de hacer y después los gastos: un hábito con la mitad o menos,
+no entrenar o correr cuando sueles hacerlo, no leer, la Biblia muchos menos
+días, una categoría de gasto un 30 % sobre tu promedio, tu mañana 5 min más
+lenta) y **una sola sugerencia** concreta y alcanzable. A mitad de semana no
+se reclama lo que falta. `js/resumen-fuentes.js` junta lo que cada sección
+ya tiene en memoria (sin lecturas nuevas); Finanzas suma una función de
+solo lectura (`FinanzasResumen.movimientos()`, gastos e ingresos en
+centavos sin transferencias ni lo excluido, como en Análisis).
+

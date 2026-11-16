@@ -126,6 +126,12 @@ Para esta semana
   dinero**: Finanzas se comparte solo en porcentajes y no entra en la
   imagen del año. Nada sale de Manolo hasta que eliges dónde.
 
+### Hecho en la fase 1 (D-137)
+`js/resumen-motor.js` y `js/resumen-fuentes.js`; en Finanzas,
+`FinanzasResumen.movimientos()` y `categorias()` (solo leen). Pruebas:
+`tests/resumen-motor.test.js` y `scripts/e2e/resumenes.js` (los datos de
+las 10 secciones llegan al motor en la app).
+
 ### Datos
 
 Ningún campo nuevo en Firestore para los resúmenes. En el teléfono:
