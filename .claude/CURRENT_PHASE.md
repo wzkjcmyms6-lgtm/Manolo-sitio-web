@@ -1,5 +1,22 @@
 # Fase actual
 
+## Tu semana, Tu año y Bici al nivel de Running (pedido del dueño, 2026-11-16)
+"Haz el 1, 2 y 4, desarróllalos de la manera más completa posible."
+Diseño en `docs/RESUMENES.md` (Tu semana y Tu año) y `docs/CYCLING.md`
+(Bici), D-136.
+
+| Fase | Qué | Estado |
+|---|---|---|
+| 0 | Auditoría y diseño | ✅ (D-136) |
+| 1 | Motor de resúmenes: tus datos de todas las secciones para cualquier semana o año (sin pantalla) | ⏳ |
+| 2 | "Tu semana": tarjeta en Inicio los lunes, pantalla con semanas anteriores, lo mejor, lo que se quedó atrás, una sugerencia, compartir | ⏳ |
+| 3 | "Tu año": el contenido (cada sección, récords, mejor mes, rachas, contra el año anterior) | ⏳ |
+| 4 | "Tu año": las diapositivas a pantalla completa, compartir cada una, tarjeta en Inicio en diciembre y enero, años anteriores | ⏳ |
+| 5 | Bici: Actividades (barra propia, tarjetas con mapa, filtros, "+", Inicio, detalle con lo de bici) | ⏳ |
+| 6 | Bici: Progreso (períodos, calendario, récords de bici, Eddington, metas, racha, mapa de calor) | ⏳ |
+| 7 | Bici: tus bicis y mantenimiento, segmentos de bici | ⏳ |
+| 8 | Control final y lista para el iPhone | ⏳ |
+
 ## Libros nivel 3: datos de verdad de cada libro (pedido del dueño, 2026-11-16) — terminado
 "Si pongo un libro, que traiga el autor, el género y las páginas (los
 libros tienen distintas páginas). Hazlo mucho mejor." Plan, auditoría con

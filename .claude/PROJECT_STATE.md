@@ -1,6 +1,14 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-16 (Libros nivel 3 terminado, D-135).
+Actualizado: 2026-11-16 (Tu semana, Tu año y Bici en curso, D-136).
+
+- **Tu semana, Tu año y Bici al nivel de Running (2026-11-16, en curso)**:
+  "Tu semana" (cada lunes en Inicio: cifras de todas tus áreas, lo mejor, lo
+  que se quedó atrás y una sugerencia), "Tu año en Manolo" (diapositivas
+  con todo tu año, para compartir sin montos de dinero) y Bici con las
+  mismas pantallas que Running (tarjetas con mapa, progreso, récords de
+  bici, Eddington, tus bicis y mantenimiento). Plan en `docs/RESUMENES.md`
+  y `docs/CYCLING.md` (D-136); fases en `.claude/CURRENT_PHASE.md`.
 
 - **Libros nivel 3 (2026-11-16, terminado)**: que al poner un libro se
   traigan bien el título en español, el autor, el género y las páginas de

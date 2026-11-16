@@ -1963,3 +1963,24 @@ con 1.500 versículos < 1,5 s" (de antes de este plan) está al borde en
 este entorno (entre 1,1 y 1,8 s según la carga de la máquina): si falla,
 se repite sola.
 
+**D-136 (2026-11-16) · "Tu semana", "Tu año en Manolo" y Bici al nivel de
+Running: plan.** Pedido del dueño: "Haz el 1, 2 y 4, desarróllalos de la
+manera más completa posible". Diseño en `docs/RESUMENES.md` y
+`docs/CYCLING.md`; fases en `.claude/CURRENT_PHASE.md`. (1) **Sin lecturas
+nuevas**: todas las secciones ya cargan sus datos completos al abrir la
+app, así que los resúmenes usan lo que está en memoria (instantáneos, sin
+costo, sin internet); un motor sin pantalla (`js/resumen-motor.js`) arma
+la semana y el año con pruebas. (2) **La semana es de lunes a domingo**
+(como el resto de la app); en Inicio la tarjeta sale lunes y martes y se
+oculta con "Listo"; siempre está en el menú. Comparaciones contra la semana
+anterior y tu promedio de 4 semanas; "Se quedó atrás" y "Para esta semana"
+con reglas simples (sin IA), una sola sugerencia concreta. (3) **Tu año**:
+siempre disponible ("hasta hoy" si no terminó); en Inicio del 1 de
+diciembre al 31 de enero; diapositivas como el Wrapped de Hábitos (que se
+mantiene y se puede abrir desde ahí). (4) **Privacidad**: las imágenes para
+compartir no llevan montos de dinero (Finanzas solo en porcentajes y fuera
+de la imagen del año). (5) **Bici**: las mismas pantallas que Running con
+lo propio de bici (velocidad, desnivel, récords por distancia de bici
+calculados una vez por rodada y guardados, número de Eddington, tus bicis
+con mantenimiento); datos solo aditivos.
+
