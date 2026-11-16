@@ -1,6 +1,11 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (control final de las mejoras sin servidor): `npm test` →
+  **702 pruebas**; las 37 suites de `scripts/e2e/` en verde con la app
+  empaquetada (2.908 comprobaciones, 0 fallas); Lighthouse 100 / 100 en las
+  pantallas nuevas, en oscuro y en claro (ver "Resultado del control
+  final" abajo).
 - 2026-11-16 (la app abre más rápido, D-127): `npm test` → **702
   pruebas**. Nueva: `paquete` (paquetes al día, la lista sin repetidos y
   sin módulos sueltos en index.html, el orden de los estilos, el modo
@@ -307,6 +312,28 @@ Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
   bloqueado de verdad y la pantalla encendida, el menú de compartir del
   iPhone y la descarga de la Biblia en el teléfono. Van en la lista de
   abajo.
+
+## Resultado del control final de las mejoras sin servidor (2026-11-16)
+- Unitarias: 702/702. E2E: las 37 suites de `scripts/e2e/` en verde sobre
+  la versión final, con la app empaquetada (2.908 comprobaciones, 0 fallas).
+- Lighthouse (Accesibilidad / Buenas prácticas, 375 px): 100 / 100 en los
+  20 pasos, en oscuro y en claro: Inicio, hoja "Apariencia", Biblia y el
+  lector con la barra de audio, rutinas de Running y su editor,
+  Entrenamiento y el editor de rutinas, Hábitos y Finanzas (cada hoja
+  confirmada abierta antes de medir).
+- Abrir la app (con la app instalada y la CPU 4 veces más lenta, mediana
+  de 7): 198 → 14 archivos; Inicio con contenido 640 → 400 ms (D-127).
+- Hallazgos arreglados antes de subir: con la app empaquetada, la búsqueda
+  de la Biblia no habría arrancado sin internet (su Worker carga dos
+  archivos sueltos que ya no estaban en la lista del service worker; ahora
+  se guardan aparte y `sin-internet` lo prueba en modo avión); el modo
+  claro generado desde el paquete salía con otros títulos de sección
+  (ahora idéntico). Dos pruebas que fallaban a veces, también antes de
+  estos cambios, leen de forma más robusta (`run-progreso`, `run-feed`).
+- Lo que no se puede probar aquí: las voces de verdad del iPhone y el
+  audio con la pantalla bloqueada, el cambio claro/oscuro del iPhone en
+  "Automático", la franja de la hora en la app instalada y la velocidad
+  real al abrir en el teléfono. Van en la lista de abajo.
 
 ## Pruebas en el iPhone (las hace el dueño)
 Abrir Manolo **desde el ícono de la pantalla de inicio** (no desde Safari),

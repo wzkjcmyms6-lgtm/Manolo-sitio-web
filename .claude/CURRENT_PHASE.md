@@ -12,7 +12,14 @@ con la app cerrada y Strava automático quedan para después ("Ahora no").
 | 3 | Rutinas del gimnasio: guardar lo cambiado al entrenar, entreno libre como rutina, aviso al cerrar el editor | ✅ (D-125) |
 | 4 | Modo claro (automático o elegido) | ✅ (D-126) |
 | 5 | Que la app abra más rápido | ✅ (D-127) |
-| 6 | Control final y entrega | ⏳ |
+| 6 | Control final y entrega | ✅ |
+
+**Plan terminado (2026-11-16).** Control final: 702 pruebas, las 37 suites
+en verde y Lighthouse 100 / 100 en las pantallas nuevas (claro y oscuro).
+Queda del dueño: probar en el iPhone las listas «Biblia en audio»,
+«Rutinas de Running desde la app», «Rutinas del gimnasio», «Modo claro» y
+«La app abre más rápido» de `docs/TESTING.md`. Para después (necesitan un
+servidor): avisos con la app cerrada y Strava automático.
 
 ## Ajustes del dueño (2026-11-15, después de probar en el iPhone)
 | Qué | Estado |

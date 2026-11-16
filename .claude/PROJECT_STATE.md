@@ -1,8 +1,8 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-16 (la app abre más rápido, D-127; mejoras sin servidor en curso).
+Actualizado: 2026-11-16 (mejoras sin servidor terminadas, D-123 a D-127).
 
-- **Mejoras sin servidor (2026-11-15, en curso)**: fase 1 hecha (D-123):
+- **Mejoras sin servidor (2026-11-15, terminado)**: fase 1 hecha (D-123):
   **Biblia en audio** en el lector, con las voces del iPhone (sin
   internet): resalta el versículo, velocidad y voz, sigue con el siguiente
   capítulo y lo marca como leído si lo oíste completo. Fase 2 hecha
@@ -17,7 +17,9 @@ Actualizado: 2026-11-16 (la app abre más rápido, D-127; mejoras sin servidor e
   (D-127): **la app abre más rápido**: los módulos van en
   `js/app.paquete.js` y los estilos en `css/app.paquete.css` (14 pedidos
   al abrir en vez de 198); tras cambiar un .js o .css: `npm run listo`.
-  Sigue: control final (`.claude/CURRENT_PHASE.md`).
+  Control final hecho: 702 pruebas, las 37 suites y Lighthouse 100 / 100
+  en las pantallas nuevas (claro y oscuro). Queda del dueño: las listas del
+  iPhone en `docs/TESTING.md`.
 
 - **Ajustes del dueño (2026-11-15)**: pago mínimo por tarjeta con aviso
   (D-121); "Leí en mi Biblia" para marcar lo leído en papel con un toque
