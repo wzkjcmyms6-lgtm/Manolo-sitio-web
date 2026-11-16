@@ -1945,3 +1945,21 @@ a internet: cada prueba simula lo que usa. Lógica en
 `js/libros-recomendar.js` (y los temas a buscar en `js/libros-fuentes.js`);
 pantalla en `js/libros-ideas-ui.js`.
 
+**D-135 (2026-11-16) · Libros nivel 3, fase 7: control final.** Todo el
+plan de `docs/LIBROS_NIVEL3.md` está hecho (D-129 a D-134). Control: `npm
+test` → 732 pruebas; las 38 pruebas de pantalla (3161
+comprobaciones), con `libros-n3` cubriendo las 6 fases a 390 y 320 px;
+Lighthouse de las pantallas nuevas (hoja "Si te gustó…", "Completar mi
+biblioteca", la ficha con temas y "De qué trata", la ficha del autor y
+"Agregar libro" con las ediciones), en oscuro y en claro: 100 en accesibilidad y en buenas prácticas en las 12 pantallas.
+Datos: solo se sumaron campos al libro (`tituloOriginal`, `autorKey`,
+`edicion`, `metaFin`, `temas`); "De qué trata", la ficha del autor, las
+ideas y lo revisado quedan en el teléfono. Las pruebas de pantalla ya no
+salen a internet a buscar libros. En el control, Lighthouse encontró que en
+modo claro las etiquetas de estado de los libros ("Leyendo", "Terminado"…)
+no contrastaban lo suficiente sobre el pie de la tarjeta (venía de antes):
+se oscurecieron en `scripts/tema-claro-manual.css`. Queda anotado que la medición "Biblia
+con 1.500 versículos < 1,5 s" (de antes de este plan) está al borde en
+este entorno (entre 1,1 y 1,8 s según la carga de la máquina): si falla,
+se repite sola.
+

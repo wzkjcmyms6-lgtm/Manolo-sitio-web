@@ -1,5 +1,11 @@
 # Cambios
 
+## 2026-11-16 · Libros: control final
+- Todo lo nuevo de Libros revisado en el iPhone (tamaño de pantalla), en
+  modo claro y oscuro.
+- En modo claro, las etiquetas de cada libro ("Leyendo", "Terminado"…) se
+  leen mejor (letra más oscura).
+
 ## 2026-11-16 · Libros: "Si te gustó…"
 - En Libros, debajo de "¿Qué leo después?", **ideas de libros** a partir
   de los que te gustaron (4 y 5 estrellas): del mismo autor y de los mismos

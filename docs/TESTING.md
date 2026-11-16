@@ -1,6 +1,12 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (Libros nivel 3, control final, D-135): `npm test` → **732
+  pruebas**; las 38 pruebas de pantalla pasan (3161 comprobaciones);
+  Lighthouse de las pantallas nuevas de Libros en oscuro y en claro: 100 en accesibilidad y en buenas prácticas en las 12 pantallas
+  (`scratchpad/lh/correr3.mjs`, fuera del repo). La medición "Biblia con
+  1.500 versículos < 1,5 s" de `lectura-qa` está al borde en este entorno:
+  si falla, repetirla sola.
 - 2026-11-16 (Libros nivel 3, fase 6, D-134): `npm test` → **732
   pruebas**. Nuevo `libros-recomendar` (de qué libros se parte, los mismos
   temas sin cuentos infantiles ni el mismo autor, uno por autor, títulos en
@@ -392,6 +398,18 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Libros nivel 3: lista para el iPhone (2026-11-16)**
+Un recorrido corto por todo lo nuevo (más detalle en cada lista de abajo):
+- [ ] ＋ Agregar libro › Buscar "Hábitos atómicos": sale en español, con
+  "Original: Atomic Habits"; elígelo y mira "¿Cuántas páginas tiene tu
+  libro?" (la recomendada ya puesta).
+- [ ] Abre un libro: toca el autor (su ficha), mira sus temas y "De qué
+  trata"; si lo estás leyendo, "¿Para cuándo lo quieres terminar?".
+- [ ] Arriba de tu lista: "Completar mi biblioteca" (nada cambia sin tu OK).
+- [ ] Debajo de "¿Qué leo después?": "Si te gustó…" (con 4 o 5 estrellas
+  en algún libro terminado).
+- [ ] Prueba en modo claro y en oscuro (☰ › Apariencia).
 
 **Libros: "Si te gustó…" (2026-11)**
 - [ ] Califica con 4 o 5 estrellas un libro que terminaste.

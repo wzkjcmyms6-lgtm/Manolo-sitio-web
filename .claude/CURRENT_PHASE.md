@@ -1,6 +1,6 @@
 # Fase actual
 
-## Libros nivel 3: datos de verdad de cada libro (pedido del dueño, 2026-11-16)
+## Libros nivel 3: datos de verdad de cada libro (pedido del dueño, 2026-11-16) — terminado
 "Si pongo un libro, que traiga el autor, el género y las páginas (los
 libros tienen distintas páginas). Hazlo mucho mejor." Plan, auditoría con
 20 libros reales y diseño en `docs/LIBROS_NIVEL3.md` (D-128).
@@ -14,7 +14,7 @@ libros tienen distintas páginas). Hazlo mucho mejor." Plan, auditoría con
 | 4 | Género y temas en español, "De qué trata", estadísticas por género | ✅ (D-132) |
 | 5 | Completar tu biblioteca (con tu OK) | ✅ (D-133) |
 | 6 | Recomendaciones: "Si te gustó…" | ✅ (D-134) |
-| 7 | Control final y lista para el iPhone | ⏳ |
+| 7 | Control final y lista para el iPhone | ✅ (D-135) |
 
 ## Mejoras sin servidor (pedido del dueño, 2026-11-15)
 El dueño eligió: app más rápida, rutinas desde la app (Running y gimnasio)

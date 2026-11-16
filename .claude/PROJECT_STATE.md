@@ -1,8 +1,8 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-16 (Libros nivel 3 en curso, D-128).
+Actualizado: 2026-11-16 (Libros nivel 3 terminado, D-135).
 
-- **Libros nivel 3 (2026-11-16, en curso)**: que al poner un libro se
+- **Libros nivel 3 (2026-11-16, terminado)**: que al poner un libro se
   traigan bien el título en español, el autor, el género y las páginas de
   tu edición; ficha del autor, temas, completar la biblioteca y
   recomendaciones. Plan y auditoría con 20 libros reales en
@@ -20,7 +20,8 @@ Actualizado: 2026-11-16 (Libros nivel 3 en curso, D-128).
   falta a tus libros, páginas incluidas, siempre con tu OK). Fase 6 hecha
   (D-134): **"Si te gustó…"** (ideas del mismo autor y de los mismos temas
   que tus libros de 4 y 5 estrellas) y "¿Qué leo después?" con lo que te
-  gustó.
+  gustó. Fase 7 hecha (D-135): control final (732 pruebas, 38 de pantalla,
+  Lighthouse 100 en accesibilidad y en buenas prácticas en las 12 pantallas); lista para el iPhone en `docs/TESTING.md`.
 
 - **Mejoras sin servidor (2026-11-15, terminado)**: fase 1 hecha (D-123):
   **Biblia en audio** en el lector, con las voces del iPhone (sin

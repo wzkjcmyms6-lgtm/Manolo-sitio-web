@@ -16,7 +16,7 @@ publicada, con pruebas y su lista para el iPhone.
 | 4 | Género y temas en español, "De qué trata" y estadísticas por género | ✅ (D-132) |
 | 5 | Completar tu biblioteca: arreglar los libros que ya tienes (títulos en inglés, sin autor, páginas, género o portada), siempre con tu OK | ✅ (D-133) |
 | 6 | Recomendaciones: "Si te gustó…", del mismo autor y de los mismos temas; "¿Qué leo después?" más inteligente | ✅ (D-134) |
-| 7 | Control final y lista para el iPhone | |
+| 7 | Control final y lista para el iPhone | ✅ (D-135) |
 
 ## Auditoría (fase 0, 2026-11-16)
 
@@ -171,8 +171,21 @@ fuera).
 
 ## Datos (solo se suman campos)
 
-Libro (`users/{uid}/libros/{id}`): `tituloOriginal`, `autorKey` (Open
-Library), `edicion` ({ olKey, editorial, anio, formato, isbn }), `temas`
-(en español), `sinopsis` ({ texto, fuente }), `idioma`. Lo que ya existe
-(`titulo`, `autor`, `paginas`, `genero`, `anio`, `olKey`, `isbn`, progreso,
-sesiones…) no cambia de forma. Lo del autor se guarda en el teléfono.
+Libro (`users/{uid}/libros/{id}`), lo que quedó: `tituloOriginal`,
+`autorKey` (Open Library), `edicion` ({ key, editorial, anio, formato }),
+`metaFin` (para cuándo terminarlo) y `temas` (en español, hasta 5). Lo que
+ya existía (`titulo`, `autor`, `paginas`, `genero`, `anio`, `olKey`,
+`isbn`, progreso, sesiones…) no cambia de forma. En el teléfono
+(`localStorage`), no en Firestore: la ficha del autor
+("manolo.libros.autores", 30 días), "De qué trata"
+("manolo.libros.sinopsis", 90 días), las ideas "Si te gustó…"
+("manolo.libros.ideas", una semana; las descartadas en
+"manolo.libros.ideas.no") y los libros ya revisados por "Completar mi
+biblioteca" ("manolo.libros.revisados"). Al final no se guardó `sinopsis`
+ni `idioma` en el libro: "De qué trata" se busca cuando abres la ficha.
+
+## Control final (fase 7, D-135)
+
+732 pruebas internas; 38 pruebas de pantalla (3161 comprobaciones);
+Lighthouse de las pantallas nuevas: 100 en accesibilidad y en buenas prácticas en las 12 pantallas. Lista para probar en el
+iPhone: `docs/TESTING.md` › "Libros nivel 3: lista para el iPhone".

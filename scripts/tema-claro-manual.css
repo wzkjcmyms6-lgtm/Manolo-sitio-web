@@ -24,3 +24,11 @@ html[data-modo="claro"] .hb-personaje .hb-xp { background: rgba(255, 255, 255, 0
 /* Las pestañas de abajo traen su color en el HTML (js/modules.js): en claro,
    la versión más oscura que viene al lado (--tab-claro). */
 html[data-modo="claro"] #bottom-nav-links a[data-hash] { --tab-color: var(--tab-claro) !important; }
+
+/* Libros (D-135): las etiquetas de estado van sobre el pie de la tarjeta,
+   más oscuro que el fondo con el que calcula el generador: un tono más
+   oscuro para que se lean bien (contraste de al menos 4,5:1). */
+html[data-modo="claro"] .lib-chip.is-leyendo { color: #0f55ad; }
+html[data-modo="claro"] .lib-chip.is-terminado { color: #216645; }
+html[data-modo="claro"] .lib-chip.is-abandonado { color: #7a4d00; }
+html[data-modo="claro"] .lib-chip.is-prioridad { color: #8a4500; }
