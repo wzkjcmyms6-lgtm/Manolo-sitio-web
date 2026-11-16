@@ -142,7 +142,8 @@ for (let i = 0; i < 45; i++) { const d = new Date(2026, 9, 31 - i); MUCHAS[`v${i
   p = await abrir(browser, base, { __SEED__: { "users/test/running": MUCHAS } }, { hash: "#running", zona: ZONA, fecha: "2026-11-04T09:00:00-04:00" });
   ok((await p.$$("#rf-feed .rf-card")).length === 20 && /Ver más \(25\)/.test(await p.$eval("[data-rf-mas]", b => b.textContent)), "45 carreras: primero 20 y «Ver más (25)»");
   await p.$eval("[data-rf-mas]", b => b.scrollIntoView());
-  await p.waitForTimeout(600);
+  // Espera a que lleguen (antes, 600 ms fijos: con la máquina ocupada no alcanzaba).
+  await p.waitForFunction(() => document.querySelectorAll("#rf-feed .rf-card").length >= 40, null, { timeout: 5000 }).catch(() => {});
   ok((await p.$$("#rf-feed .rf-card")).length === 40, "al llegar al final se cargan 20 más solas");
   ok(p.errores.length === 0, "sin errores");
   await p.context().close();

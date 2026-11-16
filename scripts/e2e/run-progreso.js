@@ -28,14 +28,17 @@ const AJ = { running_ajustes: { metas: { semanaKm: 20, mesKm: 0, anioKm: 1000 },
   const browser = await chromium.launch();
   const p = await abrir(browser, base, { __SEED__: { "users/test/running": RUN, "users/test/meta": AJ } }, { hash: "#run-progreso", zona: ZONA, fecha: "2026-11-04T09:00:00-04:00" });
   const tx = sel => p.$eval(sel, el => el.innerText.replace(/\s+/g, " ").trim());
+  // Cada pedazo de texto con un espacio, sin depender de cómo se dibuja (a
+  // veces innerText juntaba la etiqueta con su número: "Tiempo1 h").
+  const partes = sel => p.$eval(sel, el => { const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); const t = []; while (w.nextNode()) t.push(w.currentNode.nodeValue); return t.join(" ").replace(/\s+/g, " ").trim(); });
   const vis = sel => p.evaluate(s => { const el = document.querySelector(s); return !!el && !el.hidden && getComputedStyle(el).display !== "none"; }, sel);
   await p.waitForSelector(".rp-total");
 
   console.log("\nTotales por período");
-  let tot = await tx(".rp-total");
+  let tot = await partes(".rp-total");
   ok(/^Esta semana 15,0 km ▲ 2,0 km vs la semana pasada Tiempo 1 h 15 min Carreras 2 Desnivel 120 m$/.test(tot), `semana contra la pasada (${tot})`);
   await p.click('[data-rp-periodo="mes"]');
-  tot = await tx(".rp-total");
+  tot = await partes(".rp-total");
   ok(/^Este mes 15,0 km ▼ 25,1 km vs el mes pasado/.test(tot), `mes contra el pasado (${tot.slice(0, 60)})`);
   await p.click('[data-rp-periodo="total"]');
   ok(/Desde que registras 55,1 km/.test(await tx(".rp-total")) && !/vs/.test(await tx(".rp-total")), "total, sin comparación");
