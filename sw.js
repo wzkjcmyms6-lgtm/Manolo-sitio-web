@@ -23,8 +23,8 @@
 //
 // IMPORTANTE: cada entrega que cambie la app debe subir VERSION y HUELLA con
 // `npm run sw` (el test tests/sw-version.test.js falla si alguien lo olvida).
-const VERSION = "2026-11-16.5";
-const HUELLA = "2841b8e8731c";
+const VERSION = "2026-11-16.6";
+const HUELLA = "9a4cb584b5f6";
 const PREFIJO = "manolo-app-";
 const CACHE = PREFIJO + VERSION;
 const DATOS = "manolo-datos"; // copias de respaldo de datos que cambian solos (tipo de cambio, precios)
@@ -37,8 +37,10 @@ const ES_DEMO = /\/img\/ejercicios\//;
 const BIBLIA = "manolo-biblia";               // libros de la Biblia abiertos o descargados
 const ES_BIBLIA = /\/data\/biblia\//;
 
-// Archivos que no aparecen en index.html pero la app necesita.
-const EXTRAS = ["./", "manifest.json", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "js/importar-rutinas.js", "js/importar-ui.js", "js/biblia-buscar-worker.js", "js/libros-isbn.js", "vendor/leaflet-1.9.4/leaflet.js", "vendor/leaflet-1.9.4/leaflet.css"];
+// Archivos que no aparecen en index.html pero la app necesita (biblia-motor
+// y biblia-texto van en el paquete, pero el Worker de la búsqueda los carga
+// sueltos, D-127).
+const EXTRAS = ["./", "manifest.json", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "js/importar-rutinas.js", "js/importar-ui.js", "js/biblia-buscar-worker.js", "js/biblia-motor.js", "js/biblia-texto.js", "js/libros-isbn.js", "vendor/leaflet-1.9.4/leaflet.js", "vendor/leaflet-1.9.4/leaflet.css"];
 
 function propio(url) {
   return new URL(url, self.location.href).origin === self.location.origin;
@@ -60,7 +62,7 @@ function recursosDe(texto, base) {
 // Datos con versión que pide el JS (ej. data/ejercicios.json?v=…).
 function datosDeJs(texto) {
   const out = new Set();
-  const re = /["'](data\/[\w.\/-]+\.json\?v=[\w.-]+)["']/g;
+  const re = /\\?["'](data\/[\w.\/-]+\.json\?v=[\w.-]+)\\?["']/g;
   let m;
   while ((m = re.exec(texto))) out.add(new URL(m[1], self.location.href).href);
   return out;

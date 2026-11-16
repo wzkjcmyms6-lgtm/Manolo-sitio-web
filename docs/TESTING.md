@@ -1,6 +1,17 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (la app abre más rápido, D-127): `npm test` → **702
+  pruebas**. Nueva: `paquete` (paquetes al día, la lista sin repetidos y
+  sin módulos sueltos en index.html, el orden de los estilos, el modo
+  claro se sigue generando de cada estilo, Firebase antes, cada módulo
+  válido, un error en uno no frena a los demás, el service worker ve los
+  datos dentro del paquete). `sin-internet` revisa que se guarden los
+  paquetes y que la búsqueda de la Biblia arranque en modo avión (sin el
+  arreglo, falla: probado); `sw-instala`, que se guarden los paquetes.
+  Regresión con la app empaquetada: las 37 suites en verde. **Después de
+  cambiar cualquier .js o .css de la app: `npm run listo`** (paquete +
+  tema + sw). Un módulo nuevo se agrega en `js/paquete.json`.
 - 2026-11-16 (modo claro, D-126): `npm test` → **694 pruebas**. Nueva:
   `tema-claro` (colores, cómo se aclara cada uso, :where(), leer CSS, que
   `css/tema-claro.css` esté al día y cargue al final). E2E nueva:
@@ -303,6 +314,13 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**La app abre más rápido (2026-11)**
+- [ ] Cuando aparezca "Nueva versión disponible", toca "Actualizar".
+- [ ] Cierra Manolo del todo (desliza hacia arriba) y ábrelo: Inicio
+  aparece más rápido que antes.
+- [ ] En modo avión: abre Manolo y entra a Hábitos, Finanzas y la Biblia.
+  Si descargaste la Biblia, busca una palabra con la lupa.
 
 **Modo claro (2026-11)**
 - [ ] Inicio › abajo "Apariencia" › "Claro": todo se pone claro al

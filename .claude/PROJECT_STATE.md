@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-16 (modo claro, D-126; mejoras sin servidor en curso).
+Actualizado: 2026-11-16 (la app abre más rápido, D-127; mejoras sin servidor en curso).
 
 - **Mejoras sin servidor (2026-11-15, en curso)**: fase 1 hecha (D-123):
   **Biblia en audio** en el lector, con las voces del iPhone (sin
@@ -13,8 +13,11 @@ Actualizado: 2026-11-16 (modo claro, D-126; mejoras sin servidor en curso).
   como rutina nueva y el editor pregunta antes de perder cambios. Fase 4
   hecha (D-126): **modo claro** (Inicio o menú ☰ › Apariencia: automático,
   claro u oscuro); `css/tema-claro.css` se genera con `npm run tema` a
-  partir de los estilos de siempre (el oscuro no cambia). Sigue: abrir más
-  rápido (`.claude/CURRENT_PHASE.md`).
+  partir de los estilos de siempre (el oscuro no cambia). Fase 5 hecha
+  (D-127): **la app abre más rápido**: los módulos van en
+  `js/app.paquete.js` y los estilos en `css/app.paquete.css` (14 pedidos
+  al abrir en vez de 198); tras cambiar un .js o .css: `npm run listo`.
+  Sigue: control final (`.claude/CURRENT_PHASE.md`).
 
 - **Ajustes del dueño (2026-11-15)**: pago mínimo por tarjeta con aviso
   (D-121); "Leí en mi Biblia" para marcar lo leído en papel con un toque
@@ -36,7 +39,8 @@ Actualizado: 2026-11-16 (modo claro, D-126; mejoras sin servidor en curso).
   menú cerrado fuera del foco y zoom libre al escribir.
 
 - **App**: PWA estática + Firebase (Auth + Firestore), una sola página,
-  JS puro sin build. Ver `docs/ARCHITECTURE.md`.
+  JS puro sin compilar (los módulos se juntan en un paquete con
+  `npm run listo`, D-127). Ver `docs/ARCHITECTURE.md`.
 - **Se preserva**: Hábitos, Ejercicio, Finanzas, Inversiones, offline.
 - **Fase 1**: contraseña numérica, nota de hábitos, accesos + campana admin.
   Pendiente del dueño: `admins/{uid}` + publicar `firestore.rules`.

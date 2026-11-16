@@ -1748,3 +1748,35 @@ moneda del personaje a veces no se dibujaba). Las pruebas E2E corren con el
 teléfono en oscuro (`comun.js · esquema`). Pruebas:
 `tests/tema-claro.test.js` (incluye que `css/tema-claro.css` esté al día) y
 `scripts/e2e/tema-claro.js`.
+
+**D-127 (2026-11-16) · La app abre más rápido: los módulos van en un
+paquete.** Pedido del dueño (mejoras sin servidor). (1) Medido con la app
+instalada (service worker activo) y la CPU 4 veces más lenta, como un
+teléfono: index.html cargaba 170 módulos .js y 16 .css, y cada archivo
+pasaba por el service worker uno por uno; esa fila era casi la mitad del
+arranque. (2) `npm run paquete` (`scripts/paquete.js`) junta los módulos de
+`js/paquete.json`, en el mismo orden, en `js/app.paquete.js`, y los estilos
+en `css/app.paquete.css` (`css/viewport.css` sigue al final, D-120). Cada
+módulo corre como su propio `<script>`: un error en uno no frena a los
+demás, como antes, y en los errores conserva su nombre (`sourceURL`).
+También se probó correrlos todos como un solo script: abría apenas más
+rápido (unos 65 ms) pero un error en un módulo frenaba a todos los
+siguientes; se eligió lo seguro. (3) Siguen aparte: Firebase (vendor),
+`css/fuentes.css`, el modo claro (`css/tema-claro.css` y `js/tema.js`, que
+va antes de pintar) y lo que se carga al usarlo (importar rutinas, ISBN y
+el Worker de la búsqueda de la Biblia, que carga `biblia-motor.js` y
+`biblia-texto.js` sueltos: el service worker los guarda aparte). (4)
+Resultado (mediana de 7 aperturas): pedidos al abrir 198 → 14;
+DOMContentLoaded 560 → 330 ms; Inicio con contenido 640 → 400 ms. El
+service worker guarda 29 archivos en vez de unos 200. (5) Cambia la regla
+de trabajo: se edita el archivo de
+cada módulo y después `npm run listo` (= paquete + tema + sw), en vez de
+subir el `?v=` en index.html. Un módulo nuevo se agrega en
+`js/paquete.json`, no en index.html. El `?v=` de cada paquete es su huella.
+El service worker y su huella siguen viendo los datos que pide el código
+(`data/…json?v=`) dentro del paquete, y `npm run tema` lee el paquete de
+estilos como su lista (el modo claro sale idéntico).
+`tests/paquete.test.js` falla si los paquetes no están al día, si un módulo falta o se repite, si index.html
+vuelve a cargar módulos sueltos o si cambia el orden de los estilos;
+`scripts/e2e/sin-internet.js` revisa que la búsqueda de la Biblia arranque
+en modo avión.

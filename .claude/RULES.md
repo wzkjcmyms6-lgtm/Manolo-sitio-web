@@ -18,8 +18,12 @@
   retiró a pedido del dueño (D-033): no volver a agregarlo sin que lo pida.
   Manolo no pide ubicación; las rutas llegan importando archivos y los
   mapas solo las muestran.
-- Tras cambiar cualquier archivo que carga `index.html`: subir `?v=` del
-  archivo y correr `npm run sw` (si no, falla `tests/sw-version.test.js`).
+- Tras cambiar cualquier archivo de la app (`js/`, `css/`): `npm run listo`
+  (= paquete + tema + sw, D-127). La app carga `js/app.paquete.js` y
+  `css/app.paquete.css`, que se generan: no se editan a mano. Un módulo
+  nuevo va en `js/paquete.json`, no en `index.html`. Si se olvida, fallan
+  `tests/paquete.test.js`, `tests/tema-claro.test.js` o
+  `tests/sw-version.test.js`.
 - Lógica nueva en módulos UMD sin DOM con pruebas `node --test`.
 - Antes de subir: `npm test` verde, revisar el diff, `git pull --rebase`
   (otras sesiones y un bot suben a la misma rama), luego

@@ -40,7 +40,7 @@ Solo se toca `js/movilidad-rutinas.js`. Cada rutina:
 - `porLado: true` avisa "Cambia de lado" a la mitad (usar segundos pares).
 - `titulo` y `nota` de la parte son opcionales.
 - `npm test` revisa que todo esté bien escrito (`MovilidadMotor.problemas`).
-- Después de editar: subir `?v=` del archivo en `index.html` y `npm run sw`.
+- Después de editar: `npm run listo` (D-127).
 
 ## Pantallas
 

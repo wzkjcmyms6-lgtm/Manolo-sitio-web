@@ -58,9 +58,13 @@ const txt = (p, sel) => p.$eval(sel, el => el.innerText.replace(/\s+/g, " ").tri
   const activo = await p.evaluate(() => Promise.race([navigator.serviceWorker.ready.then(r => !!r.active), new Promise(res => setTimeout(() => res(false), 20000))]));
   ok(activo, "el service worker queda activo");
   const claves = await p.evaluate(async v => (await (await caches.open(`manolo-app-${v}`)).keys()).map(r => new URL(r.url).pathname), VERSION);
-  const nuevos = ["/js/finanzas/diario.js", "/js/lugares-motor.js", "/js/lugares-fotos.js", "/js/lugares.js", "/js/lugares-hojas.js", "/js/respaldo-motor.js", "/js/respaldo.js", "/css/lugares.css", "/css/respaldo.css"];
+  // D-127: los módulos y estilos van en dos paquetes (con Lugares, la copia
+  // de seguridad y el disponible por día adentro).
+  const nuevos = ["/js/app.paquete.js", "/css/app.paquete.css", "/js/tema.js", "/css/tema-claro.css", "/js/biblia-buscar-worker.js", "/js/biblia-motor.js", "/js/biblia-texto.js"];
   const faltan = nuevos.filter(f => !claves.some(k => k.endsWith(f)));
-  ok(!faltan.length, `guarda lo nuevo: disponible por día, Lugares y la copia de seguridad${faltan.length ? ` (faltan ${faltan.join(", ")})` : ""}`);
+  ok(!faltan.length, `guarda la app en sus paquetes, el modo claro y la búsqueda de la Biblia${faltan.length ? ` (faltan ${faltan.join(", ")})` : ""}`);
+  const paquete = fs.readFileSync(path.join(RAIZ, "js/app.paquete.js"), "utf8");
+  ok(["js/finanzas/diario.js", "js/lugares.js", "js/respaldo.js"].every(f => paquete.includes(`["${f}",`)), "el paquete trae el disponible por día, Lugares y la copia de seguridad");
 
   console.log("\nEn modo avión");
   await ctx.setOffline(true);
@@ -82,6 +86,17 @@ const txt = (p, sel) => p.$eval(sel, el => el.innerText.replace(/\s+/g, " ").tri
   await p.goto(`${base}/index.html#finanzas`).catch(() => {});
   await p.waitForTimeout(1500);
   ok(/por día/i.test(await txt(p, "#panel-finanzas")), "Finanzas muestra el disponible por día");
+  // El Worker de la búsqueda de la Biblia carga sus dos archivos sin internet
+  // (sin libros pedidos: solo prueba que arranca).
+  const bus = await p.evaluate(() => new Promise(res => {
+    const w = new Worker("js/biblia-buscar-worker.js");
+    const scripts = ["biblia-motor.js", "biblia-texto.js"].map(n => new URL(`js/${n}`, location.href).href);
+    w.onmessage = e => { res(e.data); w.terminate(); };
+    w.onerror = e => res({ tipo: "error", mensaje: e.message || "no arrancó" });
+    w.postMessage({ tipo: "buscar", id: 1, q: "luz", libros: [], max: 5, scripts, urls: {}, cache: "manolo-biblia" });
+    setTimeout(() => res({ tipo: "error", mensaje: "sin respuesta" }), 8000);
+  }));
+  ok(bus.tipo === "resultado", `la búsqueda de la Biblia arranca sin internet${bus.tipo === "resultado" ? "" : ` (${bus.mensaje})`}`);
   ok(!errores.length, `sin errores de página${errores.length ? ` (${errores[0]})` : ""}`);
   await ctx.setOffline(false);
   await terminar(browser, srv);

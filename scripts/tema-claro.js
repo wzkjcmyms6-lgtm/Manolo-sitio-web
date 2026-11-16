@@ -389,7 +389,11 @@ function archivosCss() {
   const out = [];
   const re = /<link[^>]+rel="stylesheet"[^>]+href="([^"?]+\.css)/g;
   let m;
-  while ((m = re.exec(html))) if (!m[1].startsWith("vendor/") && !SIN_COLORES.has(m[1])) out.push(m[1]);
+  while ((m = re.exec(html))) {
+    // El paquete de estilos (D-127) se lee como su lista, en orden.
+    const lista = m[1] === "css/app.paquete.css" ? require("./paquete.js").leerLista().css : [m[1]];
+    lista.forEach(rel => { if (!rel.startsWith("vendor/") && !SIN_COLORES.has(rel)) out.push(rel); });
+  }
   return out;
 }
 function generar() {

@@ -9,6 +9,8 @@
     "tecnica": "node scripts/build-tecnica.mjs",
     "biblia": "node scripts/build-biblia.mjs",
     "sw": "node scripts/version-sw.js",
-    "tema": "node scripts/tema-claro.js"
+    "tema": "node scripts/tema-claro.js",
+    "paquete": "node scripts/paquete.js",
+    "listo": "node scripts/paquete.js && node scripts/tema-claro.js && node scripts/version-sw.js"
   }
 }

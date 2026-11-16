@@ -56,7 +56,8 @@ function servidorPropio() {
   }, VERSION);
   ok(cache.nombres.includes(`manolo-app-${VERSION}`), `caché de la versión ${VERSION}`);
   const tiene = f => cache.claves.some(k => k.endsWith(f));
-  ok(["/index.html", "/js/run-detalle.js", "/js/run-importar.js", "/css/run.css", "/vendor/leaflet-1.9.4/leaflet.js", "/vendor/leaflet-1.9.4/leaflet.css"].every(tiene), `guarda la app y Leaflet (${cache.claves.length} archivos)`);
+  // D-127: los módulos y estilos van en dos paquetes.
+  ok(["/index.html", "/js/app.paquete.js", "/css/app.paquete.css", "/css/tema-claro.css", "/js/tema.js", "/js/biblia-motor.js", "/js/biblia-texto.js", "/data/ejercicios.json", "/vendor/leaflet-1.9.4/leaflet.js", "/vendor/leaflet-1.9.4/leaflet.css"].every(tiene), `guarda la app, sus datos y Leaflet (${cache.claves.length} archivos)`);
 
   console.log("Una versión nueva");
   swActual = SW.replace(`const VERSION = "${VERSION}"`, `const VERSION = "${VERSION}-prueba"`);

@@ -228,9 +228,8 @@ encuentran por id (`casa-…`); no aparecen en el buscador. Ver
 - `sw.js`: archivos con `?v=` (y Firebase SDK / Google Fonts) se sirven desde
   la copia; `index.html` y archivos sin versión, primero de la red. La página
   (`js/offline.js`) le pasa al service worker la lista de archivos que cargó.
-- **Al publicar cambios**: subir el `?v=` del archivo modificado en
-  `index.html` (y `RUTA_BASE` en `js/ejercicio-datos.js` si cambia
-  `data/ejercicios.json`). Si cambia `sw.js`, subir `CACHE`.
+- **Al publicar cambios**: `npm run listo` (D-127), y subir `RUTA_BASE`
+  en `js/ejercicio-datos.js` si cambia `data/ejercicios.json`.
 
 ### Pruebas hechas
 - Con un Firebase simulado en memoria y Chromium tamaño iPhone: día de
@@ -290,7 +289,7 @@ cálculo. Cambia al instante el mapa, el radar y las tarjetas (solo para tu
 cuenta). "Valores por defecto" las restablece (tu peso se mantiene).
 
 **En el código (valores por defecto):** `DEFAULTS` en `js/muscle-engine.js`
-(subir su `?v=` en `index.html` y correr `npm test`). Qué mueve cada una:
+(después `npm run listo` y `npm test`). Qué mueve cada una:
 
 - `pesoSecundario` / `serieSecundaria`: cuánto cuentan los secundarios. Más
   alto = el mapa se enciende más en los músculos que solo acompañan.

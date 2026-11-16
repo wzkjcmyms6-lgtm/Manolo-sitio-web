@@ -70,7 +70,7 @@ snapshot se crea en silencio.
   con familia, músculos, anclas, `baseIds` (ids de `data/ejercicios.json`) y
   alias. Corre `npm test`.
 - **Otra cohorte** (fuera de alcance): añadir `STANDARDS.mujer` y cambiar `COHORTE`.
-- Tras cambiar un archivo, sube su `?v=` en `index.html`.
+- Tras cambiar un archivo: `npm run listo` (D-127).
 
 ## Decisiones
 

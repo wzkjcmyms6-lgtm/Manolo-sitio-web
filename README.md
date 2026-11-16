@@ -9,8 +9,10 @@ sin compilación; datos en Firebase (Auth + Firestore) con caché offline.
 - `js/` — un archivo por pantalla y módulos de cálculo sin pantalla (UMD)
   probados con `node --test`.
 - `vendor/` — Firebase 10.7.1 guardado en el repo.
-- `sw.js` + `js/offline.js` — funciona sin conexión (`npm run sw` tras
-  cambiar archivos).
+- `sw.js` + `js/offline.js` — funciona sin conexión.
+- Tras cambiar archivos de `js/` o `css/`: `npm run listo` (junta los
+  módulos en `js/app.paquete.js` y los estilos en `css/app.paquete.css`,
+  genera el modo claro y sube la versión del service worker; D-127).
 - `firestore.rules` — copia de las reglas de seguridad (se publican en la
   consola de Firebase; ver `docs/ADMIN.md`).
 

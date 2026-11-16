@@ -17,10 +17,9 @@ let ultimaQ = "";
 let timer = null;
 let resultado = null;    // { q, total, items, palabras }
 
-const scripts = () => ["biblia-motor.js", "biblia-texto.js"].map(n => {
-  const s = document.querySelector(`script[src*="js/${n}"]`);
-  return s ? s.src : new URL(`js/${n}`, location.href).href;
-});
+// El Worker carga estos dos sueltos (en la app van dentro del paquete,
+// D-127); el service worker los guarda para buscar sin internet.
+const scripts = () => ["biblia-motor.js", "biblia-texto.js"].map(n => new URL(`js/${n}`, location.href).href);
 function urls() {
   const o = {};
   B.LIBROS.forEach(l => { o[l.id] = new URL(T.url(l.id), location.href).href; });

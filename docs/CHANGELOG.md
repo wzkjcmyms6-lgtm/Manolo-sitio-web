@@ -1,5 +1,11 @@
 # Cambios
 
+## 2026-11-16 · La app abre más rápido
+- Al abrir, Manolo carga 14 archivos en vez de 198: Inicio aparece en
+  unos 400 ms en vez de 640 ms (medido como en un teléfono).
+- Todo funciona igual, también sin internet (incluida la búsqueda de la
+  Biblia).
+
 ## 2026-11-16 · Modo claro
 - Inicio (abajo) y el menú ☰ › **"Apariencia"**: Automático (como tu
   iPhone), Claro u Oscuro. Se aplica al tocar.

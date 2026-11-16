@@ -49,6 +49,16 @@ dentro de WebKit (Safari / pantalla de inicio).
   `navigator.vibrate` (sin efecto en iPhone). **No** se usa Geolocation,
   Speech Synthesis, Wake Lock ni Notification.
 
+## Carga de la app (D-127, 2026-11)
+
+`index.html` carga Firebase (`vendor/`), `css/fuentes.css`,
+**`css/app.paquete.css`** (los 16 estilos, en orden), el modo claro
+(`css/tema-claro.css` y `js/tema.js`, D-126) y **`js/app.paquete.js`**
+(los 170 módulos; cada uno corre como su propio `<script>`). Los dos
+paquetes se generan con `npm run listo` a partir de `js/paquete.json`: se
+edita siempre el archivo de cada módulo. Lo que se usa poco (importar
+rutinas, ISBN, la búsqueda de la Biblia, Leaflet) se carga al usarlo.
+
 ## Riesgos y deuda técnica relevante
 
 1. **Reglas fuera del repo**: la seguridad real vive en la consola; riesgo

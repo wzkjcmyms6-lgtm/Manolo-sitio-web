@@ -11,7 +11,7 @@ con la app cerrada y Strava automático quedan para después ("Ahora no").
 | 2 | Rutinas de Running: crear y editar en la app (sin CSV) | ✅ (D-124) |
 | 3 | Rutinas del gimnasio: guardar lo cambiado al entrenar, entreno libre como rutina, aviso al cerrar el editor | ✅ (D-125) |
 | 4 | Modo claro (automático o elegido) | ✅ (D-126) |
-| 5 | Que la app abra más rápido | ⏳ |
+| 5 | Que la app abra más rápido | ✅ (D-127) |
 | 6 | Control final y entrega | ⏳ |
 
 ## Ajustes del dueño (2026-11-15, después de probar en el iPhone)

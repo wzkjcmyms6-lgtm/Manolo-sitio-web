@@ -56,9 +56,8 @@ número más bajo: "10-12" → 10) y 0 kg (peso corporal).
 2. Sumar su ruta en `ARCHIVOS` de `js/rutinas-listas-motor.js`
    (`"data/rutinas/{nuevo-id}.json?v=1"`): así el teléfono la guarda para
    usarla sin internet.
-3. `npm test` (revisa ids únicos y que todos los músculos se entiendan),
-   subir el `?v=` de `js/rutinas-listas-motor.js` en `index.html` y
-   `npm run sw`.
+3. `npm test` (revisa ids únicos y que todos los músculos se entiendan) y
+   `npm run listo` (D-127).
 
 ## Para que otra persona la use
 
