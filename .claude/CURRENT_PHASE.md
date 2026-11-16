@@ -1,6 +1,6 @@
 # Fase actual
 
-## Tu semana, Tu año y Bici al nivel de Running (pedido del dueño, 2026-11-16)
+## Tu semana, Tu año y Bici al nivel de Running (pedido del dueño, 2026-11-16) — terminado
 "Haz el 1, 2 y 4, desarróllalos de la manera más completa posible."
 Diseño en `docs/RESUMENES.md` (Tu semana y Tu año) y `docs/CYCLING.md`
 (Bici), D-136.
@@ -15,7 +15,7 @@ Diseño en `docs/RESUMENES.md` (Tu semana y Tu año) y `docs/CYCLING.md`
 | 5 | Bici: Actividades (barra propia, tarjetas con mapa, filtros, "+", Inicio, detalle con lo de bici) | ✅ (D-141) |
 | 6 | Bici: Progreso (períodos, calendario, récords de bici, Eddington, metas, racha, mapa de calor) | ✅ (D-142) |
 | 7 | Bici: tus bicis y mantenimiento, segmentos de bici | ✅ (D-143) |
-| 8 | Control final y lista para el iPhone | ⏳ |
+| 8 | Control final y lista para el iPhone | ✅ (D-144) |
 
 ## Libros nivel 3: datos de verdad de cada libro (pedido del dueño, 2026-11-16) — terminado
 "Si pongo un libro, que traiga el autor, el género y las páginas (los

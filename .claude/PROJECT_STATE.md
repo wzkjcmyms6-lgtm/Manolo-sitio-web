@@ -1,8 +1,8 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-16 (Tu semana, Tu año y Bici en curso, D-136).
+Actualizado: 2026-11-16 (Tu semana, Tu año y Bici terminados, D-144).
 
-- **Tu semana, Tu año y Bici al nivel de Running (2026-11-16, en curso)**:
+- **Tu semana, Tu año y Bici al nivel de Running (2026-11-16, terminado)**:
   "Tu semana" (cada lunes en Inicio: cifras de todas tus áreas, lo mejor, lo
   que se quedó atrás y una sugerencia), "Tu año en Manolo" (diapositivas
   con todo tu año, para compartir sin montos de dinero) y Bici con las
@@ -22,7 +22,9 @@ Actualizado: 2026-11-16 (Tu semana, Tu año y Bici en curso, D-136).
   y el detalle contra tus rodadas. Fase 6 hecha (D-142): **Progreso** de
   Bici (récords, Eddington, metas, mapa de calor; los récords de las rodadas
   viejas se calculan una vez con su ruta). Fase 7 hecha (D-143): **tus
-  bicis** con su **mantenimiento** y **segmentos de bici**.
+  bicis** con su **mantenimiento** y **segmentos de bici**. Control final
+  (D-144): 759 pruebas, 39 de 40 grupos de pantalla bien (la Biblia, por
+  el entorno) y Lighthouse 100 en accesibilidad.
 
 - **Libros nivel 3 (2026-11-16, terminado)**: que al poner un libro se
   traigan bien el título en español, el autor, el género y las páginas de

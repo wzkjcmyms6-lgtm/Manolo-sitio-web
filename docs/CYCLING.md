@@ -2,8 +2,9 @@
 
 > **Plan 2026-11 · Bici al nivel de Running** (D-136; pedido del dueño
 > 2026-11-16, junto con "Tu semana" y "Tu año", ver `docs/RESUMENES.md`).
-> Estado de las fases en `.claude/CURRENT_PHASE.md`. Lo de abajo de "Lo que
-> ya existe" sigue funcionando hasta que lo reemplace cada fase.
+> Terminado (fases 5 a 8, D-141 a D-144); estado en
+> `.claude/CURRENT_PHASE.md`. Lo de abajo de "Lo que ya existe" es lo de
+> antes y sigue funcionando donde no se reemplazó.
 
 ## Auditoría (fase 0)
 
@@ -15,7 +16,7 @@ Bici ya comparte mucho con Running (`docs/RUNNING.md`):
   perfil, parciales, editar, GPX y compartir ya funcionan con bici.
 - **Exportar todo (ZIP)** ya incluye las rodadas.
 
-Lo que falta (todo está hecho solo para Running):
+Lo que faltaba (todo estaba hecho solo para Running):
 - La página de Bici es la de siempre (resumen semanal, anotar a mano,
   lista simple): sin tarjetas con mapa, sin filtros, sin barra propia.
 - En el detalle de una rodada, el "Resumen inteligente" y "Mismo recorrido"
@@ -83,6 +84,11 @@ inteligente, Inicio) y `js/bici-feed.js` (Actividades, "+", Inicio); en
 (`js/run-detalle.js`, `js/run-importar.js`, `js/run-guardar.js`) y al
 anotar a mano (`js/actividad-registro.js` con `extra`); segmentos de bici en
 `js/run-segmentos.js` y `js/run-segmentos-ui.js`.
+
+### Control final (D-144)
+Al importar, cada actividad nueva se compara con los segmentos de su
+deporte: las rodadas con los de bici y las carreras con los de Running
+(`js/run-importar.js`; antes solo las carreras).
 
 ### Datos (solo se suman campos)
 - `users/{uid}/bicicleta/{id}`: `mejoresBici` ({ "5000": segundos, … }),

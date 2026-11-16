@@ -2118,3 +2118,21 @@ pestaña Segmentos de Bici; los de Running siguen aparte
 (`run_segmentos/{id}.deporte`). "Compartir imagen" ya servía para las
 rodadas.
 
+**D-144 (2026-11-16) · Tu semana, Tu año y Bici: control final.** Todo
+junto: `npm test` → 759 pruebas; pruebas de pantalla: 39 de 40 grupos
+bien, 3.437 comprobaciones (la única que falla es la medida de tiempo de
+la Biblia en `lectura-qa`, 1,7 s contra 1,5 s, por la lentitud de este
+entorno; falla igual sin estos cambios). Lighthouse de las pantallas
+nuevas en oscuro y en claro a 375 px ("Tu semana", "Tu año" con una
+diapositiva, Bici › Actividades, Progreso, Bicis, Segmentos, una rodada y
+Ajustes de Bici):
+100 en accesibilidad en todas; en buenas prácticas 100 salvo "Tu semana"
+abierta de entrada (96: en este entorno sin internet fallan los pedidos de
+afuera, que en el teléfono funcionan). Un arreglo del repaso: al importar,
+las rodadas nuevas no se comparaban con los segmentos de bici (la ruta solo
+se guardaba en memoria para las carreras); ahora cada actividad nueva se
+compara con los segmentos de su deporte (`js/run-importar.js`), con su
+prueba de pantalla en `scripts/e2e/bici.js` (falla sin el arreglo). Ningún
+dato se borra ni se cambia de forma: solo se suman campos (`mejoresBici`,
+`biciId`, `meta/bici_ajustes`, `deporte` de los segmentos de bici).
+

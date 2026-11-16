@@ -1,5 +1,11 @@
 # Cambios
 
+## 2026-11-16 · Tu semana, Tu año y Bici: control final
+- **Segmentos de bici**: la rodada que importes después de crear un
+  segmento también se suma sola a su tabla (como en Running).
+- Revisado todo junto en pantallas del tamaño de un teléfono y de una compu,
+  en modo claro y oscuro (las pruebas en tu iPhone están en la lista).
+
 ## 2026-11-16 · Bici: tus bicis, mantenimiento y segmentos
 - **Bicis** (abajo): agrega tus bicis; Manolo suma sus km con cada rodada.
   La predeterminada se pone sola en lo que importes o anotes; en una

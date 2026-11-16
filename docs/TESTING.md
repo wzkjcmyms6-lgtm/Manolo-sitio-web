@@ -1,6 +1,17 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (Tu semana, Tu año y Bici: control final, D-144): `npm test`
+  → **759 pruebas**; pruebas de pantalla: 39 de 40 grupos bien
+  y 3.437 comprobaciones (solo falla la medida de tiempo de la
+  Biblia en `lectura-qa`, 1,7 s contra 1,5 s: el entorno, igual sin estos
+  cambios). La suite `bici` suma: la rodada que importes después de
+  crear un segmento de bici se suma sola a su tabla (fallaba antes del
+  arreglo). Lighthouse (`scratchpad/lh/correr4.mjs`, fuera del repo): 100
+  en accesibilidad en las 16 pantallas (8 en oscuro y 8 en claro); buenas
+  prácticas 100 salvo "Tu semana" abierta de entrada (96 por los pedidos de
+  afuera que este entorno no deja salir). "Tu semana" se arma en ~8 ms y
+  "Tu año" en ~25 ms con 3 años de datos.
 - 2026-11-16 (Bici, fase 7, D-143): `npm test` → **759 pruebas**.
   En `bici-analisis`: los km de cada bici, la predeterminada, el
   mantenimiento (desde que la agregaste, "Hecho hoy", cada cuánto, el
@@ -476,11 +487,13 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] Bicis: agrega tu bici con los km que ya tiene y pónsela a tus
   rodadas. Mira el mantenimiento; cuando cambies algo, "Hecho hoy".
 - [ ] En una rodada con mapa: ⋯ › Crear segmento. Míralo en Segmentos.
+  Después importa una rodada que pase por ahí: su tiempo aparece solo.
 - [ ] Progreso: tus récords y el número de Eddington; los mejores tiempos
   aparecen también para tus rodadas importadas antes (tarda un poco la
   primera vez).
 - [ ] El engranaje de arriba: ponte una meta y mira el anillo en Progreso.
-- [ ] Bicicleta: la barra de abajo es Actividades · + · Progreso.
+- [ ] Bicicleta: la barra de abajo es Actividades · Progreso · + ·
+  Segmentos · Bicis.
 - [ ] Actividades: tarjetas con velocidad, mapa y medallas; prueba los
   filtros. Toca una rodada: abajo sigue la barra de Bici.
 - [ ] "+" › Anotar a mano: aparece en la lista.
