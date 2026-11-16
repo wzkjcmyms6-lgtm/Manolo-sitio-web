@@ -57,9 +57,21 @@ function vacio() {
   </div>`;
 }
 
+// Arriba del feed: lo que toca cambiar en tus bicis (Bici › Bicis, D-143).
+function pintarAviso() {
+  const el = document.getElementById("bf-aviso");
+  if (!el) return;
+  const aj = RunDatos.ajustesBici ? RunDatos.ajustesBici() : {};
+  const av = B.avisos(RunDatos.lista("bicicleta"), aj.bicis || [], aj.mantenimiento || {}, M.fechaLocal(Date.now()));
+  el.hidden = !av.length;
+  el.innerHTML = av.length ? `<a href="#bici-bicis"><span aria-hidden="true">🔧</span><span>${av.slice(0, 2).map(x => esc(`${x.pieza.texto} (${x.bici.nombre})`)).join("<br>")}${av.length > 2 ? `<br>y ${av.length - 2} más` : ""}</span><span class="icon-sm" data-icon="chevronRight"></span></a>` : "";
+  iconos(el);
+}
+
 function pintar() {
   const cont = feed();
   if (!cont) return;
+  pintarAviso();
   const todos = RunDatos.lista("bicicleta");
   pintarFiltros(todos);
   if (!RunDatos.cargada("bicicleta")) { cont.innerHTML = `<p class="rd-nota">Cargando…</p>`; return; }

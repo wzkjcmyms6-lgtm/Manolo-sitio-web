@@ -77,6 +77,13 @@ inteligente, Inicio) y `js/bici-feed.js` (Actividades, "+", Inicio); en
 `mejoresDeRuta` y `sinRecords`; en `js/run-datos.js`, `ajustesBici()`
 (`meta/bici_ajustes`); `js/run-calor.js` con el mapa de calor de Bici.
 
+### Hecho en la fase 7 (D-143)
+`js/bici-bicis.js` (tus bicis y su mantenimiento); en `js/bici-analisis.js`,
+`bicis`, `mantenimiento`, `avisos`; la bici en Editar e Importar
+(`js/run-detalle.js`, `js/run-importar.js`, `js/run-guardar.js`) y al
+anotar a mano (`js/actividad-registro.js` con `extra`); segmentos de bici en
+`js/run-segmentos.js` y `js/run-segmentos-ui.js`.
+
 ### Datos (solo se suman campos)
 - `users/{uid}/bicicleta/{id}`: `mejoresBici` ({ "5000": segundos, … }),
   `biciId` (la bici con la que saliste). Las rodadas a mano siguen igual.

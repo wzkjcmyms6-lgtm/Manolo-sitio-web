@@ -102,11 +102,14 @@ function pintar() {
   ].join("");
   // Medallas: las de bici salen de sus récords por distancia (js/bici-analisis.js, D-141).
   const logros = bici ? (window.BiciAnalisis && window.RunDatos ? BiciAnalisis.logros(d, RunDatos.lista("bicicleta")) : []) : A.logros(d, window.RunDatos ? RunDatos.lista("running") : []);
-  const zap = d.zapatillaId && ((RunDatos.ajustes().zapatillas || []).find(z => z.id === d.zapatillaId) || null);
+  const zap = !bici && d.zapatillaId && ((RunDatos.ajustes().zapatillas || []).find(z => z.id === d.zapatillaId) || null);
+  // La bici con la que saliste (Bici › Tus bicis, D-143).
+  const suBici = bici && d.biciId && RunDatos.ajustesBici ? ((RunDatos.ajustesBici().bicis || []).find(x => x.id === d.biciId) || null) : null;
   const extras = [];
   if (d.subtipo) extras.push(["Tipo", esc(nombreTipo(d.subtipo, bici))]);
   if (d.rutina) extras.push(["Rutina", `${esc(d.rutina.nombre)}${d.rutina.total ? ` · ${d.rutina.completados} de ${d.rutina.total} intervalos` : ""}`]);
   if (zap) extras.push(["Zapatillas", esc(zap.nombre)]);
+  if (suBici) extras.push(["Bici", esc(suBici.nombre)]);
   if (d.rpe) extras.push(["Esfuerzo percibido", `${d.rpe}/10`]);
   if (d.clima) extras.push(["Clima", esc([E.textoClima(d.clima.cod), d.clima.tC != null ? `${V.numero(d.clima.tC, 0)} °C` : "", d.clima.sensC != null ? `sensación ${V.numero(d.clima.sensC, 0)} °C` : "", d.clima.vientoKmh != null ? `viento ${V.numero(d.clima.vientoKmh, 0)} km/h` : "", d.clima.hum != null ? `humedad ${V.numero(d.clima.hum, 0)} %` : ""].filter(Boolean).join(" · "))]);
   if (d.origen && d.origen.formato) extras.push(["Origen", esc(`Importada de ${ORIGEN[d.origen.formato] || "un archivo"}${d.origen.app && APP[d.origen.app] ? ` (${APP[d.origen.app]})` : ""}${d.origen.dispositivo ? ` · ${d.origen.dispositivo}` : ""}`)]);
@@ -123,7 +126,7 @@ function pintar() {
           <button type="button" role="menuitem" data-rd="compartir">Compartir imagen</button>
           ${tieneRuta(d) && d.conRuta ? `<button type="button" role="menuitem" data-rd="gpx">Exportar GPX</button>` : ""}
           ${d.conRuta && !d.desnivelCorr && !bici ? `<button type="button" role="menuitem" data-rd="desnivel">Corregir desnivel</button>` : ""}
-          ${d.conRuta && !bici && window.RunSegmentosUI ? `<button type="button" role="menuitem" data-rd="segmento">Crear segmento</button>` : ""}
+          ${d.conRuta && window.RunSegmentosUI ? `<button type="button" role="menuitem" data-rd="segmento">Crear segmento</button>` : ""}
           <button type="button" role="menuitem" class="rd-peligro" data-rd="eliminar">Eliminar</button>
         </div>
       </div>
@@ -136,7 +139,7 @@ function pintar() {
     ${d.notes ? `<p class="rd-notas">${esc(d.notes)}</p>` : ""}
     ${logros.length ? `<section class="rd-sec"><h2>Logros</h2><ul class="rd-logros">${logros.map(l => `<li><span>${A.MEDALLA[l.puesto]}</span><b>${esc(l.nombre)}</b><i>${V.tiempo(l.t)}</i><small>${A.textoPuesto(l.puesto)}</small></li>`).join("")}</ul></section>` : ""}
     <div id="rd-rec-caja">${recorrido(d, bici)}</div>
-    <div id="rd-seg-caja">${bici ? "" : segmentos(d)}</div>
+    <div id="rd-seg-caja">${segmentos(d, bici)}</div>
     <section class="rd-sec rd-perfil-sec" id="rd-perfil" hidden></section>
     ${parciales(d, bici)}
     ${vueltas(d, bici)}
@@ -181,22 +184,22 @@ function recorrido(d, bici) {
   </section>`;
 }
 
-// Segmentos por los que pasó esta carrera (fase 6).
-function segmentos(d) {
+// Segmentos por los que pasó esta carrera o rodada (fase 6; bici, D-143).
+function segmentos(d, bici) {
   if (!window.RunSegmentos || !window.RunDatos) return "";
   const ss = RunSegmentos.deActividad(RunDatos.segmentos(), d.id);
   if (!ss.length) return "";
   const med = { 1: "🥇", 2: "🥈", 3: "🥉" };
   return `<section class="rd-sec"><h2>Segmentos</h2><ul class="rd-segs">${ss.map(x => `<li>
     <span class="rd-seg-med">${med[x.puesto] || ""}</span>
-    <a href="#run-segmento/${encodeURIComponent(x.seg.id)}">${esc(x.seg.nombre)}</a>
+    <a href="#${bici ? "bici-segmento" : "run-segmento"}/${encodeURIComponent(x.seg.id)}">${esc(x.seg.nombre)}</a>
     <b>${V.tiempo(x.t)}</b><small>${x.puesto === 1 ? "Tu mejor" : `${x.puesto}.º de ${x.total}`} · ${V.km(x.seg.distanciaM)}</small></li>`).join("")}</ul></section>`;
 }
 function crearSegmento() {
   const yo = actual;
   if (!yo.tramos) return alert("Espera a que cargue la ruta.");
   RunSegmentosUI.crearDesde({
-    id: yo.id, doc: yo.doc, tramos: yo.tramos, mapa: yo.mapa,
+    id: yo.id, doc: yo.doc, tramos: yo.tramos, mapa: yo.mapa, col: yo.col,
     alCambiar: (a, b) => {
       if (actual !== yo || !yo.serie) return;
       // Distancias de la ruta (GPS) llevadas a la escala del perfil.
@@ -485,13 +488,15 @@ function abrirEditar() {
     });
     hoja.addEventListener("submit", e => { e.preventDefault(); guardarEdicion(); });
   }
-  const zaps = (RunDatos.ajustes().zapatillas || []).filter(z => !z.retirada || z.id === d.zapatillaId);
+  const zaps = bici ? [] : (RunDatos.ajustes().zapatillas || []).filter(z => !z.retirada || z.id === d.zapatillaId);
+  const bicis = bici && RunDatos.ajustesBici ? (RunDatos.ajustesBici().bicis || []).filter(x => !x.retirada || x.id === d.biciId) : [];
   const tipos = bici ? TIPOS_BICI : TIPOS;
   document.getElementById("rd-form").innerHTML = `
     <label class="rd-campo">Título<input class="lib-input" name="titulo" maxlength="120" value="${esc(d.titulo || "")}" placeholder="${esc(M.tituloAuto(bici ? "bicicleta" : "running", d.inicio || Date.now()))}"></label>
     <label class="rd-campo">Descripción<textarea class="lib-input" name="notes" maxlength="2000" rows="4">${esc(d.notes || "")}</textarea></label>
     <label class="rd-campo">Tipo<select class="lib-input" name="subtipo">${tipos.map(([v, t]) => `<option value="${v}"${(d.subtipo || "") === v ? " selected" : ""}>${t}</option>`).join("")}${d.subtipo && !tipos.some(t => t[0] === d.subtipo) ? `<option value="${esc(d.subtipo)}" selected>${esc(d.subtipo)}</option>` : ""}</select></label>
     ${zaps.length ? `<label class="rd-campo">Zapatillas<select class="lib-input" name="zapatillaId"><option value="">Sin elegir</option>${zaps.map(z => `<option value="${esc(z.id)}"${z.id === d.zapatillaId ? " selected" : ""}>${esc(z.nombre)}</option>`).join("")}</select></label>` : ""}
+    ${bicis.length ? `<label class="rd-campo">Bici<select class="lib-input" name="biciId"><option value="">Sin elegir</option>${bicis.map(x => `<option value="${esc(x.id)}"${x.id === d.biciId ? " selected" : ""}>${esc(x.nombre)}</option>`).join("")}</select></label>` : ""}
     <label class="rd-campo">Esfuerzo percibido (RPE)<select class="lib-input" name="rpe"><option value="">—</option>${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<option value="${n}"${Number(d.rpe) === n ? " selected" : ""}>${n}</option>`).join("")}</select></label>`;
   hoja.classList.remove("is-closing");
   hoja.hidden = false;
@@ -515,6 +520,8 @@ function guardarEdicion() {
   if (sub !== (d.subtipo || "")) cambios.subtipo = sub || borrar;
   const z = val("zapatillaId");
   if (z != null && z !== (d.zapatillaId || "")) cambios.zapatillaId = z || borrar;
+  const bb = val("biciId");
+  if (bb != null && bb !== (d.biciId || "")) cambios.biciId = bb || borrar;
   const rpe = val("rpe");
   if (rpe !== (d.rpe ? String(d.rpe) : "")) cambios.rpe = rpe ? Number(rpe) : borrar;
   if (Object.keys(cambios).length) usuario().collection(actual.col).doc(actual.id).update(cambios).catch(err => { console.error(err); alert("No se pudo guardar."); });
@@ -561,6 +568,6 @@ if (window.RunDatos) RunDatos.al(() => {
   if (ia) ia.innerHTML = inteligente(actual.doc, bici);
   if (rec) rec.innerHTML = recorrido(actual.doc, bici);
   const sg = document.getElementById("rd-seg-caja");
-  if (sg) sg.innerHTML = bici ? "" : segmentos(actual.doc);
+  if (sg) sg.innerHTML = segmentos(actual.doc, bici);
 });
 })();

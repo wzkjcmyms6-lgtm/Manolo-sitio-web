@@ -40,6 +40,9 @@ const SUB_PANELS = [
   { hash: "bicicleta", parent: "inicio" },
   { hash: "bici-progreso", parent: "bicicleta" },
   { hash: "bici-ajustes", parent: "bici-progreso" },
+  { hash: "bici-segmentos", parent: "bicicleta" },
+  { hash: "bici-segmento", parent: "bici-segmentos" },
+  { hash: "bici-bicis", parent: "bicicleta" },
   { hash: "bici-calor", parent: "bici-progreso" },
   { hash: "libros", parent: "inicio" },
   { hash: "biblia", parent: "inicio" },
@@ -107,11 +110,14 @@ const RUN_TABS = [
   { hash: "run-segmentos", label: "Segmentos", icon: "segmento", color: "#ff7a30" },
   { hash: "run-rutinas", label: "Rutinas", icon: "timer", color: "#ff7a30" }
 ];
-// Bici también (D-141): Actividades · "+" (Importar · Anotar a mano) · Progreso.
+// Bici también (D-141, D-143): Actividades · Progreso · "+" (Importar ·
+// Anotar a mano) · Segmentos · Bicis (tus bicis y su mantenimiento).
 const BICI_TABS = [
   { hash: "bicicleta", label: "Actividades", icon: "cycling", color: "#ff7a30" },
+  { hash: "bici-progreso", label: "Progreso", icon: "chart", color: "#ff7a30" },
   { accion: "bici-mas", label: "Agregar", icon: "plus" },
-  { hash: "bici-progreso", label: "Progreso", icon: "chart", color: "#ff7a30" }
+  { hash: "bici-segmentos", label: "Segmentos", icon: "segmento", color: "#ff7a30" },
+  { hash: "bici-bicis", label: "Bicis", icon: "tools", color: "#ff7a30" }
 ];
 const TAB_BARS = { habitos: HAB_TABS, finanzas: FIN_TABS, ejercicio: EJ_TABS, inversiones: INV_TABS, running: RUN_TABS, bicicleta: BICI_TABS };
 

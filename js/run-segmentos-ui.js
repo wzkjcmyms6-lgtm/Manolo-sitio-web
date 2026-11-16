@@ -7,6 +7,8 @@
 //   en el perfil y en un trazo propio; al crearlo se busca solo en todas tus
 //   carreras (retroactivo).
 // - Al importar, cada carrera nueva se compara con tus segmentos.
+// Bici tiene los suyos (D-143): #bici-segmentos y #bici-segmento/{id}, que
+// se buscan solo en tus rodadas (`deporte: "bicicleta"`).
 // Lógica sin pantalla en js/run-segmentos.js.
 (function () {
 "use strict";
@@ -15,6 +17,13 @@ const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&a
 const usuario = () => db.collection("users").doc(currentUser.uid);
 const colSeg = () => usuario().collection("run_segmentos");
 const MED = { 1: "🥇", 2: "🥈", 3: "🥉" };
+// Lo que cambia entre Running y Bici.
+const DEP = {
+  running: { lista: "run-segmentos", app: "rs-app", pag: "run-segmento", pagApp: "rsg-app", mapa: "rsg-mapa", aviso: "rsg-aviso", uno: "carrera", varios: "carreras", esta: "esta carrera" },
+  bicicleta: { lista: "bici-segmentos", app: "bs-app", pag: "bici-segmento", pagApp: "bsg-app", mapa: "bsg-mapa", aviso: "bsg-aviso", uno: "rodada", varios: "rodadas", esta: "esta rodada" }
+};
+const colDe = seg => (seg && seg.deporte === "bicicleta" ? "bicicleta" : "running");
+const pantalla = () => location.hash.replace(/^#/, "").split("/")[0];
 
 // ---- Buscar en carreras (retroactivo y al importar) ----
 // docs: actividades con mini ruta; leerTramos(doc) → Promise<tramos>.
@@ -34,15 +43,15 @@ async function buscar(seg, docs, leerTramos, avance) {
   return encontrados;
 }
 const leerDeFirestore = d => usuario().collection("rutas").doc(d.id).get().then(s => (s.exists ? M.leerRuta(s.data()) : null));
-// Después de importar: las nuevas contra todos los segmentos (la ruta ya está en memoria).
+// Después de importar: las nuevas contra los segmentos de su deporte (la ruta ya está en memoria).
 function detectarNuevas(guardadas) {
   const segs = window.RunDatos ? RunDatos.segmentos() : [];
-  const nuevas = (guardadas || []).filter(g => g.col === "running" && g.ruta && g.doc && g.doc.mini);
+  const nuevas = (guardadas || []).filter(g => (g.col === "running" || g.col === "bicicleta") && g.ruta && g.doc && g.doc.mini);
   if (!segs.length || !nuevas.length) return Promise.resolve(0);
   const lote = db.batch();
   let n = 0;
   segs.forEach(seg => nuevas.forEach(g => {
-    if (!S.pasaCerca(g.doc, seg)) return;
+    if (g.col !== colDe(seg) || !S.pasaCerca(g.doc, seg)) return;
     const e = S.esfuerzo(seg, M.leerRuta(g.ruta));
     if (!e) return;
     lote.update(colSeg().doc(seg.id), { [`esfuerzos.${g.id}`]: { t: e.t, fecha: g.doc.date, inicio: e.inicio } });
@@ -70,7 +79,7 @@ function hojaCrear() {
   hoja.addEventListener("click", e => {
     if (e.target.closest(".budget-sheet-close") || e.target.classList.contains("budget-sheet-overlay") || e.target.closest('[data-rsh="cancelar"]')) return cerrarHoja();
     if (e.target.closest('[data-rsh="crear"]')) guardarNuevo();
-    if (e.target.closest('[data-rsh="ver"]')) { cerrarHoja(); location.hash = `run-segmento/${creando.segId}`; }
+    if (e.target.closest('[data-rsh="ver"]')) { cerrarHoja(); location.hash = `${creando.dep.pag}/${creando.segId}`; }
   });
   hoja.addEventListener("input", e => { if (e.target.matches("[data-rs-rango]")) vistaPrevia(e.target.dataset.rsRango); });
   return hoja;
@@ -83,11 +92,12 @@ function cerrarHoja() {
   hoja.classList.add("is-closing");
   setTimeout(() => { hoja.hidden = true; hoja.classList.remove("is-closing"); document.body.classList.toggle("sheet-open", !!document.querySelector(".js-sheet:not([hidden])")); }, 200);
 }
-// act = { id, doc, tramos, mapa (control de RunMapa), alCambiar(desdeM, hastaM), alCerrar() }
+// act = { id, doc, tramos, mapa (control de RunMapa), col ("running" | "bicicleta"), alCambiar(desdeM, hastaM), alCerrar() }
 function crearDesde(act) {
   const total = S.largo(S.tramo(act.tramos, 0, Infinity));
   if (!(total >= 200)) return alert("La ruta es muy corta para un segmento.");
-  creando = Object.assign({}, act, { total, desde: Math.round(total * 0.25), hasta: Math.round(total * 0.6), ctl: act.mapa });
+  const col = act.col === "bicicleta" ? "bicicleta" : "running";
+  creando = Object.assign({}, act, { col, dep: DEP[col], total, desde: Math.round(total * 0.25), hasta: Math.round(total * 0.6), ctl: act.mapa });
   abrirHoja();
   document.getElementById("rs-cuerpo").innerHTML = `
     <label class="rd-campo">Nombre<input class="lib-input" id="rs-nombre" maxlength="60" placeholder="Ej.: Subida al mirador"></label>
@@ -95,7 +105,7 @@ function crearDesde(act) {
     <label class="rd-campo rs-rango">Inicio <b id="rs-desde-t"></b><input type="range" min="0" max="${Math.round(total)}" step="10" value="${creando.desde}" data-rs-rango="desde"></label>
     <label class="rd-campo rs-rango">Fin <b id="rs-hasta-t"></b><input type="range" min="0" max="${Math.round(total)}" step="10" value="${creando.hasta}" data-rs-rango="hasta"></label>
     <p class="rs-dato" id="rs-dato" aria-live="polite"></p>
-    <p class="rd-nota">Manolo lo buscará solo en todas tus carreras (también las que importes después) y guardará tus tiempos.</p>`;
+    <p class="rd-nota">Manolo lo buscará solo en todas tus ${creando.dep.varios} (también las que importes después) y guardará tus tiempos.</p>`;
   document.getElementById("rs-acciones").innerHTML = `<button type="button" class="txn-save txn-save-otro" data-rsh="cancelar">Cancelar</button><button type="button" class="txn-save" data-rsh="crear">Crear</button>`;
   vistaPrevia();
 }
@@ -120,7 +130,7 @@ function vistaPrevia(cual) {
 }
 async function guardarNuevo() {
   const c = creando;
-  const seg = S.crear(c.tramos, c.desde, c.hasta, document.getElementById("rs-nombre").value, c.id, Date.now());
+  const seg = S.crear(c.tramos, c.desde, c.hasta, document.getElementById("rs-nombre").value, c.id, Date.now(), c.col);
   if (!seg) return alert("Elige un tramo de al menos 100 m.");
   const propio = S.esfuerzo(seg, c.tramos);
   if (propio) seg.esfuerzos[c.id] = { t: propio.t, fecha: c.doc.date, inicio: propio.inicio };
@@ -130,38 +140,41 @@ async function guardarNuevo() {
   c.segId = ref.id;
   ref.set(seg).catch(e => console.error("Manolo: segmento", e));
   if (c.ctl && c.ctl.resaltar) c.ctl.resaltar(null);
-  // Buscar en todas las demás carreras.
+  // Buscar en todas las demás carreras (o rodadas).
   const cuerpo = document.getElementById("rs-cuerpo");
-  const otras = RunDatos.lista("running").filter(d => d.id !== c.doc.id);
-  cuerpo.innerHTML = `<div class="ri-avance"><p><b>Segmento creado: ${esc(seg.nombre)}</b></p><div class="ri-barra"><i style="width:0%"></i></div><p class="ri-nota" id="rs-avance">Buscándolo en tus carreras…</p></div>`;
+  const otras = RunDatos.lista(c.col).filter(d => d.id !== c.doc.id);
+  cuerpo.innerHTML = `<div class="ri-avance"><p><b>Segmento creado: ${esc(seg.nombre)}</b></p><div class="ri-barra"><i style="width:0%"></i></div><p class="ri-nota" id="rs-avance">Buscándolo en tus ${c.dep.varios}…</p></div>`;
   document.getElementById("rs-acciones").innerHTML = "";
   const encontrados = await buscar(seg, otras, leerDeFirestore, (i, n) => {
     const barra = cuerpo.querySelector(".ri-barra i"), txt = document.getElementById("rs-avance");
     if (barra) barra.style.width = `${n ? Math.round(100 * i / n) : 100}%`;
-    if (txt) txt.textContent = n ? `Buscándolo en tus carreras: ${i} de ${n}` : "Buscándolo en tus carreras…";
+    if (txt) txt.textContent = n ? `Buscándolo en tus ${c.dep.varios}: ${i} de ${n}` : `Buscándolo en tus ${c.dep.varios}…`;
   });
   const n = Object.keys(encontrados).length;
   if (n) await ref.set({ esfuerzos: encontrados }, { merge: true }).catch(e => console.error(e));
-  cuerpo.innerHTML = `<div class="ri-avance"><p class="ri-grande"><b>¡Listo!</b></p><p>${n ? `Lo encontré en ${n} ${n === 1 ? "carrera más" : "carreras más"}.` : "Por ahora solo está en esta carrera; se sumarán las próximas."}</p></div>`;
+  cuerpo.innerHTML = `<div class="ri-avance"><p class="ri-grande"><b>¡Listo!</b></p><p>${n ? `Lo encontré en ${n} ${n === 1 ? `${c.dep.uno} más` : `${c.dep.varios} más`}.` : `Por ahora solo está en ${c.dep.esta}; se sumarán las próximas.`}</p></div>`;
   document.getElementById("rs-acciones").innerHTML = `<button type="button" class="txn-save" data-rsh="ver">Ver el segmento</button>`;
 }
 
-// ---- Lista (pestaña Segmentos) ----
+// ---- Lista (pestaña Segmentos, de Running o de Bici) ----
 function pintarLista() {
-  const app = document.getElementById("rs-app");
-  if (!app || location.hash.replace(/^#/, "").split("/")[0] !== "run-segmentos") return;
-  const segs = RunDatos.segmentos().slice().sort((a, b) => (b.creado || 0) - (a.creado || 0));
+  const col = Object.keys(DEP).find(k => DEP[k].lista === pantalla());
+  if (!col) return;
+  const dep = DEP[col];
+  const app = document.getElementById(dep.app);
+  if (!app) return;
+  const segs = S.deDeporte(RunDatos.segmentos(), col).sort((a, b) => (b.creado || 0) - (a.creado || 0));
   if (!segs.length) {
     app.innerHTML = `<div class="run-vacio"><span class="icon" data-icon="segmento"></span>
       <p><b>Tus tramos favoritos, cronometrados solos.</b></p>
-      <p>Abre una carrera con ruta, toca ⋯ y elige <b>Crear segmento</b>: marca el inicio y el fin (una subida, una vuelta al parque) y Manolo lo buscará en todas tus carreras.</p></div>`;
+      <p>Abre una ${dep.uno} con ruta, toca ⋯ y elige <b>Crear segmento</b>: marca el inicio y el fin (${col === "bicicleta" ? "una subida, la bajada de siempre" : "una subida, una vuelta al parque"}) y Manolo lo buscará en todas tus ${dep.varios}.</p></div>`;
     renderIcons(app);
     return;
   }
   app.innerHTML = `<ul class="rs-lista">${segs.map(s => {
     const tb = S.tabla(s);
     const pts = S.trazo(s);
-    return `<li><a class="rs-card" href="#run-segmento/${encodeURIComponent(s.id)}">
+    return `<li><a class="rs-card" href="#${dep.pag}/${encodeURIComponent(s.id)}">
       <span class="rs-card-mapa">${V.svgRuta([pts], { ancho: 96, alto: 64, margen: 6, clase: "run-ruta" })}</span>
       <span class="rs-card-txt"><b>${esc(s.nombre)}</b><small>${V.km(s.distanciaM)}${s.pendiente != null ? ` · ${V.numero(s.pendiente, 1)} %` : ""} · ${tb.length} ${tb.length === 1 ? "vez" : "veces"}</small></span>
       <span class="rs-card-mejor">${tb.length ? `<b>${V.tiempo(tb[0].t)}</b><small>tu mejor</small>` : ""}</span></a></li>`;
@@ -170,43 +183,48 @@ function pintarLista() {
 
 // ---- Página de un segmento ----
 let mapaSeg = null, segActual = null;
-function idDeHash() {
+// La página de un segmento a la vista: { col, id } o null.
+function deHash() {
   const p = location.hash.replace(/^#/, "").split("/");
-  return p[0] === "run-segmento" ? decodeURIComponent(p.slice(1).join("/")) : null;
+  const col = Object.keys(DEP).find(k => DEP[k].pag === p[0]);
+  return col ? { col, id: decodeURIComponent(p.slice(1).join("/")) } : null;
 }
 function pintarSegmento() {
-  const id = idDeHash();
-  const app = document.getElementById("rsg-app");
-  if (!id) { if (mapaSeg) { mapaSeg.destruir(); mapaSeg = null; } segActual = null; return; }
+  const h = deHash();
+  if (!h || !h.id) { if (mapaSeg) { mapaSeg.destruir(); mapaSeg = null; } segActual = null; return; }
+  const id = h.id, dep = DEP[h.col];
+  const app = document.getElementById(dep.pagApp);
   if (!app) return;
   if (!RunDatos.segmentosCargados()) { app.innerHTML = `<p class="rd-nota">Cargando…</p>`; return; }
   const s = RunDatos.segmentos().find(x => x.id === id);
   if (!s) { app.innerHTML = `<p class="rd-nota">Este segmento ya no existe.</p>`; return; }
+  const col = colDe(s);
   const tb = S.tabla(s);
-  const docs = RunDatos.lista("running");
-  const mismo = segActual === id;
+  const docs = RunDatos.lista(col);
+  const mismo = segActual === id && !!app.querySelector(".rsg-mapa-caja, .rd-mapa");
   segActual = id;
   const fila = e => {
     const d = docs.find(x => x.id === e.id);
+    const vel = col === "bicicleta" ? `${V.velocidad(e.t, s.distanciaM)}` : V.ritmo(V.ritmoDe(e.t, s.distanciaM));
     return `<li class="${e.puesto <= 3 ? "is-podio" : ""}"><span class="rsg-puesto">${MED[e.puesto] || e.puesto}</span>
-      <a href="#run-actividad/running/${encodeURIComponent(e.id)}">${esc(d ? (d.titulo || V.fechaActividad(d)) : e.fecha || "")}</a>
-      <b>${V.tiempo(e.t)}</b><small>${V.ritmo(V.ritmoDe(e.t, s.distanciaM))} · ${esc(e.fecha ? V.fechaActividad({ date: e.fecha }) : "")}</small></li>`;
+      <a href="#run-actividad/${col}/${encodeURIComponent(e.id)}">${esc(d ? (d.titulo || V.fechaActividad(d)) : e.fecha || "")}</a>
+      <b>${V.tiempo(e.t)}</b><small>${vel} · ${esc(e.fecha ? V.fechaActividad({ date: e.fecha }) : "")}</small></li>`;
   };
   const html = `
     <div class="rd-cab"><h1 class="rd-titulo">${esc(s.nombre)}</h1>
       <div class="rd-menu"><button type="button" class="rd-menu-btn" aria-label="Más opciones" data-rsg="menu">⋯</button>
         <div class="rd-menu-lista" hidden role="menu">
           <button type="button" role="menuitem" data-rsg="renombrar">Renombrar</button>
-          <button type="button" role="menuitem" data-rsg="buscar">Buscar de nuevo en mis carreras</button>
+          <button type="button" role="menuitem" data-rsg="buscar">Buscar de nuevo en mis ${DEP[col].varios}</button>
           <button type="button" role="menuitem" class="rd-peligro" data-rsg="eliminar">Eliminar segmento</button>
         </div></div></div>
     <p class="rd-meta">${[V.km(s.distanciaM), s.desnivelM != null ? `+${s.desnivelM} m` : "", s.pendiente != null ? `${V.numero(s.pendiente, 1)} % de pendiente media` : ""].filter(Boolean).join(" · ")}</p>
-    <div class="rd-mapa-caja"><div class="rd-mapa" id="rsg-mapa"></div></div>
-    <p class="rsg-aviso" id="rsg-aviso" aria-live="polite"></p>
+    <div class="rd-mapa-caja"><div class="rd-mapa" id="${dep.mapa}" data-rsg-mapa></div></div>
+    <p class="rsg-aviso" id="${dep.aviso}" data-rsg-aviso aria-live="polite"></p>
     <section class="rd-sec"><h2>Tu tabla <small class="rsg-n">${tb.length} ${tb.length === 1 ? "vez" : "veces"}</small></h2>
-      ${tb.length ? `<ol class="rsg-tabla">${tb.map(fila).join("")}</ol>` : `<p class="rd-nota">Todavía no pasaste por aquí en ninguna carrera con ruta.</p>`}
+      ${tb.length ? `<ol class="rsg-tabla">${tb.map(fila).join("")}</ol>` : `<p class="rd-nota">Todavía no pasaste por aquí en ninguna ${DEP[col].uno} con ruta.</p>`}
     </section>`;
-  if (mismo && mapaSeg && document.getElementById("rsg-mapa")) {
+  if (mismo && mapaSeg && app.querySelector("[data-rsg-mapa]")) {
     // Solo cambió la tabla: no se vuelve a crear el mapa.
     const tmp = document.createElement("div");
     tmp.innerHTML = html;
@@ -216,9 +234,9 @@ function pintarSegmento() {
   }
   if (mapaSeg) mapaSeg.destruir();
   app.innerHTML = html;
-  mapaSeg = RunMapa.crear(document.getElementById("rsg-mapa"), [S.trazo(s)], { alto: 220 });
+  mapaSeg = RunMapa.crear(app.querySelector("[data-rsg-mapa]"), [S.trazo(s)], { alto: 220 });
 }
-function aviso(txt) { const el = document.getElementById("rsg-aviso"); if (el) el.textContent = txt; }
+function aviso(txt) { document.querySelectorAll("[data-rsg-aviso]").forEach(el => { if (el.offsetParent) el.textContent = txt; }); }
 async function accionSegmento(a) {
   const s = RunDatos.segmentos().find(x => x.id === segActual);
   if (!s) return;
@@ -226,12 +244,14 @@ async function accionSegmento(a) {
     const nombre = prompt("Nombre del segmento", s.nombre);
     if (nombre && nombre.trim() && nombre.trim() !== s.nombre) colSeg().doc(s.id).update({ nombre: nombre.trim().slice(0, 60) });
   } else if (a === "eliminar") {
-    if (!confirm(`¿Eliminar el segmento «${s.nombre}»? Tus carreras no se tocan.`)) return;
+    const dep = DEP[colDe(s)];
+    if (!confirm(`¿Eliminar el segmento «${s.nombre}»? Tus ${dep.varios} no se tocan.`)) return;
     colSeg().doc(s.id).delete();
-    location.hash = "run-segmentos";
+    location.hash = dep.lista;
   } else if (a === "buscar") {
     if (navigator.onLine === false) return aviso("Hace falta internet para leer tus rutas.");
-    const encontrados = await buscar(s, RunDatos.lista("running"), leerDeFirestore, (i, n) => aviso(i < n ? `Buscando en tus carreras: ${i} de ${n}…` : ""));
+    const col = colDe(s), dep = DEP[col];
+    const encontrados = await buscar(s, RunDatos.lista(col), leerDeFirestore, (i, n) => aviso(i < n ? `Buscando en tus ${dep.varios}: ${i} de ${n}…` : ""));
     const nuevos = Object.keys(encontrados).filter(id => !(s.esfuerzos || {})[id] || s.esfuerzos[id].t !== encontrados[id].t);
     if (nuevos.length) await colSeg().doc(s.id).set({ esfuerzos: encontrados }, { merge: true });
     aviso(nuevos.length ? `Listo: ${nuevos.length} ${nuevos.length === 1 ? "tiempo nuevo" : "tiempos nuevos"}.` : "Listo: no hay tiempos nuevos.");
@@ -240,11 +260,12 @@ async function accionSegmento(a) {
 
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-rsg]");
-  if (!b || !e.target.closest("#panel-run-segmento")) {
-    if (!e.target.closest(".rd-menu")) document.querySelectorAll("#panel-run-segmento .rd-menu-lista").forEach(l => { l.hidden = true; });
+  const panel = e.target.closest("#panel-run-segmento, #panel-bici-segmento");
+  if (!b || !panel) {
+    if (!e.target.closest(".rd-menu")) document.querySelectorAll("#panel-run-segmento .rd-menu-lista, #panel-bici-segmento .rd-menu-lista").forEach(l => { l.hidden = true; });
     return;
   }
-  const lista = document.querySelector("#panel-run-segmento .rd-menu-lista");
+  const lista = panel.querySelector(".rd-menu-lista");
   if (b.dataset.rsg === "menu") { lista.hidden = !lista.hidden; return; }
   lista.hidden = true;
   accionSegmento(b.dataset.rsg);

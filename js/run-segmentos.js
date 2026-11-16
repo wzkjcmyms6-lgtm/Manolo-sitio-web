@@ -51,7 +51,8 @@ function largo(pts) {
   return s;
 }
 // Campos de un segmento nuevo a partir de una ruta y dos distancias.
-function crear(tramos, desdeM, hastaM, nombre, origenId, ahora) {
+// deporte: "running" (si no se dice) o "bicicleta" (segmentos de bici, D-143).
+function crear(tramos, desdeM, hastaM, nombre, origenId, ahora, deporte) {
   const pts = tramo(tramos, desdeM, hastaM);
   if (pts.length < 2) return null;
   const dist = largo(pts);
@@ -62,7 +63,7 @@ function crear(tramos, desdeM, hastaM, nombre, origenId, ahora) {
   const neto = conAlt.length >= 2 ? conAlt[conAlt.length - 1].alt - conAlt[0].alt : null;
   const seg = {
     v: 1, nombre: String(nombre || "").trim().slice(0, 60) || `Segmento de ${Math.round(dist / 10) / 100} km`.replace(".", ","),
-    deporte: "running",
+    deporte: deporte === "bicicleta" ? "bicicleta" : "running",
     ini: { lat: r5(pts[0].lat), lon: r5(pts[0].lon) },
     fin: { lat: r5(pts[pts.length - 1].lat), lon: r5(pts[pts.length - 1].lon) },
     distanciaM: Math.round(dist),
@@ -143,5 +144,8 @@ function deActividad(segs, id) {
   }).sort((a, b) => a.puesto - b.puesto || a.seg.nombre.localeCompare(b.seg.nombre));
 }
 
-return { crear, tramo, trazo, pasaCerca, esfuerzo, tabla, deActividad, largo, RADIO, RADIO_FORMA };
+// Los segmentos de un deporte (los de antes no dicen: son de Running).
+const deDeporte = (segs, col) => (segs || []).filter(s => (s.deporte === "bicicleta" ? "bicicleta" : "running") === col);
+
+return { crear, tramo, trazo, pasaCerca, esfuerzo, tabla, deActividad, deDeporte, largo, RADIO, RADIO_FORMA };
 });

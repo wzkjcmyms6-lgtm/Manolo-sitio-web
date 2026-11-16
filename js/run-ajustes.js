@@ -156,7 +156,7 @@ async function exportar(boton) {
       entradas.push({ nombre, datos: V.gpx(Object.assign({ deporte: col }, d), M.leerRuta(r)) });
       n++;
     }));
-    const json = { creado: Date.now(), version: 1, running: RunDatos.lista("running"), bicicleta: RunDatos.lista("bicicleta"), ajustes: RunDatos.ajustes(), segmentos: RunDatos.segmentos() };
+    const json = { creado: Date.now(), version: 1, running: RunDatos.lista("running"), bicicleta: RunDatos.lista("bicicleta"), ajustes: RunDatos.ajustes(), ajustesBici: RunDatos.ajustesBici ? RunDatos.ajustesBici() : {}, segmentos: RunDatos.segmentos() };
     entradas.unshift({ nombre: "manolo-running.json", datos: JSON.stringify(json, null, 1) });
     decir(`Armando el ZIP (${n} GPX)…`);
     const zip = await RunZip.crearZip(entradas);

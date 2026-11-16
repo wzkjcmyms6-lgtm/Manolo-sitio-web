@@ -105,6 +105,7 @@
   "js/run-ajustes.js",
   "js/bici-progreso.js",
   "js/bici-ajustes.js",
+  "js/bici-bicis.js",
   "js/running.js",
   "js/bicicleta.js",
   "js/finanzas/datos.js",

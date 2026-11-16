@@ -153,6 +153,8 @@ async function cargarContexto() {
       fcMax: Number(ajustes.fcMax) || null, fcMaxVista: fcVista, fcReposo: Number(ajustes.fcReposo) || null,
       ritmoUmbralS: Number(ajustes.ritmoUmbralS) || (window.RunAnalisis ? RunAnalisis.ritmoUmbralSugerido(existentes.running) : null),
       zapatilla: (ajustes.zapatillas || []).find(z => z.predeterminada && !z.retirada) || null,
+      // Bici (D-143): la predeterminada, como las zapatillas.
+      bici: ((window.RunDatos && RunDatos.ajustesBici ? RunDatos.ajustesBici().bicis : null) || []).find(b => b.predeterminada && !b.retirada) || null,
       pesoKg: fechas.length ? Number(pesajes[fechas[fechas.length - 1]]) : Number(ajustes.pesoKg) || null
     }
   };
@@ -431,6 +433,8 @@ async function guardar() {
       // Zapatilla predeterminada (Ajustes): solo para carreras desde que se agregó.
       const zap = estado.ctx.opciones.zapatilla;
       if (zap && nueva.deporte === "running" && !nueva.zapatillaId && nueva.campos.inicio >= (zap.creado || 0)) nueva.zapatillaId = zap.id;
+      const bic = estado.ctx.opciones.bici;
+      if (bic && nueva.deporte === "bicicleta" && !nueva.biciId && nueva.campos.inicio >= (bic.creado || 0)) nueva.biciId = bic.id;
       const o = G.operaciones(nueva, lista[i].clase, lista[i].existente, ahora);
       o.ops.forEach(op => { ops.push(op); tam += JSON.stringify(op.datos).length; });
       // La ruta se guarda en memoria solo si hay segmentos con los que compararla.

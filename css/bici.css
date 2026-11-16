@@ -41,3 +41,31 @@ body.in-bici .topbar-ajustes[data-engranaje="bicicleta"] span { width: 20px; hei
   background: rgba(255, 184, 77, 0.14); color: var(--accent-2); font-size: 1.9rem; font-variant-numeric: tabular-nums;
 }
 .bp-edd-caja span { line-height: 1.4; }
+
+/* Tus bicis y su mantenimiento (D-143). */
+.bf-aviso a {
+  display: flex; align-items: center; gap: 0.6rem; margin: 0 0 0.9rem; padding: 0.7rem 0.85rem; border-radius: 14px;
+  background: rgba(255, 184, 77, 0.12); border: 1px solid rgba(255, 184, 77, 0.4); color: var(--ink); text-decoration: none; line-height: 1.35;
+}
+.bf-aviso a > span:nth-child(2) { flex: 1; font-size: 0.9rem; }
+.bb-bici { margin-bottom: 0.9rem; }
+.bb-bici.is-retirada { opacity: 0.75; }
+.bb-cab { display: flex; align-items: center; gap: 0.7rem; }
+.bb-cab > div { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.bb-cab small { color: var(--muted); font-size: 0.8rem; }
+.bb-nombre { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; }
+.bb-t { margin: 0; font-size: 1rem; font-weight: 700; }
+.bb-mant-t { margin: 0.9rem 0 0.4rem; font-size: 0.92rem; }
+.bb-piezas { list-style: none; display: flex; flex-direction: column; gap: 0.55rem; margin: 0 0 0.6rem; padding: 0; }
+.bb-pieza { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "t b" "barra barra"; align-items: center; gap: 0.3rem 0.6rem; }
+.bb-pieza-t { grid-area: t; display: flex; flex-direction: column; min-width: 0; }
+.bb-pieza-t small { color: var(--muted); font-size: 0.78rem; }
+.bb-pieza .rp-zap-barra { grid-area: barra; }
+.bb-pieza .tmp-quitar { grid-area: b; }
+.bb-pieza.is-pronto .rp-zap-barra i { background: var(--accent-2); }
+.bb-pieza.is-cambiar .rp-zap-barra i { background: #ff6b6b; }
+.bb-pieza.is-cambiar .bb-pieza-t small { color: #ff8b8b; font-weight: 600; }
+.bb-cada { margin-bottom: 0.4rem; }
+.bb-int { margin-bottom: 0.2rem; }
+.bb-sub { margin: 1.4rem 0 0.6rem; font-size: 1rem; color: var(--muted); }
+.bb-sin { margin-top: 0.9rem; }

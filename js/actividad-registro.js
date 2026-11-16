@@ -29,7 +29,7 @@ function formatPace(secPerKm) {
 const SEMANAS = 12;
 
 // o = { deporte ("running" | "bicicleta"), coleccion, prefijo ("running" | "cycling"),
-//       item ("carrera" | "rodada") }
+//       item ("carrera" | "rodada"), extra? (() → campos que se suman al anotar a mano) }
 function registro(o) {
   const AA = ActividadAnalisis;
   const esRitmo = o.deporte === "running";
@@ -163,7 +163,7 @@ function registro(o) {
     const rpe = parseInt($("rpe").value, 10);
     if (!date || !distance || !duration) return;
     // El RPE (opcional) lo usa el mapa muscular: minutos × RPE × constante.
-    col().add(Object.assign({ date, distance, duration, notes }, rpe ? { rpe } : {}));
+    col().add(Object.assign({ date, distance, duration, notes }, rpe ? { rpe } : {}, o.extra ? o.extra() || {} : {}));
     e.target.reset();
     $("date").value = fechaLocalHoy();
   });

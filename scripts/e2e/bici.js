@@ -8,6 +8,11 @@
 // Fase 6: Progreso (totales con la velocidad, racha, metas, diario, récords
 // sueltos y mejores tiempos con su evolución, Eddington, los récords de una
 // rodada vieja calculados con su ruta, mapa de calor) y Ajustes de Bici.
+// Fase 7: tus bicis (agregar, predeterminada, ponerla en las rodadas sin
+// bici, en cada rodada con Editar, al anotar a mano, retirar), el
+// mantenimiento (aviso arriba del feed, «Hecho hoy», cada cuánto) y los
+// segmentos de bici (crear desde una rodada, buscarlo en tus rodadas, su
+// página con la velocidad, la pestaña Segmentos de Bici y no en Running).
 // Uso: node scripts/e2e/bici.js [carpeta-para-capturas]
 const { chromium, servidor, abrir, ok, captura: capturar, terminar } = require("./comun.js");
 const X = require("../../tests/run-fixtures.js");
@@ -76,7 +81,7 @@ async function fase5(browser, base, ancho) {
   // La barra propia: Actividades · + · Progreso.
   if (ancho <= 768) {
     const barra = await p.$$eval("#bottom-nav-links > a, #bottom-nav-links > button", els => els.map(e => e.getAttribute("aria-label") || e.textContent.trim()));
-    ok(barra.join(",") === "Actividades,Agregar,Progreso", `barra propia (${barra.join(", ")})`);
+    ok(barra.join(",") === "Actividades,Progreso,Agregar,Segmentos,Bicis", `barra propia (${barra.join(", ")})`);
     await p.click("#bottom-nav-links .tab-accion");
     await p.waitForTimeout(300);
     ok(await p.isVisible("#bici-mas-hoja") && /Importar/.test(await txt(p, "#bici-mas-hoja")) && /Anotar a mano/.test(await txt(p, "#bici-mas-hoja")), "el «+» ofrece Importar y Anotar a mano");
@@ -107,7 +112,7 @@ async function fase5(browser, base, ancho) {
   ok(await p.$('.rd-recorrido a[href="#run-actividad/bicicleta/imp_a"]') !== null, "y lleva a la otra rodada");
   if (ancho <= 768) {
     const barra = await p.$$eval("#bottom-nav-links > a, #bottom-nav-links > button", els => els.map(e => e.getAttribute("aria-label") || e.textContent.trim()));
-    ok(barra.join(",") === "Actividades,Agregar,Progreso" && !(await p.isVisible('.topbar-ajustes[data-engranaje="running"]')), `en el detalle sigue la barra de Bici (${barra.join(", ")})`);
+    ok(barra.join(",") === "Actividades,Progreso,Agregar,Segmentos,Bicis" && !(await p.isVisible('.topbar-ajustes[data-engranaje="running"]')), `en el detalle sigue la barra de Bici (${barra.join(", ")})`);
   }
   await captura(p, `bici-detalle-${ancho}.png`);
 
@@ -200,12 +205,140 @@ async function fase6(browser, base, ancho) {
   await p.context().close();
 }
 
+// ---- Fase 7: tus bicis, mantenimiento y segmentos de bici (D-143) ----
+async function fase7(browser, base, ancho) {
+  console.log(`\nBici, fase 7: tus bicis y segmentos (${ancho} px)`);
+  let p = await abrir(browser, base, { __SEED__: SEED }, { hash: "#bici-bicis", zona: ZONA, fecha: FECHA, ancho });
+  await p.waitForTimeout(600);
+  ok(/Agrega tu bici/.test(await txt(p, "#bb-app")), "sin bicis: invita a agregar una");
+  await p.click("[data-bb-nueva]");
+  await p.fill('#bb-form [name="nombre"]', "Trek Domane");
+  await p.selectOption('#bb-form [name="tipo"]', "ruta");
+  await p.fill('#bb-form [name="kmInicial"]', "2950");
+  await p.click("#bb-form button[type=submit]");
+  await p.waitForTimeout(400);
+  const aj = () => p.evaluate(() => window.__fakeStore.colMap("users/test/meta").get("bici_ajustes") || {});
+  let a = await aj();
+  ok(a.bicis && a.bicis.length === 1 && a.bicis[0].nombre === "Trek Domane" && a.bicis[0].predeterminada && a.bicis[0].kmInicial === 2950, "agregar una bici (la primera queda como predeterminada)");
+  let card = await txt(p, "#bb-app .bb-bici");
+  ok(/Trek Domane Predeterminada/.test(card) && /Ruta · 2\.950 km · 0 rodadas/.test(card), `la tarjeta de la bici (${card.slice(0, 90)})`);
+  ok((await p.$$("#bb-app .bb-pieza")).length === 4 && /Cadena 0 de 3\.000 km/.test(card) && /Service general 0 de 5\.000 km · 0 de 180 días/.test(card), "el mantenimiento: 4 piezas desde hoy");
+  // Ponerle la bici a las rodadas que no tienen.
+  ok(/5 rodadas no tienen bici/.test(await txt(p, "#bb-app .bb-sin")), "las rodadas sin bici");
+  await p.click("[data-bb-asignar]");
+  await p.waitForTimeout(600);
+  const sinBici = await p.evaluate(() => [...window.__fakeStore.colMap("users/test/bicicleta").values()].filter(d => d.biciId !== (window.__fakeStore.colMap("users/test/meta").get("bici_ajustes").bicis[0].id)).length);
+  ok(sinBici === 0 && /Trek Domane .*3\.084 km · 5 rodadas/.test(await txt(p, "#bb-app .bb-bici")), `ponerle la bici a todas (${(await txt(p, "#bb-app .bb-bici")).slice(0, 80)})`);
+  // La cadena ya tenía 3.000 km cuando la agregaste: toca cambiarla.
+  const id = (await aj()).bicis[0].id;
+  await p.evaluate(x => window.__fakeStore.colMap("users/test/meta").set("bici_ajustes", Object.assign({}, window.__fakeStore.colMap("users/test/meta").get("bici_ajustes"), { mantenimiento: { [x]: { cadena: { desdeKm: 0, desde: "2026-01-01" } } } })), id);
+  await p.evaluate(() => window.__fakeStore.notify());
+  await p.waitForTimeout(500);
+  ok(/Toca cambiar la cadena: 3\.084 km/.test(await txt(p, "#bb-app")) && await p.$("#bb-app .bb-pieza.is-cambiar") !== null, "aviso: toca cambiar la cadena");
+  await p.evaluate(() => { location.hash = "#bicicleta"; });
+  await p.waitForTimeout(400);
+  ok(await p.isVisible("#bf-aviso") && /Toca cambiar la cadena: 3\.084 km \(Trek Domane\)/.test(await txt(p, "#bf-aviso")), "y arriba del feed");
+  await captura(p, `bici-aviso-${ancho}.png`);
+  await p.click("#bf-aviso a");
+  await p.waitForTimeout(400);
+  await p.click('#bb-app .bb-pieza.is-cambiar [data-bb-hecho="cadena"]');
+  await p.waitForTimeout(400);
+  a = await aj();
+  ok(a.mantenimiento[id].cadena.desdeKm === 3084.2 && a.mantenimiento[id].cadena.desde === "2026-11-18" && /vuelve a contar desde hoy/.test(await txt(p, "#bb-app")), `«Hecho hoy»: vuelve a contar (${JSON.stringify(a.mantenimiento[id].cadena)})`);
+  ok(!(await p.$("#bb-app .bb-pieza.is-cambiar")), "ya no hay nada que cambiar");
+  // Cada cuánto.
+  await p.click("[data-bb-intervalos]");
+  await p.fill('#bb-int-form [name="cadena-km"]', "3500");
+  await p.click("#bb-int-form button[type=submit]");
+  await p.waitForTimeout(400);
+  a = await aj();
+  ok(a.mantenimiento[id].cadena.cadaKm === 3500 && a.mantenimiento[id].cadena.desdeKm === 3084.2 && a.mantenimiento[id].service.cadaDias === 180, "cambiar cada cuánto (sin perder «Hecho hoy»)");
+  await captura(p, `bici-bicis-${ancho}.png`);
+  ok(await sobra(p) <= 0, "nada se sale a lo ancho");
+
+  // Otra bici; en una rodada se elige con Editar.
+  await p.click("[data-bb-nueva]");
+  await p.fill('#bb-form [name="nombre"]', "La de montaña");
+  await p.selectOption('#bb-form [name="tipo"]', "montana");
+  await p.click("#bb-form button[type=submit]");
+  await p.waitForTimeout(400);
+  a = await aj();
+  const id2 = a.bicis[1].id;
+  ok(a.bicis.length === 2 && !a.bicis[1].predeterminada, "una segunda bici (no predeterminada)");
+  await p.evaluate(() => { location.hash = "#run-actividad/bicicleta/imp_c"; });
+  await p.waitForTimeout(900);
+  ok(/Bici Trek Domane/.test(await txt(p, "#rd-app")), "el detalle dice con qué bici saliste");
+  await p.click('[data-rd="menu"]');
+  await p.click('[data-rd="editar"]');
+  await p.waitForTimeout(350);
+  ok(await p.$('#rd-form select[name="biciId"]') !== null && !(await p.$('#rd-form select[name="zapatillaId"]')), "Editar: elegir la bici (y no zapatillas)");
+  await p.selectOption('#rd-form select[name="biciId"]', id2);
+  await p.click('[data-rdh="guardar"]');
+  await p.waitForTimeout(500);
+  ok((await p.evaluate(() => window.__fakeStore.colMap("users/test/bicicleta").get("imp_c").biciId)) === id2 && /Bici La de montaña/.test(await txt(p, "#rd-app")), "cambiarla en una rodada");
+  // Anotar a mano: con la predeterminada.
+  await p.evaluate(() => { location.hash = "#bicicleta"; });
+  await p.waitForTimeout(300);
+  await p.evaluate(() => document.querySelector("[data-bici-mas]").click());
+  await p.waitForTimeout(250);
+  await p.click('[data-bici-op="manual"]');
+  await p.waitForTimeout(300);
+  await p.fill("#cycling-distance", "22");
+  await p.fill("#cycling-duration", "60");
+  await p.click("#cycling-form button[type=submit]");
+  await p.waitForTimeout(500);
+  const nueva = await p.evaluate(() => [...window.__fakeStore.colMap("users/test/bicicleta").values()].find(d => d.distance === 22));
+  ok(nueva && nueva.biciId === id, "lo que anotas a mano lleva tu bici predeterminada");
+  // Retirar y volver a usar.
+  await p.evaluate(() => { location.hash = "#bici-bicis"; });
+  await p.waitForTimeout(400);
+  await p.click(`[data-bb-bici="${id2}"] [data-bb-retirar]`);
+  await p.waitForTimeout(400);
+  ok(/Retiradas/.test(await txt(p, "#bb-app")) && (await aj()).bicis[1].retirada === true, "retirar una bici");
+  await p.click(`[data-bb-bici="${id2}"] [data-bb-volver]`);
+  await p.waitForTimeout(400);
+  ok(!(await aj()).bicis[1].retirada, "y volver a usarla");
+  ok(!p.errores.length, `sin errores de página${p.errores.length ? `: ${p.errores[0]}` : ""}`);
+  await p.context().close();
+
+  // Segmentos de bici: crear uno desde una rodada y buscarlo en las demás.
+  p = await abrir(browser, base, { __SEED__: SEED }, { hash: "#bici-segmentos", zona: ZONA, fecha: FECHA, ancho });
+  await p.waitForTimeout(500);
+  ok(/Abre una rodada con ruta/.test(await txt(p, "#bs-app")), "Segmentos de Bici vacío");
+  await p.evaluate(() => { location.hash = "#run-actividad/bicicleta/imp_a"; });
+  await p.waitForTimeout(1200);
+  await p.click('[data-rd="menu"]');
+  await p.click('[data-rd="segmento"]');
+  await p.waitForTimeout(400);
+  ok(/en todas tus rodadas/.test(await txt(p, "#rs-cuerpo")), "crear segmento desde una rodada");
+  await p.fill("#rs-nombre", "Subida a La Cumbre");
+  await p.click('[data-rsh="crear"]');
+  await p.waitForFunction(() => /Listo/.test(document.getElementById("rs-cuerpo").innerText), null, { timeout: 15000 }).catch(() => {});
+  // imp_b va por el mismo camino y imp_c (53 km) también pasa por ahí.
+  ok(/Lo encontré en 2 rodadas más/.test(await txt(p, "#rs-cuerpo")), `lo busca en tus rodadas (${await txt(p, "#rs-cuerpo")})`);
+  const seg = await p.evaluate(() => [...window.__fakeStore.colMap("users/test/run_segmentos").values()][0]);
+  ok(seg && seg.deporte === "bicicleta" && Object.keys(seg.esfuerzos).sort().join() === "imp_a,imp_b,imp_c", "un segmento de bici con los tiempos de las 3 rodadas (las carreras no cuentan)");
+  await p.click('[data-rsh="ver"]');
+  await p.waitForSelector("#bsg-app .rsg-tabla", { timeout: 5000 }).catch(() => {});
+  ok(/#bici-segmento\//.test(p.url()) && /Subida a La Cumbre/.test(await txt(p, "#bsg-app .rd-titulo")) && /km\/h/.test(await txt(p, "#bsg-app .rsg-tabla")), "su página, con la velocidad");
+  ok(await p.$('#bsg-app .rsg-tabla a[href="#run-actividad/bicicleta/imp_b"]') !== null, "la tabla lleva a tus rodadas");
+  await captura(p, `bici-segmento-${ancho}.png`);
+  await p.evaluate(() => { location.hash = "#bici-segmentos"; });
+  await p.waitForTimeout(400);
+  ok(/Subida a La Cumbre/.test(await txt(p, "#bs-app")) && await p.$('#bs-app a[href^="#bici-segmento/"]') !== null, "la lista de Segmentos de Bici");
+  await p.evaluate(() => { location.hash = "#run-segmentos"; });
+  await p.waitForTimeout(400);
+  ok(!/Subida a La Cumbre/.test(await txt(p, "#rs-app")), "y no aparece en los de Running");
+  ok(!p.errores.length, `sin errores de página${p.errores.length ? `: ${p.errores[0]}` : ""}`);
+  await p.context().close();
+}
+
 async function compu(browser, base) {
   console.log("\nBici en la compu (1280 px)");
   const p = await abrir(browser, base, { __SEED__: SEED }, { hash: "#bicicleta", zona: ZONA, fecha: FECHA, ancho: 1280, alto: 900 });
   await p.waitForTimeout(600);
   const pills = await p.$$eval("#panel-bicicleta .fin-outer-tabs a, #panel-bicicleta .fin-outer-tabs button", els => els.map(e => e.textContent.trim() || e.getAttribute("aria-label")));
-  ok(pills.join(",") === "Actividades,+ Agregar,Progreso,Ajustes de Bici", `las secciones como pills arriba, con el engranaje (${pills.join(", ")})`);
+  ok(pills.join(",") === "Actividades,Progreso,+ Agregar,Segmentos,Bicis,Ajustes de Bici", `las secciones como pills arriba, con el engranaje (${pills.join(", ")})`);
   ok(await sobra(p) <= 0, "nada se sale a lo ancho");
   const fila = await p.$eval("#bf-feed .bf-card .bf-cifras", el => { const r = [...el.children].map(c => Math.round(c.getBoundingClientRect().top)); return new Set(r).size; });
   ok(fila === 1, "las cifras en una fila");
@@ -220,6 +353,7 @@ async function compu(browser, base) {
   const browser = await chromium.launch();
   for (const ancho of [390, 320]) await fase5(browser, base, ancho);
   for (const ancho of [390, 320]) await fase6(browser, base, ancho);
+  for (const ancho of [390, 320]) await fase7(browser, base, ancho);
   await compu(browser, base);
   await terminar(browser, srv);
 })();

@@ -21,7 +21,8 @@ Actualizado: 2026-11-16 (Tu semana, Tu año y Bici en curso, D-136).
   con barra propia, tarjetas con velocidad, mapa y récords de bici, filtros
   y el detalle contra tus rodadas. Fase 6 hecha (D-142): **Progreso** de
   Bici (récords, Eddington, metas, mapa de calor; los récords de las rodadas
-  viejas se calculan una vez con su ruta).
+  viejas se calculan una vez con su ruta). Fase 7 hecha (D-143): **tus
+  bicis** con su **mantenimiento** y **segmentos de bici**.
 
 - **Libros nivel 3 (2026-11-16, terminado)**: que al poner un libro se
   traigan bien el título en español, el autor, el género y las páginas de

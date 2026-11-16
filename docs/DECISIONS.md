@@ -2098,3 +2098,23 @@ leer nada. **Ajustes de Bici** (engranaje de arriba, `js/bici-ajustes.js`):
 metas de km por semana, mes y año en `meta/bici_ajustes` (aparte de las de
 Running).
 
+**D-143 (2026-11-16) · Bici, fase 7: tus bicis, mantenimiento y
+segmentos.** La barra de Bici queda **Actividades · Progreso · "+" ·
+Segmentos · Bicis**. (1) **Tus bicis** (`js/bici-bicis.js`, como las
+zapatillas): nombre, tipo (ruta, montaña, urbana, gravel, piñón fijo), km
+que ya tenía, la predeterminada (se pone sola en lo que importes o anotes
+desde que la agregaste; en cada rodada se cambia con Editar), retirar y
+volver a usar, y "ponerle esta bici a las N rodadas sin bici". Sus km son
+los iniciales más los de sus rodadas (`biciId`). (2) **Mantenimiento** por
+bici: cadena (cada 3.000 km), cubiertas (4.000 km), pastillas de freno
+(2.000 km) y service general (cada 5.000 km o 6 meses), contando desde que
+agregaste la bici o desde el último "Hecho hoy"; cada cuánto se puede
+cambiar. Lo que toca cambiar sale arriba de Actividades ("Toca cambiar la
+cadena: 3.120 km") y en rojo en Bicis. Todo en `meta/bici_ajustes`
+(`bicis`, `mantenimiento`). (3) **Segmentos de bici**: "Crear segmento"
+también en una rodada; se buscan solo en tus rodadas (y en las que importes
+después), con su página (`#bici-segmento/{id}`, con la velocidad) y la
+pestaña Segmentos de Bici; los de Running siguen aparte
+(`run_segmentos/{id}.deporte`). "Compartir imagen" ya servía para las
+rodadas.
+

@@ -134,3 +134,40 @@ test("cuáles faltan por calcular y cómo fue mejorando", () => {
   assert.deepEqual(B.sinRecords(xs).map(d => d.id), ["b"], "con ruta y sin calcular ({} ya cuenta como calculado)");
   assert.deepEqual(B.evolucion(xs, "5000").map(e => [e.id, e.t, e.mejor]), [["a", 700, 700], ["d", 650, 650], ["e", 690, 650]]);
 });
+
+// ---- Fase 7 (D-143): tus bicis y su mantenimiento ----
+test("tus bicis: km iniciales más los de sus rodadas, y la predeterminada", () => {
+  const lista = [
+    { id: "t", nombre: "Trek", tipo: "ruta", kmInicial: 1200, predeterminada: true, creado: Date.parse("2026-01-01T12:00:00Z") },
+    { id: "g", nombre: "Gravel", tipo: "gravel", kmInicial: 0, retirada: true, predeterminada: false }
+  ];
+  const xs = [imp("a", "2026-03-01", 50, 120, { biciId: "t" }), mano("b", "2026-03-05", 20, 60), Object.assign(mano("c", "2026-04-01", 30, 80), { biciId: "t" }), Object.assign(mano("d", "2026-02-01", 10, 30), { biciId: "g" })];
+  const bs = B.bicis(xs, lista);
+  assert.deepEqual(bs.map(b => [b.id, b.km, b.n, b.ultima]), [["t", 1280, 2, "2026-04-01"], ["g", 10, 1, "2026-02-01"]]);
+  assert.equal(B.predeterminada(lista).id, "t");
+  assert.equal(B.predeterminada([lista[1]]), null, "una retirada no es la predeterminada");
+  assert.deepEqual(B.TIPOS.map(t => t[0]), ["ruta", "montana", "urbana", "gravel", "fija"]);
+});
+
+test("mantenimiento: cada pieza con sus km desde el último cambio, avisos y «Hecho hoy»", () => {
+  const bici = { id: "t", nombre: "Trek", kmInicial: 500, creado: Date.parse("2026-01-01T12:00:00Z"), km: 3620 };
+  // Sin nada anotado: cuenta desde que la agregaste (con sus 500 km iniciales).
+  let ps = B.mantenimiento(bici, {}, "2026-03-01");
+  const por = id => ps.find(p => p.id === id);
+  assert.deepEqual(ps.map(p => p.id), ["cadena", "cubiertas", "pastillas", "service"]);
+  assert.deepEqual([por("cadena").km, por("cadena").estado, por("cadena").texto], [3120, "cambiar", "Toca cambiar la cadena: 3.120 km"]);
+  assert.deepEqual([por("cubiertas").estado, por("cubiertas").texto], ["ok", "3.120 de 4.000 km"]);
+  assert.equal(por("pastillas").texto, "Toca cambiar las pastillas de freno: 3.120 km");
+  assert.deepEqual([por("service").dias, por("service").estado, por("service").texto], [59, "ok", "3.120 de 5.000 km · 59 de 180 días"]);
+  // «Hecho hoy» en la cadena (desde 3.620 km) y un intervalo propio en las cubiertas (3.200 km).
+  ps = B.mantenimiento(bici, { cadena: { desdeKm: 3620, desde: "2026-03-01" }, cubiertas: { cadaKm: 3200 } }, "2026-03-01");
+  assert.deepEqual([por("cadena").km, por("cadena").estado], [0, "ok"]);
+  assert.deepEqual([por("cubiertas").cadaKm, por("cubiertas").estado, Math.round(por("cubiertas").pct * 100)], [3200, "pronto", 98]);
+  // El service también vence por tiempo (6 meses).
+  ps = B.mantenimiento(Object.assign({}, bici, { km: 600 }), {}, "2026-08-01");
+  assert.deepEqual([por("service").estado, por("service").texto], ["cambiar", "Toca hacer el service general: pasaron 212 días"]);
+  // Avisos: solo bicis en uso.
+  const lista = [{ id: "t", nombre: "Trek", kmInicial: 0, creado: Date.parse("2026-01-01T12:00:00Z") }, { id: "v", nombre: "Vieja", kmInicial: 9000, retirada: true }];
+  const av = B.avisos([Object.assign(mano("a", "2026-02-01", 2050, 6000), { biciId: "t" })], lista, {}, "2026-03-01");
+  assert.deepEqual(av.map(x => `${x.bici.nombre}: ${x.pieza.id}`), ["Trek: pastillas"]);
+});

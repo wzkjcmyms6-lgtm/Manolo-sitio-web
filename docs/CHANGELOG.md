@@ -1,5 +1,15 @@
 # Cambios
 
+## 2026-11-16 · Bici: tus bicis, mantenimiento y segmentos
+- **Bicis** (abajo): agrega tus bicis; Manolo suma sus km con cada rodada.
+  La predeterminada se pone sola en lo que importes o anotes; en una
+  rodada la cambias con Editar.
+- **Mantenimiento**: cadena, cubiertas, pastillas y service. Te avisa
+  cuando toca ("Toca cambiar la cadena: 3.120 km") y con "Hecho hoy" vuelve
+  a contar.
+- **Segmentos de bici**: en una rodada, ⋯ › Crear segmento (una subida, la
+  bajada de siempre). Manolo lo busca en todas tus rodadas.
+
 ## 2026-11-16 · Bici: Progreso
 - **Progreso** de Bici: tus km, tiempo, rodadas, desnivel y velocidad de la
   semana, el mes o el año contra el anterior; racha; metas con anillos (el

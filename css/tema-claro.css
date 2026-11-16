@@ -4293,6 +4293,12 @@ html[data-modo="claro"] {
 :where(html[data-modo="claro"]) body.in-bici .topbar-ajustes[data-engranaje="bicicleta"] {
   background: rgba(0, 0, 0, 0.028);
 }
+:where(html[data-modo="claro"]) .bb-pieza.is-cambiar .bb-pieza-t small {
+  color: #d70000;
+}
+:where(html[data-modo="claro"]) .bb-sub {
+  color: var(--muted);
+}
 
 /* ---- css/resumenes.css ---- */
 :where(html[data-modo="claro"]) .sem-area-t .sem-cambio.is-bien {
@@ -4340,3 +4346,8 @@ html[data-modo="claro"] .lib-chip.is-leyendo { color: #0f55ad; }
 html[data-modo="claro"] .lib-chip.is-terminado { color: #216645; }
 html[data-modo="claro"] .lib-chip.is-abandonado { color: #7a4d00; }
 html[data-modo="claro"] .lib-chip.is-prioridad { color: #8a4500; }
+
+/* Bici › Bicis (D-143): lo que toca cambiar va en un rojo más oscuro, para
+   leerse sobre el fondo claro (contraste de al menos 4,5:1). */
+html[data-modo="claro"] .bb-pieza.is-cambiar .bb-pieza-t small { color: #b3261e; }
+html[data-modo="claro"] .bb-pieza.is-cambiar .rp-zap-barra i { background: #c62828; }

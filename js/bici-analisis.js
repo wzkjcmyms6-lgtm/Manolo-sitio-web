@@ -180,6 +180,64 @@ function resumen(doc, todos) {
   return frases.slice(0, 4);
 }
 
+// ---- Tus bicis y su mantenimiento (fase 7, D-143) ----
+const TIPOS = [["ruta", "Ruta"], ["montana", "Montaña"], ["urbana", "Urbana"], ["gravel", "Gravel"], ["fija", "Piñón fijo"]];
+// Cada cuánto se cambia cada pieza (se puede cambiar en cada bici).
+const PIEZAS = [
+  { id: "cadena", nombre: "Cadena", cadaKm: 3000 },
+  { id: "cubiertas", nombre: "Cubiertas", cadaKm: 4000 },
+  { id: "pastillas", nombre: "Pastillas de freno", cadaKm: 2000 },
+  { id: "service", nombre: "Service general", cadaKm: 5000, cadaDias: 180 }
+];
+const diasEntre = (a, b) => Math.round((Date.parse(`${b}T12:00:00Z`) - Date.parse(`${a}T12:00:00Z`)) / DIA);
+// lista: [{ id, nombre, tipo, kmInicial, predeterminada, retirada, creado }] →
+// cada una con km (los iniciales más los de sus rodadas), n, ultima.
+function bicis(docs, lista) {
+  return (lista || []).map(b => {
+    let km = num(b.kmInicial), n = 0, ultima = null;
+    (docs || []).forEach(d => {
+      if (d.biciId !== b.id) return;
+      km += distM(d) / 1000; n++;
+      if (!ultima || d.date > ultima) ultima = d.date;
+    });
+    return Object.assign({}, b, { km, n, ultima });
+  });
+}
+// La predeterminada (para lo que importes o anotes desde que la agregaste).
+const predeterminada = lista => (lista || []).find(b => b.predeterminada && !b.retirada) || null;
+// Estado de cada pieza de una bici (con sus km de ahora):
+// m = { pieza: { cadaKm, cadaDias, desdeKm, desde } } → [{ id, nombre, cadaKm,
+// cadaDias, km (desde el último cambio), dias, pct, estado ("ok" | "pronto" | "cambiar"), texto }]
+function mantenimiento(bici, m, hoy) {
+  const x = m || {};
+  const inicio = bici.creado ? new Date(bici.creado).toISOString().slice(0, 10) : hoy;
+  return PIEZAS.map(p => {
+    const r = x[p.id] || {};
+    const cadaKm = num(r.cadaKm) > 0 ? num(r.cadaKm) : p.cadaKm;
+    const cadaDias = p.cadaDias ? (num(r.cadaDias) > 0 ? num(r.cadaDias) : p.cadaDias) : 0;
+    // Sin cambio anotado: desde que la agregaste (con los km que ya tenía).
+    const desdeKm = r.desdeKm != null ? num(r.desdeKm) : num(bici.kmInicial);
+    const desde = r.desde || inicio;
+    const km = Math.max(0, bici.km - desdeKm);
+    const dias = Math.max(0, diasEntre(desde, hoy));
+    const pct = Math.max(km / cadaKm, cadaDias ? dias / cadaDias : 0);
+    const estado = pct >= 1 ? "cambiar" : pct >= 0.9 ? "pronto" : "ok";
+    const porDias = cadaDias && dias / cadaDias >= km / cadaKm;
+    let texto;
+    if (estado === "cambiar") texto = porDias ? `Toca hacer el ${p.nombre.toLowerCase()}: pasaron ${dias} días` : `Toca cambiar ${p.id === "service" ? "el service" : p.id === "cadena" ? "la cadena" : `las ${p.nombre.toLowerCase()}`}: ${V.numero(km)} km`;
+    else texto = `${V.numero(km)} de ${V.numero(cadaKm)} km${cadaDias ? ` · ${dias} de ${cadaDias} días` : ""}`;
+    return { id: p.id, nombre: p.nombre, cadaKm, cadaDias, desdeKm, desde, km, dias, pct: Math.min(1, pct), estado, texto };
+  });
+}
+// Avisos de todas tus bicis en uso: [{ bici, pieza }] de lo que toca cambiar.
+function avisos(docs, lista, mant, hoy) {
+  const out = [];
+  bicis(docs, lista).filter(b => !b.retirada).forEach(b => {
+    mantenimiento(b, (mant || {})[b.id], hoy).filter(p => p.estado === "cambiar").forEach(p => out.push({ bici: b, pieza: p }));
+  });
+  return out;
+}
+
 // ---- Tarjeta de Inicio: los km de la semana y la última rodada ----
 function inicio(docs, hoy) {
   const xs = docs || [];
@@ -190,5 +248,5 @@ function inicio(docs, hoy) {
   return { kmSemana, ultima, kmUltima: distM(ultima) / 1000 };
 }
 
-return { DIST, NOMBRES, FILTROS, PASA, LARGA_KM, distM, movS, desn, velocidad, esManual, logrosPorId, logros, mejoresTiempos, evolucion, mejoresDeRuta, sinRecords, records, eddington, resumen, inicio };
+return { DIST, NOMBRES, FILTROS, PASA, LARGA_KM, TIPOS, PIEZAS, distM, movS, desn, velocidad, esManual, logrosPorId, logros, mejoresTiempos, evolucion, mejoresDeRuta, sinRecords, records, eddington, resumen, inicio, bicis, predeterminada, mantenimiento, avisos };
 });

@@ -1,6 +1,15 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (Bici, fase 7, D-143): `npm test` → **759 pruebas**.
+  En `bici-analisis`: los km de cada bici, la predeterminada, el
+  mantenimiento (desde que la agregaste, "Hecho hoy", cada cuánto, el
+  service por km o por tiempo) y los avisos. Suite `bici` con la fase 7
+  (agregar una bici, ponérsela a las rodadas sin bici, el aviso arriba del
+  feed, "Hecho hoy", cada cuánto, otra bici elegida con Editar, anotar a
+  mano con la predeterminada, retirar y volver, un segmento de bici creado
+  desde una rodada y buscado en las demás, su página con la velocidad, la
+  pestaña de Bici y no en la de Running; 390 y 320 px).
 - 2026-11-16 (Bici, fase 6, D-142): `npm test` → **757 pruebas**.
   En `bici-analisis`: los récords de una rodada vieja salen de su ruta
   (igual que al importar, ±5 s), cuáles faltan por calcular y la
@@ -8,6 +17,7 @@
   metas, diario, récords sueltos, mejores tiempos con top 3 y evolución,
   Eddington, los récords de la rodada vieja se guardan solos, mapa de
   calor, Ajustes de Bici con sus metas y el engranaje; 390 y 320 px).
+  Revisión completa: 39 de 40 (solo `lectura-qa` Biblia, el entorno).
 - 2026-11-16 (Bici, fase 5, D-141): `npm test` → **755 pruebas**.
   Nuevo `bici-analisis` (velocidad, filtros, récords de bici al importar
   aparte de los de correr, medallas, récords sueltos, Eddington, el resumen
@@ -463,6 +473,9 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
 
 **Bici (2026-11)**
+- [ ] Bicis: agrega tu bici con los km que ya tiene y pónsela a tus
+  rodadas. Mira el mantenimiento; cuando cambies algo, "Hecho hoy".
+- [ ] En una rodada con mapa: ⋯ › Crear segmento. Míralo en Segmentos.
 - [ ] Progreso: tus récords y el número de Eddington; los mejores tiempos
   aparecen también para tus rodadas importadas antes (tarda un poco la
   primera vez).

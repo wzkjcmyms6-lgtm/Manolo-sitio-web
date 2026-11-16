@@ -36,6 +36,7 @@ function documento(nueva, ahora) {
   });
   if (nueva.subtipo) doc.subtipo = nueva.subtipo;
   if (nueva.zapatillaId) doc.zapatillaId = nueva.zapatillaId;
+  if (nueva.biciId) doc.biciId = nueva.biciId;
   return doc;
 }
 function limpiarOrigen(o) {
