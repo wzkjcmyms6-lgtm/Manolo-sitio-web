@@ -34,6 +34,13 @@ const DISTANCIAS = [
   [20000, "20000", "20K"], [21097.5, "21097", "Media maratón"], [30000, "30000", "30K"],
   [42195, "42195", "Maratón"], [50000, "50000", "50K"]
 ];
+// Los de bici (D-141): se guardan aparte (`mejoresBici`) para no mezclarse
+// con los de correr.
+const DISTANCIAS_BICI = [
+  [5000, "5000", "5 km"], [10000, "10000", "10 km"], [20000, "20000", "20 km"],
+  [30000, "30000", "30 km"], [40000, "40000", "40 km"], [50000, "50000", "50 km"],
+  [80000, "80000", "80 km"], [100000, "100000", "100 km"], [160000, "160000", "160 km"]
+];
 
 const num = v => (typeof v === "number" && isFinite(v) ? v : null);
 const r1 = v => Math.round(v * 10) / 10;
@@ -141,11 +148,12 @@ function limpiar(puntos, perfil) {
 
 // ---- Mejores marcas: ventana deslizante con interpolación, O(n) ----
 // D: distancia acumulada (m), T: segundos. Devuelve { clave: segundos }.
-function mejoresMarcas(D, T) {
+// distancias: las de correr si no se dice otra cosa (bici: DISTANCIAS_BICI).
+function mejoresMarcas(D, T, distancias) {
   const out = {};
   const n = D.length;
   if (n < 2) return out;
-  DISTANCIAS.forEach(([dist, clave]) => {
+  (distancias || DISTANCIAS).forEach(([dist, clave]) => {
     if (D[n - 1] < dist) return;
     let i = 0, mejor = Infinity;
     for (let j = 1; j < n; j++) {
@@ -454,6 +462,10 @@ function calcular(act, opciones) {
   });
   const mejores = deporte === "running" ? mejoresMarcas(D, T) : {};
   if (Object.keys(mejores).length) campos.mejores = mejores;
+  if (deporte === "bicicleta") {
+    const mb = mejoresMarcas(D, T, DISTANCIAS_BICI);
+    if (Object.keys(mb).length) campos.mejoresBici = mb;
+  }
   if (zonas) campos.zonas = zonas.map(Math.round);
   if (carga && carga.v > 0) campos.carga = carga;
   if (ascenso != null) { campos.desnivelPosM = Math.round(ascenso); if (descenso != null) campos.desnivelNegM = Math.round(descenso); }
@@ -535,7 +547,7 @@ function leerMini(texto) {
 }
 
 return {
-  PERFILES, DISTANCIAS, PAUSA_S, HISTERESIS_M, SIN,
+  PERFILES, DISTANCIAS, DISTANCIAS_BICI, PAUSA_S, HISTERESIS_M, SIN,
   calcular, limpiar, mejoresMarcas, simplificar, costoMinetti, limitesZonas, zonaDe, cargaRpe,
   codificar, decodificar, leerRuta, leerMini, haversine, fechaLocal, tituloAuto
 };

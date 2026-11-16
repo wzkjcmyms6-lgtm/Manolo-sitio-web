@@ -8383,6 +8383,24 @@ body.rd-mapa-abierto .rd-ampliar { top: max(12px, env(safe-area-inset-top)); bot
 /* Damero para que se note lo transparente. */
 .rcm-img.is-transparente { background: repeating-conic-gradient(#2a2a28 0% 25%, #1a1a1a 0% 50%) 0 0 / 20px 20px; }
 
+/* ---- css/bici.css ---- */
+/* ---------- Bici (D-141) ----------
+   Bici usa los estilos de Running (css/run.css): tarjetas .rf-*, filtros,
+   hojas del "+" y Progreso. Aquí solo lo propio. */
+
+/* Hasta cuatro cifras (Distancia, Velocidad, Tiempo y Desnivel). En el
+   teléfono: tres en una fila; cuatro, de a dos. En la compu, en una fila
+   juntas como en Running (.rf-cifras). */
+@media (max-width: 768px) {
+  .bf-cifras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem 1rem; }
+  .bf-cifras.is-1 { grid-template-columns: 1fr; }
+  .bf-cifras.is-2, .bf-cifras.is-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 560px) and (max-width: 768px) { .bf-cifras.is-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 360px) { .bf-cifras.is-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.bf-avatar { background: rgba(255, 184, 77, 0.14); color: var(--accent-2); }
+.rf-filtro small { font-weight: 400; opacity: 0.8; }
+
 /* ---- css/resumenes.css ---- */
 /* ---------- Tu semana y Tu año (D-136) ----------
    Pantallas de js/resumen-semana-ui.js y js/resumen-anio-ui.js.

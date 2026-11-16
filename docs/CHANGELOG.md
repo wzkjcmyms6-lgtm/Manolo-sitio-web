@@ -1,5 +1,17 @@
 # Cambios
 
+## 2026-11-16 · Bici: Actividades
+- **Bicicleta** tiene su propia barra abajo: **Actividades**, **"+"**
+  (Importar o Anotar a mano) y **Progreso** (el resumen semanal de
+  siempre).
+- **Actividades**: una tarjeta por rodada con distancia, velocidad, tiempo
+  y desnivel, el mapa y medallas 🥇 con tus récords de bici (5 a 160 km).
+  Filtros: Con mapa, A mano y Largas (50 km o más).
+- Al abrir una rodada: el resumen inteligente y "Mismo recorrido" comparan
+  con tus rodadas (ya no con tus carreras).
+- En Inicio, la tarjeta de Bicicleta dice tus km de la semana y la última
+  rodada.
+
 ## 2026-11-16 · Tu año en Manolo
 - **"Tu año"** (menú ☰ o al pie de Inicio): tu año entero en diapositivas,
   como una historia. Toca a la derecha para avanzar: el año en números,

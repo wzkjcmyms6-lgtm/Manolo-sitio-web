@@ -17,7 +17,9 @@ Actualizado: 2026-11-16 (Tu semana, Tu año y Bici en curso, D-136).
   contenido de "Tu año" (cada sección, récords, mejor mes, contra el año
   anterior). Fase 4 hecha (D-140): **"Tu año en Manolo"** en diapositivas
   (menú ☰, pie de Inicio y tarjeta en diciembre y enero; compartir cada
-  una y el año sin dinero).
+  una y el año sin dinero). Bici fase 5 hecha (D-141): **Actividades**
+  con barra propia, tarjetas con velocidad, mapa y récords de bici, filtros
+  y el detalle contra tus rodadas.
 
 - **Libros nivel 3 (2026-11-16, terminado)**: que al poner un libro se
   traigan bien el título en español, el autor, el género y las páginas de

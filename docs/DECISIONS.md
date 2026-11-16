@@ -2064,3 +2064,20 @@ Imágenes en `js/resumen-imagen.js` (`planDiapositiva`, `planAnio`). En
 Bici, la equivalencia es con lugares más cerca de La Paz (Tiwanaku, Coroico,
 Copacabana y después Oruro, Cochabamba, Santa Cruz), nunca maratones.
 
+**D-141 (2026-11-16) · Bici, fase 5: Actividades.** Bici tiene su barra
+propia como Running: **Actividades · "+" · Progreso** (el "+" abre Importar
+o Anotar a mano). (1) **Actividades** (`js/bici-feed.js`): una tarjeta por
+rodada con Distancia · Velocidad · Tiempo y el desnivel si lo hay, el trazo
+de la ruta y medallas con los récords de bici; separadores por mes (km y
+rodadas), de a 20, y filtros Todas · Con mapa · A mano · Largas (50 km o
+más). (2) **Récords de bici** por distancia (5, 10, 20, 30, 40, 50, 80, 100
+y 160 km): al importar se guardan en la rodada (`mejoresBici`, aparte de
+los de correr); las medallas son las 3 mejores hasta ese día. (3) **El
+detalle** de una rodada usa tus rodadas: medallas de bici, "Resumen
+inteligente" (récords, la más larga, la velocidad contra tu promedio del
+último mes, desnivel y altura, tu semana) y "Mismo recorrido" con la
+velocidad; abajo sigue la barra de Bici. (4) **Inicio**: la tarjeta de Bici
+dice los km de la semana y la última rodada. El resumen semanal de siempre
+pasa a Progreso y anotar a mano, al "+". Cálculos en `js/bici-analisis.js`
+(sin pantalla, con pruebas).
+

@@ -90,6 +90,7 @@
   "js/run-vista.js",
   "js/run-graficos.js",
   "js/run-analisis.js",
+  "js/bici-analisis.js",
   "js/run-datos.js",
   "js/run-mapa.js",
   "js/run-inteligencia.js",
@@ -99,6 +100,7 @@
   "js/run-compartir.js",
   "js/run-detalle.js",
   "js/run-feed.js",
+  "js/bici-feed.js",
   "js/run-progreso.js",
   "js/run-ajustes.js",
   "js/running.js",
@@ -202,6 +204,7 @@
   "css/ej-calendario.css",
   "css/ejercicio.css",
   "css/run.css",
+  "css/bici.css",
   "css/resumenes.css",
   "css/viewport.css"
  ]

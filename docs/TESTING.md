@@ -1,6 +1,17 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (Bici, fase 5, D-141): `npm test` → **755 pruebas**.
+  Nuevo `bici-analisis` (velocidad, filtros, récords de bici al importar
+  aparte de los de correr, medallas, récords sueltos, Eddington, el resumen
+  inteligente, Inicio). Nueva suite de pantalla `bici` (40 suites): el
+  feed, filtros, la barra con el "+", anotar a mano, Inicio, el detalle con
+  lo de bici y la barra de Bici, Progreso con el resumen semanal, de a 20,
+  sin rodadas, 390 y 320 px y la compu. `running` y `regresion` miran la
+  pantalla nueva de Bici (el resumen semanal en Progreso; anotar a mano
+  desde el "+"); `run-feed` mira solo la hoja del "+" de Running (la de
+  Bici usa las mismas clases). Revisión completa: 38 de 40 a la primera
+  (`run-feed` por eso; `lectura-qa` Biblia 1,9 s, el entorno).
 - 2026-11-16 (Resúmenes, fase 4, D-140): `npm test` → **748
   pruebas**. En `resumen-imagen`: cada diapositiva del año se comparte como
   se ve, todo dentro de la imagen y sin montos; la imagen final con lo
@@ -443,6 +454,12 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Bici (2026-11)**
+- [ ] Bicicleta: la barra de abajo es Actividades · + · Progreso.
+- [ ] Actividades: tarjetas con velocidad, mapa y medallas; prueba los
+  filtros. Toca una rodada: abajo sigue la barra de Bici.
+- [ ] "+" › Anotar a mano: aparece en la lista.
 
 **Tu año en Manolo (2026-11)**
 - [ ] Menú ☰ › "Tu año": se abre a pantalla completa. Toca a la derecha

@@ -64,6 +64,13 @@ Ajustes de Bici (metas).
 - **Segmentos de bici** (los de Running ya guardan el deporte) y compartir
   la rodada (imagen tipo historia, ya existe).
 
+### Hecho en la fase 5 (D-141)
+`js/bici-analisis.js` (velocidad, filtros, récords y medallas, resumen
+inteligente, Inicio) y `js/bici-feed.js` (Actividades, "+", Inicio); en
+`js/run-metricas.js`, `DISTANCIAS_BICI` y `mejoresBici` al importar; en
+`js/run-detalle.js`, lo de bici contra tus rodadas; barra propia en
+`js/modules.js`; estilos en `css/bici.css`.
+
 ### Datos (solo se suman campos)
 - `users/{uid}/bicicleta/{id}`: `mejoresBici` ({ "5000": segundos, … }),
   `biciId` (la bici con la que saliste). Las rodadas a mano siguen igual.

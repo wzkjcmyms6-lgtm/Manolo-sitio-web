@@ -38,6 +38,7 @@ const SUB_PANELS = [
   { hash: "run-segmento", parent: "run-segmentos" },
   { hash: "run-calor", parent: "run-progreso" },
   { hash: "bicicleta", parent: "inicio" },
+  { hash: "bici-progreso", parent: "bicicleta" },
   { hash: "libros", parent: "inicio" },
   { hash: "biblia", parent: "inicio" },
   { hash: "biblia-planes", parent: "biblia" },
@@ -104,11 +105,19 @@ const RUN_TABS = [
   { hash: "run-segmentos", label: "Segmentos", icon: "segmento", color: "#ff7a30" },
   { hash: "run-rutinas", label: "Rutinas", icon: "timer", color: "#ff7a30" }
 ];
-const TAB_BARS = { habitos: HAB_TABS, finanzas: FIN_TABS, ejercicio: EJ_TABS, inversiones: INV_TABS, running: RUN_TABS };
+// Bici también (D-141): Actividades · "+" (Importar · Anotar a mano) · Progreso.
+const BICI_TABS = [
+  { hash: "bicicleta", label: "Actividades", icon: "cycling", color: "#ff7a30" },
+  { accion: "bici-mas", label: "Agregar", icon: "plus" },
+  { hash: "bici-progreso", label: "Progreso", icon: "chart", color: "#ff7a30" }
+];
+const TAB_BARS = { habitos: HAB_TABS, finanzas: FIN_TABS, ejercicio: EJ_TABS, inversiones: INV_TABS, running: RUN_TABS, bicicleta: BICI_TABS };
 
 // Grupo de pestañas de un hash: el primer nivel (subiendo) que tiene barra
 // propia. Para Finanzas, Hábitos, etc. es el módulo; para Running, "running".
 function grupoTabs(hash) {
+  // El detalle de una rodada (#run-actividad/bicicleta/ID) va con la barra de Bici.
+  if (hash === "run-actividad" && /^#run-actividad\/bicicleta\//.test(window.location.hash)) return "bicicleta";
   let h = hash;
   while (h) { if (TAB_BARS[h]) return h; h = parentOf(h); }
   return null;
@@ -169,10 +178,11 @@ function showPanel(hash) {
   const grupo = grupoTabs(hash);
   document.body.classList.toggle("has-home-btn", !!grupo);
   document.body.classList.toggle("in-running", grupo === "running");
+  document.body.classList.toggle("in-bici", grupo === "bicicleta");
   // Running y Bicicleta tampoco llevan versículo: la pantalla es para la actividad.
   // Inversiones tampoco (pedido del dueño 2026-10-28): es una sección aparte.
   // Libros y Biblia tampoco (pedido del dueño 2026-10-29), ni Medir tiempos ni Movilidad.
-  document.getElementById("verse-banner").hidden = isExercise || activeModule === "finanzas" || activeModule === "habitos" || activeModule === "inversiones" || ["running", "bicicleta", "libros", "biblia", "movilidad", "tiempos", "lugares"].includes(hash) || hash.startsWith("run-") || hash.startsWith("biblia-");
+  document.getElementById("verse-banner").hidden = isExercise || activeModule === "finanzas" || activeModule === "habitos" || activeModule === "inversiones" || ["running", "bicicleta", "libros", "biblia", "movilidad", "tiempos", "lugares"].includes(hash) || hash.startsWith("run-") || hash.startsWith("bici-") || hash.startsWith("biblia-");
   document.getElementById("body-banner").hidden = !showBody;
 
   // Pestañas propias de cada módulo (Finanzas, Hábitos, Ejercicio, Inversiones), visibles
@@ -187,7 +197,7 @@ function showPanel(hash) {
 // En escritorio no hay barra inferior: cada módulo con pestañas propias las
 // muestra como pills arriba de cada una de sus secciones. En móvil se ocultan
 // (.fin-outer-tabs). Finanzas e Inversiones suman el engranaje de Ajustes.
-const PILLS_ESCRITORIO = { habitos: "Secciones de Hábitos", ejercicio: "Secciones de Ejercicio", finanzas: "Secciones de Finanzas", inversiones: "Secciones de Inversiones", running: "Secciones de Running" };
+const PILLS_ESCRITORIO = { habitos: "Secciones de Hábitos", ejercicio: "Secciones de Ejercicio", finanzas: "Secciones de Finanzas", inversiones: "Secciones de Inversiones", running: "Secciones de Running", bicicleta: "Secciones de Bici" };
 const PILL_AJUSTES = { finanzas: ["fin-ajustes", "Ajustes de Finanzas"], inversiones: ["inv-ajustes", "Ajustes de Inversiones"], running: ["run-ajustes", "Ajustes de Running"] };
 function crearPillsEscritorio() {
   Object.keys(PILLS_ESCRITORIO).forEach(grupo => {

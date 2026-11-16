@@ -18,7 +18,7 @@
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
   <!-- Todos los estilos de la app en un archivo (D-127): js/paquete.json › npm run listo -->
-  <link rel="stylesheet" href="css/app.paquete.css?v=16d8ff696ec9">
+  <link rel="stylesheet" href="css/app.paquete.css?v=c4a3f6c23b92">
   <!-- Modo claro (D-126): generado con "npm run tema"; js/tema.js lo apaga en
        el modo oscuro y elige el modo antes de pintar (sin "defer": es chico) -->
   <link rel="stylesheet" href="css/tema-claro.css?v=202611171200" id="tema-claro-css">
@@ -153,7 +153,7 @@
               <a class="card" href="#bicicleta">
                 <span class="icon" data-icon="cycling"></span>
                 <h3>Bicicleta</h3>
-                <p>Registra tus rodadas y mira tu resumen semanal.</p>
+                <p id="bici-inicio">Tus rodadas, mapas, velocidad y récords.</p>
               </a>
               <a class="card" href="#finanzas">
                 <span class="icon" data-icon="finance"></span>
@@ -594,19 +594,48 @@
             <div class="rd-app" id="rd-app"></div>
           </section>
 
+          <!-- ===== Bici (D-141): Actividades, Progreso y el "+" (js/bici-feed.js) ===== -->
           <section id="panel-bicicleta" hidden>
-            <a class="back-link" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
-            <h1 class="page-title">Bicicleta</h1>
+            <div class="run-cabecera">
+              <h1 class="page-title">Bicicleta</h1>
+              <button type="button" class="run-importar-btn" data-ri-abrir>Importar</button>
+            </div>
+            <div class="rf-filtros" id="bf-filtros" role="group" aria-label="Filtrar rodadas"></div>
+            <div class="rf-feed" id="bf-feed" aria-live="polite"></div>
+          </section>
 
-            <div id="cycling-home">
-              <section class="dash" id="cycling-dash" aria-label="Resumen semanal"></section>
+          <section id="panel-bici-progreso" hidden>
+            <h1 class="page-title">Progreso</h1>
+            <section class="dash" id="cycling-dash" aria-label="Resumen semanal"></section>
+            <div id="bp-app" class="rp-app"></div>
+          </section>
 
-              <details class="act-manual">
-                <summary>Registrar rodada <small>a mano</small></summary>
-                <form class="tracker-form" id="cycling-form">
-                  <input type="date" id="cycling-date" required>
-                  <input type="number" id="cycling-distance" placeholder="Distancia (km)" min="0.01" step="0.01" required>
-                  <input type="number" id="cycling-duration" placeholder="Minutos" min="1" required>
+          <!-- "+" de Bici: Importar · Anotar a mano -->
+          <div id="bici-mas-hoja" class="js-sheet budget-sheet" hidden>
+            <div class="budget-sheet-overlay"></div>
+            <div class="budget-sheet-panel ri-panel" role="dialog" aria-modal="true" aria-labelledby="bici-mas-t">
+              <div class="budget-sheet-header">
+                <button type="button" class="budget-sheet-close" aria-label="Cerrar"><span data-icon="close"></span></button>
+                <h3 id="bici-mas-t">Agregar</h3>
+              </div>
+              <div class="ri-cuerpo run-mas-opciones">
+                <button type="button" class="run-mas-op" data-bici-op="importar"><span class="icon" data-icon="download"></span><span><b>Importar</b><small>GPX, TCX, FIT o el ZIP de Strava</small></span></button>
+                <button type="button" class="run-mas-op" data-bici-op="manual"><span class="icon" data-icon="edit"></span><span><b>Anotar a mano</b><small>Fecha, distancia y tiempo</small></span></button>
+              </div>
+            </div>
+          </div>
+          <div id="bici-manual-hoja" class="js-sheet budget-sheet" hidden>
+            <div class="budget-sheet-overlay"></div>
+            <div class="budget-sheet-panel ri-panel" role="dialog" aria-modal="true" aria-labelledby="bici-manual-t">
+              <div class="budget-sheet-header">
+                <button type="button" class="budget-sheet-close" aria-label="Cerrar"><span data-icon="close"></span></button>
+                <h3 id="bici-manual-t">Anotar rodada</h3>
+              </div>
+              <div class="ri-cuerpo">
+                <form class="tracker-form run-manual-form" id="cycling-form">
+                  <input type="date" id="cycling-date" required aria-label="Fecha">
+                  <input type="number" id="cycling-distance" placeholder="Distancia (km)" min="0.01" step="0.01" required inputmode="decimal">
+                  <input type="number" id="cycling-duration" placeholder="Minutos" min="1" required inputmode="numeric">
                   <select id="cycling-rpe" aria-label="Esfuerzo percibido (RPE)">
                     <option value="">RPE (opcional)</option>
                     <option value="1">RPE 1 · muy suave</option><option value="2">RPE 2</option><option value="3">RPE 3</option>
@@ -616,13 +645,9 @@
                   <input type="text" id="cycling-notes" placeholder="Notas (opcional)">
                   <button type="submit">Registrar</button>
                 </form>
-              </details>
-
-              <h2 class="act-lista-t">Tus rodadas</h2>
-              <div id="cycling-list"></div>
-              <p class="empty-state" id="cycling-empty" style="display:none;">Aún no registras rodadas.</p>
+              </div>
             </div>
-          </section>
+          </div>
 
           <!-- ===== Finanzas: Vista general ===== -->
           <section id="panel-finanzas" hidden>
@@ -1443,6 +1468,6 @@
   <script defer src="vendor/firebase-10.7.1/firebase-firestore-compat.js"></script>
   <!-- Todos los módulos de la app en un archivo (D-127): cada uno corre como su
        propio <script>. Se editan los de js/ y después: npm run listo -->
-  <script defer src="js/app.paquete.js?v=e6e127f86797"></script>
+  <script defer src="js/app.paquete.js?v=d920b385b475"></script>
 </body>
 </html>

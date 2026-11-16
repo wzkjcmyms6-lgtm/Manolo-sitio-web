@@ -89,7 +89,8 @@ for (let i = 0; i < 45; i++) { const d = new Date(2026, 9, 31 - i); MUCHAS[`v${i
   await p.click("#bottom-nav-links .tab-accion");
   await p.waitForTimeout(300);
   ok(await vis("#run-mas-hoja"), "abre la hoja Agregar");
-  ok((await p.$$eval(".run-mas-op b", els => els.map(e => e.textContent))).join("|") === "Importar|Anotar a mano|Rutina guiada", "Importar · Anotar a mano · Rutina guiada");
+  // Solo la hoja de Running (Bici tiene la suya, con las mismas clases).
+  ok((await p.$$eval("#run-mas-hoja .run-mas-op b", els => els.map(e => e.textContent))).join("|") === "Importar|Anotar a mano|Rutina guiada", "Importar · Anotar a mano · Rutina guiada");
   await captura(p, "run-mas.png");
   await p.click('[data-run-op="manual"]');
   await p.waitForTimeout(350);

@@ -229,17 +229,24 @@ async function avanzar(p, seg) {
   await captura(p, "run-lista.png");
   await p.context().close();
 
+  // Bici al nivel de Running (D-141): el resumen semanal está en Progreso y
+  // se anota a mano desde el "+" (la lista es el feed de rodadas).
   console.log("\nBicicleta");
-  p = await abrir(browser, base, { __SEED__: SEED }, { hash: "#bicicleta" });
+  p = await abrir(browser, base, { __SEED__: SEED }, { hash: "#bici-progreso" });
   ok(!(await texto(p, "#panel-bicicleta")).includes("GPS") && !(await p.$("#cycling-act")), "sin GPS");
   ok(await p.isVisible("#cycling-dash") && (await texto(p, '#cycling-dash [data-dash-metrica="km"] strong')) === "20,00 km" && (await texto(p, '#cycling-dash [data-dash-metrica="min"] strong')) === "1h", "resumen semanal de la bici");
-  await p.click("#panel-bicicleta .act-manual summary");
+  await p.click("#bottom-nav-links .tab-accion");
+  await p.waitForTimeout(250);
+  await p.click('[data-bici-op="manual"]');
+  await p.waitForTimeout(250);
   await p.fill("#cycling-distance", "15.5");
   await p.fill("#cycling-duration", "45");
   await p.click("#cycling-form button[type=submit]");
   await p.waitForTimeout(400);
   ok((await texto(p, '#cycling-dash [data-dash-metrica="km"] strong')) === "35,50 km" && (await texto(p, '#cycling-dash [data-dash-metrica="min"] strong')) === "1h 45min", "registrar una rodada suma a la semana");
-  ok((await texto(p, "#cycling-list")).includes("km/h"), "la lista muestra la velocidad");
+  await p.evaluate(() => { location.hash = "#bicicleta"; });
+  await p.waitForTimeout(400);
+  ok((await texto(p, "#bf-feed")).includes("km/h"), "el feed muestra la velocidad");
   await captura(p, "bici-dash.png");
   await p.context().close();
 
