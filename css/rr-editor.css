@@ -1,0 +1,83 @@
+/* ---------- Running: crear y editar rutinas guiadas (D-124) ---------- */
+/* Lista: "＋ Nueva" y el menú ⋯ de cada rutina */
+.rg-nueva {
+  flex-shrink: 0; min-height: 40px; padding: 0 1rem; border: 0; border-radius: 999px; background: var(--accent-grad);
+  color: #0a0a0a; font: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer; touch-action: manipulation;
+}
+.rg-nueva:active { transform: scale(0.97); }
+.rg-mas { width: 48px; flex-shrink: 0; display: grid; place-items: center; border: 0; border-radius: 14px; background: none; color: var(--muted); cursor: pointer; }
+.rg-mas [data-icon] { width: 20px; height: 20px; display: inline-flex; }
+.rg-vacio-acc { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
+
+/* Hoja del editor */
+.rre-raiz { --lib-campo: var(--surface); }
+.rre-raiz .lib-hoja-cuerpo { padding-bottom: 0; }
+/* Sin el relleno de abajo de la hoja: el pie fijo queda pegado al borde. */
+.rre-raiz .budget-sheet-panel { padding-bottom: 0; }
+.rre-form { display: flex; flex-direction: column; gap: 0.75rem; min-width: 0; }
+.rre-ayuda { margin: 0; color: var(--muted); font-size: 0.85rem; line-height: 1.4; }
+.rre-pasos, .rre-sub { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; min-width: 0; }
+.rre-vacio { padding: 1rem; border: 1px dashed var(--border); border-radius: 14px; color: var(--muted); text-align: center; font-size: 0.9rem; }
+
+/* Un intervalo: tipo + duración arriba; nota y mover/quitar abajo */
+.rre-int {
+  --lib-campo: var(--bg-soft);
+  display: flex; flex-direction: column; gap: 0.45rem; min-width: 0; padding: 0.6rem; border: 1px solid var(--border);
+  border-radius: 14px; background: var(--surface);
+}
+.rre-int.is-mal, .rre-serie.is-mal { border-color: var(--danger); }
+.rre-l1, .rre-l2 { display: flex; align-items: center; gap: 0.4rem; min-width: 0; }
+.rre-tipo { flex: 1 1 6.5rem; min-width: 0; font-weight: 700; }
+.rre-tipo.is-caminar { color: #5fcf8a; }
+.rre-tipo.is-trotar { color: #ffb84d; }
+.rre-tipo.is-correr { color: #ff7a30; }
+.rre-tipo.is-descanso { color: var(--muted); }
+.rre-tipo option { color: var(--ink); }
+.rre-dur { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 0.25rem; color: var(--muted); font-size: 0.85rem; }
+.rre-dur .lib-input { width: 3.6rem; padding: 0.55rem 0.4rem; text-align: center; font-variant-numeric: tabular-nums; -moz-appearance: textfield; }
+.rre-dur .lib-input::-webkit-outer-spin-button, .rre-dur .lib-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.rre-nota { flex: 1 1 auto; min-width: 0; }
+.lib-input.is-mal { border-color: var(--danger); }
+.rre-ic {
+  flex: 0 0 auto; display: grid; place-items: center; width: 40px; height: 44px; padding: 0; border: 0; border-radius: 10px;
+  background: transparent; color: var(--muted); font: inherit; font-size: 1.25rem; font-weight: 700; cursor: pointer; touch-action: manipulation;
+}
+.rre-ic [data-icon] { width: 18px; height: 18px; display: inline-flex; }
+.rre-ic:disabled { opacity: 0.3; cursor: default; }
+.rre-ic:not(:disabled):active { background: var(--surface-raised); }
+
+/* Una serie: "Repetir − 4 + veces" y sus intervalos */
+.rre-serie {
+  display: flex; flex-direction: column; gap: 0.55rem; min-width: 0; padding: 0.7rem 0.6rem 0.4rem;
+  border: 1px solid rgba(255, 122, 48, 0.45); border-radius: 16px; background: rgba(255, 122, 48, 0.06);
+}
+.rre-serie-cab { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+.rre-serie-t { font-weight: 700; color: var(--accent-2); }
+.rre-serie-cab .rre-ic { width: 44px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); }
+.rre-veces { width: 4rem; padding: 0.55rem 0.3rem; text-align: center; font-weight: 700; -moz-appearance: textfield; }
+.rre-veces::-webkit-outer-spin-button, .rre-veces::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.rre-serie-pie { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; flex-wrap: wrap; }
+.rre-sub-mas { min-height: 44px; padding: 0 0.2rem; font-weight: 700; }
+.rre-serie-mover { display: inline-flex; margin-left: auto; }
+
+.rre-agregar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+.rre-agregar .lib-btn-sec { padding-left: 0.6rem; padding-right: 0.6rem; }
+
+/* Pie fijo: total, error y Guardar */
+.rre-pie {
+  position: sticky; bottom: 0; z-index: 1; display: flex; flex-direction: column; gap: 0.45rem;
+  margin: 0 -1rem; padding: 0.7rem 1rem calc(0.8rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border); background: var(--bg-soft); box-shadow: 0 -10px 18px var(--bg-soft);
+}
+.rre-total { margin: 0; color: var(--muted); font-size: 0.88rem; text-align: center; font-variant-numeric: tabular-nums; }
+.rre-error { text-align: center; }
+.rre-pie .lib-acciones { margin-top: 0; }
+.rre-pie .lib-acciones .lib-btn-sec { flex: 0 0 auto; }
+
+.rre-toast { right: 16px; z-index: 1200; }
+
+@media (max-width: 360px) {
+  .rre-dur .lib-input { width: 3.1rem; }
+  .rre-ic { width: 36px; }
+  .rre-agregar { grid-template-columns: 1fr; }
+}

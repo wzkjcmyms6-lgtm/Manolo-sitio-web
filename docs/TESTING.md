@@ -1,6 +1,13 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (rutinas de Running desde la app, D-124): `npm test` → **675
+  pruebas**. Nueva: `rutina-running-editor` (pasos y series, agrupar lo que
+  se repite, duración en min y s, límites con el paso que falla, copias y
+  orden de la cola). E2E nueva: `rr-editor` (crear, errores, editar, una
+  importada se agrupa, duplicar, hacer la siguiente, eliminar, nombre de un
+  plan, la rutina se usa como siempre, 320 px); `running` borra desde el
+  menú ⋯.
 - 2026-11-16 (Biblia en audio, D-123): `npm test` → **665 pruebas**. Nueva:
   `biblia-audio` (texto para la voz, trozos, "Primera de Corintios",
   velocidades, qué voz usar, cuándo cuenta como escuchado). E2E nueva:
@@ -204,7 +211,7 @@
   retiraron en D-033.
 - **Dispositivo real (iPhone)**: pantalla encendida, voz y sonido se validan
   en el teléfono del dueño; nada se da por funcionando sin esa prueba.
-- **Regresión** en cada fase: `npm test` + las 34 suites de `scripts/e2e/`
+- **Regresión** en cada fase: `npm test` + las 35 suites de `scripts/e2e/`
   (ver "Cómo correr todo"; D-115: una prueba que quedó fuera de la lista
   corta se rompió sin que se viera).
 
@@ -216,7 +223,7 @@ for f in fase1 regresion hojas sw-instala emojis scalping inversiones tarjetas m
   running run-importar run-detalle run-feed run-progreso run-inteligencia run-segmentos \
   run-compartir run-qa habitos mi-dia ej-calendario ejercicio libros-progreso lectura \
   lectura-qa tiempos finanzas-diario lugares respaldo sin-internet pantalla tarjetas-minimo \
-  biblia-marcar biblia-audio; do node scripts/e2e/$f.js || break; done
+  biblia-marcar biblia-audio rr-editor; do node scripts/e2e/$f.js || break; done
 ```
 Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
 
@@ -278,6 +285,16 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Rutinas de Running desde la app (2026-11)**
+- [ ] Running › Rutinas › "＋ Nueva": aparece una rutina de ejemplo (20 min).
+  Ponle un nombre, cambia el "4" de la serie y un tiempo, y "Guardar
+  rutina": queda al final de la lista.
+- [ ] Toca la rutina nueva: muestra sus intervalos; "Iniciar" funciona como
+  siempre (pitidos y voz).
+- [ ] ⋯ › "Editar": cambia algo y guarda. ⋯ › "Duplicar": aparece la copia
+  debajo. ⋯ › "Hacer la siguiente": sube arriba.
+- [ ] Escribe 0 min 3 s en un intervalo y guarda: no deja y dice qué paso.
 
 **Biblia en audio (2026-11)**
 - [ ] Biblia › abre el lector › toca los **audífonos** arriba: se oye

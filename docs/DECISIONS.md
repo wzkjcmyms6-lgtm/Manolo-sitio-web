@@ -1664,3 +1664,28 @@ el nombre del nuevo; `pintar()` ahora espera al libro correcto. Lógica en
 `js/biblia-audio.js` (`tests/biblia-audio.test.js`); pantalla en
 `js/biblia-audio-ui.js` (`scripts/e2e/biblia-audio.js`, con una voz falsa
 que avisa al terminar cada trozo).
+
+**D-124 (2026-11-16) · Running: crear y editar rutinas guiadas en la app.**
+Pedido del dueño ("mejorar las rutinas desde la app"): antes solo se podían
+importar de un CSV. (1) Running › Rutinas: "＋ Nueva" y, en cada rutina, un
+menú ⋯ (Editar, Duplicar, Hacer la siguiente, Eliminar) en lugar del tacho
+suelto; "Importar CSV" y la plantilla siguen abajo. (2) El editor arma la
+rutina con pasos: intervalos (tipo, minutos y segundos, nota) y series que
+se repiten (1 a 50 veces, hasta 10 intervalos). La forma más común de una
+rutina por intervalos ("4 × correr 1:00 + caminar 1:30") se escribe con una
+serie en vez de 8 filas. Una rutina nueva trae un ejemplo de 20 min para
+cambiar lo que haga falta. (3) Se guarda lo de siempre (`intervalos`,
+`totalSeg`: la pantalla en vivo, el historial y la cola no cambian) más los
+pasos en `bloques` (opcional, aditivo) para volver a editarla igual, y
+`editado`. Si `bloques` no coincide con los intervalos (o no está, como en
+las importadas), los pasos se arman agrupando lo que se repite seguido:
+siempre da exactamente los mismos intervalos. (4) Un día de un plan: el
+nombre es del plan (cambia en todos sus días) y "Duplicar" agrega un día al
+final del plan; una rutina suelta se copia como "(copia)" justo debajo
+(orden entre las dos, con decimales). (5) Mismos límites y mensajes que el
+CSV, con el paso que falla marcado y el cursor en su duración. Duración en
+dos casillas (min y s) con teclado numérico; letra de 16 px. Lógica en
+`js/rutina-running-editor.js` (`tests/rutina-running-editor.test.js`);
+pantalla en `js/rutina-running-editor-ui.js` y `css/rr-editor.css`
+(`scripts/e2e/rr-editor.js`); `scripts/e2e/running.js` borra desde el menú
+⋯.

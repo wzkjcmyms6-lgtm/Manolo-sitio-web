@@ -1,12 +1,14 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-16 (Biblia en audio, D-123; mejoras sin servidor en curso).
+Actualizado: 2026-11-16 (rutinas de Running desde la app, D-124; mejoras sin servidor en curso).
 
 - **Mejoras sin servidor (2026-11-15, en curso)**: fase 1 hecha (D-123):
   **Biblia en audio** en el lector, con las voces del iPhone (sin
   internet): resalta el versículo, velocidad y voz, sigue con el siguiente
-  capítulo y lo marca como leído si lo oíste completo. Siguen: rutinas de
-  Running y del gimnasio desde la app, modo claro y abrir más rápido
+  capítulo y lo marca como leído si lo oíste completo. Fase 2 hecha
+  (D-124): **rutinas de Running desde la app** ("＋ Nueva", series que se
+  repiten, menú ⋯ con Editar, Duplicar, Hacer la siguiente y Eliminar).
+  Siguen: rutinas del gimnasio, modo claro y abrir más rápido
   (`.claude/CURRENT_PHASE.md`).
 
 - **Ajustes del dueño (2026-11-15)**: pago mínimo por tarjeta con aviso

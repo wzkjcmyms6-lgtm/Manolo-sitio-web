@@ -193,17 +193,22 @@ async function avanzar(p, seg) {
   await p.evaluate(() => Avisos.cambiar("voz", true));
 
   console.log("\nBorrar rutinas no borra el historial");
+  // D-124: se borra desde el menú ⋯ de la rutina.
+  const borrarPrimera = async () => {
+    await p.click('#running-rutinas .rg-item:first-child [data-rg="menu"]');
+    await p.waitForTimeout(350);
+    await p.click('.rre-menu [data-rre-accion="eliminar"]');
+    await p.waitForTimeout(600);
+  };
   await p.evaluate(() => { const r = [true, false]; window.confirm = () => r.shift(); });
-  await p.click("#running-rutinas .rg-item:first-child .act-rutina-borrar");
-  await p.waitForTimeout(400);
+  await borrarPrimera();
   ok((await rutinas(p)).map(r => r.dia).sort().join() === "1,3", "borrar un día (sin el resto del plan) deja los otros");
   await p.evaluate(() => { const r = [true, true]; window.confirm = () => r.shift(); });
-  await p.click("#running-rutinas .rg-item:first-child .act-rutina-borrar");
-  await p.waitForTimeout(400);
+  await borrarPrimera();
   ok((await rutinas(p)).length === 0, "o se puede borrar el plan entero");
   hist = (await coleccion(p, "users/test/running")).map(([, d]) => d).filter(d => d.fuente === "rutina");
   ok(hist.length === 2 && (await texto(p, "#rf-feed")).includes("Plan prueba · Día 1"), "el historial de esas rutinas sigue en Actividades");
-  ok((await texto(p, "#running-rutinas")).includes("Importa tus rutinas"), "sin rutinas: explica cómo importar");
+  ok((await texto(p, "#running-rutinas")).includes("Todavía no tienes rutinas guiadas"), "sin rutinas: explica cómo crear o importar");
 
   console.log("\nHistorial y registro a mano");
   await p.evaluate(() => { window.confirm = () => true; });

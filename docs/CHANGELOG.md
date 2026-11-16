@@ -1,5 +1,14 @@
 # Cambios
 
+## 2026-11-16 · Rutinas de Running desde la app
+- Running › Rutinas: **"＋ Nueva"** crea una rutina guiada sin CSV:
+  intervalos (caminar, trotar, correr, descanso, con minutos y segundos) y
+  **series que se repiten** ("4 veces: correr 1:00 + caminar 1:30").
+- Cada rutina tiene un menú **⋯**: Editar, Duplicar, Hacer la siguiente y
+  Eliminar. En un plan, "Duplicar" agrega un día nuevo.
+- Las rutinas importadas de un CSV también se pueden editar (lo que se
+  repite aparece como serie).
+
 ## 2026-11-16 · Biblia en audio
 - Biblia › lector: botón de **audífonos** arriba: escuchas el capítulo con
   las voces de tu iPhone (sin internet). El versículo que suena se resalta.

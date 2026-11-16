@@ -10,7 +10,9 @@
 // - El estado se guarda en el teléfono cada ~10 s, al pausar y al salir de
 //   la app; si Manolo se cierra, al volver se recupera en pausa.
 // El tiempo lo calcula js/intervalos-motor.js; sonido, voz y pantalla
-// encendida, js/avisos.js; importar y guardar rutinas, js/rutinas-running-ui.js.
+// encendida, js/avisos.js; importar y guardar rutinas, js/rutinas-running-ui.js;
+// crear, editar, duplicar y ordenar en la app (＋ Nueva y el menú ⋯),
+// js/rutina-running-editor-ui.js (D-124).
 (function () {
 const RR = RutinaRunning;
 const IM = IntervalosMotor;
@@ -86,7 +88,7 @@ function crear(o) {
     o.lista.innerHTML = `
       <div class="rg-cab">
         <h2 class="act-lista-t">Rutinas guiadas</h2>
-        <button type="button" class="link-btn" data-rg="importar">Importar CSV</button>
+        <button type="button" class="rg-nueva" data-rg="nueva">＋ Nueva</button>
       </div>
       ${ok}
       ${lista.length ? `
@@ -97,12 +99,16 @@ function crear(o) {
               <strong>${escapeHtml(RR.titulo(r))}</strong>
               <span>${r.dia ? `${escapeHtml(r.nombre)} · ` : ""}${escapeHtml(RR.resumen(r))}</span>
             </button>
-            <button type="button" class="act-rutina-borrar" data-rg="borrar" data-id="${escapeHtml(r.id)}" aria-label="Eliminar ${escapeHtml(RR.nombreCompleto(r))}"><span data-icon="trash"></span></button>
+            <button type="button" class="rg-mas" data-rg="menu" data-id="${escapeHtml(r.id)}" aria-label="Opciones de ${escapeHtml(RR.nombreCompleto(r))}"><span data-icon="moreV"></span></button>
           </li>`).join("")}</ol>
-        <p class="rg-ayuda">Al completar una rutina pasa al final de la lista. Borrar una rutina no borra tu historial.
+        <p class="rg-ayuda">Toca una rutina para empezarla; ⋯ para editarla, duplicarla o eliminarla. Al completarla pasa al final de la lista. Borrar una rutina no borra tu historial.
+          <button type="button" class="link-btn" data-rg="importar">Importar CSV</button>
           <button type="button" class="link-btn" data-rg="plantilla">Descargar plantilla</button></p>` : `
-        <p class="rg-ayuda">Importa tus rutinas desde un archivo CSV (por ejemplo: 3 min caminar, 2 min correr…), de un día o de varios (Día 1, Día 2…). Manolo te avisa cada cambio con pitidos y voz.
-          <button type="button" class="link-btn" data-rg="plantilla">Descargar plantilla</button></p>`}`;
+        <p class="rg-ayuda">Todavía no tienes rutinas guiadas. Crea una con «＋ Nueva» (por ejemplo: 5 min caminando y 4 series de correr 1 min + caminar 1:30) o impórtala de un archivo CSV, de un día o de varios (Día 1, Día 2…). Manolo te avisa cada cambio con pitidos y voz.</p>
+        <div class="rg-vacio-acc">
+          <button type="button" class="act-btn-sec" data-rg="importar">Importar CSV</button>
+          <button type="button" class="link-btn" data-rg="plantilla">Descargar plantilla</button>
+        </div>`}`;
     if (typeof renderIcons === "function") renderIcons(o.lista);
   }
 
@@ -391,6 +397,8 @@ function crear(o) {
     else if (a === "importar") RutinasRunning.importar();
     else if (a === "plantilla") RutinasRunning.plantilla();
     else if (a === "borrar") RutinasRunning.borrar(b.dataset.id);
+    else if (a === "nueva" && window.RREditorUI) RREditorUI.nueva();
+    else if (a === "menu" && window.RREditorUI) RREditorUI.menu(b.dataset.id);
     else if (a === "sonido" || a === "voz") {
       const nuevo = !Avisos.prefs()[a];
       Avisos.cambiar(a, nuevo);

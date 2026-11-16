@@ -74,5 +74,34 @@ del plan) y `dia`. Se guarda en un solo lote, al final de la cola.
 - Eliminar una rutina (o el plan entero: la app pregunta) **no borra el
   historial**.
 
-Pendiente para más adelante (no pedido aún): bloques que se repiten
-(`repetir`), crear rutinas a mano dentro de la app.
+## Crear y editar en la app (D-124, 2026-11-16)
+
+Ya no hace falta un CSV: Running › Rutinas › **"＋ Nueva"**, y el menú **⋯**
+de cada rutina (Editar, Duplicar, Hacer la siguiente, Eliminar).
+
+- **Pasos:** la rutina se arma de arriba abajo con:
+  - **intervalos**: tipo (caminar, trotar, correr, descanso), minutos y
+    segundos, y una nota opcional;
+  - **series que se repiten**: "Repetir 4 veces: correr 1:00 + caminar
+    1:30" (de 1 a 50 veces, hasta 10 intervalos por serie).
+- Una rutina nueva empieza con calentamiento (caminar 5:00), 4 series de
+  correr 1:00 + caminar 1:30 y enfriamiento (caminar 5:00): 20 minutos.
+- **＋ Intervalo** agrega el contrario del último (después de caminar,
+  correr), con la duración del último de ese tipo. ↑ ↓ mueven y ✕ quita
+  (una serie que queda vacía se quita).
+- Abajo, fijo: el total ("12 intervalos · 27 min 30 s") y **Guardar**. Los
+  mismos límites del CSV (mínimo 5 s, máximo 2 h por intervalo, 200
+  intervalos y 4 horas); el error dice qué paso y deja el cursor ahí.
+- **Qué se guarda:** lo de siempre (`intervalos`, `totalSeg`: la rutina en
+  vivo no cambia) más los pasos en `bloques` (opcional) para volver a
+  editarla igual, y `editado` al guardar cambios. Una rutina sin `bloques`
+  (importada de un CSV) se agrupa sola al editarla: lo que se repite seguido
+  queda como serie, sin cambiar nada.
+- **Un día de un plan:** el nombre es el del plan y cambia en todos sus
+  días; "Duplicar" crea un día nuevo al final del plan. Una rutina suelta se
+  duplica como "Nombre (copia)", justo debajo.
+- **Hacer la siguiente** la pone arriba de la cola. Una rutina nueva queda
+  al final.
+- Lógica en `js/rutina-running-editor.js` (`tests/rutina-running-editor.test.js`);
+  pantalla en `js/rutina-running-editor-ui.js` y `css/rr-editor.css`
+  (`scripts/e2e/rr-editor.js`).
