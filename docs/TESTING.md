@@ -1,6 +1,19 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-16 (Resúmenes, fase 3, D-139): `npm test` → **745
+  pruebas**. Nuevo `resumen-anio` (años con datos, el año en curso hasta
+  hoy, cada sección con sus récords y su mejor mes, equivalencias, el año
+  en números, contra el año anterior a la misma altura, lo destacado sin
+  dinero, con el Wrapped de Hábitos y "Tu año en libros"). Suite
+  `resumenes` con la fase 3 (el contenido con los datos de la app).
+  Revisión completa: 37 de 39 a la primera. `resumenes` «Compartir mi
+  semana» esperaba la imagen 5 s y con la máquina ocupada tardó más (ahora
+  hasta 15 s; sola pasa). `lectura-qa` «Biblia con 1.500 versículos»: en
+  este entorno hoy da 1,6–2,4 s, igual con la versión anterior medida lado
+  a lado (1,8 y 2,4 s contra 1,8 y 1,6 s): es la máquina, no los
+  resúmenes ("Tu semana" se arma en ~8 ms y "Tu año" en ~25 ms con 3 años
+  de datos).
 - 2026-11-16 (Resúmenes, fase 2, D-138): `npm test` → **740
   pruebas**. Nuevo `resumen-imagen` (la imagen de la semana sin dinero, solo
   lo que mejoró, todo dentro). Suite `resumenes` con la fase 2 (la tarjeta

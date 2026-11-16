@@ -2020,3 +2020,24 @@ iPhone abre el menú de compartir; en la compu se descarga. Pantalla en
 `js/resumen-semana-ui.js`, imagen en `js/resumen-imagen.js`, estilos en
 `css/resumenes.css`.
 
+**D-139 (2026-11-16) · Resúmenes, fase 3: el contenido de "Tu año".**
+`js/resumen-anio.js` (sin pantalla, con pruebas) arma lo de cada
+diapositiva con los mismos datos que "Tu semana": por sección las cifras,
+lo más destacado y el mejor mes (Hábitos: cumplimiento, hábito estrella y
+mejor racha; Gimnasio: entrenos, horas, series, kg, récords, el ejercicio
+que más hiciste y tu entreno más pesado; Running y Bici: km, horas,
+desnivel, la más larga, las mejores marcas de Running del año y una
+equivalencia en distancias de Bolivia, "Como ir corriendo de La Paz a
+Cochabamba"; Movilidad; Libros: terminados, páginas, tu libro del año (el
+último de 5 ★), autor y frase del año; Biblia: capítulos, cuántos
+distintos y qué parte de la Biblia, el libro que más leíste y tu mejor
+racha; Finanzas: qué parte de lo que ganaste ahorraste, el mes que más
+ahorraste, en qué se fue más y días sin gastar; Mi mañana: cuánto bajó del
+primer mes al último; Lugares: nuevos, el mejor y tu zona). Además, el año
+en números, tu mejor mes (más días con algo), tu día de la semana, la
+comparación con el año anterior **a la misma altura** (si el año no
+terminó, contra los mismos meses) y lo destacado para la imagen final (sin
+dinero). Si están, usa lo que ya calculan Hábitos (su "Manolo Wrapped") y
+Libros ("Tu año en libros"), así las cifras son las mismas que en esas
+pantallas.
+

@@ -32,7 +32,7 @@ function actividades(col) {
   return docs.filter(d => d && R.fechaOk(d.date)).map(d => {
     const b = V.basicos(d);
     return { id: d.id, fecha: d.date, km: b.distM / 1000, min: b.movS / 60, desnivel: Number(d.desnivelPosM) || 0,
-      titulo: d.titulo || (d.rutina && d.rutina.nombre) || "",
+      titulo: d.titulo || (d.rutina && d.rutina.nombre) || "", mejores: d.mejores && typeof d.mejores === "object" ? d.mejores : null,
       records: (logros[d.id] || []).filter(l => l.puesto === 1).map(l => ({ nombre: l.nombre, t: l.t, puesto: 1 })) };
   });
 }
@@ -116,7 +116,10 @@ function biblia() {
   Object.keys(leidos || {}).forEach(f => { if (R.fechaOk(f)) (leidos[f] || []).forEach(clave => caps.push({ fecha: f, clave })); });
   const vers = (lista || []).filter(x => x && !x.leido && R.fechaOk(x.fecha)).map(x => ({ fecha: x.fecha, cita: x.cita || "", libro: x.libro || "" }));
   if (!caps.length && !vers.length) return null;
-  return { caps, vers };
+  // Nombres de los libros de la Biblia que aparecen ("John" → "Juan").
+  const B = window.BibliaMotor, nombres = {};
+  caps.forEach(c => { const id = String(c.clave).split(".")[0]; if (!nombres[id] && B && B.libro) { const l = B.libro(id); if (l) nombres[id] = l.nombre; } });
+  return { caps, vers, nombres };
 }
 
 // Finanzas (js/finanzas/app.js): gastos e ingresos que cuentan, en centavos.
@@ -148,9 +151,30 @@ function lugares() {
   return xs.length ? xs : null;
 }
 
-// Todo junto, en el formato de js/resumen-motor.js.
-function datos() {
+// Lo que Hábitos y Libros ya calculan para un año ("Manolo Wrapped" de
+// Hábitos y "Tu año en libros"), para "Tu año" (js/resumen-anio.js).
+function extrasDelAnio(anio) {
+  const out = {};
+  const A = window.HabitosApp, HE = window.HabitosEngine;
+  const st = A && A.estado ? A.estado() : null;
+  if (st && st.cargado && st.res && HE && HE.wrapped) out.habitos = probar(() => HE.wrapped(st.res, anio, A.areasDef ? A.areasDef() : null));
+  const D = window.LibrosDatos, E = window.LibrosEstadisticas;
+  if (D && E && D.listo() && D.lista().length) {
+    out.libros = probar(() => {
+      const la = E.anio(D.lista(), D.frases(), anio);
+      if (la && la.fraseFav && la.fraseFav.libroId) { const l = D.uno(la.fraseFav.libroId); la.fraseFav.libro = l ? l.titulo : ""; }
+      return la;
+    });
+  }
+  return out;
+}
+
+// Todo junto, en el formato de js/resumen-motor.js. o: { anio } suma lo que
+// Hábitos y Libros calculan para ese año.
+function datos(o) {
+  const op = o || {};
   return {
+    extras: op.anio ? extrasDelAnio(op.anio) : {},
     hoy: hoyLocal(),
     running: probar(() => actividades("running")),
     bici: probar(() => actividades("bicicleta")),

@@ -4,6 +4,8 @@
 // gastos e ingresos (sin transferencias ni lo excluido).
 // Fase 2: "Tu semana" (la tarjeta de Inicio los lunes, la pantalla, ‹ ›,
 // compartir, «Listo», el menú; miércoles y sin datos).
+// Fase 3: el contenido de "Tu año" con los datos de la app (con el Wrapped
+// de Hábitos y "Tu año en libros").
 // Uso: node scripts/e2e/resumenes.js [carpeta-para-capturas]
 const fs = require("fs");
 const { chromium, servidor, abrir, ok, terminar } = require("./comun.js");
@@ -133,9 +135,10 @@ async function fase2(browser, base, ancho) {
   ok(/^16 – 22 nov Esta semana, hasta el lunes$/.test(await txt(p, ".sem-nav-t")) && await p.$(".sem-nav .sem-flecha.is-off") !== null, "› hasta esta semana; más allá no");
 
   // Compartir: una imagen (aquí se descarga, en el iPhone abre el menú de compartir).
+  // Armar un PNG de 1080 × 1920 con la máquina ocupada puede tardar: hasta 15 s.
   await p.goto(`${base}/index.html#semana/2026-11-09`);
   await p.waitForTimeout(1800);
-  const [descarga] = await Promise.all([p.waitForEvent("download", { timeout: 5000 }).catch(() => null), p.click("[data-sem-compartir]")]);
+  const [descarga] = await Promise.all([p.waitForEvent("download", { timeout: 15000 }).catch(() => null), p.click("[data-sem-compartir]")]);
   ok(descarga && descarga.suggestedFilename() === "mi-semana-2026-11-09.png", `«Compartir mi semana»: la imagen (${descarga && descarga.suggestedFilename()})`);
   if (CAPTURAS && descarga) await descarga.saveAs(`${CAPTURAS}/semana-imagen.png`);
 
@@ -172,11 +175,44 @@ async function fase2(browser, base, ancho) {
   await p.context().close();
 }
 
+// ---- Fase 3 (D-139): el contenido de "Tu año" ----
+async function fase3(browser, base) {
+  console.log("\nResúmenes, fase 3: el contenido de «Tu año»");
+  const p = await abrir(browser, base, semilla(), { hash: "#inicio", zona: ZONA, fecha: FECHA, ancho: 390 });
+  await p.waitForTimeout(2200);
+  const r = await p.evaluate(() => {
+    const d = window.ResumenFuentes.datos({ anio: 2026 });
+    const y = window.ResumenAnio.anio(d, 2026);
+    const S = y.secciones;
+    return {
+      anios: window.ResumenAnio.aniosConDatos(d), completo: y.completo, hasta: y.hasta, secciones: Object.keys(S),
+      wrapped: !!(d.extras && d.extras.habitos), librosExtra: !!(d.extras && d.extras.libros),
+      habitos: S.habitos && { pct: S.habitos.pct, conWrapped: S.habitos.conWrapped, estrella: S.habitos.estrella },
+      libros: S.libros && { terminados: S.libros.terminados, delAnio: S.libros.libroDelAnio },
+      librosEst: window.LibrosEstadisticas.anio(window.LibrosDatos.lista(), window.LibrosDatos.frases(), 2026).terminados,
+      biblia: S.biblia && { capitulos: S.biblia.capitulos, libroTop: S.biblia.libroTop },
+      numeros: y.numeros.map(n => `${n.valor} ${n.etiqueta}`), destacados: y.destacados.map(x => x.texto),
+      finanzas: S.finanzas && { pct: S.finanzas.pctAhorro }
+    };
+  });
+  ok(r.anios[0] === 2026 && r.completo === false && r.hasta === HOY, `2026, hasta hoy (años con datos: ${r.anios.join(", ")})`);
+  ok(["habitos", "gimnasio", "running", "bici", "movilidad", "libros", "biblia", "finanzas", "manana", "lugares"].every(k => r.secciones.includes(k)), `las 10 secciones (${r.secciones.join(", ")})`);
+  ok(r.wrapped && r.habitos.conWrapped && r.habitos.estrella && r.habitos.estrella.nombre, `Hábitos con su Wrapped (estrella: ${r.habitos.estrella && r.habitos.estrella.nombre})`);
+  ok(r.librosExtra && r.libros.terminados === r.librosEst, `Libros con «Tu año en libros» (${r.libros.terminados} terminados)`);
+  ok(r.biblia.capitulos === 3 && r.biblia.libroTop && r.biblia.libroTop.nombre === "Juan", `Biblia con el nombre del libro (${r.biblia.libroTop && r.biblia.libroTop.nombre})`);
+  ok(/días con algo anotado$/.test(r.numeros[0]) && r.numeros.length >= 6, `el año en números (${r.numeros.slice(0, 3).join(" · ")}…)`);
+  ok(r.destacados.length && !r.destacados.some(t => /Bs|gast|ahorr/i.test(t)), "lo destacado, sin dinero");
+  ok(r.finanzas && r.finanzas.pct > 0, "Finanzas: cuánto ahorraste de lo que ganaste");
+  ok(!p.errores.length, `sin errores de página${p.errores.length ? `: ${p.errores[0]}` : ""}`);
+  await p.context().close();
+}
+
 (async () => {
   const srv = await servidor();
   const base = `http://localhost:${srv.address().port}`;
   const browser = await chromium.launch();
   await fase1(browser, base);
   for (const ancho of [390, 320]) await fase2(browser, base, ancho);
+  await fase3(browser, base);
   await terminar(browser, srv);
 })();

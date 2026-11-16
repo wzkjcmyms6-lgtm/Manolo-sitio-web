@@ -180,6 +180,7 @@
   "js/mi-dia-motor.js",
   "js/mi-dia.js",
   "js/resumen-motor.js",
+  "js/resumen-anio.js",
   "js/resumen-fuentes.js",
   "js/resumen-imagen.js",
   "js/resumen-semana-ui.js"

@@ -137,6 +137,12 @@ las 10 secciones llegan al motor en la app).
 `js/resumen-imagen.js` (imagen sin dinero) y `css/resumenes.css`; "Tu
 semana" en el menú ☰ y al pie de Inicio.
 
+### Hecho en la fase 3 (D-139)
+`js/resumen-anio.js` (el contenido de cada diapositiva, años con datos) y,
+en `js/resumen-fuentes.js`, `datos({ anio })` con el Wrapped de Hábitos y
+"Tu año en libros"; las carreras traen sus mejores marcas y la Biblia los
+nombres de sus libros.
+
 ### Datos
 
 Ningún campo nuevo en Firestore para los resúmenes. En el teléfono:

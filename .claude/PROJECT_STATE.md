@@ -13,7 +13,9 @@ Actualizado: 2026-11-16 (Tu semana, Tu año y Bici en curso, D-136).
   contra la anterior y tu promedio, lo mejor, lo que se quedó atrás y una
   sugerencia), sin lecturas nuevas. Fase 2 hecha (D-138): **"Tu semana"**
   (tarjeta en Inicio lunes y martes, pantalla `#semana` con semanas
-  anteriores y "Compartir mi semana" sin dinero).
+  anteriores y "Compartir mi semana" sin dinero). Fase 3 hecha (D-139): el
+  contenido de "Tu año" (cada sección, récords, mejor mes, contra el año
+  anterior).
 
 - **Libros nivel 3 (2026-11-16, terminado)**: que al poner un libro se
   traigan bien el título en español, el autor, el género y las páginas de

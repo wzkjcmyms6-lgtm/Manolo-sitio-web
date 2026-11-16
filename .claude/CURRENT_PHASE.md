@@ -10,7 +10,7 @@ Diseño en `docs/RESUMENES.md` (Tu semana y Tu año) y `docs/CYCLING.md`
 | 0 | Auditoría y diseño | ✅ (D-136) |
 | 1 | Motor de resúmenes: tus datos de todas las secciones para cualquier semana o año (sin pantalla) | ✅ (D-137) |
 | 2 | "Tu semana": tarjeta en Inicio los lunes, pantalla con semanas anteriores, lo mejor, lo que se quedó atrás, una sugerencia, compartir | ✅ (D-138) |
-| 3 | "Tu año": el contenido (cada sección, récords, mejor mes, rachas, contra el año anterior) | ⏳ |
+| 3 | "Tu año": el contenido (cada sección, récords, mejor mes, rachas, contra el año anterior) | ✅ (D-139) |
 | 4 | "Tu año": las diapositivas a pantalla completa, compartir cada una, tarjeta en Inicio en diciembre y enero, años anteriores | ⏳ |
 | 5 | Bici: Actividades (barra propia, tarjetas con mapa, filtros, "+", Inicio, detalle con lo de bici) | ⏳ |
 | 6 | Bici: Progreso (períodos, calendario, récords de bici, Eddington, metas, racha, mapa de calor) | ⏳ |
