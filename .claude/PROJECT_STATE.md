@@ -1,6 +1,12 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-16 (mejoras sin servidor terminadas, D-123 a D-127).
+Actualizado: 2026-11-16 (Libros nivel 3 en curso, D-128).
+
+- **Libros nivel 3 (2026-11-16, en curso)**: que al poner un libro se
+  traigan bien el título en español, el autor, el género y las páginas de
+  tu edición; ficha del autor, temas, completar la biblioteca y
+  recomendaciones. Plan y auditoría con 20 libros reales en
+  `docs/LIBROS_NIVEL3.md` (D-128); fases en `.claude/CURRENT_PHASE.md`.
 
 - **Mejoras sin servidor (2026-11-15, terminado)**: fase 1 hecha (D-123):
   **Biblia en audio** en el lector, con las voces del iPhone (sin

@@ -15,6 +15,13 @@ vuelve (la navegación es por `#hash`). No muestran el versículo de arriba
 | 3 | Libros sin portada + frases | ✅ 2026-10-29 |
 | 4 | Portadas (búsqueda gratuita y foto) | ✅ 2026-10-29 |
 
+## Nivel 3: datos de verdad de cada libro (2026-11-16, desde D-128)
+
+Pedido del dueño: que al poner un libro se traigan bien el autor, el
+género y las páginas de su edición, y mucho más (ficha del autor, temas,
+completar la biblioteca, recomendaciones). Plan, auditoría con 20 libros
+reales y bitácora en `docs/LIBROS_NIVEL3.md`.
+
 ## Siguiente nivel (2026-11-06 a 2026-11-15, D-102 a D-115)
 
 Pedido del dueño: "Libros, Biblia y Medir tiempos: siguiente nivel". Plan,

@@ -1769,14 +1769,29 @@ el Worker de la búsqueda de la Biblia, que carga `biblia-motor.js` y
 Resultado (mediana de 7 aperturas): pedidos al abrir 198 → 14;
 DOMContentLoaded 560 → 330 ms; Inicio con contenido 640 → 400 ms. El
 service worker guarda 29 archivos en vez de unos 200. (5) Cambia la regla
-de trabajo: se edita el archivo de
-cada módulo y después `npm run listo` (= paquete + tema + sw), en vez de
-subir el `?v=` en index.html. Un módulo nuevo se agrega en
-`js/paquete.json`, no en index.html. El `?v=` de cada paquete es su huella.
-El service worker y su huella siguen viendo los datos que pide el código
-(`data/…json?v=`) dentro del paquete, y `npm run tema` lee el paquete de
-estilos como su lista (el modo claro sale idéntico).
-`tests/paquete.test.js` falla si los paquetes no están al día, si un módulo falta o se repite, si index.html
-vuelve a cargar módulos sueltos o si cambia el orden de los estilos;
-`scripts/e2e/sin-internet.js` revisa que la búsqueda de la Biblia arranque
-en modo avión.
+de trabajo: se edita el archivo de cada módulo y después `npm run listo`
+(= paquete + tema + sw), en vez de subir el `?v=` en index.html. Un módulo
+nuevo se agrega en `js/paquete.json`, no en index.html. El `?v=` de cada
+paquete es su huella. El service worker y su huella siguen viendo los datos
+que pide el código (`data/…json?v=`) dentro del paquete, y `npm run tema`
+lee el paquete de estilos como su lista (el modo claro sale idéntico).
+`tests/paquete.test.js` falla si los paquetes no están al día, si un
+módulo falta o se repite, si index.html vuelve a cargar módulos sueltos o
+si cambia el orden de los estilos; `scripts/e2e/sin-internet.js` revisa
+que la búsqueda de la Biblia arranque en modo avión.
+
+**D-128 (2026-11-16) · Libros nivel 3: datos de verdad de cada libro
+(plan).** Pedido del dueño: que al poner un libro se traigan bien el autor,
+el género y las páginas ("los libros tienen distintas páginas"). Auditoría
+con 20 libros reales (`docs/LIBROS_NIVEL3.md`): 10 de 20 títulos se
+guardaban en otro idioma, las páginas eran la mediana de todas las
+ediciones del mundo (en español varían hasta el doble: Padre rico 200–416),
+autores en otro alfabeto o equivocados y nada del autor. Fuentes elegidas,
+todas gratis, sin clave y probadas: Open Library con `lang=es` (edición en
+español), sus ediciones (páginas de cada una) e `/isbn/` (la edición
+exacta); el autor por su ficha de Open Library y su página de Wikipedia en
+español, emparejada por Wikidata para no confundirlo con otro del mismo
+nombre. Google Books (sin clave) solo como extra para la sinopsis: desde
+servidores respondió "cuota excedida". Siete fases: buscar bien, páginas
+de tu edición, ficha del autor, género y temas, completar la biblioteca,
+recomendaciones y control final. Solo se suman campos al libro.
