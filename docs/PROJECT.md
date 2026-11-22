@@ -18,6 +18,7 @@ todo en **iPhone, instalada en la pantalla de inicio** (modo standalone).
 | Modelo de datos Firestore | `docs/DATABASE.md` |
 | Lógica deportiva (rutinas, resumen semanal; GPS retirado) | `docs/SPORTS.md` · `docs/GPS.md` · `docs/RUNNING.md` · `docs/CYCLING.md` |
 | Running / Bicicleta | `docs/RUNNING.md` · `docs/CYCLING.md` |
+| Ropa (IA e inspiración de Pinterest) | `docs/ROPA.md` |
 | Rutinas de Running por CSV | `docs/CSV_ROUTINES.md` |
 | Notificaciones y administrador | `docs/NOTIFICATIONS.md` · `docs/ADMIN.md` |
 | Pruebas | `docs/TESTING.md` |

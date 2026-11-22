@@ -1,0 +1,284 @@
+# Ropa (con IA e inspiración de Pinterest)
+
+> **Plan 2026-11 · Ropa** (D-145). Pedido del dueño del 2026-11-22, completo
+> al final de este archivo. Estado de las fases en `.claude/CURRENT_PHASE.md`.
+
+Una sección nueva, **Ropa**: el ropero del dueño con fotos; una IA (el mejor
+modelo de Claude) describe cada prenda, toma sus inspiraciones de Pinterest y
+arma esos looks con su ropa, le dice qué ponerse cada día y qué le conviene
+comprar según lo que se repite en sus pines.
+
+## Auditoría (fase 0): lo que ya existe y se reutiliza
+
+- **Fotos** (`js/lugares-fotos.js`, D-117): la foto grande (máx. 1200 px,
+  JPEG 0,75) en el teléfono (IndexedDB) y una miniatura (máx. 200 px, ~10 KB)
+  en la nube. Ropa usa lo mismo con su propia base (`manolo-ropa`): el código
+  se generaliza en un ayudante común sin cambiar cómo funciona Lugares.
+- **Copia de seguridad** (`js/respaldo-motor.js`, `js/respaldo.js`): se
+  suman las colecciones de Ropa y sus fotos, igual que las de Lugares (restaurar
+  solo agrega).
+- **Clima**: Open-Meteo ya se usa en `js/run-enriquecer.js` (gratis, sin
+  clave). Para "¿Qué me pongo hoy?": el pronóstico por hora de la ciudad
+  elegida (La Paz por defecto), guardado en el teléfono por el día. Manolo no
+  pide ubicación (`.claude/RULES.md`).
+- **Navegación**: como Running y Bici, la sección cuelga de Inicio (tarjeta)
+  y tiene barra propia y engranaje (`js/modules.js`: `SUB_PANELS`,
+  `TAB_BARS`, `PILLS_ESCRITORIO`, `PILL_AJUSTES`).
+- **Resúmenes**: `js/resumen-fuentes.js` tiene una función por sección para
+  "Tu semana" y "Tu año"; Ropa suma la suya en la fase 6.
+- **Íconos** (`js/icons.js`): ya hay `camera`, `sparkle`, `shopping`, `tag`,
+  `heart`, `calendar`, `gear`; se suman `ropa` (percha) y `outfit`.
+- **Reglas de Firestore**: `users/{uid}/{document=**}` ya cubre las
+  colecciones nuevas; no hay que publicar nada.
+- **El repositorio es público**: nada de la ropa del dueño ni de su Pinterest
+  se sube al repo; todo vive en su Firestore y en su teléfono.
+
+## Prueba de Pinterest (fase 0, 2026-11-22)
+
+Desde un servidor (este entorno, con `www.pinterest.com` e `i.pinimg.com`
+permitidos):
+
+- **Tablero público por RSS**: `https://www.pinterest.com/{usuario}/{tablero}.rss`
+  responde XML con los últimos 25 pines del tablero (probado con tableros
+  públicos de la cuenta de Pinterest: 5 de 5 bien; una vez antes dio 404, así
+  que hay que reintentar y guardar la última lista buena). El perfil entero:
+  `https://www.pinterest.com/{usuario}/feed.rss`.
+- Cada pin trae su **título**, el **link del pin** y la **imagen** chica
+  (`i.pinimg.com/236x/…`); la misma imagen en **736 px** (`/736x/`) se baja
+  bien y alcanza para la IA. La original (`/originals/`) da 403.
+- **Link de un pin pegado a mano**:
+  `https://www.pinterest.com/oembed.json?url={link}` devuelve título, autor
+  e imagen.
+- **Ninguna respuesta trae permiso CORS**: el teléfono no puede leerlas
+  directo; las lee el puente (abajo).
+- **Límites**: solo tableros **públicos** (los secretos no tienen RSS); cada
+  lectura trae los últimos 25 pines (Manolo los va guardando, así que se
+  acumulan); Pinterest no documenta el RSS y podría cambiarlo. Por eso
+  siempre queda la **forma segura**: subir la imagen (o una captura) o pegar el
+  link del pin.
+- La **API oficial** de Pinterest pide registrar una app y esperar su
+  aprobación (a veces se traba); no hace falta.
+- **Falta probar**: con el tablero del dueño y desde el puente en Cloudflare
+  (fase 3).
+
+## Diseño
+
+### Pantallas
+- **Inicio**: tarjeta "Ropa" (cuántas prendas; en la fase 6, el outfit de hoy).
+- **Barra de Ropa**: **Ropero · Outfits · + · Inspiración · Compras**;
+  engranaje arriba → **Ajustes de Ropa**. En la compu, las mismas secciones
+  como pills (como Bici).
+- **Ropero** (`#ropa`): grupos como chips (Todo, Arriba, Abajo, Cuerpo entero,
+  Abrigos, Zapatos, Accesorios), búsqueda, filtros (color, clima, formalidad),
+  orden (recientes, más usadas, menos usadas) y la grilla de fotos con el tipo y
+  sus colores; "para lavar" se ve como etiqueta. Vacío: invita a agregar.
+- **Ficha** (`#ropa-prenda/{id}`): foto grande, datos, veces que la usaste y la
+  última, en qué outfits aparece, costo por uso (si tiene precio). Botones:
+  Editar, Para lavar / Ya está limpia, Ya no la tengo; con IA: Describir de
+  nuevo y "¿Con qué combino esto?".
+- **"+"**: hoja con **Agregar prenda** (cámara o galería, varias seguidas) y
+  **Agregar inspiración** (imagen o link de Pinterest).
+- **Agregar prenda**: por cada foto, el formulario ya lleno (el color sale de
+  la foto; desde la fase 2, todo lo llena la IA) → Guardar y seguir.
+- **Outfits** (`#ropa-outfits`): arriba "¿Qué me pongo hoy?" (ocasión, clima de
+  hoy, Armar) → 3 opciones con las fotos juntas, por qué combina y la
+  inspiración a la que se parece; botones Me lo pongo, Otra opción, Guardar,
+  No me gusta. Abajo: guardados y el calendario de lo que te pusiste.
+- **Inspiración** (`#ropa-inspiracion`): los pines (del tablero o subidos),
+  "Actualizar tablero", "Mi estilo" (resumen que se puede corregir). Cada pin
+  (`#ropa-pin/{id}`): la imagen, las prendas que se ven, **"Armar este look con
+  mi ropa"** (lo más parecido y lo que falta) y "Ver en Pinterest".
+- **Compras** (`#ropa-compras`): **Qué te falta** (lo que se repite en tus
+  pines y no tienes, con sus fotos y cuántos outfits nuevos te daría), **Ver
+  opciones en Pinterest** (abre `https://www.pinterest.com/search/pins/?q=…`),
+  **Qué no comprar**, **Lista de deseos** ("lo compré" la pasa al ropero) y el
+  presupuesto del mes.
+- **Ajustes de Ropa** (`#ropa-ajustes`): ciudad del clima, ocasiones, tablero de
+  Pinterest, IA (gasto del mes y tope), presupuesto.
+
+### Datos (solo se suman)
+- `users/{uid}/ropa/{id}`: `v`, `grupo`, `tipo`, `colores` ([{ nombre, hex,
+  peso }]), `estampado`, `tela`, `estilo` ([…]), `clima` ([frio | templado |
+  calor]), `formalidad` (1–5), `marca`, `talla`, `precio`, `compra` (fecha),
+  `notas`, `fotos` ([{ id, mini, ancho, alto }]), `estado` (activa | lavar |
+  fuera), `fueraFecha`, `ia` ({ fecha }), `creado`, `editado`.
+- `users/{uid}/ropa_usos/{fecha}`: lo que te pusiste ese día ({ prendas,
+  outfitId }); de ahí salen las veces, la última y el calendario.
+- `users/{uid}/ropa_outfits/{id}`: `prendas`, `ocasion`, `clima`, `origen`
+  (ia | manual | inspiracion), `inspiracionId`, `porque`, `guardado`, `gusto`
+  (si | no), `creado`.
+- `users/{uid}/ropa_inspiracion/{id}`: `origen` (pinterest | foto), `pin` ({
+  url, img, titulo }), `fotos` (las subidas), `prendas` (lo que vio la IA),
+  `estilo`, `oculta`, `creado`.
+- `users/{uid}/ropa_deseos/{id}`: `tipo`, `color`, `nota`, `inspiraciones`,
+  `estado` (quiero | comprado | descartado), `creado`.
+- `users/{uid}/meta/ropa_ajustes`: `ciudad` ({ nombre, lat, lon }),
+  `ocasiones`, `pinterest` ({ usuario, tablero }), `presupuestoMes`, `iaTope`,
+  `estilo` ({ resumen, corregido, fecha }).
+
+### La IA y el puente
+- **Puente**: un Worker en Cloudflare (plan gratis). Su código va en el repo
+  (`puente/`), sin secretos; la clave de la IA y el modelo se guardan como
+  secretos y variables en Cloudflare (el modelo no va en el repo). Lo
+  instala y actualiza el agente; el dueño solo pega la clave en Cloudflare.
+- Revisa el **token de Firebase** (proyecto `manolo-4c57b`) y que el usuario
+  esté en la **lista permitida** (solo el dueño); acepta pedidos solo del sitio
+  de Manolo.
+- **Rutas**: describir una prenda, analizar un pin, armar un look con tu ropa,
+  outfits del día, tu estilo, leer el tablero de Pinterest, leer un link de
+  pin, gasto y tope.
+- **Respuestas con esquema fijo** (JSON); la app revisa que cada prenda
+  propuesta exista en tu ropero (si no, se descarta).
+- **Gasto**: cada respuesta trae lo que se usó; el puente suma el costo del mes
+  y corta al llegar al **tope** (8 USD al empezar). Manolo lo muestra.
+- **Imágenes**: prendas a 1200 px (como Lugares); pines a 736 px.
+- **Privacidad**: a la IA solo le llegan fotos y listas de ropa, nunca el
+  nombre, el correo ni el usuario. El puente no guarda fotos ni textos (solo el
+  total del gasto del mes).
+- **Si el plan gratis de Cloudflare no alcanza**: plan B en Firebase
+  (Functions, pide tarjeta); se avisa al dueño antes de cualquier costo.
+- **Pruebas**: con un puente falso y respuestas inventadas (sin gastar); al
+  final, una prueba real corta con el OK del dueño.
+
+### Sin IA o sin internet
+- El ropero funciona sin internet (Firestore guarda en el teléfono y las fotos
+  viven ahí).
+- El **color sale de la foto** en el teléfono, sin IA (principal y secundario,
+  con nombre en español).
+- Cuántos **outfits nuevos** daría una compra lo cuenta Manolo con reglas
+  (grupos que se combinan, formalidad y clima parecidos, colores que
+  combinan), siempre igual y sin gastar.
+- Lo que necesita la IA avisa que hace falta conexión.
+
+### Costos estimados (el mejor modelo)
+- Describir una prenda: 2 a 3 centavos (150 prendas: unos 4 USD, una vez).
+- Analizar un pin: unos 3 centavos (50 pines: unos 1,50 USD, una vez).
+- "¿Qué me pongo hoy?": unos 6 centavos (2 por día: unos 4 USD al mes).
+- En total, unos 5 USD al mes; tope de 8 USD. El puente y el clima: gratis.
+
+## Fases
+| Fase | Qué |
+|---|---|
+| 0 | Diseño y prueba de Pinterest |
+| 1 | Mi ropa sin IA: agregar con fotos (varias seguidas), datos a mano, color de la foto, ropero con filtros, ficha, para lavar, ya no la tengo, copia de seguridad |
+| 2 | La IA describe: cuentas con el dueño, el puente, describir al agregar y las que ya tienes, gasto y tope |
+| 3 | Inspiración de Pinterest: subir imagen o link, leer el tablero, las prendas de cada pin, "Armar este look con mi ropa", "Mi estilo" |
+| 4 | Outfits: "¿Qué me pongo hoy?" (ocasión, clima, estilo, sin repetir), Me lo pongo, Guardar, No me gusta, "¿Con qué combino esto?", calendario |
+| 5 | Compras desde Pinterest: qué te falta, cuántos outfits nuevos, Ver opciones en Pinterest, qué no comprar, lista de deseos, lo compré, presupuesto |
+| 6 | Extras: lo más y lo menos usado, colores, costo por uso, "Tu semana", "Tu año", Inicio |
+| 7 | Revisión final: todas las pruebas, Lighthouse, la prueba real de la IA y la lista para el iPhone |
+
+## Lo que hace el dueño
+- **Fase 0**: crear en Pinterest un tablero **público** (por ejemplo, "Manolo")
+  y pasar su usuario de Pinterest y el nombre del tablero.
+- **Fase 2**: crear la cuenta de Claude (tarjeta, crédito y clave) y la de
+  Cloudflare (gratis), con guía paso a paso; la clave se pega solo en
+  Cloudflare.
+- Sacarle fotos a su ropa (una prenda por foto, buena luz, fondo liso) y
+  guardar sus inspiraciones en el tablero.
+
+---
+
+## Pedido del dueño (2026-11-22)
+
+> PROYECTO: "ROPA" EN MANOLO, CON IA E INSPIRACIÓN DE PINTEREST
+>
+> **1. Qué quiero.** Una sección nueva, Ropa, donde guardo toda mi ropa con
+> fotos. Una IA (el mejor modelo de Claude) hace tres cosas: describe cada
+> prenda; toma mis inspiraciones de Pinterest y arma esos looks con mi ropa;
+> me sugiere qué comprar a partir de mis inspiraciones de Pinterest. Hazlo de
+> la manera más completa posible, por fases, como Running y Bici.
+>
+> **2. Reglas de siempre.** Seguir `.claude/RULES.md`: español simple, tú
+> decides lo técnico y solo me preguntas lo que bloquea o lo que cambia cómo se
+> ve. No romper nada de lo que ya funciona. Mis datos solo se suman: nunca se
+> borran ni se cambian. Con el aspecto de Manolo, en modo claro y oscuro. Que
+> funcione bien en el iPhone y en la compu. Las fotos como en Lugares: la
+> grande en mi teléfono y una chiquita en la nube. Todo entra en la copia de
+> seguridad. En cada fase, pruebas completas y un resumen como siempre: qué
+> hiciste, cómo lo pruebo en el iPhone, cuántas pruebas pasaron, qué decidiste y
+> qué archivos cambiaron.
+>
+> **3. Mi ropa (el ropero).** Agregar prendas con la cámara o desde la
+> galería, varias seguidas. Grupos: arriba (camisas, poleras, chompas), abajo
+> (pantalones, jeans, shorts), cuerpo entero, abrigos (chamarras, abrigos),
+> zapatos, accesorios. De cada prenda: tipo, colores y estampado; tela y
+> estilo; para qué clima y qué tan formal es (de 1 a 5); marca; si quiero:
+> talla, precio y cuándo la compré. Lista con fotos: filtros por grupo, color,
+> clima y formalidad; búsqueda; orden por recientes, más usadas y menos usadas.
+> Ficha de cada prenda: foto y datos; cuántas veces la usé y cuándo fue la
+> última; en qué outfits aparece; cuánto me salió cada uso, si puse el precio.
+> Marcar "para lavar": mientras tanto no entra en los outfits. Marcar "ya no la
+> tengo": sale del ropero, pero su historial queda.
+>
+> **4. La IA describe.** Cuando saco la foto, la IA llena todos los datos. Yo
+> reviso y corrijo antes de guardar. Si en la foto hay varias prendas, me
+> avisa. Puedo pedirle que describa de nuevo, y que describa también las
+> prendas que cargué antes sin IA.
+>
+> **5. Inspiración de Pinterest.** Mis inspiraciones vienen de Pinterest. Dos
+> formas de traerlas: la segura (guardo la imagen del pin o una captura y la
+> subo en Ropa › Inspiración, varias a la vez; si quiero, pego el link del pin)
+> y la automática (conectar mi tablero para que Manolo lo lea solo; probarla en
+> la fase 0; si Pinterest no la permite, queda la segura). En cada inspiración
+> la IA reconoce las prendas. "Armar este look con mi ropa": lo más parecido
+> con lo que tengo y lo que me falta. Mi estilo: con mis inspiraciones, un
+> resumen de mi estilo (colores, cortes, tipo de ropa) que puedo ver y
+> corregir, y que se usa al armar los outfits. Cada inspiración con "Ver en
+> Pinterest".
+>
+> **6. Outfits.** "¿Qué me pongo hoy?": elijo la ocasión (trabajo, casual,
+> salir, deporte, formal; puedo agregar las mías); la IA mira el clima de hoy en
+> mi ciudad (La Paz, se puede cambiar; Manolo no pide mi ubicación); que piense
+> en capas (mañana fría y sol al mediodía). Me da 3 opciones solo con mi ropa,
+> siguiendo mi estilo de Pinterest; nunca inventa una prenda que no tengo; cada
+> opción con las fotos juntas, una frase de por qué combina y, si se parece a
+> una de mis inspiraciones, cuál. No me repite lo de los últimos días ni usa lo
+> que está para lavar. Botones: "Me lo pongo" (anota que lo usé), "Otra
+> opción", "Guardar", "No me gusta"; con lo que guardo y lo que no me gusta,
+> aprende mis gustos. "¿Con qué combino esto?": desde una prenda, outfits
+> alrededor de ella. Mis outfits guardados y un calendario de lo que me puse.
+>
+> **7. Compras desde Pinterest.** Qué me falta según mis inspiraciones: lo que
+> se repite en mis pins y no tengo (por ejemplo: "En 6 de tus inspiraciones hay
+> un abrigo camel y no tienes uno"). Cada sugerencia con las fotos de mis pins
+> donde aparece, cuántos outfits nuevos me daría con mi ropa y un botón "Ver
+> opciones en Pinterest" que abre Pinterest con la búsqueda lista. Qué no
+> comprar: lo que ya tengo de sobra. Lista de deseos; "lo compré" la pasa a mi
+> ropero. Nunca compra nada sola. Un presupuesto de ropa por mes, si quiero.
+>
+> **8. Extras.** Lo que más uso, lo que no uso hace 3 meses o más, mis colores y
+> el costo por uso. Conectarlo con "Tu semana" y "Tu año" (por ejemplo, mi
+> prenda más usada del año). Si tiene sentido, una tarjeta en Inicio con el
+> outfit del día.
+>
+> **9. Cómo se conecta (lo técnico lo decides tú).** Un puente seguro en
+> Cloudflare (gratis) guarda la clave de la IA; la clave nunca va dentro de
+> Manolo ni en el chat. Solo yo puedo usar la IA; los demás usuarios pueden usar
+> Ropa sin IA. A la IA solo le llegan fotos (mi ropa o mis inspiraciones) y la
+> lista de mi ropa, nunca mi nombre, mi correo ni mi usuario; el puente no
+> guarda fotos. Pinterest: Manolo solo lee mis inspiraciones; nunca publica ni
+> cambia nada en mi Pinterest. El pago en platform.claude.com, con crédito por
+> adelantado y recarga automática si quiero; me guías para crear las cuentas y
+> la clave. El gasto: Manolo me muestra cuánto llevo en el mes; tope de 8
+> dólares al mes para empezar (se puede cambiar); al llegar, la IA se pausa
+> hasta el mes siguiente. Sin internet, mi ropero funciona igual; la IA avisa
+> que necesita conexión. Si el plan gratis de Cloudflare no alcanza, usas otra
+> opción, pero me avisas antes de cualquier costo. Las pruebas de la IA con
+> respuestas inventadas, para no gastar; al final, una prueba real corta con mi
+> OK.
+>
+> **10. Fases.** 0 Diseño y prueba de Pinterest · 1 Mi ropa, sin IA · 2 La IA
+> describe · 3 Inspiración de Pinterest · 4 Outfits · 5 Compras desde
+> Pinterest · 6 Extras · 7 Revisión final.
+>
+> **11. Lo que no hace.** No genera fotos mías con la ropa puesta. No compra
+> nada sola. No publica ni cambia nada en mi Pinterest. No busca fotos nuevas de
+> Pinterest dentro de Manolo: para eso abre Pinterest. No pide mi ubicación.
+>
+> **12. Lo que hago yo.** En la fase 0: crear en Pinterest un tablero para
+> Manolo y decirte mi usuario (si tiene que ser público, me avisas antes). En
+> la fase 2: crear la cuenta de Claude (tarjeta, crédito y clave) y la de
+> Cloudflare, con tu guía. Sacarle fotos a mi ropa (una prenda por foto, con
+> buena luz y fondo liso). Guardar mis inspiraciones en ese tablero. Probar en
+> el iPhone al final de cada fase.

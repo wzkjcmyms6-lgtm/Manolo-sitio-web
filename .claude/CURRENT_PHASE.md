@@ -1,5 +1,22 @@
 # Fase actual
 
+## Ropa con IA e inspiración de Pinterest (pedido del dueño, 2026-11-22)
+"Una sección nueva, Ropa, donde guardo toda mi ropa con fotos. Una IA
+describe cada prenda, toma mis inspiraciones de Pinterest y arma esos looks
+con mi ropa, y me sugiere qué comprar." Pedido completo, auditoría, prueba
+de Pinterest y diseño en `docs/ROPA.md` (D-145).
+
+| Fase | Qué | Estado |
+|---|---|---|
+| 0 | Diseño y prueba de Pinterest | ✅ (D-145) |
+| 1 | Mi ropa sin IA: agregar con fotos, datos a mano, color de la foto, ropero con filtros, ficha, para lavar, ya no la tengo, copia de seguridad | ⏳ |
+| 2 | La IA describe: cuentas con el dueño, el puente, describir al agregar y las que ya tienes, gasto y tope | ⏳ |
+| 3 | Inspiración de Pinterest: subir imagen o link, leer el tablero, prendas de cada pin, armar el look con tu ropa, tu estilo | ⏳ |
+| 4 | Outfits: qué me pongo hoy, me lo pongo, guardar, no me gusta, con qué combino esto, calendario | ⏳ |
+| 5 | Compras desde Pinterest: qué te falta, outfits nuevos, ver opciones en Pinterest, qué no comprar, lista de deseos, presupuesto | ⏳ |
+| 6 | Extras: lo más y lo menos usado, colores, costo por uso, Tu semana, Tu año, Inicio | ⏳ |
+| 7 | Revisión final y lista para el iPhone | ⏳ |
+
 ## Tu semana, Tu año y Bici al nivel de Running (pedido del dueño, 2026-11-16) — terminado
 "Haz el 1, 2 y 4, desarróllalos de la manera más completa posible."
 Diseño en `docs/RESUMENES.md` (Tu semana y Tu año) y `docs/CYCLING.md`

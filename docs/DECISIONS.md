@@ -2136,3 +2136,36 @@ prueba de pantalla en `scripts/e2e/bici.js` (falla sin el arreglo). Ningún
 dato se borra ni se cambia de forma: solo se suman campos (`mejoresBici`,
 `biciId`, `meta/bici_ajustes`, `deporte` de los segmentos de bici).
 
+**D-145 (2026-11-22) · Ropa con IA e inspiración de Pinterest: plan.**
+Pedido del dueño (completo en `docs/ROPA.md`): su ropero con fotos; una IA
+(el mejor modelo de Claude) describe cada prenda, arma con su ropa los looks
+de sus inspiraciones de Pinterest, propone qué ponerse cada día y qué
+comprar según lo que se repite en sus pines. Fases en
+`.claude/CURRENT_PHASE.md`. (1) **Sección colgada de Inicio** con barra
+propia (Ropero · Outfits · + · Inspiración · Compras) y engranaje (Ajustes de
+Ropa), como Running y Bici. (2) **Fotos como Lugares** (D-117): la grande en
+el teléfono, la miniatura en la nube; entran en la copia de seguridad. (3)
+**La IA, por un puente en Cloudflare** (plan gratis): el código va en el repo
+sin secretos; la clave y el modelo, como secretos y variables de Cloudflare
+(nunca en la app ni en el repo); revisa el token de Firebase y que el
+usuario esté permitido (solo el dueño; los demás usan Ropa sin IA); no
+guarda fotos ni textos; suma el gasto del mes y corta en el tope (8 USD al
+empezar). Respuestas con esquema fijo; la app descarta cualquier prenda que
+no esté en el ropero. A la IA no le llega el nombre, el correo ni el
+usuario. Plan B si el plan gratis no alcanza: Firebase Functions, avisando
+antes de cualquier costo. (4) **Pinterest sin la API oficial** (pide
+aprobación): el tablero **público** se lee por su RSS desde el puente
+(probado desde un servidor: 25 pines por lectura con título, link e imagen
+de 736 px; reintentos y última lista buena porque una vez dio 404); un link
+de pin se lee por oEmbed; siempre se puede subir la imagen o una captura.
+Para ver opciones nuevas se abre la búsqueda de Pinterest (no deja buscar a
+otras apps). Nada de Pinterest ni de la ropa se sube al repo (es público).
+(5) **Clima** de Open-Meteo para la ciudad elegida (La Paz por defecto), sin
+pedir ubicación. (6) **Compras**: lo que se repite en los pines y no está en
+el ropero; los outfits nuevos que daría cada compra los cuenta Manolo con
+reglas (sin IA, siempre igual). (7) **Datos solo aditivos**: `ropa`,
+`ropa_usos`, `ropa_outfits`, `ropa_inspiracion`, `ropa_deseos` y
+`meta/ropa_ajustes`; las reglas de Firestore ya los cubren. (8) **Pruebas
+sin gastar**: un puente falso con respuestas inventadas; una prueba real
+corta al final, con el OK del dueño.
+

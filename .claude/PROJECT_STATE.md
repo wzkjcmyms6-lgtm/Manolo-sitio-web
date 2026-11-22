@@ -1,6 +1,16 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-16 (Tu semana, Tu año y Bici terminados, D-144).
+Actualizado: 2026-11-22 (Ropa con IA e inspiración de Pinterest: plan, D-145).
+
+- **Ropa con IA e inspiración de Pinterest (2026-11-22, en curso)**: el
+  ropero del dueño con fotos; una IA (el mejor modelo de Claude, por un
+  puente en Cloudflare con tope de gasto) describe cada prenda, arma con su
+  ropa los looks de sus pines de Pinterest, propone qué ponerse cada día y
+  qué comprar según lo que se repite en sus pines. Plan, prueba de Pinterest
+  (el tablero público se lee por RSS) y diseño en `docs/ROPA.md` (D-145);
+  fases en `.claude/CURRENT_PHASE.md`. Falta del dueño: un tablero público
+  en Pinterest y su usuario (fase 0); las cuentas de Claude y Cloudflare
+  (fase 2).
 
 - **Tu semana, Tu año y Bici al nivel de Running (2026-11-16, terminado)**:
   "Tu semana" (cada lunes en Inicio: cifras de todas tus áreas, lo mejor, lo
