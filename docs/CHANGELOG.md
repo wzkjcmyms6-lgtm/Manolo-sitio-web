@@ -1,5 +1,15 @@
 # Cambios
 
+## 2026-11-22 · Ropa: tu ropero con fotos
+- **Ropa** (en Inicio): agrega tus prendas con fotos, varias a la vez. Manolo
+  saca el color de cada foto y te arma el nombre ("Polera blanca"); tú eliges
+  qué es, el clima, el estilo y qué tan formal es.
+- El ropero: busca, filtra por grupo, color, clima y formalidad, y ordena por
+  las más o las menos usadas.
+- La ficha de cada prenda: "Me la puse hoy", cuántas veces la usaste y cuánto
+  te sale cada vez (si pones el precio), "Para lavar" y "Ya no la tengo".
+- La copia de seguridad ahora incluye tu ropa y sus fotos.
+
 ## 2026-11-16 · Tu semana, Tu año y Bici: control final
 - **Segmentos de bici**: la rodada que importes después de crear un
   segmento también se suma sola a su tabla (como en Running).

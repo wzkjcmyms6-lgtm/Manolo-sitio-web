@@ -36,7 +36,9 @@ const COLECCIONES = [
   { id: "biblia", nombre: "versículos guardados", uno: "versículo guardado" },
   { id: "biblia_marcas", nombre: "marcas de la Biblia", uno: "marca de la Biblia" },
   { id: "tiempos", nombre: "días de Medir tiempos", uno: "día de Medir tiempos" },
-  { id: "lugares", nombre: "lugares", uno: "lugar" }
+  { id: "lugares", nombre: "lugares", uno: "lugar" },
+  { id: "ropa", nombre: "prendas de Ropa", uno: "prenda de Ropa" },
+  { id: "ropa_usos", nombre: "días con ropa anotada", uno: "día con ropa anotada" }
 ];
 const NOMBRE = Object.fromEntries(COLECCIONES.map(c => [c.id, c.nombre]));
 const MAX_BYTES = 150 * 1024 * 1024;   // un archivo más grande no es una copia de Manolo
@@ -66,7 +68,8 @@ function decodificar(v, crearTs) {
 }
 
 // ---- Armar la copia ----
-// datos: { colecciones: { nombre: { id: datos } }, fotosLugares: [{ id, lugarId, ancho, alto, datos }] }
+// datos: { colecciones: { nombre: { id: datos } }, fotosLugares: [{ id, lugarId, ancho, alto, datos }],
+//          fotosRopa: [{ id, grupoId, clase, ancho, alto, datos }] (D-146) }
 function armar(datos, ahora) {
   const d = datos || {};
   const colecciones = {}, conteos = {};
@@ -77,7 +80,9 @@ function armar(datos, ahora) {
   });
   const fotosLugares = (Array.isArray(d.fotosLugares) ? d.fotosLugares : []).filter(fotoOk);
   conteos.fotosLugares = fotosLugares.length;
-  return { app: "Manolo", tipo: TIPO, version: VERSION, exportado: new Date(ahora || Date.now()).toISOString(), conteos, colecciones, fotosLugares };
+  const fotosRopa = (Array.isArray(d.fotosRopa) ? d.fotosRopa : []).filter(fotoRopaOk);
+  conteos.fotosRopa = fotosRopa.length;
+  return { app: "Manolo", tipo: TIPO, version: VERSION, exportado: new Date(ahora || Date.now()).toISOString(), conteos, colecciones, fotosLugares, fotosRopa };
 }
 const total = conteos => COLECCIONES.reduce((s, c) => s + (conteos && conteos[c.id] || 0), 0);
 
@@ -102,6 +107,8 @@ function desdeLugares(c) {
 // Un id de Firestore: texto sin "/", no "." ni "..", no __reservado__.
 const idOk = id => typeof id === "string" && id.length > 0 && id.length <= 700 && !id.includes("/") && id !== "." && id !== ".." && !/^__.*__$/.test(id);
 const fotoOk = f => esPlano(f) && idOk(f.id) && idOk(f.lugarId) && typeof f.datos === "string" && /^data:image\/(jpeg|png|webp);base64,/.test(f.datos);
+// Fotos de Ropa (D-146): de una prenda (o una inspiración), por grupoId.
+const fotoRopaOk = f => esPlano(f) && idOk(f.id) && idOk(f.grupoId) && typeof f.datos === "string" && /^data:image\/(jpeg|png|webp);base64,/.test(f.datos);
 // → { ok, error } o { ok, colecciones, fotos, danados, desconocidas, exportado, version, seccion }
 function validar(copia, bytes) {
   if (bytes && bytes > MAX_BYTES) return { ok: false, error: "Ese archivo es demasiado grande para ser una copia de Manolo." };
@@ -136,13 +143,16 @@ function validar(copia, bytes) {
   const todas = Array.isArray(copia.fotosLugares) ? copia.fotosLugares : [];
   const fotos = todas.filter(fotoOk);
   danados += todas.length - fotos.length;
-  return { ok: true, colecciones, fotos, danados, desconocidas, exportado: copia.exportado || null, version: copia.version, seccion: null };
+  const todasRopa = Array.isArray(copia.fotosRopa) ? copia.fotosRopa : [];
+  const fotosRopa = todasRopa.filter(fotoRopaOk);
+  danados += todasRopa.length - fotosRopa.length;
+  return { ok: true, colecciones, fotos, fotosRopa, danados, desconocidas, exportado: copia.exportado || null, version: copia.version, seccion: null };
 }
 
 // ---- Qué se agregaría ----
-// actuales: { nombre: [ids] | Set }; fotosActuales: [ids] | Set.
+// actuales: { nombre: [ids] | Set }; fotosActuales y fotosRopaActuales: [ids] | Set.
 // Solo entra lo que NO existe; lo que ya tienes no se toca.
-function plan(v, actuales, fotosActuales) {
+function plan(v, actuales, fotosActuales, fotosRopaActuales) {
   const nuevos = {}, porColeccion = [];
   let totalNuevos = 0, totalYaTenias = 0;
   COLECCIONES.forEach(c => {
@@ -156,7 +166,9 @@ function plan(v, actuales, fotosActuales) {
   });
   const yaFotos = fotosActuales instanceof Set ? fotosActuales : new Set(fotosActuales || []);
   const fotosNuevas = (v.fotos || []).filter(f => !yaFotos.has(f.id));
-  return { nuevos, porColeccion, totalNuevos, totalYaTenias, fotosNuevas, vacio: !totalNuevos && !fotosNuevas.length };
+  const yaRopa = fotosRopaActuales instanceof Set ? fotosRopaActuales : new Set(fotosRopaActuales || []);
+  const fotosRopaNuevas = (v.fotosRopa || []).filter(f => !yaRopa.has(f.id));
+  return { nuevos, porColeccion, totalNuevos, totalYaTenias, fotosNuevas, fotosRopaNuevas, vacio: !totalNuevos && !fotosNuevas.length && !fotosRopaNuevas.length };
 }
 
 // "12 movimientos de Finanzas, 1 libro y 2 lugares".
@@ -164,8 +176,10 @@ function lista(xs) { return xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).jo
 function resumen(p) {
   const partes = p.porColeccion.filter(c => c.nuevos).map(c => `${c.nuevos.toLocaleString("es-BO")} ${c.nuevos === 1 ? c.uno : c.nombre}`);
   if (p.fotosNuevas.length) partes.push(`${p.fotosNuevas.length.toLocaleString("es-BO")} ${p.fotosNuevas.length === 1 ? "foto de Lugares" : "fotos de Lugares"}`);
+  const fr = (p.fotosRopaNuevas || []).length;
+  if (fr) partes.push(`${fr.toLocaleString("es-BO")} ${fr === 1 ? "foto de Ropa" : "fotos de Ropa"}`);
   return lista(partes);
 }
 
-return { VERSION, TIPO, COLECCIONES, NOMBRE, MAX_BYTES, codificar, decodificar, armar, total, idOk, fotoOk, validar, plan, resumen, lista };
+return { VERSION, TIPO, COLECCIONES, NOMBRE, MAX_BYTES, codificar, decodificar, armar, total, idOk, fotoOk, fotoRopaOk, validar, plan, resumen, lista };
 });

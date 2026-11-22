@@ -18,7 +18,7 @@
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
   <!-- Todos los estilos de la app en un archivo (D-127): js/paquete.json › npm run listo -->
-  <link rel="stylesheet" href="css/app.paquete.css?v=516eff3b4d8a">
+  <link rel="stylesheet" href="css/app.paquete.css?v=1250d6f6960f">
   <!-- Modo claro (D-126): generado con "npm run tema"; js/tema.js lo apaga en
        el modo oscuro y elige el modo antes de pintar (sin "defer": es chico) -->
   <link rel="stylesheet" href="css/tema-claro.css?v=202611171200" id="tema-claro-css">
@@ -185,6 +185,11 @@
                 <span class="icon" data-icon="lugar"></span>
                 <h3>Lugares</h3>
                 <p>Dónde comer: lo que probaste y si volverías.</p>
+              </a>
+              <a class="card" href="#ropa">
+                <span class="icon" data-icon="ropa"></span>
+                <h3>Ropa</h3>
+                <p id="ropa-inicio">Tu ropero con fotos, outfits e inspiración.</p>
               </a>
               <a class="card" href="#tiempos">
                 <span class="icon" data-icon="timer"></span>
@@ -484,6 +489,17 @@
             <a class="back-link lib-volver" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
             <h1 class="page-title">Lugares</h1>
             <div class="lug-app" id="lug-app"></div>
+          </section>
+
+          <!-- ===== Ropa (D-145): el ropero (js/ropa.js) y la ficha de cada prenda ===== -->
+          <section id="panel-ropa" hidden>
+            <a class="back-link lib-volver" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
+            <h1 class="page-title">Ropa</h1>
+            <div class="ro-app" id="ro-app"></div>
+          </section>
+          <section id="panel-ropa-prenda" hidden>
+            <a class="back-link lib-volver" href="#ropa"><span class="icon-sm" data-icon="chevronLeft"></span>Ropa</a>
+            <div class="rop-app" id="rop-app"></div>
           </section>
 
           <!-- ===== Tu semana (D-136): js/resumen-semana-ui.js ===== -->
@@ -1498,6 +1514,6 @@
   <script defer src="vendor/firebase-10.7.1/firebase-firestore-compat.js"></script>
   <!-- Todos los módulos de la app en un archivo (D-127): cada uno corre como su
        propio <script>. Se editan los de js/ y después: npm run listo -->
-  <script defer src="js/app.paquete.js?v=3dad2f250668"></script>
+  <script defer src="js/app.paquete.js?v=a7efe16fa774"></script>
 </body>
 </html>

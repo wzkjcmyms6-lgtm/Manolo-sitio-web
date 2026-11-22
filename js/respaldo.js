@@ -82,6 +82,22 @@ function idsFotos() {
   const F = Fotos();
   return F ? F.todas().then(regs => regs.map(r => r.id), () => []) : Promise.resolve([]);
 }
+// Fotos de Ropa de este teléfono (D-146): solo las de prendas que existen.
+const FotosRopa = () => (window.RopaDatos && window.RopaDatos.Fotos) || null;
+function fotosRopaDe(prendas) {
+  const F = FotosRopa();
+  if (!F) return Promise.resolve([]);
+  return F.todas().catch(() => [])
+    .then(regs => Promise.all(regs.filter(r => r && r.blob && prendas[r.grupoId]).map(r => F.aDataUrl(r.blob)
+      .then(datos => ({ id: r.id, grupoId: r.grupoId, clase: r.clase || "prenda", ancho: r.ancho || 0, alto: r.alto || 0, datos }), () => null))))
+    .then(xs => xs.filter(Boolean));
+}
+function idsFotosRopa() {
+  const F = FotosRopa();
+  return F ? F.todas().then(regs => regs.map(r => r.id), () => []) : Promise.resolve([]);
+}
+// Las fotos de los dos lados (Lugares y Ropa) para una copia.
+const todasLasFotos = colecciones => Promise.all([fotosDe(colecciones.lugares || {}), fotosRopaDe(colecciones.ropa || {})]);
 
 // ---------- Copias automáticas (IndexedDB de este teléfono) ----------
 const BASE = "manolo-respaldos", ALMACEN = "copias";
@@ -173,7 +189,7 @@ function vistaInicio() {
   const ultima = Number(leerLS(CLAVE_ULTIMA)) || 0;
   const p = preparada;
   return `
-    <p class="rsp-intro">Todo Manolo en un solo archivo: hábitos, finanzas, inversiones, ejercicio, running, libros, Biblia, tiempos, lugares (con sus fotos) y tus ajustes.</p>
+    <p class="rsp-intro">Todo Manolo en un solo archivo: hábitos, finanzas, inversiones, ejercicio, running, libros, Biblia, tiempos, lugares y ropa (con sus fotos) y tus ajustes.</p>
     ${errorHTML()}
     <section class="rsp-bloque" aria-labelledby="rsp-t-guardar">
       <h4 class="rsp-h4" id="rsp-t-guardar" tabindex="-1">${ic("download")}Guardar una copia</h4>
@@ -214,8 +230,9 @@ function vistaPlan() {
   const { v, p, archivo } = revisada;
   const filas = p.porColeccion.filter(c => c.nuevos).map(c => `<li><span>${esc(mayus(c.nombre))}</span><span class="rsp-num rsp-mas">+${num(c.nuevos)}</span></li>`);
   if (p.fotosNuevas.length) filas.push(`<li><span>Fotos de Lugares</span><span class="rsp-num rsp-mas">+${num(p.fotosNuevas.length)}</span></li>`);
+  if ((p.fotosRopaNuevas || []).length) filas.push(`<li><span>Fotos de Ropa</span><span class="rsp-num rsp-mas">+${num(p.fotosRopaNuevas.length)}</span></li>`);
   const fecha = v.exportado ? fechaHora(Date.parse(v.exportado)) : "";
-  const total = p.totalNuevos + p.fotosNuevas.length;
+  const total = p.totalNuevos + p.fotosNuevas.length + (p.fotosRopaNuevas || []).length;
   return `
     ${errorHTML()}
     <h4 class="rsp-h4 rsp-h4-paso" id="rsp-t-plan" tabindex="-1">${p.vacio ? "Ya tienes todo" : "Esto se agregaría"}</h4>
@@ -314,11 +331,11 @@ function preparar(b) {
   ocupado(b, "Preparando…");
   const mio = turno;
   leerColecciones(false)
-    .then(({ colecciones, deCache }) => fotosDe(colecciones.lugares || {}).then(fotos => {
+    .then(({ colecciones, deCache }) => todasLasFotos(colecciones).then(([fotos, fotosRopa]) => {
       if (mio !== turno) return;
-      const copia = M.armar({ colecciones, fotosLugares: fotos });
+      const copia = M.armar({ colecciones, fotosLugares: fotos, fotosRopa });
       const texto = JSON.stringify(copia);
-      preparada = { texto, nombre: `manolo-copia-${L.hoyLocal()}.json`, bytes: new Blob([texto]).size, total: M.total(copia.conteos), fotos: copia.conteos.fotosLugares, deCache };
+      preparada = { texto, nombre: `manolo-copia-${L.hoyLocal()}.json`, bytes: new Blob([texto]).size, total: M.total(copia.conteos), fotos: copia.conteos.fotosLugares + copia.conteos.fotosRopa, deCache };
     }))
     .catch(err => {
       console.warn("Copia de seguridad: preparar", err);
@@ -355,11 +372,11 @@ function revisar(input) {
       const v = M.validar(copia, f.size);
       if (!v.ok) throw deUsuario(v.error);
       // Lo que ya tienes, desde la nube: así no se pisa nada.
-      return Promise.all([leerColecciones(true), idsFotos()]).then(([actual, fotos]) => {
+      return Promise.all([leerColecciones(true), idsFotos(), idsFotosRopa()]).then(([actual, fotos, fotosRopa]) => {
         if (mio !== turno) return;
         const ids = {};
         Object.keys(actual.colecciones).forEach(k => { ids[k] = Object.keys(actual.colecciones[k]); });
-        revisada = { v, p: M.plan(v, ids, fotos), archivo: f.name || "copia.json", colecciones: actual.colecciones };
+        revisada = { v, p: M.plan(v, ids, fotos, fotosRopa), archivo: f.name || "copia.json", colecciones: actual.colecciones };
         paso = "plan";
       });
     })
@@ -408,19 +425,32 @@ function guardarFotos(v, p, alGuardar) {
     .then(blob => F.guardar({ id: x.id, lugarId: x.lugarId, blob, mini: minis[x.id] || null, ancho: n(x.ancho), alto: n(x.alto), creado: Date.now() }))
     .then(() => alGuardar(x.id), err => console.warn("Copia de seguridad: foto", err))), Promise.resolve());
 }
+// Las fotos de Ropa que faltan (D-146); la miniatura viene en el documento de la prenda.
+function guardarFotosRopa(v, p, alGuardar) {
+  const F = FotosRopa();
+  const nuevas = p.fotosRopaNuevas || [];
+  if (!F || !nuevas.length) return Promise.resolve();
+  const minis = {};
+  const prendas = v.colecciones.ropa || {};
+  Object.keys(prendas).forEach(id => (Array.isArray(prendas[id].fotos) ? prendas[id].fotos : []).forEach(x => { if (x && x.id && typeof x.mini === "string" && /^data:image\//.test(x.mini)) minis[x.id] = x.mini; }));
+  const n = x => (Number.isFinite(x) && x > 0 ? Math.round(x) : 0);
+  return nuevas.reduce((prom, x) => prom.then(() => F.deDataUrl(x.datos)
+    .then(blob => F.guardar({ id: x.id, grupoId: x.grupoId, clase: x.clase || "prenda", blob, mini: minis[x.id] || null, ancho: n(x.ancho), alto: n(x.alto), creado: Date.now() }))
+    .then(() => alGuardar(x.id), err => console.warn("Copia de seguridad: foto de Ropa", err))), Promise.resolve());
+}
 function restaurar() {
   if (!revisada || trabajando) return;
   const { v, p, archivo, colecciones } = revisada;
   trabajando = true;
   error = "";
-  const agregados = [], fotos = [];
+  const agregados = [], fotos = [], fotosRopa = [];
   let pendiente = false;
-  avance = { fase: "copia", hechos: 0, total: p.totalNuevos + p.fotosNuevas.length };
+  avance = { fase: "copia", hechos: 0, total: p.totalNuevos + p.fotosNuevas.length + (p.fotosRopaNuevas || []).length };
   paso = "agregando";
   pintar("#rsp-t-avance");
   // 1. Primero la copia automática de lo que tienes ahora. Si falla, no se cambia nada.
-  fotosDe(colecciones.lugares || {})
-    .then(fotosAct => guardarAuto(M.armar({ colecciones, fotosLugares: fotosAct }), `Antes de restaurar «${archivo}»`))
+  todasLasFotos(colecciones)
+    .then(([fotosAct, fotosRopaAct]) => guardarAuto(M.armar({ colecciones, fotosLugares: fotosAct, fotosRopa: fotosRopaAct }), `Antes de restaurar «${archivo}»`))
     .catch(err => { console.warn("Copia de seguridad: copia automática", err); throw deUsuario("No pude guardar la copia automática en este teléfono (¿poco espacio?), así que no cambié nada."); })
     // 2. Recién ahora, solo lo que falta.
     .then(() => {
@@ -436,12 +466,13 @@ function restaurar() {
     .then(() => {
       avance.fase = "fotos";
       actualizarAvance();
-      return guardarFotos(v, p, id => { fotos.push(id); avance.hechos = agregados.length + fotos.length; actualizarAvance(); });
+      return guardarFotos(v, p, id => { fotos.push(id); avance.hechos = agregados.length + fotos.length; actualizarAvance(); })
+        .then(() => guardarFotosRopa(v, p, id => { fotosRopa.push(id); avance.hechos = agregados.length + fotos.length + fotosRopa.length; actualizarAvance(); }));
     })
     .then(() => {
       trabajando = false;
       revisada = null;
-      ultimo = { agregados, fotos, resumen: M.resumen(p) || "lo que faltaba", pendiente, deshecho: false };
+      ultimo = { agregados, fotos, fotosRopa, resumen: M.resumen(p) || "lo que faltaba", pendiente, deshecho: false };
       cargarAutos();
       if (h && h.abierta()) { paso = "listo"; pintar("#rsp-t-listo"); }
       else { paso = "inicio"; ultimo = null; aviso(`Copia restaurada: agregué ${M.resumen(p) || "lo que faltaba"}.`); }
@@ -473,6 +504,7 @@ function deshacer(b) {
     return conTope(bt.commit());
   }), Promise.resolve())
     .then(() => { const F = Fotos(); return F ? Promise.all(r.fotos.map(id => F.borrar(id).catch(() => {}))) : null; })
+    .then(() => { const F = FotosRopa(); return F ? Promise.all((r.fotosRopa || []).map(id => F.borrar(id).catch(() => {}))) : null; })
     .then(() => { r.deshecho = true; aviso("Listo: quité lo que había agregado."); })
     .catch(err => { console.warn("Copia de seguridad: deshacer", err); error = "No pude deshacer. Revisa tu conexión e intenta de nuevo."; })
     .then(() => { trabajando = false; pintar("#rsp-t-listo"); });

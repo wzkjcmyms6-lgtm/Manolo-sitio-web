@@ -2169,3 +2169,29 @@ reglas (sin IA, siempre igual). (7) **Datos solo aditivos**: `ropa`,
 sin gastar**: un puente falso con respuestas inventadas; una prueba real
 corta al final, con el OK del dueño.
 
+**D-146 (2026-11-22) · Ropa, fase 1: el ropero (sin IA).** Sección Ropa
+colgada de Inicio con el ropero y la ficha de cada prenda; agregar varias
+fotos seguidas, una prenda por foto. (1) **El color sale de la foto en el
+teléfono**, sin IA y sin internet: cada punto de una copia chica (48 px) va
+al color más parecido de una paleta de 29 colores con nombre (distancia en
+el espacio Lab); lo que domina el borde es el fondo y no cuenta (salvo que
+la prenda sea del mismo color); el centro pesa más; las sombras de un mismo
+color se juntan. Siempre se puede corregir (hasta 3 colores, el primero es
+el principal). (2) **El nombre de la prenda concuerda**: tipo + color en su
+forma ("Polera blanca", "Zapatillas negras", "Jean azul"). (3) **Fotos**:
+`js/lugares-fotos.js` pasa a ser una fábrica (`FotosLocales.crear`); Lugares
+no cambia; Ropa usa su base `manolo-ropa` (registros con `grupoId` y
+`clase`) y guarda además una **mediana de 480 px** para la grilla (con 150
+prendas, decodificar fotos de 1200 px podría llenar la memoria del iPhone);
+si falta (una foto restaurada), se hace sola la primera vez. (4) **"Me la puse hoy"** en la ficha anota el día en
+`ropa_usos/{fecha}` (`prendas` con arrayUnion): de ahí salen las veces, la
+última y el costo por uso; en la fase 4 lo anotará también "Me lo pongo".
+(5) **Estados**: activa, para lavar, ya no la tengo (con su fecha; su
+historial queda) y borrar con Deshacer. (6) **Copia de seguridad**: suma
+`ropa`, `ropa_usos` y `fotosRopa` (campo nuevo del archivo; las copias
+viejas siguen sirviendo). (7) Pruebas: `npm test` → 771; suite
+`ropa` (126 comprobaciones: 390 y 320 px, la compu, copia y
+restauración); `lugares`, `respaldo` y `regresion` bien; Lighthouse 100 en
+accesibilidad y buenas prácticas en el ropero, la ficha, agregar y un
+filtro, en oscuro y en claro.
+

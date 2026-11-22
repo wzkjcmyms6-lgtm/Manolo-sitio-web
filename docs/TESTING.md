@@ -1,6 +1,18 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-22 (Ropa, fase 1, D-146): `npm test` → **771 pruebas**. Nuevo
+  `ropa-motor` (el color de una foto sin contar el fondo, el nombre que
+  concuerda, normalizar, revisar, usos, costo por uso, buscar, filtrar,
+  ordenar) y la copia con las fotos de Ropa en `respaldo-motor`. Nueva suite
+  de pantalla `ropa` (126 comprobaciones): Inicio, vacío, dos fotos de
+  una vez con su color, errores, sin foto y "Otro", grupos, filtros, buscar,
+  ordenar, la ficha (me la puse hoy, para lavar, editar con precio, ya no la
+  tengo y volver, borrar con Deshacer), las fotos en el teléfono, la copia y
+  restaurarla en un teléfono nuevo; 390 y 320 px y la compu. `lugares`,
+  `respaldo` y `regresion` bien. Lighthouse (`scratchpad/lh/correr5.mjs`):
+  100 en accesibilidad y buenas prácticas en las 8 pantallas (oscuro y
+  claro).
 - 2026-11-16 (Tu semana, Tu año y Bici: control final, D-144): `npm test`
   → **759 pruebas**; pruebas de pantalla: 39 de 40 grupos bien
   y 3.437 comprobaciones (solo falla la medida de tiempo de la
@@ -482,6 +494,15 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Ropa (2026-11)**
+- [ ] Inicio › Ropa › "+" › "Sacar o elegir fotos": elige 3 o 4 fotos a la
+  vez. En cada una, mira que el color esté bien y elige qué es.
+- [ ] "Guardar y seguir" hasta la última; mira el ropero con sus nombres.
+- [ ] Prueba los grupos, el filtro de color y buscar por la marca.
+- [ ] Abre una prenda: "Me la puse hoy", "Para lavar" y "Editar" (ponle el
+  precio y mira cuánto te sale cada vez).
+- [ ] Saca una foto con la cámara desde el "+" (no de la galería).
 
 **Bici (2026-11)**
 - [ ] Bicis: agrega tu bici con los km que ya tiene y pónsela a tus

@@ -3486,6 +3486,11 @@ html[data-modo="claro"] {
   color: var(--muted);
 }
 
+/* ---- css/ropa.css ---- */
+:where(html[data-modo="claro"]) .lug-chip.is-activo .ro-n {
+  color: inherit;
+}
+
 /* ---- css/ej-calendario.css ---- */
 :where(html[data-modo="claro"]) .ejc-tarjeta {
   background: #ffffff;

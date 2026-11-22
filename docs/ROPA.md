@@ -168,6 +168,38 @@ permitidos):
 | 6 | Extras: lo más y lo menos usado, colores, costo por uso, "Tu semana", "Tu año", Inicio |
 | 7 | Revisión final: todas las pruebas, Lighthouse, la prueba real de la IA y la lista para el iPhone |
 
+## Hecho en la fase 1 (D-146)
+- `js/ropa-motor.js` (sin pantalla, `tests/ropa-motor.test.js`): grupos y tipos
+  (con su género, para que el color concuerde: "Zapatillas negras"), 29
+  colores con nombre en español y su familia, **el color de una foto** (cada
+  punto al color más parecido de la paleta; el fondo —lo que domina el borde—
+  no cuenta salvo que la prenda sea del mismo color; el centro pesa más; las
+  sombras de un mismo color se juntan), normalizar, revisar, las veces que te
+  la pusiste, costo por uso, buscar sin tildes, filtrar, ordenar y la fecha
+  larga ("domingo 22 de noviembre").
+- `js/ropa-datos.js`: escucha `ropa` y `ropa_usos`; guarda, cambia el estado,
+  borra y restaura; "me la puse" con `arrayUnion` / `arrayRemove` en el día.
+  Las fotos con `FotosLocales.crear({ base: "manolo-ropa", campo: "grupoId" })`;
+  los borradores de más de una hora se limpian solos.
+- `js/lugares-fotos.js` ahora es una fábrica (`FotosLocales.crear`); Lugares
+  sigue igual (misma base, mismo índice, mismas funciones). Ropa guarda además
+  una mediana de 480 px para la grilla (`url(id, "media")`; si falta, se hace
+  una vez desde la grande).
+- `js/ropa.js`: el ropero (cuántas, buscar, grupos con cuántas hay, chips de
+  color, clima, formalidad, orden y "Para lavar", la grilla con la miniatura
+  al toque y la foto grande cuando se ve, "Ya no las tengo"), la ficha
+  (`#ropa-prenda/{id}`: foto con su forma, datos, cuánto la usas, "Me la puse
+  hoy", para lavar, editar, ya no la tengo / la volví a tener, borrar con
+  Deshacer) y la tarjeta de Inicio.
+- `js/ropa-form.js`: el "+" (varias fotos a la vez o sin foto), una prenda por
+  foto con el color ya puesto, "Guardar y seguir" / "Saltar esta", "Otro" para
+  escribir el tipo, colores a mano (hasta 3), "Más datos" (talla, precio,
+  compra, notas), editar y cambiar la foto.
+- Copia de seguridad: `ropa` y `ropa_usos` en las colecciones y `fotosRopa`
+  (las fotos completas) en el archivo; restaurar trae las que faltan. Las
+  copias viejas (sin `fotosRopa`) siguen sirviendo.
+- `css/ropa.css` (`.ro-`); el modo claro sale solo de las variables.
+
 ## Lo que hace el dueño
 - **Fase 0**: crear en Pinterest un tablero **público** (por ejemplo, "Manolo")
   y pasar su usuario de Pinterest y el nombre del tablero.

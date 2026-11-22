@@ -7405,6 +7405,143 @@ body.mov-en-guia { overflow: hidden; }
 #panel-lugares .lug-tabs .fin-tab { min-height: 44px; }
 .lug-exportar { min-height: 44px; }
 
+/* ---- css/ropa.css ---- */
+/* ---------- Ropa (clases .ro-, D-146) ----------
+   Sub-panel de Inicio. Reutiliza .lug-chips / .lug-chip / .lug-fab /
+   .lug-buscar (Lugares), .lib-btn* y .lib-input (Libros), las hojas de
+   lectura-comun y .run-mas-op (Running). Aquí va lo propio. */
+
+#panel-ropa .back-link, #panel-ropa-prenda .back-link { min-height: 44px; }
+.ro-app { padding-bottom: calc(7rem + env(safe-area-inset-bottom)); min-width: 0; max-width: 980px; }
+.rop-app { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); min-width: 0; max-width: 640px; }
+.ro-resumen { margin: -0.6rem 0 0.8rem; color: var(--muted); font-size: 0.9rem; min-height: 1.2em; }
+.ro-sub { font-size: 1.05rem; margin: 0 0 0.5rem; }
+
+/* Grupos: chips con cuántas hay */
+.ro-grupos { margin-bottom: 0.3rem; }
+.ro-n { margin-left: 0.15rem; color: var(--muted); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.lug-chip.is-activo .ro-n { color: inherit; }
+
+/* La grilla de prendas */
+.ro-grilla { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; }
+@media (min-width: 640px) { .ro-grilla { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.9rem; } }
+.ro-card {
+  position: relative; display: flex; flex-direction: column; gap: 0.3rem; height: 100%; padding: 0.45rem 0.45rem 0.65rem;
+  border-radius: var(--radio-caja); border: 1px solid var(--border); background: var(--surface); color: var(--ink);
+  text-decoration: none; transition: transform var(--anim-rapida) ease, border-color var(--anim-rapida) ease; box-sizing: border-box;
+}
+.ro-card:active { transform: scale(0.985); }
+.ro-card:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.ro-foto { display: block; aspect-ratio: 1 / 1; border-radius: 10px; overflow: hidden; background: var(--bg-soft); }
+.ro-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ro-foto.is-vacia, .ro-ficha-foto.is-vacia { display: grid; place-items: center; color: var(--muted); }
+.ro-foto.is-vacia [data-icon] { width: 38%; height: 38%; }
+.ro-card-t { padding: 0 0.25rem; font-weight: 700; font-size: 0.92rem; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+.ro-card-m { display: flex; align-items: center; gap: 0.4rem; padding: 0 0.25rem; color: var(--muted); font-size: 0.8rem; }
+.ro-puntos { display: inline-flex; gap: 3px; }
+.ro-puntos i { width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--border); display: block; }
+.ro-tag {
+  position: absolute; top: 0.8rem; left: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.55rem 0.2rem 0.4rem;
+  border-radius: var(--radio-pildora); background: var(--bg); color: var(--ink); font-size: 0.75rem; font-weight: 600; border: 1px solid var(--border);
+}
+.ro-tag [data-icon] { width: 14px; height: 14px; display: inline-flex; }
+.ro-card.is-lavar .ro-foto img { opacity: 0.6; }
+.ro-pie { margin-top: 1.1rem; text-align: center; }
+.ro-fuera-btn { min-height: 44px; padding: 0 0.8rem; color: var(--muted); font-size: 0.9rem; }
+.ro-vacio .lib-btn { margin-top: 0.5rem; }
+
+/* Hojas de filtros: una lista de opciones */
+.ro-ops { display: flex; flex-direction: column; gap: 0.45rem; padding-bottom: 1rem; }
+.ro-op {
+  display: flex; align-items: center; gap: 0.7rem; min-height: 50px; padding: 0 1rem; border-radius: 14px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 0.98rem; text-align: left; cursor: pointer; touch-action: manipulation;
+}
+.ro-op.is-sel { border-color: var(--accent-2); color: var(--accent-2); font-weight: 700; }
+.ro-muestra { flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border); display: inline-block; }
+
+/* La ficha */
+.ro-ficha-foto { display: block; margin: 0 auto 1rem; max-width: 100%; max-height: 70vh; aspect-ratio: 1 / 1; border-radius: var(--radio-tarjeta); overflow: hidden; background: var(--bg-soft); }
+.ro-ficha-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ro-ficha-foto.is-vacia { aspect-ratio: 2 / 1; }
+.ro-ficha-foto.is-vacia [data-icon] { width: 56px; height: 56px; }
+h1.page-title.ro-ficha-t { margin-bottom: 0.2rem; font-size: 1.7rem; overflow-wrap: anywhere; }
+.ro-ficha-sub { margin: 0 0 0.8rem; color: var(--muted); }
+.ro-lavar-t { color: var(--estado-aviso); }
+.ro-infos { list-style: none; margin: 0 0 1rem; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.ro-info { display: inline-flex; align-items: center; gap: 0.35rem; min-height: 32px; padding: 0 0.75rem; border-radius: var(--radio-pildora); border: 1px solid var(--border); background: var(--surface); font-size: 0.86rem; }
+.ro-info .ro-muestra { width: 14px; height: 14px; }
+.ro-puse {
+  width: 100%; min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin: 0 0 1rem;
+  border-radius: var(--radio-pildora); border: 1px solid var(--border); background: var(--surface); color: var(--ink);
+  font: inherit; font-weight: 700; font-size: 1rem; cursor: pointer; touch-action: manipulation;
+}
+.ro-puse [data-icon] { width: 20px; height: 20px; display: inline-flex; color: var(--muted); }
+.ro-puse.is-on { background: var(--estado-ok-fondo); border-color: var(--estado-ok); color: var(--estado-ok); }
+.ro-puse.is-on [data-icon] { color: var(--estado-ok); }
+.ro-uso { margin-bottom: 1rem; }
+.ro-uso-n { margin: 0; font-size: 1rem; }
+.ro-datos { margin: 0 0 1.2rem; display: grid; gap: 0.1rem; }
+.ro-datos > div { display: flex; justify-content: space-between; gap: 1rem; padding: 0.6rem 0; border-bottom: 1px solid var(--border); }
+.ro-datos dt { color: var(--muted); }
+.ro-datos dd { margin: 0; text-align: right; overflow-wrap: anywhere; min-width: 0; }
+.ro-acciones { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.ro-acciones .lib-btn-sec, .ro-acciones .lib-btn-peligro { display: inline-flex; align-items: center; gap: 0.4rem; flex: 1 1 auto; justify-content: center; min-height: 48px; }
+.ro-acciones [data-icon] { width: 18px; height: 18px; display: inline-flex; }
+
+/* El "+" */
+.ro-mas-ops .run-mas-op { width: 100%; box-sizing: border-box; }
+.ro-mas-foto { position: relative; }
+.ro-mas-foto:has(input:focus-visible) { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+
+/* El formulario */
+.ro-form { display: flex; flex-direction: column; gap: 1rem; padding-bottom: 1rem; }
+.ro-form-foto { align-self: center; width: min(220px, 60%); aspect-ratio: 1 / 1; border-radius: 16px; overflow: hidden; background: var(--bg-soft); }
+.ro-form-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ro-campo { margin: 0; padding: 0; border: 0; min-width: 0; display: flex; flex-direction: column; gap: 0.45rem; }
+.ro-campo legend { padding: 0; margin-bottom: 0.45rem; color: var(--muted); font-size: 0.85rem; }
+.ro-opciones { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.ro-op-chip { position: relative; display: inline-flex; cursor: pointer; touch-action: manipulation; }
+.ro-op-chip input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.ro-op-chip span {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 0.9rem; border-radius: var(--radio-pildora);
+  border: 1px solid var(--border); background: var(--surface); color: var(--ink); font-size: 0.9rem; white-space: nowrap;
+}
+.ro-op-chip input:checked + span { border-color: var(--accent-2); background: rgba(255, 184, 77, 0.12); color: var(--accent-2); font-weight: 700; }
+.ro-op-chip input:focus-visible + span { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.ro-formal .ro-op-chip span { min-width: 44px; justify-content: center; padding: 0; font-variant-numeric: tabular-nums; }
+.ro-otro { margin-top: 0.2rem; }
+.ro-colores { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+.ro-color-sel {
+  display: inline-flex; align-items: center; gap: 0.4rem; min-height: 44px; padding: 0 0.2rem 0 0.75rem; border-radius: var(--radio-pildora);
+  border: 1px solid var(--border); background: var(--surface); font-size: 0.9rem;
+}
+.ro-color-sel small { color: var(--muted); }
+.ro-quitar { width: 44px; height: 40px; display: inline-grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; }
+.ro-quitar [data-icon] { width: 16px; height: 16px; display: inline-flex; }
+.ro-color-mas [data-icon] { width: 16px; height: 16px; display: inline-flex; }
+.ro-paleta[hidden] { display: none; }
+.ro-paleta { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 0.4rem; margin-top: 0.3rem; }
+.ro-color-op {
+  display: flex; align-items: center; gap: 0.45rem; min-height: 44px; padding: 0 0.6rem; border-radius: 12px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 0.82rem; text-align: left; cursor: pointer; min-width: 0;
+}
+.ro-color-op i { flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border); }
+.ro-color-op span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ro-de-foto { margin: 0; }
+.ro-mas { border: 1px solid var(--border); border-radius: 14px; padding: 0 0.9rem; }
+.ro-mas summary { min-height: 48px; display: flex; align-items: center; cursor: pointer; font-weight: 600; }
+.ro-mas[open] { padding-bottom: 0.9rem; }
+.ro-mas[open] summary { margin-bottom: 0.4rem; }
+.ro-mas .rd-campo + .rd-campo { margin-top: 0.7rem; }
+.ro-cambiar-foto { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; position: relative; }
+.ro-cambiar-foto [data-icon] { width: 18px; height: 18px; display: inline-flex; }
+.ro-cambiar-foto:has(input:focus-visible) { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.ro-form-botones { display: flex; gap: 0.6rem; position: sticky; bottom: 0; margin: 0 -1px; padding: 0.6rem 1px calc(0.4rem + env(safe-area-inset-bottom)); background: var(--bg-soft); }
+.ro-form-botones > * { flex: 1 1 0; }
+@media (max-width: 360px) { .ro-form-botones .lib-btn, .ro-form-botones .lib-btn-sec { padding-left: 0.6rem; padding-right: 0.6rem; font-size: 0.88rem; white-space: nowrap; } }
+.ro-preparando { text-align: center; padding: 2rem 0; }
+.ro-hoja button:focus-visible, .ro-hoja a:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+
 /* ---- css/respaldo.css ---- */
 /* ---------- Copia de seguridad de todo Manolo (D-118) ----------
    Hoja de js/respaldo.js. Solo usa las variables de :root (css/style.css):

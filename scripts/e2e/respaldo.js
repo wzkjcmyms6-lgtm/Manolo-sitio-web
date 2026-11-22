@@ -68,7 +68,7 @@ async function cerrarHoja(p) {
   ok(await abierta(p) && /Copia de seguridad/.test(await txt(p, ".rsp-hoja h3")), "abre la hoja «Copia de seguridad»");
   ok(await p.evaluate(() => document.activeElement && document.activeElement.classList.contains("budget-sheet-close")), "el foco queda en la hoja (botón Cerrar)");
   const cuerpo = await txt(p, ".rsp-hoja .lib-hoja-cuerpo");
-  ok(/lugares \(con sus fotos\)/.test(cuerpo) && /Todavía no guardaste una copia/.test(cuerpo), "explica qué incluye y que todavía no hay copias");
+  ok(/lugares y ropa \(con sus fotos\)/.test(cuerpo) && /Todavía no guardaste una copia/.test(cuerpo), "explica qué incluye y que todavía no hay copias");
   ok(/Nunca borra ni cambia lo que ya tienes/.test(cuerpo), "dice claro que restaurar nunca borra ni cambia nada");
   await captura(p, "respaldo-inicio-375.png");
 
@@ -88,7 +88,7 @@ async function cerrarHoja(p) {
   const copia = JSON.parse(fs.readFileSync(archivoCopia, "utf8"));
   ok(dl.suggestedFilename() === "manolo-copia-2026-11-15.json", `nombre del archivo con la fecha (${dl.suggestedFilename()})`);
   ok(copia.app === "Manolo" && copia.tipo === "copia-completa" && copia.version === 1, "archivo de copia completa de Manolo (con versión)");
-  ok(Object.keys(copia.colecciones).length === 21 && copia.colecciones.lugares.l1.nombre === "Doña Rosa" && copia.colecciones.finanzas.f2.montoCent === 4550 && copia.colecciones.libros.b1.titulo === "El principito", "trae todas las secciones con tus datos (también Lugares)");
+  ok(Object.keys(copia.colecciones).length === require("../../js/respaldo-motor.js").COLECCIONES.length && copia.colecciones.lugares.l1.nombre === "Doña Rosa" && copia.colecciones.finanzas.f2.montoCent === 4550 && copia.colecciones.libros.b1.titulo === "El principito", "trae todas las secciones con tus datos (también Lugares)");
   ok(copia.fotosLugares.length === 1 && copia.fotosLugares[0].id === "fx1" && /^data:image\/jpeg;base64,/.test(copia.fotosLugares[0].datos), "incluye la foto completa de Lugares");
   ok(copia.conteos.finanzas === 2 && copia.conteos.fotosLugares === 1, "con el conteo de cada sección");
   await p.waitForTimeout(300);

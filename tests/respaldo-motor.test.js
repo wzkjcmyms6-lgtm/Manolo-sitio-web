@@ -160,3 +160,32 @@ test("ninguna colección tuya queda fuera de la copia", () => {
   // Cada una con su nombre en plural y en singular (para el resumen).
   R.COLECCIONES.forEach(c => assert.ok(c.nombre && c.uno && c.nombre !== c.uno, c.id));
 });
+
+// Ropa (D-146): sus colecciones y sus fotos (que viven en el teléfono) entran
+// en la copia; restaurar solo agrega las que faltan.
+test("la copia lleva tu ropa y sus fotos; restaurar suma solo las que faltan", () => {
+  const c = R.armar({
+    colecciones: { ropa: { p1: { grupo: "arriba", tipo: "Polera", fotos: [{ id: "r1", mini: FOTO }] } }, ropa_usos: { "2026-11-20": { prendas: ["p1"] } } },
+    fotosRopa: [{ id: "r1", grupoId: "p1", clase: "prenda", ancho: 900, alto: 1200, datos: FOTO }, { id: "mala", grupoId: "p1", datos: "no" }, { id: "sin", datos: FOTO }]
+  }, Date.UTC(2026, 10, 22));
+  assert.equal(c.conteos.ropa, 1);
+  assert.equal(c.conteos.ropa_usos, 1);
+  assert.equal(c.conteos.fotosRopa, 1, "las fotos dañadas o sin prenda no entran");
+  assert.deepEqual(c.fotosRopa.map(f => f.id), ["r1"]);
+  const v = R.validar(JSON.parse(JSON.stringify(Object.assign({}, c, { fotosRopa: c.fotosRopa.concat([{ id: "x", grupoId: "p1", datos: "javascript:alert(1)" }]) }))));
+  assert.ok(v.ok);
+  assert.equal(v.fotosRopa.length, 1);
+  assert.equal(v.danados, 1);
+  // Ya tenías la prenda pero no su foto: entra solo la foto.
+  const p = R.plan(v, { ropa: ["p1"] }, [], []);
+  assert.equal(p.totalNuevos, 1, "solo el día anotado es nuevo");
+  assert.deepEqual(p.fotosRopaNuevas.map(f => f.id), ["r1"]);
+  assert.match(R.resumen(p), /1 foto de Ropa/);
+  // Con la foto ya en el teléfono, no hay nada de Ropa para agregar.
+  const p2 = R.plan(v, { ropa: ["p1"], ropa_usos: ["2026-11-20"] }, [], new Set(["r1"]));
+  assert.ok(p2.vacio);
+  // Una copia vieja (sin fotosRopa) sigue sirviendo.
+  const vieja = R.validar({ app: "Manolo", tipo: R.TIPO, version: 1, colecciones: { lugares: {} } });
+  assert.ok(vieja.ok);
+  assert.deepEqual(vieja.fotosRopa, []);
+});
