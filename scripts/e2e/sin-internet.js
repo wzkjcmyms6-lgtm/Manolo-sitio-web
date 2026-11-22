@@ -70,7 +70,7 @@ const txt = (p, sel) => p.$eval(sel, el => el.innerText.replace(/\s+/g, " ").tri
   await ctx.setOffline(true);
   await p.reload();
   await p.waitForTimeout(1500);
-  ok(await p.isVisible("#panel-inicio") && (await p.$$(".card-grid-home .card")).length === 11, "Inicio abre con sus 11 tarjetas");
+  ok(await p.isVisible("#panel-inicio") && (await p.$$(".card-grid-home .card")).length === 12, "Inicio abre con sus 12 tarjetas");
   await p.click('a.card[href="#lugares"]');
   await p.waitForTimeout(700);
   ok(/Doña Rosa/.test(await txt(p, "#lug-lista")), "Lugares abre con tus lugares");
