@@ -69,6 +69,7 @@ function limpio(d) {
     compra: d.compra || "", notas: String(d.notas || "").trim().slice(0, 500)
   };
   if (Array.isArray(d.fotos)) o.fotos = d.fotos.map(f => ({ id: f.id, mini: f.mini || "", ancho: f.ancho || 0, alto: f.alto || 0 }));
+  if (d.ia) o.ia = { fecha: d.ia };   // la llenó la IA (D-147)
   return o;
 }
 // Nueva (id null) o editada. → Promise<id>
@@ -88,6 +89,10 @@ function estado(id, e) {
   return col("ropa").doc(id).update(cambio);
 }
 function borrar(id) { return col("ropa").doc(id).delete(); }
+// Lo que la IA llenó en una prenda que ya tenías (solo lo que faltaba, D-147).
+function completar(id, cambios) {
+  return col("ropa").doc(id).update(Object.assign({}, cambios, { ia: { fecha: hoy() }, editado: Date.now() }));
+}
 function restaurar(id, doc) { return col("ropa").doc(id).set(doc); }
 // Me la puse (o no) en una fecha.
 function meLaPuse(id, fecha, si) {
@@ -99,6 +104,6 @@ const puestaHoy = id => !!(usosDocs[hoy()] && Array.isArray(usosDocs[hoy()].pren
 window.RopaDatos = {
   lista: () => prendas, una: id => prendas.find(p => p.id === id) || null, crudo: id => crudos.get(id) || null,
   cargada: () => cargada, error: () => error, usos: () => usosMap, usosDe: id => usosMap.get(id) || { n: 0, ultima: "", fechas: [] },
-  usosDocs: () => usosDocs, al: fn => { oyentes.push(fn); }, guardar, estado, borrar, restaurar, meLaPuse, puestaHoy, hoy, Fotos
+  usosDocs: () => usosDocs, al: fn => { oyentes.push(fn); }, guardar, estado, borrar, completar, restaurar, meLaPuse, puestaHoy, hoy, Fotos
 };
 })();

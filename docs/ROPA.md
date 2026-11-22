@@ -200,6 +200,28 @@ permitidos):
   copias viejas (sin `fotosRopa`) siguen sirviendo.
 - `css/ropa.css` (`.ro-`); el modo claro sale solo de las variables.
 
+## Hecho en la fase 2 (D-147): lista en el código, falta conectarla
+- `puente/` (Worker de Cloudflare, `puente/README.md`): revisa el token de
+  Firebase sin dependencias (firma RS256 con las llaves públicas de Google,
+  proyecto, emisor y vencimiento), deja pasar solo a `USUARIOS`, CORS solo
+  para el sitio, llama a la IA con la biblioteca oficial (`@anthropic-ai/sdk`)
+  con esfuerzo bajo, **respuesta con esquema fijo** (las mismas listas que la
+  app; una prueba revisa que sigan iguales) y el respaldo del servidor si el
+  modelo se niega (`fallbacks: "default"`), suma el gasto del mes en KV y
+  corta en el tope. La clave, el modelo y los usuarios son secretos de
+  Cloudflare.
+- `js/ropa-ia.js`: habla con el puente con el token de la sesión; a la IA
+  solo le llega la foto.
+- Agregar: mientras la IA mira la foto, "Llenar a mano"; la siguiente foto ya
+  se va mirando; "Lo llenó la IA: revísalo"; avisa si hay varias prendas o si
+  no ve ropa; si la IA no puede (tope, crédito, sin internet), lo dice y queda
+  el color de la foto. Se guarda `ia: { fecha }`.
+- La ficha: "Describir con IA" abre Editar con lo que vio la IA.
+- `js/ropa-ajustes.js` (`#ropa-ajustes`, el engranaje): conectada o no, tu
+  código de usuario para conectarla, el gasto del mes con su tope y "Describir
+  con IA las que cargaste antes" (llena solo lo que falta). Quien no es el
+  dueño usa Ropa sin IA.
+
 ## Lo que hace el dueño
 - **Fase 0**: crear en Pinterest un tablero **público** (por ejemplo, "Manolo")
   y pasar su usuario de Pinterest y el nombre del tablero.

@@ -3487,6 +3487,9 @@ html[data-modo="claro"] {
 }
 
 /* ---- css/ropa.css ---- */
+:where(html[data-modo="claro"]) body.in-ropa .topbar-ajustes[data-engranaje="ropa"] {
+  background: rgba(0, 0, 0, 0.028);
+}
 :where(html[data-modo="claro"]) .lug-chip.is-activo .ro-n {
   color: inherit;
 }

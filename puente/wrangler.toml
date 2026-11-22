@@ -1,0 +1,15 @@
+# Puente de Manolo (D-147). Secretos en Cloudflare (no en el repo):
+# ANTHROPIC_API_KEY (lo pega el dueño), MODELO y USUARIOS.
+name = "manolo-puente"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+keep_vars = true
+
+[vars]
+FIREBASE_PROJECT = "manolo-4c57b"
+ORIGENES = "https://wzkjcmyms6-lgtm.github.io"
+
+# La cuenta del gasto del mes y el tope. El id se completa al crear el KV.
+[[kv_namespaces]]
+binding = "GASTO"
+id = "PENDIENTE"

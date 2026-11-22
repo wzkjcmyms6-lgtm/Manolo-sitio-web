@@ -165,7 +165,7 @@ const ID_CLIMAS = CLIMAS.map(c => c[0]), ID_ESTILOS = ESTILOS.map(e => e[0]), ID
 function normalizar(id, d) {
   const x = d || {};
   const grupo = GRUPO[x.grupo] ? x.grupo : "arriba";
-  const colores = (Array.isArray(x.colores) ? x.colores : []).filter(c => c && COLOR[c.id]).slice(0, 3)
+  const colores = (Array.isArray(x.colores) ? x.colores : []).map(c => (typeof c === "string" ? { id: c } : c)).filter(c => c && COLOR[c.id]).slice(0, 3)
     .map(c => ({ id: c.id, nombre: nombreColor(c.id), hex: COLOR[c.id].hex, peso: typeof c.peso === "number" ? c.peso : null }));
   const f = Number(x.formalidad);
   return {

@@ -1,6 +1,20 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-22 (Ropa, fase 2, D-147: la IA, lista para conectar): `npm test` →
+  **778 pruebas** (nuevo `puente-logica`: el token de Firebase firmado con
+  una llave hecha en la prueba —el bueno pasa; vencido, de otro proyecto,
+  con otra llave, sin firma o con el usuario cambiado, no—, usuarios, CORS,
+  costo, mes de Bolivia, tope, esquema e instrucciones, limpiar lo que
+  contesta la IA y la foto; y que sus listas sean las de la app). Suite
+  `ropa` con la fase 2 (159 comprobaciones en total) con un puente de
+  mentira (rutas de Playwright, opción nueva `rutas` de `abrir`): sin puente,
+  conectada con gasto y tope, agregar con la IA (esperar, la siguiente ya
+  mirada, varias prendas), la IA no puede (tope), "Llenar a mano", "Describir
+  con IA" en la ficha, las que cargaste antes (solo lo que falta) y quien no
+  es el dueño. Lighthouse (`scratchpad/lh/correr5.mjs`, con un puente de
+  mentira en su servidor): 100 en accesibilidad y buenas prácticas en las 12
+  pantallas de Ropa.
 - 2026-11-22 (Ropa, fase 1, D-146): `npm test` → **771 pruebas**. Nuevo
   `ropa-motor` (el color de una foto sin contar el fondo, el nombre que
   concuerda, normalizar, revisar, usos, costo por uso, buscar, filtrar,
@@ -503,6 +517,10 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] Abre una prenda: "Me la puse hoy", "Para lavar" y "Editar" (ponle el
   precio y mira cuánto te sale cada vez).
 - [ ] Saca una foto con la cámara desde el "+" (no de la galería).
+- [ ] (Con la IA conectada) Agrega 2 o 3 fotos: mira que la IA llene todo y
+  revísalo antes de guardar. En una prenda vieja: "Describir con IA".
+- [ ] (Con la IA conectada) Ajustes de Ropa: el gasto del mes y cambia el
+  tope.
 
 **Bici (2026-11)**
 - [ ] Bicis: agrega tu bici con los km que ya tiene y pónsela a tus

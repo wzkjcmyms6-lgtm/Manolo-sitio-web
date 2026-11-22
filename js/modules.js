@@ -54,6 +54,7 @@ const SUB_PANELS = [
   { hash: "lugares", parent: "inicio" },
   { hash: "ropa", parent: "inicio" },
   { hash: "ropa-prenda", parent: "ropa" },
+  { hash: "ropa-ajustes", parent: "ropa" },
   { hash: "semana", parent: "inicio" },
   { hash: "fin-presupuesto", parent: "finanzas" },
   { hash: "fin-movimientos", parent: "finanzas" },
@@ -189,6 +190,7 @@ function showPanel(hash) {
   document.body.classList.toggle("has-home-btn", !!grupo);
   document.body.classList.toggle("in-running", grupo === "running");
   document.body.classList.toggle("in-bici", grupo === "bicicleta");
+  document.body.classList.toggle("in-ropa", hash === "ropa" || hash.startsWith("ropa-"));
   // Running y Bicicleta tampoco llevan versículo: la pantalla es para la actividad.
   // Inversiones tampoco (pedido del dueño 2026-10-28): es una sección aparte.
   // Libros y Biblia tampoco (pedido del dueño 2026-10-29), ni Medir tiempos ni Movilidad.

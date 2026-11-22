@@ -1,0 +1,123 @@
+// ---------- Ropa: Ajustes (#ropa-ajustes, el engranaje; D-147) ----------
+// La IA: si está conectada, el gasto del mes con su tope (se puede cambiar) y
+// "Describir con IA" las prendas que cargaste antes (llena solo lo que falta,
+// sin cambiar lo que pusiste). Si no está conectada, tu código de usuario
+// para conectarla.
+(function () {
+"use strict";
+const M = window.RopaMotor, D = window.RopaDatos, IA = window.RopaIA, A = () => window.RopaApp;
+const app = document.getElementById("roa-app");
+if (!M || !D || !IA || !app || !window.Lectura) return;
+const { esc } = window.Lectura;
+const visible = () => location.hash.replace(/^#/, "").split("/")[0] === "ropa-ajustes";
+const usd = n => `US$ ${(Math.round(n * 100) / 100).toLocaleString("es-BO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+let tarea = null;   // describiendo varias: { total, hechas, bien, mal, cancelar }
+let aviso = "";
+
+// Las prendas con foto que la IA todavía no vio.
+const sinIA = () => D.lista().filter(p => p.estado !== "fuera" && p.fotos.length && !(D.crudo(p.id) || {}).ia);
+
+function pintar() {
+  if (!visible()) return;
+  const e = IA.estado();
+  const uid = typeof currentUser !== "undefined" && currentUser ? currentUser.uid : "";
+  let ia;
+  if (!IA.puente()) {
+    ia = `<p>La IA todavía no está conectada. Cuando la conectes, describirá cada prenda desde su foto.</p>
+      ${uid ? `<p class="rd-nota">Tu código para conectarla:</p><p class="roa-codigo"><code>${esc(uid)}</code><button type="button" class="lib-btn-sec lib-btn-chico" data-roa="copiar">Copiar</button></p>` : ""}`;
+  } else if (!e) {
+    ia = `<p class="rd-nota">Revisando la conexión con la IA…</p><button type="button" class="lib-btn-sec lib-btn-chico" data-roa="reintentar">Reintentar</button>`;
+  } else if (!e.permitido) {
+    ia = `<p>La IA de Ropa es solo para el dueño de Manolo.</p>${uid ? `<p class="rd-nota">Tu código: <code>${esc(uid)}</code></p>` : ""}`;
+  } else if (!e.lista) {
+    ia = `<p>Falta la clave de la IA en Cloudflare: el puente está listo, pero sin la clave no puede describir.</p>`;
+  } else {
+    const g = e.gasto || { usd: 0, tope: 8, veces: 0 };
+    const pct = Math.min(100, Math.round((g.usd / (g.tope || 1)) * 100));
+    const n = sinIA().length;
+    ia = `<p class="roa-ok"><span data-icon="check" aria-hidden="true"></span>La IA está conectada.</p>
+      <div class="roa-gasto">
+        <p><b>Este mes: ${usd(g.usd)}</b> de ${usd(g.tope)}${g.veces ? ` · ${g.veces} ${g.veces === 1 ? "vez" : "veces"}` : ""}</p>
+        <div class="rp-zap-barra roa-barra" role="img" aria-label="Llevas el ${pct} % del tope del mes"><i style="width:${pct}%"></i></div>
+        <p class="rd-nota">Al llegar al tope, la IA se pausa hasta el mes que viene.</p>
+      </div>
+      <form class="roa-tope" id="roa-tope" novalidate>
+        <label class="rd-campo">Tope del mes (US$)<input class="lib-input" name="tope" inputmode="decimal" value="${esc(String(g.tope))}"></label>
+        <button type="submit" class="lib-btn-sec">Guardar</button>
+      </form>
+      ${tarea ? `<div class="roa-tarea" role="status"><p><b>Describiendo: ${tarea.hechas} de ${tarea.total}</b></p><div class="rp-zap-barra"><i style="width:${Math.round((tarea.hechas / tarea.total) * 100)}%"></i></div><button type="button" class="lib-btn-sec lib-btn-chico" data-roa="cancelar">Parar</button></div>`
+        : n ? `<button type="button" class="lib-btn roa-todas" data-roa="todas">Describir con IA las ${n === 1 ? "prenda" : `${n} prendas`} que cargaste antes</button>
+               <p class="rd-nota">Llena solo lo que falta; lo que pusiste no cambia. Son unos ${usd(n * 0.03)}.</p>` : ""}`;
+  }
+  app.innerHTML = `${aviso ? `<p class="tmp-ok" role="status">${esc(aviso)}</p>` : ""}
+    <section class="tmp-card roa-ia" aria-labelledby="roa-ia-t"><h2 class="ro-sub" id="roa-ia-t">La IA</h2>${ia}</section>`;
+  if (typeof renderIcons === "function") renderIcons(app);
+}
+
+// Lo que dijo la IA, solo en lo que está vacío.
+function soloLoQueFalta(p, ia) {
+  const c = {};
+  if (!p.colores.length && ia.colores.length) c.colores = ia.colores.map(id => ({ id }));
+  if (!p.estampado && ia.estampado) c.estampado = ia.estampado;
+  if (!p.tela && ia.tela) c.tela = ia.tela;
+  if (!p.estilo.length && ia.estilo.length) c.estilo = ia.estilo;
+  if (!p.clima.length && ia.clima.length) c.clima = ia.clima;
+  if (!p.formalidad && ia.formalidad) c.formalidad = ia.formalidad;
+  if (!p.marca && ia.marca) c.marca = ia.marca;
+  return c;
+}
+async function fotoDe(p) {
+  const f = p.fotos[0];
+  const r = D.Fotos ? await D.Fotos.leer(f.id).catch(() => null) : null;
+  if (r && r.blob) return r.blob;
+  return f.mini ? fetch(f.mini).then(x => x.blob()) : null;
+}
+async function describirTodas() {
+  const lista = sinIA();
+  if (!lista.length || tarea) return;
+  tarea = { total: lista.length, hechas: 0, bien: 0, mal: 0, cancelar: false };
+  aviso = "";
+  pintar();
+  for (const p of lista) {
+    if (tarea.cancelar) break;
+    try {
+      const ia = await IA.describir(await fotoDe(p));
+      await D.completar(p.id, soloLoQueFalta(p, ia));
+      tarea.bien++;
+    } catch (e) {
+      tarea.mal++;
+      if (e && ["tope", "credito", "clave", "falta-clave", "sesion", "permiso", "sin-internet"].includes(e.codigo)) { aviso = e.message; break; }
+    }
+    tarea.hechas++;
+    pintar();
+  }
+  const t = tarea;
+  tarea = null;
+  if (!aviso) aviso = t.bien ? `Listo: la IA describió ${t.bien} ${t.bien === 1 ? "prenda" : "prendas"}${t.mal ? ` (${t.mal} no pudo)` : ""}.` : "La IA no pudo describir ninguna. Intenta de nuevo.";
+  pintar();
+}
+
+app.addEventListener("click", e => {
+  const b = e.target.closest("[data-roa]");
+  if (!b) return;
+  const a = b.dataset.roa;
+  if (a === "copiar") {
+    const uid = currentUser ? currentUser.uid : "";
+    (navigator.clipboard ? navigator.clipboard.writeText(uid) : Promise.reject()).then(() => A().aviso("Código copiado."), () => A().aviso("No pude copiarlo: mantén apretado el código para copiarlo."));
+  } else if (a === "reintentar") IA.quien(true).then(pintar);
+  else if (a === "todas") describirTodas();
+  else if (a === "cancelar" && tarea) { tarea.cancelar = true; b.disabled = true; }
+});
+app.addEventListener("submit", e => {
+  if (e.target.id !== "roa-tope") return;
+  e.preventDefault();
+  const v = Number(String(e.target.elements.tope.value).replace(",", "."));
+  if (!(v >= 1 && v <= 100)) { aviso = "El tope va de 1 a 100 dólares."; pintar(); return; }
+  IA.tope(v).then(() => { aviso = `Listo: el tope del mes es ${usd(v)}.`; pintar(); }, err => { aviso = err.message; pintar(); });
+});
+IA.alCambiar(() => { if (!tarea) pintar(); });
+D.al(() => { if (!tarea && !(document.activeElement && document.activeElement.closest("#roa-app form"))) pintar(); });
+window.addEventListener("hashchange", () => { aviso = ""; if (visible()) IA.quien().then(pintar); pintar(); });
+document.addEventListener("DOMContentLoaded", pintar);
+window.RopaAjustes = { pintar, soloLoQueFalta };
+})();

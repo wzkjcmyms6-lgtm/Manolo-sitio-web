@@ -2195,3 +2195,33 @@ restauración); `lugares`, `respaldo` y `regresion` bien; Lighthouse 100 en
 accesibilidad y buenas prácticas en el ropero, la ficha, agregar y un
 filtro, en oscuro y en claro.
 
+**D-147 (2026-11-22) · Ropa, fase 2: la IA describe (lista para conectar).**
+(1) **El puente** (`puente/`, Worker de Cloudflare, plan gratis): la clave
+de la IA, el modelo y los usuarios permitidos son secretos de Cloudflare
+(nada de eso en la app ni en el repo, que es público). Revisa el token de
+Firebase de la sesión con WebCrypto, sin dependencias: firma RS256 contra
+las llaves públicas de Google, proyecto `manolo-4c57b`, emisor y
+vencimiento; solo pasa quien está en `USUARIOS` (el dueño); CORS solo para
+el sitio. No guarda fotos ni textos. (2) **La IA** se llama con la
+biblioteca oficial: esfuerzo bajo (describir una prenda es simple), salida
+con **esquema fijo** cuyas listas (grupos, tipos, colores, estampados,
+estilos, climas) son las de `js/ropa-motor.js` (una prueba revisa que
+sigan iguales) y el respaldo del servidor si el modelo se niega
+(`fallbacks: "default"`); lo que contesta se limpia antes de volver. (3)
+**El gasto**: cada respuesta trae los tokens usados → el costo del mes en
+KV (mes de Bolivia, UTC−4); al llegar al tope (8 USD al empezar, de 1 a 100,
+se cambia en Ajustes de Ropa) el puente corta con un aviso claro. (4) **En la
+app** (`js/ropa-ia.js`): al agregar, la IA mira cada foto (la siguiente
+mientras revisas la anterior); "Llenar a mano" no espera y lo que llegue
+después no pisa nada; el aviso "Lo llenó la IA: revísalo" y el de varias
+prendas; los errores en palabras simples. "Describir con IA" en la ficha
+abre Editar; "Describir las que cargaste antes" llena solo lo que falta.
+Quien no es el dueño usa Ropa sin IA. Se guarda `ia: { fecha }` (campo
+nuevo). (5) Pruebas sin gastar: `npm test` → 778 (7 del puente: token
+bueno y malos, usuarios, CORS, costo, mes, tope, esquema e instrucciones,
+limpiar la respuesta, la foto); suite `ropa` con un puente de mentira
+(159 comprobaciones); Lighthouse 100 en accesibilidad y buenas prácticas
+en las 12 pantallas de Ropa (con Ajustes y el formulario llenado por la IA),
+en oscuro y en claro. **Falta**: instalar el puente con las cuentas del
+dueño (Claude y Cloudflare) y la prueba real corta.
+

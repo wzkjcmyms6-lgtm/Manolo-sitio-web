@@ -6,6 +6,12 @@
 // no la tengo y volver, borrar con Deshacer), las fotos en el teléfono y la
 // copia de seguridad (bajar y restaurar en un "teléfono nuevo"); 390 y 320
 // px y la compu.
+// Fase 2 (la IA, con un puente de mentira que contesta como la IA, sin
+// gastar): Ajustes sin puente (tu código), conectada (gasto y tope), agregar
+// con la IA llenando todo (esperando, la siguiente foto ya mirada, varias
+// prendas), cuando la IA no puede (tope), "Llenar a mano", "Describir con IA"
+// en la ficha, describir las que cargaste antes (solo lo que falta) y quien no
+// es el dueño no ve la IA.
 // Uso: node scripts/e2e/ropa.js [carpeta-para-capturas]
 const fs = require("node:fs");
 const os = require("node:os");
@@ -305,6 +311,167 @@ async function copia(browser, base) {
   await p.context().close();
 }
 
+// ---- Fase 2: un puente de mentira que contesta como la IA ----
+const PUENTE = "https://puente.prueba";
+const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Authorization, Content-Type", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" };
+const JEAN = { esPrenda: true, varias: false, grupo: "abajo", tipo: "Jean", colores: ["azul-jean"], estampado: "liso", tela: "Jean", estilo: ["casual", "urbano"], clima: ["frio", "templado"], formalidad: 2, marca: "Levi's" };
+const ZAPAS = { esPrenda: true, varias: true, grupo: "zapatos", tipo: "Zapatillas", colores: ["blanco", "gris"], estampado: "liso", tela: "Cuero", estilo: ["deportivo"], clima: ["templado", "calor"], formalidad: 1, marca: "" };
+function puenteFalso(o) {
+  const est = Object.assign({ permitido: true, lista: true, gasto: { mes: "2026-11", usd: 0.12, veces: 3, tope: 8 }, demora: 500, prendas: [JEAN], fallo: null, pedidos: [] }, o || {});
+  est.describir = () => est.pedidos.filter(x => x.ruta === "/describir");
+  est.rutas = async ctx => {
+    await ctx.route(`${PUENTE}/**`, async route => {
+      const req = route.request();
+      if (req.method() === "OPTIONS") return route.fulfill({ status: 204, headers: CORS });
+      const ruta = new URL(req.url()).pathname;
+      const cuerpo = req.postData() ? JSON.parse(req.postData()) : null;
+      est.pedidos.push({ ruta, auth: req.headers().authorization, cuerpo });
+      const json = (status, c) => route.fulfill({ status, headers: CORS, contentType: "application/json", body: JSON.stringify(c) });
+      if (ruta === "/quien") return json(200, { permitido: est.permitido, uid: "test", lista: est.lista, gasto: est.gasto });
+      if (ruta === "/tope") { est.gasto = Object.assign({}, est.gasto, { tope: cuerpo.tope }); return json(200, { gasto: est.gasto }); }
+      if (ruta === "/describir") {
+        const n = est.describir().length;   // en el orden en que llegan los pedidos
+        await new Promise(r => setTimeout(r, est.demora));
+        if (est.fallo) return json(est.fallo[0], est.fallo[1]);
+        est.gasto = Object.assign({}, est.gasto, { usd: Math.round((est.gasto.usd + 0.03) * 100) / 100, veces: est.gasto.veces + 1 });
+        return json(200, { prenda: est.prendas[(n - 1) % est.prendas.length], gasto: est.gasto });
+      }
+      return json(404, { error: "ruta" });
+    });
+  };
+  return est;
+}
+const marcado = (p, nombre) => p.$$eval(enHoja(`input[name="${nombre}"]:checked`), els => els.map(e => e.value).join(","));
+
+async function fase2(browser, base) {
+  console.log("\nRopa, fase 2: la IA (con un puente de mentira)");
+  // Sin puente: tu código para conectarla.
+  let p = await abrir(browser, base, { __SEED__: {} }, { hash: "#ropa-ajustes", zona: ZONA, fecha: FECHA, ancho: 390 });
+  await p.waitForTimeout(400);
+  ok(/La IA todavía no está conectada/.test(await txt(p, "#roa-app")) && /Tu código para conectarla: test/.test(await txt(p, "#roa-app")), "sin puente: «todavía no está conectada» y tu código");
+  ok(await p.isVisible('.topbar-ajustes[data-engranaje="ropa"]'), "el engranaje de Ropa arriba");
+  await p.context().close();
+
+  // Conectada (el dueño).
+  const est = puenteFalso({ prendas: [JEAN, ZAPAS] });
+  p = await abrir(browser, base, { __SEED__: {}, "manolo.puente": PUENTE }, { hash: "#ropa-ajustes", zona: ZONA, fecha: FECHA, ancho: 390, rutas: est.rutas });
+  await p.waitForTimeout(600);
+  ok(/La IA está conectada/.test(await txt(p, "#roa-app")) && /Este mes: US\$ 0,12 de US\$ 8,00 · 3 veces/.test(await txt(p, "#roa-app")), "conectada: el gasto del mes con su tope");
+  ok(est.pedidos[0] && est.pedidos[0].auth === "Bearer token-de-prueba-test", "le pide al puente con el token de tu sesión");
+  await captura(p, "ropa-ajustes-390.png");
+  await p.fill('#roa-tope [name="tope"]', "10");
+  await p.click("#roa-tope button[type=submit]");
+  await p.waitForTimeout(400);
+  ok(est.pedidos.some(x => x.ruta === "/tope" && x.cuerpo.tope === 10) && /el tope del mes es US\$ 10,00/.test(await txt(p, "#roa-app")), "cambiar el tope");
+  // Agregar dos fotos: la IA llena todo.
+  await p.evaluate(() => { location.hash = "ropa"; });
+  await p.waitForTimeout(400);
+  await abrirMas(p);
+  await elegirFotos(p, [["#f3f3f0", "#4f6f9a"], ["#d9c6a5", "#f4f4f2"]]);
+  await p.waitForSelector(".ro-hoja-form .ro-ia-espera", { timeout: 8000 }).catch(() => {});
+  ok(/La IA está mirando la foto/.test(await txt(p, ".ro-hoja-form")) && await p.isVisible(".ro-hoja-form [data-ro-a-mano]"), "mientras la IA mira: espera, con «Llenar a mano»");
+  await captura(p, "ropa-ia-espera-390.png");
+  await esperarFormulario(p);
+  ok(/Lo llenó la IA/.test(await txt(p, enHoja(".ro-ia-aviso"))), "«Lo llenó la IA: revísalo»");
+  ok(await marcado(p, "grupo") === "abajo" && await marcado(p, "tipo") === "Jean" && await marcado(p, "clima") === "frio,templado" && await marcado(p, "estilo") === "casual,urbano" && await marcado(p, "formalidad") === "2", "la IA marcó grupo, tipo, clima, estilo y qué tan formal");
+  ok((await p.$eval(enHoja('input[name="marca"]'), el => el.value)) === "Levi's" && (await p.$eval(enHoja('input[name="tela"]'), el => el.value)) === "Jean" && /Azul jean/.test(await txt(p, enHoja("[data-ro-colores]"))), "y la marca, la tela y el color");
+  await captura(p, "ropa-ia-form-390.png");
+  const d1 = est.describir()[0];
+  ok(d1 && d1.cuerpo.tipo === "image/jpeg" && d1.cuerpo.imagen.length > 5000 && !/^data:/.test(d1.cuerpo.imagen), "a la IA le llega la foto (y nada más)");
+  ok(Object.keys(d1.cuerpo).sort().join() === "imagen,tipo", "sin tu nombre ni tu usuario en el pedido");
+  await p.waitForTimeout(700);
+  ok(est.describir().length === 2, "la siguiente foto ya se está mirando mientras revisas esta");
+  await p.click(enHoja('button[type="submit"]'));
+  await p.waitForFunction(() => /Prenda 2 de 2/.test((document.querySelector(".ro-hoja-form h3") || {}).textContent || ""), null, { timeout: 8000 });
+  await esperarFormulario(p);
+  ok(!(await p.$(".ro-hoja-form .ro-ia-espera")) && await marcado(p, "tipo") === "Zapatillas", "la segunda ya está lista: sin esperar");
+  ok(/varias prendas/.test(await txt(p, enHoja(".ro-form"))), "si en la foto hay varias prendas, avisa");
+  await p.click(enHoja('button[type="submit"]'));
+  await p.waitForTimeout(900);
+  const [idJ, jean] = await porTipo(p, "Jean");
+  const [, zapas] = await porTipo(p, "Zapatillas");
+  ok(jean && jean.ia && jean.ia.fecha === HOY && jean.marca === "Levi's" && jean.colores[0].id === "azul-jean" && jean.estilo.join() === "casual,urbano" && jean.formalidad === 2, "se guarda lo de la IA (y que la llenó la IA)");
+  ok(zapas && zapas.grupo === "zapatos" && zapas.colores.map(c => c.id).join() === "blanco,gris", "las zapatillas también");
+  // Cuando la IA no puede (llegaste al tope): se llena a mano.
+  est.fallo = [402, { error: "tope", mensaje: "Llegaste al tope del mes (US$ 10)." }];
+  await abrirMas(p);
+  await elegirFotos(p, [["#f3f3f0", "#c43a31"]]);
+  await esperarFormulario(p);
+  ok(/La IA no pudo: Llegaste al tope del mes/.test(await txt(p, enHoja(".ro-form"))) && /Rojo/.test(await txt(p, enHoja("[data-ro-colores]"))), "si la IA no puede, lo dice y queda el color de la foto");
+  await marcar(p, "tipo", "Polera");
+  await p.click(enHoja('button[type="submit"]'));
+  await p.waitForTimeout(700);
+  const [, polera] = await porTipo(p, "Polera");
+  ok(polera && !polera.ia, "esa se guarda sin la marca de la IA");
+  // "Llenar a mano": lo que llegue después de la IA no pisa nada.
+  est.fallo = null;
+  est.demora = 2500;
+  await abrirMas(p);
+  await elegirFotos(p, [["#f3f3f0", "#151515"]]);
+  await p.waitForSelector(".ro-hoja-form [data-ro-a-mano]", { timeout: 8000 });
+  await p.click(".ro-hoja-form [data-ro-a-mano]");
+  await esperarFormulario(p);
+  await marcar(p, "grupo", "abrigos");
+  await marcar(p, "tipo", "Chamarra");
+  await p.waitForTimeout(3000);
+  ok(await marcado(p, "tipo") === "Chamarra" && !(await p.$(enHoja(".ro-ia-aviso"))), "«Llenar a mano»: lo que llega después de la IA no pisa nada");
+  await p.click(enHoja('button[type="submit"]'));
+  await p.waitForTimeout(700);
+  // "Describir con IA" en la ficha.
+  est.demora = 300;
+  const [idCh] = await porTipo(p, "Chamarra");
+  await p.evaluate(id => { location.hash = `ropa-prenda/${id}`; }, idCh);
+  await p.waitForTimeout(500);
+  ok(await p.isVisible('[data-rop="ia"]'), "en la ficha: «Describir con IA»");
+  await p.click('[data-rop="ia"]');
+  await esperarFormulario(p);
+  ok(/Editar prenda/.test(await txt(p, ".ro-hoja-form h3")) && /Lo llenó la IA/.test(await txt(p, enHoja(".ro-ia-aviso"))), "abre Editar con lo que vio la IA, para revisarlo");
+  await p.click(enHoja('button[type="submit"]'));
+  await p.waitForTimeout(600);
+  ok(((await docs(p))[idCh] || {}).ia && ((await docs(p))[idCh] || {}).ia.fecha === HOY, "y al guardar queda descrita por la IA");
+  await p.evaluate(() => { location.hash = "ropa-ajustes"; });
+  await p.waitForTimeout(500);
+  ok(/Este mes: US\$ 0,24 de US\$ 10,00 · 7 veces/.test(await txt(p, "#roa-app")), `el gasto se actualiza (${(await txt(p, "#roa-app")).slice(0, 120)})`);
+  ok(idJ && !p.errores.length, `sin errores de página${p.errores.length ? `: ${p.errores[0]}` : ""}`);
+  await p.context().close();
+
+  // Las que cargaste antes: la IA llena solo lo que falta.
+  const MINI = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk2PbfHwAEhwJ6g1n0LQAAAABJRU5ErkJggg==";
+  const seed = { [COL]: {
+    v1: { v: 1, grupo: "abajo", tipo: "Jean", colores: [{ id: "azul" }], tela: "Lino", estilo: [], clima: [], estado: "activa", creado: 1, fotos: [{ id: "x1", mini: MINI }] },
+    v2: { v: 1, grupo: "abajo", tipo: "Pantalón", colores: [], estilo: ["formal"], clima: [], estado: "activa", creado: 2, fotos: [{ id: "x2", mini: MINI }] },
+    v3: { v: 1, grupo: "arriba", tipo: "Polera", colores: [], estado: "activa", creado: 3, fotos: [] },
+    v4: { v: 1, grupo: "arriba", tipo: "Camisa", colores: [], estado: "activa", creado: 4, fotos: [{ id: "x4", mini: MINI }], ia: { fecha: "2026-11-01" } }
+  } };
+  const est2 = puenteFalso({ demora: 150 });
+  p = await abrir(browser, base, { __SEED__: seed, "manolo.puente": PUENTE }, { hash: "#ropa-ajustes", zona: ZONA, fecha: FECHA, ancho: 390, rutas: est2.rutas });
+  await p.waitForTimeout(700);
+  ok(/Describir con IA las 2 prendas que cargaste antes/.test(await txt(p, "#roa-app")), "las que cargaste antes con foto y sin IA: 2");
+  await p.click('[data-roa="todas"]');
+  await p.waitForFunction(() => /Listo: la IA describió 2 prendas/.test(document.getElementById("roa-app").innerText), null, { timeout: 8000 }).catch(() => {});
+  ok(/Listo: la IA describió 2 prendas/.test(await txt(p, "#roa-app")), "las describe una por una");
+  const ds = await docs(p);
+  ok(ds.v1.tela === "Lino" && ds.v1.colores[0].id === "azul" && ds.v1.estilo.join() === "casual,urbano" && ds.v1.clima.join() === "frio,templado" && ds.v1.ia.fecha === HOY, "llena solo lo que faltaba (la tela y el color que pusiste quedan)");
+  ok(ds.v2.estilo.join() === "formal" && ds.v2.colores[0].id === "azul-jean" && ds.v2.tipo === "Pantalón", "lo tuyo no cambia: estilo y tipo");
+  ok(!ds.v3.ia && ds.v4.ia.fecha === "2026-11-01" && est2.describir().length === 2, "sin foto o ya descrita: no se toca");
+  ok(!(await p.$('[data-roa="todas"]')), "ya no queda ninguna por describir");
+  await p.context().close();
+
+  // Quien no es el dueño no ve la IA.
+  const est3 = puenteFalso({ permitido: false });
+  p = await abrir(browser, base, { __SEED__: {}, "manolo.puente": PUENTE }, { hash: "#ropa-ajustes", zona: ZONA, fecha: FECHA, ancho: 390, rutas: est3.rutas });
+  await p.waitForTimeout(600);
+  ok(/La IA de Ropa es solo para el dueño/.test(await txt(p, "#roa-app")), "otro usuario: la IA es solo para el dueño");
+  await p.evaluate(() => { location.hash = "ropa"; });
+  await p.waitForTimeout(300);
+  await abrirMas(p);
+  await elegirFotos(p, [["#f3f3f0", "#2f8a4e"]]);
+  await esperarFormulario(p);
+  ok(!(await p.$(".ro-hoja-form .ro-ia-espera")) && !(await p.$(enHoja(".ro-ia-aviso"))) && est3.describir().length === 0, "y agrega prendas sin IA (no se le pide nada)");
+  ok(!p.errores.length, `sin errores de página${p.errores.length ? `: ${p.errores[0]}` : ""}`);
+  await p.context().close();
+}
+
 async function compu(browser, base) {
   console.log("\nRopa en la compu (1280 px)");
   const seed = { [COL]: {} };
@@ -327,6 +494,7 @@ async function compu(browser, base) {
   const browser = await chromium.launch();
   for (const ancho of [390, 320]) await fase1(browser, base, ancho);
   await copia(browser, base);
+  await fase2(browser, base);
   await compu(browser, base);
   await terminar(browser, srv);
 })();

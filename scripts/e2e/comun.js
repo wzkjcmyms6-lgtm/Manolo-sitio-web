@@ -78,6 +78,8 @@ async function abrir(browser, base, estado, opciones) {
   if (o.reloj) await ctx.addInitScript(simuladores);
   if (o.voz) await ctx.addInitScript(simVoz);
   if (o.init) await ctx.addInitScript(o.init);
+  // Rutas propias de una prueba (por ejemplo, un puente de mentira), antes de abrir.
+  if (o.rutas) await o.rutas(ctx);
   const p = await ctx.newPage();
   p.errores = [];
   p.on("pageerror", err => { p.errores.push(err.message); fallos++; console.log("  error de página:", err.message); });

@@ -7411,7 +7411,36 @@ body.mov-en-guia { overflow: hidden; }
    .lug-buscar (Lugares), .lib-btn* y .lib-input (Libros), las hojas de
    lectura-comun y .run-mas-op (Running). Aquí va lo propio. */
 
-#panel-ropa .back-link, #panel-ropa-prenda .back-link { min-height: 44px; }
+#panel-ropa .back-link, #panel-ropa-prenda .back-link, #panel-ropa-ajustes .back-link { min-height: 44px; }
+
+/* El engranaje de arriba (Ajustes de Ropa), como el de Bici. */
+body.in-ropa .topbar-ajustes[data-engranaje="ropa"] {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 44px; height: 44px; margin-left: 0.4rem; border-radius: 50%; color: var(--ink);
+  border: 1px solid var(--border); background: rgba(255, 255, 255, 0.04);
+}
+body.in-ropa .topbar-ajustes[data-engranaje="ropa"] span { width: 20px; height: 20px; display: flex; }
+
+/* La IA (D-147) */
+.ro-ia-aviso { display: flex; align-items: center; gap: 0.45rem; margin: 0; padding: 0.6rem 0.8rem; border-radius: 12px; background: rgba(255, 184, 77, 0.12); color: var(--accent-2); font-weight: 600; font-size: 0.9rem; }
+.ro-ia-aviso [data-icon] { width: 18px; height: 18px; display: inline-flex; flex-shrink: 0; }
+.ro-ia-ojo { margin: 0; padding: 0.55rem 0.8rem; border-radius: 12px; background: var(--estado-aviso-fondo); color: var(--ink); font-size: 0.88rem; line-height: 1.4; }
+.ro-ia-espera { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; padding: 2rem 0.5rem; text-align: center; }
+.ro-ia-espera p { margin: 0; }
+.ro-ia-espera .lib-btn-sec { margin-top: 0.6rem; }
+.roa-app { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); max-width: 640px; min-width: 0; }
+.roa-ia p { line-height: 1.45; }
+.roa-ok { display: flex; align-items: center; gap: 0.4rem; color: var(--estado-ok); font-weight: 700; margin: 0 0 0.8rem; }
+.roa-ok [data-icon] { width: 20px; height: 20px; display: inline-flex; }
+.roa-gasto p { margin: 0.2rem 0; }
+.roa-barra { margin: 0.5rem 0; }
+.roa-tope { display: flex; align-items: flex-end; gap: 0.6rem; margin: 1rem 0; }
+.roa-tope .rd-campo { flex: 1 1 auto; min-width: 0; }
+.roa-tope .lib-btn-sec { min-height: 44px; flex-shrink: 0; }
+.roa-todas { width: 100%; margin-top: 0.4rem; }
+.roa-tarea { margin-top: 0.8rem; }
+.roa-codigo { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.roa-codigo code, .roa-ia code { padding: 0.35rem 0.6rem; border-radius: 8px; background: var(--bg-soft); border: 1px solid var(--border); font-size: 0.85rem; overflow-wrap: anywhere; user-select: all; -webkit-user-select: all; }
 .ro-app { padding-bottom: calc(7rem + env(safe-area-inset-bottom)); min-width: 0; max-width: 980px; }
 .rop-app { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); min-width: 0; max-width: 640px; }
 .ro-resumen { margin: -0.6rem 0 0.8rem; color: var(--muted); font-size: 0.9rem; min-height: 1.2em; }

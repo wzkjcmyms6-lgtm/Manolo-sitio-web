@@ -1,0 +1,15 @@
+{
+  "name": "manolo-puente",
+  "private": true,
+  "description": "Puente de Manolo hacia la IA (Cloudflare Worker). No es parte de la app: la app sigue sin dependencias.",
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.12.0"
+  },
+  "devDependencies": {
+    "wrangler": "4.166.0"
+  }
+}

@@ -267,6 +267,7 @@ function renderFicha() {
     </section>
     ${datos.length ? `<dl class="ro-datos">${datos.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>` : ""}
     <div class="ro-acciones">
+      ${window.RopaIA && window.RopaIA.disponible() && p.fotos.length && p.estado !== "fuera" ? `<button type="button" class="lib-btn-sec" data-rop="ia"><span data-icon="sparkle" aria-hidden="true"></span>Describir con IA</button>` : ""}
       <button type="button" class="lib-btn-sec" data-rop="editar"><span data-icon="edit" aria-hidden="true"></span>Editar</button>
       ${p.estado === "fuera" ? `<button type="button" class="lib-btn-sec" data-rop="volver">La volví a tener</button>`
         : `<button type="button" class="lib-btn-sec" data-rop="lavar"><span data-icon="lavar" aria-hidden="true"></span>${p.estado === "lavar" ? "Ya está limpia" : "Para lavar"}</button>
@@ -285,6 +286,7 @@ if (ficha) ficha.addEventListener("click", e => {
   const nombre = M.titulo(p);
   if (a === "puse") D.meLaPuse(p.id, D.hoy(), !D.puestaHoy(p.id)).catch(fallo);
   else if (a === "editar") { if (window.RopaForm) window.RopaForm.editar(p.id, b); }
+  else if (a === "ia") describirConIA(p, b);
   else if (a === "lavar") { const e2 = p.estado === "lavar" ? "activa" : "lavar"; D.estado(p.id, e2).catch(fallo); aviso(e2 === "lavar" ? `${nombre}: para lavar.` : `${nombre}: ya está limpia.`); }
   else if (a === "fuera") { D.estado(p.id, "fuera").catch(fallo); aviso(`${nombre} salió de tu ropero.`, () => D.estado(p.id, p.estado).catch(fallo)); }
   else if (a === "volver") { D.estado(p.id, "activa").catch(fallo); aviso(`${nombre} volvió a tu ropero.`); }
@@ -297,6 +299,23 @@ if (ficha) ficha.addEventListener("click", e => {
       () => { if (D.Fotos) fotos.forEach(id => D.Fotos.borrar(id).catch(() => {})); });
   }
 });
+
+// "Describir con IA": la foto grande de este teléfono (o la miniatura) → el
+// formulario de editar con lo que vio la IA, para revisar antes de guardar.
+async function describirConIA(p, b) {
+  if (!window.RopaIA || b.disabled) return;
+  b.disabled = true;
+  const antes = b.innerHTML;
+  b.textContent = "Describiendo…";
+  try {
+    const f = p.fotos[0];
+    const r = D.Fotos ? await D.Fotos.leer(f.id).catch(() => null) : null;
+    const blob = r && r.blob ? r.blob : await fetch(f.mini).then(x => x.blob());
+    const ia = await window.RopaIA.describir(blob);
+    if (window.RopaForm) window.RopaForm.editar(p.id, b, ia);
+  } catch (e) { aviso((e && e.message) || "La IA no pudo. Intenta de nuevo."); }
+  if (b.isConnected) { b.disabled = false; b.innerHTML = antes; }
+}
 
 // ---------- Tarjeta de Inicio ----------
 function inicio() {
@@ -317,6 +336,8 @@ window.addEventListener("hashchange", () => {
   else fichaId = null;
 });
 document.addEventListener("DOMContentLoaded", () => { if (pantalla() === "ropa") render(); else if (pantalla() === "ropa-prenda") renderFicha(); });
+// Cuando se sabe si la IA está conectada, la ficha muestra (o no) "Describir con IA".
+if (window.RopaIA) window.RopaIA.alCambiar(() => { if (pantalla() === "ropa-prenda") renderFicha(); });
 render();
 window.RopaApp = { aviso, fallo, hoja, render, renderFicha, fotoHTML, puntos };
 })();

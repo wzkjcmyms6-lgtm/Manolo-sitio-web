@@ -18,7 +18,7 @@
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
   <!-- Todos los estilos de la app en un archivo (D-127): js/paquete.json › npm run listo -->
-  <link rel="stylesheet" href="css/app.paquete.css?v=1250d6f6960f">
+  <link rel="stylesheet" href="css/app.paquete.css?v=6433d20f1883">
   <!-- Modo claro (D-126): generado con "npm run tema"; js/tema.js lo apaga en
        el modo oscuro y elige el modo antes de pintar (sin "defer": es chico) -->
   <link rel="stylesheet" href="css/tema-claro.css?v=202611171200" id="tema-claro-css">
@@ -66,6 +66,7 @@
       <a href="#inv-ajustes" class="topbar-ajustes" data-engranaje="inversiones" aria-label="Ajustes de Inversiones"><span data-icon="gear"></span></a>
       <a href="#run-ajustes" class="topbar-ajustes" data-engranaje="running" aria-label="Ajustes de Running"><span data-icon="gear"></span></a>
       <a href="#bici-ajustes" class="topbar-ajustes" data-engranaje="bicicleta" aria-label="Ajustes de Bici"><span data-icon="gear"></span></a>
+      <a href="#ropa-ajustes" class="topbar-ajustes" data-engranaje="ropa" aria-label="Ajustes de Ropa"><span data-icon="gear"></span></a>
       <button class="menu-toggle" id="menu-toggle" data-icon="menu" aria-expanded="false" aria-label="Abrir menú"></button>
     </div>
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
@@ -500,6 +501,11 @@
           <section id="panel-ropa-prenda" hidden>
             <a class="back-link lib-volver" href="#ropa"><span class="icon-sm" data-icon="chevronLeft"></span>Ropa</a>
             <div class="rop-app" id="rop-app"></div>
+          </section>
+          <section id="panel-ropa-ajustes" hidden>
+            <a class="back-link lib-volver" href="#ropa"><span class="icon-sm" data-icon="chevronLeft"></span>Ropa</a>
+            <h1 class="page-title">Ajustes de Ropa</h1>
+            <div class="roa-app" id="roa-app"></div>
           </section>
 
           <!-- ===== Tu semana (D-136): js/resumen-semana-ui.js ===== -->
@@ -1514,6 +1520,6 @@
   <script defer src="vendor/firebase-10.7.1/firebase-firestore-compat.js"></script>
   <!-- Todos los módulos de la app en un archivo (D-127): cada uno corre como su
        propio <script>. Se editan los de js/ y después: npm run listo -->
-  <script defer src="js/app.paquete.js?v=a7efe16fa774"></script>
+  <script defer src="js/app.paquete.js?v=f93ccd0318fe"></script>
 </body>
 </html>

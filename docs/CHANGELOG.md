@@ -1,5 +1,12 @@
 # Cambios
 
+## 2026-11-22 · Ropa: lista para la IA
+- **Ajustes de Ropa** (el engranaje de arriba): si la IA está conectada,
+  cuánto llevas gastado en el mes y el tope; si no, tu código para
+  conectarla.
+- Todo listo para que la IA describa tus prendas desde la foto (se activa
+  cuando la conectemos con tus cuentas).
+
 ## 2026-11-22 · Ropa: tu ropero con fotos
 - **Ropa** (en Inicio): agrega tus prendas con fotos, varias a la vez. Manolo
   saca el color de cada foto y te arma el nombre ("Polera blanca"); tú eliges

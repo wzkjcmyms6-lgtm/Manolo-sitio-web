@@ -10,7 +10,7 @@ de Pinterest y diseño en `docs/ROPA.md` (D-145).
 |---|---|---|
 | 0 | Diseño y prueba de Pinterest | ✅ (D-145) |
 | 1 | Mi ropa sin IA: agregar con fotos, datos a mano, color de la foto, ropero con filtros, ficha, para lavar, ya no la tengo, copia de seguridad | ✅ (D-146) |
-| 2 | La IA describe: cuentas con el dueño, el puente, describir al agregar y las que ya tienes, gasto y tope | ⏳ |
+| 2 | La IA describe: cuentas con el dueño, el puente, describir al agregar y las que ya tienes, gasto y tope | 🔧 lista en el código (D-147); falta instalar el puente con las cuentas del dueño |
 | 3 | Inspiración de Pinterest: subir imagen o link, leer el tablero, prendas de cada pin, armar el look con tu ropa, tu estilo | ⏳ |
 | 4 | Outfits: qué me pongo hoy, me lo pongo, guardar, no me gusta, con qué combino esto, calendario | ⏳ |
 | 5 | Compras desde Pinterest: qué te falta, outfits nuevos, ver opciones en Pinterest, qué no comprar, lista de deseos, presupuesto | ⏳ |

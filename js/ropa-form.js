@@ -8,6 +8,8 @@
 (function () {
 "use strict";
 const M = window.RopaMotor, D = window.RopaDatos, A = () => window.RopaApp;
+const IA = () => window.RopaIA;
+const iaLista = () => !!(IA() && IA().disponible());
 if (!M || !D || !window.Lectura || !document.getElementById("ro-app")) return;
 const { esc } = window.Lectura;
 const icono = n => `<span data-icon="${n}" aria-hidden="true"></span>`;
@@ -68,14 +70,34 @@ function empezar(archivos) {
   i = 0; editando = null; guardadas = 0;
   abrirActual();
 }
-// Prepara la foto i (achicar y guardar en el teléfono como borrador) y su color.
+// Prepara la foto i (achicar y guardar en el teléfono como borrador), su color
+// y, si la IA está conectada, le pide que la describa (sin esperar).
 function preparar(x) {
-  if (x.reg || !D.Fotos) return Promise.resolve(x);
-  return D.Fotos.preparar(x.archivo, "borrador", { clase: "prenda" })
-    .then(reg => D.Fotos.guardar(reg).then(() => reg, () => Object.assign(reg, { soloMini: true })))
-    .then(reg => { x.reg = reg; return coloresDe(reg.mini); })
-    .then(c => { x.colores = c; return x; })
-    .catch(err => { console.warn("Ropa: foto", err); x.error = (err && err.message) || "No pude leer esa foto."; return x; });
+  if (!x.preparando) {
+    x.preparando = (x.reg || !D.Fotos ? Promise.resolve() : D.Fotos.preparar(x.archivo, "borrador", { clase: "prenda" })
+      .then(reg => D.Fotos.guardar(reg).then(() => reg, () => Object.assign(reg, { soloMini: true })))
+      .then(reg => { x.reg = reg; return coloresDe(reg.mini); })
+      .then(c => { x.colores = c; }))
+      .then(() => {
+        if (x.reg && x.reg.blob && iaLista() && !x.iaPromesa) {
+          x.iaPromesa = IA().describir(x.reg.blob).then(p => { x.ia = p; }, e => { x.iaError = (e && e.message) || "No respondió."; });
+        }
+        return x;
+      })
+      .catch(err => { console.warn("Ropa: foto", err); x.error = (err && err.message) || "No pude leer esa foto."; return x; });
+  }
+  return x.preparando;
+}
+// Lo que dijo la IA → los campos del formulario.
+function desdeIA(p) {
+  const o = { grupo: p.grupo, tipo: p.tipo, estampado: p.estampado || "liso", tela: p.tela, estilo: p.estilo.slice(), clima: p.clima.slice(), formalidad: p.formalidad, marca: p.marca };
+  if (p.colores.length) o.colores = p.colores.map(id => ({ id }));
+  return o;
+}
+function aplicarIA(ia) {
+  Object.assign(datos, desdeIA(ia));
+  datos.ia = D.hoy();
+  datos.iaAviso = { varias: ia.varias, noPrenda: ia.esPrenda === false };
 }
 function abrirActual() {
   const x = cola[i];
@@ -87,6 +109,22 @@ function abrirActual() {
     if (cola[i] !== x) return;
     if (x.reg) datos.fotos = [{ id: x.reg.id, mini: x.reg.mini, ancho: x.reg.ancho, alto: x.reg.alto }];
     datos.colores = (x.colores || []).map(c => ({ id: c.id, peso: c.peso }));
+    // La siguiente foto se va preparando (y la IA la va mirando) mientras revisas esta.
+    if (cola[i + 1]) preparar(cola[i + 1]);
+    if (x.iaPromesa && !x.ia && !x.iaError) {
+      H().mostrar(titulo(), `<div class="ro-ia-espera" role="status"><span class="rsp-rueda" aria-hidden="true"></span>
+        <p><b>La IA está mirando la foto…</b></p><p class="rd-nota">Tarda unos segundos. Si quieres, llénala a mano.</p>
+        <button type="button" class="lib-btn-sec" data-ro-a-mano>Llenar a mano</button></div>`);
+      H().alCerrar = descartarBorradores;
+      H().el.onclick = e => { if (e.target.closest("[data-ro-a-mano]")) { x.aMano = true; formulario(); } };
+      x.iaPromesa.then(() => {
+        if (cola[i] !== x || x.aMano || !H().abierta()) return;
+        if (x.ia) aplicarIA(x.ia);
+        formulario();
+      });
+      return;
+    }
+    if (x.ia && !x.aMano) aplicarIA(x.ia);
     formulario();
   });
 }
@@ -119,10 +157,15 @@ const paletaHTML = () => `<div class="ro-paleta" data-ro-paleta-lista hidden>${M
 function formulario() {
   const x = cola[i], d = datos;
   const foto = d.fotos[0];
-  const deFoto = x && x.colores && x.colores.length && !editando;
+  const av = d.iaAviso;
+  const deFoto = x && x.colores && x.colores.length && !editando && !av;
   const html = `<form class="ro-form" novalidate>
     ${foto ? `<div class="ro-form-foto"><img src="${esc(foto.mini)}" data-foto="${esc(foto.id)}" alt="La foto de la prenda"></div>` : ""}
     ${x && x.error ? `<p class="lib-error">${esc(x.error)} Puedes guardarla sin foto o saltarla.</p>` : ""}
+    ${av ? `<p class="ro-ia-aviso" role="status">${icono("sparkle")}Lo llenó la IA: revísalo antes de guardar.</p>` : ""}
+    ${av && av.varias ? `<p class="ro-ia-ojo">En la foto hay varias prendas: la IA describió la principal. Mejor una prenda por foto.</p>` : ""}
+    ${av && av.noPrenda ? `<p class="ro-ia-ojo">La IA no ve ropa en esta foto.</p>` : ""}
+    ${x && x.iaError && !x.aMano ? `<p class="ro-ia-ojo">La IA no pudo: ${esc(x.iaError)} Llénala a mano.</p>` : ""}
     <fieldset class="ro-campo"><legend>Grupo</legend><div class="ro-opciones" data-grupo="grupo">${M.GRUPOS.map(g => radio("grupo", g.id, g.nombre, d.grupo === g.id)).join("")}</div>${err("grupo")}</fieldset>
     <fieldset class="ro-campo"><legend>Qué es</legend><div class="ro-opciones" data-grupo="tipo" data-ro-tipos>${tiposHTML(d.grupo, d.tipo)}</div>${err("tipo")}</fieldset>
     <fieldset class="ro-campo"><legend>Colores</legend><div class="ro-colores" data-ro-colores>${coloresHTML()}</div>${paletaHTML()}
@@ -278,7 +321,8 @@ function cambiarFoto(archivo) {
     })
     .catch(e => A().aviso((e && e.message) || "No pude leer esa foto."));
 }
-function editar(id, desde) {
+// ia (opcional): lo que la IA vio en la foto ("Describir con IA" en la ficha).
+function editar(id, desde, ia) {
   const p = D.una(id);
   if (!p) return;
   editando = id; cola = []; i = 0; fotoNueva = null;
@@ -287,6 +331,7 @@ function editar(id, desde) {
     estilo: p.estilo.slice(), clima: p.clima.slice(), formalidad: p.formalidad, marca: p.marca, talla: p.talla,
     precio: p.precio != null ? String(p.precio) : "", compra: p.compra, notas: p.notas, fotos: p.fotos.map(f => Object.assign({}, f))
   });
+  if (ia) aplicarIA(ia);
   formulario();
   if (desde) H().volver = desde;
 }

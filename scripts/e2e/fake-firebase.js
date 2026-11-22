@@ -183,7 +183,7 @@
   const usuarios = JSON.parse(localStorage.getItem("__USERS__") || "{}");
   const oyentesAuth = [];
   function hacerUsuario(email, uid, login) {
-    return { uid, email, metadata: { lastSignInTime: new Date(login).toUTCString() } };
+    return { uid, email, metadata: { lastSignInTime: new Date(login).toUTCString() }, getIdToken: () => Promise.resolve(`token-de-prueba-${uid}`) };
   }
   const sesion = localStorage.getItem("__SESION__");
   if (sesion === null || sesion) {
