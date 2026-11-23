@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-23 (Ropa, fase 4: Outfits, D-149).
+Actualizado: 2026-11-23 (Ropa, fase 5: Compras desde Pinterest, D-150).
 
 - **Ropa con IA e inspiración de Pinterest (2026-11-22, en curso)**: el
   ropero del dueño con fotos; una IA (el mejor modelo de Claude, por un
@@ -22,7 +22,11 @@ Actualizado: 2026-11-23 (Ropa, fase 4: Outfits, D-149).
   cualquier ciudad —Open-Meteo, sin tu ubicación—, hoy o mañana, friolento o
   caluroso, tus ocasiones, 3 opciones con reglas o con la IA, a qué
   inspiración se parece, Me lo pongo / Guardar / Otra opción / No me gusta,
-  guardados, calendario y "¿Con qué combino esto?"). Falta del dueño: las
+  guardados, calendario y "¿Con qué combino esto?"). Fase 5 (D-150):
+  **Compras** (qué te falta según tus pines, con sus fotos, cuántos outfits
+  nuevos te daría y "Ver opciones en Pinterest"; tu lista de deseos con "Lo
+  compré", que la pasa al ropero; qué no comprar; el presupuesto del mes; sin
+  IA). Falta del dueño: las
   cuentas de Claude y Cloudflare para instalar el puente, y un tablero público
   en Pinterest.
 

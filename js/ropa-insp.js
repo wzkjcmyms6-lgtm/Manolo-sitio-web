@@ -12,6 +12,7 @@
 "use strict";
 const M = window.RopaMotor, I = window.RopaInspMotor, D = window.RopaDatos, DI = window.RopaInspDatos;
 const IA = () => window.RopaIA, A = () => window.RopaApp;
+const DD = () => window.RopaComprasDatos, K = () => window.RopaComprasMotor;   // la lista de deseos (D-150)
 const app = document.getElementById("rin-app"), ficha = document.getElementById("rinp-app");
 if (!M || !I || !D || !DI || !app || !window.Lectura) return;
 const { esc } = window.Lectura;
@@ -525,8 +526,9 @@ function lookHTML(p) {
         ${pr.estado === "lavar" ? `<span class="ro-tag">${icono("lavar")}Para lavar</span>` : ""}
       </a></li>`;
     }).join("")}</ul>` : `<p class="rd-nota">No encontré nada parecido en tu ropero.</p>`}
-    ${look.faltan.length ? `<h3 class="rin-sub3">Te falta</h3><ul class="rin-faltan">${look.faltan.map(f => `<li>${puntos(f.colores)}<span><b>${esc(I.nombreVista({ tipo: f.tipo, colores: f.colores, detalle: "" }))}</b>${f.porque ? `<small>${esc(f.porque)}</small>` : ""}</span>
-      <a class="rin-buscar" href="${esc(I.buscarEnPinterest(f))}" target="_blank" rel="noopener">Ver ideas${icono("externo")}<span class="visually-hidden"> de ${esc(f.tipo)} en Pinterest (se abre aparte)</span></a></li>`).join("")}</ul>` : ""}
+    ${look.faltan.length ? `<h3 class="rin-sub3">Te falta</h3><ul class="rin-faltan">${look.faltan.map((f, k) => `<li>${puntos(f.colores)}<span><b>${esc(I.nombreVista({ tipo: f.tipo, colores: f.colores, detalle: "" }))}</b>${f.porque ? `<small>${esc(f.porque)}</small>` : ""}</span>
+      <span class="rin-falta-bot"><a class="rin-buscar" href="${esc(I.buscarEnPinterest(f))}" target="_blank" rel="noopener">Ver ideas${icono("externo")}<span class="visually-hidden"> de ${esc(f.tipo)} en Pinterest (se abre aparte)</span></a>
+      ${DD() && K() ? (DD().deClave(K().clave(f)) ? `<span class="rin-en-lista">${icono("check")}En tu lista</span>` : `<button type="button" class="rin-lista" data-rinp="lista" data-k="${k}">${icono("plus")}A mi lista<span class="visually-hidden"> de deseos: ${esc(f.tipo)}</span></button>`) : ""}</span></li>`).join("")}</ul>` : ""}
     ${look.consejo ? `<p class="rin-consejo">${icono("sparkle")}${esc(look.consejo)}</p>` : ""}
     <div class="rin-look-bot">
       ${ids.length ? `<button type="button" class="lib-btn${todasHoy ? " is-on" : ""}" data-rinp="puse"${todasHoy ? " disabled" : ""}>${icono("check")}${todasHoy ? "Te lo pusiste hoy" : "Me lo pongo hoy"}</button>` : ""}
@@ -592,7 +594,17 @@ if (ficha) ficha.addEventListener("click", e => {
   const a = b.dataset.rinp;
   if (a === "mirar") mirarUna(p);
   else if (a === "armar") armarConIA(p);
-  else if (a === "puse") {
+  else if (a === "lista" && DD()) {
+    // A tu lista de deseos (D-150): lo que te falta de este look.
+    const ropero = D.lista();
+    const look = p.look && p.look.origen === "ia" ? I.lookVigente(p.look, ropero) : I.armarLocal(p.analisis, ropero);
+    const f = look.faltan[Number(b.dataset.k)];
+    if (!f) return;
+    b.disabled = true;
+    const nombre = I.nombreVista({ tipo: f.tipo, colores: f.colores, detalle: "" });
+    DD().agregar({ grupo: f.grupo, tipo: f.tipo, colores: f.colores }, { inspiraciones: [p.id], origen: "pin" })
+      .then(r => aviso(`Listo: ${nombre} está en tu lista de deseos (en Compras).`, r.nuevo ? () => DD().borrar(r.id).catch(fallo) : null), e2 => { b.disabled = false; fallo(e2); });
+  } else if (a === "puse") {
     const ropero = D.lista();
     const look = p.look && p.look.origen === "ia" ? I.lookVigente(p.look, ropero) : I.armarLocal(p.analisis, ropero);
     const ids = look.prendas.map(x => x.id).filter(id => D.una(id));
@@ -636,6 +648,7 @@ DI.al(() => {
   if (/^ropa/.test(pantalla())) analizarPendientes();
 });
 D.al(() => { if (pantalla() === "ropa-pin") renderFicha(); });
+if (DD()) DD().al(() => { if (pantalla() === "ropa-pin") renderFicha(); });
 window.addEventListener("hashchange", () => { mensaje = ""; alEntrar(); });
 document.addEventListener("DOMContentLoaded", alEntrar);
 // Cuando se sabe si la IA y el puente están, se muestra (y se hace) lo que corresponde.

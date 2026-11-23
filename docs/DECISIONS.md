@@ -2332,3 +2332,39 @@ Pruebas: `npm test` → 813 (nuevos `ropa-clima` y `ropa-outfit-motor`;
 entero (7, con `/outfits` y la versión 3); suite nueva `ropa-outfits` (84
 comprobaciones) y 10 suites cercanas sin fallas (485); Lighthouse 100 en accesibilidad y buenas prácticas en las 38 pantallas de Ropa
 (19 en oscuro y 19 en claro).
+
+**D-150 (2026-11-23) · Ropa, fase 5: Compras desde Pinterest.** (1) **Sin IA
+y sin gastar**: todo sale de lo que la IA ya vio en cada pin (fase 3) y de tu
+ropero, con reglas (`js/ropa-compras-motor.js`): siempre igual. (2) **Qué te
+falta**: cada cosa que se ve en tus pines se agrupa por grupo, tipo (por
+familia: chaqueta y chamarra, jean y pantalón son lo mismo) y color (por
+familia: camel y beige); cada pin cuenta una vez; sale si está en 2 pines o
+más, no es un accesorio y no tienes nada igual o parecido (lo que está para
+lavar cuenta como tuyo; lo que ya no tienes, no). Si la tienes de otro color,
+igual falta, pero lo dice. De la que más se repite a la que menos (hasta 8).
+(3) **Cuántos outfits nuevos** te daría (sin lo que ya no tienes): lo de
+arriba, con cada cosa de abajo con la que va (y al revés); un vestido, con
+cada par de zapatos; zapatos o un abrigo, con cada conjunto con el que va.
+"Van juntas": hasta dos colores fuertes, un solo estampado, la formalidad sin
+saltos de más de 2 y ningún par de climas opuestos (solo frío con solo calor;
+los vecinos sí: un abrigo de frío sobre una camisa de templado). El clima y
+la formalidad de lo que te falta salen de los pines donde aparece. (4) **"Ver
+opciones en Pinterest"**: `pinterest.com/search/pins/?q=` con el nombre y
+"outfit" (se abre aparte; Manolo no busca dentro de Pinterest). (5) **Tu lista
+de deseos** (`ropa_deseos`): desde "Qué te falta" (con sus pines) o desde "Te
+falta" en un pin; lo mismo (la misma clave) no se repite: suma los pines.
+"Lo compré" usa el formulario de siempre (`RopaForm.comprar`): con foto o
+sin foto, viene lleno con el grupo, el tipo, el color (si hay foto, manda el
+de la foto) y la fecha de hoy; al guardarla, el deseo queda comprado con su
+prenda. "Ya no lo quiero" la deja descartada (con Deshacer). (6) **Qué no
+comprar**: 3 o más del mismo tipo y color (por familia). (7) **El
+presupuesto** (`meta/ropa_ajustes.presupuestoMes`, opcional): lo que gastaste
+es el precio de la ropa con fecha de compra en el mes (aunque ya no la
+tengas); las de este mes sin precio se avisan. Se escribe "500" o "1.000" (el
+punto separa los miles). (8) Nunca compra nada. (9) Pruebas: `npm test` →
+818 (nuevo `ropa-compras-motor`: qué te falta, cuántos outfits nuevos, las
+reglas de "van juntas", qué no comprar, el gasto del mes, el presupuesto y la
+lista de deseos); suite nueva `ropa-compras` (50 comprobaciones) y 11
+suites cercanas sin fallas (569); Lighthouse 100 en accesibilidad y
+buenas prácticas en las 46 pantallas de Ropa.
+

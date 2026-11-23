@@ -4,7 +4,9 @@
 // prenda con el color ya puesto (sale de la foto, sin IA): grupo, qué es,
 // colores, estampado, tela, estilo, clima, qué tan formal y marca; talla,
 // precio, cuándo la compraste y notas en "Más datos". "Guardar y seguir"
-// pasa a la siguiente foto. Editar usa el mismo formulario.
+// pasa a la siguiente foto. Editar usa el mismo formulario. "Lo compré" (de
+// la lista de deseos, D-150): con foto o sin foto, el formulario ya viene con
+// lo que querías y la fecha de hoy; al guardar, avisa (para marcarlo comprado).
 (function () {
 "use strict";
 const M = window.RopaMotor, D = window.RopaDatos, A = () => window.RopaApp;
@@ -39,6 +41,7 @@ function coloresDe(mini) {
 // cola: [{ archivo, reg (foto preparada), colores }]; i: la que se está viendo.
 let cola = [], i = 0, editando = null, datos = null, guardadas = 0, ocupado = false;
 let fotoNueva = null;   // al editar: la foto nueva (se borra si no guardas)
+let relleno = null, despues = null;   // "Lo compré": lo que ya viene puesto y qué hacer al guardar
 const vacio = () => ({ grupo: "arriba", tipo: "", colores: [], estampado: "liso", tela: "", estilo: [], clima: [], formalidad: null, marca: "", talla: "", precio: "", compra: "", notas: "", fotos: [] });
 const H = () => A().hoja("ro-hoja-form");
 
@@ -82,10 +85,34 @@ document.addEventListener("click", e => {
   e.preventDefault();
   agregar(b);
 });
-function empezar(archivos) {
+function empezar(archivos, prefill, alGuardar) {
   cola = archivos.map(archivo => ({ archivo, reg: null, colores: null }));
   i = 0; editando = null; guardadas = 0;
+  relleno = prefill || null; despues = alGuardar || null;
   abrirActual();
+}
+// "Lo compré": a tu ropero, con o sin foto. prefill: { grupo, tipo, colores
+// [{ id }] }; alGuardar(id, datos): cuando quedó guardada.
+function comprar(prefill, alGuardar, desde) {
+  const h = A().hoja("ro-hoja-mas");
+  h.mostrar("Lo compraste", `<p class="rd-nota ro-compre-nota">Pasa a tu ropero con la fecha de hoy. Sácale una foto o guárdala sin foto (la pones después).</p>
+    <div class="run-mas-opciones ro-mas-ops">
+    <label class="run-mas-op ro-mas-foto"><span class="icon" data-icon="camera"></span><span><b>Sacar o elegir la foto</b><small>Una prenda por foto</small></span>
+      <input type="file" accept="image/*" class="lug-oculto" data-ro-fotos aria-label="Sacar o elegir la foto de lo que compraste"></label>
+    <button type="button" class="run-mas-op" data-ro-sinfoto><span class="icon" data-icon="edit"></span><span><b>Sin foto</b><small>Solo los datos</small></span></button>
+  </div>`);
+  if (desde) h.volver = desde;
+  if (typeof renderIcons === "function") renderIcons(h.el);
+  const datosDe = () => Object.assign({}, prefill, { colores: (prefill.colores || []).map(c => ({ id: c.id })), compra: D.hoy() });
+  h.el.onchange = e => {
+    const inp = e.target.closest("[data-ro-fotos]");
+    if (!inp || !inp.files || !inp.files.length) return;
+    const archivos = [...inp.files].filter(f => /^image\//.test(f.type || "image/")).slice(0, 1);
+    inp.value = "";
+    h.cerrar();
+    if (archivos.length) setTimeout(() => empezar(archivos, datosDe(), alGuardar), 230);
+  };
+  h.el.onclick = e => { if (e.target.closest("[data-ro-sinfoto]")) { h.cerrar(); setTimeout(() => empezar([], datosDe(), alGuardar), 230); } };
 }
 // Prepara la foto i (achicar y guardar en el teléfono como borrador), su color
 // y, si la IA está conectada, le pide que la describa (sin esperar).
@@ -118,14 +145,16 @@ function aplicarIA(ia) {
 }
 function abrirActual() {
   const x = cola[i];
-  datos = vacio();
+  datos = Object.assign(vacio(), relleno ? JSON.parse(JSON.stringify(relleno)) : {});
   if (!x) { formulario(); return; }
   H().mostrar(titulo(), `<p class="rd-nota ro-preparando">Preparando la foto…</p>`);
   H().alCerrar = descartarBorradores;
   preparar(x).then(() => {
     if (cola[i] !== x) return;
     if (x.reg) datos.fotos = [{ id: x.reg.id, mini: x.reg.mini, ancho: x.reg.ancho, alto: x.reg.alto }];
-    datos.colores = (x.colores || []).map(c => ({ id: c.id, peso: c.peso }));
+    // El color de la foto manda (es la prenda de verdad); si no salió, queda el que venía.
+    const deFoto = (x.colores || []).map(c => ({ id: c.id, peso: c.peso }));
+    if (deFoto.length || !relleno) datos.colores = deFoto;
     // La siguiente foto se va preparando (y la IA la va mirando) mientras revisas esta.
     if (cola[i + 1]) preparar(cola[i + 1]);
     if (x.iaPromesa && !x.ia && !x.iaError) {
@@ -316,6 +345,7 @@ function guardar() {
     if (i < cola.length - 1) { A().aviso(`Listo: ${nombre}.`); siguiente(); return; }
     H().cerrar();
     A().aviso(guardadas > 1 ? `Listo: ${guardadas} prendas nuevas en tu ropero.` : `Listo: ${nombre} está en tu ropero.`);
+    if (despues) { const f = despues; despues = null; relleno = null; f(id, d); }
   }).catch(e2 => { ocupado = false; A().fallo(e2); });
 }
 function siguiente() {
@@ -342,7 +372,7 @@ function cambiarFoto(archivo) {
 function editar(id, desde, ia) {
   const p = D.una(id);
   if (!p) return;
-  editando = id; cola = []; i = 0; fotoNueva = null;
+  editando = id; cola = []; i = 0; fotoNueva = null; relleno = null; despues = null;
   datos = Object.assign(vacio(), {
     grupo: p.grupo, tipo: p.tipo, colores: p.colores.map(c => ({ id: c.id, peso: c.peso })), estampado: p.estampado || "liso", tela: p.tela,
     estilo: p.estilo.slice(), clima: p.clima.slice(), formalidad: p.formalidad, marca: p.marca, talla: p.talla,
@@ -353,5 +383,5 @@ function editar(id, desde, ia) {
   if (desde) H().volver = desde;
 }
 
-window.RopaForm = { agregar, editar, coloresDe };
+window.RopaForm = { agregar, editar, comprar, coloresDe };
 })();

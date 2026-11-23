@@ -1,6 +1,20 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-23 (Ropa, fase 5, D-150: Compras): `npm test` → **818 pruebas**
+  (nuevo `ropa-compras-motor`: qué te falta —cada pin una vez, desde 2, sin
+  accesorios ni lo que quitaste, lo que ya tienes no; de otro color sí—,
+  cuántos outfits nuevos te daría, "van juntas", qué no comprar, el gasto del
+  mes, el presupuesto y la lista de deseos). Suite nueva `ropa-compras` (50
+  comprobaciones: qué te falta con sus pines, los outfits nuevos iguales a
+  las reglas, "Ver opciones en Pinterest", "A mi lista" con Deshacer, "Ya no
+  lo quiero", el presupuesto —"1.000"—, "Lo compré" sin foto y con foto, ya
+  no te falta, te pasaste, qué no comprar, desde un pin, sin inspiraciones,
+  320 px, claro, la compu y la copia de seguridad) y 11 suites cercanas sin
+  fallas (ropa, ropa-insp, ropa-outfits, respaldo, regresion, tema-claro,
+  pantalla, sin-internet, mi-dia, hojas y sw-instala: 569 comprobaciones).
+  Lighthouse (`scratchpad/lh/correr8.mjs`): 100 en accesibilidad y buenas
+  prácticas en 46 pantallas de Ropa.
 - 2026-11-23 (Ropa, fase 4, D-149: Outfits): `npm test` → **813
   pruebas** (nuevos `ropa-clima`: el pronóstico real de La Paz y Santa Cruz del
   2026-11-23 —capas y sol; calor, lluvia, viento y tormenta—, frío, nieve,
@@ -574,6 +588,12 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] "+ Otra": agrega una ocasión tuya; quítala en Ajustes de Ropa.
 - [ ] Ajustes de Ropa: marca "Friolento" y mira cómo cambian los consejos.
 - [ ] En la ficha de una prenda: "¿Con qué combino esto?".
+- [ ] Ropa › Compras: mira "Qué te falta" (con la IA mirando tus pines) y toca
+  "Ver opciones en Pinterest".
+- [ ] "A mi lista" en algo que te falta y en "Te falta" de un pin.
+- [ ] "Ponerme un presupuesto" (por ejemplo, 500) y mira cuánto te queda.
+- [ ] En tu lista: "Lo compré" (con foto) y mira que llegue a tu ropero con
+  la fecha de hoy y el precio.
 
 **Bici (2026-11)**
 - [ ] Bicis: agrega tu bici con los km que ya tiene y pónsela a tus

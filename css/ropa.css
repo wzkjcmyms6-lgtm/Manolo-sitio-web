@@ -255,6 +255,14 @@ h1.page-title.rin-ficha-t { margin-bottom: 0.2rem; font-size: 1.5rem; overflow-w
 .rin-sub3 { font-size: 0.95rem; margin: 0.4rem 0 0.2rem; }
 .rin-buscar { flex-shrink: 0; display: inline-flex; align-items: center; gap: 0.25rem; min-height: 44px; padding: 0 0.4rem; color: var(--accent-2); font-weight: 600; font-size: 0.86rem; text-decoration: none; }
 .rin-buscar [data-icon] { width: 15px; height: 15px; display: inline-flex; }
+/* Te falta (D-150): "Ver ideas" y "A mi lista", en un renglón aparte. */
+.rin-faltan li { flex-wrap: wrap; }
+.rin-falta-bot { flex-basis: 100%; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.2rem; margin-top: -0.2rem; }
+.rin-lista, .rin-en-lista { display: inline-flex; align-items: center; gap: 0.25rem; min-height: 44px; padding: 0 0.5rem; font-size: 0.86rem; font-weight: 600; }
+.rin-lista { border: 0; background: none; color: var(--accent-2); font-family: inherit; cursor: pointer; }
+.rin-lista:disabled { opacity: 0.5; cursor: default; }
+.rin-en-lista { color: var(--muted); }
+.rin-lista [data-icon], .rin-en-lista [data-icon] { width: 15px; height: 15px; display: inline-flex; }
 .rin-consejo { display: flex; gap: 0.45rem; align-items: flex-start; margin: 0 0 0.8rem; padding: 0.6rem 0.8rem; border-radius: 12px; background: rgba(255, 184, 77, 0.12); line-height: 1.4; }
 .rin-consejo [data-icon] { width: 18px; height: 18px; display: inline-flex; flex-shrink: 0; color: var(--accent-2); margin-top: 1px; }
 .rin-look .rd-nota [data-icon] { width: 15px; height: 15px; display: inline-flex; vertical-align: -2px; margin-right: 0.25rem; color: var(--accent-2); }
@@ -367,3 +375,55 @@ h1.page-title.rin-ficha-t { margin-bottom: 0.2rem; font-size: 1.5rem; overflow-w
 .roa-ocasiones li { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
 .roa-ocasiones li > span { min-width: 0; overflow-wrap: anywhere; }
 .roa-ocasiones .lib-btn-sec { min-height: 44px; flex-shrink: 0; }
+
+/* ---------- Compras (clases .rco-, D-150) ---------- */
+.rco-app { padding-bottom: calc(7rem + env(safe-area-inset-bottom)); min-width: 0; max-width: 760px; }
+.rco-sec { margin-bottom: 1.4rem; }
+.rco-sec > .ro-sub, .rco-plata .ro-sub { display: flex; align-items: center; gap: 0.45rem; margin: 0 0 0.4rem; }
+.rco-sec > .ro-sub [data-icon], .rco-plata .ro-sub [data-icon] { width: 22px; height: 22px; display: inline-flex; flex-shrink: 0; color: var(--accent-2); }
+.rco-sec > .rd-nota { margin: 0 0 0.6rem; }
+/* El presupuesto */
+.rco-plata { margin-bottom: 1.2rem; }
+.rco-plata p { margin: 0.3rem 0; line-height: 1.45; }
+.rco-barra { margin: 0.45rem 0; }
+.rco-plata.is-pasado .rco-barra i { background: var(--danger); }
+.rco-plata.is-pasado .rco-queda b { color: var(--danger); }
+.rco-plata .lib-btn-sec { min-height: 44px; margin-top: 0.3rem; }
+/* Cada cosa: lo que te falta y tu lista */
+.rco-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.8rem; }
+.rco-t { display: flex; align-items: center; gap: 0.5rem; margin: 0 0 0.2rem; font-size: 1.05rem; overflow-wrap: anywhere; }
+.rco-t .ro-puntos { flex-shrink: 0; }
+.rco-cuantas { margin: 0 0 0.5rem; color: var(--muted); font-size: 0.88rem; }
+.rco-nota { margin: 0.3rem 0; line-height: 1.45; }
+.rco-pines { list-style: none; margin: 0 0 0.5rem; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 64px); gap: 0.35rem; }
+.rco-pin { display: block; aspect-ratio: 3 / 4; border-radius: 8px; overflow: hidden; background: var(--bg-soft); }
+.rco-pin img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rco-pin > [data-icon] { display: grid; place-items: center; width: 100%; height: 100%; padding: 30%; box-sizing: border-box; color: var(--muted); }
+.rco-pin:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.rco-pin-mas { display: grid; place-items: center; border-radius: 8px; background: var(--bg-soft); color: var(--muted); font-weight: 700; font-size: 0.9rem; }
+.rco-outfits { display: flex; align-items: center; gap: 0.4rem; margin: 0 0 0.3rem; }
+.rco-outfits [data-icon] { width: 18px; height: 18px; display: inline-flex; flex-shrink: 0; color: var(--accent-2); }
+/* Los botones: lo principal primero; en el teléfono, uno por renglón. */
+.rco-bot { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.45rem; margin-top: 0.6rem; }
+.rco-bot a { text-decoration: none; }
+.rco-bot > * { display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; min-height: 44px; min-width: 0; padding-left: 0.6rem; padding-right: 0.6rem; text-align: center; }
+.rco-bot [data-icon] { width: 17px; height: 17px; display: inline-flex; flex-shrink: 0; }
+.rco-en-lista { color: var(--muted); font-weight: 600; font-size: 0.92rem; }
+.rco-en-lista [data-icon] { color: var(--accent-2); }
+.rco-compradas { margin-top: 0.8rem; }
+.rco-compradas summary { min-height: 44px; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; color: var(--muted); font-weight: 600; list-style: none; }
+.rco-compradas summary::-webkit-details-marker { display: none; }
+.rco-compradas summary::before { content: "›"; display: inline-block; width: 1ch; font-size: 1.2rem; line-height: 1; transition: transform 0.15s; }
+.rco-compradas[open] summary::before { transform: rotate(90deg); }
+.rco-compradas ul { margin: 0.2rem 0 0; padding-left: 1.2rem; line-height: 1.6; }
+.rco-compradas a { color: var(--ink); }
+/* Qué no comprar */
+.rco-sobra { list-style: none; margin: 0; padding: 0.4rem 0.9rem; }
+.rco-sobra li { display: flex; align-items: center; gap: 0.7rem; min-height: 52px; padding: 0.35rem 0; border-bottom: 1px solid var(--border); }
+.rco-sobra li:last-child { border-bottom: 0; }
+.rco-sobra li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.rco-sobra-fotos { display: flex; flex-shrink: 0; }
+.rco-sobra-fotos .ro-foto { width: 34px; border: 2px solid var(--surface); border-radius: 8px; }
+.rco-sobra-fotos .ro-foto + .ro-foto { margin-left: -12px; }
+.rco-nunca { text-align: center; margin-top: 0.4rem; }
+

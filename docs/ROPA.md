@@ -125,14 +125,16 @@ permitidos):
   `ia` ({ fecha }), `iaError` ({ veces, mensaje }), `look` (el de la IA: {
   origen, fecha, prendas [{ pin, id, parecido, porque }], faltan [{ pin,
   grupo, tipo, colores, porque }], consejo }), `oculta`, `creado`, `editado`.
-- `users/{uid}/ropa_deseos/{id}`: `tipo`, `color`, `nota`, `inspiraciones`,
-  `estado` (quiero | comprado | descartado), `creado`.
+- `users/{uid}/ropa_deseos/{id}` (D-150): `v`, `grupo`, `tipo`, `colores`
+  ([ids]), `nota`, `inspiraciones` ([ids]), `origen` (falta | pin | manual),
+  `estado` (quiero | comprado | descartado), `prendaId` (la del ropero, al
+  comprarla), `compradoFecha`, `creado`, `editado`.
 - `users/{uid}/meta/ropa_ajustes`: `pinterest` ({ usuario, tablero, titulo,
   conectado, leido, error, errorFecha } o null), `estilo` ({ resumen, claves,
   colores, prendas, fecha, pines, corregido }) (D-148); `ciudad` ({ nombre,
   region, pais, codigoPais, lat, lon, zona }), `ciudades` (las últimas 5),
   `sensacion` (friolento | normal | caluroso), `ocasiones` ([{ id, nombre,
-  como }]) (D-149); después `presupuestoMes`.
+  como }]) (D-149); `presupuestoMes` (Bs por mes, o null) (D-150).
 
 ### La IA y el puente
 - **Puente**: un Worker en Cloudflare (plan gratis). Su código va en el repo
@@ -305,6 +307,30 @@ permitidos):
 - **Ajustes de Ropa › Tus outfits**: la ciudad, cómo sientes el frío y tus
   ocasiones (para quitarlas).
 - La copia de seguridad lleva tus outfits.
+
+## Hecho en la fase 5 (D-150): Compras desde Pinterest
+- **La barra de Ropa** completa: Ropero · Outfits · **+** · Inspiración ·
+  Compras.
+- **Compras** (`#ropa-compras`, `js/ropa-compras.js`), sin IA y sin gastar
+  (con lo que la IA ya vio en tus pines; `js/ropa-compras-motor.js`):
+  - **Qué te falta**: lo que se repite en tus inspiraciones (en 2 pines o
+    más; sin accesorios) y no tienes ni igual ni parecido. Por ejemplo,
+    "Abrigo camel · En 6 de tus inspiraciones · en tu ropero, solo de otro
+    color". Con las fotos de esos pines (llevan al pin), **cuántos outfits
+    nuevos** te daría con tu ropa, **"Ver opciones en Pinterest"** (abre
+    Pinterest con la búsqueda lista: "abrigo camel outfit") y "A mi lista".
+  - **Tu lista de deseos**: lo que traes de Pinterest (desde "Qué te falta" o
+    desde "Te falta" en un pin; lo mismo no se repite). **"Lo compré"**: con
+    foto o sin foto, el formulario ya viene con lo que querías y la fecha de
+    hoy; al guardarla, pasa a tu ropero y en la lista queda como comprado.
+    "Ya no lo quiero" (con Deshacer). Abajo, "Lo que compraste".
+  - **Qué no comprar**: lo que ya tienes de sobra (3 o más del mismo tipo y
+    color).
+  - **Tu presupuesto de ropa**, si quieres: lo que gastaste en el mes (el
+    precio de lo que compraste ese mes), de cuánto, lo que te queda o cuánto
+    te pasaste.
+- Manolo nunca compra nada: solo muestra ideas.
+- La copia de seguridad lleva tu lista de deseos.
 
 ## Lo que hace el dueño
 - **Fase 0 / 3**: crear en Pinterest un tablero **público** (por ejemplo,

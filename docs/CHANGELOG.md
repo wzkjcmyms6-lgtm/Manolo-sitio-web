@@ -1,5 +1,18 @@
 # Cambios
 
+## 2026-11-23 · Ropa: Compras desde Pinterest
+- **Compras** en la barra de Ropa.
+- **Qué te falta**: lo que se repite en tus inspiraciones de Pinterest y no
+  tienes ("Abrigo camel: en 6 de tus inspiraciones"), con las fotos de esos
+  pines, cuántos outfits nuevos te daría con tu ropa y "Ver opciones en
+  Pinterest".
+- **Tu lista de deseos**: desde lo que te falta o desde un pin. "Lo compré"
+  la pasa a tu ropero (con foto o sin foto).
+- **Qué no comprar**: lo que ya tienes de sobra.
+- **Tu presupuesto de ropa** por mes, si quieres: cuánto gastaste y cuánto te
+  queda.
+- Manolo nunca compra nada.
+
 ## 2026-11-23 · Ropa: Outfits
 - **"¿Qué me pongo?"**: en Ropa › Outfits, 3 opciones solo con tu ropa para
   hoy o mañana, con el clima de tu ciudad (cualquier ciudad: La Paz por
