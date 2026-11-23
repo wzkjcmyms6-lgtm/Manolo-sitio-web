@@ -8,7 +8,7 @@
 // window.RopaIA: puente(), quien(forzar), disponible(), pinterest(),
 // describir(blob), analizar(blob), look(pin, ropero), estilo(pines),
 // tablero(datos), pin(link), imagen(url), outfits(datos), version(),
-// gasto(), tope(usd), alCambiar(fn), estado().
+// gasto(), tope(usd), alCambiar(fn), estado(), fallo(), sinInternet().
 (function () {
 "use strict";
 // La dirección del puente (se completa al instalarlo). En las pruebas se cambia
@@ -16,6 +16,7 @@
 const PUENTE = "";
 const puente = () => { try { return localStorage.getItem("manolo.puente") || PUENTE; } catch (e) { return PUENTE; } };
 let estado = null;            // lo último de /quien: { permitido, uid, lista, gasto }
+let fallo = "";               // por qué no contestó /quien la última vez ("" si contestó)
 let consultando = null;
 const oyentes = [];
 const avisar = () => oyentes.forEach(f => { try { f(estado); } catch (e) { console.error(e); } });
@@ -46,16 +47,41 @@ async function pedir(ruta, cuerpo, comoBlob) {
   if (!r.ok) throw error(j.error || `http-${r.status}`, j.mensaje || "No respondió. Intenta de nuevo.", j);
   return j;
 }
+// Lo último que contestó /quien en este teléfono (sin el gasto): si abres
+// Manolo sin internet, igual se sabe que la IA es tuya y avisa que necesita
+// conexión (D-152).
+const GUARDADO = "manolo.ropa.ia";
+function recordar(j) {
+  try { localStorage.setItem(GUARDADO, JSON.stringify({ uid: String(j.uid || ""), permitido: !!j.permitido, lista: !!j.lista })); } catch (e) { /* sin lugar */ }
+}
+function recordado() {
+  try {
+    const r = JSON.parse(localStorage.getItem(GUARDADO) || "null");
+    const uid = typeof currentUser !== "undefined" && currentUser ? currentUser.uid : "";
+    return r && uid && r.uid === uid ? r : null;
+  } catch (e) { return null; }
+}
 // ¿Quién soy para el puente? (se pregunta una vez por sesión)
 function quien(forzar) {
   if (!puente()) return Promise.resolve(null);
   if (estado && !forzar) return Promise.resolve(estado);
   if (consultando) return consultando;
-  consultando = pedir("/quien").then(j => { estado = j; avisar(); return j; })
-    .catch(e => { console.warn("Ropa IA:", e.message); return null; })
+  fallo = "";
+  consultando = pedir("/quien").then(j => { estado = j; recordar(j); avisar(); return j; })
+    .catch(e => { console.warn("Ropa IA:", e.message); fallo = e.message || "No respondió."; avisar(); return null; })
     .then(x => { consultando = null; return x; });
   return consultando;
 }
+// Sin internet y la IA es tuya (por lo de ahora o lo de la última vez): la
+// pantalla lo avisa en vez de esconder la IA.
+const sinInternet = () => {
+  if (!puente() || navigator.onLine !== false) return false;
+  const r = estado || recordado();
+  return !!(r && r.permitido && r.lista);
+};
+// Cuando vuelve internet, pregunta de nuevo si no se sabía; los avisos se actualizan.
+window.addEventListener("online", () => { if (puente() && !estado) quien(true); else avisar(); });
+window.addEventListener("offline", avisar);
 const disponible = () => !!(puente() && estado && estado.permitido && estado.lista);
 // Pinterest no necesita la clave de la IA: alcanza con el puente (versión 2 o más).
 const version = () => (estado && estado.version) || 1;
@@ -94,5 +120,5 @@ const gasto = () => pedir("/gasto").then(j => j.gasto);
 const tope = usd => pedir("/tope", { tope: usd }).then(j => j.gasto);
 
 if (typeof onAuthReady === "function") onAuthReady(() => { quien(); });
-window.RopaIA = { puente, quien, disponible, pinterest, version, describir, analizar, look, estilo, tablero, pin, imagen, outfits, gasto, tope, alCambiar: fn => { oyentes.push(fn); }, estado: () => estado };
+window.RopaIA = { puente, quien, disponible, pinterest, version, describir, analizar, look, estilo, tablero, pin, imagen, outfits, gasto, tope, alCambiar: fn => { oyentes.push(fn); }, estado: () => estado, fallo: () => fallo, sinInternet };
 })();

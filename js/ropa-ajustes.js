@@ -30,7 +30,9 @@ function pintar() {
     ia = `<p>La IA todavía no está conectada. Cuando la conectes, describirá cada prenda desde su foto.</p>
       ${uid ? `<p class="rd-nota">Tu código para conectarla:</p><p class="roa-codigo"><code>${esc(uid)}</code><button type="button" class="lib-btn-sec lib-btn-chico" data-roa="copiar">Copiar</button></p>` : ""}`;
   } else if (!e) {
-    ia = `<p class="rd-nota">Revisando la conexión con la IA…</p><button type="button" class="lib-btn-sec lib-btn-chico" data-roa="reintentar">Reintentar</button>`;
+    // Sin internet (D-152): lo dice; la IA vuelve sola cuando hay conexión.
+    ia = navigator.onLine === false ? `<p>Sin internet: la IA necesita conexión. Tu ropero funciona igual; cuando vuelva internet, se conecta sola.</p>`
+      : `<p class="rd-nota">${IA.fallo && IA.fallo() ? esc(IA.fallo()) : "Revisando la conexión con la IA…"}</p><button type="button" class="lib-btn-sec lib-btn-chico" data-roa="reintentar">Reintentar</button>`;
   } else if (!e.permitido) {
     ia = `<p>La IA de Ropa es solo para el dueño de Manolo.</p>${uid ? `<p class="rd-nota">Tu código: <code>${esc(uid)}</code></p>` : ""}`;
   } else if (!e.lista) {
@@ -40,6 +42,7 @@ function pintar() {
     const pct = Math.min(100, Math.round((g.usd / (g.tope || 1)) * 100));
     const n = sinIA().length;
     ia = `<p class="roa-ok"><span data-icon="check" aria-hidden="true"></span>La IA está conectada.</p>
+      ${navigator.onLine === false ? `<p class="rd-nota">Sin internet ahora: la IA vuelve cuando tengas conexión.</p>` : ""}
       <div class="roa-gasto">
         <p><b>Este mes: ${usd(g.usd)}</b> de ${usd(g.tope)}${g.veces ? ` · ${g.veces} ${g.veces === 1 ? "vez" : "veces"}` : ""}</p>
         <div class="rp-zap-barra roa-barra" role="img" aria-label="Llevas el ${pct} % del tope del mes"><i style="width:${pct}%"></i></div>

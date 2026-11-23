@@ -124,7 +124,13 @@ function preparar(x) {
       .then(c => { x.colores = c; }))
       .then(() => {
         if (x.reg && x.reg.blob && iaLista() && !x.iaPromesa) {
-          x.iaPromesa = IA().describir(x.reg.blob).then(p => { x.ia = p; }, e => { x.iaError = (e && e.message) || "No respondió."; });
+          x.iaPromesa = IA().describir(x.reg.blob).then(p => { x.ia = p; }, e => {
+            if (e && e.codigo === "sin-internet") x.iaSinInternet = true;
+            else x.iaError = (e && e.message) || "No respondió.";
+          });
+        } else if (x.reg && !x.iaPromesa && IA() && IA().sinInternet && IA().sinInternet()) {
+          // Abriste Manolo sin internet: la IA lo avisa (D-152).
+          x.iaSinInternet = true;
         }
         return x;
       })
@@ -157,7 +163,7 @@ function abrirActual() {
     if (deFoto.length || !relleno) datos.colores = deFoto;
     // La siguiente foto se va preparando (y la IA la va mirando) mientras revisas esta.
     if (cola[i + 1]) preparar(cola[i + 1]);
-    if (x.iaPromesa && !x.ia && !x.iaError) {
+    if (x.iaPromesa && !x.ia && !x.iaError && !x.iaSinInternet) {
       H().mostrar(titulo(), `<div class="ro-ia-espera" role="status"><span class="rsp-rueda" aria-hidden="true"></span>
         <p><b>La IA está mirando la foto…</b></p><p class="rd-nota">Tarda unos segundos. Si quieres, llénala a mano.</p>
         <button type="button" class="lib-btn-sec" data-ro-a-mano>Llenar a mano</button></div>`);
@@ -212,6 +218,7 @@ function formulario() {
     ${av && av.varias ? `<p class="ro-ia-ojo">En la foto hay varias prendas: la IA describió la principal. Mejor una prenda por foto.</p>` : ""}
     ${av && av.noPrenda ? `<p class="ro-ia-ojo">La IA no ve ropa en esta foto.</p>` : ""}
     ${x && x.iaError && !x.aMano ? `<p class="ro-ia-ojo">La IA no pudo: ${esc(x.iaError)} Llénala a mano.</p>` : ""}
+    ${x && x.iaSinInternet && !x.aMano ? `<p class="ro-ia-ojo">Sin internet: la IA no puede mirar la foto. Llénala a mano.</p>` : ""}
     <fieldset class="ro-campo"><legend>Grupo</legend><div class="ro-opciones" data-grupo="grupo">${M.GRUPOS.map(g => radio("grupo", g.id, g.nombre, d.grupo === g.id)).join("")}</div>${err("grupo")}</fieldset>
     <fieldset class="ro-campo"><legend>Qué es</legend><div class="ro-opciones" data-grupo="tipo" data-ro-tipos>${tiposHTML(d.grupo, d.tipo)}</div>${err("tipo")}</fieldset>
     <fieldset class="ro-campo"><legend>Colores</legend><div class="ro-colores" data-ro-colores>${coloresHTML()}</div>${paletaHTML()}

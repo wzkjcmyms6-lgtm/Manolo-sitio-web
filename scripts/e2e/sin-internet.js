@@ -1,6 +1,7 @@
 // Sin internet (QA 2026-11, D-119): con el service worker de verdad, la app
 // se guarda en el teléfono y, en modo avión, abren Inicio, Finanzas (el
-// disponible por día), Lugares y la copia de seguridad. Los datos de prueba
+// disponible por día), Lugares, la copia de seguridad y Ropa (tu ropero, Tus
+// números y Outfits con tu ropa, sin el clima; D-152). Los datos de prueba
 // los da el Firebase falso, servido en lugar de vendor/firebase (las demás
 // pruebas bloquean el service worker y lo inyectan con rutas).
 // Uso: node scripts/e2e/sin-internet.js
@@ -20,7 +21,12 @@ const SEED = {
   },
   "users/test/lugares": {
     l1: { v: 1, nombre: "Doña Rosa", estado: "visitado", calificacion: 5, volveria: "si", tipo: "restaurante", platos: {}, visitas: {}, fotos: [], etiquetas: [], creado: 1, actualizado: 1 }
-  }
+  },
+  // Ropa: un ropero chico (con sus miniaturas) y lo que te pusiste.
+  "users/test/ropa": Object.fromEntries([["r1", "arriba", "Polera", "blanco", "#f4f4f2"], ["r2", "abajo", "Jean", "azul-jean", "#4f6f9a"], ["r3", "zapatos", "Zapatillas", "blanco", "#f4f4f2"], ["r4", "abrigos", "Chamarra", "verde-oliva", "#6b7134"]]
+    .map(([id, grupo, tipo, color, hex], k) => [id, { v: 1, grupo, tipo, colores: [{ id: color }], estampado: "liso", clima: ["frio", "templado"], formalidad: 2, estado: "activa", creado: Date.parse("2026-10-01T12:00:00Z") + k,
+      fotos: [{ id: "f-" + id, mini: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#e9e4da"/><path d="M30 20h40l12 16-8 5-2 45H28l-2-45-8-5Z" fill="' + hex + '"/></svg>'), ancho: 900, alto: 1200 }] }])),
+  "users/test/ropa_usos": { "2026-11-10": { prendas: ["r1", "r2", "r3"], actualizado: 1 } }
 };
 
 function servidor() {
@@ -86,6 +92,19 @@ const txt = (p, sel) => p.$eval(sel, el => el.innerText.replace(/\s+/g, " ").tri
   await p.goto(`${base}/index.html#finanzas`).catch(() => {});
   await p.waitForTimeout(1500);
   ok(/por día/i.test(await txt(p, "#panel-finanzas")), "Finanzas muestra el disponible por día");
+  // Ropa (D-152): tu ropero funciona igual; Outfits arma con tu ropa sin el clima.
+  await p.evaluate(() => { location.hash = "ropa"; });
+  await p.waitForTimeout(900);
+  ok(/Jean azul/.test(await txt(p, "#ro-lista")) && /4 prendas/.test(await txt(p, "#ro-resumen")), "Ropa abre tu ropero");
+  await p.evaluate(() => { location.hash = "ropa-numeros"; });
+  await p.waitForTimeout(600);
+  ok(/^4 prendas/.test(await txt(p, "#rn-app .rn-cifras")), "y tus números");
+  await p.evaluate(() => { location.hash = "ropa-outfits"; });
+  await p.waitForTimeout(900);
+  ok(/Sin internet: no tengo el clima de hoy\. Igual puedo armar tus outfits\./.test(await txt(p, "#rof-app")), "Outfits: dice que no tiene el clima");
+  await p.click('#rof-app [data-rof="armar"]').catch(() => {});
+  await p.waitForSelector("#rof-app .rof-op", { timeout: 6000 }).catch(() => {});
+  ok((await p.$$("#rof-app .rof-op")).length >= 1, "y arma igual, con tu ropa");
   // El Worker de la búsqueda de la Biblia carga sus dos archivos sin internet
   // (sin libros pedidos: solo prueba que arranca).
   const bus = await p.evaluate(() => new Promise(res => {
