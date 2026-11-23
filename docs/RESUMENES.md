@@ -26,6 +26,7 @@ Lo que ya existe y se aprovecha:
 | Finanzas | `finanzas` (movimientos en centavos) | `FinanzasAnalisis` (gasto e ingreso sin transferencias ni excluidos) |
 | Medir tiempos | `tiempos` (segundos por actividad y día) | `TiemposStats` (mi mañana por día, mediana) |
 | Lugares | `lugares` (calificación, visitas con fecha) | zonas, ordenar |
+| Ropa | `ropa` (nombre, color, fecha de compra), `ropa_usos` (lo que te pusiste cada día) | `RopaNumerosMotor.familiaDe` (la familia de cada color); D-151 |
 
 Todas las secciones escuchan sus datos completos al abrir Manolo y los
 comparten con globales (`HabitosApp`, `Gimnasio`, `RunDatos`, `LibrosDatos`,
@@ -117,9 +118,11 @@ Para esta semana
       ahorraste, en qué se fue más, días sin gastar.
   11. Mi mañana: días medidos, tu promedio y cuánto mejoraste.
   12. Lugares: lugares nuevos, el mejor calificado, tu zona.
-  13. Tu mejor mes (con más actividad en todo) y tu día de la semana.
-  14. Contra el año anterior (si hay datos): más km, más libros…
-  15. Cierre: "Gracias por un año más", "Compartir tu año" y "Verlo otra
+  13. Ropa (D-151): tu prenda del año, los días con tu ropa anotada, las
+      prendas distintas, tu color del año y lo que compraste (sin plata).
+  14. Tu mejor mes (con más actividad en todo) y tu día de la semana.
+  15. Contra el año anterior (si hay datos): más km, más libros…
+  16. Cierre: "Gracias por un año más", "Compartir tu año" y "Verlo otra
       vez".
 - **Compartir**: cada diapositiva tiene "Compartir" (imagen vertical
   1080 × 1920) y al final una imagen con lo mejor del año. **Sin montos de
@@ -148,6 +151,11 @@ nombres de sus libros.
 enero, "Tu año" en el menú ☰ y al pie de Inicio), las imágenes de cada
 diapositiva y la del año en `js/resumen-imagen.js` y, en Hábitos,
 `HabitosApp.abrirWrapped(año)` para "Ver tu año en hábitos".
+
+### Ropa (D-151)
+"Tu semana" suma el área Ropa (los días que anotaste lo que te pusiste, lo
+que más te pusiste y lo que compraste) y "Tu año", su diapositiva (tu prenda
+del año). Los días con ropa anotada cuentan como días con algo.
 
 ### Datos
 

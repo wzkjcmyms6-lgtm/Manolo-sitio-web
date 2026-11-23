@@ -14,7 +14,7 @@ de Pinterest y diseño en `docs/ROPA.md` (D-145).
 | 3 | Inspiración de Pinterest: subir imagen o link, leer el tablero, prendas de cada pin, armar el look con tu ropa, tu estilo | ✅ en el código (D-148); Pinterest y la IA se encienden al instalar el puente |
 | 4 | Outfits: qué me pongo hoy, me lo pongo, guardar, no me gusta, con qué combino esto, calendario | ✅ (D-149): con el clima de cualquier ciudad; con reglas ya, con la IA al instalar el puente |
 | 5 | Compras desde Pinterest: qué te falta, outfits nuevos, ver opciones en Pinterest, qué no comprar, lista de deseos, presupuesto | ✅ (D-150): sin IA (con lo que la IA ya vio en tus pines) |
-| 6 | Extras: lo más y lo menos usado, colores, costo por uso, Tu semana, Tu año, Inicio | ⏳ |
+| 6 | Extras: lo más y lo menos usado, colores, costo por uso, Tu semana, Tu año, Inicio | ✅ (D-151): "Tus números", lo de hoy en Inicio y Ropa en "Tu semana" y "Tu año" |
 | 7 | Revisión final y lista para el iPhone | ⏳ |
 
 ## Tu semana, Tu año y Bici al nivel de Running (pedido del dueño, 2026-11-16) — terminado

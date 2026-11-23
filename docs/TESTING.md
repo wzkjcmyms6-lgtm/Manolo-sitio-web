@@ -1,6 +1,24 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-23 (Ropa, fase 6, D-151: Extras): `npm test` → **823 pruebas**
+  (nuevo `ropa-numeros-motor`: lo que más te pones, lo que no te pones hace 3
+  meses o más —también sin fecha—, tus colores por familia y el que más te
+  pones, cuánto te sale cada uso y lo invertido; Ropa en `resumen-motor` —la
+  semana; sin ropa no cambia nada— y en `resumen-anio` —tu prenda del año, el
+  color, las compras y la diapositiva sin plata—). Suite nueva `ropa-numeros`
+  (54 comprobaciones: las cifras, las listas y los colores iguales a las
+  reglas, cada prenda a su ficha, cambia solo, la tarjeta de Inicio —hoy, el
+  outfit para hoy, nada—, Ropa en "Tu semana" y en "Tu año" con "Compartir",
+  sin ropa, sin precios, 320 px, el contraste en oscuro y en claro, la compu)
+  y 13 suites cercanas sin fallas (resumenes, ropa, ropa-insp, ropa-outfits,
+  ropa-compras, tema-claro, mi-dia, sin-internet, regresion, pantalla,
+  respaldo, hojas y sw-instala: 742 comprobaciones). Lighthouse
+  (`scratchpad/lh/correr9.mjs`): 100 en accesibilidad y buenas prácticas en
+  52 pantallas. `scripts/e2e/comun.js` ahora exporta `auditarContraste`
+  (el contraste de `tema-claro.js`, para cualquier suite). Ojo: con el reloj
+  fijo, justo al abrir, el primer `$eval` de Playwright a veces lee la página
+  sin estilos (vacíos); `ropa-numeros` espera a que los lea.
 - 2026-11-23 (Ropa, fase 5, D-150: Compras): `npm test` → **818 pruebas**
   (nuevo `ropa-compras-motor`: qué te falta —cada pin una vez, desde 2, sin
   accesorios ni lo que quitaste, lo que ya tienes no; de otro color sí—,
@@ -594,6 +612,11 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] "Ponerme un presupuesto" (por ejemplo, 500) y mira cuánto te queda.
 - [ ] En tu lista: "Lo compré" (con foto) y mira que llegue a tu ropero con
   la fecha de hoy y el precio.
+- [ ] Ropa › Ropero › "Tus números": lo que más te pones, lo que no te pones
+  hace 3 meses o más, tus colores y cuánto te sale cada uso (pon el precio en
+  alguna ficha). Toca una prenda: abre su ficha.
+- [ ] Anota lo que te pusiste hoy y mira la tarjeta de Ropa en Inicio.
+- [ ] Menú ☰ › "Tu semana" y "Tu año": mira Ropa (tu prenda del año).
 
 **Bici (2026-11)**
 - [ ] Bicis: agrega tu bici con los km que ya tiene y pónsela a tus

@@ -2368,3 +2368,40 @@ lista de deseos); suite nueva `ropa-compras` (50 comprobaciones) y 11
 suites cercanas sin fallas (569); Lighthouse 100 en accesibilidad y
 buenas prácticas en las 46 pantallas de Ropa.
 
+**D-151 (2026-11-23) · Ropa, fase 6: Extras.** (1) **Sin IA**: reglas en
+`js/ropa-numeros-motor.js` (lo mismo cada vez), con lo que ya está en el
+teléfono (sin lecturas nuevas de Firestore). (2) **Lo que más te pones**: los
+últimos 90 días, desde 2 veces, hasta 5. **Lo que no te pones**: la última vez
+hace 90 días o más; si nunca, desde que la agregaste (90 días o más; si esa
+fecha no se sabe —antes de 2020—, sale sin decir desde cuándo); hasta 8 y "Y N
+más". (3) **Tus colores**: el principal de cada prenda, por familia (con el
+nombre y la muestra de la familia); hasta 7 y "Otros" si hay más de 8. El que
+más te pones cuenta cada vez que te pusiste algo de ese color en 90 días. El
+gráfico: una barra por color, de un solo color (#c98326 en oscuro, #a35200 en
+claro, con el contraste revisado), la muestra con borde dice qué color es y
+el número va en texto (la lista sirve de tabla; las barras no se leen dos
+veces). (4) **Costo por uso**: precio ÷ todas las veces que te la pusiste;
+con 4 o más usadas con precio, las 3 que mejor rinden y las 3 que menos (sin
+repetir); si no, una sola lista; "Sin estrenar": con precio y nunca puesta
+(hasta 5, de la más cara). Lo invertido: el precio de lo que tienes; lo
+invertido va a lo ancho (un monto no se parte en dos líneas) y, sin precios,
+no va. (5) **Lo que ya no tienes** no cuenta en "Tus números"; en "Tu semana" y
+"Tu año" sí (te la pusiste y la compraste igual). (6) **Inicio**: lo de hoy
+primero; si no, el outfit guardado para hoy; hasta 4 fotos sin accesorios y
+los nombres para el lector de pantalla; cambia solo al anotar. Y un título
+invisible, "Tus secciones", antes de las tarjetas: el lector de pantalla tiene
+los títulos en orden (h1 › h2 › h3; Lighthouse lo pedía cuando Inicio no
+muestra nada arriba). (7) **"Tu semana"** (`resumen-motor`): el área Ropa
+sale si anotaste o compraste algo en las últimas 8 semanas; "N de 7 días", lo que más te pusiste (desde 2 veces) y
+lo que compraste (por la fecha de compra); compara los días con la semana
+anterior; "Anotaste tu ropa los 7 días" entra en lo mejor (con poco peso). Los
+días con ropa anotada cuentan como días con algo. (8) **"Tu año"**
+(`resumen-anio`): tu prenda del año (desde 2 veces), los días, las prendas
+distintas, tu color del año (el que más te pusiste, contando cada vez) y lo
+que compraste; sin plata. La diapositiva va después de Lugares; si ninguna
+prenda se repite, muestra los días anotados (o lo que compraste). (9) Pruebas:
+`npm test` → 823 (nuevo `ropa-numeros-motor`; Ropa en `resumen-motor` y
+`resumen-anio`); suite nueva `ropa-numeros` (54 comprobaciones) y 13
+suites cercanas sin fallas (742); Lighthouse 100 en accesibilidad y buenas
+prácticas en 52 pantallas (Ropa, Inicio y "Tu semana", en oscuro y en claro).
+

@@ -332,6 +332,31 @@ permitidos):
 - Manolo nunca compra nada: solo muestra ideas.
 - La copia de seguridad lleva tu lista de deseos.
 
+## Hecho en la fase 6 (D-151): Extras
+- **Tus números** (`#ropa-numeros`: en el ropero, "Tus números";
+  `js/ropa-numeros.js` y `js/ropa-numeros-motor.js`), sin IA:
+  - Arriba: cuántas prendas tienes, los días que anotaste lo que te pusiste
+    (de los últimos 30) y lo que invertiste (el precio de lo que tienes).
+  - **Lo que más te pones** (los últimos 3 meses, desde 2 veces).
+  - **Lo que no te pones hace 3 meses o más** (o nunca, si la tienes hace 3
+    meses o más): "La última vez: hace 4 meses". En su ficha, "Ya no la
+    tengo".
+  - **Tus colores**: una barra por color (por familia: el gris oscuro va con
+    el negro, el camel con el beige), con su muestra y su número, y el que
+    más te pones.
+  - **Cuánto te sale cada uso**: el precio dividido por las veces que te la
+    pusiste. Lo que mejor rinde, lo que menos y lo que no estrenaste.
+  - Cada prenda lleva a su ficha. Sin lo que ya no tienes.
+- **Inicio**: la tarjeta de Ropa muestra lo que te pusiste hoy (las fotos) o,
+  si todavía no anotaste nada, el outfit que guardaste para hoy ("Para hoy
+  elegiste «Oficina fresca»"), y lleva a Outfits.
+- **"Tu semana"**: Ropa, con los días que anotaste tu ropa, lo que más te
+  pusiste y lo que compraste (contra la semana anterior).
+- **"Tu año"**: una diapositiva de Ropa con **tu prenda del año** (cuántas
+  veces te la pusiste), los días anotados, cuántas prendas distintas, tu
+  color del año y cuántas compraste (sin plata: se puede compartir). "Tu
+  prenda del año" también va en lo destacado de la imagen de tu año.
+
 ## Lo que hace el dueño
 - **Fase 0 / 3**: crear en Pinterest un tablero **público** (por ejemplo,
   "Manolo") y, con el puente instalado, conectarlo en Inspiración pegando su

@@ -1,5 +1,13 @@
 # Cambios
 
+## 2026-11-23 · Ropa: tus números
+- **Tus números** (en el ropero): lo que más te pones, lo que no te pones hace
+  3 meses o más, tus colores y cuánto te sale cada uso.
+- **Inicio**: la tarjeta de Ropa muestra lo que te pusiste hoy o el outfit que
+  elegiste para hoy.
+- **"Tu semana"** y **"Tu año"** con tu ropa: los días que la anotaste, lo que
+  más te pusiste y tu prenda del año.
+
 ## 2026-11-23 · Ropa: Compras desde Pinterest
 - **Compras** en la barra de Ropa.
 - **Qué te falta**: lo que se repite en tus inspiraciones de Pinterest y no
