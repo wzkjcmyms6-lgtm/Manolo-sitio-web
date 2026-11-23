@@ -1,8 +1,9 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-23 (Ropa, fase 6: Extras, D-151).
+Actualizado: 2026-11-23 (Ropa, fase 7: revisión final, D-152).
 
-- **Ropa con IA e inspiración de Pinterest (2026-11-22, en curso)**: el
+- **Ropa con IA e inspiración de Pinterest (2026-11-22; terminado el
+  2026-11-23, falta conectar la IA)**: el
   ropero del dueño con fotos; una IA (el mejor modelo de Claude, por un
   puente en Cloudflare con tope de gasto) describe cada prenda, arma con su
   ropa los looks de sus pines de Pinterest, propone qué ponerse cada día y
@@ -29,7 +30,10 @@ Actualizado: 2026-11-23 (Ropa, fase 6: Extras, D-151).
   IA). Fase 6 (D-151): **Tus números** (lo que más te pones, lo que no te
   pones hace 3 meses o más, tus colores y cuánto te sale cada uso), la
   tarjeta de Inicio con lo que te pusiste hoy o el outfit para hoy, y tu ropa
-  en "Tu semana" y "Tu año" (tu prenda del año). Falta del dueño: las
+  en "Tu semana" y "Tu año" (tu prenda del año). Fase 7 (D-152): revisión
+  final (todas las pruebas, Lighthouse con Ropa llena y vacía; la IA sin
+  internet lo avisa y vuelve sola; la lista para el iPhone y la guía de la
+  prueba real de la IA). Falta del dueño: las
   cuentas de Claude y Cloudflare para instalar el puente, y un tablero público
   en Pinterest.
 

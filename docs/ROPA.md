@@ -357,6 +357,37 @@ permitidos):
   color del año y cuántas compraste (sin plata: se puede compartir). "Tu
   prenda del año" también va en lo destacado de la imagen de tu año.
 
+## Hecho en la fase 7 (D-152): revisión final
+- **Todas las pruebas**: las de la app, las 46 pruebas de pantalla y las del
+  puente, sin fallas; Lighthouse 100 con Ropa llena y con Ropa vacía (lo
+  primero que ve alguien nuevo), en oscuro y en claro.
+- **Arreglos del repaso**: la IA sin internet. Ajustes de Ropa ya no se queda
+  en "Revisando la conexión…": dice "Sin internet: la IA necesita conexión" (o
+  el error del puente, con "Reintentar"); cuando vuelve internet, la IA se
+  conecta sola; al agregar una foto sin internet: "Sin internet: la IA no
+  puede mirar la foto. Llénala a mano."
+- **Revisado**: a la IA solo le llegan las fotos y la lista de tu ropa (sin
+  notas, talla ni precio), nunca tu nombre, tu correo ni tu usuario; nada se
+  borra solo (solo "Borrar", con Deshacer); todo entra en la copia de
+  seguridad; sin internet, el ropero, Tus números y Outfits funcionan igual.
+- **La lista para el iPhone**, completa: `docs/TESTING.md` › "Pruebas en el
+  iPhone" › Ropa.
+
+## La prueba real de la IA (cuando esté el puente)
+Corta, con tu OK: cuesta unos centavos (menos de US$ 0,25).
+1. Con el puente instalado, abre Ropa › el engranaje: tiene que decir "La IA
+   está conectada" y "Este mes: US$ 0,00 de US$ 8,00".
+2. "+" › "Sacar o elegir fotos": una foto de una prenda (por ejemplo, un
+   jean). La IA llena qué es, los colores, la tela, el estilo, el clima y la
+   formalidad: revísalo y guárdala.
+3. Una foto con dos prendas juntas: tiene que avisar que hay varias.
+4. Inspiración: sube una captura de un pin; ábrelo: "Lo que se ve" y "Armar
+   este look con la IA".
+5. Outfits: "¿Qué me pongo?" con la IA: 3 opciones solo con tu ropa.
+6. Vuelve al engranaje: el gasto del mes subió unos centavos.
+
+Si algo no anda, me dices qué pasó (y qué decía la pantalla) y lo reviso.
+
 ## Lo que hace el dueño
 - **Fase 0 / 3**: crear en Pinterest un tablero **público** (por ejemplo,
   "Manolo") y, con el puente instalado, conectarlo en Inspiración pegando su

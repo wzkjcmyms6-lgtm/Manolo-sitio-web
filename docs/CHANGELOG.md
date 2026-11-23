@@ -1,5 +1,14 @@
 # Cambios
 
+## 2026-11-23 · Ropa: revisión final
+- Sin internet, Ajustes de Ropa lo dice (antes se quedaba "revisando") y la IA
+  se conecta sola cuando vuelve internet. Al agregar una foto sin internet,
+  te avisa que la llenes a mano.
+- Revisadas todas las pantallas de Ropa: en el iPhone chico y grande, en
+  claro y en oscuro y en la compu.
+- La lista completa para probar Ropa en el iPhone y la guía de la prueba real
+  de la IA.
+
 ## 2026-11-23 · Ropa: tus números
 - **Tus números** (en el ropero): lo que más te pones, lo que no te pones hace
   3 meses o más, tus colores y cuánto te sale cada uso.

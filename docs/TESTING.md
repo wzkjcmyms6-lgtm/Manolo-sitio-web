@@ -1,6 +1,14 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-23 (Ropa, fase 7, D-152: revisión final): `npm test` → **823
+  pruebas**; las **46 suites** de `scripts/e2e/` sin fallas sobre la versión
+  final (3.924 comprobaciones). Nueva `ropa-final` (28: la IA sin internet con
+  un puente de mentira y las 8 pantallas de Ropa a 320, 390 —oscuro y claro—
+  y 1280 px, con el contraste de cada texto); `sin-internet` (13) suma Ropa
+  en modo avión. El Worker del puente (`puente/`, `npm run prueba`): 7.
+  Lighthouse 100 en 52 pantallas con Ropa llena (`scratchpad/lh/correr9.mjs`) y en
+  12 con Ropa vacía (`correr10.mjs`).
 - 2026-11-23 (Ropa, fase 6, D-151: Extras): `npm test` → **823 pruebas**
   (nuevo `ropa-numeros-motor`: lo que más te pones, lo que no te pones hace 3
   meses o más —también sin fecha—, tus colores por familia y el que más te
@@ -480,7 +488,7 @@
   retiraron en D-033.
 - **Dispositivo real (iPhone)**: pantalla encendida, voz y sonido se validan
   en el teléfono del dueño; nada se da por funcionando sin esa prueba.
-- **Regresión** en cada fase: `npm test` + las 38 suites de `scripts/e2e/`
+- **Regresión** en cada fase: `npm test` + las 46 suites de `scripts/e2e/`
   (ver "Cómo correr todo"; D-115: una prueba que quedó fuera de la lista
   corta se rompió sin que se viera).
 
@@ -492,7 +500,9 @@ for f in fase1 regresion hojas sw-instala emojis scalping inversiones tarjetas m
   running run-importar run-detalle run-feed run-progreso run-inteligencia run-segmentos \
   run-compartir run-qa habitos mi-dia ej-calendario ejercicio libros-progreso lectura \
   lectura-qa tiempos finanzas-diario lugares respaldo sin-internet pantalla tarjetas-minimo \
-  biblia-marcar biblia-audio rr-editor rutina-entreno tema-claro libros-n3; do node scripts/e2e/$f.js || break; done
+  biblia-marcar biblia-audio rr-editor rutina-entreno tema-claro libros-n3 bici resumenes \
+  ropa ropa-insp ropa-outfits ropa-compras ropa-numeros ropa-final; do node scripts/e2e/$f.js || break; done
+(cd puente && npm install && npm run prueba)   # el Worker del puente de Ropa
 ```
 Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
 
@@ -577,46 +587,52 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
 
-**Ropa (2026-11)**
+**Ropa (2026-11; revisión final D-152)**
+
+*Ya funciona, sin la IA:*
 - [ ] Inicio › Ropa › "+" › "Sacar o elegir fotos": elige 3 o 4 fotos a la
-  vez. En cada una, mira que el color esté bien y elige qué es.
-- [ ] "Guardar y seguir" hasta la última; mira el ropero con sus nombres.
-- [ ] Prueba los grupos, el filtro de color y buscar por la marca.
-- [ ] Abre una prenda: "Me la puse hoy", "Para lavar" y "Editar" (ponle el
-  precio y mira cuánto te sale cada vez).
+  vez. En cada una, mira que el color esté bien y elige qué es; "Guardar y
+  seguir" hasta la última.
 - [ ] Saca una foto con la cámara desde el "+" (no de la galería).
-- [ ] (Con la IA conectada) Agrega 2 o 3 fotos: mira que la IA llene todo y
-  revísalo antes de guardar. En una prenda vieja: "Describir con IA".
-- [ ] (Con la IA conectada) Ajustes de Ropa: el gasto del mes y cambia el
-  tope.
-- [ ] La barra de Ropa: Ropero, el "+" e Inspiración.
-- [ ] "+" › "Subir imágenes": elige 2 o 3 capturas de Pinterest; ábrelas.
-- [ ] (Con el puente) Inspiración › "Conectar tablero": en Pinterest, tu
-  tablero › Compartir › Copiar link, y pégalo. Mira que lleguen tus pines.
-- [ ] (Con el puente) "+" › "Link de Pinterest": pega el link de un pin.
-- [ ] (Con la IA) Abre un pin: "Lo que se ve" y "Armar este look con la IA";
-  "Me lo pongo hoy". Mira "Mi estilo" y corrígelo.
-- [ ] Ropa › Outfits: mira el clima de hoy en La Paz y toca "¿Qué me pongo?".
-- [ ] Prueba "Otra opción", "No me gusta" (y Deshacer), "Guardar" y "Me lo
-  pongo"; mira el calendario de abajo.
-- [ ] "Cambiar ciudad": busca otra (por ejemplo, Santa Cruz) y vuelve a La Paz
-  desde "Las que usaste".
-- [ ] Toca "Mañana" y "Para mañana"; al otro día, arriba dice "Para hoy
-  elegiste".
-- [ ] "+ Otra": agrega una ocasión tuya; quítala en Ajustes de Ropa.
-- [ ] Ajustes de Ropa: marca "Friolento" y mira cómo cambian los consejos.
-- [ ] En la ficha de una prenda: "¿Con qué combino esto?".
-- [ ] Ropa › Compras: mira "Qué te falta" (con la IA mirando tus pines) y toca
-  "Ver opciones en Pinterest".
-- [ ] "A mi lista" en algo que te falta y en "Te falta" de un pin.
-- [ ] "Ponerme un presupuesto" (por ejemplo, 500) y mira cuánto te queda.
-- [ ] En tu lista: "Lo compré" (con foto) y mira que llegue a tu ropero con
-  la fecha de hoy y el precio.
-- [ ] Ropa › Ropero › "Tus números": lo que más te pones, lo que no te pones
-  hace 3 meses o más, tus colores y cuánto te sale cada uso (pon el precio en
-  alguna ficha). Toca una prenda: abre su ficha.
-- [ ] Anota lo que te pusiste hoy y mira la tarjeta de Ropa en Inicio.
-- [ ] Menú ☰ › "Tu semana" y "Tu año": mira Ropa (tu prenda del año).
+- [ ] La barra de Ropa: Ropero, Outfits, "+", Inspiración y Compras.
+- [ ] El ropero: los grupos, el filtro de color y buscar por la marca.
+- [ ] Una prenda: "Me la puse hoy", "Para lavar", "Editar" (ponle el precio)
+  y "¿Con qué combino esto?".
+- [ ] "+" › "Subir imágenes": 2 o 3 capturas de Pinterest; ábrelas.
+- [ ] Outfits: el clima de hoy en La Paz y "¿Qué me pongo?"; prueba "Otra
+  opción", "No me gusta" (y Deshacer), "Guardar" y "Me lo pongo"; mira el
+  calendario de abajo.
+- [ ] "Cambiar ciudad" (por ejemplo, Santa Cruz) y vuelve a La Paz desde "Las
+  que usaste"; "Mañana" y "Para mañana" (al otro día, arriba dice "Para hoy
+  elegiste").
+- [ ] "+ Otra": una ocasión tuya; quítala en Ajustes de Ropa. Marca
+  "Friolento" y mira cómo cambian los consejos.
+- [ ] Compras: "Ponerme un presupuesto" (por ejemplo, 500); en tu lista, "Lo
+  compré" (con foto): llega a tu ropero con la fecha de hoy y el precio.
+- [ ] El ropero › "Tus números": lo que más te pones, lo que no te pones hace
+  3 meses o más, tus colores y cuánto te sale cada uso. Toca una prenda: abre
+  su ficha.
+- [ ] Anota lo que te pusiste hoy y mira la tarjeta de Ropa en Inicio; menú ☰
+  › "Tu semana" y "Tu año": mira Ropa (tu prenda del año).
+- [ ] En modo avión: abre Ropa, "Tus números" y Outfits (arma igual, sin el
+  clima).
+- [ ] Ajustes › Apariencia › Claro: mira Ropa en modo claro.
+
+*Con la IA (cuando esté el puente):*
+- [ ] La prueba real corta (`docs/ROPA.md` › "La prueba real de la IA").
+- [ ] Agrega 2 o 3 fotos: la IA llena todo; revísalo antes de guardar. En una
+  prenda vieja: "Describir con IA".
+- [ ] Ajustes de Ropa: el gasto del mes; cambia el tope.
+- [ ] Inspiración › "Conectar tablero": en Pinterest, tu tablero › Compartir ›
+  Copiar link, y pégalo; mira que lleguen tus pines. "+" › "Link de
+  Pinterest": pega el link de un pin.
+- [ ] Un pin: "Lo que se ve", "Armar este look con la IA" y "Me lo pongo hoy";
+  "Mi estilo": míralo y corrígelo.
+- [ ] Outfits con la IA. Compras: "Qué te falta" y "Ver opciones en
+  Pinterest"; "A mi lista" desde un pin.
+- [ ] En modo avión: Ajustes de Ropa dice "Sin internet"; al agregar una foto,
+  "Sin internet: la IA no puede mirar la foto". Al volver internet, la IA se
+  conecta sola.
 
 **Bici (2026-11)**
 - [ ] Bicis: agrega tu bici con los km que ya tiene y pónsela a tus

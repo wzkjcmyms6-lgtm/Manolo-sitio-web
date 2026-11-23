@@ -2405,3 +2405,40 @@ prenda se repite, muestra los días anotados (o lo que compraste). (9) Pruebas:
 suites cercanas sin fallas (742); Lighthouse 100 en accesibilidad y buenas
 prácticas en 52 pantallas (Ropa, Inicio y "Tu semana", en oscuro y en claro).
 
+**D-152 (2026-11-23) · Ropa, fase 7: revisión final.** (1) **Todas las
+pruebas**: `npm test` → 823; las 46 suites de `scripts/e2e/` sin fallas
+sobre la versión final (3.924 comprobaciones); el Worker del puente con fetch
+de mentira (`puente/`, `npm run prueba`): 7. (2) **Lighthouse** (accesibilidad
+y buenas prácticas, 375 px, oscuro y claro): 100 en las 52 pantallas con Ropa
+llena (`correr9`) y en las 12 con Ropa vacía (`correr10`: el ropero, Outfits,
+Inspiración, Compras, Tus números y Ajustes sin nada); el clima va guardado
+porque Open-Meteo a veces le contesta 429 a este entorno (comparte su IP). (3)
+**Arreglo del repaso: la IA sin internet** (el pedido: "sin internet, mi ropero
+funciona igual; la IA avisa que necesita conexión"). Antes, con el puente
+instalado y sin internet, Ajustes de Ropa se quedaba en "Revisando la conexión
+con la IA…" y la IA no volvía hasta recargar. Ahora (`js/ropa-ia.js`,
+`js/ropa-ajustes.js`, `js/ropa-form.js`): sin internet dice "Sin internet: la IA
+necesita conexión…"; si el puente no contesta, su error con "Reintentar";
+con la IA ya conectada, "Sin internet ahora"; al volver internet (`online`),
+pregunta de nuevo y se conecta sola; al agregar una foto sin internet, "Sin
+internet: la IA no puede mirar la foto. Llénala a mano." (sin pedirle nada al
+puente). Para saberlo aunque abras Manolo sin internet, el teléfono recuerda
+lo último que dijo el puente (`manolo.ropa.ia`: tu código, si es tuya y si
+está lista; sin el gasto); quien no es el dueño no ve avisos de la IA. (4)
+**Pruebas nuevas**: `ropa-final` (28 comprobaciones: la IA sin internet con un
+puente de mentira —6 de sus comprobaciones fallan con el código de antes— y
+las 8 pantallas de Ropa con un ropero lleno a 390 px en oscuro y en claro, a
+320 px y en la compu: nada se sale, cada una con su título y lo suyo a la
+vista, la barra marca lo que corresponde, el contraste de cada texto y sin
+errores); `sin-internet` (con el service worker de verdad, 13
+comprobaciones) suma Ropa en modo avión: el ropero, Tus números y Outfits, que
+arma con tu ropa sin el clima. (5) **Revisado**: a la IA solo le llegan las
+fotos, la lista de tu ropa (sin notas, talla ni precio) y una instrucción que
+dice "una app personal" (sin tu nombre, correo ni usuario; el pedido no lleva
+`metadata`); el puente no guarda fotos; Pinterest solo se lee. Nada se borra
+solo: "Borrar" (una prenda o una inspiración) es tuyo, con Deshacer, y sus
+fotos se borran cuando se va el aviso; lo demás suma o cambia el estado. La
+copia de seguridad lleva las 5 colecciones de Ropa y sus ajustes. (6) Queda
+para cuando el dueño cree las cuentas: instalar el puente y la prueba real
+corta de la IA (la guía, en `docs/ROPA.md`).
+
