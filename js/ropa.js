@@ -3,7 +3,8 @@
 // filtros en chips (color, clima, formalidad, orden, para lavar) y la grilla
 // de fotos; abajo, las que ya no tienes. La ficha (#ropa-prenda/{id}): foto,
 // datos, cuántas veces te la pusiste, "Me la puse hoy", para lavar, ya no la
-// tengo, editar y borrar (con Deshacer). Agregar y editar: js/ropa-form.js.
+// tengo, editar y borrar (con Deshacer). Agregar y editar: js/ropa-form.js
+// (el "+" de la barra de Ropa). Inspiración: js/ropa-insp.js.
 // Datos: js/ropa-datos.js; lógica: js/ropa-motor.js.
 (function () {
 "use strict";
@@ -11,6 +12,10 @@
 if (typeof ICONS === "object") {
   ICONS.ropa = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M10 5.6a2 2 0 1 1 2.6 1.9c-.4.1-.6.5-.6.9v1.2"/><path d="M12 9.6l8.1 6a1.6 1.6 0 0 1-.95 2.9H4.85a1.6 1.6 0 0 1-.95-2.9Z"/></svg>`;
   ICONS.lavar = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M4 7h16l-1.6 11.2a2 2 0 0 1-2 1.8H7.6a2 2 0 0 1-2-1.8Z"/><path d="M4 7c1.5-1.3 3-1.3 4 0s3 1.3 4 0 3-1.3 4 0 2.5 1.3 4 0"/></svg>`;
+  // Inspiración (D-148): una chinche, una imagen y un link.
+  ICONS.inspiracion = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M8.5 3.5h7"/><path d="M10 3.5l-.7 5.6-2.8 3.4h11l-2.8-3.4L14 3.5"/><path d="M12 12.5v8"/></svg>`;
+  ICONS.imagen = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M20.5 16l-4.6-4.6a1.2 1.2 0 0 0-1.7 0L6.5 19.5"/></svg>`;
+  ICONS.enlace = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M10 14a4 4 0 0 0 5.66 0l3.17-3.17a4 4 0 0 0-5.66-5.66l-1.2 1.2"/><path d="M14 10a4 4 0 0 0-5.66 0l-3.17 3.17a4 4 0 0 0 5.66 5.66l1.2-1.2"/></svg>`;
 }
 const M = window.RopaMotor, D = window.RopaDatos;
 const app = document.getElementById("ro-app"), ficha = document.getElementById("rop-app");
@@ -127,8 +132,7 @@ app.innerHTML = `
   <div class="lug-chips ro-grupos" id="ro-grupos" role="toolbar" aria-label="Grupos de prendas"></div>
   <div class="lug-chips" id="ro-chips" role="toolbar" aria-label="Filtros y orden"></div>
   <div id="ro-lista" aria-live="polite"></div>
-  <div class="ro-pie" id="ro-pie"></div>
-  <button type="button" class="lug-fab ro-fab" data-ro="agregar" aria-label="Agregar prendas"><span data-icon="plus"></span></button>`;
+  <div class="ro-pie" id="ro-pie"></div>`;
 pintarIconos(app);
 const $ = id => document.getElementById(id);
 

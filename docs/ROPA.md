@@ -58,8 +58,15 @@ permitidos):
   link del pin.
 - La **API oficial** de Pinterest pide registrar una app y esperar su
   aprobación (a veces se traba); no hace falta.
+- **El link corto del iPhone** (Compartir › Copiar link en la app de
+  Pinterest): `https://pin.it/XXXX` responde 308 a
+  `api.pinterest.com/url_shortener/XXXX/redirect/`, que lleva al pin o al
+  tablero; el puente sigue esos saltos sin bajar las páginas (probado el
+  2026-11-23).
+- **Las imágenes de `i.pinimg.com` tampoco traen CORS**: el teléfono las puede
+  mostrar, pero no guardarlas; las trae el puente (`/pinterest/imagen`).
 - **Falta probar**: con el tablero del dueño y desde el puente en Cloudflare
-  (fase 3).
+  (cuando esté instalado).
 
 ## Diseño
 
@@ -107,14 +114,20 @@ permitidos):
 - `users/{uid}/ropa_outfits/{id}`: `prendas`, `ocasion`, `clima`, `origen`
   (ia | manual | inspiracion), `inspiracionId`, `porque`, `guardado`, `gusto`
   (si | no), `creado`.
-- `users/{uid}/ropa_inspiracion/{id}`: `origen` (pinterest | foto), `pin` ({
-  url, img, titulo }), `fotos` (las subidas), `prendas` (lo que vio la IA),
-  `estilo`, `oculta`, `creado`.
+- `users/{uid}/ropa_inspiracion/{id}` (D-148; los pines con id `pin-{id del
+  pin}`, así no se repiten): `v`, `via` (tablero | link | foto), `pin` ({ id,
+  url, titulo, img, fecha }), `fotos` ([{ id, mini, ancho, alto }]),
+  `analisis` (lo que vio la IA: { esRopa, resumen, prendas [{ grupo, tipo,
+  colores, estampado, tela, detalle }], estilo, clima, formalidad, ocasion }),
+  `ia` ({ fecha }), `iaError` ({ veces, mensaje }), `look` (el de la IA: {
+  origen, fecha, prendas [{ pin, id, parecido, porque }], faltan [{ pin,
+  grupo, tipo, colores, porque }], consejo }), `oculta`, `creado`, `editado`.
 - `users/{uid}/ropa_deseos/{id}`: `tipo`, `color`, `nota`, `inspiraciones`,
   `estado` (quiero | comprado | descartado), `creado`.
-- `users/{uid}/meta/ropa_ajustes`: `ciudad` ({ nombre, lat, lon }),
-  `ocasiones`, `pinterest` ({ usuario, tablero }), `presupuestoMes`, `iaTope`,
-  `estilo` ({ resumen, corregido, fecha }).
+- `users/{uid}/meta/ropa_ajustes`: `pinterest` ({ usuario, tablero, titulo,
+  conectado, leido, error, errorFecha } o null), `estilo` ({ resumen, claves,
+  colores, prendas, fecha, pines, corregido }) (D-148); después `ciudad` ({
+  nombre, lat, lon }), `ocasiones`, `presupuestoMes`.
 
 ### La IA y el puente
 - **Puente**: un Worker en Cloudflare (plan gratis). Su código va en el repo
@@ -152,7 +165,10 @@ permitidos):
 
 ### Costos estimados (el mejor modelo)
 - Describir una prenda: 2 a 3 centavos (150 prendas: unos 4 USD, una vez).
-- Analizar un pin: unos 3 centavos (50 pines: unos 1,50 USD, una vez).
+- Analizar un pin: unos 2 a 3 centavos (50 pines: unos 1,50 USD, una vez).
+- "Armar este look con mi ropa" con la IA: unos 3 a 5 centavos (si miras
+  varios pines seguidos, menos: tu ropero queda unos minutos en caché). Sin la
+  IA (por reglas) no cuesta nada. "Mi estilo": 1 a 2 centavos.
 - "¿Qué me pongo hoy?": unos 6 centavos (2 por día: unos 4 USD al mes).
 - En total, unos 5 USD al mes; tope de 8 USD. El puente y el clima: gratis.
 
@@ -222,9 +238,42 @@ permitidos):
   con IA las que cargaste antes" (llena solo lo que falta). Quien no es el
   dueño usa Ropa sin IA.
 
+## Hecho en la fase 3 (D-148): Inspiración
+- **La barra de Ropa** (como Running y Bici): Ropero · **+** · Inspiración
+  (Outfits y Compras se suman en las fases 4 y 5); en la compu, arriba.
+  El **+**: a tu ropero (fotos o sin foto) o una inspiración (imágenes o un
+  link de Pinterest).
+- **Inspiración** (`#ropa-inspiracion`, `js/ropa-insp.js`): tu tablero de
+  Pinterest (se conecta pegando su link; Manolo trae solo los pines nuevos
+  —la imagen la trae el puente y se guarda en el teléfono— y lo vuelve a
+  leer solo si pasaron 6 horas), las imágenes que subes y los links que
+  pegas; las tarjetas en columnas, cada imagen con su forma. Con la IA, mira
+  cada una sola (una por una; si llega otra en el medio, también) y la
+  tarjeta dice cuántas prendas se ven. "Quitar de Manolo" deja oculto un pin
+  del tablero (no vuelve al actualizar; "Las que quitaste" para traerlo); las
+  imágenes subidas se borran con Deshacer.
+- **Un pin** (`#ropa-pin/{id}`): la imagen, "Ver en Pinterest", **lo que se
+  ve** (cada prenda con su nombre: "Abrigo camel largo", y el estilo, el
+  clima, la formalidad y la ocasión) y **con tu ropa**: lo más parecido de tu
+  ropero al toque y gratis (por grupo, tipo y color, `js/ropa-insp-motor.js`)
+  o, con la IA, **"Armar este look con mi ropa"** (cada prenda tuya con por
+  qué, lo que te falta con "Ver ideas" en Pinterest y un consejo; queda
+  guardado). "Me lo pongo hoy" anota esas prendas en lo que te pusiste.
+- **Mi estilo**: una fila arriba de los pines con lo que más se repite
+  (estilos, colores, prendas); con la IA, un resumen en palabras que puedes
+  **corregir** (se usará para los outfits).
+- **El puente** (versión 2): `/pinterest/tablero` (RSS del tablero, con
+  reintentos), `/pinterest/pin` (oEmbed), `/pinterest/imagen` (solo de
+  `i.pinimg.com`), y la IA: `/inspiracion`, `/look` (el ropero va con
+  referencias cortas —la IA no ve tus ids— y en caché) y `/estilo`. Pinterest
+  anda aunque falte la clave de la IA. Las instrucciones a la IA ya no dicen el
+  nombre de la app.
+- La copia de seguridad lleva las inspiraciones y sus imágenes.
+
 ## Lo que hace el dueño
-- **Fase 0**: crear en Pinterest un tablero **público** (por ejemplo, "Manolo")
-  y pasar su usuario de Pinterest y el nombre del tablero.
+- **Fase 0 / 3**: crear en Pinterest un tablero **público** (por ejemplo,
+  "Manolo") y, con el puente instalado, conectarlo en Inspiración pegando su
+  link (Compartir › Copiar link).
 - **Fase 2**: crear la cuenta de Claude (tarjeta, crédito y clave) y la de
   Cloudflare (gratis), con guía paso a paso; la clave se pega solo en
   Cloudflare.

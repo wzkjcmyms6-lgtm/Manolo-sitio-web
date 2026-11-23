@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-22 (Ropa, fase 2 lista en el código, D-147).
+Actualizado: 2026-11-23 (Ropa, fase 3: Inspiración, D-148).
 
 - **Ropa con IA e inspiración de Pinterest (2026-11-22, en curso)**: el
   ropero del dueño con fotos; una IA (el mejor modelo de Claude, por un
@@ -14,9 +14,12 @@ Actualizado: 2026-11-22 (Ropa, fase 2 lista en el código, D-147).
   y la copia de seguridad con las fotos de Ropa). Fase 2 lista en el código
   (D-147): el puente (`puente/`, Worker de Cloudflare: token de Firebase,
   solo el dueño, gasto y tope) y la IA que describe al agregar, en la ficha y
-  las que ya tenías; Ajustes de Ropa. Falta del dueño: las cuentas de Claude
-  y Cloudflare para instalar el puente, y un tablero público en Pinterest con
-  su usuario.
+  las que ya tenías; Ajustes de Ropa. Fase 3 (D-148): la barra de Ropa
+  (Ropero · + · Inspiración) e **Inspiración** (tu tablero de Pinterest por el
+  puente, links de pines e imágenes subidas; la IA reconoce las prendas de
+  cada una; "Armar este look con mi ropa" sin IA por reglas o con la IA; "Mi
+  estilo"). Falta del dueño: las cuentas de Claude y Cloudflare para instalar
+  el puente, y un tablero público en Pinterest.
 
 - **Tu semana, Tu año y Bici al nivel de Running (2026-11-16, terminado)**:
   "Tu semana" (cada lunes en Inicio: cifras de todas tus áreas, lo mejor, lo

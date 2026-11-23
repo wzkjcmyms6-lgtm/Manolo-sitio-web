@@ -38,7 +38,8 @@ const COLECCIONES = [
   { id: "tiempos", nombre: "días de Medir tiempos", uno: "día de Medir tiempos" },
   { id: "lugares", nombre: "lugares", uno: "lugar" },
   { id: "ropa", nombre: "prendas de Ropa", uno: "prenda de Ropa" },
-  { id: "ropa_usos", nombre: "días con ropa anotada", uno: "día con ropa anotada" }
+  { id: "ropa_usos", nombre: "días con ropa anotada", uno: "día con ropa anotada" },
+  { id: "ropa_inspiracion", nombre: "inspiraciones de Ropa", uno: "inspiración de Ropa" }
 ];
 const NOMBRE = Object.fromEntries(COLECCIONES.map(c => [c.id, c.nombre]));
 const MAX_BYTES = 150 * 1024 * 1024;   // un archivo más grande no es una copia de Manolo

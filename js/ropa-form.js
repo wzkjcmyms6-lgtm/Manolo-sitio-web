@@ -42,29 +42,46 @@ let fotoNueva = null;   // al editar: la foto nueva (se borra si no guardas)
 const vacio = () => ({ grupo: "arriba", tipo: "", colores: [], estampado: "liso", tela: "", estilo: [], clima: [], formalidad: null, marca: "", talla: "", precio: "", compra: "", notas: "", fotos: [] });
 const H = () => A().hoja("ro-hoja-form");
 
-// "+": cómo quieres agregar.
+// "+" (la barra de Ropa, o "Agregar prendas" del ropero vacío): a tu ropero
+// (fotos o sin foto) o una inspiración (imágenes o un link de Pinterest, con
+// js/ropa-insp.js).
 function agregar(desde) {
   const h = A().hoja("ro-hoja-mas");
-  h.mostrar("Agregar prendas", `<div class="run-mas-opciones ro-mas-ops">
+  const insp = window.RopaInsp;
+  h.mostrar("Agregar", `<h4 class="ro-mas-t">A tu ropero</h4>
+    <div class="run-mas-opciones ro-mas-ops">
     <label class="run-mas-op ro-mas-foto"><span class="icon" data-icon="camera"></span><span><b>Sacar o elegir fotos</b><small>Una prenda por foto; puedes elegir varias a la vez</small></span>
       <input type="file" accept="image/*" multiple class="lug-oculto" data-ro-fotos aria-label="Sacar o elegir fotos de tus prendas"></label>
     <button type="button" class="run-mas-op" data-ro-sinfoto><span class="icon" data-icon="edit"></span><span><b>Sin foto</b><small>Solo los datos; la foto la pones después</small></span></button>
-  </div>`);
+  </div>
+  ${insp ? `<h4 class="ro-mas-t">Inspiración</h4>
+    <div class="run-mas-opciones ro-mas-ops">
+    <label class="run-mas-op ro-mas-foto"><span class="icon" data-icon="imagen"></span><span><b>Subir imágenes</b><small>Capturas de Pinterest, de Instagram o de donde sea</small></span>
+      <input type="file" accept="image/*" multiple class="lug-oculto" data-rin-fotos aria-label="Subir imágenes de inspiración"></label>
+    <button type="button" class="run-mas-op" data-rin-link><span class="icon" data-icon="enlace"></span><span><b>Link de Pinterest</b><small>Pega el link de un pin</small></span></button>
+  </div>` : ""}`);
   if (desde) h.volver = desde;
   h.el.onchange = e => {
-    const inp = e.target.closest("[data-ro-fotos]");
+    const inp = e.target.closest("[data-ro-fotos], [data-rin-fotos]");
     if (!inp || !inp.files || !inp.files.length) return;
     const archivos = [...inp.files].filter(f => /^image\//.test(f.type || "image/")).slice(0, 30);
+    const esInsp = inp.hasAttribute("data-rin-fotos");
     inp.value = "";
     h.cerrar();
-    if (archivos.length) setTimeout(() => empezar(archivos), 230);
+    if (archivos.length) setTimeout(() => (esInsp ? insp.subir(archivos) : empezar(archivos)), 230);
   };
   h.el.onclick = e => {
-    if (!e.target.closest("[data-ro-sinfoto]")) return;
-    h.cerrar();
-    setTimeout(() => empezar([]), 230);
+    if (e.target.closest("[data-ro-sinfoto]")) { h.cerrar(); setTimeout(() => empezar([]), 230); }
+    else if (e.target.closest("[data-rin-link]")) { h.cerrar(); setTimeout(() => insp.pegarLink(desde), 230); }
   };
 }
+// El "+" de la barra de Ropa (o el "+ Agregar" de la compu).
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-ropa-mas]");
+  if (!b) return;
+  e.preventDefault();
+  agregar(b);
+});
 function empezar(archivos) {
   cola = archivos.map(archivo => ({ archivo, reg: null, colores: null }));
   i = 0; editando = null; guardadas = 0;

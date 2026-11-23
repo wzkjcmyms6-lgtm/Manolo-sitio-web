@@ -82,7 +82,7 @@ function idsFotos() {
   const F = Fotos();
   return F ? F.todas().then(regs => regs.map(r => r.id), () => []) : Promise.resolve([]);
 }
-// Fotos de Ropa de este teléfono (D-146): solo las de prendas que existen.
+// Fotos de Ropa de este teléfono (D-146, D-148): solo las de prendas e inspiraciones que existen.
 const FotosRopa = () => (window.RopaDatos && window.RopaDatos.Fotos) || null;
 function fotosRopaDe(prendas) {
   const F = FotosRopa();
@@ -96,8 +96,8 @@ function idsFotosRopa() {
   const F = FotosRopa();
   return F ? F.todas().then(regs => regs.map(r => r.id), () => []) : Promise.resolve([]);
 }
-// Las fotos de los dos lados (Lugares y Ropa) para una copia.
-const todasLasFotos = colecciones => Promise.all([fotosDe(colecciones.lugares || {}), fotosRopaDe(colecciones.ropa || {})]);
+// Las fotos de los dos lados (Lugares y Ropa: prendas e inspiraciones, D-148) para una copia.
+const todasLasFotos = colecciones => Promise.all([fotosDe(colecciones.lugares || {}), fotosRopaDe(Object.assign({}, colecciones.ropa || {}, colecciones.ropa_inspiracion || {}))]);
 
 // ---------- Copias automáticas (IndexedDB de este teléfono) ----------
 const BASE = "manolo-respaldos", ALMACEN = "copias";

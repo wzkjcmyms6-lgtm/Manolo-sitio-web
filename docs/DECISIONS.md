@@ -2225,3 +2225,43 @@ en las 12 pantallas de Ropa (con Ajustes y el formulario llenado por la IA),
 en oscuro y en claro. **Falta**: instalar el puente con las cuentas del
 dueño (Claude y Cloudflare) y la prueba real corta.
 
+**D-148 (2026-11-23) · Ropa, fase 3: Inspiración de Pinterest.**
+(1) **La barra de Ropa** (como Running y Bici, D-061): Ropero · "+" ·
+Inspiración; el "+" abre una hoja con dos partes (a tu ropero / inspiración).
+Se va el botón flotante y el "Inicio" de arriba (vuelve la casita). Outfits y
+Compras entran a la barra en sus fases. (2) **Pinterest lo lee el puente**:
+ni el RSS, ni oEmbed, ni las imágenes de `i.pinimg.com` traen permiso CORS.
+Rutas nuevas (`puente/src/pinterest.js`, sin red y probado): el tablero por
+RSS (reintenta: a veces da 404 un rato), un pin por oEmbed, el link corto
+`pin.it` del iPhone (se siguen las redirecciones sin bajar páginas y sin salir
+de Pinterest) y la imagen (solo de `i.pinimg.com`, 736 px o la que haya). No
+necesitan la clave de la IA. A Pinterest no le llega ni el nombre de la app ni
+el usuario. (3) **Cada inspiración** se guarda en `ropa_inspiracion` (los
+pines con id `pin-{id}`, así no se repiten); la imagen vive en el teléfono
+(como las prendas, clase "inspiracion") y, si no está (otro teléfono), se ve
+desde Pinterest. Los pines del tablero que quitas quedan ocultos, para que no
+vuelvan al actualizar. El tablero se lee solo si pasaron 6 horas (y una vez
+por vez que abres la app); una sola lectura a la vez. (4) **La IA mira cada
+imagen sola** (`/inspiracion`, esfuerzo bajo, esquema fijo): lo que se ve, de
+arriba abajo (hasta 8 prendas, sin describir a la persona), el estilo, el
+clima, la formalidad y la ocasión. Una por una; si en el medio llegan otras,
+también; dos fallas en la misma: se deja; si la IA no puede (tope, sin
+internet), se pausa 5 minutos. (5) **"Armar este look con mi ropa"**: sin IA,
+al toque y gratis, por reglas (`js/ropa-insp-motor.js`: mismo grupo; tipo
+igual, de la misma familia u otro; color igual, de la familia o cerca; las
+mejores parejas primero, cada prenda una vez; las para lavar valen menos; los
+accesorios no se piden). Con la IA (`/look`, esfuerzo medio): el ropero va
+sin notas, talla, precio ni fotos, con referencias cortas (p1, p2…) que el
+puente vuelve a los ids (la IA nunca ve tus ids y no puede inventar
+prendas), primero y en caché; el look de la IA queda guardado. (6) **Mi
+estilo**: lo que más se repite, sin IA; con la IA (`/estilo`, desde 3 pines
+con ropa), un resumen que se puede corregir (`meta/ropa_ajustes.estilo`).
+(7) Las instrucciones a la IA ya no dicen el nombre de la app. (8) Pruebas:
+`npm test` → 795 (nuevos `puente-pinterest` y `ropa-insp-motor`, y
+inspiración, look y estilo en `puente-logica`); el Worker entero con fetch de
+mentira (`cd puente && npm run prueba`, 6 pruebas: el tablero con el link
+corto y un 404, el pin y su imagen, la IA con su pedido de verdad —respaldo,
+esfuerzo, esquema, caché—, el tope); suite `ropa-insp` (107
+comprobaciones) y `ropa` (159); Lighthouse 100 en accesibilidad y buenas
+prácticas en las 24 pantallas de Ropa (12 en oscuro y 12 en claro).
+

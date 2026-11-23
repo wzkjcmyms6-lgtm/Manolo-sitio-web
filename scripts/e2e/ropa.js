@@ -54,8 +54,9 @@ function elegirFotos(p, pares) {
     });
   }), pares);
 }
+// El "+" de la barra de Ropa (D-148; en la compu, el "+ Agregar" de arriba).
 async function abrirMas(p) {
-  await p.click('#ro-app [data-ro="agregar"] >> nth=0');
+  await p.locator("[data-ropa-mas]").locator("visible=true").first().click();
   await p.waitForSelector(".ro-hoja-mas:not([hidden]) [data-ro-fotos]", { state: "attached", timeout: 4000 });
   await p.waitForTimeout(250);
 }
@@ -72,7 +73,7 @@ async function fase1(browser, base, ancho) {
   await p.click('a.card[href="#ropa"]');
   await p.waitForTimeout(400);
   ok(await p.isVisible("#panel-ropa") && /Tu ropero está vacío/.test(await txt(p, "#ro-lista")), "vacío: invita a agregar");
-  ok(await p.isVisible(".ro-fab"), "el botón + para agregar");
+  ok(await p.isVisible("#bottom-nav-links [data-ropa-mas]") && /Ropero/.test(await txt(p, "#bottom-nav-links")) && /Inspiración/.test(await txt(p, "#bottom-nav-links")), "la barra de Ropa: Ropero, + e Inspiración");
   ok(!(await p.isVisible("#verse-banner")), "sin el versículo arriba");
 
   // Dos fotos de una vez: polera roja sobre la cama blanca y un jean azul marino sobre el piso beige.

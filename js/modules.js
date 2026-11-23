@@ -55,6 +55,8 @@ const SUB_PANELS = [
   { hash: "ropa", parent: "inicio" },
   { hash: "ropa-prenda", parent: "ropa" },
   { hash: "ropa-ajustes", parent: "ropa" },
+  { hash: "ropa-inspiracion", parent: "ropa" },
+  { hash: "ropa-pin", parent: "ropa-inspiracion" },
   { hash: "semana", parent: "inicio" },
   { hash: "fin-presupuesto", parent: "finanzas" },
   { hash: "fin-movimientos", parent: "finanzas" },
@@ -122,7 +124,14 @@ const BICI_TABS = [
   { hash: "bici-segmentos", label: "Segmentos", icon: "segmento", color: "#ff7a30" },
   { hash: "bici-bicis", label: "Bicis", icon: "tools", color: "#ff7a30" }
 ];
-const TAB_BARS = { habitos: HAB_TABS, finanzas: FIN_TABS, ejercicio: EJ_TABS, inversiones: INV_TABS, running: RUN_TABS, bicicleta: BICI_TABS };
+// Ropa también (D-148): Ropero · "+" (prendas o inspiración) · Inspiración.
+// Outfits (fase 4) y Compras (fase 5) se suman después.
+const ROPA_TABS = [
+  { hash: "ropa", label: "Ropero", icon: "ropa", color: "#ffb84d" },
+  { accion: "ropa-mas", label: "Agregar", icon: "plus" },
+  { hash: "ropa-inspiracion", label: "Inspiración", icon: "inspiracion", color: "#ffb84d" }
+];
+const TAB_BARS = { habitos: HAB_TABS, finanzas: FIN_TABS, ejercicio: EJ_TABS, inversiones: INV_TABS, running: RUN_TABS, bicicleta: BICI_TABS, ropa: ROPA_TABS };
 
 // Grupo de pestañas de un hash: el primer nivel (subiendo) que tiene barra
 // propia. Para Finanzas, Hábitos, etc. es el módulo; para Running, "running".
@@ -209,8 +218,8 @@ function showPanel(hash) {
 // En escritorio no hay barra inferior: cada módulo con pestañas propias las
 // muestra como pills arriba de cada una de sus secciones. En móvil se ocultan
 // (.fin-outer-tabs). Finanzas e Inversiones suman el engranaje de Ajustes.
-const PILLS_ESCRITORIO = { habitos: "Secciones de Hábitos", ejercicio: "Secciones de Ejercicio", finanzas: "Secciones de Finanzas", inversiones: "Secciones de Inversiones", running: "Secciones de Running", bicicleta: "Secciones de Bici" };
-const PILL_AJUSTES = { finanzas: ["fin-ajustes", "Ajustes de Finanzas"], inversiones: ["inv-ajustes", "Ajustes de Inversiones"], running: ["run-ajustes", "Ajustes de Running"], bicicleta: ["bici-ajustes", "Ajustes de Bici"] };
+const PILLS_ESCRITORIO = { habitos: "Secciones de Hábitos", ejercicio: "Secciones de Ejercicio", finanzas: "Secciones de Finanzas", inversiones: "Secciones de Inversiones", running: "Secciones de Running", bicicleta: "Secciones de Bici", ropa: "Secciones de Ropa" };
+const PILL_AJUSTES = { finanzas: ["fin-ajustes", "Ajustes de Finanzas"], inversiones: ["inv-ajustes", "Ajustes de Inversiones"], running: ["run-ajustes", "Ajustes de Running"], bicicleta: ["bici-ajustes", "Ajustes de Bici"], ropa: ["ropa-ajustes", "Ajustes de Ropa"] };
 function crearPillsEscritorio() {
   Object.keys(PILLS_ESCRITORIO).forEach(grupo => {
     TAB_BARS[grupo].forEach(tab => {

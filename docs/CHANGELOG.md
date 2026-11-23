@@ -1,5 +1,15 @@
 # Cambios
 
+## 2026-11-23 · Ropa: Inspiración
+- **Ropa tiene su barra abajo**: Ropero · **+** · Inspiración.
+- **Inspiración**: guarda lo que te gusta: capturas, links de pines de
+  Pinterest o tu tablero entero (Manolo trae solo los pines nuevos).
+- Con la IA conectada: reconoce las prendas de cada inspiración y **arma ese
+  look con tu ropa** (y te dice qué te falta). Sin IA, igual te muestra lo
+  más parecido de tu ropero.
+- **Mi estilo**: lo que más se repite en lo que te gusta (y, con la IA, en
+  palabras, para que lo corrijas si quieres).
+
 ## 2026-11-22 · Ropa: lista para la IA
 - **Ajustes de Ropa** (el engranaje de arriba): si la IA está conectada,
   cuánto llevas gastado en el mes y el tope; si no, tu código para

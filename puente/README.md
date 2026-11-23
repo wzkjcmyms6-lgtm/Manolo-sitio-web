@@ -12,8 +12,13 @@ dependencias; esto se instala aparte, en la cuenta de Cloudflare del dueño.
   tope (8 USD al empezar; se cambia desde Ajustes de Ropa).
 - No guarda fotos ni textos.
 
-Rutas: `GET /quien`, `GET /gasto`, `POST /tope`, `POST /describir`.
-Lógica sin red en `src/logica.js` (pruebas: `tests/puente-logica.test.js`).
+Rutas: `GET /quien`, `GET /gasto`, `POST /tope`; la IA: `POST /describir`,
+`/inspiracion`, `/look`, `/estilo`; Pinterest (solo lectura, sin la IA):
+`POST /pinterest/tablero`, `/pinterest/pin`, `/pinterest/imagen`.
+Lógica sin red en `src/logica.js` y `src/pinterest.js` (pruebas:
+`tests/puente-logica.test.js` y `tests/puente-pinterest.test.js`, en el
+`npm test` de la app). El Worker entero, con fetch de mentira:
+`npm run prueba` (aquí, después de `npm install`).
 
 ## Instalar (lo hace el agente, con el token de Cloudflare del dueño)
 

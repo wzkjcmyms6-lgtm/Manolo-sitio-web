@@ -128,3 +128,115 @@ test("la foto que manda Manolo", async () => {
   assert.equal(L.fotoValida({ tipo: "image/jpeg", imagen: img + "<script>" }), null);
   assert.equal(L.fotoValida(null), null);
 });
+
+// Cada objeto del esquema: additionalProperties false y todo obligatorio; sin límites.
+function revisarEsquema(s, donde) {
+  if (s.type === "object") {
+    assert.equal(s.additionalProperties, false, `${donde}: additionalProperties`);
+    assert.deepEqual([...s.required].sort(), Object.keys(s.properties).sort(), `${donde}: todo obligatorio`);
+    Object.entries(s.properties).forEach(([k, v]) => revisarEsquema(v, `${donde}.${k}`));
+  }
+  if (s.type === "array") revisarEsquema(s.items, `${donde}[]`);
+  assert.ok(!/minimum|maximum|minItems|maxItems|minLength|maxLength|multipleOf/.test(JSON.stringify(s)), `${donde}: sin límites`);
+}
+
+test("inspiración (D-148): esquemas e instrucciones, sin el nombre de la app", async () => {
+  const L = await cargar();
+  revisarEsquema(L.ESQUEMA_INSPIRACION, "inspiracion");
+  revisarEsquema(L.ESQUEMA_LOOK, "look");
+  revisarEsquema(L.ESQUEMA_ESTILO, "estilo");
+  assert.deepEqual(L.ESQUEMA_INSPIRACION.properties.prendas.items.properties.colores.items.enum, R.COLORES.map(c => c.id));
+  const todas = [L.instruccionesPrenda(), L.instruccionesInspiracion(), L.instruccionesLook(), L.instruccionesEstilo()];
+  todas.forEach(t => assert.ok(!/Manolo/.test(t), "las instrucciones no dicen el nombre de la app"));
+  assert.match(L.instruccionesInspiracion(), /No describas a la persona/);
+  assert.match(L.instruccionesInspiracion(), /Chompa con capucha/);
+  assert.match(L.instruccionesLook(), /SOLO su ropa/);
+  assert.match(L.instruccionesLook(), /Nunca inventes una referencia/);
+  assert.match(L.instruccionesEstilo(), /nunca de la persona/);
+});
+
+const PIN = {
+  esRopa: true, resumen: "Casual de invierno: abrigo camel largo con jean recto", estilo: ["casual", "clasico"], clima: ["frio"], formalidad: 2, ocasion: "fin de semana",
+  prendas: [
+    { grupo: "abrigos", tipo: "Abrigo", colores: ["camel"], estampado: "liso", tela: "Lana", detalle: "largo" },
+    { grupo: "arriba", tipo: "Chompa", colores: ["crema"], estampado: "liso", tela: "Punto", detalle: "cuello alto" },
+    { grupo: "abajo", tipo: "Jean", colores: ["azul-jean"], estampado: "liso", tela: "Jean", detalle: "recto" },
+    { grupo: "zapatos", tipo: "Botines", colores: ["cafe"], estampado: "liso", tela: "Cuero", detalle: "" }
+  ]
+};
+
+test("lo que la IA vio en un pin se limpia", async () => {
+  const L = await cargar();
+  const x = L.limpiarInspiracion(Object.assign({}, PIN, {
+    prendas: PIN.prendas.concat([{ grupo: "luna", tipo: "X" }, { grupo: "accesorios", tipo: "", colores: ["violeta", "negro"], estampado: "raro", tela: 5, detalle: "  muy   largo  " }]),
+    estilo: ["casual", "casual", "hippie"], formalidad: 7, ocasion: "x".repeat(200)
+  }));
+  assert.equal(x.prendas.length, 5, "sin la de un grupo que no existe");
+  assert.deepEqual(x.prendas[4], { grupo: "accesorios", tipo: "Cinturón", colores: ["negro"], estampado: "liso", tela: "5", detalle: "muy largo" });
+  assert.deepEqual(x.estilo, ["casual"]);
+  assert.equal(x.formalidad, null);
+  assert.equal(x.ocasion.length, 60);
+  const muchas = L.limpiarInspiracion({ prendas: Array.from({ length: 12 }, () => PIN.prendas[0]) });
+  assert.equal(muchas.prendas.length, 8);
+  assert.deepEqual(L.limpiarInspiracion({ esRopa: false, prendas: PIN.prendas }).prendas, [], "sin ropa: sin prendas");
+  assert.equal(L.limpiarInspiracion(null).esRopa, true);
+});
+
+test("armar el look: el ropero va con referencias cortas y vuelve con tus ids", async () => {
+  const L = await cargar();
+  const ropero = [
+    { id: "abc123", grupo: "abrigos", tipo: "Abrigo", colores: ["beige"], estampado: "liso", tela: "Lana", estilo: ["clasico"], clima: ["frio"], formalidad: 3, marca: "Zara", notas: "regalo de mi mamá", precio: 500, talla: "M" },
+    { id: "jean_1", grupo: "abajo", tipo: "Jean", colores: ["azul-jean"], estampado: "liso", tela: "Jean", estilo: ["casual"], clima: ["frio", "templado"], formalidad: 2, lavar: true },
+    { id: "jean_1", grupo: "abajo", tipo: "Repetido" },
+    { id: "mal id!", grupo: "abajo", tipo: "Jean" },
+    { id: "zz", grupo: "luna", tipo: "Jean" },
+    { id: "polera-9", grupo: "arriba", tipo: "Polera", colores: ["blanco"] }
+  ];
+  const e = L.entradaLook({ pin: PIN, ropero });
+  assert.deepEqual(e.ropero.map(p => p.id), ["abc123", "jean_1", "polera-9"], "solo ids válidos, sin repetir");
+  assert.ok(!("notas" in e.ropero[0]) && !("precio" in e.ropero[0]) && !("talla" in e.ropero[0]), "sin notas, precio ni talla");
+  assert.equal(L.entradaLook({ pin: { prendas: [] }, ropero }), null, "sin prendas en el pin, nada");
+  assert.equal(L.entradaLook({ pin: PIN, ropero: [] }), null, "sin ropero, nada");
+  const { texto, refs } = L.textoRopero(e.ropero);
+  assert.equal(texto.split("\n")[1], "p1 · abrigos · Abrigo · beige · Lana · clasico · frio · formal 3 · Zara");
+  assert.equal(texto.split("\n")[2], "p2 · abajo · Jean · azul jean · Jean · casual · frio, templado · formal 2 · para lavar");
+  assert.ok(!/abc123|jean_1|polera-9|regalo/.test(texto), "la IA no ve tus ids ni tus notas");
+  assert.deepEqual([...refs.entries()], [["p1", "abc123"], ["p2", "jean_1"], ["p3", "polera-9"]]);
+  const t = L.textoLook(e.pin);
+  assert.match(t, /^El look de inspiración: Casual de invierno/);
+  assert.match(t, /1\. abrigos · Abrigo · camel · Lana · largo/);
+  assert.match(t, /4\. zapatos · Botines · cafe · Cuero/);
+  // Lo que contesta la IA.
+  const look = L.limpiarLook({
+    prendas: [
+      { pin: 1, ref: "p1", parecido: "parecida", porque: "Mismo largo, en beige." },
+      { pin: 3, ref: "P2", parecido: "igual", porque: "Tu jean." },
+      { pin: 2, ref: "p9", parecido: "igual", porque: "no existe" },
+      { pin: 3, ref: "p3", parecido: "igual", porque: "esa ya está" },
+      { pin: 2, ref: "p1", parecido: "igual", porque: "repetida" },
+      { pin: 9, ref: "p3", parecido: "igual", porque: "fuera de rango" }
+    ],
+    faltan: [{ pin: 4, grupo: "zapatos", tipo: "Botines", colores: ["cafe"], porque: "No tienes botines." }, { pin: 1, grupo: "abrigos", tipo: "Abrigo", colores: [], porque: "ya cubierta" }, { pin: 2, grupo: "luna", tipo: "x", colores: [], porque: "" }],
+    consejo: "Dobla el jean una vez."
+  }, refs, 4);
+  assert.deepEqual(look.prendas, [
+    { pin: 1, id: "abc123", parecido: "parecida", porque: "Mismo largo, en beige." },
+    { pin: 3, id: "jean_1", parecido: "igual", porque: "Tu jean." }
+  ]);
+  assert.deepEqual(look.faltan, [{ pin: 4, grupo: "zapatos", tipo: "Botines", colores: ["cafe"], porque: "No tienes botines." }]);
+  assert.equal(look.consejo, "Dobla el jean una vez.");
+  assert.deepEqual(L.limpiarLook(null, refs, 4), { prendas: [], faltan: [], consejo: "" });
+});
+
+test("mi estilo: desde 3 pines, y lo que contesta la IA se limpia", async () => {
+  const L = await cargar();
+  assert.equal(L.entradaEstilo({ pines: [PIN, PIN] }), null);
+  assert.equal(L.entradaEstilo({ pines: [PIN, PIN, { esRopa: false }] }), null, "los que no tienen ropa no cuentan");
+  const e = L.entradaEstilo({ pines: [PIN, PIN, PIN] });
+  assert.equal(e.pines.length, 3);
+  const t = L.textoEstilo(e.pines);
+  assert.match(t, /^Mis pines de inspiración/);
+  assert.match(t, /1\. Casual de invierno: abrigo camel largo con jean recto \(casual, clasico\): Abrigo camel largo; Chompa crema cuello alto; Jean azul jean recto; Botines cafe\./);
+  const s = L.limpiarEstilo({ resumen: " Te gusta lo   neutro. ", claves: ["neutros", "neutros", "", "capas", "a", "b", "c", "d", "e"], colores: ["camel", "nada", "negro"], prendas: ["Abrigo largo"] });
+  assert.deepEqual(s, { resumen: "Te gusta lo neutro.", claves: ["neutros", "capas", "a", "b", "c", "d"], colores: ["camel", "negro"], prendas: ["Abrigo largo"] });
+});

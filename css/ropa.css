@@ -162,3 +162,113 @@ h1.page-title.ro-ficha-t { margin-bottom: 0.2rem; font-size: 1.7rem; overflow-wr
 @media (max-width: 360px) { .ro-form-botones .lib-btn, .ro-form-botones .lib-btn-sec { padding-left: 0.6rem; padding-right: 0.6rem; font-size: 0.88rem; white-space: nowrap; } }
 .ro-preparando { text-align: center; padding: 2rem 0; }
 .ro-hoja button:focus-visible, .ro-hoja a:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+
+/* ---------- Inspiración (clases .rin-, D-148) ---------- */
+#panel-ropa-pin .back-link { min-height: 44px; }
+.rin-app { padding-bottom: calc(7rem + env(safe-area-inset-bottom)); min-width: 0; max-width: 980px; }
+.rinp-app { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); min-width: 0; max-width: 640px; }
+.rin-mensaje { margin: 0 0 0.8rem; }
+.rin-tablero { margin-bottom: 0.9rem; }
+.rin-tablero .ro-sub, .rin-vista .ro-sub, .rin-look .ro-sub, .roa-pin .ro-sub { display: flex; align-items: center; gap: 0.45rem; }
+.rin-tablero .ro-sub [data-icon], .rin-vista .ro-sub [data-icon], .rin-look .ro-sub [data-icon], .roa-pin .ro-sub [data-icon] { width: 20px; height: 20px; display: inline-flex; flex-shrink: 0; color: var(--accent-2); }
+.rin-tablero-fila { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.rin-tablero-fila .ro-sub { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.rin-tablero-fila .lib-btn-sec { flex-shrink: 0; min-height: 44px; }
+.rin-tablero p { margin: 0.4rem 0 0; line-height: 1.45; }
+.rin-tablero .lib-btn { margin-top: 0.7rem; }
+.rin-error { margin: 0.4rem 0 0.6rem; padding: 0.55rem 0.8rem; border-radius: 12px; background: var(--estado-aviso-fondo); color: var(--ink); font-size: 0.88rem; line-height: 1.4; }
+.rin-rueda { display: inline-block; width: 14px; height: 14px; margin-right: 0.45rem; vertical-align: -2px; }
+.rin-tarea { margin: 0 0 0.9rem; }
+/* "Mi estilo": una fila que abre su hoja */
+.rin-estilo-fila {
+  width: 100%; display: flex; align-items: center; gap: 0.75rem; min-height: 64px; margin: 0 0 0.9rem; padding: 0.7rem 0.9rem;
+  border-radius: var(--radio-caja); border: 1px solid var(--border); background: var(--surface); color: var(--ink);
+  font: inherit; text-align: left; cursor: pointer; touch-action: manipulation; box-sizing: border-box;
+}
+.rin-estilo-fila:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.rin-estilo-ic { flex-shrink: 0; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: rgba(255, 184, 77, 0.12); color: var(--accent-2); }
+.rin-estilo-ic [data-icon] { width: 20px; height: 20px; display: inline-flex; }
+.rin-estilo-txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.rin-estilo-txt small { color: var(--muted); font-size: 0.85rem; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.rin-estilo-ir { flex-shrink: 0; width: 18px; height: 18px; display: inline-flex; color: var(--muted); }
+.rin-estilo-nota { display: flex; gap: 0.45rem; align-items: flex-start; margin: 0 0 0.9rem; }
+.rin-estilo-nota > [data-icon] { width: 16px; height: 16px; flex-shrink: 0; display: inline-flex; color: var(--accent-2); margin-top: 2px; }
+.rin-estilo-hoja { display: flex; flex-direction: column; gap: 0.2rem; }
+.rin-estilo-hoja .ro-infos { margin-bottom: 0.5rem; }
+.rin-estilo-t { margin: 0 0 0.6rem; line-height: 1.5; }
+.rin-estilo-bot { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.8rem; padding-bottom: calc(0.6rem + env(safe-area-inset-bottom)); }
+.rin-estilo-bot > * { width: 100%; }
+.rin-look-bot { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.rin-look-bot > * { flex: 1 1 auto; }
+.rin-estilo-bot .lib-btn, .rin-estilo-bot .lib-btn-sec, .rin-look-bot .lib-btn, .rin-look-bot .lib-btn-sec, .rin-ver, .rin-vacio-bot .lib-btn-sec {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; min-height: 44px;
+}
+.rin-estilo-bot [data-icon], .rin-look-bot [data-icon], .rin-ver [data-icon], .rin-vacio-bot [data-icon], .rinp-app .ro-acciones [data-icon] { width: 18px; height: 18px; display: inline-flex; }
+
+/* La grilla de pines: en columnas, cada imagen con su forma */
+.rin-grilla { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 0.7rem; }
+@media (min-width: 640px) { .rin-grilla { columns: 3; column-gap: 0.9rem; } }
+@media (min-width: 960px) { .rin-grilla { columns: 4; } }
+.rin-grilla > li { break-inside: avoid; margin-bottom: 0.7rem; }
+.rin-card {
+  position: relative; display: flex; flex-direction: column; gap: 0.3rem; padding: 0.4rem 0.4rem 0.6rem; border-radius: var(--radio-caja);
+  border: 1px solid var(--border); background: var(--surface); color: var(--ink); text-decoration: none; box-sizing: border-box;
+  transition: transform var(--anim-rapida) ease;
+}
+.rin-card:active { transform: scale(0.985); }
+.rin-card:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.rin-foto { display: block; aspect-ratio: 3 / 4; border-radius: 10px; overflow: hidden; background: var(--bg-soft); }
+.rin-foto img, .rin-ficha-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rin-foto.is-vacia, .rin-ficha-foto.is-vacia { display: grid; place-items: center; color: var(--muted); }
+.rin-foto.is-vacia [data-icon] { width: 38%; height: 38%; }
+.rin-card-t { padding: 0 0.25rem; font-weight: 700; font-size: 0.88rem; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.rin-card-m { display: flex; align-items: center; gap: 0.4rem; padding: 0 0.25rem; color: var(--muted); font-size: 0.78rem; }
+.rin-tag {
+  position: absolute; top: 0.75rem; left: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.55rem;
+  border-radius: var(--radio-pildora); background: var(--bg); color: var(--ink); font-size: 0.74rem; font-weight: 600; border: 1px solid var(--border);
+}
+.rin-tag.is-ia { color: var(--accent-2); }
+.rin-tag [data-icon] { width: 13px; height: 13px; display: inline-flex; }
+.rin-vacio-bot { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; margin-top: 0.6rem; }
+.rin-subir { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; cursor: pointer; }
+.rin-subir [data-icon] { width: 18px; height: 18px; display: inline-flex; }
+.rin-subir:has(input:focus-visible) { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+
+/* Un pin */
+.rin-ficha-foto { display: block; margin: 0 auto 1rem; max-width: 100%; max-height: 56vh; aspect-ratio: 3 / 4; border-radius: var(--radio-tarjeta); overflow: hidden; background: var(--bg-soft); }
+.rin-ficha-foto.is-vacia { aspect-ratio: 2 / 1; }
+.rin-ficha-foto.is-vacia [data-icon] { width: 56px; height: 56px; }
+h1.page-title.rin-ficha-t { margin-bottom: 0.2rem; font-size: 1.5rem; overflow-wrap: anywhere; }
+.rin-ver { margin: 0 0 1rem; }
+.rin-vista, .rin-look { margin-bottom: 1rem; }
+.rin-vista > .lib-btn-sec { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 44px; }
+.rin-vista > .lib-btn-sec [data-icon] { width: 18px; height: 18px; display: inline-flex; }
+.rin-resumen { margin: 0 0 0.6rem; line-height: 1.45; }
+.rin-vistas, .rin-faltan { list-style: none; margin: 0 0 0.8rem; padding: 0; }
+.rin-vistas li, .rin-faltan li { display: flex; align-items: center; gap: 0.6rem; min-height: 44px; padding: 0.35rem 0; border-bottom: 1px solid var(--border); }
+.rin-vistas li:last-child, .rin-faltan li:last-child { border-bottom: 0; }
+.rin-vistas li > span:last-child, .rin-faltan li > span:nth-child(2) { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; overflow-wrap: anywhere; }
+.rin-vistas small, .rin-faltan small { color: var(--muted); font-size: 0.82rem; }
+.rin-look-grilla { margin-bottom: 0.8rem; }
+.rin-como { padding: 0 0.25rem; color: var(--muted); font-size: 0.78rem; line-height: 1.3; }
+.rin-porque { padding: 0 0.25rem; font-size: 0.8rem; line-height: 1.3; }
+.rin-sub3 { font-size: 0.95rem; margin: 0.4rem 0 0.2rem; }
+.rin-buscar { flex-shrink: 0; display: inline-flex; align-items: center; gap: 0.25rem; min-height: 44px; padding: 0 0.4rem; color: var(--accent-2); font-weight: 600; font-size: 0.86rem; text-decoration: none; }
+.rin-buscar [data-icon] { width: 15px; height: 15px; display: inline-flex; }
+.rin-consejo { display: flex; gap: 0.45rem; align-items: flex-start; margin: 0 0 0.8rem; padding: 0.6rem 0.8rem; border-radius: 12px; background: rgba(255, 184, 77, 0.12); line-height: 1.4; }
+.rin-consejo [data-icon] { width: 18px; height: 18px; display: inline-flex; flex-shrink: 0; color: var(--accent-2); margin-top: 1px; }
+.rin-look .rd-nota [data-icon] { width: 15px; height: 15px; display: inline-flex; vertical-align: -2px; margin-right: 0.25rem; color: var(--accent-2); }
+.rin-look-bot .lib-btn.is-on { background: var(--estado-ok-fondo); border-color: var(--estado-ok); color: var(--estado-ok); opacity: 1; }
+.rin-form { display: flex; flex-direction: column; gap: 0.9rem; padding-bottom: 1rem; }
+.rin-form p { margin: 0; line-height: 1.45; }
+.rin-form [data-rin-pegar] { align-self: flex-start; min-height: 44px; }
+
+/* El "+": las dos partes */
+.ro-mas-t { margin: 0.2rem 0 0.45rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+.ro-mas-t:not(:first-child) { margin-top: 1.1rem; }
+
+/* Ajustes: el tablero */
+.roa-pin { margin-bottom: 1rem; }
+.roa-pin p { margin: 0.3rem 0; line-height: 1.45; }
+.roa-pin-bot { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.6rem; }
+.roa-pin-bot .lib-btn-sec { min-height: 44px; }

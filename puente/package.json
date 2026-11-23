@@ -4,7 +4,8 @@
   "description": "Puente de Manolo hacia la IA (Cloudflare Worker). No es parte de la app: la app sigue sin dependencias.",
   "type": "module",
   "scripts": {
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "prueba": "node --test pruebas/worker.prueba.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "1.12.0"

@@ -1,0 +1,201 @@
+// Pruebas del Worker entero (puente/src/index.js, D-147 / D-148), sin red y
+// sin gastar: el fetch de afuera es de mentira (Google, Pinterest y la API de
+// la IA), así se revisa lo que el puente le pide a cada uno y lo que contesta.
+// Necesita las dependencias del puente: cd puente && npm install && npm run prueba
+import test from "node:test";
+import assert from "node:assert/strict";
+import worker from "../src/index.js";
+
+const subtle = globalThis.crypto.subtle;
+const b64url = buf => Buffer.from(buf).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const par = await subtle.generateKey({ name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" }, true, ["sign", "verify"]);
+const pub = await subtle.exportKey("jwk", par.publicKey);
+const JWKS = { keys: [{ kid: "k1", alg: "RS256", use: "sig", kty: pub.kty, n: pub.n, e: pub.e }] };
+async function token(sub) {
+  const ahora = Math.floor(Date.now() / 1000);
+  const h = b64url(JSON.stringify({ alg: "RS256", kid: "k1", typ: "JWT" }));
+  const p = b64url(JSON.stringify({ aud: "manolo-4c57b", iss: "https://securetoken.google.com/manolo-4c57b", sub, iat: ahora - 60, auth_time: ahora - 600, exp: ahora + 3000 }));
+  const firma = await subtle.sign("RSASSA-PKCS1-v1_5", par.privateKey, new TextEncoder().encode(`${h}.${p}`));
+  return `${h}.${p}.${b64url(firma)}`;
+}
+
+// KV de mentira.
+function kv() {
+  const m = new Map();
+  return { m, get: async (k, tipo) => (m.has(k) ? (tipo === "json" ? JSON.parse(m.get(k)) : m.get(k)) : null), put: async (k, v) => { m.set(k, String(v)); } };
+}
+const ORIGEN = "https://wzkjcmyms6-lgtm.github.io";
+const entorno = extra => Object.assign({ FIREBASE_PROJECT: "manolo-4c57b", ORIGENES: ORIGEN, USUARIOS: "dueno123", ANTHROPIC_API_KEY: "sk-ant-de-prueba", MODELO: "modelo-de-prueba", GASTO: kv() }, extra || {});
+
+// Lo de afuera: Google (llaves), Pinterest e IA.
+const RSS = `<?xml version="1.0"?><rss version="2.0"><channel><title>Manolo</title>
+<item><title>Abrigo camel</title><link>https://www.pinterest.com/pin/111/</link><description>&lt;img src=&quot;https://i.pinimg.com/236x/aa/bb/cc/abc.jpg&quot;&gt;</description><pubDate>Sun, 22 Nov 2026 18:21:01 GMT</pubDate></item>
+<item><title>Jean recto</title><link>https://www.pinterest.com/pin/222/</link><description>&lt;img src=&quot;https://i.pinimg.com/236x/dd/ee/ff/def.jpg&quot;&gt;</description></item>
+</channel></rss>`;
+let pedidos = [], respuestaIA = null, rssFalla = 0;
+const IMG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 4]);
+globalThis.fetch = async (url, init) => {
+  const u = String(url instanceof Request ? url.url : url);
+  const opciones = init || {};
+  pedidos.push({ url: u, init: opciones });
+  const r = (cuerpo, status, headers) => new Response(cuerpo, { status: status || 200, headers: headers || {} });
+  if (u.startsWith("https://www.googleapis.com/")) return r(JSON.stringify(JWKS), 200, { "cache-control": "public, max-age=3600" });
+  if (u === "https://pin.it/2Ab3Cd4Ef") return r(null, 308, { Location: "https://api.pinterest.com/url_shortener/2Ab3Cd4Ef/redirect/" });
+  if (u === "https://api.pinterest.com/url_shortener/2Ab3Cd4Ef/redirect/") return r(null, 302, { Location: "https://www.pinterest.com/juanito_99/manolo/?invite_code=z" });
+  if (u === "https://pin.it/PinCorto1") return r(null, 308, { Location: "https://www.pinterest.com/pin/333/sent/?x=1" });
+  if (u === "https://www.pinterest.com/juanito_99/manolo.rss") { if (rssFalla > 0) { rssFalla--; return r("no", 404); } return r(RSS, 200, { "Content-Type": "text/xml" }); }
+  if (u.startsWith("https://www.pinterest.com/oembed.json?url=")) {
+    return decodeURIComponent(u.split("url=")[1]) === "https://www.pinterest.com/pin/333/"
+      ? r(JSON.stringify({ title: "Look de oficina", thumbnail_url: "https://i.pinimg.com/236x/12/34/56/x.jpg" }), 200, { "Content-Type": "application/json" })
+      : r("{}", 404);
+  }
+  if (u === "https://i.pinimg.com/736x/12/34/56/x.jpg") return r("no", 403);
+  if (u === "https://i.pinimg.com/474x/12/34/56/x.jpg") return r(IMG, 200, { "Content-Type": "image/jpeg", "Content-Length": String(IMG.length) });
+  if (u.startsWith("https://i.pinimg.com/")) return r("no", 404);
+  if (/\/v1\/messages$/.test(u)) {
+    const c = respuestaIA || {};
+    return r(JSON.stringify({
+      id: "msg_1", type: "message", role: "assistant", model: "modelo-de-prueba",
+      content: c.content || [{ type: "text", text: JSON.stringify(c.datos || {}) }],
+      stop_reason: c.stop_reason || "end_turn", stop_sequence: null,
+      usage: c.usage || { input_tokens: 2000, output_tokens: 500, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 }
+    }), 200, { "Content-Type": "application/json", "request-id": "req_1" });
+  }
+  return r("fuera de la prueba: " + u, 599);
+};
+const deIA = () => pedidos.filter(p => /\/v1\/messages$/.test(p.url));
+const cuerpoIA = p => JSON.parse(p.init.body);
+const encabezado = (p, n) => {
+  const h = p.init.headers;
+  if (!h) return null;
+  if (typeof h.get === "function") return h.get(n);
+  const k = Object.keys(h).find(x => x.toLowerCase() === n);
+  return k ? h[k] : null;
+};
+
+async function pedir(env, ruta, cuerpo, sub) {
+  const t = await token(sub || "dueno123");
+  const req = new Request(`https://manolo-puente.prueba.workers.dev${ruta}`, {
+    method: cuerpo === undefined ? "GET" : "POST",
+    headers: Object.assign({ Origin: ORIGEN, Authorization: `Bearer ${t}` }, cuerpo === undefined ? {} : { "Content-Type": "application/json" }),
+    body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo)
+  });
+  const res = await worker.fetch(req, env);
+  const tipo = res.headers.get("Content-Type") || "";
+  return { status: res.status, headers: res.headers, json: tipo.includes("json") ? await res.json() : null, bytes: tipo.startsWith("image/") ? new Uint8Array(await res.arrayBuffer()) : null };
+}
+const FOTO = { tipo: "image/jpeg", imagen: "A".repeat(4000) };
+
+test("quién soy: el dueño, la versión y el gasto; los demás no pasan", async () => {
+  pedidos = [];
+  const env = entorno();
+  const r = await pedir(env, "/quien");
+  assert.equal(r.status, 200);
+  assert.equal(r.json.permitido, true);
+  assert.equal(r.json.version, 2);
+  assert.equal(r.json.lista, true);
+  assert.equal(r.json.gasto.usd, 0);
+  assert.equal(r.headers.get("Access-Control-Allow-Origin"), ORIGEN);
+  const otro = await pedir(env, "/pinterest/pin", { link: "https://www.pinterest.com/pin/333/" }, "intruso");
+  assert.equal(otro.status, 403);
+  const sinToken = await worker.fetch(new Request("https://x.dev/quien", { headers: { Origin: ORIGEN } }), env);
+  assert.equal(sinToken.status, 401);
+});
+
+test("Pinterest: el tablero con el link corto del iPhone, reintentando si da 404", async () => {
+  pedidos = [];
+  rssFalla = 1;
+  const env = entorno({ ANTHROPIC_API_KEY: "" });   // Pinterest funciona aunque falte la clave de la IA
+  const r = await pedir(env, "/pinterest/tablero", { link: "Mira mi tablero https://pin.it/2Ab3Cd4Ef" });
+  assert.equal(r.status, 200);
+  assert.deepEqual([r.json.usuario, r.json.tablero, r.json.titulo], ["juanito_99", "manolo", "Manolo"]);
+  assert.deepEqual(r.json.pines.map(p => [p.id, p.titulo, p.img]), [["111", "Abrigo camel", "https://i.pinimg.com/736x/aa/bb/cc/abc.jpg"], ["222", "Jean recto", "https://i.pinimg.com/736x/dd/ee/ff/def.jpg"]]);
+  const saltos = pedidos.filter(p => /pin\.it|url_shortener/.test(p.url));
+  assert.ok(saltos.length === 2 && saltos.every(p => p.init.redirect === "manual"), "el link corto se sigue sin bajar páginas");
+  assert.equal(pedidos.filter(p => p.url.endsWith("manolo.rss")).length, 2, "reintentó el 404");
+  assert.ok(!pedidos.some(p => /Manolo|dueno123/i.test(JSON.stringify(p.init.headers || {}))), "a Pinterest no le llega ni el nombre de la app ni el usuario");
+  // Un pin no es un tablero; un link raro tampoco.
+  assert.equal((await pedir(env, "/pinterest/tablero", { link: "https://www.pinterest.com/pin/333/" })).json.error, "es-pin");
+  assert.equal((await pedir(env, "/pinterest/tablero", { link: "hola" })).json.error, "link");
+});
+
+test("Pinterest: un pin pegado (link corto) y su imagen para el teléfono", async () => {
+  pedidos = [];
+  const env = entorno();
+  const r = await pedir(env, "/pinterest/pin", { link: "https://pin.it/PinCorto1" });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.json.pin, { id: "333", url: "https://www.pinterest.com/pin/333/", titulo: "Look de oficina", img: "https://i.pinimg.com/736x/12/34/56/x.jpg" });
+  const img = await pedir(env, "/pinterest/imagen", { url: r.json.pin.img });
+  assert.equal(img.status, 200);
+  assert.equal(img.headers.get("Content-Type"), "image/jpeg");
+  assert.equal(img.headers.get("Access-Control-Allow-Origin"), ORIGEN, "el teléfono la puede leer");
+  assert.deepEqual([...img.bytes], [...IMG], "si la de 736 no está, trae la de 474");
+  const mala = await pedir(env, "/pinterest/imagen", { url: "https://example.com/x.jpg" });
+  assert.equal(mala.status, 404);
+  assert.ok(!pedidos.some(p => p.url.startsWith("https://example.com")), "no trae nada que no sea de Pinterest");
+  assert.equal((await pedir(env, "/pinterest/pin", { link: "https://www.pinterest.com/pin/999/" })).json.error, "pin");
+});
+
+test("IA: lo que se ve en una inspiración (pedido con esquema, respaldo y esfuerzo bajo)", async () => {
+  pedidos = [];
+  const env = entorno();
+  respuestaIA = { datos: { esRopa: true, resumen: "Casual de invierno", prendas: [{ grupo: "abrigos", tipo: "Abrigo", colores: ["camel"], estampado: "liso", tela: "Lana", detalle: "largo" }, { grupo: "luna" }], estilo: ["casual"], clima: ["frio"], formalidad: 2, ocasion: "fin de semana" } };
+  const r = await pedir(env, "/inspiracion", FOTO);
+  assert.equal(r.status, 200);
+  assert.equal(r.json.inspiracion.prendas.length, 1, "limpio: sin la prenda rara");
+  assert.equal(r.json.gasto.veces, 1);
+  assert.equal(r.json.gasto.usd, 0.018, "2000 de entrada a 4 y 500 de salida a 20 por millón");
+  const [p] = deIA();
+  const c = cuerpoIA(p);
+  assert.equal(c.model, "modelo-de-prueba");
+  assert.equal(c.fallbacks, "default");
+  assert.equal(c.output_config.effort, "low");
+  assert.equal(c.output_config.format.type, "json_schema");
+  assert.ok(/server-side-fallback-2026-07-01/.test(encabezado(p, "anthropic-beta") || ""), "el respaldo del servidor va pedido");
+  const clave = encabezado(p, "x-api-key") || String(encabezado(p, "authorization") || "").replace(/^Bearer /, "");
+  assert.equal(clave, "sk-ant-de-prueba", "la clave va al pedido (y solo ahí)");
+  assert.equal(c.messages[0].content[0].type, "image");
+  assert.ok(!/Manolo|dueno123/.test(JSON.stringify(c)), "a la IA no le llega el nombre de la app ni el usuario");
+  // Rechazo y respuesta rara.
+  respuestaIA = { stop_reason: "refusal", content: [] };
+  assert.equal((await pedir(env, "/inspiracion", FOTO)).status, 422);
+  respuestaIA = { content: [{ type: "text", text: "no es json" }] };
+  assert.equal((await pedir(env, "/inspiracion", FOTO)).json.error, "respuesta");
+  assert.equal((await pedir(env, "/inspiracion", { tipo: "image/jpeg", imagen: "x" })).status, 400);
+});
+
+test("IA: armar el look con tu ropa (el ropero en caché, referencias cortas) y mi estilo", async () => {
+  pedidos = [];
+  const env = entorno();
+  respuestaIA = { datos: { prendas: [{ pin: 1, ref: "p2", parecido: "parecida", porque: "Tu abrigo beige." }, { pin: 2, ref: "p7", parecido: "igual", porque: "no existe" }], faltan: [{ pin: 2, grupo: "zapatos", tipo: "Botines", colores: ["cafe"], porque: "No tienes." }], consejo: "Súbele las mangas." } };
+  const pin = { resumen: "Casual de invierno", prendas: [{ grupo: "abrigos", tipo: "Abrigo", colores: ["camel"] }, { grupo: "zapatos", tipo: "Botines", colores: ["cafe"] }], estilo: ["casual"], clima: ["frio"], formalidad: 2 };
+  const ropero = [{ id: "jean_1", grupo: "abajo", tipo: "Jean", colores: ["azul-jean"] }, { id: "abrigo_9", grupo: "abrigos", tipo: "Abrigo", colores: ["beige"], notas: "secreto" }];
+  const r = await pedir(env, "/look", { pin, ropero });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.json.look.prendas, [{ pin: 1, id: "abrigo_9", parecido: "parecida", porque: "Tu abrigo beige." }]);
+  assert.deepEqual(r.json.look.faltan.map(f => f.tipo), ["Botines"]);
+  const c = cuerpoIA(deIA()[0]);
+  assert.equal(c.output_config.effort, "medium");
+  assert.deepEqual(c.messages[0].content[0].cache_control, { type: "ephemeral" }, "el ropero queda en caché");
+  assert.match(c.messages[0].content[0].text, /^La ropa que tengo/);
+  assert.ok(!/jean_1|abrigo_9|secreto/.test(JSON.stringify(c)), "la IA no ve tus ids ni tus notas");
+  assert.equal((await pedir(env, "/look", { pin, ropero: [] })).status, 400);
+  // Mi estilo.
+  respuestaIA = { datos: { resumen: "Te gustan los neutros.", claves: ["neutros"], colores: ["camel"], prendas: ["Abrigo largo"] } };
+  const e = await pedir(env, "/estilo", { pines: [pin, pin, pin] });
+  assert.equal(e.status, 200);
+  assert.equal(e.json.estilo.resumen, "Te gustan los neutros.");
+  assert.equal((await pedir(env, "/estilo", { pines: [pin] })).status, 400);
+});
+
+test("el tope: al llegar, la IA no se llama; Pinterest sigue", async () => {
+  pedidos = [];
+  const env = entorno();
+  const mes = new Date(Date.now() - 4 * 3600e3).toISOString().slice(0, 7);
+  await env.GASTO.put(`gasto:${mes}`, JSON.stringify({ usd: 8.01, n: 300 }));
+  const r = await pedir(env, "/inspiracion", FOTO);
+  assert.equal(r.status, 402);
+  assert.equal(r.json.error, "tope");
+  assert.equal(deIA().length, 0, "no se gastó nada");
+  assert.equal((await pedir(env, "/pinterest/pin", { link: "https://www.pinterest.com/pin/333/" })).status, 200);
+});

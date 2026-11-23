@@ -1,6 +1,22 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-23 (Ropa, fase 3, D-148: Inspiración): `npm test` → **795
+  pruebas** (nuevos `puente-pinterest`: links de pin, tablero y `pin.it`, el
+  link corto sin salir de Pinterest, el RSS de un tablero —también el real
+  bajado el 2026-11-22—, oEmbed y las imágenes que el puente acepta; y
+  `ropa-insp-motor`: normalizar, qué tan parecida es una prenda, el look sin
+  IA, "Mi estilo" sin IA y lo que se manda a la IA; en `puente-logica`, los
+  esquemas, instrucciones y limpieza de inspiración, look y estilo). El
+  Worker entero con fetch de mentira: `cd puente && npm install && npm run
+  prueba` (6). Suite nueva `ropa-insp` (107 comprobaciones: sin puente,
+  con un puente de mentira que contesta como Pinterest y la IA, a 390 y 320
+  px, en claro, sin la clave de la IA, la compu y la copia de seguridad) y
+  `ropa` (159, con el "+" de la barra); y 12 suites cercanas sin
+  fallas (respaldo, regresion, pantalla, tema-claro, sin-internet, lugares,
+  hojas, sw-instala, fase1, mi-dia, bici y running: 554 comprobaciones). Lighthouse
+  (`scratchpad/lh/correr6.mjs`): 100 en accesibilidad y buenas prácticas en
+  24 pantallas de Ropa.
 - 2026-11-22 (Ropa, fase 2, D-147: la IA, lista para conectar): `npm test` →
   **778 pruebas** (nuevo `puente-logica`: el token de Firebase firmado con
   una llave hecha en la prueba —el bueno pasa; vencido, de otro proyecto,
@@ -521,6 +537,13 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
   revísalo antes de guardar. En una prenda vieja: "Describir con IA".
 - [ ] (Con la IA conectada) Ajustes de Ropa: el gasto del mes y cambia el
   tope.
+- [ ] La barra de Ropa: Ropero, el "+" e Inspiración.
+- [ ] "+" › "Subir imágenes": elige 2 o 3 capturas de Pinterest; ábrelas.
+- [ ] (Con el puente) Inspiración › "Conectar tablero": en Pinterest, tu
+  tablero › Compartir › Copiar link, y pégalo. Mira que lleguen tus pines.
+- [ ] (Con el puente) "+" › "Link de Pinterest": pega el link de un pin.
+- [ ] (Con la IA) Abre un pin: "Lo que se ve" y "Armar este look con la IA";
+  "Me lo pongo hoy". Mira "Mi estilo" y corrígelo.
 
 **Bici (2026-11)**
 - [ ] Bicis: agrega tu bici con los km que ya tiene y pónsela a tus

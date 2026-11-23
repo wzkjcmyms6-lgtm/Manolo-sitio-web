@@ -18,7 +18,7 @@
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
   <!-- Todos los estilos de la app en un archivo (D-127): js/paquete.json › npm run listo -->
-  <link rel="stylesheet" href="css/app.paquete.css?v=6433d20f1883">
+  <link rel="stylesheet" href="css/app.paquete.css?v=8ca8a789a121">
   <!-- Modo claro (D-126): generado con "npm run tema"; js/tema.js lo apaga en
        el modo oscuro y elige el modo antes de pintar (sin "defer": es chico) -->
   <link rel="stylesheet" href="css/tema-claro.css?v=202611171200" id="tema-claro-css">
@@ -492,15 +492,22 @@
             <div class="lug-app" id="lug-app"></div>
           </section>
 
-          <!-- ===== Ropa (D-145): el ropero (js/ropa.js) y la ficha de cada prenda ===== -->
+          <!-- ===== Ropa (D-145 a D-148): el ropero y la ficha de cada prenda (js/ropa.js), Inspiración (js/ropa-insp.js); barra propia Ropero · + · Inspiración ===== -->
           <section id="panel-ropa" hidden>
-            <a class="back-link lib-volver" href="#inicio"><span class="icon-sm" data-icon="chevronLeft"></span>Inicio</a>
             <h1 class="page-title">Ropa</h1>
             <div class="ro-app" id="ro-app"></div>
           </section>
           <section id="panel-ropa-prenda" hidden>
-            <a class="back-link lib-volver" href="#ropa"><span class="icon-sm" data-icon="chevronLeft"></span>Ropa</a>
+            <a class="back-link lib-volver" href="#ropa"><span class="icon-sm" data-icon="chevronLeft"></span>Ropero</a>
             <div class="rop-app" id="rop-app"></div>
+          </section>
+          <section id="panel-ropa-inspiracion" hidden>
+            <h1 class="page-title">Inspiración</h1>
+            <div class="rin-app" id="rin-app"></div>
+          </section>
+          <section id="panel-ropa-pin" hidden>
+            <a class="back-link lib-volver" href="#ropa-inspiracion"><span class="icon-sm" data-icon="chevronLeft"></span>Inspiración</a>
+            <div class="rinp-app" id="rinp-app"></div>
           </section>
           <section id="panel-ropa-ajustes" hidden>
             <a class="back-link lib-volver" href="#ropa"><span class="icon-sm" data-icon="chevronLeft"></span>Ropa</a>
@@ -1520,6 +1527,6 @@
   <script defer src="vendor/firebase-10.7.1/firebase-firestore-compat.js"></script>
   <!-- Todos los módulos de la app en un archivo (D-127): cada uno corre como su
        propio <script>. Se editan los de js/ y después: npm run listo -->
-  <script defer src="js/app.paquete.js?v=f93ccd0318fe"></script>
+  <script defer src="js/app.paquete.js?v=446110f0552a"></script>
 </body>
 </html>

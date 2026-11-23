@@ -1,11 +1,13 @@
-// ---------- Ropa: Ajustes (#ropa-ajustes, el engranaje; D-147) ----------
-// La IA: si está conectada, el gasto del mes con su tope (se puede cambiar) y
-// "Describir con IA" las prendas que cargaste antes (llena solo lo que falta,
-// sin cambiar lo que pusiste). Si no está conectada, tu código de usuario
-// para conectarla.
+// ---------- Ropa: Ajustes (#ropa-ajustes, el engranaje; D-147 / D-148) ----------
+// Tu tablero de Pinterest (conectar, actualizar, cambiar o desconectar; con
+// el puente listo). La IA: si está conectada, el gasto del mes con su tope
+// (se puede cambiar) y "Describir con IA" las prendas que cargaste antes
+// (llena solo lo que falta, sin cambiar lo que pusiste). Si no está
+// conectada, tu código de usuario para conectarla.
 (function () {
 "use strict";
 const M = window.RopaMotor, D = window.RopaDatos, IA = window.RopaIA, A = () => window.RopaApp;
+const DI = window.RopaInspDatos, RI = () => window.RopaInsp;
 const app = document.getElementById("roa-app");
 if (!M || !D || !IA || !app || !window.Lectura) return;
 const { esc } = window.Lectura;
@@ -50,8 +52,30 @@ function pintar() {
                <p class="rd-nota">Llena solo lo que falta; lo que pusiste no cambia. Son unos ${usd(n * 0.03)}.</p>` : ""}`;
   }
   app.innerHTML = `${aviso ? `<p class="tmp-ok" role="status">${esc(aviso)}</p>` : ""}
+    ${pinterestHTML()}
     <section class="tmp-card roa-ia" aria-labelledby="roa-ia-t"><h2 class="ro-sub" id="roa-ia-t">La IA</h2>${ia}</section>`;
   if (typeof renderIcons === "function") renderIcons(app);
+}
+
+// Tu tablero de Pinterest (D-148): solo con el puente listo.
+function pinterestHTML() {
+  if (!DI || !RI() || !IA.pinterest()) return "";
+  const t = (DI.ajustes() || {}).pinterest;
+  const cab = `<h2 class="ro-sub" id="roa-pin-t"><span data-icon="inspiracion" aria-hidden="true"></span>Tu tablero de Pinterest</h2>`;
+  if (!t || !t.usuario) {
+    return `<section class="tmp-card roa-pin" aria-labelledby="roa-pin-t">${cab}
+      <p class="rd-nota">Conéctalo y Manolo trae solo los pines nuevos a Inspiración. Solo lee tu tablero: nunca publica nada.</p>
+      <button type="button" class="lib-btn" data-roa="pin-conectar">Conectar tablero</button></section>`;
+  }
+  const fecha = t.leido ? new Date(t.leido).toLocaleString("es-BO", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "";
+  return `<section class="tmp-card roa-pin" aria-labelledby="roa-pin-t">${cab}
+    <p>Conectado: <b>«${esc(t.titulo || t.tablero)}»</b> <span class="rd-nota">(${esc(t.usuario)}/${esc(t.tablero)})</span></p>
+    <p class="rd-nota">${fecha ? `Lo leí por última vez el ${esc(fecha)}. ` : ""}Solo lee tu tablero: nunca publica nada.</p>
+    <div class="roa-pin-bot">
+      <button type="button" class="lib-btn-sec lib-btn-chico" data-roa="pin-actualizar">Actualizar ahora</button>
+      <button type="button" class="lib-btn-sec lib-btn-chico" data-roa="pin-conectar">Cambiar de tablero</button>
+      <button type="button" class="lib-btn-sec lib-btn-chico" data-roa="pin-quitar">Desconectar</button>
+    </div></section>`;
 }
 
 // Lo que dijo la IA, solo en lo que está vacío.
@@ -107,6 +131,13 @@ app.addEventListener("click", e => {
   } else if (a === "reintentar") IA.quien(true).then(pintar);
   else if (a === "todas") describirTodas();
   else if (a === "cancelar" && tarea) { tarea.cancelar = true; b.disabled = true; }
+  else if (a === "pin-conectar" && RI()) RI().conectarTablero(b);
+  else if (a === "pin-actualizar" && RI()) { location.hash = "ropa-inspiracion"; RI().actualizarTablero(true); }
+  else if (a === "pin-quitar" && DI) {
+    const antes = (DI.ajustes() || {}).pinterest;
+    DI.guardarAjustes({ pinterest: null }).catch(err => A().fallo(err));
+    A().aviso("Desconectaste tu tablero. Los pines que ya trajiste se quedan.", () => DI.guardarAjustes({ pinterest: antes }).catch(err => A().fallo(err)));
+  }
 });
 app.addEventListener("submit", e => {
   if (e.target.id !== "roa-tope") return;
@@ -116,6 +147,7 @@ app.addEventListener("submit", e => {
   IA.tope(v).then(() => { aviso = `Listo: el tope del mes es ${usd(v)}.`; pintar(); }, err => { aviso = err.message; pintar(); });
 });
 IA.alCambiar(() => { if (!tarea) pintar(); });
+if (DI) DI.al(() => { if (!tarea && !(document.activeElement && document.activeElement.closest("#roa-app form"))) pintar(); });
 D.al(() => { if (!tarea && !(document.activeElement && document.activeElement.closest("#roa-app form"))) pintar(); });
 window.addEventListener("hashchange", () => { aviso = ""; if (visible()) IA.quien().then(pintar); pintar(); });
 document.addEventListener("DOMContentLoaded", pintar);
