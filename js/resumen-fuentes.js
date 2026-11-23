@@ -151,6 +151,21 @@ function lugares() {
   return xs.length ? xs : null;
 }
 
+// Ropa (js/ropa-datos.js, D-151): lo que te pusiste cada día y tus prendas
+// (su nombre, la familia de su color, cuándo la compraste y su precio).
+// También las que ya no tienes: te las pusiste y las compraste igual.
+function ropa() {
+  const D = window.RopaDatos, M = window.RopaMotor, N = window.RopaNumerosMotor;
+  if (!D || !M || !N || !D.cargada()) return null;
+  const docs = D.usosDocs();
+  const usos = Object.keys(docs).filter(R.fechaOk).map(f => ({ fecha: f, prendas: Array.isArray(docs[f].prendas) ? docs[f].prendas.slice() : [] })).filter(u => u.prendas.length);
+  const prendas = D.lista().map(p => {
+    const c = N.familiaDe(p);
+    return { id: p.id, nombre: M.titulo(p), color: c ? c.nombre : "", compra: p.compra || "", precio: p.precio || 0 };
+  });
+  return usos.length || prendas.some(p => p.compra) ? { usos, prendas } : null;
+}
+
 // Lo que Hábitos y Libros ya calculan para un año ("Manolo Wrapped" de
 // Hábitos y "Tu año en libros"), para "Tu año" (js/resumen-anio.js).
 function extrasDelAnio(anio) {
@@ -185,7 +200,8 @@ function datos(o) {
     biblia: probar(biblia),
     finanzas: probar(finanzas),
     manana: probar(manana),
-    lugares: probar(lugares)
+    lugares: probar(lugares),
+    ropa: probar(ropa)
   };
 }
 
@@ -198,6 +214,7 @@ function avisar() {
   espera = setTimeout(() => { espera = null; oyentes.forEach(fn => probar(fn)); }, 400);
 }
 ["manolo:fuente", "manolo:actividades", "libros:datos"].forEach(ev => window.addEventListener(ev, avisar));
+if (window.RopaDatos) window.RopaDatos.al(avisar);
 
 window.ResumenFuentes = { datos, alCambiar: fn => { oyentes.push(fn); } };
 })();

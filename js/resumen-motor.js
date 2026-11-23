@@ -17,7 +17,9 @@
 //   biblia: { caps: [{ fecha, clave: "John.3" }], vers: [{ fecha, cita }] },
 //   finanzas: { movs: [{ fecha, tipo: "gasto" | "ingreso", cent, cat }], cats: { id: nombre } },
 //   manana: [{ fecha, seg }]   (Mi mañana: el total de cada día),
-//   lugares: [{ id, nombre, calificacion, zona, visitas: [fecha] }]
+//   lugares: [{ id, nombre, calificacion, zona, visitas: [fecha] }],
+//   ropa: { usos: [{ fecha, prendas: [ids] }], prendas: [{ id, nombre, color
+//           (la familia de su color, en palabras), compra (fecha), precio }] } (D-151)
 // }
 // Cada sección puede faltar (null): no cargó o no la usas.
 (function (root, factory) {
@@ -143,6 +145,26 @@ function lugares(xs, desde, hasta) {
   return { visitas, nuevos };
 }
 
+// Ropa (D-151): los días que anotaste lo que te pusiste, cuántas prendas
+// distintas, la que más te pusiste, el color que más te pusiste (contando
+// cada vez) y lo que compraste (por la fecha de compra de cada prenda).
+function ropa(rp, desde, hasta) {
+  const usos = (rp.usos || []).filter(u => dentro(u.fecha, desde, hasta) && (u.prendas || []).length);
+  const por = new Map((rp.prendas || []).map(p => [p.id, p]));
+  const veces = {};
+  usos.forEach(u => [...new Set(u.prendas)].forEach(id => { if (por.has(id)) veces[id] = (veces[id] || 0) + 1; }));
+  const ids = Object.keys(veces).sort((a, b) => veces[b] - veces[a] || (a < b ? -1 : 1));
+  const porColor = {};
+  ids.forEach(id => { const c = por.get(id).color; if (c) porColor[c] = (porColor[c] || 0) + veces[id]; });
+  const color = Object.keys(porColor).sort((a, b) => porColor[b] - porColor[a] || a.localeCompare(b, "es"))[0] || "";
+  const compradas = (rp.prendas || []).filter(p => dentro(p.compra, desde, hasta));
+  return {
+    dias: usos.length, distintas: ids.length,
+    top: ids.length ? { id: ids[0], nombre: por.get(ids[0]).nombre, veces: veces[ids[0]] } : null,
+    color, compras: compradas.length, gasto: compradas.reduce((s, p) => s + num(p.precio), 0)
+  };
+}
+
 // Las cifras de todas las secciones entre dos fechas (incluidas).
 function periodo(d, desde, hasta) {
   const x = d || {};
@@ -157,6 +179,7 @@ function periodo(d, desde, hasta) {
   if (x.finanzas) out.finanzas = finanzas(x.finanzas, desde, hasta);
   if (x.manana) out.manana = manana(x.manana, desde, hasta);
   if (x.lugares) out.lugares = lugares(x.lugares, desde, hasta);
+  if (x.ropa) out.ropa = ropa(x.ropa, desde, hasta);
   out.diasActivos = diasActivos(x, desde, hasta).size;
   return out;
 }
@@ -170,6 +193,7 @@ function diasActivos(x, desde, hasta) {
   if (x.biblia) (x.biblia.caps || []).concat(x.biblia.vers || []).forEach(e => poner(e.fecha));
   if (x.finanzas) (x.finanzas.movs || []).forEach(e => poner(e.fecha));
   if (x.lugares) x.lugares.forEach(l => (l.visitas || []).forEach(poner));
+  if (x.ropa) (x.ropa.usos || []).forEach(u => { if ((u.prendas || []).length) poner(u.fecha); });
   return s;
 }
 
@@ -184,7 +208,8 @@ const AREAS = [
   { id: "biblia", nombre: "Biblia", icono: "biblia", href: "#biblia" },
   { id: "finanzas", nombre: "Finanzas", icono: "finance", href: "#finanzas" },
   { id: "manana", nombre: "Mi mañana", icono: "timer", href: "#tiempos" },
-  { id: "lugares", nombre: "Lugares", icono: "lugar", href: "#lugares" }
+  { id: "lugares", nombre: "Lugares", icono: "lugar", href: "#lugares" },
+  { id: "ropa", nombre: "Ropa", icono: "ropa", href: "#ropa" }
 ];
 function usada(id, p) {
   const a = p[id];
@@ -195,6 +220,7 @@ function usada(id, p) {
     case "biblia": return a.dias > 0;
     case "finanzas": return a.n > 0;
     case "lugares": return a.visitas > 0;
+    case "ropa": return a.dias > 0 || a.compras > 0;
     default: return a.n > 0;
   }
 }
@@ -333,6 +359,13 @@ function semana(d, lunesIn) {
       area.valor = plural(a.visitas, "visita", "visitas");
       area.linea = a.visitas ? `${plural(a.visitas, "visita", "visitas")}${a.nuevos.length ? ` · ${plural(a.nuevos.length, "lugar nuevo", "lugares nuevos")}` : ""}` : "Sin visitas";
       a.nuevos.filter(l => l.calificacion >= 4).slice(0, 1).forEach(l => mejor.push({ icono: "🍽️", texto: `Descubriste «${l.nombre}» (${"★".repeat(Math.round(l.calificacion))})`, peso: 4 }));
+    } else if (def.id === "ropa") {
+      area.valor = `${a.dias} de ${dias} días`;
+      area.linea = [a.dias ? `Anotaste tu ropa ${plural(a.dias, "día", "días")}` : "Sin ropa anotada",
+        a.top && a.top.veces >= 2 ? `lo que más: ${a.top.nombre} (${plural(a.top.veces, "vez", "veces")})` : "",
+        a.compras ? `compraste ${plural(a.compras, "prenda", "prendas")}` : ""].filter(Boolean).join(" · ");
+      if (b) area.cambio = cambio(a.dias, b.dias, { texto: v => plural(v, "día", "días") });
+      if (a.dias === 7) mejor.push({ icono: "👕", texto: "Anotaste tu ropa los 7 días", peso: 3 });
     }
     areas.push(area);
   });

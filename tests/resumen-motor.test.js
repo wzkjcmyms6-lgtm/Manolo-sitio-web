@@ -136,3 +136,41 @@ test("hábitos de «X veces por semana» y formatos", () => {
   assert.equal(R.lunesDe("2026-11-16"), "2026-11-16");
   assert.equal(R.lunesDe("2026-11-22"), "2026-11-16");
 });
+
+// ---- Ropa (D-151): lo que te pusiste y lo que compraste ----
+test("Ropa en la semana: los días anotados, lo que más te pusiste y lo que compraste", () => {
+  const d = datos({
+    ropa: {
+      usos: [
+        // La semana: 7 de 7 días (el jean 4 veces); la anterior, 3 días.
+        ...[0, 1, 2, 3, 4, 5, 6].map(i => ({ fecha: f(L, i), prendas: i < 4 ? ["jean", "polera"] : ["short"] })),
+        ...[1, 3, 5].map(i => ({ fecha: f(L, i - 7), prendas: ["jean"] })),
+        { fecha: f(L, -20), prendas: [] }
+      ],
+      prendas: [
+        { id: "jean", nombre: "Jean azul", color: "Azul", compra: "2025-03-01", precio: 300 },
+        { id: "polera", nombre: "Polera negra", color: "Negro", compra: f(L, 2), precio: 80 },
+        { id: "short", nombre: "Short beige", color: "Beige", compra: "", precio: 0 }
+      ]
+    }
+  });
+  const p = R.periodo(d, L, f(L, 6));
+  assert.deepEqual(p.ropa, { dias: 7, distintas: 3, top: { id: "jean", nombre: "Jean azul", veces: 4 }, color: "Azul", compras: 1, gasto: 80 },
+    "el color que más te pusiste: azul y negro 4 veces, gana por orden alfabético");
+  const s = R.semana(d, L);
+  assert.deepEqual(s.areas.map(a => a.id), ["habitos", "gimnasio", "running", "libros", "biblia", "finanzas", "manana", "lugares", "ropa"]);
+  const ropa = s.areas.find(a => a.id === "ropa");
+  assert.deepEqual([ropa.valor, ropa.linea, ropa.href], ["7 de 7 días", "Anotaste tu ropa 7 días · lo que más: Jean azul (4 veces) · compraste 1 prenda", "#ropa"]);
+  assert.deepEqual(ropa.cambio, { texto: "▲ 4 días", signo: 1 });
+  assert.ok(!s.mejor.some(m => /ropa/.test(m.texto)), "con 4 cosas más importantes, «Anotaste tu ropa los 7 días» queda fuera");
+  // Sin la ropa (o sin nada anotado ni comprado), el área no aparece.
+  assert.ok(!R.semana(datos(), L).areas.some(a => a.id === "ropa"));
+  assert.ok(!R.semana(datos({ ropa: { usos: [], prendas: [{ id: "x", nombre: "X", color: "", compra: "", precio: 0 }] } }), L).areas.some(a => a.id === "ropa"));
+  // Los días con ropa anotada cuentan como días con algo.
+  const solo = R.periodo({ hoy: "2026-11-16", ropa: { usos: [{ fecha: f(L, 1), prendas: ["jean"] }, { fecha: f(L, 2), prendas: [] }], prendas: [] } }, L, f(L, 6));
+  assert.equal(solo.diasActivos, 1);
+  // Una semana tranquila: los 7 días de ropa sí entran en lo mejor.
+  const tranquila = R.semana({ hoy: "2026-11-16", ropa: d.ropa }, L);
+  assert.deepEqual(tranquila.mejor.map(m => m.texto), ["Anotaste tu ropa los 7 días"]);
+  assert.equal(tranquila.areas.find(a => a.id === "ropa").linea, "Anotaste tu ropa 7 días · lo que más: Jean azul (4 veces) · compraste 1 prenda");
+});

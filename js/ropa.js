@@ -127,7 +127,8 @@ const puntos = p => `<span class="ro-puntos" aria-hidden="true">${p.colores.map(
 
 // ---------- El ropero ----------
 app.innerHTML = `
-  <p class="ro-resumen" id="ro-resumen" aria-live="polite"></p>
+  <div class="ro-resumen-fila"><p class="ro-resumen" id="ro-resumen" aria-live="polite"></p>
+    <a class="ro-numeros-link" id="ro-numeros-link" href="#ropa-numeros" hidden><span data-icon="chart" aria-hidden="true"></span>Tus números</a></div>
   <label class="lug-buscar ro-buscar">
     <span class="lug-buscar-ic" data-icon="search" aria-hidden="true"></span>
     <input type="search" class="lib-input" id="ro-q" placeholder="Tipo, color, marca o tela" aria-label="Buscar en tu ropero por tipo, color, marca o tela" autocomplete="off" enterkeyhint="search">
@@ -158,6 +159,7 @@ function render() {
   const todas = D.lista();
   const r = M.resumen(todas);
   $("ro-resumen").textContent = r.total ? `${plural(r.total, "prenda", "prendas")}${r.lavar ? ` · ${plural(r.lavar, "para lavar", "para lavar")}` : ""}` : "";
+  $("ro-numeros-link").hidden = !r.total || !window.RopaNumeros;
   if (!todas.length) {
     $("ro-grupos").innerHTML = ""; $("ro-chips").innerHTML = ""; $("ro-pie").innerHTML = "";
     $("ro-lista").innerHTML = `<div class="run-vacio ro-vacio"><span class="icon" data-icon="ropa"></span>
@@ -327,13 +329,33 @@ async function describirConIA(p, b) {
 }
 
 // ---------- Tarjeta de Inicio ----------
+// Cuántas prendas tienes y, si ya está, el outfit del día (D-151): lo que te
+// pusiste hoy o lo que elegiste para hoy, con sus fotos; entonces la tarjeta
+// lleva a Outfits.
 function inicio() {
   const el = document.getElementById("ropa-inicio");
   if (!el || !D.cargada()) return;
   const r = M.resumen(D.lista());
   el.textContent = r.total ? `${plural(r.total, "prenda", "prendas")} en tu ropero${r.lavar ? ` · ${plural(r.lavar, "para lavar", "para lavar")}` : ""}.` : "Tu ropero con fotos, outfits e inspiración.";
+  const card = el.closest("a.card");
+  if (!card) return;
+  const hoy = D.hoy(), u = D.usosDocs()[hoy];
+  const puestas = (u && Array.isArray(u.prendas) ? u.prendas : []).map(id => D.una(id)).filter(Boolean);
+  const DO = window.RopaOutfitsDatos;
+  const para = !puestas.length && DO ? DO.lista().find(o => o.para === hoy && o.guardado && o.prendas.some(id => D.una(id))) : null;
+  const ps = (puestas.length ? puestas : para ? para.prendas.map(id => D.una(id)).filter(Boolean) : []);
+  const fotos = ps.filter(p => p.grupo !== "accesorios").slice(0, 4);
+  let hoyEl = card.querySelector(".ro-ini-hoy");
+  if (!ps.length) { if (hoyEl) hoyEl.remove(); card.setAttribute("href", "#ropa"); return; }
+  if (!hoyEl) { hoyEl = document.createElement("span"); hoyEl.className = "ro-ini-hoy"; card.appendChild(hoyEl); }
+  const que = puestas.length ? "Hoy te pusiste" : `Para hoy elegiste${para.nombre ? ` «${para.nombre}»` : ""}`;
+  hoyEl.innerHTML = `<span class="ro-ini-t">${esc(que)}:</span><span class="ro-ini-fotos" aria-hidden="true">${fotos.map(p => fotoHTML(p, "ro-foto")).join("")}</span>
+    <span class="visually-hidden">${esc(ps.map(p => M.titulo(p)).join(", "))}.</span>`;
+  card.setAttribute("href", "#ropa-outfits");
 }
 
+// El outfit del día también cambia con tus outfits (lo que elegiste para hoy).
+if (window.RopaOutfitsDatos) window.RopaOutfitsDatos.al(inicio);
 D.al(() => {
   inicio();
   if (pantalla() === "ropa") render();

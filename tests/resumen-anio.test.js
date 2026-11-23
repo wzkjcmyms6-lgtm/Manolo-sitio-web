@@ -148,3 +148,45 @@ test("las diapositivas: solo lo que usaste, en orden, Finanzas solo para ti y el
   assert.equal(vacio[1].titulo, "Este año todavía está en blanco");
   assert.deepEqual(A.diapositivas(null), []);
 });
+
+// ---- Ropa (D-151): tu prenda del año ----
+test("Ropa en «Tu año»: tu prenda del año, tu color y lo que compraste (sin plata)", () => {
+  const d = datos();
+  d.ropa = {
+    usos: [],
+    prendas: [
+      { id: "jean", nombre: "Jean azul", color: "Azul", compra: "2026-02-10", precio: 300 },
+      { id: "polera", nombre: "Polera negra", color: "Negro", compra: "2025-12-20", precio: 80 },
+      { id: "zapas", nombre: "Zapatillas blancas", color: "Blanco", compra: "2026-06-01", precio: 500 }
+    ]
+  };
+  // El jean, 30 veces (marzo es el mes con más días); la polera, 12; las zapatillas, 5 (y una en 2025).
+  for (let k = 0; k < 30; k++) d.ropa.usos.push({ fecha: R.sumar("2026-03-01", k), prendas: k < 12 ? ["jean", "polera"] : k < 17 ? ["jean", "zapas"] : ["jean"] });
+  d.ropa.usos.push({ fecha: "2025-12-28", prendas: ["zapas"] }, { fecha: "2026-04-02", prendas: [] });
+  assert.deepEqual(A.aniosConDatos(d), [2026, 2025]);
+  const y = A.anio(d, 2026);
+  assert.deepEqual(y.secciones.ropa, { dias: 30, distintas: 3, top: { id: "jean", nombre: "Jean azul", veces: 30 }, color: "Azul", compras: 2,
+    mejorMes: { mes: 3, nombre: "marzo", valor: 30 } });
+  assert.deepEqual(y.numeros.find(n => /ropa/.test(n.etiqueta)), { valor: "30", etiqueta: "días con tu ropa anotada" });
+  assert.ok(!y.destacados.some(x => /prenda/.test(x.texto)), "lo destacado son 6 y la ropa va al final (aquí no entra)");
+  const ds = A.diapositivas(y);
+  assert.deepEqual(ds.map(s => s.id), ["portada", "numeros", "habitos", "gimnasio", "running", "bici", "movilidad", "libros", "biblia", "finanzas", "manana", "lugares", "ropa", "ritmo", "contra", "cierre"]);
+  const s = ds.find(x => x.id === "ropa");
+  assert.deepEqual([s.eyebrow, s.grande, s.titulo], ["Ropa", "30", "veces te pusiste «Jean azul»"]);
+  assert.deepEqual(s.lineas, ["Tu prenda del año.", "Anotaste lo que te pusiste 30 días, con 3 prendas distintas.", "Tu color del año: azul.", "Compraste 2 prendas."]);
+  assert.ok(!s.lineas.concat(s.titulo).some(t => /Bs|\d{3}/.test(t)), "sin plata");
+  // Sin una prenda que se repita: los días anotados; solo compras: las compras.
+  const d2 = datos();
+  d2.ropa = { usos: [{ fecha: "2026-05-05", prendas: ["jean"] }], prendas: [{ id: "jean", nombre: "Jean azul", color: "", compra: "", precio: 0 }] };
+  const s2 = A.diapositivas(A.anio(d2, 2026)).find(x => x.id === "ropa");
+  assert.deepEqual([s2.grande, s2.titulo, s2.lineas], ["1", "día con tu ropa anotada", ["Con 1 prenda distinta."]]);
+  assert.ok(!A.anio(d2, 2026).destacados.some(x => /prenda del año/.test(x.texto)), "una sola vez no hace «la prenda del año»");
+  const d3 = { hoy: "2026-11-16", ropa: { usos: [], prendas: [{ id: "a", nombre: "Abrigo", color: "Camel", compra: "2026-07-01", precio: 900 }] } };
+  const s3 = A.diapositivas(A.anio(d3, 2026)).find(x => x.id === "ropa");
+  assert.deepEqual([s3.grande, s3.titulo, s3.lineas], ["1", "prenda comprada", []]);
+  // Con poco más: tu prenda del año entra en lo destacado.
+  const d4 = { hoy: "2026-11-16", ropa: d.ropa };
+  assert.deepEqual(A.anio(d4, 2026).destacados, [{ icono: "👕", texto: "Tu prenda del año: Jean azul" }]);
+  // Sin la ropa, nada cambia (la lista de arriba sigue igual).
+  assert.ok(!("ropa" in A.anio(datos(), 2026).secciones));
+});

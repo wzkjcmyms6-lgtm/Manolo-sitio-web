@@ -2,7 +2,7 @@
 // parpadeo, y que los textos se lean en cada pantalla: mide el contraste de
 // cada texto visible contra su fondo real (como Lighthouse) a 375 px.
 // Uso: node scripts/e2e/tema-claro.js [carpeta-para-capturas]
-const { chromium, servidor, abrir, ok, captura: capturar, terminar } = require("./comun.js");
+const { chromium, servidor, abrir, ok, captura: capturar, terminar, auditarContraste: auditar } = require("./comun.js");
 
 const CAPTURAS = process.argv[2] || null;
 const captura = (p, n) => capturar(p, CAPTURAS, n);
@@ -23,54 +23,6 @@ const PANTALLAS = [
   ["fin-presupuesto", "#panel-fin-presupuesto"], ["fin-analisis", "#panel-fin-analisis"], ["inversiones", "#panel-inversiones"],
   ["libros", "#panel-libros"], ["biblia", "#panel-biblia"], ["tiempos", "#panel-tiempos"], ["lugares", "#panel-lugares"]
 ];
-
-// Corre en la página: textos visibles con poco contraste contra su fondo.
-function auditar() {
-  const leer = s => { const m = /rgba?\(([^)]+)\)/.exec(s || ""); if (!m) return null; const p = m[1].split(/[\s,/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p[3] == null ? 1 : p[3] }; };
-  const canal = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
-  const lum = c => 0.2126 * canal(c.r) + 0.7152 * canal(c.g) + 0.0722 * canal(c.b);
-  const sobre = (a, b) => ({ r: a.r * a.a + b.r * (1 - a.a), g: a.g * a.a + b.g * (1 - a.a), b: a.b * a.a + b.b * (1 - a.a), a: 1 });
-  const nombre = el => { let s = el.tagName.toLowerCase(); if (el.id) s += "#" + el.id; else if (el.classList.length) s += "." + [...el.classList].slice(0, 2).join("."); const p = el.parentElement; return p ? `${p.classList.length ? "." + p.classList[0] : p.tagName.toLowerCase()} > ${s}` : s; };
-  function fondo(el) {
-    const capas = [];
-    for (let x = el; x; x = x.parentElement) {
-      const cs = getComputedStyle(x);
-      if (cs.backgroundImage && cs.backgroundImage !== "none" && !/^url\(/.test(cs.backgroundImage)) return null;
-      const c = leer(cs.backgroundColor);
-      if (c && c.a > 0) { capas.push(c); if (c.a >= 0.99) break; }
-    }
-    let base = leer(getComputedStyle(document.body).backgroundColor) || { r: 255, g: 255, b: 255, a: 1 };
-    base.a = 1;
-    for (let i = capas.length - 1; i >= 0; i--) base = sobre(capas[i], base);
-    return base;
-  }
-  const malos = [];
-  const vistos = new Set();
-  const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  while (w.nextNode()) {
-    const t = w.currentNode;
-    if (!t.textContent.trim()) continue;
-    const el = t.parentElement;
-    if (!el || vistos.has(el)) continue;
-    vistos.add(el);
-    if (el.closest("[hidden], script, style, svg, .visually-hidden, [aria-hidden='true']")) continue;
-    const r = el.getBoundingClientRect();
-    if (r.width < 2 || r.height < 2) continue;
-    let oculto = false;
-    for (let x = el; x; x = x.parentElement) { const cs = getComputedStyle(x); if (cs.display === "none" || cs.visibility === "hidden" || Number(cs.opacity) < 0.5) { oculto = true; break; } }
-    if (oculto) continue;
-    const cs = getComputedStyle(el);
-    const c = leer(cs.color);
-    const f = fondo(el);
-    if (!c || !f) continue;
-    const col = c.a < 1 ? sobre(c, f) : c;
-    const a = lum(col), b = lum(f);
-    const k = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
-    const grande = parseFloat(cs.fontSize) >= 24 || (parseFloat(cs.fontSize) >= 18.6 && Number(cs.fontWeight) >= 700);
-    if (k < (grande ? 3 : 4.5)) malos.push({ texto: t.textContent.trim().slice(0, 28), k: Math.round(k * 100) / 100, donde: nombre(el), color: cs.color });
-  }
-  return malos;
-}
 
 (async () => {
   const srv = await servidor();

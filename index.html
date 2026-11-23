@@ -18,7 +18,7 @@
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
   <!-- Todos los estilos de la app en un archivo (D-127): js/paquete.json › npm run listo -->
-  <link rel="stylesheet" href="css/app.paquete.css?v=1a32d83897ad">
+  <link rel="stylesheet" href="css/app.paquete.css?v=7b646c31bc5a">
   <!-- Modo claro (D-126): generado con "npm run tema"; js/tema.js lo apaga en
        el modo oscuro y elige el modo antes de pintar (sin "defer": es chico) -->
   <link rel="stylesheet" href="css/tema-claro.css?v=202611171200" id="tema-claro-css">
@@ -136,6 +136,8 @@
             <section class="sem-inicio anio-inicio" id="anio-inicio" hidden aria-labelledby="anio-ini-t"></section>
 
             <a class="gym-en-curso act-en-curso-aviso" href="#run-rutinas" data-act-en-curso="run-rutinas" hidden><span class="gym-en-curso-punto" aria-hidden="true"></span><span>Tienes una <strong>rutina</strong> sin terminar</span><span class="gym-en-curso-ir">Continuar</span></a>
+            <!-- Para el lector de pantalla: el título de las tarjetas (h1 › h2 › h3, D-151) -->
+            <h2 class="visually-hidden">Tus secciones</h2>
             <div class="card-grid card-grid-home">
               <a class="card" href="#habitos">
                 <span class="icon" data-icon="habits"></span>
@@ -492,7 +494,7 @@
             <div class="lug-app" id="lug-app"></div>
           </section>
 
-          <!-- ===== Ropa (D-145 a D-150): el ropero y la ficha de cada prenda (js/ropa.js), Outfits (js/ropa-outfits.js), Inspiración (js/ropa-insp.js), Compras (js/ropa-compras.js); barra propia Ropero · Outfits · + · Inspiración · Compras ===== -->
+          <!-- ===== Ropa (D-145 a D-151): el ropero y la ficha de cada prenda (js/ropa.js), Outfits (js/ropa-outfits.js), Inspiración (js/ropa-insp.js), Compras (js/ropa-compras.js), Tus números (js/ropa-numeros.js); barra propia Ropero · Outfits · + · Inspiración · Compras ===== -->
           <section id="panel-ropa" hidden>
             <h1 class="page-title">Ropa</h1>
             <div class="ro-app" id="ro-app"></div>
@@ -512,6 +514,11 @@
           <section id="panel-ropa-compras" hidden>
             <h1 class="page-title">Compras</h1>
             <div class="rco-app" id="rco-app"></div>
+          </section>
+          <section id="panel-ropa-numeros" hidden>
+            <a class="back-link lib-volver" href="#ropa"><span class="icon-sm" data-icon="chevronLeft"></span>Ropero</a>
+            <h1 class="page-title">Tus números</h1>
+            <div class="rn-app" id="rn-app"></div>
           </section>
           <section id="panel-ropa-pin" hidden>
             <a class="back-link lib-volver" href="#ropa-inspiracion"><span class="icon-sm" data-icon="chevronLeft"></span>Inspiración</a>
@@ -1535,6 +1542,6 @@
   <script defer src="vendor/firebase-10.7.1/firebase-firestore-compat.js"></script>
   <!-- Todos los módulos de la app en un archivo (D-127): cada uno corre como su
        propio <script>. Se editan los de js/ y después: npm run listo -->
-  <script defer src="js/app.paquete.js?v=4cc04ea6673f"></script>
+  <script defer src="js/app.paquete.js?v=af34c47d9acd"></script>
 </body>
 </html>

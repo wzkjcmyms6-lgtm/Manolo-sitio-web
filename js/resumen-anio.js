@@ -46,6 +46,7 @@ function aniosConDatos(d) {
   if (x.biblia) (x.biblia.caps || []).concat(x.biblia.vers || []).forEach(e => poner(e.fecha));
   if (x.finanzas) (x.finanzas.movs || []).forEach(e => poner(e.fecha));
   if (x.lugares) x.lugares.forEach(l => (l.visitas || []).forEach(poner));
+  if (x.ropa) { (x.ropa.usos || []).forEach(u => { if ((u.prendas || []).length) poner(u.fecha); }); (x.ropa.prendas || []).forEach(p => poner(p.compra)); }
   return Array.from(anios).sort((a, b) => b - a);
 }
 
@@ -207,6 +208,12 @@ function anio(d, anioN) {
     S.lugares = { visitas: p.lugares.visitas, nuevos: p.lugares.nuevos.length, mejor: mejor || null, zonaTop: zona ? { nombre: zona, visitas: zonas[zona] } : null };
   }
 
+  // ---- Ropa (D-151): tu prenda del año, tu color y lo que compraste ----
+  if (p.ropa && (p.ropa.dias || p.ropa.compras)) {
+    S.ropa = { dias: p.ropa.dias, distintas: p.ropa.distintas, top: p.ropa.top, color: p.ropa.color, compras: p.ropa.compras,
+      mejorMes: mejorMes(meses, q => (q.ropa ? q.ropa.dias : 0)) };
+  }
+
   // ---- El año en números ----
   const nums = [];
   nums.push({ valor: R.miles(p.diasActivos), etiqueta: p.diasActivos === 1 ? "día con algo anotado" : "días con algo anotado" });
@@ -217,6 +224,7 @@ function anio(d, anioN) {
   if (S.libros) nums.push({ valor: R.miles(S.libros.terminados), etiqueta: S.libros.terminados === 1 ? "libro terminado" : "libros terminados" });
   if (S.biblia) nums.push({ valor: R.miles(S.biblia.capitulos), etiqueta: S.biblia.capitulos === 1 ? "capítulo de la Biblia" : "capítulos de la Biblia" });
   if (S.movilidad) nums.push({ valor: R.miles(S.movilidad.n), etiqueta: S.movilidad.n === 1 ? "rutina de movilidad" : "rutinas de movilidad" });
+  if (S.ropa && S.ropa.dias) nums.push({ valor: R.miles(S.ropa.dias), etiqueta: S.ropa.dias === 1 ? "día con tu ropa anotada" : "días con tu ropa anotada" });
   out.numeros = nums;
 
   // ---- Tu mejor mes (más días con algo) y tu día de la semana ----
@@ -251,6 +259,7 @@ function anio(d, anioN) {
   if (S.biblia) dest.push({ icono: "📖", texto: R.plural(S.biblia.capitulos, "capítulo de la Biblia", "capítulos de la Biblia") });
   if (S.habitos && S.habitos.pct != null) dest.push({ icono: "✅", texto: `${R.pct(S.habitos.pct)} de tus hábitos` });
   if (S.movilidad) dest.push({ icono: "🧘", texto: R.plural(S.movilidad.n, "rutina de movilidad", "rutinas de movilidad") });
+  if (S.ropa && S.ropa.top && S.ropa.top.veces >= 2) dest.push({ icono: "👕", texto: `Tu prenda del año: ${S.ropa.top.nombre}` });
   out.destacados = dest.slice(0, 6);
   out.hayDatos = Object.keys(S).length > 0;
   return out;
@@ -350,6 +359,30 @@ function diapositivas(y) {
     if (g.mejor) l.push(`El mejor: ${g.mejor.nombre}${g.mejor.calificacion ? ` ${estrellas(g.mejor.calificacion)}` : ""}.`);
     if (g.zonaTop) l.push(`Tu zona: ${g.zonaTop.nombre}.`);
     pon({ id: "lugares", tema: "oro", eyebrow: "Lugares", grande: R.miles(g.nuevos), titulo: g.nuevos === 1 ? "lugar nuevo" : "lugares nuevos", lineas: l });
+  }
+  if (S.ropa) {
+    // Tu prenda del año; si no hay una (2 veces o más), los días anotados o
+    // lo que compraste. Sin plata: la imagen se comparte.
+    const r = S.ropa, l = [];
+    const top = r.top && r.top.veces >= 2 ? r.top : null;
+    const distintas = R.plural(r.distintas, "prenda distinta", "prendas distintas");
+    let grande, titulo;
+    if (top) {
+      grande = R.miles(top.veces);
+      titulo = `veces te pusiste «${top.nombre}»`;
+      l.push("Tu prenda del año.");
+      l.push(`Anotaste lo que te pusiste ${R.plural(r.dias, "día", "días")}, con ${distintas}.`);
+    } else if (r.dias) {
+      grande = R.miles(r.dias);
+      titulo = r.dias === 1 ? "día con tu ropa anotada" : "días con tu ropa anotada";
+      l.push(`Con ${distintas}.`);
+    } else {
+      grande = R.miles(r.compras);
+      titulo = r.compras === 1 ? "prenda comprada" : "prendas compradas";
+    }
+    if (r.color) l.push(`Tu color del año: ${r.color.toLowerCase()}.`);
+    if (r.compras && (top || r.dias)) l.push(`Compraste ${R.plural(r.compras, "prenda", "prendas")}.`);
+    pon({ id: "ropa", tema: "fuego", eyebrow: "Ropa", grande, titulo, lineas: l });
   }
   if (y.mejorMes || y.diaSemana) {
     const l = [];

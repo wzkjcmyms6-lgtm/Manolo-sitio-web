@@ -41,3 +41,7 @@ html[data-modo="claro"] .bb-pieza.is-cambiar .rp-zap-barra i { background: #c628
 /* El aviso con "Deshacer" (todas las secciones): sobre su fondo claro, el
    ámbar del modo claro no llega a 4,5:1; uno más oscuro sí (5,7:1). */
 html[data-modo="claro"] .undo-toast-btn { color: #8a4500; }
+
+/* Ropa › Tus números (D-151): las barras de tus colores, en el ámbar del modo
+   claro (validado: contraste de al menos 3:1 sobre el blanco de la tarjeta). */
+html[data-modo="claro"] .rn-app { --rn-barra: #a35200; }

@@ -59,6 +59,7 @@ const SUB_PANELS = [
   { hash: "ropa-inspiracion", parent: "ropa" },
   { hash: "ropa-pin", parent: "ropa-inspiracion" },
   { hash: "ropa-compras", parent: "ropa" },
+  { hash: "ropa-numeros", parent: "ropa" },
   { hash: "semana", parent: "inicio" },
   { hash: "fin-presupuesto", parent: "finanzas" },
   { hash: "fin-movimientos", parent: "finanzas" },
