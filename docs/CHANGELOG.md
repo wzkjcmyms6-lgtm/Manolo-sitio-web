@@ -1,5 +1,19 @@
 # Cambios
 
+## 2026-11-23 · Ropa: Outfits
+- **"¿Qué me pongo?"**: en Ropa › Outfits, 3 opciones solo con tu ropa para
+  hoy o mañana, con el clima de tu ciudad (cualquier ciudad: La Paz por
+  defecto, y las que uses quedan a un toque cuando viajes). Manolo nunca usa tu
+  ubicación.
+- Piensa en capas, frío, calor, lluvia, viento, nieve y sol fuerte, y en si eres
+  friolento o caluroso (Ajustes de Ropa).
+- Cada opción: sus fotos, por qué combina y a qué inspiración tuya se parece.
+  "Me lo pongo", "Guardar", "Otra opción" y "No me gusta": aprende de ti.
+- Tus propias ocasiones ("+ Otra"), tus outfits guardados y el calendario de lo
+  que te pusiste.
+- "¿Con qué combino esto?" en la ficha de cada prenda.
+- Sin IA funciona igual, con reglas; con la IA conectada, los arma la IA.
+
 ## 2026-11-23 · Ropa: Inspiración
 - **Ropa tiene su barra abajo**: Ropero · **+** · Inspiración.
 - **Inspiración**: guarda lo que te gusta: capturas, links de pines de

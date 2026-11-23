@@ -7,8 +7,8 @@
 // el teléfono): tu tablero, los pines que pegas y sus imágenes.
 // window.RopaIA: puente(), quien(forzar), disponible(), pinterest(),
 // describir(blob), analizar(blob), look(pin, ropero), estilo(pines),
-// tablero(datos), pin(link), imagen(url), gasto(), tope(usd), alCambiar(fn),
-// estado().
+// tablero(datos), pin(link), imagen(url), outfits(datos), version(),
+// gasto(), tope(usd), alCambiar(fn), estado().
 (function () {
 "use strict";
 // La dirección del puente (se completa al instalarlo). En las pruebas se cambia
@@ -58,7 +58,8 @@ function quien(forzar) {
 }
 const disponible = () => !!(puente() && estado && estado.permitido && estado.lista);
 // Pinterest no necesita la clave de la IA: alcanza con el puente (versión 2 o más).
-const pinterest = () => !!(puente() && estado && estado.permitido && (estado.version || 1) >= 2);
+const version = () => (estado && estado.version) || 1;
+const pinterest = () => !!(puente() && estado && estado.permitido && version() >= 2);
 
 // La foto (Blob) → lo que la IA ve en ella (ya limpio, con las listas de Manolo).
 function aBase64(blob) {
@@ -87,9 +88,11 @@ const estilo = pines => pedir("/estilo", { pines }).then(j => j.estilo);
 const tablero = datos => pedir("/pinterest/tablero", datos);
 const pin = link => pedir("/pinterest/pin", { link }).then(j => j.pin);
 const imagen = url => pedir("/pinterest/imagen", { url }, true);
+// "¿Qué me pongo hoy?" (D-149, puente versión 3).
+const outfits = datos => pedir("/outfits", datos);
 const gasto = () => pedir("/gasto").then(j => j.gasto);
 const tope = usd => pedir("/tope", { tope: usd }).then(j => j.gasto);
 
 if (typeof onAuthReady === "function") onAuthReady(() => { quien(); });
-window.RopaIA = { puente, quien, disponible, pinterest, describir, analizar, look, estilo, tablero, pin, imagen, gasto, tope, alCambiar: fn => { oyentes.push(fn); }, estado: () => estado };
+window.RopaIA = { puente, quien, disponible, pinterest, version, describir, analizar, look, estilo, tablero, pin, imagen, outfits, gasto, tope, alCambiar: fn => { oyentes.push(fn); }, estado: () => estado };
 })();

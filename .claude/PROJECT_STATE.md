@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-23 (Ropa, fase 3: Inspiración, D-148).
+Actualizado: 2026-11-23 (Ropa, fase 4: Outfits, D-149).
 
 - **Ropa con IA e inspiración de Pinterest (2026-11-22, en curso)**: el
   ropero del dueño con fotos; una IA (el mejor modelo de Claude, por un
@@ -18,8 +18,13 @@ Actualizado: 2026-11-23 (Ropa, fase 3: Inspiración, D-148).
   (Ropero · + · Inspiración) e **Inspiración** (tu tablero de Pinterest por el
   puente, links de pines e imágenes subidas; la IA reconoce las prendas de
   cada una; "Armar este look con mi ropa" sin IA por reglas o con la IA; "Mi
-  estilo"). Falta del dueño: las cuentas de Claude y Cloudflare para instalar
-  el puente, y un tablero público en Pinterest.
+  estilo"). Fase 4 (D-149): **Outfits** ("¿Qué me pongo?" con el clima de
+  cualquier ciudad —Open-Meteo, sin tu ubicación—, hoy o mañana, friolento o
+  caluroso, tus ocasiones, 3 opciones con reglas o con la IA, a qué
+  inspiración se parece, Me lo pongo / Guardar / Otra opción / No me gusta,
+  guardados, calendario y "¿Con qué combino esto?"). Falta del dueño: las
+  cuentas de Claude y Cloudflare para instalar el puente, y un tablero público
+  en Pinterest.
 
 - **Tu semana, Tu año y Bici al nivel de Running (2026-11-16, terminado)**:
   "Tu semana" (cada lunes en Inicio: cifras de todas tus áreas, lo mejor, lo

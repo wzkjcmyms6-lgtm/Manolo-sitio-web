@@ -55,6 +55,7 @@ const SUB_PANELS = [
   { hash: "ropa", parent: "inicio" },
   { hash: "ropa-prenda", parent: "ropa" },
   { hash: "ropa-ajustes", parent: "ropa" },
+  { hash: "ropa-outfits", parent: "ropa" },
   { hash: "ropa-inspiracion", parent: "ropa" },
   { hash: "ropa-pin", parent: "ropa-inspiracion" },
   { hash: "semana", parent: "inicio" },
@@ -124,10 +125,11 @@ const BICI_TABS = [
   { hash: "bici-segmentos", label: "Segmentos", icon: "segmento", color: "#ff7a30" },
   { hash: "bici-bicis", label: "Bicis", icon: "tools", color: "#ff7a30" }
 ];
-// Ropa también (D-148): Ropero · "+" (prendas o inspiración) · Inspiración.
-// Outfits (fase 4) y Compras (fase 5) se suman después.
+// Ropa también (D-148, D-149): Ropero · Outfits · "+" (prendas o inspiración)
+// · Inspiración. Compras (fase 5) se suma después.
 const ROPA_TABS = [
   { hash: "ropa", label: "Ropero", icon: "ropa", color: "#ffb84d" },
+  { hash: "ropa-outfits", label: "Outfits", icon: "outfit", color: "#ffb84d" },
   { accion: "ropa-mas", label: "Agregar", icon: "plus" },
   { hash: "ropa-inspiracion", label: "Inspiración", icon: "inspiracion", color: "#ffb84d" }
 ];

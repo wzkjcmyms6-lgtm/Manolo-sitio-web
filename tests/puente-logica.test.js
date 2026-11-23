@@ -240,3 +240,53 @@ test("mi estilo: desde 3 pines, y lo que contesta la IA se limpia", async () => 
   const s = L.limpiarEstilo({ resumen: " Te gusta lo   neutro. ", claves: ["neutros", "neutros", "", "capas", "a", "b", "c", "d", "e"], colores: ["camel", "nada", "negro"], prendas: ["Abrigo largo"] });
   assert.deepEqual(s, { resumen: "Te gusta lo neutro.", claves: ["neutros", "capas", "a", "b", "c", "d"], colores: ["camel", "negro"], prendas: ["Abrigo largo"] });
 });
+
+test("outfits (D-149): esquema, lo que llega, el pedido y lo que contesta la IA", async () => {
+  const L = await cargar();
+  revisarEsquema(L.ESQUEMA_OUTFITS, "outfits");
+  assert.ok(!/Manolo/.test(L.instruccionesOutfits()));
+  assert.match(L.instruccionesOutfits(), /Usa SOLO su ropa/);
+  const ropero = [
+    { id: "idPol1", grupo: "arriba", tipo: "Polera", colores: ["blanco"], clima: ["templado"], notas: "secreta" },
+    { id: "idJean2", grupo: "abajo", tipo: "Jean", colores: ["azul-jean"] },
+    { id: "idZap3", grupo: "zapatos", tipo: "Zapatillas", colores: ["blanco"] },
+    { id: "idCha4", grupo: "abrigos", tipo: "Chamarra", colores: ["verde-oliva"], clima: ["frio"] },
+    { id: "idSucia5", grupo: "arriba", tipo: "Camisa", colores: ["celeste"], lavar: true },
+    { id: "mal id", grupo: "arriba", tipo: "X" }
+  ];
+  const e = L.entradaOutfits({
+    ropero, clima: "En La Paz (Bolivia): sensación de 9 a 20 °C.", necesidades: { base: "templado", abrigo: "abrigo", capas: true, lluvia: "nada", sol: true },
+    ocasion: "Trabajo", estilo: "Neutros y cortes rectos.", recientes: ["idJean2", "otro"], gustan: [["idPol1", "idJean2"], ["solo"]], noGustan: [["idPol1", "idJean2", "idZap3"]], evitar: [["idCha4", "idPol1", "idJean2", "idZap3"]], base: "idCha4"
+  });
+  assert.deepEqual(e.ropero.map(p => p.id), ["idPol1", "idJean2", "idZap3", "idCha4"], "sin lo que está para lavar ni ids raros");
+  assert.deepEqual(e.necesidades, { base: "templado", abrigo: "abrigo", capas: true, lluvia: "", tormenta: false, nieve: false, viento: false, sol: true });
+  assert.deepEqual(e.recientes, ["idJean2"]);
+  assert.deepEqual(e.gustan, [["idPol1", "idJean2"]]);
+  assert.equal(e.base, "idCha4");
+  assert.equal(L.entradaOutfits({ ropero: ropero.slice(0, 1) }), null, "con una prenda no se arma nada");
+  const { texto, refs } = L.textoRopero(e.ropero);
+  const t = L.textoOutfits(e, refs);
+  assert.match(t, /^El día: En La Paz \(Bolivia\)/);
+  assert.match(t, /Lo que pide: ropa de templado; abrigo para el frío; capas \(mañana fresca/);
+  assert.match(t, /Ocasión: Trabajo\./);
+  assert.match(t, /Me puse hace poco \(mejor no repetir\): p2\./);
+  assert.match(t, /Combinaciones que me gustaron: \(p1, p2\)\./);
+  assert.match(t, /No me gustaron \(no las repitas\): \(p1, p2, p3\)\./);
+  assert.match(t, /Ya vi estas \(dame otras\): \(p4, p1, p2, p3\)\./);
+  assert.match(t, /Tiene que ir sí o sí: p4\./);
+  assert.match(t, /Arma 5 outfits, del mejor al menos bueno\.$/, "3 para ver y 2 por si pide otra opción");
+  assert.match(L.instruccionesOutfits(), /los tres primeros son los que va a ver/);
+  assert.ok(!/idPol1|idJean2|idZap3|idCha4|secreta/.test(texto + t), "la IA no ve tus ids ni tus notas");
+  const r = L.limpiarOutfits({ outfits: [
+    { nombre: "Capas neutras", prendas: ["p4", "P1", "p2", "p3", "p1"], porque: "Neutros.", capas: "Chamarra a la mañana." },
+    { nombre: "Inventado", prendas: ["p9", "p1"], porque: "", capas: "" },
+    { nombre: "Otro", prendas: ["p1", "p2"], porque: "x".repeat(300), capas: "" }
+  ], nota: "Te falta algo para la lluvia." }, refs);
+  assert.deepEqual(r.outfits[0], { nombre: "Capas neutras", prendas: ["idCha4", "idPol1", "idJean2", "idZap3"], porque: "Neutros.", capas: "Chamarra a la mañana." });
+  assert.equal(r.outfits.length, 2, "la que tenía una prenda inventada queda con una sola: se va");
+  assert.equal(r.outfits[1].porque.length, 200);
+  assert.equal(r.nota, "Te falta algo para la lluvia.");
+  assert.deepEqual(L.limpiarOutfits(null, refs), { outfits: [], nota: "" });
+  const muchos = L.limpiarOutfits({ outfits: Array.from({ length: 9 }, () => ({ nombre: "x", prendas: ["p1", "p2"], porque: "", capas: "" })), nota: "" }, refs);
+  assert.equal(muchos.outfits.length, 6, "hasta 6 (la app muestra 3 y guarda el resto)");
+});

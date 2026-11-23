@@ -1,6 +1,8 @@
-// ---------- Ropa: Ajustes (#ropa-ajustes, el engranaje; D-147 / D-148) ----------
-// Tu tablero de Pinterest (conectar, actualizar, cambiar o desconectar; con
-// el puente listo). La IA: si está conectada, el gasto del mes con su tope
+// ---------- Ropa: Ajustes (#ropa-ajustes, el engranaje; D-147 a D-149) ----------
+// Tus outfits: la ciudad del clima, cómo sientes el frío (friolento, normal
+// o caluroso: corre los límites 3 grados) y tus ocasiones (las que agregaste
+// en Outfits; aquí se quitan, con Deshacer). Tu tablero de Pinterest
+// (conectar, actualizar, cambiar o desconectar; con el puente listo). La IA: si está conectada, el gasto del mes con su tope
 // (se puede cambiar) y "Describir con IA" las prendas que cargaste antes
 // (llena solo lo que falta, sin cambiar lo que pusiste). Si no está
 // conectada, tu código de usuario para conectarla.
@@ -52,9 +54,33 @@ function pintar() {
                <p class="rd-nota">Llena solo lo que falta; lo que pusiste no cambia. Son unos ${usd(n * 0.03)}.</p>` : ""}`;
   }
   app.innerHTML = `${aviso ? `<p class="tmp-ok" role="status">${esc(aviso)}</p>` : ""}
+    ${climaHTML()}
     ${pinterestHTML()}
     <section class="tmp-card roa-ia" aria-labelledby="roa-ia-t"><h2 class="ro-sub" id="roa-ia-t">La IA</h2>${ia}</section>`;
   if (typeof renderIcons === "function") renderIcons(app);
+}
+
+// Tus outfits (D-149): la ciudad del clima, cómo sientes el frío y tus ocasiones.
+const propias = () => (window.RopaOutfitMotor && DI ? window.RopaOutfitMotor.ocasionesPropias((DI.ajustes() || {}).ocasiones) : []);
+function climaHTML() {
+  const C = window.RopaClima, O = window.RopaOutfitMotor;
+  if (!DI || !C || !O || !window.RopaOutfits) return "";
+  const aj = DI.ajustes() || {};
+  const c = C.ciudad(aj.ciudad || C.LA_PAZ);
+  const s = ["friolento", "normal", "caluroso"].includes(aj.sensacion) ? aj.sensacion : "normal";
+  const ocs = propias();
+  return `<section class="tmp-card roa-clima" aria-labelledby="roa-clima-t">
+    <h2 class="ro-sub" id="roa-clima-t"><span data-icon="clima" aria-hidden="true"></span>Tus outfits</h2>
+    <div class="roa-ciudad"><p>Ciudad: <b>${esc(c.nombre)}</b> <span class="rd-nota">${esc(C.detalleCiudad(c))}</span></p>
+      <button type="button" class="lib-btn-sec lib-btn-chico" data-roa="ciudad" aria-haspopup="dialog">Cambiar ciudad</button></div>
+    <fieldset class="ro-campo"><legend>Cómo sientes el frío</legend><div class="ro-opciones">${C.SENSACIONES.map(([v, t]) =>
+      `<label class="ro-op-chip"><input type="radio" name="roa-sensacion" value="${v}"${s === v ? " checked" : ""}><span>${esc(t)}</span></label>`).join("")}</div>
+      <small class="rd-nota">Friolento: Manolo te abriga como si hiciera 3 grados menos. Caluroso: como si hiciera 3 grados más.</small></fieldset>
+    <h3 class="ro-mas-t">Tus ocasiones</h3>
+    ${ocs.length ? `<ul class="roa-ocasiones">${ocs.map(o => `<li><span><b>${esc(o.nombre)}</b> <small class="rd-nota">como ${esc(O.OCASION[o.como].nombre.toLowerCase())}</small></span>
+      <button type="button" class="lib-btn-sec lib-btn-chico" data-roa="oc-quitar" data-id="${esc(o.id)}" aria-label="Quitar ${esc(o.nombre)}">Quitar</button></li>`).join("")}</ul>` : ""}
+    <p class="rd-nota">${ocs.length ? "Agrega más" : "Agrega las tuyas (la universidad, la iglesia…)"} en Outfits › Para qué › «+ Otra».</p>
+  </section>`;
 }
 
 // Tu tablero de Pinterest (D-148): solo con el puente listo.
@@ -131,6 +157,13 @@ app.addEventListener("click", e => {
   } else if (a === "reintentar") IA.quien(true).then(pintar);
   else if (a === "todas") describirTodas();
   else if (a === "cancelar" && tarea) { tarea.cancelar = true; b.disabled = true; }
+  else if (a === "ciudad" && window.RopaOutfits) window.RopaOutfits.elegirCiudad(b);
+  else if (a === "oc-quitar" && DI) {
+    const antes = propias(), o = antes.find(x => x.id === b.dataset.id);
+    if (!o) return;
+    DI.guardarAjustes({ ocasiones: antes.filter(x => x.id !== o.id) }).catch(err => A().fallo(err));
+    A().aviso(`Quitaste «${o.nombre}» de tus ocasiones.`, () => DI.guardarAjustes({ ocasiones: antes }).catch(err => A().fallo(err)));
+  }
   else if (a === "pin-conectar" && RI()) RI().conectarTablero(b);
   else if (a === "pin-actualizar" && RI()) { location.hash = "ropa-inspiracion"; RI().actualizarTablero(true); }
   else if (a === "pin-quitar" && DI) {
@@ -138,6 +171,11 @@ app.addEventListener("click", e => {
     DI.guardarAjustes({ pinterest: null }).catch(err => A().fallo(err));
     A().aviso("Desconectaste tu tablero. Los pines que ya trajiste se quedan.", () => DI.guardarAjustes({ pinterest: antes }).catch(err => A().fallo(err)));
   }
+});
+app.addEventListener("change", e => {
+  if (e.target.name !== "roa-sensacion" || !DI) return;
+  DI.guardarAjustes({ sensacion: e.target.value }).catch(err => A().fallo(err));
+  A().aviso(e.target.value === "normal" ? "Listo: el clima, tal cual." : `Listo: Manolo sabe que eres ${e.target.value}.`);
 });
 app.addEventListener("submit", e => {
   if (e.target.id !== "roa-tope") return;

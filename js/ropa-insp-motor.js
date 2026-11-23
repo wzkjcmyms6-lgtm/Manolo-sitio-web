@@ -165,6 +165,38 @@ function armarLocal(a, ropero) {
     .map(({ v, k }) => ({ pin: k + 1, grupo: v.grupo, tipo: v.tipo, colores: v.colores.slice(), porque: "" }));
   return { origen: "reglas", prendas, faltan, consejo: "" };
 }
+// ¿A cuál de tus inspiraciones se parece un outfit? (D-149) items: las
+// prendas del outfit (normalizadas). De cada inspiración cuenta las prendas
+// que se ven (sin accesorios) que el outfit tiene igual (1) o parecida (0,7),
+// cada prenda tuya una vez: tienen que ser 2 o más y la mitad o más. Si la IA
+// ya armó ese look con tu ropa y el outfit lleva 2 o más de esas mismas
+// prendas, esa va primero. → { id, puntos } (la que más se parece) o null.
+function parecidaA(items, inspiraciones) {
+  const tuyas = items || [], ids = new Set(tuyas.map(p => p.id));
+  let mejor = null;
+  (inspiraciones || []).forEach(x => {
+    if (!x || x.oculta || !x.analisis || !x.analisis.esRopa) return;
+    const vistas = x.analisis.prendas.filter(v => v.grupo !== "accesorios");
+    if (vistas.length < 2) return;
+    const delLook = x.look ? x.look.prendas.filter(l => ids.has(l.id)).length : 0;
+    let suma = 0, n = 0;
+    const usadas = new Set();
+    vistas.forEach(v => {
+      let el = null;
+      tuyas.forEach(p => {
+        if (usadas.has(p.id)) return;
+        const c = cuanto(parecido(v, p));
+        const val = c === "igual" ? 1 : c === "parecida" ? 0.7 : 0;
+        if (val && (!el || val > el.val)) el = { id: p.id, val };
+      });
+      if (el) { usadas.add(el.id); suma += el.val; n++; }
+    });
+    const parte = suma / vistas.length;
+    const puntos = Math.max(delLook >= 2 ? 1 + delLook / 10 : 0, n >= 2 && parte >= 0.5 ? parte : 0);
+    if (puntos > 0 && (!mejor || puntos > mejor.puntos)) mejor = { id: x.id, puntos: Math.round(puntos * 100) / 100 };
+  });
+  return mejor;
+}
 // El look guardado con tu ropero de hoy: sin las prendas que borraste.
 function lookVigente(look, ropero) {
   if (!look) return null;
@@ -230,7 +262,7 @@ const esLinkPinterest = s => /(?:^|\s)(?:https?:\/\/)?(?:pin\.it\/[A-Za-z0-9]{3,
 
 return {
   PARECIDOS, MIN_ESTILO, normalizar, analisis, lookGuardado, docDePin, titulo, ordenar, porAnalizar, resumen,
-  nombreVista, buscarEnPinterest, familiaTipo, parecido, armarLocal, lookVigente, roperoParaIA, pinParaIA, pinesParaEstilo,
+  nombreVista, buscarEnPinterest, familiaTipo, parecido, cuanto, armarLocal, parecidaA, lookVigente, roperoParaIA, pinParaIA, pinesParaEstilo,
   estiloLocal, estiloGuardado, esLinkPinterest
 };
 });

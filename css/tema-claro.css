@@ -4359,3 +4359,7 @@ html[data-modo="claro"] .lib-chip.is-prioridad { color: #8a4500; }
    leerse sobre el fondo claro (contraste de al menos 4,5:1). */
 html[data-modo="claro"] .bb-pieza.is-cambiar .bb-pieza-t small { color: #b3261e; }
 html[data-modo="claro"] .bb-pieza.is-cambiar .rp-zap-barra i { background: #c62828; }
+
+/* El aviso con "Deshacer" (todas las secciones): sobre su fondo claro, el
+   ámbar del modo claro no llega a 4,5:1; uno más oscuro sí (5,7:1). */
+html[data-modo="claro"] .undo-toast-btn { color: #8a4500; }

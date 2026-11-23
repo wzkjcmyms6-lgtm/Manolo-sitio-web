@@ -7,7 +7,7 @@
 // documentos. Los pines del tablero que quitas quedan ocultos (así no vuelven
 // al actualizar); las imágenes subidas se borran (con Deshacer).
 // window.RopaInspDatos: lista(), todas(), una(id), crudo(id), cargada(),
-// error(), ajustes(), al(fn), agregarImagen(archivo, extra), agregarPin(pin,
+// error(), ajustes(), ajustesListos(), al(fn), agregarImagen(archivo, extra), agregarPin(pin,
 // via, blob), guardarAnalisis(id, a), fallaAnalisis(id, mensaje),
 // guardarLook(id, look), guardarImagen(id, blob, fotoId), ocultar(id, si),
 // borrar(id), restaurar(id, doc), guardarAjustes(cambios), Fotos.
@@ -21,7 +21,7 @@ const col = () => usuario().collection("ropa_inspiracion");
 const refAjustes = () => usuario().collection("meta").doc("ropa_ajustes");
 const FV = () => firebase.firestore.FieldValue;
 
-let todas = [], cargada = false, error = null, ajustes = {};
+let todas = [], cargada = false, error = null, ajustes = {}, ajustesListos = false;
 const crudos = new Map();
 const oyentes = [];
 function avisar() {
@@ -39,7 +39,7 @@ function escuchar() {
       error = null;
       avisar();
     }, err => { console.warn("Ropa (inspiración):", err); error = err; avisar(); }),
-    refAjustes().onSnapshot(s => { ajustes = (s.exists && s.data()) || {}; avisar(); }, err => console.warn("Ropa (ajustes):", err))
+    refAjustes().onSnapshot(s => { ajustes = (s.exists && s.data()) || {}; ajustesListos = true; avisar(); }, err => console.warn("Ropa (ajustes):", err))
   ];
 }
 if (typeof onAuthReady === "function") onAuthReady(escuchar);
@@ -92,7 +92,7 @@ function guardarAjustes(cambios) { return refAjustes().set(Object.assign({}, cam
 
 window.RopaInspDatos = {
   lista: () => todas.filter(p => !p.oculta), todas: () => todas, una: id => todas.find(p => p.id === id) || null, crudo: id => crudos.get(id) || null,
-  cargada: () => cargada, error: () => error, ajustes: () => ajustes, al: fn => { oyentes.push(fn); },
+  cargada: () => cargada, error: () => error, ajustes: () => ajustes, ajustesListos: () => ajustesListos, al: fn => { oyentes.push(fn); },
   agregarImagen, agregarPin, guardarAnalisis, fallaAnalisis, guardarLook, guardarImagen, ocultar, borrar, restaurar, guardarAjustes, Fotos
 };
 })();

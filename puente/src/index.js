@@ -8,7 +8,7 @@
 // Configuración en Cloudflare: secretos ANTHROPIC_API_KEY, MODELO y USUARIOS;
 // variables FIREBASE_PROJECT y ORIGENES (wrangler.toml).
 // Rutas: GET /quien, GET /gasto, POST /tope; IA: POST /describir,
-// /inspiracion, /look, /estilo; Pinterest: POST /pinterest/tablero,
+// /inspiracion, /look, /estilo, /outfits; Pinterest: POST /pinterest/tablero,
 // /pinterest/pin, /pinterest/imagen.
 // Lógica sin red (y sus pruebas): ./logica.js, ./pinterest.js y
 // tests/puente-logica.test.js, tests/puente-pinterest.test.js.
@@ -17,7 +17,7 @@ import * as L from "./logica.js";
 import * as P from "./pinterest.js";
 
 // Lo que este puente sabe hacer (la app lo mira para mostrar o no lo nuevo).
-const VERSION = 2;
+const VERSION = 3;   // 2: Pinterest e inspiración (D-148); 3: outfits (D-149)
 
 let jwks = null;   // { llaves, vence }
 async function llaves() {
@@ -131,6 +131,19 @@ async function estilo(env, cuerpo) {
   return r.cuerpo ? [r.status, r.cuerpo] : [200, { estilo: L.limpiarEstilo(r.datos), gasto: r.gasto }];
 }
 
+// "¿Qué me pongo hoy?" (D-149): tres outfits solo con tu ropa (el ropero en
+// caché, como en el look).
+async function outfits(env, cuerpo) {
+  const e = L.entradaOutfits(cuerpo);
+  if (!e) return [400, { error: "datos", mensaje: "Hace falta tu ropero para armar outfits." }];
+  const { texto, refs } = L.textoRopero(e.ropero);
+  const r = await preguntar(env, {
+    system: L.instruccionesOutfits(), esquema: L.ESQUEMA_OUTFITS, esfuerzo: "medium", que: "armar tus outfits",
+    contenido: [{ type: "text", text: texto, cache_control: { type: "ephemeral" } }, { type: "text", text: L.textoOutfits(e, refs) }]
+  });
+  return r.cuerpo ? [r.status, r.cuerpo] : [200, Object.assign(L.limpiarOutfits(r.datos, refs), { gasto: r.gasto })];
+}
+
 // ---- Pinterest (solo lectura) ----
 // Pide algo a Pinterest; si falla (a veces da 404 un rato), reintenta.
 async function traer(url, intentos) {
@@ -215,7 +228,7 @@ export default {
         return json(200, { gasto: await estadoGasto(env) });
       }
       if (!env.ANTHROPIC_API_KEY || !env.MODELO) return json(503, { error: "falta-clave", mensaje: "Falta conectar la IA: la clave va en Cloudflare." });
-      const ia = { "/describir": describir, "/inspiracion": inspiracion, "/look": look, "/estilo": estilo }[ruta];
+      const ia = { "/describir": describir, "/inspiracion": inspiracion, "/look": look, "/estilo": estilo, "/outfits": outfits }[ruta];
       if (post && ia) return json(...(await ia(env, await leer())));
       return json(404, { error: "ruta", mensaje: "No existe." });
     } catch (e) {

@@ -115,6 +115,27 @@ test("armar el look sin IA: lo más parecido de tu ropa y lo que te falta", () =
   assert.equal(I.lookVigente(null, ROPERO), null);
 });
 
+test("a qué inspiración se parece un outfit (D-149)", () => {
+  const insp = (id, analisis, extra) => I.normalizar(id, Object.assign({ via: "tablero", creado: 1, pin: { id, url: "https://www.pinterest.com/pin/1/", titulo: id }, analisis }, extra || {}));
+  const camel = insp("camel", PIN);
+  const oficina = insp("oficina", { esRopa: true, resumen: "Oficina", prendas: [
+    { grupo: "arriba", tipo: "Camisa", colores: ["celeste"] }, { grupo: "abajo", tipo: "Pantalón de tela", colores: ["negro"] }, { grupo: "zapatos", tipo: "Mocasines", colores: ["cafe"] }] });
+  const botines = prenda("botines", "zapatos", "Botines", "cafe-oscuro");
+  const de = ids => ids.map(id => (id === "botines" ? botines : ROPERO.find(p => p.id === id)));
+  // Abrigo beige (de la familia del camel: 0,7), polera crema (la chompa es otro
+  // tipo: no cuenta), el jean igual (1) y botines café oscuro (0,7): 2,4 de 4.
+  assert.deepEqual(I.parecidaA(de(["abrigo", "polera", "jean", "botines"]), [oficina, camel]), { id: "camel", puntos: 0.6 });
+  assert.equal(I.parecidaA(de(["abrigo", "polera", "jean", "zapas"]), [oficina, camel]), null, "con zapatillas: 1,7 de 4, menos de la mitad");
+  assert.equal(I.parecidaA(de(["polera", "zapas"]), [camel, oficina]), null, "sin nada parecido, nada");
+  assert.equal(I.parecidaA(de(["abrigo", "polera", "jean", "botines"]), [Object.assign({}, camel, { oculta: true })]), null, "las que quitaste no cuentan");
+  // La chamarra camel (otro tipo de abrigo: no cuenta) y el jean: 1 de 4, no alcanza.
+  assert.equal(I.parecidaA(de(["chamarra", "polera", "jean"]), [camel]), null);
+  // Si la IA ya armó ese look con tu ropa y el outfit lleva 2 de esas prendas, gana.
+  const conLook = insp("con-look", PIN, { look: { origen: "ia", fecha: "2026-11-22", prendas: [{ pin: 1, id: "chamarra", parecido: "reemplazo", porque: "" }, { pin: 3, id: "jean", parecido: "igual", porque: "" }], faltan: [], consejo: "" } });
+  assert.deepEqual(I.parecidaA(de(["chamarra", "polera", "jean"]), [camel, conLook]), { id: "con-look", puntos: 1.2 });
+  assert.equal(I.parecidaA([], [camel]), null);
+});
+
 test("lo que se le manda a la IA: sin notas, talla, precio ni fotos", () => {
   const r = I.roperoParaIA(ROPERO);
   assert.ok(!r.some(p => p.id === "jean-negro"), "sin las que ya no tienes");

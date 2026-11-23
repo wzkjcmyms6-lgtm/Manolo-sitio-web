@@ -111,9 +111,12 @@ permitidos):
   fuera), `fueraFecha`, `ia` ({ fecha }), `creado`, `editado`.
 - `users/{uid}/ropa_usos/{fecha}`: lo que te pusiste ese día ({ prendas,
   outfitId }); de ahí salen las veces, la última y el calendario.
-- `users/{uid}/ropa_outfits/{id}`: `prendas`, `ocasion`, `clima`, `origen`
-  (ia | manual | inspiracion), `inspiracionId`, `porque`, `guardado`, `gusto`
-  (si | no), `creado`.
+- `users/{uid}/ropa_outfits/{id}` (D-149; uno por conjunto de prendas: si
+  armas el mismo, es el mismo): `v`, `prendas`, `ocasion` (casual, trabajo,
+  noche, deporte, formal o una tuya "o-…"), `origen` (ia | reglas |
+  inspiracion | manual), `nombre`, `porque`, `capas`, `ciudad`, `clima` (el
+  resumen del día), `inspiracionId`, `guardado`, `gusto` (si | no), `puesto`
+  ([fechas]), `para` (la fecha para la que lo elegiste), `creado`, `editado`.
 - `users/{uid}/ropa_inspiracion/{id}` (D-148; los pines con id `pin-{id del
   pin}`, así no se repiten): `v`, `via` (tablero | link | foto), `pin` ({ id,
   url, titulo, img, fecha }), `fotos` ([{ id, mini, ancho, alto }]),
@@ -126,8 +129,10 @@ permitidos):
   `estado` (quiero | comprado | descartado), `creado`.
 - `users/{uid}/meta/ropa_ajustes`: `pinterest` ({ usuario, tablero, titulo,
   conectado, leido, error, errorFecha } o null), `estilo` ({ resumen, claves,
-  colores, prendas, fecha, pines, corregido }) (D-148); después `ciudad` ({
-  nombre, lat, lon }), `ocasiones`, `presupuestoMes`.
+  colores, prendas, fecha, pines, corregido }) (D-148); `ciudad` ({ nombre,
+  region, pais, codigoPais, lat, lon, zona }), `ciudades` (las últimas 5),
+  `sensacion` (friolento | normal | caluroso), `ocasiones` ([{ id, nombre,
+  como }]) (D-149); después `presupuestoMes`.
 
 ### La IA y el puente
 - **Puente**: un Worker en Cloudflare (plan gratis). Su código va en el repo
@@ -169,7 +174,9 @@ permitidos):
 - "Armar este look con mi ropa" con la IA: unos 3 a 5 centavos (si miras
   varios pines seguidos, menos: tu ropero queda unos minutos en caché). Sin la
   IA (por reglas) no cuesta nada. "Mi estilo": 1 a 2 centavos.
-- "¿Qué me pongo hoy?": unos 6 centavos (2 por día: unos 4 USD al mes).
+- "¿Qué me pongo hoy?" con la IA: unos 5 a 7 centavos (2 por día: unos 4 USD
+  al mes); "Otra opción" usa las que la IA dejó de reserva, sin volver a
+  preguntarle. Con reglas, gratis. El clima (Open-Meteo): gratis.
 - En total, unos 5 USD al mes; tope de 8 USD. El puente y el clima: gratis.
 
 ## Fases
@@ -269,6 +276,35 @@ permitidos):
   anda aunque falte la clave de la IA. Las instrucciones a la IA ya no dicen el
   nombre de la app.
 - La copia de seguridad lleva las inspiraciones y sus imágenes.
+
+## Hecho en la fase 4 (D-149): Outfits
+- **La barra de Ropa**: Ropero · Outfits · **+** · Inspiración.
+- **El clima de cualquier ciudad** (`js/ropa-clima.js`, Open-Meteo: gratis y
+  sin clave): La Paz por defecto; "Cambiar ciudad" busca cualquiera (las de tu
+  país primero) y las últimas quedan a un toque para cuando viajes. Nunca usa
+  tu ubicación. Hoy o mañana (de noche, mañana) y los consejos del día: capas,
+  frío, calor, lluvia, tormenta, nieve, viento y sol fuerte. En Ajustes, "Cómo
+  sientes el frío": friolento o caluroso corre todo 3 grados.
+- **"¿Qué me pongo?"** (`#ropa-outfits`, `js/ropa-outfits.js`): la ocasión
+  (Casual, Trabajo, Salir de noche, Deporte, Evento formal y **las tuyas** con
+  "+ Otra": un nombre y a cuál se parece); 3 opciones solo con tu ropa (nada
+  para lavar), cada una con sus fotos en una fila, por qué combina, cómo llevar
+  las capas y **a qué inspiración tuya se parece** (lleva al pin). Botones:
+  "Me lo pongo", "Guardar" (de noche, "Para mañana"), **"Otra opción"** (cambia
+  esa sola) y "No me gusta" (no vuelve y llega otra), con Deshacer; "Otras
+  opciones" cambia las tres. Aprende de lo que guardas, te pones y no te gusta.
+- **Sin IA, con reglas** (`js/ropa-outfit-motor.js`): el clima, la ocasión,
+  tu estilo de Pinterest, los colores, lo que te pusiste estos días y lo que
+  aprendió de ti. **Con la IA** (`/outfits` en el puente, versión 3), lo mismo
+  pensado por la IA (pide 5: se ven 3 y 2 quedan para "Otra opción"); si no
+  puede, con reglas.
+- **Lo de hoy, tus guardados y el calendario** de lo que te pusiste (cada día
+  con una foto; tócalo para verlo).
+- **"¿Con qué combino esto?"** en la ficha de cada prenda: arma con esa prenda
+  en las tres.
+- **Ajustes de Ropa › Tus outfits**: la ciudad, cómo sientes el frío y tus
+  ocasiones (para quitarlas).
+- La copia de seguridad lleva tus outfits.
 
 ## Lo que hace el dueño
 - **Fase 0 / 3**: crear en Pinterest un tablero **público** (por ejemplo,

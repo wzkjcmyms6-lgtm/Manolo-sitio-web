@@ -1,6 +1,26 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-23 (Ropa, fase 4, D-149: Outfits): `npm test` → **813
+  pruebas** (nuevos `ropa-clima`: el pronóstico real de La Paz y Santa Cruz del
+  2026-11-23 —capas y sol; calor, lluvia, viento y tormenta—, frío, nieve,
+  friolento y caluroso, el buscador de ciudades y la hora de la ciudad; y
+  `ropa-outfit-motor`: 3 opciones distintas con abrigo o liviano según el día,
+  sin lo de lavar, el trabajo y la noche, "¿Con qué combino esto?", lo que
+  aprende —con tope, por ocasión— y lo que no vuelve, la ropa de verano que no
+  sale con frío, el jean a 30 °C, repetir zapatos y abrigo, tus ocasiones, tu
+  estilo de Pinterest y revisar lo que contesta la IA; `parecidaA` en
+  `ropa-insp-motor`; outfits en `puente-logica`). El Worker entero (7). Suite
+  nueva `ropa-outfits` (84 comprobaciones, con Open-Meteo y el puente de
+  mentira: La Paz y Santa Cruz, cambiar de ciudad, friolento, hoy y mañana, las
+  ocasiones y una tuya, "Otra opción", "No me gusta", "Guardar", "Me lo pongo",
+  la inspiración parecida, el calendario, combinar, sin clima, el clima de hace
+  un rato, la IA con su reserva y si falla, un puente viejo, 320 px, claro, la
+  compu y la copia de seguridad) y 10 suites cercanas sin fallas (ropa,
+  ropa-insp, respaldo, regresion, tema-claro, pantalla, sin-internet, mi-dia,
+  hojas y sw-instala: 485 comprobaciones). Lighthouse
+  (`scratchpad/lh/correr7.mjs`): 100 en accesibilidad y buenas prácticas en 38
+  pantallas de Ropa.
 - 2026-11-23 (Ropa, fase 3, D-148: Inspiración): `npm test` → **795
   pruebas** (nuevos `puente-pinterest`: links de pin, tablero y `pin.it`, el
   link corto sin salir de Pinterest, el RSS de un tablero —también el real
@@ -544,6 +564,16 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] (Con el puente) "+" › "Link de Pinterest": pega el link de un pin.
 - [ ] (Con la IA) Abre un pin: "Lo que se ve" y "Armar este look con la IA";
   "Me lo pongo hoy". Mira "Mi estilo" y corrígelo.
+- [ ] Ropa › Outfits: mira el clima de hoy en La Paz y toca "¿Qué me pongo?".
+- [ ] Prueba "Otra opción", "No me gusta" (y Deshacer), "Guardar" y "Me lo
+  pongo"; mira el calendario de abajo.
+- [ ] "Cambiar ciudad": busca otra (por ejemplo, Santa Cruz) y vuelve a La Paz
+  desde "Las que usaste".
+- [ ] Toca "Mañana" y "Para mañana"; al otro día, arriba dice "Para hoy
+  elegiste".
+- [ ] "+ Otra": agrega una ocasión tuya; quítala en Ajustes de Ropa.
+- [ ] Ajustes de Ropa: marca "Friolento" y mira cómo cambian los consejos.
+- [ ] En la ficha de una prenda: "¿Con qué combino esto?".
 
 **Bici (2026-11)**
 - [ ] Bicis: agrega tu bici con los km que ya tiene y pónsela a tus

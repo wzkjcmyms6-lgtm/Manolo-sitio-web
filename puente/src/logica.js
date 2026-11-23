@@ -392,3 +392,102 @@ export function limpiarEstilo(x) {
   const textos = (v, n, max) => (Array.isArray(v) ? v : []).map(t => corto(t, max)).filter((t, i, a) => t && a.indexOf(t) === i).slice(0, n);
   return { resumen: corto(o.resumen, 600), claves: textos(o.claves, 6, 50), colores: solo(o.colores, COLORES, 5), prendas: textos(o.prendas, 6, 50) };
 }
+
+// ---- Outfits del día (D-149) ----
+export const ESQUEMA_OUTFITS = {
+  type: "object",
+  additionalProperties: false,
+  required: ["outfits", "nota"],
+  properties: {
+    outfits: {
+      type: "array",
+      description: "Cinco outfits distintos, del mejor al menos bueno, solo con su ropa",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["nombre", "prendas", "porque", "capas"],
+        properties: {
+          nombre: { type: "string", description: "2 a 4 palabras" },
+          prendas: { type: "array", items: { type: "string" }, description: "Las referencias de sus prendas (p1, p2…), tal cual" },
+          porque: { type: "string", description: "Una frase corta" },
+          capas: { type: "string", description: "Cómo llevar las capas ese día, si hace falta; vacío si no" }
+        }
+      }
+    },
+    nota: { type: "string", description: "Si le falta algo para este día u ocasión, una frase; vacío si no" }
+  }
+};
+const NECESIDADES = { base: ["frio", "templado", "calor"], abrigo: ["abrigo", "liviano", ""], lluvia: ["si", "quizas", ""] };
+// { ropero, clima (texto), necesidades, ocasion, estilo, recientes, gustan,
+// noGustan, evitar, base } que manda Manolo → limpio, o null.
+export function entradaOutfits(c) {
+  const o = obj(c);
+  const vistos = new Set();
+  const ropero = (Array.isArray(o.ropero) ? o.ropero : []).slice(0, MAX_ROPERO).map(entradaPrenda)
+    .filter(p => p && !p.lavar && !vistos.has(p.id) && vistos.add(p.id));
+  if (ropero.length < 2) return null;
+  const ids = new Set(ropero.map(p => p.id));
+  const lista = (v, max) => [...new Set((Array.isArray(v) ? v : []).filter(id => typeof id === "string" && ids.has(id)))].slice(0, max);
+  const combos = (v, max) => (Array.isArray(v) ? v : []).slice(0, max).map(x => lista(x, 8)).filter(x => x.length >= 2);
+  const n = obj(o.necesidades);
+  const de = (k, v) => (NECESIDADES[k].includes(v) ? v : NECESIDADES[k][NECESIDADES[k].length - 1]);
+  return {
+    ropero,
+    clima: corto(o.clima, 400),
+    necesidades: { base: NECESIDADES.base.includes(n.base) ? n.base : "templado", abrigo: de("abrigo", n.abrigo), capas: n.capas === true, lluvia: de("lluvia", n.lluvia), tormenta: n.tormenta === true, nieve: n.nieve === true, viento: n.viento === true, sol: n.sol === true },
+    ocasion: corto(o.ocasion, 60) || "Casual",
+    estilo: corto(o.estilo, 600),
+    recientes: lista(o.recientes, 60),
+    gustan: combos(o.gustan, 15),
+    noGustan: combos(o.noGustan, 15),
+    evitar: combos(o.evitar, 12),
+    base: typeof o.base === "string" && ids.has(o.base) ? o.base : null
+  };
+}
+// El pedido (después del ropero, que va en caché): el día, la ocasión, tu
+// estilo y lo que aprendió de ti, todo con las referencias cortas.
+export function textoOutfits(e, refs) {
+  const refDe = new Map([...refs].map(([r, id]) => [id, r]));
+  const rs = ids => ids.map(id => refDe.get(id)).filter(Boolean).join(", ");
+  const n = e.necesidades;
+  const pide = [`ropa de ${n.base === "frio" ? "frío" : n.base}`,
+    n.abrigo === "abrigo" ? "abrigo para el frío" : n.abrigo === "liviano" ? "algo liviano encima" : "sin abrigo",
+    n.capas ? "capas (mañana fresca, mediodía más cálido: lo de abajo para el mediodía y el abrigo para la mañana)" : "",
+    n.tormenta ? "tormenta" : n.lluvia === "si" ? "lluvia" : n.lluvia === "quizas" ? "quizás llueva" : "",
+    n.nieve ? "nieve" : "", n.viento ? "viento fuerte" : "", n.sol ? "sol muy fuerte" : ""].filter(Boolean).join("; ");
+  return [
+    e.clima ? `El día: ${e.clima}` : "",
+    `Lo que pide: ${pide}.`,
+    `Ocasión: ${e.ocasion}.`,
+    e.estilo ? `Mi estilo: ${e.estilo}` : "",
+    e.recientes.length ? `Me puse hace poco (mejor no repetir): ${rs(e.recientes)}.` : "",
+    e.gustan.length ? `Combinaciones que me gustaron: ${e.gustan.map(x => `(${rs(x)})`).join("; ")}.` : "",
+    e.noGustan.length ? `No me gustaron (no las repitas): ${e.noGustan.map(x => `(${rs(x)})`).join("; ")}.` : "",
+    e.evitar.length ? `Ya vi estas (dame otras): ${e.evitar.map(x => `(${rs(x)})`).join("; ")}.` : "",
+    e.base ? `Tiene que ir sí o sí: ${refDe.get(e.base)}.` : "",
+    "Arma 5 outfits, del mejor al menos bueno."
+  ].filter(Boolean).join("\n");
+}
+export function instruccionesOutfits() {
+  return `${QUIEN}. Armas outfits para el día con la ropa que tiene la persona (cada prenda con su referencia: p1, p2…). Usa SOLO su ropa.
+
+Reglas:
+- Cada outfit: algo de arriba y algo de abajo (o algo de cuerpo entero), zapatos si tiene, y un abrigo si el día lo pide. Accesorios solo si suman (con sol fuerte, gorra o lentes; no de noche).
+- Cinco outfits distintos entre sí (que cambien al menos dos prendas), del mejor al menos bueno: los tres primeros son los que va a ver; los otros, por si pide otra opción. Nunca inventes una referencia ni repitas una prenda.
+- El clima manda: con calor, ropa liviana; con frío, abrigo; con capas, lo de abajo para el mediodía y el abrigo para la mañana; con lluvia, zapatos cerrados y, si tiene, algo que no se moje.
+- La ocasión manda en qué tan formal. Respeta su estilo.
+- Colores que combinen: neutros con uno o dos colores fuertes como mucho; un solo estampado.
+- Evita lo que se puso hace poco si hay otra opción igual de buena. No repitas lo que no le gustó ni lo que ya vio.
+- Si hay una prenda que tiene que ir, va en todos.
+- nombre: 2 a 4 palabras. porque: una frase corta. capas: cómo llevarlas, si hace falta (si no, vacío). nota: si le falta algo para este día (por ejemplo, algo para la lluvia), una frase; si no, vacío.`;
+}
+// Lo que contestó la IA → con tus ids (lo completo lo revisa la app).
+export function limpiarOutfits(x, refs) {
+  const o = obj(x);
+  const outfits = (Array.isArray(o.outfits) ? o.outfits : []).slice(0, 6).map(f => {
+    const q = obj(f);
+    const ids = [...new Set((Array.isArray(q.prendas) ? q.prendas : []).map(r => refs.get(String(r || "").trim().toLowerCase())).filter(Boolean))].slice(0, 8);
+    return ids.length >= 2 ? { nombre: corto(q.nombre, 40), prendas: ids, porque: corto(q.porque, 200), capas: corto(q.capas, 160) } : null;
+  }).filter(Boolean);
+  return { outfits, nota: corto(o.nota, 200) };
+}

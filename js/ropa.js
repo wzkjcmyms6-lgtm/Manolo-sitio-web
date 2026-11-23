@@ -16,6 +16,10 @@ if (typeof ICONS === "object") {
   ICONS.inspiracion = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M8.5 3.5h7"/><path d="M10 3.5l-.7 5.6-2.8 3.4h11l-2.8-3.4L14 3.5"/><path d="M12 12.5v8"/></svg>`;
   ICONS.imagen = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M20.5 16l-4.6-4.6a1.2 1.2 0 0 0-1.7 0L6.5 19.5"/></svg>`;
   ICONS.enlace = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M10 14a4 4 0 0 0 5.66 0l3.17-3.17a4 4 0 0 0-5.66-5.66l-1.2 1.2"/><path d="M14 10a4 4 0 0 0-5.66 0l-3.17 3.17a4 4 0 0 0 5.66 5.66l1.2-1.2"/></svg>`;
+  // Outfits (D-149): una polera, el clima (sol con nube) y guardar.
+  ICONS.outfit = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M8.5 4 4 6.6l1.7 3.5L8 9.2V20h8V9.2l2.3.9L20 6.6 15.5 4c-.6 1.4-1.9 2.2-3.5 2.2S9.1 5.4 8.5 4Z"/></svg>`;
+  ICONS.clima = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><circle cx="9" cy="9" r="3.2"/><path d="M9 2.5v1.3M3.8 4.2l.9.9M2.5 9h1.3M14.2 4.2l-.9.9"/><path d="M8.5 19.5h9a3 3 0 0 0 .4-6 4.3 4.3 0 0 0-8.2-.9 3.2 3.2 0 0 0-1.2 6.9Z"/></svg>`;
+  ICONS.guardar = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M7 3.5h10a1 1 0 0 1 1 1v16l-6-4-6 4v-16a1 1 0 0 1 1-1Z"/></svg>`;
 }
 const M = window.RopaMotor, D = window.RopaDatos;
 const app = document.getElementById("ro-app"), ficha = document.getElementById("rop-app");
@@ -271,6 +275,7 @@ function renderFicha() {
     </section>
     ${datos.length ? `<dl class="ro-datos">${datos.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>` : ""}
     <div class="ro-acciones">
+      ${p.estado === "activa" && window.RopaOutfits ? `<a class="lib-btn-sec" href="#ropa-outfits/con/${encodeURIComponent(p.id)}"><span data-icon="outfit" aria-hidden="true"></span>¿Con qué combino esto?</a>` : ""}
       ${window.RopaIA && window.RopaIA.disponible() && p.fotos.length && p.estado !== "fuera" ? `<button type="button" class="lib-btn-sec" data-rop="ia"><span data-icon="sparkle" aria-hidden="true"></span>Describir con IA</button>` : ""}
       <button type="button" class="lib-btn-sec" data-rop="editar"><span data-icon="edit" aria-hidden="true"></span>Editar</button>
       ${p.estado === "fuera" ? `<button type="button" class="lib-btn-sec" data-rop="volver">La volví a tener</button>`

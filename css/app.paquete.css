@@ -7681,6 +7681,101 @@ h1.page-title.rin-ficha-t { margin-bottom: 0.2rem; font-size: 1.5rem; overflow-w
 .roa-pin-bot { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.6rem; }
 .roa-pin-bot .lib-btn-sec { min-height: 44px; }
 
+/* ---------- Outfits (clases .rof-, D-149) ---------- */
+.rof-app { padding-bottom: calc(7rem + env(safe-area-inset-bottom)); min-width: 0; max-width: 760px; }
+.rof-clima, .rof-hoy, .rof-cal { margin-bottom: 1rem; }
+.rof-clima-cab, .rof-cal-cab { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.rof-clima-cab .ro-sub, .rof-hoy .ro-sub, .roa-clima .ro-sub { display: flex; align-items: center; gap: 0.45rem; margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.rof-clima-cab .ro-sub [data-icon], .rof-hoy .ro-sub [data-icon], .roa-clima .ro-sub [data-icon] { width: 22px; height: 22px; display: inline-flex; flex-shrink: 0; color: var(--accent-2); }
+.rof-clima-cab .lib-btn-sec { flex-shrink: 0; min-height: 44px; }
+.rof-dias { display: flex; gap: 0.4rem; margin: 0.7rem 0 0.5rem; }
+.rof-clima-r { margin: 0.2rem 0 0.4rem; line-height: 1.45; }
+.rof-consejos { margin: 0 0 0.3rem; padding-left: 1.1rem; line-height: 1.45; }
+.rof-consejos li + li { margin-top: 0.25rem; }
+.rof-ocasion { margin-bottom: 0.9rem; }
+.rof-armar { width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.45rem; min-height: 52px; }
+.rof-armar [data-icon], .rof-op-bot [data-icon], .rof-hoy .lib-btn [data-icon], .rof-ia [data-icon] { width: 18px; height: 18px; display: inline-flex; }
+.rof-con { text-align: center; margin: 0.4rem 0 1rem; }
+.rof-ops { margin-bottom: 1rem; scroll-margin-top: calc(env(safe-area-inset-top) + 88px); }
+.rof-opciones { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.8rem; }
+.rof-op-cab { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.5rem; }
+.rof-op-t { margin: 0; font-size: 1.02rem; overflow-wrap: anywhere; }
+.rof-op-n { display: block; color: var(--muted); font-size: 0.76rem; font-weight: 600; letter-spacing: 0.02em; }
+.rof-ia { display: inline-flex; align-items: center; gap: 0.25rem; flex-shrink: 0; padding: 0.15rem 0.55rem; border-radius: var(--radio-pildora); background: rgba(255, 184, 77, 0.12); color: var(--accent-2); font-size: 0.78rem; font-weight: 700; }
+/* Las prendas de un outfit, en una sola fila (con muchas, cada foto se achica). */
+.rof-fotos { list-style: none; margin: 0 0 0.4rem; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 64px); gap: 0.35rem; }
+.rof-foto-a { display: block; border-radius: 10px; }
+.rof-foto-a:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.rof-lista { margin: 0 0 0.4rem; color: var(--muted); font-size: 0.86rem; line-height: 1.4; }
+.rof-porque { margin: 0 0 0.3rem; line-height: 1.45; }
+.rof-capas { margin: 0 0 0.3rem; }
+/* Los cuatro botones de cada opción: de a dos (en una pantalla angosta, uno por fila). */
+.rof-op-bot { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 0.45rem; margin-top: 0.6rem; }
+.rof-op-bot > * { display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; min-height: 44px; min-width: 0; padding-left: 0.6rem; padding-right: 0.6rem; white-space: nowrap; }
+/* "Se parece a tu inspiración" (lleva al pin). */
+.rof-insp { display: flex; align-items: center; gap: 0.6rem; margin: 0.35rem 0 0.15rem; padding: 0.3rem 0.6rem 0.3rem 0.3rem; min-height: 44px; border-radius: var(--radio-caja); background: var(--bg-soft); color: var(--ink); text-decoration: none; font-size: 0.86rem; line-height: 1.35; overflow-wrap: anywhere; }
+.rof-insp img, .rof-insp > [data-icon] { width: 40px; height: 40px; flex-shrink: 0; border-radius: 8px; object-fit: cover; }
+.rof-insp > [data-icon] { display: grid; place-items: center; padding: 10px; box-sizing: border-box; color: var(--accent-2); }
+.rof-insp:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+/* "+ Otra" ocasión: un chip con borde punteado. */
+.rof-oc-nueva { display: inline-flex; align-items: center; min-height: 44px; padding: 0 0.9rem; border: 1px dashed var(--border); border-radius: var(--radio-pildora); background: transparent; color: var(--muted); font: inherit; font-size: 0.9rem; font-weight: 600; white-space: nowrap; cursor: pointer; }
+.rof-oc-nueva:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.rof-otras { width: 100%; margin-top: 0.8rem; min-height: 48px; }
+.rof-hoy .ro-sub { margin-bottom: 0.6rem; }
+.rof-hoy .lib-btn { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.4rem; }
+.rof-base { display: flex; align-items: center; gap: 0.7rem; margin: 0 0 0.9rem; padding: 0.5rem 0.6rem; border-radius: var(--radio-caja); border: 1px solid var(--accent-2); background: rgba(255, 184, 77, 0.08); }
+.rof-base .rof-base-foto { width: 48px; flex-shrink: 0; }
+.rof-base > span:nth-child(2) { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.rof-base-x { flex-shrink: 0; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; color: var(--muted); }
+.rof-base-x [data-icon] { width: 18px; height: 18px; display: inline-flex; }
+
+/* Guardados: una fila que se desliza */
+.rof-guardados-s { margin-bottom: 1rem; }
+.rof-guardados { list-style: none; margin: 0; padding: 0 0 0.3rem; display: flex; gap: 0.6rem; overflow-x: auto; scroll-snap-type: x mandatory; }
+.rof-guardados > li { flex: 0 0 auto; scroll-snap-align: start; }
+.rof-g { width: 132px; display: flex; flex-direction: column; gap: 0.3rem; padding: 0.4rem; border-radius: var(--radio-caja); border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.rof-g:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.rof-collage { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; border-radius: 10px; overflow: hidden; aspect-ratio: 1 / 1; background: var(--bg-soft); }
+.rof-collage.n1 { grid-template-columns: 1fr; }
+.rof-collage .ro-foto { border-radius: 0; }
+.rof-g-t { font-weight: 700; font-size: 0.85rem; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rof-g-para { color: var(--accent-2); font-size: 0.76rem; font-weight: 600; }
+
+/* El calendario */
+.rof-cal-ir { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); color: var(--ink); cursor: pointer; }
+.rof-cal-ir:disabled { opacity: 0.35; cursor: default; }
+.rof-cal-ir [data-icon] { width: 18px; height: 18px; display: inline-flex; }
+.rof-cal-n { margin: 0.3rem 0 0.6rem; }
+.rof-cal-sem, .rof-cal-grilla { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.3rem; }
+.rof-cal-sem li { text-align: center; color: var(--muted); font-size: 0.76rem; font-weight: 600; }
+.rof-cal-grilla { margin-top: 0.3rem; }
+.rof-cal-d { position: relative; width: 100%; aspect-ratio: 1 / 1; min-height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 2px; border-radius: 10px; border: 1px solid transparent; background: transparent; color: var(--muted); font: inherit; font-size: 0.8rem; box-sizing: border-box; overflow: hidden; }
+.rof-cal-d.tiene { border-color: var(--border); background: var(--surface); color: var(--ink); cursor: pointer; }
+.rof-cal-d.es-hoy { border-color: var(--accent-2); color: var(--ink); font-weight: 700; }
+.rof-cal-d img { position: absolute; inset: 18px 4px 4px; width: calc(100% - 8px); height: calc(100% - 22px); object-fit: cover; border-radius: 6px; }
+.rof-cal-punto { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); margin-top: 4px; }
+.rof-cal-d:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+/* En la compu las celdas son anchas: más bajas, para que el mes entre sin tanto scroll. */
+@media (min-width: 640px) { .rof-cal-d { aspect-ratio: 3 / 2; } }
+
+/* Hojas: un guardado, un día, la ciudad */
+.rof-hoja-o { display: flex; flex-direction: column; gap: 0.3rem; padding-bottom: 1rem; }
+.rof-hoja-o p { margin: 0.2rem 0; }
+.rof-ciudades { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.rof-ciudades .ro-op { width: 100%; }
+.rof-ciudades small { color: var(--muted); font-weight: 400; }
+.rof-ciudades .rd-nota { padding: 0.4rem 0.2rem; }
+
+/* Ajustes: el clima */
+.roa-clima { margin-bottom: 1rem; }
+.roa-ciudad { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap; margin: 0.4rem 0 0.8rem; }
+.roa-ciudad p { margin: 0; }
+.roa-ciudad .lib-btn-sec { min-height: 44px; }
+.roa-ocasiones { list-style: none; margin: 0 0 0.4rem; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.roa-ocasiones li { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.roa-ocasiones li > span { min-width: 0; overflow-wrap: anywhere; }
+.roa-ocasiones .lib-btn-sec { min-height: 44px; flex-shrink: 0; }
+
 /* ---- css/respaldo.css ---- */
 /* ---------- Copia de seguridad de todo Manolo (D-118) ----------
    Hoja de js/respaldo.js. Solo usa las variables de :root (css/style.css):

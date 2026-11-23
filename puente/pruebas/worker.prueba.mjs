@@ -92,7 +92,7 @@ test("quién soy: el dueño, la versión y el gasto; los demás no pasan", async
   const r = await pedir(env, "/quien");
   assert.equal(r.status, 200);
   assert.equal(r.json.permitido, true);
-  assert.equal(r.json.version, 2);
+  assert.equal(r.json.version, 3);
   assert.equal(r.json.lista, true);
   assert.equal(r.json.gasto.usd, 0);
   assert.equal(r.headers.get("Access-Control-Allow-Origin"), ORIGEN);
@@ -186,6 +186,22 @@ test("IA: armar el look con tu ropa (el ropero en caché, referencias cortas) y 
   assert.equal(e.status, 200);
   assert.equal(e.json.estilo.resumen, "Te gustan los neutros.");
   assert.equal((await pedir(env, "/estilo", { pines: [pin] })).status, 400);
+});
+
+test("IA: outfits del día (el ropero en caché, referencias cortas, esfuerzo medio)", async () => {
+  pedidos = [];
+  const env = entorno();
+  respuestaIA = { datos: { outfits: [{ nombre: "Capas neutras", prendas: ["p3", "p1", "p2"], porque: "Neutros.", capas: "" }, { nombre: "Con inventada", prendas: ["p1", "p9"], porque: "", capas: "" }], nota: "" } };
+  const ropero = [{ id: "pol", grupo: "arriba", tipo: "Polera", colores: ["blanco"] }, { id: "jean", grupo: "abajo", tipo: "Jean", colores: ["azul-jean"] }, { id: "cha", grupo: "abrigos", tipo: "Chamarra", colores: ["verde-oliva"], notas: "secreta" }];
+  const r = await pedir(env, "/outfits", { ropero, clima: "En La Paz: 9 a 20 °C.", necesidades: { base: "templado", abrigo: "abrigo", capas: true }, ocasion: "Casual" });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.json.outfits.map(o => o.prendas), [["cha", "pol", "jean"]], "con tus ids; la que tenía una inventada, fuera");
+  const c = cuerpoIA(deIA()[0]);
+  assert.equal(c.output_config.effort, "medium");
+  assert.deepEqual(c.messages[0].content[0].cache_control, { type: "ephemeral" });
+  assert.match(c.messages[0].content[1].text, /Lo que pide: ropa de templado; abrigo para el frío; capas/);
+  assert.ok(!/pol"|jean"|secreta/.test(JSON.stringify(c.messages)), "la IA no ve tus ids ni tus notas");
+  assert.equal((await pedir(env, "/outfits", { ropero: [] })).status, 400);
 });
 
 test("el tope: al llegar, la IA no se llama; Pinterest sigue", async () => {

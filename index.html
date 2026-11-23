@@ -18,7 +18,7 @@
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
   <!-- Todos los estilos de la app en un archivo (D-127): js/paquete.json › npm run listo -->
-  <link rel="stylesheet" href="css/app.paquete.css?v=8ca8a789a121">
+  <link rel="stylesheet" href="css/app.paquete.css?v=f3afa221d81b">
   <!-- Modo claro (D-126): generado con "npm run tema"; js/tema.js lo apaga en
        el modo oscuro y elige el modo antes de pintar (sin "defer": es chico) -->
   <link rel="stylesheet" href="css/tema-claro.css?v=202611171200" id="tema-claro-css">
@@ -492,7 +492,7 @@
             <div class="lug-app" id="lug-app"></div>
           </section>
 
-          <!-- ===== Ropa (D-145 a D-148): el ropero y la ficha de cada prenda (js/ropa.js), Inspiración (js/ropa-insp.js); barra propia Ropero · + · Inspiración ===== -->
+          <!-- ===== Ropa (D-145 a D-149): el ropero y la ficha de cada prenda (js/ropa.js), Outfits (js/ropa-outfits.js), Inspiración (js/ropa-insp.js); barra propia Ropero · Outfits · + · Inspiración ===== -->
           <section id="panel-ropa" hidden>
             <h1 class="page-title">Ropa</h1>
             <div class="ro-app" id="ro-app"></div>
@@ -500,6 +500,10 @@
           <section id="panel-ropa-prenda" hidden>
             <a class="back-link lib-volver" href="#ropa"><span class="icon-sm" data-icon="chevronLeft"></span>Ropero</a>
             <div class="rop-app" id="rop-app"></div>
+          </section>
+          <section id="panel-ropa-outfits" hidden>
+            <h1 class="page-title">Outfits</h1>
+            <div class="rof-app" id="rof-app"></div>
           </section>
           <section id="panel-ropa-inspiracion" hidden>
             <h1 class="page-title">Inspiración</h1>
@@ -1527,6 +1531,6 @@
   <script defer src="vendor/firebase-10.7.1/firebase-firestore-compat.js"></script>
   <!-- Todos los módulos de la app en un archivo (D-127): cada uno corre como su
        propio <script>. Se editan los de js/ y después: npm run listo -->
-  <script defer src="js/app.paquete.js?v=446110f0552a"></script>
+  <script defer src="js/app.paquete.js?v=d858e7ba5589"></script>
 </body>
 </html>

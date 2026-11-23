@@ -2265,3 +2265,70 @@ esfuerzo, esquema, caché—, el tope); suite `ropa-insp` (107
 comprobaciones) y `ropa` (159); Lighthouse 100 en accesibilidad y buenas
 prácticas en las 24 pantallas de Ropa (12 en oscuro y 12 en claro).
 
+**D-149 (2026-11-23) · Ropa, fase 4: Outfits ("¿Qué me pongo hoy?"), con el
+clima de cualquier ciudad.** (1) **El clima** (pedido del dueño: "que se pueda
+adaptar a otros climas"): Open-Meteo (gratis, sin clave y con CORS;
+`js/ropa-clima.js`): el pronóstico de 3 días por hora, en la hora de la
+ciudad, y el buscador de ciudades (las de tu país primero). Manolo nunca usa
+tu ubicación: la ciudad se elige (La Paz por defecto) y las últimas 5 quedan a
+un toque (`meta/ropa_ajustes.ciudad` y `ciudades`). Del día cuenta la
+sensación térmica de 7 a 21 h: capas si la mañana es fresca y el mediodía 9 °C
+más cálido; abrigo bajo 10 °C (algo liviano bajo 16); lluvia (60 %, o 40 % si
+el pronóstico es de lluvia), tormenta, nieve, viento (ráfagas de 60 km/h o 30
+sostenido: las de 50 de La Paz son de todos los días) y sol (UV 8 o más).
+"Cómo sientes el frío" (friolento, normal o caluroso) corre los límites 3 °C.
+Hoy o mañana (después de las 20 h, mañana). Una hora de caché en el teléfono;
+sin internet, el último pronóstico; sin nada, se arma como un día templado.
+Probado con días de verdad de La Paz (capas y sol) y Santa Cruz (calor,
+lluvia, viento y tormenta) del 2026-11-23 (`tests/fixtures/clima`). (2) **Las
+reglas** (`js/ropa-outfit-motor.js`; sin IA, gratis y como respaldo): solo
+prendas activas. Cada prenda suma o resta por el clima (justo +2, al lado 0,
+opuesto −3; en un día extremo —26 °C o más, o menos de 8— también resta 1,5 la
+que llega al otro lado: un jean de frío y templado a 30 °C), la formalidad de
+la ocasión, su estilo, la lluvia (sin sandalias), tu estilo de Pinterest (el
+color de la familia de los que más se repiten en tus inspiraciones +0,4; cada
+estilo +0,3: un empujón, el clima sigue mandando) y cuándo te la pusiste (lo
+de ayer resta; los zapatos y el abrigo, un cuarto: se repiten siempre). Cada
+combinación, por los colores (neutros con un color fuerte es lo mejor), los
+estampados, que la formalidad no salte y lo que aprendió de ti: cada par de
+prendas que te gustó junto suma (tope de ±3 en total, para que nunca le gane
+al clima); cuenta entero en la misma ocasión, la mitad en una parecida (un
+punto de formalidad o menos) y nada en una muy distinta (lo casual no dice nada
+de un evento formal); lo que no te gustó no vuelve nunca. Salen 5: se ven 3
+que cambian al menos dos prendas y 2 quedan para "Otra opción". Accesorios
+por el día: con sol, lentes (no de noche) y gorra o sombrero según la
+ocasión; con mucho frío, bufanda o guantes; cinturón para el trabajo o lo
+formal. (3) **Tus ocasiones**: "+ Otra" con un nombre y a cuál de las 5 se
+parece (se arma como esa; hasta 8, en `meta/ropa_ajustes.ocasiones`; se quitan
+en Ajustes, con Deshacer). (4) **Con la IA** (`/outfits`, versión 3 del
+puente, esfuerzo medio): el ropero (sin lo de lavar, notas, talla, precio ni
+fotos; con referencias cortas y en caché), el clima en palabras, lo que pide
+el día, la ocasión (la tuya, con la de base), tu estilo, lo que te pusiste
+estos días, lo que te gustó, lo que no y lo que ya viste; pide 5, de la mejor a
+la menos buena. La app revisa cada una (completa, con zapatos si tienes, sin
+repetir grupos, sin lo vetado ni lo ya visto, con la prenda base) y muestra 3;
+las otras, para "Otra opción" sin volver a preguntar. Si la IA no puede (tope,
+sin internet), salen con reglas y lo dice. (5) **La pantalla**
+(`#ropa-outfits`, en la barra: Ropero · Outfits · + · Inspiración): el clima
+con sus consejos, hoy o mañana, la ocasión, "¿Qué me pongo?" y cada opción
+con sus fotos en una fila, por qué combina, las capas, **a qué inspiración se
+parece** (`RopaInspMotor.parecidaA`: si la mitad o más de lo que se ve en un
+pin —sin accesorios, 2 prendas o más— está en el outfit igual o parecido, o si
+la IA ya armó ese look con 2 o más de esas prendas) y "Me lo pongo" (anota
+todo en `ropa_usos` del día, con el outfit), "Guardar" (de noche, "Para
+mañana"), "Otra opción" (cambia esa sola) y "No me gusta" (no vuelve; llega
+otra), con Deshacer; "Otras opciones" cambia las tres. Abajo, lo de hoy, tus
+guardados y el calendario del mes (cada día con una foto). "¿Con qué combino
+esto?" desde la ficha: arma solo, con esa prenda en las tres. (6) **Datos**
+(solo se suman): `ropa_outfits` (uno por conjunto de prendas),
+`ropa_usos.outfitId` y, en `meta/ropa_ajustes`, `ciudad`, `ciudades`,
+`sensacion` y `ocasiones`. La copia de seguridad lleva los outfits. (7)
+**Arreglos en el camino**: con el clima de hace un rato, la pantalla esperaba
+otro dato para mostrarlo (ahora sale al toque); si cambias de ciudad mientras
+llega el clima, se descarta y se pide el de la nueva; el "Deshacer" de los
+avisos en modo claro, más oscuro (5,7:1; lo encontró Lighthouse). (8)
+Pruebas: `npm test` → 813 (nuevos `ropa-clima` y `ropa-outfit-motor`;
+`parecidaA` en `ropa-insp-motor`; outfits en `puente-logica`); el Worker
+entero (7, con `/outfits` y la versión 3); suite nueva `ropa-outfits` (84
+comprobaciones) y 10 suites cercanas sin fallas (485); Lighthouse 100 en accesibilidad y buenas prácticas en las 38 pantallas de Ropa
+(19 en oscuro y 19 en claro).

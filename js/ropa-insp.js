@@ -595,9 +595,18 @@ if (ficha) ficha.addEventListener("click", e => {
   else if (a === "puse") {
     const ropero = D.lista();
     const look = p.look && p.look.origen === "ia" ? I.lookVigente(p.look, ropero) : I.armarLocal(p.analisis, ropero);
-    const nuevas = look.prendas.map(x => x.id).filter(id => D.una(id) && !D.puestaHoy(id));
-    Promise.all(nuevas.map(id => D.meLaPuse(id, D.hoy(), true))).catch(fallo);
-    aviso(`Listo: ${plural(nuevas.length, "prenda anotada", "prendas anotadas")} en lo que te pusiste hoy.`, () => Promise.all(nuevas.map(id => D.meLaPuse(id, D.hoy(), false))).catch(fallo));
+    const ids = look.prendas.map(x => x.id).filter(id => D.una(id));
+    const nuevas = ids.filter(id => !D.puestaHoy(id));
+    const DO = window.RopaOutfitsDatos;
+    const texto = `Listo: ${plural(nuevas.length, "prenda anotada", "prendas anotadas")} en lo que te pusiste hoy.`;
+    if (DO) {
+      // También queda como outfit (para el calendario y para lo que aprende de ti).
+      DO.ponerme(ids, { origen: "inspiracion", nombre: I.titulo(p).slice(0, 40), inspiracionId: p.id }, D.hoy())
+        .then(r => aviso(texto, () => DO.quitarme(r.id, nuevas, D.hoy(), r.nuevo).catch(fallo)), fallo);
+    } else {
+      Promise.all(nuevas.map(id => D.meLaPuse(id, D.hoy(), true))).catch(fallo);
+      aviso(texto, () => Promise.all(nuevas.map(id => D.meLaPuse(id, D.hoy(), false))).catch(fallo));
+    }
   } else if (a === "quitar") {
     DI.ocultar(p.id, true).catch(fallo);
     location.hash = "ropa-inspiracion";
