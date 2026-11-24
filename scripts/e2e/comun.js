@@ -70,11 +70,13 @@ async function abrir(browser, base, estado, opciones) {
   // salen a internet en las pruebas: cada prueba simula las que usa (sus
   // rutas se registran después y mandan). Las portadas no se tocan.
   await ctx.route(/openlibrary\.org\/(search|works|books|authors|isbn)|es\.wikipedia\.org\/w\/api\.php|www\.googleapis\.com\/books/, r => r.abort());
+  // Sin el puente de verdad de Ropa (D-153): la prueba que lo necesita trae
+  // uno de mentira en "manolo.puente".
   await ctx.addInitScript(e => {
     if (localStorage.getItem("__INIT__")) return;
     localStorage.setItem("__INIT__", "1");
     Object.keys(e).forEach(k => localStorage.setItem(k, typeof e[k] === "string" ? e[k] : JSON.stringify(e[k])));
-  }, estado || {});
+  }, Object.assign({ "manolo.puente": "ninguno" }, estado || {}));
   if (o.reloj) await ctx.addInitScript(simuladores);
   if (o.voz) await ctx.addInitScript(simVoz);
   if (o.init) await ctx.addInitScript(o.init);

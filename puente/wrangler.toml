@@ -9,7 +9,7 @@ keep_vars = true
 FIREBASE_PROJECT = "manolo-4c57b"
 ORIGENES = "https://wzkjcmyms6-lgtm.github.io"
 
-# La cuenta del gasto del mes y el tope. El id se completa al crear el KV.
+# La cuenta del gasto del mes y el tope (el KV "GASTO" de la cuenta del dueño).
 [[kv_namespaces]]
 binding = "GASTO"
-id = "PENDIENTE"
+id = "b8e6711c3f51447ea2543e9130d275be"

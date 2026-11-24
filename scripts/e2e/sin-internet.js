@@ -54,6 +54,7 @@ const txt = (p, sel) => p.$eval(sel, el => el.innerText.replace(/\s+/g, " ").tri
     if (localStorage.getItem("__INIT__")) return;
     localStorage.setItem("__INIT__", "1");
     localStorage.setItem("__SEED__", JSON.stringify(seed));
+    localStorage.setItem("manolo.puente", "ninguno");   // sin el puente de verdad (D-153)
   }, SEED);
   const p = await ctx.newPage();
   const errores = [];

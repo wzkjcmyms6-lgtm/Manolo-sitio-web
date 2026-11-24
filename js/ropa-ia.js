@@ -11,10 +11,13 @@
 // gasto(), tope(usd), alCambiar(fn), estado(), fallo(), sinInternet().
 (function () {
 "use strict";
-// La dirección del puente (se completa al instalarlo). En las pruebas se cambia
-// con localStorage "manolo.puente".
-const PUENTE = "";
-const puente = () => { try { return localStorage.getItem("manolo.puente") || PUENTE; } catch (e) { return PUENTE; } };
+// La dirección del puente (instalado en la cuenta de Cloudflare del dueño,
+// 2026-11-24). En las pruebas se cambia con localStorage "manolo.puente": otra
+// dirección (un puente de mentira) o "ninguno" (sin puente).
+const PUENTE = "https://manolo-puente.manolo-ropa-482.workers.dev";
+const puente = () => {
+  try { const v = localStorage.getItem("manolo.puente"); return v === "ninguno" ? "" : (v || PUENTE); } catch (e) { return PUENTE; }
+};
 let estado = null;            // lo último de /quien: { permitido, uid, lista, gasto }
 let fallo = "";               // por qué no contestó /quien la última vez ("" si contestó)
 let consultando = null;
