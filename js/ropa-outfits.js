@@ -341,14 +341,34 @@ function render() {
 
 // ---------- Armar ----------
 const claveDe = () => [fechaDelDia(), ciudad().lat, ciudad().lon, est.ocasion, base() || ""].join("|");
+// Las opciones de cada día, ciudad, ocasión y prenda (D-159): al volver a una
+// (otra ocasión, mañana y hoy otra vez), siguen ahí sin pedirlas de nuevo. Se
+// guardan las de hoy en adelante, como mucho 12 (antes, solo la última).
 const GUARDADAS = "manolo.ropa.opciones";
-function guardarOpciones() { guardarLocal(GUARDADAS, { clave: est.clave, opciones: est.opciones, reserva: est.reserva, vistas: est.vistas, nota: est.nota }); }
+function todasGuardadas() {
+  const g = leerLocal(GUARDADAS);
+  if (!g || typeof g !== "object") return {};
+  return typeof g.clave === "string" ? { [g.clave]: g } : g;   // la de antes (una sola)
+}
+function guardarOpciones() {
+  const hoy = D.hoy();
+  const todas = Object.assign(todasGuardadas(), { [est.clave]: { opciones: est.opciones, reserva: est.reserva, vistas: est.vistas, nota: est.nota, hora: Date.now() } });
+  const quedan = Object.entries(todas).filter(([k]) => k.slice(0, 10) >= hoy).sort((a, b) => (b[1].hora || 0) - (a[1].hora || 0)).slice(0, 12);
+  guardarLocal(GUARDADAS, Object.fromEntries(quedan));
+}
 function recuperarOpciones() {
   const k = claveDe();
   if (est.clave === k) return;
-  const g = leerLocal(GUARDADAS);
-  if (g && g.clave === k) Object.assign(est, { clave: k, opciones: g.opciones || [], reserva: g.reserva || [], vistas: g.vistas || [], nota: g.nota || "" });
+  const g = todasGuardadas()[k];
+  if (g) Object.assign(est, { clave: k, opciones: g.opciones || [], reserva: g.reserva || [], vistas: g.vistas || [], nota: g.nota || "" });
   else Object.assign(est, { clave: k, opciones: [], reserva: [], vistas: [], nota: "" });
+}
+// Para tu estilista (D-159): las opciones que viste hoy en Outfits (de cualquier ocasión).
+function opcionesDelDia(fecha) {
+  const f = fecha || D.hoy();
+  return Object.entries(todasGuardadas()).filter(([k]) => k.startsWith(`${f}|`))
+    .reduce((xs, [, g]) => xs.concat(Array.isArray(g.opciones) ? g.opciones : []), [])
+    .filter(o => o && Array.isArray(o.prendas)).map(o => ({ prendas: o.prendas, nombre: o.nombre || "" }));
 }
 // Lo que necesitan las reglas (y para revisar lo que contesta la IA).
 function ctxArmar(evitar) {
@@ -737,5 +757,5 @@ DI.al(() => {
 });
 if (IA()) IA().alCambiar(() => { if (pantalla() === "ropa-outfits") render(); });
 if (window.RopaEstilistaDatos) window.RopaEstilistaDatos.al(() => { if (pantalla() === "ropa-outfits") render(); });
-window.RopaOutfits = { render, armar, elegirCiudad, tableroHTML, ver: verPrendas, contexto, pedirClima, climaParaIA };
+window.RopaOutfits = { render, armar, elegirCiudad, tableroHTML, ver: verPrendas, contexto, pedirClima, climaParaIA, opcionesDelDia };
 })();

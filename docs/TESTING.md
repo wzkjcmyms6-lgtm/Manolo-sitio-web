@@ -1,6 +1,13 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-24 (D-159: tu estilista recuerda lo del día): `npm test` → **846**
+  (en `puente-logica`, los outfits de antes con su número y su nombre y lo que
+  viste hoy; en `ropa-estilista-motor`, `delDia`, `deHoy` y lo de antes con
+  nombre). `ropa-estilista` → **113** (sigue la conversación de hoy; una de
+  otro día, no; en una nueva igual sabe lo de hoy; le llegan las opciones de
+  Outfits); `ropa-outfits` → **87** (al volver a hoy o a otra ocasión, siguen
+  las opciones). Puente: 18 de la lógica y 9 del Worker (versión 6).
 - 2026-11-24 (Ropa, nivel 2, fase 3, D-158: hablar con tu estilista):
   `npm test` → **844 pruebas** (nuevo `ropa-estilista-motor`: el título de
   cada conversación, los mensajes, cuándo está llena y lo que quedó sin

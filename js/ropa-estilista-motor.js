@@ -78,11 +78,38 @@ function sinRespuesta(c) {
   return u && u.de === "yo" ? u : null;
 }
 // Lo hablado antes para el puente (sin el mensaje nuevo): los últimos 20; de
-// los de tu estilista, también los outfits que armó (tus ids).
-function historial(mensajes) {
+// los de tu estilista, también los outfits que armó (tus ids; con el puente 6
+// o más, también su nombre, para "la opción 2" o "el de capas": D-159).
+function historial(mensajes, conNombre) {
   return (mensajes || []).slice(-PARA_IA).map(m => (m.de === "ia"
-    ? { de: "ia", texto: m.texto, outfits: m.outfits.map(o => o.prendas) }
+    ? { de: "ia", texto: m.texto, outfits: m.outfits.map(o => (conNombre ? { prendas: o.prendas, nombre: o.nombre } : o.prendas)) }
     : { de: "yo", texto: m.texto }));
+}
+// El día (AAAA-MM-DD) de un momento, en este teléfono.
+function fechaLocal(ms) {
+  if (!ms) return "";
+  const d = new Date(ms);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+// ¿Es de hoy? (la usaste hoy por última vez).
+const deHoy = (c, hoy) => !!c && fechaLocal(c.editado) === hoy;
+// Lo que ya viste hoy (D-159): los outfits de tu estilista en tus otras
+// conversaciones de hoy (lo más nuevo primero) y las opciones de Outfits de
+// hoy; sin repetir, hasta 9. Los de la conversación abierta ya van en lo
+// hablado.
+function delDia(charlas, idActual, hoy, deOutfits) {
+  const vistos = new Set(), out = [];
+  const sumar = o => {
+    const prendas = ids(o && o.prendas).slice(0, 8);
+    const k = prendas.slice().sort().join("|");
+    if (prendas.length < 2 || vistos.has(k) || out.length >= 9) return;
+    vistos.add(k);
+    out.push({ prendas, nombre: texto(o.nombre, 40) });
+  };
+  (charlas || []).filter(c => c && c.id !== idActual).forEach(c => c.mensajes.slice().reverse()
+    .filter(m => m.de === "ia" && fechaLocal(m.fecha) === hoy).forEach(m => m.outfits.forEach(sumar)));
+  (deOutfits || []).forEach(sumar);
+  return out;
 }
 // "Otra opción" de un outfit: un mensaje más a tu estilista.
 const otraOpcion = nombre => (texto(nombre, 40) ? `Dame otra opción distinta de «${texto(nombre, 40)}».` : "Dame otra opción distinta.");
@@ -151,7 +178,7 @@ function cuando(ms, ahora) {
 }
 
 return {
-  MAX_MENSAJES, MAX_MEMORIA, PARA_IA, MAX_TEXTO, EJEMPLOS, texto, titulo, mensaje, normalizar, ordenar, llena, sinRespuesta, historial, otraOpcion,
+  MAX_MENSAJES, MAX_MEMORIA, PARA_IA, MAX_TEXTO, EJEMPLOS, texto, titulo, mensaje, normalizar, ordenar, llena, sinRespuesta, historial, fechaLocal, deHoy, delDia, otraOpcion,
   roperoParaCharla, presupuestoTexto, claveMemoria, memoria, recordar, olvidar, recuerda, cuando
 };
 });

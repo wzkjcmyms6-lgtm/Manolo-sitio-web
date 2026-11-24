@@ -10,7 +10,10 @@
 // estilo, lo que te pusiste hace poco, lo que te gustó y lo que no, lo que
 // recuerda de ti y tu presupuesto; lo que contesta se revisa aquí
 // (RopaOutfitMotor.validas: completo y con tu ropa). Sin internet, lo hablado
-// se ve igual. Nada corre solo: cada mensaje lo mandas tú.
+// se ve igual. Nada corre solo: cada mensaje lo mandas tú. Recuerda lo del día
+// (D-159): "Pídelo con tus palabras" sigue la conversación de hoy, y le llegan
+// los outfits de antes con su número y su nombre, y lo que ya viste hoy (en
+// Outfits y en tus otras conversaciones).
 // Datos: js/ropa-estilista-datos.js; lógica: js/ropa-estilista-motor.js.
 (function () {
 "use strict";
@@ -205,13 +208,15 @@ function presupuesto() {
   const tope = KK.presupuesto((DI.ajustes() || {}).presupuestoMes);
   return tope ? E.presupuestoTexto(tope, KK.gastoDelMes(D.lista(), D.hoy().slice(0, 7)).total) : "";
 }
-async function datosIA(t, antes) {
+async function datosIA(t, antes, id) {
   const aj = DI.ajustes() || {};
+  const v6 = IA().version() >= 6;   // el puente que recuerda lo del día (D-159)
   const g = I() && I().estiloGuardado ? I().estiloGuardado(aj.estilo) : null;
   let clima = "";
   try { clima = RO() && RO().climaParaIA ? await RO().climaParaIA() : ""; } catch (e) { clima = ""; }
   return {
-    mensaje: t, ropero: E.roperoParaCharla(D.lista()), historial: E.historial(antes), clima: clima || "",
+    mensaje: t, ropero: E.roperoParaCharla(D.lista()), historial: E.historial(antes, v6), clima: clima || "",
+    ...(v6 ? { hoy: E.delDia(DE.lista(), id, D.hoy(), RO() && RO().opcionesDelDia ? RO().opcionesDelDia() : []) } : {}),
     estilo: g ? g.resumen : "", recientes: O.recientes(D.usosDocs(), D.hoy()),
     gustan: DO.lista().filter(o => o.gusto === "si").slice(0, 15).map(o => o.prendas),
     noGustan: DO.lista().filter(o => o.gusto === "no").slice(0, 15).map(o => o.prendas),
@@ -240,7 +245,7 @@ async function preguntar(id, t, antes) {
   render();
   alFinal();
   let r;
-  try { r = await IA().charla(await datosIA(t, antes)); } catch (e) {
+  try { r = await IA().charla(await datosIA(t, antes, id)); } catch (e) {
     est.pensando = "";
     est.error = { id, texto: (e && e.message) || "Tu estilista no pudo contestar.", codigo: (e && e.codigo) || "" };
     vivo(est.error.texto);
@@ -444,14 +449,17 @@ function verMemoria(desde) {
   };
 }
 
-// ---------- Desde Outfits: "Pídelo con tus palabras" (una conversación nueva) ----------
+// ---------- Desde Outfits: "Pídelo con tus palabras" ----------
+// Sigue tu conversación de hoy (así recuerda lo que ya te armó; D-159); si no
+// hay una de hoy (o está llena), empieza una nueva.
 function pedir(texto) {
   const t = E.texto(texto, E.MAX_TEXTO);
   if (t && !puedoMandar()) return false;
-  abrirCharla("");
+  const deHoy = DE.lista().find(c => E.deHoy(c, D.hoy()) && !E.llena(c));
+  abrirCharla(deHoy ? deHoy.id : "");
   est.error = null;
   if (pantalla() !== "ropa-estilista") location.hash = "ropa-estilista";
-  if (t) enviar(t, { nueva: true }); else render();
+  if (t) enviar(t, { nueva: !deHoy }); else render();
   return true;
 }
 

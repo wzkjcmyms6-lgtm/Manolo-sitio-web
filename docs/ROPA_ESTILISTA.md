@@ -423,6 +423,16 @@ los botones en la app llegan en las fases 3 y 4.
   `meta/ropa_ajustes.memoria`; en la lista de deseos, "de tu estilista"
   (`origen: "estilista"`). La copia de seguridad suma tus conversaciones.
 
+## Arreglado después de la fase 3 (D-159): recuerda lo del día
+Pregunta del dueño: "¿Por qué no recuerda los outfits que me hizo para el día?"
+- "Pídelo con tus palabras" sigue tu conversación de hoy (si no hay, empieza
+  una nueva).
+- A tu estilista le llegan los outfits de antes con su número y su nombre ("la
+  opción 2", "Capas abrigadas") y lo que ya viste hoy en Outfits y en tus
+  otras conversaciones (puente versión 6).
+- Outfits guarda las opciones de cada día y cada ocasión: al volver, siguen ahí
+  (sin pedirlas otra vez).
+
 ## Lo que no hace
 No genera fotos tuyas con la ropa puesta. No compra nada. No borra ni cambia
 tu ropa: solo propone. No publica nada en tu Pinterest. No pide tu ubicación.

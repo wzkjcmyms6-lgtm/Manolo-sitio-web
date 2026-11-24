@@ -584,6 +584,7 @@ Reglas:
 - Fíjate en el corte y las mangas: proporciones que funcionen (algo suelto con algo más pegado; oversize con pitillo o recto).
 - Colores que combinen: neutros con uno o dos colores fuertes; un solo estampado.
 - Respeta lo que sabes de la persona y su estilo. Si hay otra opción igual de buena, evita lo que se puso hace poco y lo que no le gustó.
+- Recuerdas lo que ya le armaste (cada outfit de antes va con su número y su nombre) y lo que ya vio hoy: si te nombra uno ("la opción 2", "el de capas"), es ese; puedes cambiarle prendas como te pida. Si pide otra cosa, que sea distinta de lo que ya vio.
 - Si solo pregunta algo, contesta corto y deja outfits vacío; si puedes, nombra prendas suyas.
 - respuesta: de 1 a 4 frases, sin repetir lo que ya dicen los outfits. outfits: de 0 a 3, distintos entre sí, del mejor al menos bueno. nombre: 2 a 4 palabras. porque: una frase corta. capas: cómo llevarlas, si hace falta; si no, vacío.
 - faltan: como mucho 2, solo si de verdad le sirven para lo que pidió.
@@ -599,18 +600,26 @@ export function entradaCharla(c) {
   const ropero = roperoDe(o);
   if (!mensaje || !ropero.length) return null;
   const { lista, combos } = listasDe(ropero);
+  // Los outfits de antes (D-159): [ids] (versión 5) o { prendas, nombre }.
+  const conNombre = (v, max) => (Array.isArray(v) ? v : []).slice(0, max * 2).map(x => {
+    const q = Array.isArray(x) ? { prendas: x } : obj(x);
+    const prendas = lista(q.prendas, 8);
+    return prendas.length >= 2 ? { prendas, nombre: corto(q.nombre, 40) } : null;
+  }).filter(Boolean).slice(0, max);
   // Los últimos 10 que sirven (los vacíos o raros no ocupan lugar).
   const historial = (Array.isArray(o.historial) ? o.historial : []).slice(-60).map(h => {
     const x = obj(h);
     const de = x.de === "ia" ? "ia" : x.de === "yo" ? "yo" : null;
     const texto = corto(x.texto, 800);
-    const outfits = de === "ia" ? combos(x.outfits, 3) : [];
+    const outfits = de === "ia" ? conNombre(x.outfits, 3) : [];
     return de && (texto || outfits.length) ? { de, texto, outfits } : null;
   }).filter(Boolean).slice(-MAX_HISTORIAL);
   return {
     mensaje, ropero, historial,
     clima: corto(o.clima, 600), estilo: corto(o.estilo, 600),
     recientes: lista(o.recientes, 60), gustan: combos(o.gustan, 15), noGustan: combos(o.noGustan, 15),
+    // Lo que ya vio hoy (en Outfits y en otras conversaciones; D-159).
+    hoy: conNombre(o.hoy, 9),
     memoria: memoriaDe(o.memoria), presupuesto: corto(o.presupuesto, 160)
   };
 }
@@ -618,17 +627,21 @@ export function entradaCharla(c) {
 // por bloque, para que queden en caché) y el mensaje nuevo.
 export function bloquesCharla(e, refs) {
   const rs = refsDe(refs);
+  const hoy = e.hoy || [];
   const contexto = [
     e.clima ? `El clima: ${e.clima}` : "Sin el clima de hoy.",
     e.estilo ? `Mi estilo (de mis inspiraciones): ${e.estilo}` : "",
     loQueSabes(e.memoria),
     e.recientes.length ? `Me puse hace poco: ${rs(e.recientes)}.` : "",
+    hoy.length ? `Hoy ya vi estas opciones (en Outfits o en otra conversación contigo): ${hoy.map(o => `${o.nombre ? `«${o.nombre}» ` : ""}(${rs(o.prendas)})`).join("; ")}.` : "",
     e.gustan.length ? `Combinaciones que me gustaron: ${e.gustan.map(x => `(${rs(x)})`).join("; ")}.` : "",
     e.noGustan.length ? `No me gustaron: ${e.noGustan.map(x => `(${rs(x)})`).join("; ")}.` : "",
     e.presupuesto ? `Mi presupuesto de ropa: ${e.presupuesto}` : ""
   ].filter(Boolean).join("\n");
+  // Cada outfit de antes, con su número y su nombre (para "la opción 2").
+  const opcion = (o, i) => `opción ${i + 1}${o.nombre ? ` «${o.nombre}»` : ""}: ${rs(o.prendas)}`;
   const turnos = e.historial.map(h => (h.de === "yo" ? `Yo: ${h.texto}`
-    : `Tú: ${h.texto}${h.outfits.length ? ` (outfits que me armaste: ${h.outfits.map(x => `(${rs(x)})`).join("; ")})` : ""}`));
+    : `Tú: ${h.texto}${h.outfits.length ? ` (outfits que me armaste: ${h.outfits.map(opcion).join("; ")})` : ""}`));
   return { contexto, turnos, mensaje: `${turnos.length ? "Ahora te digo" : "Te digo"}: ${e.mensaje}` };
 }
 const outfitsDe = (v, refs, max, sin) => (Array.isArray(v) ? v : []).slice(0, max * 2).map(f => {

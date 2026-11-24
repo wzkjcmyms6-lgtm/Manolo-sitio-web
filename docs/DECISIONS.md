@@ -2689,3 +2689,30 @@ explicado. (10) **Datos**: `ropa_charlas` (nuevo, en la copia de seguridad:
 al puente, tu ropa, el presupuesto, lo que recuerda de ti y cuándo); E2E
 nueva `ropa-estilista` (104 comprobaciones, con un puente de mentira); las 49
 suites sin fallas (4.175 comprobaciones).
+
+**D-159 (2026-11-24) · Ropa: tu estilista recuerda los outfits del día.**
+Pregunta del dueño: "¿Por qué no recuerda los outfits que me hizo para el
+día?". Cuatro causas: (a) "Pídelo con tus palabras" empezaba siempre una
+conversación nueva; (b) en la misma conversación, a la IA le llegaban los
+outfits de antes sin su número ni su nombre ("la opción 2", "el de capas");
+(c) las opciones de "¿Qué me pongo?" no le llegaban; (d) Outfits guardaba en el
+teléfono solo el último grupo de opciones (al cambiar de ocasión o de día y
+volver, se perdían y había que pedirlas de nuevo, gastando otra vez). Arreglos:
+(1) "Pídelo con tus palabras" sigue tu conversación de hoy (la última usada
+hoy, si no está llena); si no hay, empieza una nueva ("Nueva" sigue a mano).
+(2) **Puente versión 6**: lo de antes llega como { prendas, nombre } (la
+versión 5, como lista de ids, se sigue aceptando) y se le dice "opción 1
+«Capas abrigadas»: p5, p2, p1…"; nuevo `hoy` (hasta 9): "Hoy ya vi estas
+opciones (en Outfits o en otra conversación contigo)…", en el contexto del día
+(antes de lo hablado: la caché de la conversación no se rompe mientras no
+cambie). Regla nueva: si te nombra uno, es ese; si pide otra cosa, distinta de
+lo que ya viste. La app manda el formato nuevo solo con el puente 6 o más. (3)
+`E.delDia`: los outfits de tu estilista en tus otras conversaciones de hoy (lo
+más nuevo primero) y las opciones de Outfits de hoy (`RopaOutfits.opcionesDelDia`,
+de cada ocasión), sin repetir. (4) Outfits guarda las opciones de cada día,
+ciudad, ocasión y prenda (`manolo.ropa.opciones`, ahora un mapa: las de hoy
+en adelante, hasta 12; la de antes se lee igual). Pruebas: `npm test` → 846;
+`ropa-estilista` 113 (sigue la de hoy, con los nombres y lo que viste en
+Outfits; una de otro día no sigue; en una nueva igual sabe lo de hoy);
+`ropa-outfits` 87 (al volver a hoy o a Casual, siguen las opciones). Puente:
+18 pruebas de la lógica y 9 del Worker; instalado (versión 6).

@@ -77,7 +77,7 @@ function semilla(extra) {
 const PUENTE = "https://puente.prueba";
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Authorization, Content-Type", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" };
 function puenteFalso(o) {
-  const est = Object.assign({ permitido: true, lista: true, version: 5, gasto: { mes: "2026-11", usd: 0.12, veces: 3, tope: 8 }, demora: 300, respuestas: [], fallo: null, pedidos: [] }, o || {});
+  const est = Object.assign({ permitido: true, lista: true, version: 6, gasto: { mes: "2026-11", usd: 0.12, veces: 3, tope: 8 }, demora: 300, respuestas: [], fallo: null, pedidos: [] }, o || {});
   est.charlas = () => est.pedidos.filter(x => x.ruta === "/charla");
   est.rutas = async ctx => {
     await ctx.route(/open-meteo\.com/, r => r.abort());
@@ -212,6 +212,7 @@ async function conversar(browser, base) {
   await esperarIA(p, 2);
   const c2 = pf.charlas()[1];
   ok(c2.cuerpo.historial.length === 2 && c2.cuerpo.historial[0].texto === "Hace frío: una chompa y una chamarra encima" && c2.cuerpo.historial[1].de === "ia" && c2.cuerpo.historial[1].outfits.length === 2, "lo hablado antes va al puente (con los outfits que armó)");
+  ok(c2.cuerpo.historial[1].outfits.map(o => o.nombre).join() === "Capas abrigadas,Más formal" && clave(c2.cuerpo.historial[1].outfits[0].prendas) === clave(CAPAS), "cada outfit de antes, con su nombre (para «la opción 1»)");
   ok(await p.$eval("#roe-texto", t => t.value === ""), "el cuadro queda vacío");
   // Otra opción: un mensaje más.
   pf.respuestas.push({ respuesta: "Otra:", outfits: [{ nombre: "Otra más", prendas: ["cha", "pol", "tela", "zn"], porque: "", capas: "" }] });
@@ -219,6 +220,18 @@ async function conversar(browser, base) {
   await esperarIA(p, 3);
   ok(pf.charlas()[2].cuerpo.mensaje === "Dame otra opción distinta de «Lluvia»." && (await mensajes(p))[4].texto === "Dame otra opción distinta de «Lluvia».", "«Otra opción»: se lo pide a tu estilista");
   ok(/US\$ 0,24 de US\$ 8,00/.test(await txt(p, "#roe-nota")), "abajo: lo que cuesta cada mensaje y lo gastado este mes");
+  // Desde Outfits otra vez: sigue la conversación de hoy, y le llegan las opciones que viste en Outfits.
+  await ir(p, "ropa-outfits");
+  await p.click('#rof-app [data-rof="armar"]');
+  await p.waitForSelector("#rof-app .rof-op", { timeout: 6000 });
+  const deOutfits = await p.$$eval("#rof-app .rof-op", els => els.map(el => [...el.querySelectorAll(".rof-foto-a")].map(a => a.dataset.prenda)));
+  pf.respuestas.push({ respuesta: "Sí, va bien." });
+  await p.fill("#rof-pide", "¿Y la opción 1 de Outfits?");
+  await p.click("#rof-app .roe-pide button[type=submit]");
+  await esperarIA(p, 4);
+  const c4 = pf.charlas()[3];
+  ok(Object.keys(await charlas(p)).length === 1 && c4.cuerpo.historial.length === 6, "«Pídelo con tus palabras» sigue la conversación de hoy (recuerda lo que ya te armó)");
+  ok(c4.cuerpo.hoy.length === deOutfits.length && deOutfits.every(o => c4.cuerpo.hoy.some(h => clave(h.prendas) === clave(o))), `y le llegan las opciones que viste hoy en Outfits (${c4.cuerpo.hoy.length})`);
   await captura(p, "estilista-390.png");
   sinErrores(p);
   await p.context().close();
@@ -318,6 +331,33 @@ async function conversacionesYMemoria(browser, base) {
   await p.context().close();
 }
 
+// ---------- (5b) Lo del día: la conversación de hoy sigue; una de otro día, no ----------
+async function delDia(browser, base) {
+  console.log("\nLo del día: la conversación de hoy sigue");
+  const hoy1 = { v: 1, titulo: "Hoy temprano", creado: Date.parse(FECHA) - 3600e3, editado: Date.parse(FECHA) - 3600e3,
+    mensajes: [{ de: "yo", texto: "¿Qué me pongo hoy?", fecha: Date.parse(FECHA) - 3600e3 },
+      { de: "ia", texto: "Este:", outfits: [{ prendas: CAPAS, nombre: "Capas abrigadas", porque: "", capas: "" }], faltan: [], recordo: [], fecha: Date.parse(FECHA) - 3599e3 }] };
+  const pf = puenteFalso({ respuestas: [{ respuesta: "Para la noche:" }, { respuesta: "Hola de nuevo." }] });
+  const p = await abrir(browser, base, { hash: "#ropa-outfits", puente: pf, seed: { "users/test/ropa_charlas": { vieja: CHARLA_VIEJA, hoy1 } } });
+  await p.fill("#rof-pide", "Otra para la noche");
+  await p.click("#rof-app .roe-pide button[type=submit]");
+  await esperarIA(p, 2);
+  let cs = await charlas(p);
+  ok(Object.keys(cs).length === 2 && cs.hoy1.mensajes.length === 4 && cs.vieja.mensajes.length === 2, "«Pídelo» sigue la de hoy (la de otro día queda como estaba)");
+  const h = pf.charlas()[0].cuerpo.historial;
+  ok(h.length === 2 && h[1].outfits[0].nombre === "Capas abrigadas", "con lo que ya te armó hoy, por su nombre");
+  ok(pf.charlas()[0].cuerpo.hoy.length === 0, "lo de otro día no cuenta como de hoy");
+  await p.click('#roe-app [data-roe="nueva"]');
+  await p.waitForTimeout(300);
+  await escribir(p, "Empiezo otra");
+  await esperarIA(p, 1);
+  cs = await charlas(p);
+  ok(Object.keys(cs).length === 3, "«Nueva»: otra conversación");
+  ok(pf.charlas()[1].cuerpo.historial.length === 0 && pf.charlas()[1].cuerpo.hoy.some(o => o.nombre === "Capas abrigadas"), "en la nueva, igual sabe lo que viste hoy en la otra");
+  sinErrores(p);
+  await p.context().close();
+}
+
 // ---------- (6) Una conversación llena empieza otra ----------
 async function llena(browser, base) {
   console.log("\nUna conversación de 40 mensajes");
@@ -407,6 +447,7 @@ async function chico(browser, base, esquema) {
   await conversar(browser, base);
   await errores(browser, base);
   await conversacionesYMemoria(browser, base);
+  await delDia(browser, base);
   await llena(browser, base);
   await sinInternetYOtros(browser, base);
   for (const esquema of ["dark", "light"]) await chico(browser, base, esquema);

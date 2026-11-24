@@ -109,3 +109,25 @@ test("cuándo: hoy, ayer o la fecha", () => {
   assert.equal(E.cuando(new Date(2025, 11, 31, 9, 0).getTime(), ahora), "el 31 de diciembre de 2025");
   assert.equal(E.cuando(0, ahora), "");
 });
+
+test("recordar lo del día (D-159): los outfits de antes con su nombre y lo que ya viste hoy", () => {
+  const ia = (nombre, prendas, fecha) => E.mensaje({ de: "ia", texto: "Va:", outfits: [{ prendas, nombre }], fecha });
+  assert.deepEqual(E.historial([ia("Capas", ["a", "b"], 1)], true)[0].outfits, [{ prendas: ["a", "b"], nombre: "Capas" }], "con el puente 6: con su nombre");
+  assert.deepEqual(E.historial([ia("Capas", ["a", "b"], 1)])[0].outfits, [["a", "b"]], "con el 5: solo las prendas");
+  const hoy = "2026-11-24", ahora = new Date(2026, 10, 24, 10, 0).getTime(), ayer = new Date(2026, 10, 23, 18, 0).getTime();
+  assert.equal(E.fechaLocal(ahora), hoy);
+  assert.equal(E.fechaLocal(0), "");
+  assert.equal(E.deHoy({ editado: ahora }, hoy), true);
+  assert.equal(E.deHoy({ editado: ayer }, hoy), false);
+  assert.equal(E.deHoy(null, hoy), false);
+  const charlas = [
+    { id: "abierta", mensajes: [ia("Esta no", ["x", "y"], ahora)] },
+    { id: "otra", mensajes: [ia("Vieja", ["v", "w"], ayer), ia("Primera", ["a", "b"], ahora), ia("Segunda", ["c", "d"], ahora + 1)] }
+  ];
+  const outs = [{ prendas: ["e", "f"], nombre: "De Outfits" }, { prendas: ["b", "a"], nombre: "Repetida" }, { prendas: ["g"], nombre: "Sola" }];
+  assert.deepEqual(E.delDia(charlas, "abierta", hoy, outs).map(o => o.nombre), ["Segunda", "Primera", "De Outfits"],
+    "de tus otras conversaciones de hoy (lo más nuevo primero) y de Outfits; sin la abierta, sin lo de ayer y sin repetir");
+  const muchas = Array.from({ length: 12 }, (_, i) => ({ prendas: [`p${i}`, `q${i}`], nombre: `O${i}` }));
+  assert.equal(E.delDia([], "", hoy, muchas).length, 9, "hasta 9");
+  assert.deepEqual(E.delDia(null, "", hoy, null), []);
+});

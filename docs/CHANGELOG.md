@@ -1,5 +1,14 @@
 # Cambios
 
+## 2026-11-24 · Ropa: tu estilista recuerda lo del día
+- Lo que escribes en "Pídelo con tus palabras" sigue tu conversación de hoy:
+  tu estilista recuerda los outfits que ya te armó, y si le dices "la opción
+  2" o el nombre de uno, sabe cuál es.
+- También sabe las opciones que viste hoy en Outfits y en tus otras
+  conversaciones del día.
+- Outfits no pierde tus opciones: si cambias de ocasión o miras mañana y
+  vuelves, siguen ahí (sin pedirlas otra vez).
+
 ## 2026-11-24 · Ropa: habla con tu estilista
 - **Tu estilista** (en Outfits, arriba: "Pídelo con tus palabras"): le
   escribes o le dictas lo que necesitas ("Hace frío: una chompa y una

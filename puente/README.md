@@ -23,8 +23,9 @@ calcula la app —`h1`, `h2`…— sin cambiarlos, sugiere prendas y dice qué n
 comprar y qué dejar); Pinterest (solo lectura, sin la IA):
 `POST /pinterest/tablero`, `/pinterest/pin`, `/pinterest/imagen`. `/quien`
 dice la versión del puente (3: con outfits; 4: `/describir` también dice el
-corte y las mangas de la prenda, D-154; 5: el estilista, D-157); la app usa
-lo nuevo solo si el puente lo tiene.
+corte y las mangas de la prenda, D-154; 5: el estilista, D-157; 6: en
+`/charla`, los outfits de antes con su nombre y lo que ya viste hoy, `hoy`,
+D-159); la app usa lo nuevo solo si el puente lo tiene.
 
 Para que cueste poco, la ropa va primero y en caché (en `/charla` y
 `/opinar`); en `/charla`, además, cada mensaje de antes va en su propio

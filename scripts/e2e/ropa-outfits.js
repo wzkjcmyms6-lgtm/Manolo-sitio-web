@@ -192,11 +192,20 @@ async function conReglas(browser, base, seed) {
   ok(Object.values(await coleccion(p, "users/test/ropa_outfits")).some(o => o.para === MANANA && o.guardado) && /Para el martes 24/.test(await txt(p, ".rof-guardados")), "«Para mañana»: guardado para el martes");
   // Para el trabajo.
   await p.click('.rof-dias [data-rof-dia="hoy"]');
+  await p.waitForTimeout(300);
+  const deHoy = (await opciones(p)).map(clave);
+  ok(deHoy.length && deHoy.join() === despues.join(), "al volver a hoy, siguen tus opciones de hoy (no hay que pedirlas de nuevo; D-159)");
   await p.click('.rof-ocasion label:has(input[value="trabajo"])');
   await p.click('[data-rof="armar"]');
   await p.waitForSelector(".rof-op", { timeout: 5000 });
   ops = await opciones(p);
   ok(ops[0].includes("cam") && ops.some(o => o.includes("chino")) && !ops.some(o => o.includes("gorra")), `al trabajo: con camisa y el pantalón de tela; sin gorra (${ops.join(" / ")})`);
+  await p.click('.rof-ocasion label:has(input[value="casual"])');
+  await p.waitForTimeout(300);
+  ok((await opciones(p)).map(clave).join() === despues.join(), "y al volver a Casual, las de Casual siguen ahí");
+  ok(await p.evaluate(() => window.RopaOutfits.opcionesDelDia().length) >= deHoy.length + ops.length, "las de hoy (de cada ocasión) quedan para tu estilista");
+  await p.click('.rof-ocasion label:has(input[value="trabajo"])');
+  await p.waitForTimeout(300);
   // Una ocasión tuya: la iglesia, como un evento formal.
   await p.click('[data-rof="ocasion-nueva"]');
   await p.waitForSelector(".rof-hoja-ocasion [name=nombre]", { timeout: 4000 });

@@ -369,7 +369,7 @@ test("conversar: lo que llega, los bloques (cada mensaje por separado) y lo que 
   assert.equal(e.mensaje, "Está haciendo bastante frío, quiero una chompa y una chamarra encima");
   assert.equal(e.historial.length, 10, "los últimos 10 que sirven (los vacíos o raros no ocupan lugar)");
   assert.deepEqual(e.historial[0], { de: "yo", texto: "Mensaje 4", outfits: [] });
-  assert.deepEqual(e.historial[1], { de: "ia", texto: "Respuesta 5", outfits: [["idPol1", "idJean3", "idZap6"]] }, "solo los outfits con tus prendas");
+  assert.deepEqual(e.historial[1], { de: "ia", texto: "Respuesta 5", outfits: [{ prendas: ["idPol1", "idJean3", "idZap6"], nombre: "" }] }, "solo los outfits con tus prendas");
   assert.deepEqual(e.memoria, ["Es friolento", "No le gusta el amarillo"]);
   assert.deepEqual(e.recientes, ["idJean3"]);
   const { texto, refs } = L.textoRopero(e.ropero);
@@ -381,7 +381,7 @@ test("conversar: lo que llega, los bloques (cada mensaje por separado) y lo que 
   assert.match(b.contexto, /Mi presupuesto de ropa: Te quedan Bs 300 este mes\./);
   assert.equal(b.turnos.length, 10);
   assert.equal(b.turnos[0], "Yo: Mensaje 4");
-  assert.equal(b.turnos[1], "Tú: Respuesta 5 (outfits que me armaste: (p1, p3, p6))");
+  assert.equal(b.turnos[1], "Tú: Respuesta 5 (outfits que me armaste: opción 1: p1, p3, p6)");
   assert.equal(b.mensaje, "Ahora te digo: Está haciendo bastante frío, quiero una chompa y una chamarra encima");
   assert.equal(L.bloquesCharla(L.entradaCharla({ mensaje: "Hola", ropero: ROPERO_E }), refs).mensaje, "Te digo: Hola");
   assert.ok(!/idPol1|idJean3|secreta/.test(texto + JSON.stringify(b)), "la IA no ve tus ids ni tus notas");
@@ -463,4 +463,23 @@ test("el repaso del ropero: lo que llega, el pedido y solo lo que existe", async
   assert.deepEqual(r.colores, { van: ["negro", "blanco"], sumar: ["camel", "beige"], porque: "Neutros cálidos." });
   assert.deepEqual(r.consejos, ["Capas: polera, chompa y chamarra."]);
   assert.deepEqual(L.limpiarOpinion(null, refs, e).sugerencias, []);
+});
+
+test("conversar (D-159): recuerda los outfits de antes por su número y su nombre, y lo que ya viste hoy", async () => {
+  const L = await cargar();
+  const historial = [
+    { de: "yo", texto: "¿Qué me pongo hoy?" },
+    { de: "ia", texto: "Te armé dos:", outfits: [{ prendas: ["idCha5", "idCho2", "idPol1", "idJean3", "idZap6"], nombre: "Capas abrigadas" }, { prendas: ["idPol1", "idJean3", "idZap6"], nombre: "" }, { prendas: ["idPol1", "noEsMia"], nombre: "Mala" }] }
+  ];
+  const hoy = [{ prendas: ["idPol1", "idTela4", "idZn7"], nombre: "Oficina" }, ["idCho2", "idJean3", "idZap6"], { prendas: ["idPol1"], nombre: "Sola" }, "raro"];
+  const e = L.entradaCharla({ mensaje: "La opción 1 pero con zapatos negros", ropero: ROPERO_E, historial, hoy });
+  assert.deepEqual(e.historial[1].outfits.map(o => o.nombre), ["Capas abrigadas", ""], "con su nombre; los que no son tuyos no van");
+  assert.deepEqual(e.hoy, [{ prendas: ["idPol1", "idTela4", "idZn7"], nombre: "Oficina" }, { prendas: ["idCho2", "idJean3", "idZap6"], nombre: "" }], "lo que ya viste hoy (también como lista de ids)");
+  const { refs } = L.textoRopero(e.ropero);
+  const b = L.bloquesCharla(e, refs);
+  assert.equal(b.turnos[1], "Tú: Te armé dos: (outfits que me armaste: opción 1 «Capas abrigadas»: p5, p2, p1, p3, p6; opción 2: p1, p3, p6)");
+  assert.match(b.contexto, /\nHoy ya vi estas opciones \(en Outfits o en otra conversación contigo\): «Oficina» \(p1, p4, p7\); \(p2, p3, p6\)\./);
+  assert.ok(!/Hoy ya vi/.test(L.bloquesCharla(L.entradaCharla({ mensaje: "Hola", ropero: ROPERO_E }), refs).contexto), "sin nada de hoy, no se dice");
+  assert.match(L.instruccionesCharla(), /si te nombra uno \("la opción 2", "el de capas"\), es ese/);
+  assert.equal(L.entradaCharla({ mensaje: "x", ropero: ROPERO_E, hoy: Array.from({ length: 20 }, () => ["idPol1", "idJean3"]) }).hoy.length, 9, "hasta 9");
 });
