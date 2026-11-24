@@ -4,8 +4,8 @@
 // la fecha y el resumen; "Lo que ve" (los números los cuenta Manolo, js/
 // ropa-opinion-motor.js; tu estilista comenta cada uno); "Lo que sumaría" (por
 // qué, con qué de tu ropa va, cuántos outfits nuevos te da —los cuenta
-// Manolo—, si también está en tus pines, "A mi lista" y "Ver opciones en
-// Pinterest"); "Qué no comprar más"; "Podrías dejar de lado" (es solo un
+// Manolo—, si también está en tus pines y en cuántos, "A mi lista" y "Ver
+// opciones en Pinterest"); "Qué no comprar más"; "Podrías dejar de lado" (es solo un
 // consejo: nunca toca nada); "Tus colores"; "Consejos"; "Pedirle otra
 // opinión". Cada repaso queda en ropa_opiniones (se ve el último).
 // (2) "¿Qué opinas?" de un outfit (desde Armar el mío y desde una opción o un
@@ -28,7 +28,7 @@ const puntos = cs => `<span class="ro-puntos" aria-hidden="true">${cs.map(id => 
 const afuera = (href, texto) => `<a class="lib-btn-sec" href="${esc(href)}" target="_blank" rel="noopener">${icono("externo")}${texto}<span class="visually-hidden"> (se abre aparte)</span></a>`;
 const disponible = () => !!(IA() && IA().estilista() && !IA().sinInternet());
 const tuyas = () => D.lista().filter(p => p.estado !== "fuera");
-const cosaDe = s => ({ grupo: s.grupo, tipo: s.tipo, colores: s.color ? [s.color] : [] });
+const cosaDe = P.cosaDe;
 const pensando = t => `<p class="rop-mirando" role="status"><span class="roe-puntos" aria-hidden="true"><i></i><i></i><i></i></span>${t}</p>`;
 // Lo que va a tu estilista además de tu ropa: tu estilo, lo que recuerda de ti y tu presupuesto.
 function contexto() {
@@ -59,7 +59,7 @@ function sugerenciaHTML(s, i, ropero, enPines) {
   return `<li class="tmp-card rco-item rop-sug">
     <h4 class="rco-t">${puntos(cosa.colores)}<span>${esc(nombre)}</span></h4>
     ${s.porque ? `<p class="rop-porque">${esc(s.porque)}</p>` : ""}
-    ${enPines.has(K.clave(cosa)) ? `<p class="rco-cuantas rop-pines">${icono("inspiracion")}También está en tus inspiraciones.</p>` : ""}
+    ${enPines.has(K.clave(cosa)) ? `<p class="rco-cuantas rop-pines">${icono("inspiracion")}También está en ${enPines.get(K.clave(cosa)).toLocaleString("es-BO")} de tus pines.</p>` : ""}
     ${va.length ? `<p class="rd-nota rop-va-t">Va con:</p><ul class="rop-va">${va.map(p => `<li><a class="rop-va-a" href="#ropa-prenda/${encodeURIComponent(p.id)}" aria-label="${esc(M.titulo(p))}">${A().fotoHTML(p, "ro-foto")}</a></li>`).join("")}</ul>` : ""}
     <p class="rco-outfits">${icono("outfit")}<span>${n ? `Con tu ropa: <b>${plural(n, "outfit nuevo", "outfits nuevos")}</b> (lo cuenta Manolo)` : "Con tu ropa de ahora no combina mucho"}</span></p>
     <div class="rco-bot">
@@ -78,7 +78,7 @@ function coloresHTML(c) {
 function opinionHTML(op) {
   const ia = op.ia, ropero = D.lista();
   const comenta = new Map(ia.comentarios.map(c => [c.hecho, c.texto]));
-  const enPines = new Set(I() ? K.faltan(DI.lista(), ropero).map(f => f.clave) : []);
+  const enPines = new Map(I() ? K.faltan(DI.lista(), ropero).map(f => [f.clave, f.n]) : []);   // clave → en cuántos pines
   const dejar = ia.dejar.map(x => ({ p: D.una(x.prenda), porque: x.porque })).filter(x => x.p && x.p.estado !== "fuera");
   return `<p class="rd-nota rop-fecha">${op.fecha ? `Del ${esc(M.fechaLarga(op.fecha))}` : "Tu último repaso"}${op.n ? ` · cuando tenías ${plural(op.n, "prenda", "prendas")}` : ""}</p>
     ${ia.resumen ? `<p class="rop-resumen">${esc(ia.resumen)}</p>` : ""}
@@ -215,5 +215,5 @@ function opinar(ids, o) {
   };
 }
 
-window.RopaOpinion = { html, opinar, disponible };
+window.RopaOpinion = { html, opinar, disponible, ultima };
 })();

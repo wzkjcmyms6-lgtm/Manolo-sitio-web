@@ -7,13 +7,14 @@
 // lo que no te pones hace 3 meses, lo que más te pones, tus colores, lo que
 // tienes de sobra y cuántas combinaciones salen). Tu ropa con las veces que
 // te la pusiste, lo que se repite en tus pines en palabras, cada repaso
-// guardado (users/{uid}/ropa_opiniones) y, para "¿Qué opinas?", cambiar una
-// prenda por otra.
+// guardado (users/{uid}/ropa_opiniones), para "¿Qué opinas?", cambiar una
+// prenda por otra, y el aviso del día en Outfits (D-161): lo que te sugirió
+// que le serviría al clima o a la ocasión del día, si todavía no lo tienes.
 (function (root, factory) {
   if (typeof module === "object" && module.exports) {
-    module.exports = factory(require("./ropa-motor.js"), require("./ropa-compras-motor.js"), require("./ropa-numeros-motor.js"), require("./ropa-estilista-motor.js"));
-  } else root.RopaOpinionMotor = factory(root.RopaMotor, root.RopaComprasMotor, root.RopaNumerosMotor, root.RopaEstilistaMotor);
-})(typeof self !== "undefined" ? self : this, function (M, K, N, E) {
+    module.exports = factory(require("./ropa-motor.js"), require("./ropa-compras-motor.js"), require("./ropa-numeros-motor.js"), require("./ropa-estilista-motor.js"), require("./ropa-insp-motor.js"));
+  } else root.RopaOpinionMotor = factory(root.RopaMotor, root.RopaComprasMotor, root.RopaNumerosMotor, root.RopaEstilistaMotor, root.RopaInspMotor);
+})(typeof self !== "undefined" ? self : this, function (M, K, N, E, I) {
 "use strict";
 
 const MAX_HECHOS = 15;
@@ -157,5 +158,77 @@ function cambiar(lista, sale, entra) {
   return [...new Set(xs.map(id => (id === sale ? entra : id)))];
 }
 
-return { MAX_HECHOS, hechos, roperoParaRepaso, pinesTexto, normalizar, ordenar, veredicto, cambiar };
+// ---- El aviso del día en Outfits (D-161) ----
+// Lo que tu estilista sugirió en su último repaso y le serviría a las opciones
+// del día: por el clima (la lluvia, el frío, ir en capas, el calor, el viento
+// o el sol fuerte) o por la ocasión (trabajo, algo formal, la noche o hacer
+// deporte). Se mira el tipo de prenda (no su porqué: es texto libre). Sin lo
+// que ya tienes (igual o parecido), lo que ya compraste o ya no quieres (en
+// tu lista de deseos) y lo que ocultaste. Uno solo: el primer motivo que
+// toca, con la primera sugerencia que le sirve. Sin IA: no cuesta nada.
+// Una sugerencia como cosa de la lista de deseos: { grupo, tipo, colores [id] }.
+const cosaDe = s => ({ grupo: s.grupo, tipo: s.tipo, colores: s.color && M.COLOR[s.color] ? [s.color] : [] });
+// ¿Ya tienes algo igual o parecido (el mismo tipo, del mismo color o sin color)?
+function laTienes(s, ropero) {
+  const v = { grupo: s.grupo, tipo: s.tipo, colores: cosaDe(s).colores, estampado: "", tela: "" };
+  return (ropero || []).some(p => p && p.estado !== "fuera" && ["igual", "parecida"].includes(I.cuanto(I.parecido(v, p))));
+}
+const tipo = s => M.plano(s.tipo);
+const en = (s, grupo, re) => s.grupo === grupo && re.test(tipo(s));
+// Del clima del día (RopaClima.necesidades), en este orden. sirve: cuánto le
+// sirve (0, nada; con frío, un abrigo más que unas botas).
+const POR_CLIMA = [
+  { id: "lluvia", hay: n => !!n.tormenta || n.lluvia === "si",
+    sirve: s => (en(s, "zapatos", /bota|botin|impermeable|cerrad|lluvia/) || en(s, "abrigos", /impermeable|rompeviento|cortaviento|parka|piloto|gabardina|trench|lluvia/) ? 2 : 0) || (en(s, "accesorios", /paraguas/) ? 1 : 0) },
+  { id: "frio", hay: n => n.abrigo === "abrigo" || n.base === "frio" || !!n.nieve,
+    sirve: s => (s.grupo === "abrigos" ? 3 : 0) || (en(s, "arriba", /chompa|sueter|polar|buzo|cardigan|chaleco|cuello alto|lana|termic|hoodie|poleron|sudadera/) ? 2 : 0)
+      || (en(s, "zapatos", /bota|botin/) || en(s, "accesorios", /bufanda|chalina|gorro|guante/) ? 1 : 0) },
+  { id: "capas", hay: n => !!n.capas,
+    sirve: s => ((s.grupo === "abrigos" && !/parka|plumon|pluma|acolchad/.test(tipo(s))) || en(s, "arriba", /cardigan|sobrecamisa|chaleco|chompa|sueter|camisa/) ? 1 : 0) },
+  { id: "calor", hay: n => n.base === "calor",
+    sirve: s => (en(s, "arriba", /polera|musculosa|camiseta|lino|manga corta|top|guayabera/) || en(s, "abajo", /short|bermuda|falda|lino/)
+      || en(s, "cuerpo", /vestido|enterizo|mono/) || en(s, "zapatos", /sandalia|alpargata|chancla/) ? 1 : 0) },
+  { id: "viento", hay: n => !!n.viento, sirve: s => (en(s, "abrigos", /rompeviento|cortaviento/) ? 1 : 0) },
+  { id: "sol", hay: n => !!n.sol, sirve: s => (en(s, "accesorios", /gorra|sombrero|lentes|gafas/) ? 1 : 0) }
+];
+// De la ocasión elegida (su tipo: RopaOutfitMotor.tipoDe).
+const POR_OCASION = {
+  trabajo: /saco|blazer|camisa|pantalon de (vestir|tela)|chino|vestido|mocasin|oxford|derby|zapato/,
+  formal: /saco|blazer|traje|camisa|pantalon de vestir|vestido|corbata|mocasin|oxford|derby|zapato/,
+  noche: /camisa|blazer|vestido|botin|cuero/,
+  deporte: /zapatilla|deport|calza|legging|buzo|short/
+};
+// op: el último repaso (normalizar); ropero: tus prendas (normalizadas); o: {
+// nec (el clima del día; sin clima, nada), ocasion (su tipo), deseos (tu
+// lista, normalizada), ocultos ([claves]) }. → { i (cuál sugerencia), s,
+// clave, nombre, motivo } o null.
+function avisoDelDia(op, ropero, o) {
+  const x = o || {};
+  const sug = op && op.ia ? op.ia.sugerencias : [];
+  if (!sug.length) return null;
+  const ocultos = new Set(x.ocultos || []);
+  const deseos = x.deseos || [];
+  // Ya la compraste o ya no la quieres (y no la volviste a pedir).
+  const noVa = k => deseos.some(d => d.clave === k && (d.estado === "comprado" || d.estado === "descartado")) && !deseos.some(d => d.clave === k && d.estado === "quiero");
+  const sirven = sug.map((s, i) => ({ i, s, clave: K.clave(cosaDe(s)) })).filter(c => !ocultos.has(c.clave) && !noVa(c.clave) && !laTienes(c.s, ropero));
+  const oc = POR_OCASION[x.ocasion];
+  const motivos = (x.nec ? POR_CLIMA.filter(m => m.hay(x.nec)) : []).concat(oc ? [{ id: x.ocasion, sirve: s => (oc.test(tipo(s)) ? 1 : 0) }] : []);
+  for (const m of motivos) {
+    let mejor = null, max = 0;
+    sirven.forEach(y => { const n = m.sirve(y.s); if (n > max) { max = n; mejor = y; } });
+    if (mejor) return Object.assign(mejor, { nombre: K.normalizarDeseo("x", cosaDe(mejor.s)).nombre, motivo: m.id });
+  }
+  return null;
+}
+const FRASE = {
+  lluvia: d => `Para la lluvia de ${d}`, frio: d => `Para el frío de ${d}`, capas: d => `Para ir en capas ${d}`,
+  calor: d => `Para el calor de ${d}`, viento: d => `Para el viento de ${d}`, sol: d => `Para el sol fuerte de ${d}`,
+  trabajo: () => "Para el trabajo", formal: () => "Para algo formal", noche: () => "Para la noche", deporte: () => "Para hacer deporte"
+};
+// "Para la lluvia de hoy, tu estilista te sugirió:" (o "de mañana").
+const fraseAviso = (a, manana) => `${(FRASE[a && a.motivo] || (() => "Para hoy"))(manana ? "mañana" : "hoy")}, tu estilista te sugirió:`;
+// Lo que ocultaste ([claves], hasta 30; lo más nuevo al final).
+const ocultar = (lista, k) => [...new Set((Array.isArray(lista) ? lista : []).filter(x => typeof x === "string" && x && x !== k).concat(k ? [k] : []))].slice(-30);
+
+return { MAX_HECHOS, hechos, roperoParaRepaso, pinesTexto, normalizar, ordenar, veredicto, cambiar, cosaDe, laTienes, avisoDelDia, fraseAviso, ocultar };
 });

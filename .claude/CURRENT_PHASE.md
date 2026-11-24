@@ -13,7 +13,7 @@ datos, puente y costos en `docs/ROPA_ESTILISTA.md` (D-155).
 | 3 | Hablar con mi estilista: la pantalla, las conversaciones, lo que recuerda de ti, "Pídelo con tus palabras" | ✅ (D-158): `#ropa-estilista` (conversar, cada outfit con sus botones, "A mi lista", "Lo recordé"), tus conversaciones, lo que recuerda de ti (también en Ajustes de Ropa) y "Pídelo con tus palabras" en Outfits |
 | + | Pregunta del dueño: "¿Por qué no recuerda los outfits que me hizo para el día?" | ✅ (D-159): sigue la conversación de hoy; los outfits de antes con su nombre y lo que viste hoy (puente 6); Outfits guarda las opciones de cada día y ocasión |
 | 4 | Lo que opina mi estilista de mi ropero (en Compras) y "¿Qué opinas?" de mis outfits | ✅ (D-160): el repaso en Compras (los números de Manolo, lo que sumaría, qué no comprar, qué dejar, colores, consejos; `ropa_opiniones`) y "¿Qué opinas?" en Armar el mío, guardados y opciones ("Cambiar" en un toque) |
-| 5 | Conectarlo con Outfits y Compras (y con Inicio, si tiene sentido) | ⏳ |
+| 5 | Conectarlo con Outfits y Compras (y con Inicio, si tiene sentido) | ✅ (D-161): el aviso del día en Outfits (sin IA, con la ✕), "Hoy te armó…" con el link a esa conversación, "Para mañana" en la conversación, los cruces en Compras (también lo sugiere, en N de tus pines, te lo sugirió) e Inicio (lo que te armó hoy o "¿Qué me pongo hoy?") |
 | 6 | Revisión final y la prueba real corta con el OK del dueño | ⏳ |
 
 ## Ropa con IA e inspiración de Pinterest (pedido del dueño, 2026-11-22)

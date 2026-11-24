@@ -102,3 +102,52 @@ test("«¿Qué opinas?»: el veredicto en palabras y cambiar una prenda en un to
   assert.deepEqual(P.cambiar(["a", "b", "c"], "b", "c"), ["a", "c"], "si ya estaba, no se repite");
   assert.deepEqual(P.cambiar(["a", "b"], "x", "z"), ["a", "b"], "si no está, nada");
 });
+
+test("el aviso del día (D-161): lo que te sugirió tu estilista y le serviría al clima o a la ocasión del día", () => {
+  const r = ropero();
+  const sug = (grupo, tipo, color) => ({ grupo, tipo, color, porque: "", combina: [] });
+  const op = { ia: { sugerencias: [sug("zapatos", "Botas", "cafe"), sug("abrigos", "Chamarra", "verde-oliva"), sug("arriba", "Cárdigan", "gris"), sug("abajo", "Bermuda", "beige"), sug("arriba", "Blazer", "azul-marino"), sug("accesorios", "Gorra", "negro")] } };
+  const nec = extra => Object.assign({ base: "templado", abrigo: "", capas: false, lluvia: "", tormenta: false, nieve: false, viento: false, sol: false }, extra);
+  const a = P.avisoDelDia(op, r, { nec: nec({ lluvia: "si" }) });
+  assert.equal(a.motivo, "lluvia");
+  assert.equal(a.i, 0);
+  assert.equal(a.nombre, "Botas cafés");
+  assert.equal(a.clave, K.clave(P.cosaDe(op.ia.sugerencias[0])));
+  assert.equal(P.fraseAviso(a), "Para la lluvia de hoy, tu estilista te sugirió:");
+  assert.equal(P.fraseAviso(a, true), "Para la lluvia de mañana, tu estilista te sugirió:");
+  assert.equal(P.avisoDelDia(op, r, { nec: nec({ tormenta: true }) }).motivo, "lluvia", "con tormenta, también");
+  assert.equal(P.avisoDelDia(op, r, { nec: nec({ abrigo: "abrigo" }) }).nombre, "Chamarra verde oliva", "con frío: un abrigo");
+  const capas = P.avisoDelDia(op, r, { nec: nec({ capas: true, abrigo: "liviano" }) });
+  assert.equal(capas.motivo, "capas");
+  assert.equal(P.fraseAviso(capas), "Para ir en capas hoy, tu estilista te sugirió:");
+  assert.equal(P.avisoDelDia(op, r, { nec: nec({ base: "calor" }) }).nombre, "Bermuda beige");
+  assert.equal(P.avisoDelDia(op, r, { nec: nec({ sol: true }) }).nombre, "Gorra negra");
+  assert.equal(P.avisoDelDia(op, r, { nec: nec({}) }), null, "un día templado, sin lluvia: nada");
+  const t = P.avisoDelDia(op, r, { nec: nec({}), ocasion: "trabajo" });
+  assert.equal(t.nombre, "Blazer azul marino");
+  assert.equal(P.fraseAviso(t), "Para el trabajo, tu estilista te sugirió:");
+  assert.equal(P.avisoDelDia(op, r, { ocasion: "formal" }).motivo, "formal", "sin el clima: solo la ocasión");
+  assert.equal(P.avisoDelDia(op, r, { ocasion: "casual" }), null);
+  assert.equal(P.avisoDelDia(op, r, { nec: nec({ lluvia: "si" }), ocasion: "trabajo" }).motivo, "lluvia", "el clima va primero");
+  // Lo que ya tienes, lo que ya compraste o ya no quieres y lo que ocultaste: no.
+  const conBotas = r.concat([p("zapatos", "Botines", "cafe")]);
+  assert.equal(P.laTienes(op.ia.sugerencias[0], conBotas), true, "unos botines cafés son lo mismo");
+  assert.equal(P.laTienes(op.ia.sugerencias[0], r.concat([p("zapatos", "Botas", "negro")])), false, "de otro color, no");
+  assert.equal(P.laTienes(op.ia.sugerencias[0], r.concat([p("zapatos", "Botas", "cafe", { estado: "fuera" })])), false, "lo que ya no tienes no cuenta");
+  assert.equal(P.avisoDelDia(op, conBotas, { nec: nec({ lluvia: "si" }) }), null, "ya tienes botas: no hay otra cosa para la lluvia");
+  const k0 = K.clave(P.cosaDe(op.ia.sugerencias[0]));
+  const deseo = estado => K.normalizarDeseo("d1", { grupo: "zapatos", tipo: "Botas", colores: ["cafe"], estado });
+  assert.equal(P.avisoDelDia(op, r, { nec: nec({ lluvia: "si" }), deseos: [deseo("comprado")] }), null, "ya la compraste");
+  assert.equal(P.avisoDelDia(op, r, { nec: nec({ lluvia: "si" }), deseos: [deseo("descartado")] }), null, "ya no la quieres");
+  assert.equal(P.avisoDelDia(op, r, { nec: nec({ lluvia: "si" }), deseos: [deseo("descartado"), deseo("quiero")] }).i, 0, "la volviste a pedir: sí");
+  assert.equal(P.avisoDelDia(op, r, { nec: nec({ lluvia: "si" }), ocultos: [k0] }), null, "la ocultaste");
+  assert.equal(P.avisoDelDia(op, r, { nec: nec({ lluvia: "si", abrigo: "abrigo" }), ocultos: [k0] }).motivo, "frio", "si ocultas una, puede salir otra");
+  assert.equal(P.avisoDelDia(null, r, { nec: nec({ lluvia: "si" }) }), null);
+  assert.equal(P.avisoDelDia({ ia: { sugerencias: [] } }, r, { nec: nec({ lluvia: "si" }) }), null);
+  assert.deepEqual(P.cosaDe({ grupo: "abajo", tipo: "Chino", color: "inventado" }), { grupo: "abajo", tipo: "Chino", colores: [] });
+  // Lo que ocultaste: sin repetir, hasta 30.
+  assert.deepEqual(P.ocultar(["a", "b"], "a"), ["b", "a"]);
+  assert.deepEqual(P.ocultar(null, "x"), ["x"]);
+  assert.equal(P.ocultar(Array.from({ length: 40 }, (_, i) => `k${i}`), "nuevo").length, 30);
+  assert.equal(P.ocultar(Array.from({ length: 40 }, (_, i) => `k${i}`), "nuevo").slice(-1)[0], "nuevo");
+});

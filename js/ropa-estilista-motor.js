@@ -111,6 +111,26 @@ function delDia(charlas, idActual, hoy, deOutfits) {
   (deOutfits || []).forEach(sumar);
   return out;
 }
+// Lo que te armó hoy (D-161, para Outfits e Inicio): los outfits de hoy de
+// todas tus conversaciones (sin repetir, lo más nuevo primero, hasta 9; si
+// das sigue(id), solo los que todavía te puedes poner) y la conversación más
+// nueva donde te los armó. → { id, outfits } o null.
+function armadoHoy(charlas, hoy, sigue) {
+  const outfits = delDia(charlas, "", hoy, []).filter(o => !sigue || o.prendas.every(sigue));
+  if (!outfits.length) return null;
+  const k = o => o.prendas.slice().sort().join("|");
+  const de = new Set(outfits.map(k));
+  const c = (charlas || []).find(x => x && x.mensajes.some(m => m.de === "ia" && fechaLocal(m.fecha) === hoy && m.outfits.some(o => de.has(k({ prendas: ids(o.prendas).slice(0, 8) })))));
+  return c ? { id: c.id, outfits } : null;
+}
+// En palabras: "Hoy te armó «Capas», «Lluvia» y 1 outfit más." (hasta 2 nombres).
+function armadoTexto(outfits) {
+  const xs = outfits || [], n = xs.length;
+  const nombres = xs.map(o => texto(o && o.nombre, 40)).filter(Boolean).slice(0, 2).map(t => `«${t}»`);
+  if (!nombres.length) return `Hoy te armó ${n === 1 ? "1 outfit" : `${n} outfits`}.`;
+  const mas = n - nombres.length;
+  return `Hoy te armó ${mas ? `${nombres.join(", ")} y ${mas === 1 ? "1 outfit más" : `${mas} outfits más`}` : nombres.join(" y ")}.`;
+}
 // "Otra opción" de un outfit: un mensaje más a tu estilista.
 const otraOpcion = nombre => (texto(nombre, 40) ? `Dame otra opción distinta de «${texto(nombre, 40)}».` : "Dame otra opción distinta.");
 
@@ -178,7 +198,7 @@ function cuando(ms, ahora) {
 }
 
 return {
-  MAX_MENSAJES, MAX_MEMORIA, PARA_IA, MAX_TEXTO, EJEMPLOS, texto, titulo, mensaje, normalizar, ordenar, llena, sinRespuesta, historial, fechaLocal, deHoy, delDia, otraOpcion,
+  MAX_MENSAJES, MAX_MEMORIA, PARA_IA, MAX_TEXTO, EJEMPLOS, texto, titulo, mensaje, normalizar, ordenar, llena, sinRespuesta, historial, fechaLocal, deHoy, delDia, armadoHoy, armadoTexto, otraOpcion,
   roperoParaCharla, presupuestoTexto, claveMemoria, memoria, recordar, olvidar, recuerda, cuando
 };
 });

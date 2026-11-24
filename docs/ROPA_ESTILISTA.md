@@ -321,7 +321,7 @@ en ese caso conviene subirlo a US$ 12 en Ajustes de Ropa (te pregunto antes).
 | 2 | El puente aprende a conversar y a opinar: `/charla`, `/opinar`, `/opinion` (versión 5), con pruebas sin gastar, y desplegado |
 | 3 | Hablar con mi estilista: la pantalla, las conversaciones, lo que recuerda de ti, "Pídelo con tus palabras" |
 | 4 | Lo que opina mi estilista de mi ropero (en Compras) y "¿Qué opinas?" de mis outfits |
-| 5 | Conectarlo con Outfits y Compras: el aviso del día en Outfits, "Cambiar una prenda" desde las conversaciones, y en Inicio si tiene sentido |
+| 5 | Conectarlo con Outfits y Compras: el aviso del día en Outfits, "Cambiar una prenda" desde las conversaciones, y en Inicio si tiene sentido (hecho: D-161) |
 | 6 | Revisión final: todas las pruebas, Lighthouse, la lista para el iPhone y la prueba real corta con tu OK |
 
 ## Pedido del dueño durante la fase 0 (2026-11-24)
@@ -455,6 +455,34 @@ Pregunta del dueño: "¿Por qué no recuerda los outfits que me hizo para el dí
   outfit, abre Armar el mío con el cambio hecho. Si preguntas lo mismo otra
   vez, te muestra la misma respuesta sin pagar; "Preguntarle otra vez" vuelve a
   preguntar.
+
+## Hecho en la fase 5 (D-161): conectado con Outfits, Compras e Inicio
+- **El aviso del día en Outfits** (antes de tus opciones; sin IA, no cuesta
+  nada): si algo que te sugirió tu estilista en su último repaso te serviría
+  para el clima del día (la lluvia, el frío, ir en capas, el calor, el viento,
+  el sol fuerte) o para la ocasión (trabajo, algo formal, la noche, deporte) y
+  todavía no lo tienes, lo dice corto: "Para la lluvia de mañana, tu estilista
+  te sugirió: Botines cafés. Ver en Compras". Uno solo: primero el clima; con
+  frío, un abrigo antes que unas botas. No sale lo que ya tienes (igual o
+  parecido), lo que ya compraste o ya no quieres, ni lo que ocultaste (la ✕,
+  con Deshacer; queda en este teléfono). Si ya está en tu lista de deseos, lo
+  dice.
+- **"Hoy te armó…"** en la tarjeta de tu estilista (Outfits): los outfits que
+  te armó hoy (de todas tus conversaciones), con "Verlos" para abrir esa
+  conversación.
+- **"Para mañana"** en cada outfit de la conversación: queda en tus guardados
+  para mañana ("Lo elegiste para mañana."), con Deshacer. "Cambiar una prenda"
+  desde las conversaciones ya estaba desde la fase 3.
+- **Compras**: "Tu estilista también lo sugiere" en lo que te falta (si
+  coincide con su repaso), "También está en N de tus pines" en lo que opina y
+  "Te lo sugirió tu estilista" en tu lista de deseos.
+- **Inicio** (tiene sentido, y es corto): si no te pusiste ni elegiste nada
+  para hoy, la tarjeta de Ropa muestra lo que te armó hoy tu estilista (las
+  fotos del primero; lleva a esa conversación) o "¿Qué me pongo hoy?
+  Pídeselo a tu estilista" (desde las 20, "mañana"; lleva a Outfits). Sin
+  internet o sin la IA, como antes.
+- **Lo que armas tú también le enseña tus gustos**: ya pasaba (lo que guardas
+  o te pones le llega a tu estilista como "le gustó").
 
 ## Lo que no hace
 No genera fotos tuyas con la ropa puesta. No compra nada. No borra ni cambia

@@ -1,6 +1,18 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-24 (Ropa, nivel 2, fase 5, D-161: tu estilista, conectado con
+  Outfits, Compras e Inicio): `npm test` → **853** (el aviso del día: el clima
+  y la ocasión, lo que ya tienes, compraste, ya no quieres u ocultaste; lo que
+  te armó hoy y en palabras). E2E nueva `ropa-conectar` (**74**, con un
+  puente de mentira que solo contesta `/quien`): el aviso de hoy y de mañana,
+  la ✕ con Deshacer, "Ya está en tu lista", lo que ya tienes no sale, sin
+  aviso combinando una prenda, sale igual sin el puente; "Hoy te armó…" con el
+  link a esa conversación; "Para mañana" con Deshacer (nuevo y ya guardado);
+  en Compras, "Tu estilista también lo sugiere", "También está en 2 de tus
+  pines" y "Te lo sugirió tu estilista"; Inicio (lo que te armó hoy, "¿Qué me
+  pongo hoy?", sin internet, a la noche, sin el puente); 320 px en oscuro y
+  en claro (las tarjetas de Inicio entran).
 - 2026-11-24 (Ropa, nivel 2, fase 4, D-160: lo que opina tu estilista y "¿Qué
   opinas?"): `npm test` → **851** (nuevo `ropa-opinion-motor`: lo que ve
   Manolo con sus números, tu ropa con las veces, tus pines en palabras, cada
@@ -734,6 +746,14 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
   una sugerencia.
 - [ ] "Armar el mío": arma un outfit y toca "¿Qué opinas?"; si propone un
   cambio, "Cambiar".
+- [ ] Con un repaso de tu estilista: en Outfits, mira si sale el aviso corto
+  ("Para el frío de hoy, tu estilista te sugirió: …"); toca "Mañana" (si
+  llueve, cambia); "Ver en Compras"; la ✕ lo oculta (y "Deshacer").
+- [ ] Pídele algo a tu estilista y vuelve a Outfits: "Hoy te armó…" › "Verlos"
+  abre esa conversación. En un outfit, "Para mañana": míralo en tus guardados.
+- [ ] Compras: "Tu estilista también lo sugiere" (si coincide con tus pines) y
+  "Te lo sugirió tu estilista" en tu lista. Inicio: la tarjeta de Ropa dice lo
+  que te armó hoy o "¿Qué me pongo hoy?".
 - [ ] En modo avión: Ajustes de Ropa dice "Sin internet"; al agregar una foto,
   "Sin internet: la IA no puede mirar la foto". Al volver internet, la IA se
   conecta sola.

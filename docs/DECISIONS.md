@@ -2761,3 +2761,57 @@ lo guardado, cada parte del repaso, "A mi lista" y Pinterest, lo guardado sin
 la IA; "¿Qué opinas?" en Armar el mío con "Cambiar" y Deshacer, sin pagar dos
 veces y "Preguntarle otra vez"; desde un guardado; sin la IA no aparece; 320 px
 en oscuro y en claro). Las 50 suites sin fallas (4.243 comprobaciones).
+
+**D-161 (2026-11-24) · Ropa, nivel 2, fase 5: tu estilista, conectado con
+Outfits, Compras e Inicio.** (1) **El aviso del día en Outfits**
+(`RopaOpinionMotor.avisoDelDia`; sin IA, no cuesta nada): de lo que sugirió tu
+estilista en su último repaso, lo que le serviría al clima del día elegido
+(hoy o mañana) o a la ocasión. Motivos, en este orden: la lluvia o tormenta
+(botas, botines, zapatos cerrados, algo impermeable, rompevientos, paraguas),
+el frío (un abrigo vale más que una chompa o un buzo, y estos más que unas
+botas o una bufanda), ir en capas (un abrigo liviano, cárdigan, sobrecamisa,
+chaleco, chompa, camisa), el calor (polera, lino, short, bermuda, falda,
+vestido, sandalias), el viento (rompevientos) y el sol fuerte (gorra,
+sombrero, lentes); después, la ocasión (trabajo, algo formal, la noche,
+deporte). Se mira el tipo de prenda, no su porqué: es texto libre ("menos en
+días de lluvia" daría avisos al revés). No sale lo que ya tienes (igual o
+parecido, como en "Qué te falta": `RopaInspMotor.parecido`/`cuanto`), lo que
+ya compraste o ya no quieres en tu lista de deseos (salvo que lo volviste a
+pedir) ni lo que ocultaste. Uno solo y corto, antes de tus opciones: "Para la
+lluvia de mañana, tu estilista te sugirió: Botines cafés. Ver en Compras" (si
+ya está en tu lista, lo dice). La ✕ (44 px) lo oculta en este teléfono
+(`manolo.ropa.avisos`: las claves, hasta 30; es una comodidad del teléfono,
+no un dato), con Deshacer, y el foco queda en "¿Qué me pongo?". No sale
+combinando una prenda ni sin un repaso guardado. (2) **"Hoy te armó…"** en la
+tarjeta de tu estilista (Outfits): los outfits de hoy de todas tus
+conversaciones que todavía te puedes poner (`RopaEstilistaMotor.armadoHoy` y
+`armadoTexto`: "Hoy te armó «Capas para el frío», «Lluvia» y 1 outfit más."),
+con "Verlos" → `#ropa-estilista/{id}`: abre la conversación más nueva donde te
+los armó y la dirección vuelve a `#ropa-estilista` (si ya no está, queda la
+que tenías abierta). (3) **"Para mañana"** en cada outfit de la conversación
+(como en Outfits): queda en tus guardados con la fecha de mañana ("Lo elegiste
+para mañana."); Deshacer lo deja como estaba (si era nuevo, lo borra; si ya
+estaba guardado, vuelve sin la fecha). "Cambiar una prenda" desde las
+conversaciones ya estaba (fase 3). (4) **Compras**: en "Qué te falta", "Tu
+estilista también lo sugiere." si coincide con su último repaso (la misma
+clave: tipo y color por familia); en lo que opina, "También está en N de tus
+pines." (antes, sin el número); en tu lista de deseos, "Te lo sugirió tu
+estilista" (`origen: "estilista"`, desde una conversación o desde su repaso).
+`RopaOpinion.ultima()` y `RopaOpinionMotor.cosaDe` quedan para los demás. (5)
+**Inicio** (la tarjeta de Ropa; corto, por eso sí tiene sentido): si no te
+pusiste ni elegiste nada para hoy, lo que te armó hoy tu estilista ("Hoy tu
+estilista te armó 2 outfits:" con las fotos del primero; lleva a esa
+conversación) o, con tu estilista lista, con internet y 2 prendas o más,
+"¿Qué me pongo hoy? Pídeselo a tu estilista." (desde las 20, "mañana"; lleva
+a Outfits). Sin el puente, como antes. Arreglo de paso: las fotos de esa
+tarjeta ensanchaban las tarjetas de Inicio (a 320 px y un poco a 390 px, ya
+con "Hoy te pusiste"); ahora se achican (21 px a 320). (6) "Lo que armo yo
+también le enseña mis gustos": ya pasaba (lo que guardas o te pones queda con
+gusto "sí" y le llega a tu estilista). (7) Sin cambios en el puente ni en los
+datos de la nube. (8) **Pruebas**: `npm test` → 853 (el aviso del día: cada
+motivo, el orden, lo que ya tienes, compraste, ya no quieres u ocultaste; lo
+que te armó hoy y en palabras); E2E nueva `ropa-conectar` (74: el aviso
+de hoy y de mañana, la ✕ con Deshacer, "Ya está en tu lista", lo que ya
+tienes no sale, sin aviso combinando una prenda, sale sin el puente; "Hoy te
+armó…" y su link; "Para mañana" con Deshacer; los cruces en Compras; Inicio;
+320 px en oscuro y en claro, con las tarjetas de Inicio enteras).

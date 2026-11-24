@@ -15,6 +15,11 @@
 // Tu estilista (D-158): arriba, "Pídelo con tus palabras" abre una conversación
 // nueva (js/ropa-estilista.js) con lo que escribiste; el clima de hoy y de
 // mañana le llega en palabras (climaParaIA).
+// Conectado (D-161): en la tarjeta de tu estilista, lo que te armó hoy (con un
+// link a esa conversación); antes de tus opciones, un aviso corto si algo que
+// te sugirió en su último repaso le serviría al clima o a la ocasión del día y
+// todavía no lo tienes (js/ropa-opinion-motor.js; sin IA). El ✕ lo oculta en
+// este teléfono (con Deshacer).
 // Datos: js/ropa-outfits-datos.js; clima: js/ropa-clima.js (Open-Meteo, sin
 // tu ubicación); ajustes (ciudad, cómo sientes el frío): meta/ropa_ajustes.
 (function () {
@@ -160,6 +165,40 @@ const armar_ = () => window.RopaArmar;   // "Armar el mío" (js/ropa-armar.js)
 // "¿Qué opinas?" de tu estilista (D-160, js/ropa-opinion.js): "Cambiar" abre
 // "Armar el mío" con el cambio hecho (para guardarlo o ponértelo).
 const opinion = () => !!(window.RopaOpinion && window.RopaOpinion.disponible());
+// Lo que te armó hoy tu estilista (en cualquier conversación), con lo que todavía te puedes poner.
+function armadoHoy() {
+  const E = window.RopaEstilistaMotor, DE = window.RopaEstilistaDatos;
+  return E && DE ? E.armadoHoy(DE.lista(), D.hoy(), id => { const p = D.una(id); return !!p && p.estado !== "fuera"; }) : null;
+}
+// El aviso del día (D-161): lo que te sugirió tu estilista y le serviría hoy.
+const OCULTOS = "manolo.ropa.avisos";
+const ocultos = () => { const v = leerLocal(OCULTOS); return Array.isArray(v) ? v.filter(x => typeof x === "string") : []; };
+function avisoDelDia() {
+  const P = window.RopaOpinionMotor, RP = window.RopaOpinion, DD = window.RopaComprasDatos;
+  const op = P && RP && RP.ultima ? RP.ultima() : null;
+  if (!op) return null;
+  const x = elDia();
+  return P.avisoDelDia(op, D.lista(), { nec: x ? x.nec : null, ocasion: O.tipoDe(ocasionActual()), deseos: DD ? DD.lista() : [], ocultos: ocultos() });
+}
+function avisoHTML() {
+  const a = avisoDelDia();
+  if (!a) return "";
+  const DD = window.RopaComprasDatos;
+  const enLista = !!(DD && DD.deClave(a.clave));
+  return `<div class="rof-falta" role="note">${icono("sparkle")}
+    <p>${esc(window.RopaOpinionMotor.fraseAviso(a, est.dia === "manana"))} <b>${esc(a.nombre)}</b>.${enLista ? " Ya está en tu lista de deseos." : ""} <a href="#ropa-compras">Ver en Compras</a></p>
+    <button type="button" class="rof-falta-x" data-rof="falta-x" data-k="${esc(a.clave)}" aria-label="Ocultar este aviso">${icono("close")}</button></div>`;
+}
+function ocultarAviso(k) {
+  const P = window.RopaOpinionMotor;
+  if (!P || !k) return;
+  const antes = ocultos();
+  guardarLocal(OCULTOS, P.ocultar(antes, k));
+  render();
+  const armarB = app.querySelector(".rof-armar");
+  if (armarB) armarB.focus({ preventScroll: true });
+  aviso("Listo: no te lo vuelvo a mostrar.", () => { guardarLocal(OCULTOS, antes); render(); });
+}
 function opinarDe(ids, o, desde) {
   const RP = window.RopaOpinion, PM = window.RopaOpinionMotor;
   if (!RP || !PM) return;
@@ -216,6 +255,7 @@ function estilistaHTML() {
   if (!RE || !IA() || !(IA().estilista() || IA().sinInternet())) return "";
   const sin = IA().sinInternet() || !IA().estilista();
   const n = DE ? DE.lista().length : 0;
+  const hoy = armadoHoy();
   return `<section class="tmp-card roe-pide" aria-labelledby="roe-pide-t">
     <h2 class="ro-sub" id="roe-pide-t">${icono("sparkle")}<span>Tu estilista</span></h2>
     <form class="roe-pide-form" data-rof-pide novalidate>
@@ -225,6 +265,7 @@ function estilistaHTML() {
         <button type="submit" class="lib-btn roe-enviar" aria-label="Enviar a tu estilista"${sin ? " disabled" : ""}>${icono("send")}</button>
       </div>
     </form>
+    ${hoy ? `<p class="roe-pide-hoy">${icono("outfit")}<span>${esc(window.RopaEstilistaMotor.armadoTexto(hoy.outfits))} <a href="#ropa-estilista/${encodeURIComponent(hoy.id)}">${hoy.outfits.length === 1 ? "Verlo" : "Verlos"}</a></span></p>` : ""}
     <a class="roe-pide-ver" href="#ropa-estilista">${n ? `Tus conversaciones (${n})` : "Abrir tu estilista"}</a>
   </section>`;
 }
@@ -336,6 +377,7 @@ function render() {
       <button type="button" class="lib-btn rof-armar" data-rof="${est.opciones.length ? "otras" : "armar"}"${est.armando ? " disabled" : ""}>${icono("sparkle")}${est.armando ? "Armando…" : est.opciones.length ? "Otras opciones" : b ? "Armar con esta prenda" : "¿Qué me pongo?"}</button>
       <p class="rd-nota rof-con">${iaOutfits() ? "Con la IA, solo con tu ropa." : "Con reglas, solo con tu ropa (sin IA, gratis)."}</p>
       ${armar_() ? `<a class="lib-btn-sec rof-mio" href="#ropa-armar">${icono("edit")}Armar el mío</a>` : ""}
+      ${b ? "" : avisoHTML()}
       <div aria-live="polite">${opcionesHTML()}</div>`}
     ${guardadosHTML()}
     ${calendarioHTML()}`;
@@ -483,6 +525,7 @@ app.addEventListener("click", e => {
   else if (a === "ciudad") elegirCiudad(b);
   else if (a === "reclima") pedirClima(true);
   else if (a === "ocasion-nueva") nuevaOcasion(b);
+  else if (a === "falta-x") ocultarAviso(b.dataset.k);
 });
 // "Pídelo con tus palabras" → una conversación nueva con tu estilista.
 app.addEventListener("submit", e => {
@@ -769,5 +812,7 @@ DI.al(() => {
 });
 if (IA()) IA().alCambiar(() => { if (pantalla() === "ropa-outfits") render(); });
 if (window.RopaEstilistaDatos) window.RopaEstilistaDatos.al(() => { if (pantalla() === "ropa-outfits") render(); });
+// Tu lista de deseos (el aviso del día no muestra lo que ya compraste o ya no quieres).
+if (window.RopaComprasDatos) window.RopaComprasDatos.al(() => { if (pantalla() === "ropa-outfits") render(); });
 window.RopaOutfits = { render, armar, elegirCiudad, tableroHTML, ver: verPrendas, contexto, pedirClima, climaParaIA, opcionesDelDia };
 })();

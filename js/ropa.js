@@ -337,7 +337,9 @@ async function describirConIA(p, b) {
 // ---------- Tarjeta de Inicio ----------
 // Cuántas prendas tienes y, si ya está, el outfit del día (D-151): lo que te
 // pusiste hoy o lo que elegiste para hoy, con sus fotos; entonces la tarjeta
-// lleva a Outfits.
+// lleva a Outfits. Si no (D-161): lo que te armó hoy tu estilista (con las
+// fotos del primero; lleva a esa conversación) o, con tu estilista lista,
+// "¿Qué me pongo hoy?" (después de las 20, "mañana"; lleva a Outfits).
 function inicio() {
   const el = document.getElementById("ropa-inicio");
   if (!el || !D.cargada()) return;
@@ -349,19 +351,38 @@ function inicio() {
   const puestas = (u && Array.isArray(u.prendas) ? u.prendas : []).map(id => D.una(id)).filter(Boolean);
   const DO = window.RopaOutfitsDatos;
   const para = !puestas.length && DO ? DO.lista().find(o => o.para === hoy && o.guardado && o.prendas.some(id => D.una(id))) : null;
-  const ps = (puestas.length ? puestas : para ? para.prendas.map(id => D.una(id)).filter(Boolean) : []);
-  const fotos = ps.filter(p => p.grupo !== "accesorios").slice(0, 4);
+  let ps = (puestas.length ? puestas : para ? para.prendas.map(id => D.una(id)).filter(Boolean) : []);
+  let que = "", href = "#ropa";
+  if (ps.length) {
+    que = puestas.length ? "Hoy te pusiste:" : `Para hoy elegiste${para.nombre ? ` «${para.nombre}»` : ""}:`;
+    href = "#ropa-outfits";
+  } else {
+    const E = window.RopaEstilistaMotor, DE = window.RopaEstilistaDatos, IA = window.RopaIA;
+    const armo = E && DE ? E.armadoHoy(DE.lista(), hoy, id => { const p = D.una(id); return !!p && p.estado !== "fuera"; }) : null;
+    if (armo) {
+      que = `Hoy tu estilista te armó ${plural(armo.outfits.length, "outfit", "outfits")}:`;
+      ps = armo.outfits[0].prendas.map(id => D.una(id)).filter(Boolean);
+      href = `#ropa-estilista/${encodeURIComponent(armo.id)}`;
+    } else if (IA && IA.estilista() && !IA.sinInternet() && D.lista().filter(p => p.estado === "activa").length >= 2) {
+      que = `¿Qué me pongo ${new Date().getHours() >= 20 ? "mañana" : "hoy"}? Pídeselo a tu estilista.`;
+      href = "#ropa-outfits";
+    }
+  }
   let hoyEl = card.querySelector(".ro-ini-hoy");
-  if (!ps.length) { if (hoyEl) hoyEl.remove(); card.setAttribute("href", "#ropa"); return; }
+  card.setAttribute("href", href);
+  if (!que) { if (hoyEl) hoyEl.remove(); return; }
   if (!hoyEl) { hoyEl = document.createElement("span"); hoyEl.className = "ro-ini-hoy"; card.appendChild(hoyEl); }
-  const que = puestas.length ? "Hoy te pusiste" : `Para hoy elegiste${para.nombre ? ` «${para.nombre}»` : ""}`;
-  hoyEl.innerHTML = `<span class="ro-ini-t">${esc(que)}:</span><span class="ro-ini-fotos" aria-hidden="true">${fotos.map(p => fotoHTML(p, "ro-foto")).join("")}</span>
-    <span class="visually-hidden">${esc(ps.map(p => M.titulo(p)).join(", "))}.</span>`;
-  card.setAttribute("href", "#ropa-outfits");
+  const fotos = ps.filter(p => p.grupo !== "accesorios").slice(0, 4);
+  hoyEl.innerHTML = `<span class="ro-ini-t">${esc(que)}</span>${fotos.length ? `<span class="ro-ini-fotos" aria-hidden="true">${fotos.map(p => fotoHTML(p, "ro-foto")).join("")}</span>
+    <span class="visually-hidden">${esc(ps.map(p => M.titulo(p)).join(", "))}.</span>` : ""}`;
 }
 
-// El outfit del día también cambia con tus outfits (lo que elegiste para hoy).
+// El outfit del día también cambia con tus outfits (lo que elegiste para hoy),
+// con lo que te armó tu estilista y con si tu estilista está lista (D-161).
 if (window.RopaOutfitsDatos) window.RopaOutfitsDatos.al(inicio);
+if (window.RopaEstilistaDatos) window.RopaEstilistaDatos.al(inicio);
+window.addEventListener("online", inicio);
+window.addEventListener("offline", inicio);
 D.al(() => {
   inicio();
   if (pantalla() === "ropa") render();
@@ -374,7 +395,7 @@ window.addEventListener("hashchange", () => {
 });
 document.addEventListener("DOMContentLoaded", () => { if (pantalla() === "ropa") render(); else if (pantalla() === "ropa-prenda") renderFicha(); });
 // Cuando se sabe si la IA está conectada, la ficha muestra (o no) "Describir con IA".
-if (window.RopaIA) window.RopaIA.alCambiar(() => { if (pantalla() === "ropa-prenda") renderFicha(); });
+if (window.RopaIA) window.RopaIA.alCambiar(() => { inicio(); if (pantalla() === "ropa-prenda") renderFicha(); });
 render();
 window.RopaApp = { aviso, fallo, hoja, render, renderFicha, fotoHTML, puntos };
 })();

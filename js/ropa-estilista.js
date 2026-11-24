@@ -14,6 +14,9 @@
 // (D-159): "Pídelo con tus palabras" sigue la conversación de hoy, y le llegan
 // los outfits de antes con su número y su nombre, y lo que ya viste hoy (en
 // Outfits y en tus otras conversaciones).
+// Conectado (D-161): "Para mañana" en cada outfit (queda en tus guardados para
+// mañana, como en Outfits) y #ropa-estilista/{id} abre esa conversación (el
+// link de "Hoy te armó…", en Outfits y en Inicio).
 // Datos: js/ropa-estilista-datos.js; lógica: js/ropa-estilista-motor.js.
 (function () {
 "use strict";
@@ -33,6 +36,8 @@ const leerLocal = k => { try { return localStorage.getItem(k) || ""; } catch (e)
 const guardarLocal = (k, v) => { try { if (v) localStorage.setItem(k, v); else localStorage.removeItem(k); } catch (e) { /* sin almacenamiento */ } };
 const usd = n => `US$ ${(Math.round(n * 100) / 100).toLocaleString("es-BO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const minuscula = t => (t ? t.charAt(0).toLowerCase() + t.slice(1) : t);
+// La fecha de mañana ("AAAA-MM-DD").
+const manana = () => { const C = window.RopaClima; if (C && C.manana) return C.manana(D.hoy()); const d = new Date(`${D.hoy()}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); };
 
 // ---------- El estado ----------
 const ACTUAL = "manolo.ropa.charla", BORRADOR = "manolo.ropa.charla.borrador";
@@ -122,14 +127,16 @@ function outfitHTML(o, i, j, n, ocupado) {
   const noEsta = ps.length - hay.length;
   const lavar = hay.filter(p => p.estado === "lavar");
   const ya = DO.deCombo(o.prendas);
-  const estado = !ya ? "" : ya.puesto.includes(D.hoy()) ? "Te lo pusiste hoy." : ya.gusto === "no" ? "No te gustó: no vuelve a salir en Outfits." : ya.guardado ? "Está en tus guardados." : "";
+  const estado = !ya ? "" : ya.puesto.includes(D.hoy()) ? "Te lo pusiste hoy." : ya.gusto === "no" ? "No te gustó: no vuelve a salir en Outfits."
+    : ya.guardado && ya.para === manana() ? "Lo elegiste para mañana." : ya.guardado ? "Está en tus guardados." : "";
   const k = `data-m="${i}" data-o="${j}"`;
   return `<li class="tmp-card rof-op roe-op">
     <div class="rof-op-cab"><h3 class="rof-op-t">${n > 1 ? `<span class="rof-op-n">Opción ${j + 1}</span>` : ""}${esc(o.nombre || "Tu outfit")}</h3></div>
     ${hay.length ? `<div class="rof-ver-a" data-roe-o="ver" ${k}><span class="rof-fotos">${hay.map(p => `<span class="rof-foto-a" data-prenda="${esc(p.id)}">${A().fotoHTML(p, "ro-foto")}</span>`).join("")}</span>
       <p class="rof-lista">${hay.map(p => esc(M.titulo(p))).join(" · ")}</p></div>` : ""}
     <div class="rof-op-ver"><button type="button" class="link-btn" data-roe-o="ver" ${k} aria-haspopup="dialog">${icono("ampliar")}Ver en grande</button>
-      ${window.RopaArmar && !noEsta ? `<button type="button" class="link-btn" data-roe-o="cambiar" ${k}>${icono("edit")}Cambiar una prenda</button>` : ""}</div>
+      ${window.RopaArmar && !noEsta ? `<button type="button" class="link-btn" data-roe-o="cambiar" ${k}>${icono("edit")}Cambiar una prenda</button>` : ""}
+      ${noEsta ? "" : `<button type="button" class="link-btn" data-roe-o="manana" ${k}>${icono("calendar")}Para mañana</button>`}</div>
     ${o.porque ? `<p class="rof-porque">${esc(o.porque)}</p>` : ""}
     ${o.capas ? `<p class="rd-nota rof-capas">${esc(o.capas)}</p>` : ""}
     ${noEsta ? `<p class="rd-nota">${noEsta === 1 ? "Una prenda de este outfit ya no está en tu ropero." : `${noEsta} prendas de este outfit ya no están en tu ropero.`}</p>` : ""}
@@ -312,6 +319,11 @@ function accion(a, i, j, desde) {
     DO.ponerme(ids, datosDe(o), D.hoy()).then(r => aviso("Listo: anotado lo que te pusiste hoy.", () => DO.quitarme(r.id, nuevas, D.hoy(), r.nuevo).catch(fallo)), fallo);
   } else if (a === "guardar") {
     DO.guardar(ids, datosDe(o)).then(r => aviso("Guardado en tus outfits.", () => (r.nuevo ? DO.borrar(r.id) : DO.quitarGuardado(r.id)).catch(fallo)), fallo);
+  } else if (a === "manana") {
+    // Queda en tus guardados para mañana (como "Para mañana" en Outfits); Deshacer lo deja como estaba.
+    const ya = DO.deCombo(ids), antes = ya ? DO.crudo(ya.id) : null;
+    DO.guardar(ids, datosDe(o), manana()).then(r => aviso(`Listo: ${o.nombre ? `«${o.nombre}»` : "el outfit"} queda para mañana.`,
+      () => (r.nuevo ? DO.borrar(r.id) : DO.restaurar(r.id, antes)).catch(fallo)), fallo);
   } else if (a === "no") {
     const ya = DO.deCombo(ids), antes = ya ? DO.crudo(ya.id) : null;
     DO.noMeGusta(ids, datosDe(o)).then(r => aviso("Listo: no vuelve a salir en Outfits.", () => (r.nuevo ? DO.borrar(r.id) : DO.restaurar(r.id, antes)).catch(fallo)), fallo);
@@ -493,8 +505,16 @@ ta.addEventListener("keydown", e => {
 });
 
 // ---------- Cuándo se pinta ----------
+// #ropa-estilista/{id} (desde "Hoy te armó…"): abre esa conversación y la dirección vuelve a ser #ropa-estilista.
+function pedida() {
+  const id = partes()[1] ? decodeURIComponent(partes()[1]) : "";
+  if (!id || !DE.cargada()) return;
+  if (DE.una(id)) { abrirCharla(id); est.error = null; }
+  try { history.replaceState(null, "", "#ropa-estilista"); } catch (e) { /* sin historial */ }
+}
 function alEntrar() {
   if (pantalla() !== "ropa-estilista") return;
+  pedida();
   if (est.id && DE.cargada() && !DE.una(est.id) && !(est.local && est.local.id === est.id)) abrirCharla("");
   if (IA() && !IA().estado()) IA().quien().then(render);
   render();
@@ -507,6 +527,7 @@ D.al(siVisible);
 DO.al(siVisible);
 DI.al(siVisible);
 DE.al(() => {
+  if (pantalla() === "ropa-estilista") pedida();
   // La conversación abierta se borró (aquí o en otro teléfono): una nueva.
   if (est.id && !DE.una(est.id) && !(est.local && est.local.id === est.id) && !est.pensando) abrirCharla("");
   siVisible();

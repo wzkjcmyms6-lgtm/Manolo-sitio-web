@@ -131,3 +131,25 @@ test("recordar lo del día (D-159): los outfits de antes con su nombre y lo que 
   assert.equal(E.delDia([], "", hoy, muchas).length, 9, "hasta 9");
   assert.deepEqual(E.delDia(null, "", hoy, null), []);
 });
+
+test("lo que te armó hoy (D-161): los outfits de hoy de todas tus conversaciones y dónde", () => {
+  const ia = (nombre, prendas, fecha) => E.mensaje({ de: "ia", texto: "Va:", outfits: [{ prendas, nombre }], fecha });
+  const hoy = "2026-11-24", ahora = new Date(2026, 10, 24, 10, 0).getTime(), ayer = new Date(2026, 10, 23, 18, 0).getTime();
+  const charlas = [
+    { id: "nueva", mensajes: [{ de: "yo", texto: "hola", outfits: [], fecha: ahora + 5 }, ia("Solo texto", [], ahora + 6)] },
+    { id: "hoy", mensajes: [ia("Vieja", ["v", "w"], ayer), ia("Capas", ["a", "b"], ahora), ia("Lluvia", ["c", "d"], ahora + 1)] },
+    { id: "antes", mensajes: [ia("Otra", ["e", "f"], ahora - 1)] }
+  ];
+  const r = E.armadoHoy(charlas, hoy);
+  assert.equal(r.id, "hoy", "la conversación más nueva donde te armó algo hoy");
+  assert.deepEqual(r.outfits.map(o => o.nombre), ["Lluvia", "Capas", "Otra"], "lo más nuevo primero, sin lo de ayer");
+  assert.deepEqual(E.armadoHoy(charlas, hoy, id => id !== "c").outfits.map(o => o.nombre), ["Capas", "Otra"], "solo lo que todavía te puedes poner");
+  assert.equal(E.armadoHoy(charlas, hoy, id => !["a", "c"].includes(id)).id, "antes", "si los de la más nueva ya no se pueden poner: la otra");
+  assert.equal(E.armadoHoy(charlas, "2026-11-25"), null, "mañana: nada");
+  assert.equal(E.armadoHoy(null, hoy), null);
+  assert.equal(E.armadoTexto(r.outfits), "Hoy te armó «Lluvia», «Capas» y 1 outfit más.");
+  assert.equal(E.armadoTexto(r.outfits.slice(0, 2)), "Hoy te armó «Lluvia» y «Capas».");
+  assert.equal(E.armadoTexto([{ nombre: "Capas" }]), "Hoy te armó «Capas».");
+  assert.equal(E.armadoTexto([{ nombre: "" }, { nombre: "" }]), "Hoy te armó 2 outfits.");
+  assert.equal(E.armadoTexto([{ nombre: "" }, { nombre: "Noche" }, { nombre: "" }, { nombre: "" }]), "Hoy te armó «Noche» y 3 outfits más.");
+});

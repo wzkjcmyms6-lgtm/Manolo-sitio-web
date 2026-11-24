@@ -8,8 +8,9 @@
 // foto), "Ver en Pinterest" y "Ya no lo quiero" (con Deshacer); abajo, lo que
 // compraste. "Qué no comprar": lo que ya tienes de sobra. Manolo nunca compra
 // nada. Antes de "Qué te falta", lo que opina tu estilista de tu ropero (D-160,
-// js/ropa-opinion.js). Reglas: js/ropa-compras-motor.js; datos:
-// js/ropa-compras-datos.js.
+// js/ropa-opinion.js); si tu estilista también sugiere algo que te falta, lo
+// dice, y en tu lista se ve lo que te sugirió (D-161). Reglas:
+// js/ropa-compras-motor.js; datos: js/ropa-compras-datos.js.
 (function () {
 "use strict";
 const M = window.RopaMotor, K = window.RopaComprasMotor, D = window.RopaDatos, DI = window.RopaInspDatos, DD = window.RopaComprasDatos;
@@ -74,6 +75,10 @@ function faltanHTML() {
   }
   const ropero = D.lista();
   faltanAhora = K.faltan(insp, ropero).slice(0, 8);
+  // Lo que también sugiere tu estilista (en su último repaso; D-161).
+  const RO = window.RopaOpinion, P = window.RopaOpinionMotor;
+  const op = RO && RO.ultima && P ? RO.ultima() : null;
+  const sugiere = new Set(op ? op.ia.sugerencias.map(x => K.clave(P.cosaDe(x))) : []);
   if (!faltanAhora.length) return caja(`<p class="rd-nota">Lo que se repite en tus inspiraciones ya está en tu ropero.</p>`);
   return caja(`<p class="rd-nota">Lo que más se repite en tus inspiraciones y no tienes.</p>
     <ol class="rco-lista">${faltanAhora.map((f, i) => {
@@ -81,6 +86,7 @@ function faltanHTML() {
       return `<li class="tmp-card rco-item">
         <h3 class="rco-t">${puntos(f.colores)}<span>${esc(f.nombre)}</span></h3>
         <p class="rco-cuantas">En ${f.n} de tus inspiraciones · ${f.otroColor ? "en tu ropero, solo de otro color" : "no está en tu ropero"}</p>
+        ${sugiere.has(f.clave) ? `<p class="rco-cuantas rco-estilista">${icono("sparkle")}Tu estilista también lo sugiere.</p>` : ""}
         ${pinesHTML(f.pines)}
         <p class="rco-outfits">${icono("outfit")}<span>${n ? `Con tu ropa: <b>${plural(n, "outfit nuevo", "outfits nuevos")}</b>` : "Con tu ropa de ahora no combina mucho"}</span></p>
         <div class="rco-bot">
@@ -97,6 +103,7 @@ function listaHTML() {
   const cuerpo = !DD.cargada() ? `<p class="rd-nota">Cargando…</p>`
     : qs.length ? `<ol class="rco-lista">${qs.map(d => `<li class="tmp-card rco-item rco-deseo">
         <h3 class="rco-t">${puntos(d.colores)}<span>${esc(d.nombre)}</span></h3>
+        ${d.origen === "estilista" ? `<p class="rco-cuantas rco-estilista">${icono("sparkle")}Te lo sugirió tu estilista</p>` : ""}
         ${d.inspiraciones.length ? `<p class="rco-cuantas">De ${plural(d.inspiraciones.length, "inspiración", "inspiraciones")}</p>${pinesHTML(d.inspiraciones, 4)}` : ""}
         ${d.nota ? `<p class="rco-nota">${esc(d.nota)}</p>` : ""}
         <div class="rco-bot">

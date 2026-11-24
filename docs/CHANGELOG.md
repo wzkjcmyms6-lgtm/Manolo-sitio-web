@@ -1,5 +1,23 @@
 # Cambios
 
+## 2026-11-24 · Ropa: tu estilista, conectado con todo
+- **En Outfits, un aviso corto** cuando algo que te sugirió tu estilista (y
+  todavía no tienes) te serviría para el clima del día o la ocasión: "Para la
+  lluvia de mañana, tu estilista te sugirió: Botines cafés". Con "Ver en
+  Compras"; la ✕ lo oculta (con Deshacer). No usa la IA: no cuesta nada.
+- **"Hoy te armó…"**: en la tarjeta de tu estilista (Outfits) ves los outfits
+  que te armó hoy, con "Verlos" para abrir esa conversación.
+- **"Para mañana"** en cada outfit de tu estilista: queda en tus guardados
+  para mañana (con Deshacer).
+- **En Compras**: "Tu estilista también lo sugiere" en lo que te falta,
+  "También está en 4 de tus pines" en lo que opina, y "Te lo sugirió tu
+  estilista" en tu lista de deseos.
+- **En Inicio**, la tarjeta de Ropa muestra lo que te armó hoy tu estilista
+  o, si todavía no elegiste nada, "¿Qué me pongo hoy? Pídeselo a tu
+  estilista".
+- Arreglo: las fotos de la tarjeta de Ropa ya no ensanchan las tarjetas de
+  Inicio en pantallas chicas.
+
 ## 2026-11-24 · Ropa: lo que opina tu estilista
 - **En Compras, "Lo que opina tu estilista"**: le pides su opinión de todo tu
   ropero (unos 12 centavos) y te dice lo que ve (Manolo cuenta los números y tu
