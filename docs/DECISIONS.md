@@ -2687,4 +2687,5 @@ explicado. (10) **Datos**: `ropa_charlas` (nuevo, en la copia de seguridad:
 (`RopaComprasMotor.ORIGENES`). (11) **Pruebas**: `npm test` → 844 (nuevo
 `ropa-estilista-motor`: el título, los mensajes, las conversaciones, lo que va
 al puente, tu ropa, el presupuesto, lo que recuerda de ti y cuándo); E2E
-nueva `ropa-estilista` (104 comprobaciones, con un puente de mentira).
+nueva `ropa-estilista` (104 comprobaciones, con un puente de mentira); las 49
+suites sin fallas (4.175 comprobaciones).

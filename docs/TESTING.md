@@ -15,7 +15,8 @@
   los ejemplos, Enter y el borrador; tus conversaciones y lo que recuerda de ti
   (con Deshacer en la misma hoja) y en Ajustes de Ropa; una conversación llena;
   sin internet, quien no es el dueño y sin el puente; 320 px en oscuro y en
-  claro (nada se sale, todo se toca con el dedo y se lee bien).
+  claro (nada se sale, todo se toca con el dedo y se lee bien). Las **49
+  suites** de `scripts/e2e/` sin fallas (**4.175** comprobaciones).
 - 2026-11-24 (Ropa, nivel 2, fase 2, D-157: el puente aprende a conversar y a
   opinar): `npm test` → **836 pruebas** (5 nuevas en `puente-logica`: los
   esquemas y las instrucciones —sin el nombre de la app ni correos—, las
