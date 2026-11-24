@@ -112,11 +112,13 @@ function soloLoQueFalta(p, ia) {
   const c = {};
   if (!p.colores.length && ia.colores.length) c.colores = ia.colores.map(id => ({ id }));
   if (!p.estampado && ia.estampado) c.estampado = ia.estampado;
-  if (!p.tela && ia.tela) c.tela = ia.tela;
+  if (!p.tela && ia.tela) c.tela = M.mayus(ia.tela);
+  if (!p.corte && ia.corte && (M.CORTES_DE[p.grupo] || []).includes(ia.corte)) c.corte = ia.corte;
+  if (!p.manga && M.CON_MANGA.includes(p.grupo) && M.MANGAS.some(m => m[0] === ia.manga)) c.manga = ia.manga;
   if (!p.estilo.length && ia.estilo.length) c.estilo = ia.estilo;
   if (!p.clima.length && ia.clima.length) c.clima = ia.clima;
   if (!p.formalidad && ia.formalidad) c.formalidad = ia.formalidad;
-  if (!p.marca && ia.marca) c.marca = ia.marca;
+  if (!p.marca && ia.marca) c.marca = M.mayus(ia.marca);
   return c;
 }
 async function fotoDe(p) {

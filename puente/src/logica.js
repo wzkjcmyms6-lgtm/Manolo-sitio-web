@@ -98,11 +98,25 @@ export const COLORES = ["negro", "gris-oscuro", "gris", "gris-claro", "blanco", 
 export const ESTAMPADOS = ["liso", "rayas", "cuadros", "puntos", "floral", "estampado", "logo"];
 export const ESTILOS = ["casual", "formal", "deportivo", "elegante", "urbano", "clasico"];
 export const CLIMAS = ["frio", "templado", "calor"];
+// El corte y las mangas (D-154): cada grupo tiene sus cortes; zapatos y
+// accesorios, ninguno. Las mangas, solo arriba y cuerpo entero.
+export const CORTES = ["pegado", "regular", "suelto", "oversize", "pitillo", "recto", "ancho", "acampanado"];
+export const CORTES_DE = {
+  arriba: ["pegado", "regular", "suelto", "oversize"],
+  abajo: ["pitillo", "pegado", "recto", "ancho", "acampanado"],
+  cuerpo: ["pegado", "recto", "suelto", "acampanado"],
+  abrigos: ["pegado", "regular", "suelto", "oversize"],
+  zapatos: [], accesorios: []
+};
+export const MANGAS = ["sin", "corta", "larga"];
+export const CON_MANGA = ["arriba", "cuerpo"];
+const corteDe = (grupo, c) => ((CORTES_DE[grupo] || []).includes(c) ? c : "");
+const mangaDe = (grupo, m) => (CON_MANGA.includes(grupo) && MANGAS.includes(m) ? m : "");
 
 export const ESQUEMA_PRENDA = {
   type: "object",
   additionalProperties: false,
-  required: ["esPrenda", "varias", "grupo", "tipo", "colores", "estampado", "tela", "estilo", "clima", "formalidad", "marca"],
+  required: ["esPrenda", "varias", "grupo", "tipo", "colores", "estampado", "tela", "corte", "manga", "estilo", "clima", "formalidad", "marca"],
   properties: {
     esPrenda: { type: "boolean", description: "true si la foto muestra ropa, calzado o un accesorio" },
     varias: { type: "boolean", description: "true si en la foto hay más de una prenda" },
@@ -111,6 +125,8 @@ export const ESQUEMA_PRENDA = {
     colores: { type: "array", items: { type: "string", enum: COLORES }, description: "De 1 a 3, el principal primero" },
     estampado: { type: "string", enum: ESTAMPADOS },
     tela: { type: "string", description: "Tu mejor suposición en una o dos palabras; vacío si no se nota" },
+    corte: { type: "string", enum: ["", ...CORTES], description: "Cómo le queda, de los cortes de su grupo; vacío si no se nota, o en calzado y accesorios" },
+    manga: { type: "string", enum: ["", ...MANGAS], description: "Solo arriba y cuerpo entero: sin, corta o larga; vacío en los demás o si no se ve" },
     estilo: { type: "array", items: { type: "string", enum: ESTILOS }, description: "De 1 a 3" },
     clima: { type: "array", items: { type: "string", enum: CLIMAS }, description: "Para qué clima sirve (puede ser más de uno)" },
     formalidad: { type: "integer", description: "1 muy informal (buzo) a 5 muy formal (terno)" },
@@ -120,6 +136,7 @@ export const ESQUEMA_PRENDA = {
 // Sin el nombre de la app ni de la persona: a la IA solo le llega lo necesario.
 const QUIEN = "Eres el asistente de ropa de una app personal";
 const TIPOS = () => Object.entries(GRUPOS).map(([g, ts]) => `- ${g}: ${ts.join(", ")}`).join("\n");
+const CORTES_TEXTO = "Arriba y abrigos: pegado (ceñido al cuerpo), regular (el corte de siempre), suelto (holgado) u oversize (grande a propósito, hombros caídos). Abajo: pitillo (ajustado hasta el tobillo), pegado (ceñido, slim), recto, ancho o acampanado. Cuerpo entero: pegado, recto, suelto o acampanado.";
 const FORMALIDAD = "1 muy informal (buzo, ropa de deporte), 2 informal (polera, jean), 3 intermedio (camisa casual, chino), 4 formal (camisa de vestir, saco), 5 muy formal (terno, vestido de gala)";
 export function instruccionesPrenda() {
   const tipos = TIPOS();
@@ -132,6 +149,8 @@ ${tipos}
   Si no calza ninguno, escribe el nombre común y corto (por ejemplo "Pantalón cargo").
 - colores: de 1 a 3, el principal primero (el que más se ve). El fondo no cuenta.
 - tela: tu mejor suposición en una o dos palabras (algodón, jean, lana, cuero, poliéster…); vacío si no se nota.
+- corte: cómo le queda. ${CORTES_TEXTO} Calzado y accesorios: vacío. Vacío también si no se nota (por ejemplo, una prenda doblada).
+- manga: solo arriba y cuerpo entero: sin (sin mangas o tirantes), corta o larga (tres cuartos cuenta como larga). En los demás grupos, vacío.
 - estilo: de 1 a 3. clima: frío (abriga), templado o calor; puede ser más de uno.
 - formalidad: ${FORMALIDAD}.
 - varias: true si en la foto hay más de una prenda (describe la principal). esPrenda: false si la foto no muestra ropa.`;
@@ -152,6 +171,8 @@ export function limpiarPrenda(x) {
     colores: solo(o.colores, COLORES, 3),
     estampado: ESTAMPADOS.includes(o.estampado) ? o.estampado : "liso",
     tela: corto(o.tela, 40),
+    corte: corteDe(grupo, o.corte),
+    manga: mangaDe(grupo, o.manga),
     estilo: solo(o.estilo, ESTILOS, 3),
     clima: solo(o.clima, CLIMAS, 3),
     formalidad: formal(o.formalidad),
@@ -287,7 +308,8 @@ function entradaPrenda(p) {
   if (!ID.test(String(o.id || "")) || !GRUPOS[o.grupo]) return null;
   return {
     id: o.id, grupo: o.grupo, tipo: corto(o.tipo, 40) || GRUPOS[o.grupo][0], colores: solo(o.colores, COLORES, 3),
-    estampado: ESTAMPADOS.includes(o.estampado) ? o.estampado : "", tela: corto(o.tela, 40), estilo: solo(o.estilo, ESTILOS, 3),
+    estampado: ESTAMPADOS.includes(o.estampado) ? o.estampado : "", tela: corto(o.tela, 40),
+    corte: corteDe(o.grupo, o.corte), manga: mangaDe(o.grupo, o.manga), estilo: solo(o.estilo, ESTILOS, 3),
     clima: solo(o.clima, CLIMAS, 3), formalidad: formal(o.formalidad), marca: corto(o.marca, 40), lavar: o.lavar === true
   };
 }
@@ -303,6 +325,7 @@ export function entradaLook(c) {
   return ropero.length ? { pin, ropero } : null;
 }
 const nombreCol = id => id.replace(/-/g, " ");
+const MANGA_TEXTO = { sin: "sin mangas", corta: "manga corta", larga: "manga larga" };
 const lineaVista = (p, i) => `${i + 1}. ${[p.grupo, p.tipo, p.colores.map(nombreCol).join(" y "), p.estampado !== "liso" ? p.estampado : "", p.tela, p.detalle].filter(Boolean).join(" · ")}`;
 // El ropero en texto, con referencias cortas → { texto, refs: Map(ref → id) }.
 export function textoRopero(ropero) {
@@ -310,7 +333,8 @@ export function textoRopero(ropero) {
   const lineas = ropero.map((p, i) => {
     const ref = `p${i + 1}`;
     refs.set(ref, p.id);
-    return `${ref} · ${[p.grupo, p.tipo, p.colores.map(nombreCol).join(" y "), p.estampado && p.estampado !== "liso" ? p.estampado : "", p.tela,
+    return `${ref} · ${[p.grupo, p.tipo, p.corte ? `corte ${p.corte}` : "", p.manga ? MANGA_TEXTO[p.manga] : "",
+      p.colores.map(nombreCol).join(" y "), p.estampado && p.estampado !== "liso" ? p.estampado : "", p.tela,
       p.estilo.join(", "), p.clima.join(", "), p.formalidad ? `formal ${p.formalidad}` : "", p.marca, p.lavar ? "para lavar" : ""].filter(Boolean).join(" · ")}`;
   });
   return { texto: `La ropa que tengo (cada prenda con su referencia):\n${lineas.join("\n")}`, refs };

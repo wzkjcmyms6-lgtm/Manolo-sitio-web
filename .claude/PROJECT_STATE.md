@@ -1,9 +1,10 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-23 (Ropa, fase 7: revisión final, D-152).
+Actualizado: 2026-11-24 (Ropa: el puente instalado, D-153; corte, mangas,
+colores y mayúsculas, D-154).
 
 - **Ropa con IA e inspiración de Pinterest (2026-11-22; terminado el
-  2026-11-23, falta conectar la IA)**: el
+  2026-11-23; la IA conectada el 2026-11-24)**: el
   ropero del dueño con fotos; una IA (el mejor modelo de Claude, por un
   puente en Cloudflare con tope de gasto) describe cada prenda, arma con su
   ropa los looks de sus pines de Pinterest, propone qué ponerse cada día y
@@ -33,9 +34,11 @@ Actualizado: 2026-11-23 (Ropa, fase 7: revisión final, D-152).
   en "Tu semana" y "Tu año" (tu prenda del año). Fase 7 (D-152): revisión
   final (todas las pruebas, Lighthouse con Ropa llena y vacía; la IA sin
   internet lo avisa y vuelve sola; la lista para el iPhone y la guía de la
-  prueba real de la IA). Falta del dueño: las
-  cuentas de Claude y Cloudflare para instalar el puente, y un tablero público
-  en Pinterest.
+  prueba real de la IA). El puente quedó instalado en el Cloudflare del dueño
+  (D-153: US$ 2 a 4 al mes, tope US$ 8). Después (D-154): el corte y las mangas
+  de cada prenda (la IA también los llena), cambiar los colores tocándolos y
+  lo escrito con mayúscula. Falta del dueño: la prueba real corta de la IA y
+  un tablero público en Pinterest.
 
 - **Tu semana, Tu año y Bici al nivel de Running (2026-11-16, terminado)**:
   "Tu semana" (cada lunes en Inicio: cifras de todas tus áreas, lo mejor, lo

@@ -105,10 +105,14 @@ permitidos):
 
 ### Datos (solo se suman)
 - `users/{uid}/ropa/{id}`: `v`, `grupo`, `tipo`, `colores` ([{ nombre, hex,
-  peso }]), `estampado`, `tela`, `estilo` ([…]), `clima` ([frio | templado |
-  calor]), `formalidad` (1–5), `marca`, `talla`, `precio`, `compra` (fecha),
-  `notas`, `fotos` ([{ id, mini, ancho, alto }]), `estado` (activa | lavar |
-  fuera), `fueraFecha`, `ia` ({ fecha }), `creado`, `editado`.
+  peso }]), `estampado`, `tela`, `corte` (D-154: pegado | regular | suelto |
+  oversize | pitillo | recto | ancho | acampanado, los de su grupo; "" si no
+  lo elegiste), `manga` (D-154: sin | corta | larga, solo arriba y cuerpo
+  entero; ""), `estilo` ([…]), `clima` ([frio | templado | calor]),
+  `formalidad` (1–5), `marca`, `talla`, `precio`, `compra` (fecha), `notas`,
+  `fotos` ([{ id, mini, ancho, alto }]), `estado` (activa | lavar | fuera),
+  `fueraFecha`, `ia` ({ fecha }), `creado`, `editado`. Lo escrito se guarda
+  con mayúscula al empezar; la talla en letras, toda en mayúscula (D-154).
 - `users/{uid}/ropa_usos/{fecha}`: lo que te pusiste ese día ({ prendas,
   outfitId }); de ahí salen las veces, la última y el calendario.
 - `users/{uid}/ropa_outfits/{id}` (D-149; uno por conjunto de prendas: si
@@ -373,13 +377,58 @@ permitidos):
 - **La lista para el iPhone**, completa: `docs/TESTING.md` › "Pruebas en el
   iPhone" › Ropa.
 
-## La prueba real de la IA (cuando esté el puente)
+## El puente, instalado (D-153, 2026-11-24)
+- En la cuenta de Cloudflare del dueño: `https://manolo-puente.manolo-ropa-482.workers.dev`
+  (el subdominio de workers.dev se cambió para que no lleve el nombre del
+  correo), el contador del gasto (KV `GASTO`, tope US$ 8 al mes) y tres
+  secretos: el modelo, el código de Manolo del dueño (solo él usa la IA; no va
+  en el repositorio) y la clave de la IA, que pegó el dueño en Cloudflare (no
+  pasó por el chat).
+- La app ya apunta al puente (`js/ropa-ia.js`). En las pruebas,
+  `manolo.puente` = "ninguno" la deja sin puente (las que lo necesitan traen
+  uno de mentira).
+- **Cuánto gasta, siendo realista**: US$ 2 a 4 al mes; el primer mes, unos
+  US$ 6 si describes todo tu ropero de una vez; el puente corta en US$ 8 (se
+  cambia en Ajustes de Ropa). Lo que la IA hace sola: mirar cada inspiración
+  nueva (unos US$ 0,03 cada una), leer tu tablero de Pinterest al abrir
+  Inspiración (como mucho cada 6 horas; leerlo no usa la IA), mirar la foto al
+  agregar una prenda y Outfits con la IA (US$ 0,07 a 0,10). Las recargas
+  automáticas de crédito se ven y se apagan en la consola de Claude
+  (Billing › Auto-reload).
+
+## Corte, mangas, cambiar los colores y mayúsculas (D-154, 2026-11-24)
+Pedido del dueño: "que siempre escriba los detalles con mayúscula y que
+permita cambiar los colores, igual lo que es si la polera es pegada, suelta,
+corte recto, ya sabes".
+- **El corte** ("cómo te queda"), según el grupo: arriba y abrigos (pegado,
+  regular, suelto, oversize); abajo (pitillo, pegado, recto, ancho,
+  acampanado); cuerpo entero (pegado, recto, suelto, acampanado); zapatos y
+  accesorios no tienen. El nombre va con la prenda: "Polera pegada", "Falda
+  recta", "Leggings pegados" ("Pitillo", "Regular" y "Oversize" no cambian).
+  **Las mangas**: sin, corta o larga (solo arriba y cuerpo entero). Tocar otra
+  vez el que elegiste lo quita. En la ficha: "Corte" y "Mangas".
+- **Cambiar los colores**: en el formulario, toca un color y elige el nuevo
+  ("Elige el color nuevo en lugar de blanco"); queda en el mismo lugar; si ya
+  estaba en otro lugar, no se repite. "Que sea el principal" lo pasa adelante.
+  En la ficha, "Cambiar los colores" abre el formulario con la paleta lista.
+- **Mayúsculas**: lo que escribes empieza con mayúscula (qué es cuando eliges
+  "Otro", tela, marca, notas, tus ocasiones, la nota de un deseo y "Mi
+  estilo"); la talla en letras, toda en mayúscula ("m" → "M", "2xl" → "2XL").
+  Lo de antes ya se ve con mayúscula; se guarda así cuando lo editas.
+- **La IA** llena el corte y las mangas al mirar la foto (el puente, versión 4)
+  y los usa para armar looks y outfits. Buscar encuentra por el corte y las
+  mangas ("pegada", "manga corta").
+- Solo se suma: las prendas de antes quedan sin corte ni mangas hasta que las
+  edites.
+
+## La prueba real de la IA (el puente ya está instalado)
 Corta, con tu OK: cuesta unos centavos (menos de US$ 0,25).
-1. Con el puente instalado, abre Ropa › el engranaje: tiene que decir "La IA
-   está conectada" y "Este mes: US$ 0,00 de US$ 8,00".
-2. "+" › "Sacar o elegir fotos": una foto de una prenda (por ejemplo, un
-   jean). La IA llena qué es, los colores, la tela, el estilo, el clima y la
-   formalidad: revísalo y guárdala.
+1. Abre Ropa › el engranaje: tiene que decir "La IA está conectada" y "Este
+   mes: US$ 0,00 de US$ 8,00".
+2. "+" › "Sacar o elegir fotos": una foto de una prenda (por ejemplo, una
+   polera). La IA llena qué es, el corte, las mangas, los colores, la tela, el
+   estilo, el clima y la formalidad: revísalo (si un color salió mal, tócalo y
+   cámbialo) y guárdala.
 3. Una foto con dos prendas juntas: tiene que avisar que hay varias.
 4. Inspiración: sube una captura de un pin; ábrelo: "Lo que se ve" y "Armar
    este look con la IA".
@@ -394,7 +443,7 @@ Si algo no anda, me dices qué pasó (y qué decía la pantalla) y lo reviso.
   link (Compartir › Copiar link).
 - **Fase 2**: crear la cuenta de Claude (tarjeta, crédito y clave) y la de
   Cloudflare (gratis), con guía paso a paso; la clave se pega solo en
-  Cloudflare.
+  Cloudflare. ✅ Hecho el 2026-11-24 (D-153).
 - Sacarle fotos a su ropa (una prenda por foto, buena luz, fondo liso) y
   guardar sus inspiraciones en el tablero.
 

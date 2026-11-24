@@ -88,6 +88,10 @@ test("las listas del puente son las mismas que las de la app", async () => {
   assert.deepEqual(L.ESTAMPADOS, R.ESTAMPADOS.map(e => e[0]));
   assert.deepEqual(L.ESTILOS, R.ESTILOS.map(e => e[0]));
   assert.deepEqual(L.CLIMAS, R.CLIMAS.map(c => c[0]));
+  assert.deepEqual(L.CORTES, R.CORTES.map(c => c[0]));
+  assert.deepEqual(L.CORTES_DE, R.CORTES_DE);
+  assert.deepEqual(L.MANGAS, R.MANGAS.map(m => m[0]));
+  assert.deepEqual(L.CON_MANGA, R.CON_MANGA);
 });
 
 test("el esquema y las instrucciones para describir una prenda", async () => {
@@ -100,12 +104,26 @@ test("el esquema y las instrucciones para describir una prenda", async () => {
   const i = L.instruccionesPrenda();
   assert.match(i, /Chompa con capucha/);
   assert.match(i, /No inventes la marca/);
+  // El corte y las mangas (D-154): con vacío para "no se nota" o "no va".
+  assert.deepEqual(s.properties.corte.enum, ["", ...L.CORTES]);
+  assert.deepEqual(s.properties.manga.enum, ["", "sin", "corta", "larga"]);
+  assert.match(i, /pitillo \(ajustado hasta el tobillo\)/);
+  assert.match(i, /manga: solo arriba y cuerpo entero/);
 });
 
 test("lo que contesta la IA se limpia antes de llegar al formulario", async () => {
   const L = await cargar();
   const p = L.limpiarPrenda({ esPrenda: true, varias: false, grupo: "abajo", tipo: "  Jean  ", colores: ["azul-jean", "azul-jean", "violeta", "blanco", "negro", "rojo"], estampado: "lunares", tela: "Jean", estilo: ["casual", "nada"], clima: ["frio", "templado"], formalidad: 2.4, marca: "Levi's" });
-  assert.deepEqual(p, { esPrenda: true, varias: false, grupo: "abajo", tipo: "Jean", colores: ["azul-jean", "blanco", "negro"], estampado: "liso", tela: "Jean", estilo: ["casual"], clima: ["frio", "templado"], formalidad: 2, marca: "Levi's" });
+  assert.deepEqual(p, { esPrenda: true, varias: false, grupo: "abajo", tipo: "Jean", colores: ["azul-jean", "blanco", "negro"], estampado: "liso", tela: "Jean", corte: "", manga: "", estilo: ["casual"], clima: ["frio", "templado"], formalidad: 2, marca: "Levi's" });
+  // El corte y las mangas, solo si van con el grupo (D-154).
+  const recto = L.limpiarPrenda({ grupo: "abajo", tipo: "Jean", corte: "recto", manga: "larga" });
+  assert.equal(recto.corte, "recto");
+  assert.equal(recto.manga, "", "un jean no tiene mangas");
+  const polera = L.limpiarPrenda({ grupo: "arriba", tipo: "Polera", corte: "pitillo", manga: "corta" });
+  assert.equal(polera.corte, "", "una polera no es pitillo");
+  assert.equal(polera.manga, "corta");
+  assert.equal(L.limpiarPrenda({ grupo: "zapatos", tipo: "Botas", corte: "pegado", manga: "sin" }).corte, "", "zapatos sin corte");
+  assert.equal(R.nombreCorte(R.normalizar("y", L.limpiarPrenda({ grupo: "arriba", tipo: "Polera", corte: "pegado" })).corte, "Polera"), "Pegada");
   const raro = L.limpiarPrenda({ grupo: "luna", formalidad: 9, varias: "si", esPrenda: false });
   assert.equal(raro.grupo, "arriba");
   assert.equal(raro.tipo, "Polera");
@@ -200,6 +218,14 @@ test("armar el look: el ropero va con referencias cortas y vuelve con tus ids", 
   const { texto, refs } = L.textoRopero(e.ropero);
   assert.equal(texto.split("\n")[1], "p1 · abrigos · Abrigo · beige · Lana · clasico · frio · formal 3 · Zara");
   assert.equal(texto.split("\n")[2], "p2 · abajo · Jean · azul jean · Jean · casual · frio, templado · formal 2 · para lavar");
+  // Con el corte y las mangas (D-154); lo que no va con el grupo no llega.
+  const conCorte = L.entradaLook({ pin: PIN, ropero: [
+    { id: "pol", grupo: "arriba", tipo: "Polera", colores: ["negro"], corte: "pegado", manga: "corta" },
+    { id: "jn", grupo: "abajo", tipo: "Jean", colores: ["azul-jean"], corte: "oversize", manga: "larga" }
+  ] });
+  const lineas = L.textoRopero(conCorte.ropero).texto.split("\n");
+  assert.equal(lineas[1], "p1 · arriba · Polera · corte pegado · manga corta · negro");
+  assert.equal(lineas[2], "p2 · abajo · Jean · azul jean", "oversize no es un corte de pantalón y un jean no tiene mangas");
   assert.ok(!/abc123|jean_1|polera-9|regalo/.test(texto), "la IA no ve tus ids ni tus notas");
   assert.deepEqual([...refs.entries()], [["p1", "abc123"], ["p2", "jean_1"], ["p3", "polera-9"]]);
   const t = L.textoLook(e.pin);

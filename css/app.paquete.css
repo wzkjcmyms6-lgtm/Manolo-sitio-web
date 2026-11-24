@@ -7538,6 +7538,7 @@ h1.page-title.ro-ficha-t { margin-bottom: 0.2rem; font-size: 1.7rem; overflow-wr
 .ro-form-foto { align-self: center; width: min(220px, 60%); aspect-ratio: 1 / 1; border-radius: 16px; overflow: hidden; background: var(--bg-soft); }
 .ro-form-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ro-campo { margin: 0; padding: 0; border: 0; min-width: 0; display: flex; flex-direction: column; gap: 0.45rem; }
+.ro-campo[hidden] { display: none; }   /* el corte en zapatos, las mangas abajo (D-154) */
 .ro-campo legend { padding: 0; margin-bottom: 0.45rem; color: var(--muted); font-size: 0.85rem; }
 .ro-opciones { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .ro-op-chip { position: relative; display: inline-flex; cursor: pointer; touch-action: manipulation; }
@@ -7556,6 +7557,18 @@ h1.page-title.ro-ficha-t { margin-bottom: 0.2rem; font-size: 1.7rem; overflow-wr
   border: 1px solid var(--border); background: var(--surface); font-size: 0.9rem;
 }
 .ro-color-sel small { color: var(--muted); }
+/* Tocar un color para cambiarlo (D-154) */
+.ro-color-cambiar { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 44px; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.ro-color-cambiar:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; border-radius: 8px; }
+.ro-color-sel.is-cambiando { border-color: var(--accent-2); box-shadow: 0 0 0 1px var(--accent-2) inset; }
+.ro-colores-nota { flex-basis: 100%; margin: 0; }
+.ro-paleta-caja[hidden] { display: none; }
+.ro-paleta-caja { margin-top: 0.4rem; }
+.ro-paleta-t { margin: 0 0 0.2rem; font-size: 0.88rem; font-weight: 600; }
+.ro-principal { min-height: 44px; margin-bottom: 0.2rem; }
+.ro-principal[hidden] { display: none; }
+.ro-campo legend small { color: var(--muted); font-weight: 400; }
+.ro-cambiar-colores { min-height: 44px; margin: -0.3rem 0 0.4rem; }
 .ro-quitar { width: 44px; height: 40px; display: inline-grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; }
 .ro-quitar [data-icon] { width: 16px; height: 16px; display: inline-flex; }
 .ro-color-mas [data-icon] { width: 16px; height: 16px; display: inline-flex; }

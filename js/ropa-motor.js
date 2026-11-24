@@ -2,7 +2,8 @@
 // Grupos y tipos de prenda, colores con nombre en español (y sacar el color
 // de una foto, sin IA), el nombre de cada prenda ("Polera blanca",
 // "Zapatillas negras"), normalizar y revisar lo que se guarda, filtros,
-// búsqueda, orden y las veces que te pusiste cada prenda.
+// búsqueda, orden y las veces que te pusiste cada prenda. El corte y las
+// mangas (D-154) y los textos que escribes, siempre con mayúscula.
 // Datos en users/{uid}/ropa y users/{uid}/ropa_usos (docs/ROPA.md).
 // Pruebas: tests/ropa-motor.test.js.
 (function (root, factory) {
@@ -32,6 +33,20 @@ const TELAS = ["Algodón", "Jean", "Lana", "Lino", "Poliéster", "Cuero", "Gamuz
 const FORMALIDAD = { 1: "Muy informal", 2: "Informal", 3: "Intermedio", 4: "Formal", 5: "Muy formal" };
 const ESTADOS = ["activa", "lavar", "fuera"];
 const nombreDe = (lista, id) => (lista.find(x => x[0] === id) || [null, ""])[1];
+// El corte (D-154): cómo te queda. Cada grupo tiene los suyos; zapatos y
+// accesorios, ninguno. El nombre concuerda con la prenda ("Polera pegada",
+// "Jean recto", "Leggings pitillo").
+const CORTES = [["pegado", "Pegado"], ["regular", "Regular"], ["suelto", "Suelto"], ["oversize", "Oversize"], ["pitillo", "Pitillo"], ["recto", "Recto"], ["ancho", "Ancho"], ["acampanado", "Acampanado"]];
+const CORTES_DE = {
+  arriba: ["pegado", "regular", "suelto", "oversize"],
+  abajo: ["pitillo", "pegado", "recto", "ancho", "acampanado"],
+  cuerpo: ["pegado", "recto", "suelto", "acampanado"],
+  abrigos: ["pegado", "regular", "suelto", "oversize"],
+  zapatos: [], accesorios: []
+};
+// Las mangas (D-154): solo arriba y cuerpo entero.
+const MANGAS = [["sin", "Sin mangas"], ["corta", "Manga corta"], ["larga", "Manga larga"]];
+const CON_MANGA = ["arriba", "cuerpo"];
 
 // ---- Colores ----
 // f: las 4 formas del nombre [m, f, mp, fp] (si es igual siempre, una sola);
@@ -79,6 +94,25 @@ function colorPara(colorId, tipo) {
   return c.f.length === 1 ? c.f[0] : c.f[i];
 }
 const nombreColor = id => (COLOR[id] ? cap(COLOR[id].f[0]) : "");
+// "Pegada" para una polera, "Pegados" para unos leggings; "Oversize" igual.
+function nombreCorte(id, tipo) {
+  const base = nombreDe(CORTES, id);
+  if (!base) return "";
+  const g = TIPO_G[tipo] || "m";
+  if (["pegado", "suelto", "recto", "ancho", "acampanado"].includes(id)) return base.slice(0, -1) + { m: "o", f: "a", mp: "os", fp: "as" }[g];
+  if (base === "Regular" && (g === "mp" || g === "fp")) return "Regulares";
+  return base;
+}
+const nombreManga = id => nombreDe(MANGAS, id);
+// Lo que escribes, con mayúscula al empezar (también después de "¿", "¡" o
+// un paréntesis); lo demás queda como lo escribiste.
+const mayus = s => String(s == null ? "" : s).replace(/^([^\p{L}\p{N}]*)(\p{L})/u, (m, a, b) => a + b.toUpperCase());
+// La talla: si es de letras ("m", "xl", "2xl", "s/m", "eu 42"), toda en
+// mayúscula; si no ("talla única"), con mayúscula al empezar.
+const talla = s => {
+  const t = String(s == null ? "" : s).trim();
+  return t && t.split(/[\s/-]+/).every(x => /^\d+([.,]\d+)?$/.test(x) || /^\d*[a-z]{1,4}$/i.test(x)) ? t.toUpperCase() : mayus(t);
+};
 
 // ---- Color de una foto (sin IA) ----
 function hexARgb(hex) {
@@ -160,7 +194,7 @@ const texto = (v, max) => String(v == null ? "" : v).replace(/\s+/g, " ").trim()
 const lista = (v, validos) => (Array.isArray(v) ? v : []).filter((x, i, a) => validos.includes(x) && a.indexOf(x) === i);
 const fechaOk = f => typeof f === "string" && /^\d{4}-\d{2}-\d{2}$/.test(f);
 const numOk = v => (typeof v === "number" && isFinite(v) && v >= 0 ? v : null);
-const ID_CLIMAS = CLIMAS.map(c => c[0]), ID_ESTILOS = ESTILOS.map(e => e[0]), ID_ESTAMPADOS = ESTAMPADOS.map(e => e[0]);
+const ID_CLIMAS = CLIMAS.map(c => c[0]), ID_ESTILOS = ESTILOS.map(e => e[0]), ID_ESTAMPADOS = ESTAMPADOS.map(e => e[0]), ID_MANGAS = MANGAS.map(m => m[0]);
 // Lo guardado (puede venir de versiones viejas o a medias) → una prenda completa.
 function normalizar(id, d) {
   const x = d || {};
@@ -171,18 +205,20 @@ function normalizar(id, d) {
   return {
     id,
     grupo,
-    tipo: texto(x.tipo, 40) || GRUPO[grupo].tipos[0][0],
+    tipo: mayus(texto(x.tipo, 40)) || GRUPO[grupo].tipos[0][0],
     colores,
     estampado: ID_ESTAMPADOS.includes(x.estampado) ? x.estampado : "",
-    tela: texto(x.tela, 40),
+    tela: mayus(texto(x.tela, 40)),
+    corte: CORTES_DE[grupo].includes(x.corte) ? x.corte : "",
+    manga: CON_MANGA.includes(grupo) && ID_MANGAS.includes(x.manga) ? x.manga : "",
     estilo: lista(x.estilo, ID_ESTILOS),
     clima: lista(x.clima, ID_CLIMAS),
     formalidad: f >= 1 && f <= 5 ? Math.round(f) : null,
-    marca: texto(x.marca, 40),
-    talla: texto(x.talla, 12),
+    marca: mayus(texto(x.marca, 40)),
+    talla: talla(texto(x.talla, 12)),
     precio: numOk(x.precio),
     compra: fechaOk(x.compra) ? x.compra : "",
-    notas: texto(x.notas, 500),
+    notas: mayus(texto(x.notas, 500)),
     fotos: (Array.isArray(x.fotos) ? x.fotos : []).filter(p => p && typeof p.id === "string").map(p => ({ id: p.id, mini: typeof p.mini === "string" ? p.mini : "", ancho: p.ancho || 0, alto: p.alto || 0 })),
     estado: ESTADOS.includes(x.estado) ? x.estado : "activa",
     fueraFecha: fechaOk(x.fueraFecha) ? x.fueraFecha : "",
@@ -207,11 +243,11 @@ function titulo(p) {
   if (c && t && c.split(" ").length > 1 && plano(c).includes(plano(t.split(" ")[0]))) c = c.split(" ")[0];
   return [t, c].filter(Boolean).join(" ") || "Prenda";
 }
-// Un renglón con lo más importante: "Algodón · Casual · Frío y templado".
+// Un renglón con lo más importante: "Pegada · Algodón · Casual · Frío y templado".
 function detalle(p) {
   const climas = p.clima.map(c => nombreDe(CLIMAS, c).toLowerCase());
   const clima = climas.length ? cap(climas.length > 1 ? `${climas.slice(0, -1).join(", ")} y ${climas[climas.length - 1]}` : climas[0]) : "";
-  return [p.tela, p.estilo.map(s => nombreDe(ESTILOS, s))[0], clima, p.marca].filter(Boolean).join(" · ");
+  return [nombreCorte(p.corte, p.tipo), p.tela, p.estilo.map(s => nombreDe(ESTILOS, s))[0], clima, p.marca].filter(Boolean).join(" · ");
 }
 
 // ---- Las veces que te la pusiste ----
@@ -247,7 +283,7 @@ function buscar(xs, q) {
   const partes = t.split(/\s+/);
   return xs.filter(p => {
     const todo = plano([titulo(p), p.tipo, GRUPO[p.grupo].nombre, p.colores.map(c => c.nombre).join(" "), p.tela, p.marca, p.notas,
-      p.estilo.map(s => nombreDe(ESTILOS, s)).join(" "), nombreDe(ESTAMPADOS, p.estampado), p.talla].join(" "));
+      p.estilo.map(s => nombreDe(ESTILOS, s)).join(" "), nombreDe(ESTAMPADOS, p.estampado), p.talla, nombreCorte(p.corte, p.tipo), nombreDe(CORTES, p.corte), nombreManga(p.manga)].join(" "));
     return partes.every(w => todo.includes(w));
   });
 }
@@ -301,8 +337,8 @@ function resumen(xs) {
 }
 
 return {
-  GRUPOS, GRUPO, CLIMAS, ESTILOS, ESTAMPADOS, TELAS, FORMALIDAD, ESTADOS, COLORES, COLOR, ORDENES,
-  nombreDe, colorPara, nombreColor, hexARgb, rgbALab, colorCercano, coloresDeFoto,
+  GRUPOS, GRUPO, CLIMAS, ESTILOS, ESTAMPADOS, TELAS, FORMALIDAD, ESTADOS, COLORES, COLOR, ORDENES, CORTES, CORTES_DE, MANGAS, CON_MANGA,
+  nombreDe, colorPara, nombreColor, nombreCorte, nombreManga, mayus, talla, hexARgb, rgbALab, colorCercano, coloresDeFoto,
   normalizar, validar, titulo, detalle, usos, costoPorUso, fechaLarga, buscar, filtrar, ordenar, familias, resumen, plano
 };
 });

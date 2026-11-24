@@ -44,7 +44,7 @@ function ocasionesPropias(x) {
   const nombres = new Set(OCASIONES.map(o => M.plano(o.nombre).trim())), ids = new Set();
   return (Array.isArray(x) ? x : []).map(o => {
     const q = o && typeof o === "object" ? o : {};
-    const nombre = String(q.nombre == null ? "" : q.nombre).replace(/\s+/g, " ").trim().slice(0, 24);
+    const nombre = M.mayus(String(q.nombre == null ? "" : q.nombre).replace(/\s+/g, " ").trim().slice(0, 24));
     const k = M.plano(nombre).trim();
     if (!nombre || typeof q.id !== "string" || !/^o-[a-z0-9]{1,20}$/.test(q.id) || ids.has(q.id) || nombres.has(k) || !OCASION[q.como]) return null;
     ids.add(q.id); nombres.add(k);
@@ -293,7 +293,7 @@ function capas(items, nec) {
 // Lo que se le manda (sin notas, talla, precio ni fotos; sin lo que está para
 // lavar ni lo que ya no tienes).
 const roperoParaIA = ropero => (ropero || []).filter(p => p.estado === "activa").map(p => ({
-  id: p.id, grupo: p.grupo, tipo: p.tipo, colores: p.colores.map(x => x.id), estampado: p.estampado, tela: p.tela,
+  id: p.id, grupo: p.grupo, tipo: p.tipo, colores: p.colores.map(x => x.id), estampado: p.estampado, tela: p.tela, corte: p.corte || "", manga: p.manga || "",
   estilo: p.estilo.slice(), clima: p.clima.slice(), formalidad: p.formalidad, marca: p.marca, lavar: false
 }));
 // Lo que te pusiste en los últimos días (para no repetir).

@@ -28,7 +28,7 @@ function vista(x) {
   if (!M.GRUPO[o.grupo]) return null;
   return {
     grupo: o.grupo, tipo: texto(o.tipo, 40) || M.GRUPO[o.grupo].tipos[0][0], colores: colores(o.colores),
-    estampado: ID_ESTAMPADOS.includes(o.estampado) ? o.estampado : "liso", tela: texto(o.tela, 40), detalle: texto(o.detalle, 60)
+    estampado: ID_ESTAMPADOS.includes(o.estampado) ? o.estampado : "liso", tela: M.mayus(texto(o.tela, 40)), detalle: texto(o.detalle, 60)
   };
 }
 function analisis(x) {
@@ -38,7 +38,7 @@ function analisis(x) {
     esRopa: o.esRopa !== false,
     resumen: texto(o.resumen, 160),
     prendas: o.esRopa === false ? [] : (Array.isArray(o.prendas) ? o.prendas : []).map(vista).filter(Boolean).slice(0, 8),
-    estilo: lista(o.estilo, ID_ESTILOS, 3), clima: lista(o.clima, ID_CLIMAS, 3), formalidad: formal(o.formalidad), ocasion: texto(o.ocasion, 60)
+    estilo: lista(o.estilo, ID_ESTILOS, 3), clima: lista(o.clima, ID_CLIMAS, 3), formalidad: formal(o.formalidad), ocasion: M.mayus(texto(o.ocasion, 60))
   };
 }
 // El look guardado (de la IA o de las reglas).
@@ -207,7 +207,7 @@ function lookVigente(look, ropero) {
 
 // ---- Lo que se le manda a la IA (sin notas, talla, precio ni fotos) ----
 const roperoParaIA = ropero => (ropero || []).filter(p => p.estado !== "fuera").map(p => ({
-  id: p.id, grupo: p.grupo, tipo: p.tipo, colores: p.colores.map(c => c.id), estampado: p.estampado, tela: p.tela,
+  id: p.id, grupo: p.grupo, tipo: p.tipo, colores: p.colores.map(c => c.id), estampado: p.estampado, tela: p.tela, corte: p.corte || "", manga: p.manga || "",
   estilo: p.estilo.slice(), clima: p.clima.slice(), formalidad: p.formalidad, marca: p.marca, lavar: p.estado === "lavar"
 }));
 const pinParaIA = a => ({ resumen: a.resumen, prendas: a.prendas.map(v => Object.assign({}, v)), estilo: a.estilo.slice(), clima: a.clima.slice(), formalidad: a.formalidad, ocasion: a.ocasion });
@@ -250,7 +250,7 @@ function estiloGuardado(x) {
   const o = obj(x);
   const textos = (v, n, max) => (Array.isArray(v) ? v : []).map(t => texto(t, max)).filter((t, i, a) => t && a.indexOf(t) === i).slice(0, n);
   const r = {
-    resumen: texto(o.resumen, 600), claves: textos(o.claves, 6, 50), colores: lista(o.colores, M.COLORES.map(c => c.id), 5), prendas: textos(o.prendas, 6, 50),
+    resumen: M.mayus(texto(o.resumen, 600)), claves: textos(o.claves, 6, 50), colores: lista(o.colores, M.COLORES.map(c => c.id), 5), prendas: textos(o.prendas, 6, 50),
     fecha: fechaOk(o.fecha) ? o.fecha : "", pines: Math.max(0, Math.round(Number(o.pines) || 0)), corregido: o.corregido === true
   };
   return r.resumen ? r : null;

@@ -156,10 +156,10 @@ const ESTADOS = ["quiero", "comprado", "descartado"];
 function normalizarDeseo(id, d) {
   const x = d && typeof d === "object" ? d : {};
   const grupo = M.GRUPO[x.grupo] ? x.grupo : "arriba";
-  const tipo = texto(x.tipo, 40) || "Prenda";
+  const tipo = M.mayus(texto(x.tipo, 40)) || "Prenda";
   const colores = [...new Set((Array.isArray(x.colores) ? x.colores : []).filter(c => typeof c === "string" && M.COLOR[c]))].slice(0, 3);
   return {
-    id, grupo, tipo, colores, clave: clave({ grupo, tipo, colores }), nombre: nombreDe(tipo, colores), nota: texto(x.nota, 200),
+    id, grupo, tipo, colores, clave: clave({ grupo, tipo, colores }), nombre: nombreDe(tipo, colores), nota: M.mayus(texto(x.nota, 200)),
     inspiraciones: [...new Set((Array.isArray(x.inspiraciones) ? x.inspiraciones : []).filter(s => typeof s === "string" && s))].slice(0, 24),
     origen: ["falta", "pin", "manual"].includes(x.origen) ? x.origen : "manual", estado: ESTADOS.includes(x.estado) ? x.estado : "quiero",
     prendaId: typeof x.prendaId === "string" ? x.prendaId : "", compradoFecha: fechaOk(x.compradoFecha) ? x.compradoFecha : "",

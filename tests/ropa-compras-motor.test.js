@@ -104,7 +104,7 @@ test("lo que gastaste en ropa este mes y tu presupuesto", () => {
 
 test("la lista de deseos: limpia, con su clave, y la búsqueda en Pinterest", () => {
   const d = K.normalizarDeseo("w1", { grupo: "abrigos", tipo: "  Abrigo  ", colores: ["camel", "nada", "camel"], nota: "  largo   hasta la rodilla ", inspiraciones: ["p1", "p1", "", 5, "p2"], origen: "falta", estado: "quiero", creado: 10 });
-  assert.deepEqual(d, { id: "w1", grupo: "abrigos", tipo: "Abrigo", colores: ["camel"], clave: "abrigos|abrigo|beige", nombre: "Abrigo camel", nota: "largo hasta la rodilla",
+  assert.deepEqual(d, { id: "w1", grupo: "abrigos", tipo: "Abrigo", colores: ["camel"], clave: "abrigos|abrigo|beige", nombre: "Abrigo camel", nota: "Largo hasta la rodilla",
     inspiraciones: ["p1", "p2"], origen: "falta", estado: "quiero", prendaId: "", compradoFecha: "", creado: 10, editado: 0 });
   const raro = K.normalizarDeseo("w2", { grupo: "luna", estado: "robado", origen: "x", compradoFecha: "ayer" });
   assert.deepEqual([raro.grupo, raro.tipo, raro.estado, raro.origen, raro.compradoFecha], ["arriba", "Prenda", "quiero", "manual", ""]);

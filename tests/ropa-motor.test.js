@@ -1,5 +1,6 @@
 // Ropa (js/ropa-motor.js, D-146): colores con nombre, color de una foto,
-// nombre de cada prenda, normalizar, revisar, usos, buscar, filtrar, ordenar.
+// nombre de cada prenda, normalizar, revisar, usos, buscar, filtrar, ordenar;
+// el corte, las mangas y las mayúsculas (D-154).
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const R = require("../js/ropa-motor.js");
@@ -82,6 +83,71 @@ test("normalizar: lo viejo o a medias queda completo y limpio", () => {
   assert.equal(R.normalizar("b", { grupo: "zapatos", tipo: "Botas", formalidad: 4, estado: "lavar" }).formalidad, 4);
 });
 
+test("el corte y las mangas: por grupo y con el nombre que va con la prenda (D-154)", () => {
+  // Cada grupo con sus cortes; zapatos y accesorios, ninguno.
+  assert.deepEqual(Object.keys(R.CORTES_DE), R.GRUPOS.map(g => g.id));
+  Object.values(R.CORTES_DE).flat().forEach(c => assert.ok(R.CORTES.some(x => x[0] === c), c));
+  assert.deepEqual(R.CORTES_DE.zapatos, []);
+  assert.deepEqual(R.CORTES_DE.accesorios, []);
+  // El nombre concuerda: "Polera pegada", "Jean recto", "Leggings pitillo", "Shorts sueltos".
+  assert.equal(R.nombreCorte("pegado", "Polera"), "Pegada");
+  assert.equal(R.nombreCorte("pegado", "Jean"), "Pegado");
+  assert.equal(R.nombreCorte("recto", "Falda"), "Recta");
+  assert.equal(R.nombreCorte("acampanado", "Vestido"), "Acampanado");
+  assert.equal(R.nombreCorte("suelto", "Leggings"), "Sueltos");
+  assert.equal(R.nombreCorte("pitillo", "Leggings"), "Pitillo", "pitillo no cambia");
+  assert.equal(R.nombreCorte("oversize", "Chompa"), "Oversize");
+  assert.equal(R.nombreCorte("regular", "Zapatillas"), "Regulares");
+  assert.equal(R.nombreCorte("regular", "Camisa"), "Regular");
+  assert.equal(R.nombreCorte("", "Polera"), "");
+  assert.equal(R.nombreCorte("raro", "Polera"), "");
+  assert.equal(R.nombreManga("corta"), "Manga corta");
+  assert.equal(R.nombreManga("sin"), "Sin mangas");
+  assert.equal(R.nombreManga(""), "");
+  // normalizar: solo lo que va con el grupo.
+  const polera = R.normalizar("c1", { grupo: "arriba", tipo: "Polera", corte: "pegado", manga: "corta" });
+  assert.equal(polera.corte, "pegado");
+  assert.equal(polera.manga, "corta");
+  const jean = R.normalizar("c2", { grupo: "abajo", tipo: "Jean", corte: "oversize", manga: "larga" });
+  assert.equal(jean.corte, "", "oversize no es un corte de pantalón");
+  assert.equal(jean.manga, "", "un jean no tiene mangas");
+  assert.equal(R.normalizar("c3", { grupo: "zapatos", tipo: "Botas", corte: "recto" }).corte, "");
+  assert.equal(R.normalizar("c4", { grupo: "cuerpo", tipo: "Vestido", corte: "acampanado", manga: "sin" }).manga, "sin");
+  // Lo viejo (sin corte ni mangas) sigue igual.
+  const viejo = R.normalizar("c5", { grupo: "arriba", tipo: "Camisa" });
+  assert.equal(viejo.corte, "");
+  assert.equal(viejo.manga, "");
+  // En el renglón de la tarjeta, primero el corte.
+  assert.equal(R.detalle(R.normalizar("c6", { grupo: "arriba", tipo: "Polera", corte: "pegado", tela: "algodón", estilo: ["casual"], clima: ["frio", "templado"], marca: "adidas" })),
+    "Pegada · Algodón · Casual · Frío y templado · Adidas");
+});
+
+test("lo que escribes queda con mayúscula; la talla en letras, toda en mayúscula (D-154)", () => {
+  const p = R.normalizar("m1", { grupo: "abajo", tipo: "pantalón cargo", tela: "jean", marca: "levi's", talla: "m", notas: "me la regaló mi hermana" });
+  assert.equal(p.tipo, "Pantalón cargo");
+  assert.equal(p.tela, "Jean");
+  assert.equal(p.marca, "Levi's");
+  assert.equal(p.talla, "M");
+  assert.equal(p.notas, "Me la regaló mi hermana");
+  assert.equal(R.talla("xl"), "XL");
+  assert.equal(R.talla(" xs "), "XS");
+  assert.equal(R.talla("38"), "38");
+  assert.equal(R.talla("32/34"), "32/34");
+  assert.equal(R.talla("talla única"), "Talla única");
+  assert.equal(R.talla(""), "");
+  assert.equal(R.mayus("ñandú"), "Ñandú");
+  assert.equal(R.mayus("¿algo?"), "¿Algo?", "también después de un signo");
+  assert.equal(R.mayus("(regalo)"), "(Regalo)");
+  assert.equal(R.mayus("3 poleras"), "3 poleras", "si empieza con un número, igual");
+  assert.equal(R.talla("2xl"), "2XL");
+  assert.equal(R.talla("s/m"), "S/M");
+  assert.equal(R.talla("eu 42"), "EU 42");
+  assert.equal(R.talla("10 años"), "10 años");
+  assert.equal(R.mayus(null), "");
+  // Lo que ya tenía mayúsculas no se toca.
+  assert.equal(R.normalizar("m2", { grupo: "arriba", tipo: "Polera", marca: "H&M", tela: "Algodón pima" }).marca, "H&M");
+});
+
 test("revisar el formulario", () => {
   assert.deepEqual(R.validar({ grupo: "abajo", tipo: "Jean" }), []);
   assert.deepEqual(R.validar({ grupo: "", tipo: "" }).map(e => e.campo), ["grupo", "tipo"]);
@@ -110,6 +176,10 @@ const ropero = [
 ];
 
 test("buscar sin importar tildes ni mayúsculas", () => {
+  assert.deepEqual(R.buscar([R.normalizar("q1", { grupo: "arriba", tipo: "Polera", corte: "oversize", manga: "larga" }), ropero[1]], "oversize manga larga").map(p => p.id), ["q1"], "también por el corte y las mangas");
+  const pegada = [R.normalizar("q2", { grupo: "arriba", tipo: "Polera", corte: "pegado" })];
+  assert.equal(R.buscar(pegada, "pegada").length, 1, "«pegada», como se ve en la ficha");
+  assert.equal(R.buscar(pegada, "pegado").length, 1, "y «pegado», como lo escribirías");
   assert.deepEqual(R.buscar(ropero, "polera").map(p => p.id), ["p1"]);
   assert.deepEqual(R.buscar(ropero, "ALGODON").map(p => p.id), ["p1"]);
   assert.deepEqual(R.buscar(ropero, "levi").map(p => p.id), ["p2"]);

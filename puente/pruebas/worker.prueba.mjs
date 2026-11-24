@@ -92,7 +92,7 @@ test("quién soy: el dueño, la versión y el gasto; los demás no pasan", async
   const r = await pedir(env, "/quien");
   assert.equal(r.status, 200);
   assert.equal(r.json.permitido, true);
-  assert.equal(r.json.version, 3);
+  assert.equal(r.json.version, 4, "4: el corte y las mangas (D-154)");
   assert.equal(r.json.lista, true);
   assert.equal(r.json.gasto.usd, 0);
   assert.equal(r.headers.get("Access-Control-Allow-Origin"), ORIGEN);

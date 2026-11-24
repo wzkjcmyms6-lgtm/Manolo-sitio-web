@@ -17,7 +17,7 @@ import * as L from "./logica.js";
 import * as P from "./pinterest.js";
 
 // Lo que este puente sabe hacer (la app lo mira para mostrar o no lo nuevo).
-const VERSION = 3;   // 2: Pinterest e inspiración (D-148); 3: outfits (D-149)
+const VERSION = 4;   // 2: Pinterest e inspiración (D-148); 3: outfits (D-149); 4: el corte y las mangas (D-154)
 
 let jwks = null;   // { llaves, vence }
 async function llaves() {

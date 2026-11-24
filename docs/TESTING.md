@@ -1,6 +1,20 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-24 (Ropa: corte, mangas, colores y mayúsculas, D-154; el puente
+  instalado, D-153): `npm test` → **825 pruebas** (el corte, las mangas y las
+  mayúsculas en `ropa-motor`; en `puente-logica`, las listas iguales a las de
+  la app, el esquema con vacío y la limpieza según el grupo). Las **47
+  suites** de `scripts/e2e/` sin fallas (3.993 comprobaciones; en la
+  corrida completa, la medición de la Biblia de `lectura-qa` dio 1.686 ms con
+  la máquina ocupada, y sola 1.325 ms, bajo el límite de 1,5 s). Nueva
+  `ropa-corte` (69: el corte con su nombre según la prenda y el grupo, tocar
+  otra vez para quitarlo, cambiar los colores, el principal, sin repetir y el
+  foco, las mayúsculas al guardar, la ficha con "Cambiar los colores", buscar,
+  la IA con un puente de mentira, una prenda de antes y 320 px en oscuro y en
+  claro). El Worker del puente: 7 (versión 4). Ojo: para ver si algo está a la
+  vista no basta el atributo `hidden` (un estilo puede ganarle): `ropa-corte`
+  mira `getClientRects`.
 - 2026-11-23 (Ropa, fase 7, D-152: revisión final): `npm test` → **823
   pruebas**; las **46 suites** de `scripts/e2e/` sin fallas sobre la versión
   final (3.924 comprobaciones). Nueva `ropa-final` (28: la IA sin internet con
@@ -488,7 +502,7 @@
   retiraron en D-033.
 - **Dispositivo real (iPhone)**: pantalla encendida, voz y sonido se validan
   en el teléfono del dueño; nada se da por funcionando sin esa prueba.
-- **Regresión** en cada fase: `npm test` + las 46 suites de `scripts/e2e/`
+- **Regresión** en cada fase: `npm test` + las 47 suites de `scripts/e2e/`
   (ver "Cómo correr todo"; D-115: una prueba que quedó fuera de la lista
   corta se rompió sin que se viera).
 
@@ -501,7 +515,7 @@ for f in fase1 regresion hojas sw-instala emojis scalping inversiones tarjetas m
   run-compartir run-qa habitos mi-dia ej-calendario ejercicio libros-progreso lectura \
   lectura-qa tiempos finanzas-diario lugares respaldo sin-internet pantalla tarjetas-minimo \
   biblia-marcar biblia-audio rr-editor rutina-entreno tema-claro libros-n3 bici resumenes \
-  ropa ropa-insp ropa-outfits ropa-compras ropa-numeros ropa-final; do node scripts/e2e/$f.js || break; done
+  ropa ropa-insp ropa-outfits ropa-compras ropa-numeros ropa-final ropa-corte; do node scripts/e2e/$f.js || break; done
 (cd puente && npm install && npm run prueba)   # el Worker del puente de Ropa
 ```
 Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
@@ -617,11 +631,17 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] En modo avión: abre Ropa, "Tus números" y Outfits (arma igual, sin el
   clima).
 - [ ] Ajustes › Apariencia › Claro: mira Ropa en modo claro.
+- [ ] Una polera: elige el corte ("Pegada", "Suelta"…) y las mangas; tócalo
+  otra vez y se quita. Cambia a "Abajo": los cortes de pantalón, sin mangas.
+- [ ] Toca un color para cambiarlo; con dos colores, "Que sea el principal".
+  En la ficha, "Cambiar los colores".
+- [ ] Escribe la tela y la marca en minúscula y la talla "m": al guardar,
+  quedan con mayúscula ("M").
 
-*Con la IA (cuando esté el puente):*
+*Con la IA (el puente ya está instalado):*
 - [ ] La prueba real corta (`docs/ROPA.md` › "La prueba real de la IA").
-- [ ] Agrega 2 o 3 fotos: la IA llena todo; revísalo antes de guardar. En una
-  prenda vieja: "Describir con IA".
+- [ ] Agrega 2 o 3 fotos: la IA llena todo, también el corte y las mangas;
+  revísalo antes de guardar. En una prenda vieja: "Describir con IA".
 - [ ] Ajustes de Ropa: el gasto del mes; cambia el tope.
 - [ ] Inspiración › "Conectar tablero": en Pinterest, tu tablero › Compartir ›
   Copiar link, y pégalo; mira que lleguen tus pines. "+" › "Link de

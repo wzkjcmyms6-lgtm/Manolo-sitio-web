@@ -190,7 +190,7 @@ test("lo que falta para armar, los colores y el nombre", () => {
 test("lo que se manda a la IA y lo que contesta", () => {
   const r = O.roperoParaIA(ROPERO);
   assert.ok(!r.some(p => p.id === "camisa-lavar" || p.id === "saco-fuera"), "sin lo que está para lavar ni lo que ya no tienes");
-  assert.deepEqual(Object.keys(r[0]).sort(), ["clima", "colores", "estampado", "estilo", "formalidad", "grupo", "id", "lavar", "marca", "tela", "tipo"]);
+  assert.deepEqual(Object.keys(r[0]).sort(), ["clima", "colores", "corte", "estampado", "estilo", "formalidad", "grupo", "id", "lavar", "manga", "marca", "tela", "tipo"]);
   assert.deepEqual(O.recientes({ "2026-11-23": { prendas: ["a"] }, "2026-11-17": { prendas: ["b"] }, "2026-11-10": { prendas: ["c"] }, "2026-11-24": { prendas: ["d"] } }, HOY).sort(), ["a", "b"]);
   const v = O.validas([
     { nombre: "Bien", prendas: ["polera-b", "jean", "zapas", "chamarra"] },

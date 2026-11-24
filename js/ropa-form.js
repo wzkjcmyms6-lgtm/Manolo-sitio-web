@@ -42,7 +42,10 @@ function coloresDe(mini) {
 let cola = [], i = 0, editando = null, datos = null, guardadas = 0, ocupado = false;
 let fotoNueva = null;   // al editar: la foto nueva (se borra si no guardas)
 let relleno = null, despues = null;   // "Lo compré": lo que ya viene puesto y qué hacer al guardar
-const vacio = () => ({ grupo: "arriba", tipo: "", colores: [], estampado: "liso", tela: "", estilo: [], clima: [], formalidad: null, marca: "", talla: "", precio: "", compra: "", notas: "", fotos: [] });
+const vacio = () => ({ grupo: "arriba", tipo: "", colores: [], estampado: "liso", tela: "", corte: "", manga: "", estilo: [], clima: [], formalidad: null, marca: "", talla: "", precio: "", compra: "", notas: "", fotos: [] });
+let cambiando = null;   // el color que estás cambiando (su lugar en la lista), o null si agregas uno (D-154)
+let antes = null;   // el corte o las mangas que ya estaban elegidas al empezar el toque
+const quitable = t => { const c = t && t.closest && t.closest(".ro-op-chip"); return c && c.querySelector('input[name="corte"], input[name="manga"]'); };
 const H = () => A().hoja("ro-hoja-form");
 
 // "+" (la barra de Ropa, o "Agregar prendas" del ropero vacío): a tu ropero
@@ -140,7 +143,8 @@ function preparar(x) {
 }
 // Lo que dijo la IA → los campos del formulario.
 function desdeIA(p) {
-  const o = { grupo: p.grupo, tipo: p.tipo, estampado: p.estampado || "liso", tela: p.tela, estilo: p.estilo.slice(), clima: p.clima.slice(), formalidad: p.formalidad, marca: p.marca };
+  const o = { grupo: p.grupo, tipo: p.tipo, estampado: p.estampado || "liso", tela: M.mayus(p.tela), corte: p.corte || "", manga: p.manga || "",
+    estilo: p.estilo.slice(), clima: p.clima.slice(), formalidad: p.formalidad, marca: M.mayus(p.marca) };
   if (p.colores.length) o.colores = p.colores.map(id => ({ id }));
   return o;
 }
@@ -200,14 +204,25 @@ function tiposHTML(grupo, tipo) {
   return ts.map(t => radio("tipo", t, t, t === tipo)).join("") + radio("tipo", "__otro", "Otro", otro)
     + `<input class="lib-input ro-otro" name="tipoOtro" maxlength="40" placeholder="Escribe qué es" aria-label="Qué prenda es" value="${otro ? esc(tipo) : ""}"${otro ? "" : " hidden"}>`;
 }
+// Cada color: tócalo para cambiarlo (D-154), o la ✕ para quitarlo.
 function coloresHTML() {
   const sel = datos.colores;
-  return `${sel.length ? sel.map((c, k) => `<span class="ro-color-sel"><i class="ro-muestra" style="background:${esc(M.COLOR[c.id].hex)}" aria-hidden="true"></i>${esc(M.nombreColor(c.id))}${k === 0 && sel.length > 1 ? " <small>(el principal)</small>" : ""}<button type="button" class="ro-quitar" data-ro-quitar="${esc(c.id)}" aria-label="Quitar ${esc(M.nombreColor(c.id))}">${icono("close")}</button></span>`).join("") : `<span class="rd-nota">Sin color todavía.</span>`}
-    ${sel.length < 3 ? `<button type="button" class="lug-chip ro-color-mas" data-ro-paleta aria-expanded="false">${icono("plus")}Agregar color</button>` : ""}`;
+  return `${sel.length ? sel.map((c, k) => `<span class="ro-color-sel${k === cambiando ? " is-cambiando" : ""}"><button type="button" class="ro-color-cambiar" data-ro-color-cambiar="${k}" aria-expanded="${k === cambiando}" aria-label="Cambiar ${esc(M.nombreColor(c.id))}${k === 0 && sel.length > 1 ? " (el principal)" : ""}"><i class="ro-muestra" style="background:${esc(M.COLOR[c.id].hex)}" aria-hidden="true"></i>${esc(M.nombreColor(c.id))}${k === 0 && sel.length > 1 ? " <small>(el principal)</small>" : ""}</button><button type="button" class="ro-quitar" data-ro-quitar="${esc(c.id)}" aria-label="Quitar ${esc(M.nombreColor(c.id))}">${icono("close")}</button></span>`).join("") : `<span class="rd-nota">Sin color todavía.</span>`}
+    ${sel.length < 3 ? `<button type="button" class="lug-chip ro-color-mas" data-ro-paleta aria-expanded="false">${icono("plus")}Agregar color</button>` : ""}
+    ${sel.length ? `<small class="rd-nota ro-colores-nota">Toca un color para cambiarlo.</small>` : ""}`;
 }
-const paletaHTML = () => `<div class="ro-paleta" data-ro-paleta-lista hidden>${M.COLORES.map(c => `<button type="button" class="ro-color-op" data-ro-color="${c.id}" aria-label="${esc(M.nombreColor(c.id))}" title="${esc(M.nombreColor(c.id))}"><i style="background:${esc(c.hex)}"></i><span>${esc(M.nombreColor(c.id))}</span></button>`).join("")}</div>`;
+const paletaHTML = () => `<div class="ro-paleta-caja" data-ro-paleta-lista hidden>
+  <p class="ro-paleta-t" data-ro-paleta-t>Elige un color</p>
+  <button type="button" class="link-btn ro-principal" data-ro-principal hidden>Que sea el principal</button>
+  <div class="ro-paleta">${M.COLORES.map(c => `<button type="button" class="ro-color-op" data-ro-color="${c.id}" aria-label="${esc(M.nombreColor(c.id))}" title="${esc(M.nombreColor(c.id))}"><i style="background:${esc(c.hex)}"></i><span>${esc(M.nombreColor(c.id))}</span></button>`).join("")}</div></div>`;
+// El corte (con el nombre que va con la prenda: "Pegada", "Recto") y las mangas (D-154).
+function cortesHTML(grupo, tipo, corte) {
+  return M.CORTES_DE[grupo].map(id => radio("corte", id, M.nombreCorte(id, tipo || M.GRUPO[grupo].tipos[0][0]), id === corte)).join("");
+}
+const mangasHTML = manga => M.MANGAS.map(([v, t]) => radio("manga", v, t, v === manga)).join("");
 function formulario() {
   const x = cola[i], d = datos;
+  cambiando = null;
   const foto = d.fotos[0];
   const av = d.iaAviso;
   const deFoto = x && x.colores && x.colores.length && !editando && !av;
@@ -221,6 +236,10 @@ function formulario() {
     ${x && x.iaSinInternet && !x.aMano ? `<p class="ro-ia-ojo">Sin internet: la IA no puede mirar la foto. Llénala a mano.</p>` : ""}
     <fieldset class="ro-campo"><legend>Grupo</legend><div class="ro-opciones" data-grupo="grupo">${M.GRUPOS.map(g => radio("grupo", g.id, g.nombre, d.grupo === g.id)).join("")}</div>${err("grupo")}</fieldset>
     <fieldset class="ro-campo"><legend>Qué es</legend><div class="ro-opciones" data-grupo="tipo" data-ro-tipos>${tiposHTML(d.grupo, d.tipo)}</div>${err("tipo")}</fieldset>
+    <fieldset class="ro-campo" data-ro-corte-campo${M.CORTES_DE[d.grupo].length ? "" : " hidden"}><legend>Corte <small>(cómo te queda)</small></legend>
+      <div class="ro-opciones" data-ro-cortes>${cortesHTML(d.grupo, d.tipo, d.corte)}</div></fieldset>
+    <fieldset class="ro-campo" data-ro-manga-campo${M.CON_MANGA.includes(d.grupo) ? "" : " hidden"}><legend>Mangas</legend>
+      <div class="ro-opciones" data-ro-mangas>${mangasHTML(d.manga)}</div></fieldset>
     <fieldset class="ro-campo"><legend>Colores</legend><div class="ro-colores" data-ro-colores>${coloresHTML()}</div>${paletaHTML()}
       ${deFoto ? `<small class="rd-nota ro-de-foto">Lo saqué de la foto: revísalo.</small>` : ""}</fieldset>
     <label class="rd-campo">Estampado<select class="lib-input" name="estampado">${M.ESTAMPADOS.map(([v, t]) => `<option value="${v}"${d.estampado === v ? " selected" : ""}>${t}</option>`).join("")}</select></label>
@@ -253,6 +272,8 @@ function formulario() {
   h.el.onchange = alCambiar;
   h.el.oninput = e => { if (e.target.name === "tipoOtro") quitarError("tipo"); };
   h.el.onclick = alClic;
+  h.el.onpointerdown = e => { const r = quitable(e.target); antes = r && r.checked ? r : null; };
+  h.el.onpointercancel = () => { antes = null; };   // el dedo se arrastró para desplazar: no fue un toque
   h.el.onsubmit = e => { e.preventDefault(); guardar(); };
 }
 function form() { return H().el.querySelector(".ro-form"); }
@@ -267,8 +288,10 @@ function leer() {
   let tipo = (f.querySelector('input[name="tipo"]:checked') || {}).value || "";
   if (tipo === "__otro") tipo = v("tipoOtro").trim();
   const fo = (f.querySelector('input[name="formalidad"]:checked') || {}).value;
+  const corte = (f.querySelector('input[name="corte"]:checked') || {}).value || "";
+  const manga = (f.querySelector('input[name="manga"]:checked') || {}).value || "";
   Object.assign(datos, {
-    grupo: g, tipo, estampado: v("estampado"), tela: v("tela").trim(), estilo: marcadas("estilo"), clima: marcadas("clima"),
+    grupo: g, tipo, estampado: v("estampado"), tela: v("tela").trim(), corte, manga, estilo: marcadas("estilo"), clima: marcadas("clima"),
     formalidad: fo ? Number(fo) : null, marca: v("marca").trim(), talla: v("talla").trim(),
     precio: String(v("precio")).replace(",", ".").trim(), compra: v("compra"), notas: v("notas").trim()
   });
@@ -281,10 +304,13 @@ function alCambiar(e) {
     datos.tipo = "";
     const cont = form().querySelector("[data-ro-tipos]");
     cont.innerHTML = tiposHTML(datos.grupo, "");
+    pintarCortes();
     quitarError("grupo");
   } else if (t.name === "tipo") {
     const otro = form().elements.tipoOtro;
     if (otro) { otro.hidden = t.value !== "__otro"; if (!otro.hidden) otro.focus(); }
+    leer();
+    pintarCortes();
     quitarError("tipo");
   } else if (t.name === "formalidad") {
     const s = form().querySelector("[data-ro-formal-t]");
@@ -299,21 +325,80 @@ function pintarColores() {
   c.innerHTML = coloresHTML();
   if (typeof renderIcons === "function") renderIcons(c);
 }
+// Los cortes y las mangas del grupo elegido (lo que no va con el grupo, se borra).
+function pintarCortes() {
+  const f = form();
+  if (!M.CORTES_DE[datos.grupo].includes(datos.corte)) datos.corte = "";
+  if (!M.CON_MANGA.includes(datos.grupo)) datos.manga = "";
+  f.querySelector("[data-ro-cortes]").innerHTML = cortesHTML(datos.grupo, datos.tipo, datos.corte);
+  f.querySelector("[data-ro-corte-campo]").hidden = !M.CORTES_DE[datos.grupo].length;
+  f.querySelector("[data-ro-mangas]").innerHTML = mangasHTML(datos.manga);
+  f.querySelector("[data-ro-manga-campo]").hidden = !M.CON_MANGA.includes(datos.grupo);
+}
+// La paleta: para agregar un color (k = null) o para cambiar el que tocaste.
+function abrirPaleta(k) {
+  const f = form();
+  cambiando = k;
+  f.querySelectorAll("[data-ro-color-cambiar]").forEach(b => {
+    const si = Number(b.dataset.roColorCambiar) === k;
+    b.setAttribute("aria-expanded", String(si));
+    b.parentNode.classList.toggle("is-cambiando", si);
+  });
+  const l = f.querySelector("[data-ro-paleta-lista]");
+  const c = k != null ? datos.colores[k] : null;
+  f.querySelector("[data-ro-paleta-t]").textContent = c ? `Elige el color nuevo en lugar de ${M.nombreColor(c.id).toLowerCase()}` : "Elige un color";
+  f.querySelector("[data-ro-principal]").hidden = !(k > 0);
+  l.hidden = false;
+  const mas = f.querySelector("[data-ro-paleta]");
+  if (mas) mas.setAttribute("aria-expanded", String(k == null));
+  l.closest("fieldset").scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+// foco: a qué volver (el color que cambiaste, el que agregaste…).
+function cerrarPaleta(foco) {
+  const f = form();
+  cambiando = null;
+  f.querySelector("[data-ro-paleta-lista]").hidden = true;
+  pintarColores();
+  const b = foco && f.querySelector(foco);
+  if (b) b.focus({ preventScroll: true });
+}
+const chip = k => `[data-ro-color-cambiar="${k}"]`;
 function alClic(e) {
   const q = e.target.closest("[data-ro-quitar]");
-  if (q) { datos.colores = datos.colores.filter(c => c.id !== q.dataset.roQuitar); pintarColores(); return; }
+  if (q) { datos.colores = datos.colores.filter(c => c.id !== q.dataset.roQuitar); cerrarPaleta(datos.colores.length ? chip(0) : "[data-ro-paleta]"); return; }
+  const cam = e.target.closest("[data-ro-color-cambiar]");
+  if (cam) {
+    const k = Number(cam.dataset.roColorCambiar);
+    if (cambiando === k && !form().querySelector("[data-ro-paleta-lista]").hidden) cerrarPaleta(chip(k)); else abrirPaleta(k);
+    return;
+  }
   const pal = e.target.closest("[data-ro-paleta]");
   if (pal) {
     const l = form().querySelector("[data-ro-paleta-lista]");
-    l.hidden = !l.hidden;
-    pal.setAttribute("aria-expanded", String(!l.hidden));
+    if (!l.hidden && cambiando == null) cerrarPaleta("[data-ro-paleta]"); else abrirPaleta(null);
+    return;
+  }
+  if (e.target.closest("[data-ro-principal]")) {
+    if (cambiando > 0) { const [c] = datos.colores.splice(cambiando, 1); datos.colores.unshift(c); }
+    cerrarPaleta(chip(0));
     return;
   }
   const c = e.target.closest("[data-ro-color]");
   if (c) {
-    if (!datos.colores.some(x => x.id === c.dataset.roColor) && datos.colores.length < 3) datos.colores.push({ id: c.dataset.roColor });
-    form().querySelector("[data-ro-paleta-lista]").hidden = true;
-    pintarColores();
+    const id = c.dataset.roColor, ya = datos.colores.findIndex(x => x.id === id);
+    if (cambiando != null && datos.colores[cambiando]) {
+      // Cambiar: el nuevo queda en el mismo lugar (si ya estaba en otro, ese se va).
+      datos.colores = datos.colores.map((x, k) => (k === cambiando ? { id } : x)).filter((x, k) => k === cambiando || x.id !== id);
+    } else if (ya < 0 && datos.colores.length < 3) datos.colores.push({ id });
+    cerrarPaleta(chip(datos.colores.findIndex(x => x.id === id)));
+    return;
+  }
+  // Tocar otra vez el corte o las mangas que ya estaban elegidas: quedan sin
+  // elegir (después del toque, para que el teléfono no lo vuelva a marcar).
+  const r = quitable(e.target);
+  if (r && r === antes) {
+    antes = null;
+    setTimeout(() => { r.checked = false; leer(); }, 0);
     return;
   }
   if (e.target.closest("[data-ro-saltar]")) {
@@ -376,18 +461,25 @@ function cambiarFoto(archivo) {
     .catch(e => A().aviso((e && e.message) || "No pude leer esa foto."));
 }
 // ia (opcional): lo que la IA vio en la foto ("Describir con IA" en la ficha).
-function editar(id, desde, ia) {
+// o.colores: abre en los colores, con la paleta para cambiar el principal (D-154).
+function editar(id, desde, ia, o) {
   const p = D.una(id);
   if (!p) return;
-  editando = id; cola = []; i = 0; fotoNueva = null; relleno = null; despues = null;
+  editando = id; cola = []; i = 0; fotoNueva = null; relleno = null; despues = null; cambiando = null;
   datos = Object.assign(vacio(), {
-    grupo: p.grupo, tipo: p.tipo, colores: p.colores.map(c => ({ id: c.id, peso: c.peso })), estampado: p.estampado || "liso", tela: p.tela,
+    grupo: p.grupo, tipo: p.tipo, colores: p.colores.map(c => ({ id: c.id, peso: c.peso })), estampado: p.estampado || "liso", tela: p.tela, corte: p.corte, manga: p.manga,
     estilo: p.estilo.slice(), clima: p.clima.slice(), formalidad: p.formalidad, marca: p.marca, talla: p.talla,
     precio: p.precio != null ? String(p.precio) : "", compra: p.compra, notas: p.notas, fotos: p.fotos.map(f => Object.assign({}, f))
   });
   if (ia) aplicarIA(ia);
   formulario();
   if (desde) H().volver = desde;
+  if (o && o.colores) setTimeout(() => {
+    if (!form()) return;
+    abrirPaleta(datos.colores.length ? 0 : null);
+    const b = form().querySelector(datos.colores.length ? chip(0) : "[data-ro-paleta]");
+    if (b) b.focus({ preventScroll: true });
+  }, 300);
 }
 
 window.RopaForm = { agregar, editar, comprar, coloresDe };

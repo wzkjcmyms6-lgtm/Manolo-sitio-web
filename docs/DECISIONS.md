@@ -2442,3 +2442,71 @@ copia de seguridad lleva las 5 colecciones de Ropa y sus ajustes. (6) Queda
 para cuando el dueño cree las cuentas: instalar el puente y la prueba real
 corta de la IA (la guía, en `docs/ROPA.md`).
 
+**D-153 (2026-11-24) · Ropa: el puente de la IA, instalado.** (1) En la
+cuenta de Cloudflare del dueño, con un token de API que la sesión usa por el
+proxy (nunca en el chat ni en el repositorio): el Worker `manolo-puente` en
+`https://manolo-puente.manolo-ropa-482.workers.dev` (el subdominio de
+workers.dev se cambió para no usar el nombre del correo del dueño), el KV
+`GASTO` (su id en `puente/wrangler.toml`), las variables `FIREBASE_PROJECT` y
+`ORIGENES` (solo la app de GitHub Pages) y tres secretos: `MODELO`,
+`USUARIOS` (el código de Manolo del dueño: solo él usa la IA; no va en el
+repositorio) y `ANTHROPIC_API_KEY` (la pegó el dueño en el panel de
+Cloudflare). (2) La app apunta al puente (`PUENTE` en `js/ropa-ia.js`); con
+`manolo.puente` = "ninguno" queda sin puente: `scripts/e2e/comun.js` lo pone
+por defecto y las pruebas que lo necesitan traen uno de mentira. (3) **Costos,
+siendo realista**: US$ 2 a 4 al mes (el primer mes, unos US$ 6 si describe todo
+su ropero), con el tope del puente en US$ 8. Lo que la IA hace sola: mirar
+cada inspiración nueva (`analizarPendientes`, una por una), mirar la foto al
+agregar una prenda y Outfits con la IA (`version` ≥ 3); leer el tablero de
+Pinterest (al abrir Inspiración, como mucho cada 6 horas) no usa la IA. Las
+recargas automáticas de crédito son de la cuenta de Claude: se ven y se apagan
+en su consola (Billing › Auto-reload).
+
+**D-154 (2026-11-24) · Ropa: el corte, las mangas, cambiar los colores y las
+mayúsculas.** Pedido del dueño: "que siempre escriba los detalles con
+mayúscula y que permita cambiar los colores, igual lo que es si la polera es
+pegada, suelta, corte recto, ya sabes, confío en ti". (1) **El corte**
+(`corte`, en `js/ropa-motor.js`: `CORTES`, `CORTES_DE`, `nombreCorte`): arriba
+y abrigos (pegado, regular, suelto, oversize), abajo (pitillo, pegado, recto,
+ancho, acampanado), cuerpo entero (pegado, recto, suelto, acampanado); zapatos
+y accesorios, ninguno. Se guarda el id ("" si no lo elegiste) y el nombre
+concuerda con la prenda por su género y número (`TIPO_G`): "Polera pegada",
+"Falda recta", "Leggings pegados"; "Pitillo", "Regular" (salvo en plural) y
+"Oversize" no cambian. **Las mangas** (`manga`: sin, corta, larga; `MANGAS`,
+`CON_MANGA`): solo arriba y cuerpo entero. En el formulario, después de "Qué
+es": "Corte (cómo te queda)" y "Mangas", que cambian con el grupo y el tipo (lo
+que no va con el grupo se borra); tocar otra vez el elegido lo quita (el toque
+cae en el círculo invisible que cubre la opción: se recuerda si ya estaba
+marcado al empezar el toque y se quita justo después, para que el teléfono no
+lo vuelva a marcar). En la ficha, "Corte" y "Mangas"; buscar los encuentra
+("pegada" y también "pegado"). (2) **Cambiar los colores**: tocar un color
+abre la paleta para cambiarlo ("Elige el color nuevo en lugar de blanco"); el
+nuevo queda en el mismo lugar y, si ya estaba en otro, ese se va (sin
+repetir); "Que sea el principal" lo pasa adelante; el foco vuelve al color (no
+se pierde). La ficha suma "Cambiar los colores" ("Ponerle color" si no tiene),
+que abre el formulario con la paleta lista para cambiar el principal. (3)
+**Mayúsculas** (`mayus`, `talla`): lo escrito empieza con mayúscula, también
+después de "¿", "¡" o un paréntesis (qué es con "Otro", tela, marca, notas,
+tus ocasiones, la nota de un deseo, "Mi estilo", y la tela y la ocasión que
+dice la IA de una inspiración); la talla en letras, toda en mayúscula ("m" →
+"M", "2xl" → "2XL", "s/m" → "S/M", "eu 42" → "EU 42"; "10 años" queda igual). Se
+aplica al leer (`normalizar`) y al guardar (`ropa-datos.limpio`): lo de antes
+se ve bien y se guarda así al editarlo. (4) **La IA**: el puente (versión 4,
+desplegado el 2026-11-24) pide `corte` y `manga` con "" para "no se nota" o
+"no va" (enum con vacío; todo obligatorio, como pide el esquema), los revisa
+contra el grupo (`limpiarPrenda`, `entradaPrenda`) y los suma a tu ropa en el
+texto que lee la IA para el look y Outfits ("Polera · corte pegado · manga
+corta"); las listas son las mismas de la app (una prueba lo revisa). "Describir
+con IA las que cargaste antes" también los llena si faltan. Con un puente
+viejo (sin corte), el formulario queda sin corte: nada se rompe. (5) Solo se
+suma: las prendas de antes quedan sin corte ni mangas hasta que las edites. (6)
+**Pruebas**: `npm test` → 825; el Worker → 7; E2E nueva `ropa-corte` (69
+comprobaciones: el corte con su nombre según la prenda y el grupo, tocar otra
+vez para quitarlo, los colores —cambiar, el principal, sin repetir, el foco—,
+las mayúsculas al guardar, la ficha y "Cambiar los colores", buscar, la IA con
+un puente de mentira, una prenda de antes, y a 320 px en oscuro y en claro:
+nada se sale, todo se toca con el dedo y se lee bien); las 47 suites sin
+fallas (3.993 comprobaciones). La captura mostró las mangas en "Abajo"
+aunque estaban escondidas: el estilo del recuadro (`display: flex`) le ganaba
+al atributo `hidden`; arreglado con `.ro-campo[hidden]`, y la prueba ahora
+mira lo que de verdad se ve.

@@ -1,5 +1,20 @@
 # Cambios
 
+## 2026-11-24 · Ropa: el corte, las mangas y cambiar los colores
+- **El corte** de cada prenda: pegada, suelta, oversize, recto, pitillo,
+  ancho, acampanado… (el nombre va con la prenda: "Polera pegada", "Falda
+  recta"). Y **las mangas**: sin, corta o larga.
+- La IA llena el corte y las mangas sola al mirar la foto, y los usa para
+  armar tus looks y outfits.
+- **Cambiar los colores**: toca un color para cambiarlo, o "Que sea el
+  principal". En la ficha de cada prenda, "Cambiar los colores".
+- Lo que escribes queda **con mayúscula** (tela, marca, notas…), y la talla en
+  letras, toda en mayúscula ("M", "XL").
+
+## 2026-11-24 · Ropa: la IA conectada
+- El puente de la IA quedó instalado en tu Cloudflare, con el tope de US$ 8
+  al mes. Ropa › el engranaje dice si la IA está conectada y cuánto gastaste.
+
 ## 2026-11-23 · Ropa: revisión final
 - Sin internet, Ajustes de Ropa lo dice (antes se quedaba "revisando") y la IA
   se conecta sola cuando vuelve internet. Al agregar una foto sin internet,

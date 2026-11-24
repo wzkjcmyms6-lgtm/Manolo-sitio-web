@@ -59,14 +59,18 @@ function hoy() {
 // Lo que se guarda de una prenda (lo que viene del formulario, ya revisado).
 function limpio(d) {
   const o = {
-    v: 1, grupo: d.grupo, tipo: String(d.tipo || "").trim().slice(0, 40),
+    v: 1, grupo: d.grupo, tipo: M.mayus(String(d.tipo || "").trim().slice(0, 40)),
     colores: (d.colores || []).filter(c => c && M.COLOR[c.id]).slice(0, 3).map(c => (typeof c.peso === "number" ? { id: c.id, peso: c.peso } : { id: c.id })),
-    estampado: d.estampado || "", tela: String(d.tela || "").trim().slice(0, 40),
+    estampado: d.estampado || "", tela: M.mayus(String(d.tela || "").trim().slice(0, 40)),
+    // El corte y las mangas (D-154), si van con el grupo.
+    corte: (M.CORTES_DE[d.grupo] || []).includes(d.corte) ? d.corte : "",
+    manga: M.CON_MANGA.includes(d.grupo) && M.MANGAS.some(m => m[0] === d.manga) ? d.manga : "",
     estilo: d.estilo || [], clima: d.clima || [],
     formalidad: d.formalidad ? Number(d.formalidad) : null,
-    marca: String(d.marca || "").trim().slice(0, 40), talla: String(d.talla || "").trim().slice(0, 12),
+    // Lo que escribes, siempre con mayúscula (D-154).
+    marca: M.mayus(String(d.marca || "").trim().slice(0, 40)), talla: M.talla(String(d.talla || "").trim().slice(0, 12)),
     precio: d.precio === "" || d.precio == null ? null : Math.round(Number(d.precio) * 100) / 100,
-    compra: d.compra || "", notas: String(d.notas || "").trim().slice(0, 500)
+    compra: d.compra || "", notas: M.mayus(String(d.notas || "").trim().slice(0, 500))
   };
   if (Array.isArray(d.fotos)) o.fotos = d.fotos.map(f => ({ id: f.id, mini: f.mini || "", ancho: f.ancho || 0, alto: f.alto || 0 }));
   if (d.ia) o.ia = { fecha: d.ia };   // la llenó la IA (D-147)

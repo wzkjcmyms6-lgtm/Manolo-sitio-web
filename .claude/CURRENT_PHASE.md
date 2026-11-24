@@ -10,12 +10,13 @@ de Pinterest y diseño en `docs/ROPA.md` (D-145).
 |---|---|---|
 | 0 | Diseño y prueba de Pinterest | ✅ (D-145) |
 | 1 | Mi ropa sin IA: agregar con fotos, datos a mano, color de la foto, ropero con filtros, ficha, para lavar, ya no la tengo, copia de seguridad | ✅ (D-146) |
-| 2 | La IA describe: cuentas con el dueño, el puente, describir al agregar y las que ya tienes, gasto y tope | 🔧 lista en el código (D-147); falta instalar el puente con las cuentas del dueño |
+| 2 | La IA describe: cuentas con el dueño, el puente, describir al agregar y las que ya tienes, gasto y tope | ✅ (D-147); el puente, instalado en el Cloudflare del dueño el 2026-11-24 (D-153) |
 | 3 | Inspiración de Pinterest: subir imagen o link, leer el tablero, prendas de cada pin, armar el look con tu ropa, tu estilo | ✅ en el código (D-148); Pinterest y la IA se encienden al instalar el puente |
 | 4 | Outfits: qué me pongo hoy, me lo pongo, guardar, no me gusta, con qué combino esto, calendario | ✅ (D-149): con el clima de cualquier ciudad; con reglas ya, con la IA al instalar el puente |
 | 5 | Compras desde Pinterest: qué te falta, outfits nuevos, ver opciones en Pinterest, qué no comprar, lista de deseos, presupuesto | ✅ (D-150): sin IA (con lo que la IA ya vio en tus pines) |
 | 6 | Extras: lo más y lo menos usado, colores, costo por uso, Tu semana, Tu año, Inicio | ✅ (D-151): "Tus números", lo de hoy en Inicio y Ropa en "Tu semana" y "Tu año" |
-| 7 | Revisión final y lista para el iPhone | ✅ (D-152): todas las pruebas, Lighthouse, la IA sin internet y la lista para el iPhone; la prueba real de la IA espera las cuentas del dueño |
+| 7 | Revisión final y lista para el iPhone | ✅ (D-152): todas las pruebas, Lighthouse, la IA sin internet y la lista para el iPhone; la prueba real de la IA, del dueño (el puente ya está) |
+| + | Pedido del dueño (2026-11-24): el corte y las mangas, cambiar los colores, mayúsculas | ✅ (D-154): la IA también llena el corte y las mangas (puente versión 4) |
 
 ## Tu semana, Tu año y Bici al nivel de Running (pedido del dueño, 2026-11-16) — terminado
 "Haz el 1, 2 y 4, desarróllalos de la manera más completa posible."

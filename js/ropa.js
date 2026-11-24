@@ -252,6 +252,7 @@ function renderFicha() {
   const u = D.usosDe(p.id), hoy = D.puestaHoy(p.id);
   const cpu = M.costoPorUso(p.precio, u.n);
   const datos = [
+    ["Corte", M.nombreCorte(p.corte, p.tipo)], ["Mangas", M.nombreManga(p.manga)],
     ["Tela", p.tela], ["Estampado", M.nombreDe(M.ESTAMPADOS, p.estampado)], ["Marca", p.marca], ["Talla", p.talla],
     ["Precio", p.precio != null ? plata(p.precio) : ""], ["La compraste", p.compra ? fechaLarga(p.compra) : ""], ["Notas", p.notas]
   ].filter(x => x[1]);
@@ -268,6 +269,7 @@ function renderFicha() {
     <h1 class="page-title ro-ficha-t">${esc(M.titulo(p))}</h1>
     <p class="ro-ficha-sub">${esc(M.GRUPO[p.grupo].nombre)} · ${esc(p.tipo)}${p.estado === "lavar" ? ` · <b class="ro-lavar-t">Para lavar</b>` : ""}${p.estado === "fuera" ? ` · Ya no la tienes${p.fueraFecha ? ` (desde el ${esc(fechaLarga(p.fueraFecha))})` : ""}` : ""}</p>
     ${chips ? `<ul class="ro-infos">${chips}</ul>` : ""}
+    ${p.estado !== "fuera" ? `<button type="button" class="link-btn ro-cambiar-colores" data-rop="colores">${p.colores.length ? "Cambiar los colores" : "Ponerle color"}</button>` : ""}
     ${p.estado === "fuera" ? "" : `<button type="button" class="ro-puse${hoy ? " is-on" : ""}" data-rop="puse" aria-pressed="${hoy}"><span data-icon="check" aria-hidden="true"></span>${hoy ? "Te la pusiste hoy" : "Me la puse hoy"}</button>`}
     <section class="tmp-card ro-uso" aria-labelledby="rop-uso-t">
       <h2 class="ro-sub" id="rop-uso-t">Cuánto la usas</h2>
@@ -297,6 +299,7 @@ if (ficha) ficha.addEventListener("click", e => {
   const nombre = M.titulo(p);
   if (a === "puse") D.meLaPuse(p.id, D.hoy(), !D.puestaHoy(p.id)).catch(fallo);
   else if (a === "editar") { if (window.RopaForm) window.RopaForm.editar(p.id, b); }
+  else if (a === "colores") { if (window.RopaForm) window.RopaForm.editar(p.id, b, null, { colores: true }); }
   else if (a === "ia") describirConIA(p, b);
   else if (a === "lavar") { const e2 = p.estado === "lavar" ? "activa" : "lavar"; D.estado(p.id, e2).catch(fallo); aviso(e2 === "lavar" ? `${nombre}: para lavar.` : `${nombre}: ya está limpia.`); }
   else if (a === "fuera") { D.estado(p.id, "fuera").catch(fallo); aviso(`${nombre} salió de tu ropero.`, () => D.estado(p.id, p.estado).catch(fallo)); }

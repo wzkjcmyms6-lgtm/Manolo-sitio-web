@@ -139,7 +139,11 @@ test("a qué inspiración se parece un outfit (D-149)", () => {
 test("lo que se le manda a la IA: sin notas, talla, precio ni fotos", () => {
   const r = I.roperoParaIA(ROPERO);
   assert.ok(!r.some(p => p.id === "jean-negro"), "sin las que ya no tienes");
-  assert.deepEqual(r.find(p => p.id === "jean"), { id: "jean", grupo: "abajo", tipo: "Jean", colores: ["azul-jean"], estampado: "", tela: "Jean", estilo: [], clima: [], formalidad: null, marca: "", lavar: false });
+  assert.deepEqual(r.find(p => p.id === "jean"), { id: "jean", grupo: "abajo", tipo: "Jean", colores: ["azul-jean"], estampado: "", tela: "Jean", corte: "", manga: "", estilo: [], clima: [], formalidad: null, marca: "", lavar: false });
+  // Con el corte y las mangas (D-154).
+  const conCorte = I.roperoParaIA([M.normalizar("pl", { grupo: "arriba", tipo: "Polera", corte: "oversize", manga: "corta" })])[0];
+  assert.equal(conCorte.corte, "oversize");
+  assert.equal(conCorte.manga, "corta");
   assert.equal(r.find(p => p.id === "chompa").lavar, true);
   assert.ok(!JSON.stringify(r).includes("favorita"));
   const pin = I.pinParaIA(I.analisis(PIN));
