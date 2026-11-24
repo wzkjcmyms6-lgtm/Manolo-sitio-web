@@ -4,11 +4,13 @@
 // suma al final (arrayUnion): nada se reescribe. Hasta 40 mensajes por
 // conversación; después, lo que escribas empieza una nueva. Lo que recuerda
 // de ti va en meta/ropa_ajustes.memoria (por RopaInspDatos.guardarAjustes).
-// Borrar una conversación se puede deshacer (restaurar). Solo se suman campos
-// y documentos.
+// Borrar una conversación se puede deshacer (restaurar). Cada repaso de tu
+// ropero (D-160) queda en users/{uid}/ropa_opiniones (se ve el último). Solo
+// se suman campos y documentos.
 // window.RopaEstilistaDatos: lista(), una(id), crudo(id), cargada(), al(fn),
 // crear(mensaje) → id, agregar(id, mensaje) → promesa, borrar(id),
-// restaurar(id, doc), memoria(), guardarMemoria(lista).
+// restaurar(id, doc), memoria(), guardarMemoria(lista), opiniones(),
+// opinionesCargadas(), guardarOpinion(doc) → id.
 (function () {
 "use strict";
 const E = window.RopaEstilistaMotor, DI = window.RopaInspDatos;
@@ -17,19 +19,29 @@ const usuario = () => db.collection("users").doc(currentUser.uid);
 const col = () => usuario().collection("ropa_charlas");
 const FV = () => firebase.firestore.FieldValue;
 
-let todas = [], cargada = false;
+let todas = [], cargada = false, opiniones = [], opinionesCargadas = false;
 const crudos = new Map();
 const oyentes = [];
-let quitar = null;
+const avisar = () => oyentes.forEach(f => { try { f(); } catch (e) { console.error("Ropa (estilista):", e); } });
+let quitar = [];
 function escuchar() {
-  if (quitar) quitar();
-  quitar = col().onSnapshot(snap => {
-    crudos.clear();
-    snap.docs.forEach(d => crudos.set(d.id, d.data()));
-    todas = E.ordenar([...crudos.entries()].map(([id, d]) => E.normalizar(id, d)));
-    cargada = true;
-    oyentes.forEach(f => { try { f(); } catch (e) { console.error("Ropa (estilista):", e); } });
-  }, err => console.warn("Ropa (estilista):", err));
+  quitar.forEach(f => f());
+  quitar = [
+    col().onSnapshot(snap => {
+      crudos.clear();
+      snap.docs.forEach(d => crudos.set(d.id, d.data()));
+      todas = E.ordenar([...crudos.entries()].map(([id, d]) => E.normalizar(id, d)));
+      cargada = true;
+      avisar();
+    }, err => console.warn("Ropa (estilista):", err)),
+    // Los repasos de tu ropero (D-160; la lógica, en RopaOpinionMotor).
+    usuario().collection("ropa_opiniones").onSnapshot(snap => {
+      const P = window.RopaOpinionMotor;
+      opiniones = P ? P.ordenar(snap.docs.map(d => P.normalizar(d.id, d.data()))) : [];
+      opinionesCargadas = true;
+      avisar();
+    }, err => console.warn("Ropa (opiniones):", err))
+  ];
 }
 if (typeof onAuthReady === "function") onAuthReady(escuchar);
 
@@ -59,12 +71,20 @@ function agregar(id, m) {
 const borrar = id => col().doc(id).delete();
 const restaurar = (id, doc) => col().doc(id).set(doc);
 
+// Un repaso nuevo de tu ropero. → su id (al toque).
+function guardarOpinion(doc) {
+  const ref = usuario().collection("ropa_opiniones").doc();
+  ref.set(Object.assign({ v: 1 }, doc, { creado: Date.now() })).catch(e => console.warn("Ropa (opiniones):", e));
+  return ref.id;
+}
+
 // Lo que recuerda de ti (en los ajustes de Ropa).
 const memoria = () => E.memoria((DI.ajustes() || {}).memoria);
 const guardarMemoria = lista => DI.guardarAjustes({ memoria: E.memoria(lista) });
 
 window.RopaEstilistaDatos = {
   lista: () => todas, una: id => todas.find(c => c.id === id) || null, crudo: id => crudos.get(id) || null,
-  cargada: () => cargada, al: fn => { oyentes.push(fn); }, crear, agregar, borrar, restaurar, memoria, guardarMemoria
+  cargada: () => cargada, al: fn => { oyentes.push(fn); }, crear, agregar, borrar, restaurar, memoria, guardarMemoria,
+  opiniones: () => opiniones, opinionesCargadas: () => opinionesCargadas, guardarOpinion
 };
 })();

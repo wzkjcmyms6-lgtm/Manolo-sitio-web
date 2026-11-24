@@ -1,5 +1,16 @@
 # Cambios
 
+## 2026-11-24 · Ropa: lo que opina tu estilista
+- **En Compras, "Lo que opina tu estilista"**: le pides su opinión de todo tu
+  ropero (unos 12 centavos) y te dice lo que ve (Manolo cuenta los números y tu
+  estilista los comenta), lo que sumaría (con cuántos outfits nuevos te da, con
+  qué de tu ropa va, "A mi lista" y "Ver opciones en Pinterest"), qué no
+  comprar más, qué podrías dejar de lado, tus colores y consejos. Queda
+  guardado; puedes pedirle otra opinión cuando quieras.
+- **"¿Qué opinas?"**: en "Armar el mío" y en tus outfits, tu estilista te dice
+  si va bien, qué funciona y hasta 2 cambios con fotos; "Cambiar" lo hace en
+  un toque (unos 4 centavos).
+
 ## 2026-11-24 · Ropa: tu estilista recuerda lo del día
 - Lo que escribes en "Pídelo con tus palabras" sigue tu conversación de hoy:
   tu estilista recuerda los outfits que ya te armó, y si le dices "la opción

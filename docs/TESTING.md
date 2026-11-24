@@ -1,6 +1,15 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-24 (Ropa, nivel 2, fase 4, D-160: lo que opina tu estilista y "¿Qué
+  opinas?"): `npm test` → **851** (nuevo `ropa-opinion-motor`: lo que ve
+  Manolo con sus números, tu ropa con las veces, tus pines en palabras, cada
+  repaso guardado, el veredicto y cambiar una prenda). E2E nueva
+  `ropa-opinion` (**56**, con un puente de mentira): pedir la opinión en
+  Compras (y un error), lo que va al puente, lo guardado, cada parte del
+  repaso, "A mi lista" y Pinterest, lo guardado sin la IA; "¿Qué opinas?" en
+  Armar el mío ("Cambiar" con Deshacer, sin pagar dos veces, "Preguntarle otra
+  vez") y desde un guardado; sin la IA no aparece; 320 px en oscuro y en claro.
 - 2026-11-24 (D-159: tu estilista recuerda lo del día): `npm test` → **846**
   (en `puente-logica`, los outfits de antes con su número y su nombre y lo que
   viste hoy; en `ropa-estilista-motor`, `delDia`, `deHoy` y lo de antes con
@@ -718,6 +727,11 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
   "Lo que recuerda de ti" (también en Ajustes de Ropa).
 - [ ] Sal y vuelve: la conversación sigue; en "Conversaciones", empieza una
   nueva y vuelve a la de antes.
+- [ ] Compras › "Lo que opina tu estilista" › "Pedir su opinión" (unos 12
+  centavos; tarda un poco). Lee lo que ve y lo que sumaría; "A mi lista" en
+  una sugerencia.
+- [ ] "Armar el mío": arma un outfit y toca "¿Qué opinas?"; si propone un
+  cambio, "Cambiar".
 - [ ] En modo avión: Ajustes de Ropa dice "Sin internet"; al agregar una foto,
   "Sin internet: la IA no puede mirar la foto". Al volver internet, la IA se
   conecta sola.

@@ -3549,6 +3549,12 @@ html[data-modo="claro"] {
 :where(html[data-modo="claro"]) .roar-p-l {
   color: var(--accent-2);
 }
+:where(html[data-modo="claro"]) .roar-opinar [data-icon] {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .roar-opinar small {
+  color: var(--muted);
+}
 
 /* ---- css/ej-calendario.css ---- */
 :where(html[data-modo="claro"]) .ejc-tarjeta {

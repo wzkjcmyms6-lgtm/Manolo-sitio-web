@@ -7,7 +7,9 @@
 // lista". "Tu lista de deseos": "Lo compré" (pasa a tu ropero, con foto o sin
 // foto), "Ver en Pinterest" y "Ya no lo quiero" (con Deshacer); abajo, lo que
 // compraste. "Qué no comprar": lo que ya tienes de sobra. Manolo nunca compra
-// nada. Reglas: js/ropa-compras-motor.js; datos: js/ropa-compras-datos.js.
+// nada. Antes de "Qué te falta", lo que opina tu estilista de tu ropero (D-160,
+// js/ropa-opinion.js). Reglas: js/ropa-compras-motor.js; datos:
+// js/ropa-compras-datos.js.
 (function () {
 "use strict";
 const M = window.RopaMotor, K = window.RopaComprasMotor, D = window.RopaDatos, DI = window.RopaInspDatos, DD = window.RopaComprasDatos;
@@ -124,7 +126,7 @@ function sobraHTML() {
 function render() {
   if (pantalla() !== "ropa-compras") return;
   if (!D.cargada()) { app.innerHTML = `<p class="rd-nota">Cargando…</p>`; return; }
-  app.innerHTML = `${presupuestoHTML()}${faltanHTML()}${listaHTML()}${sobraHTML()}
+  app.innerHTML = `${presupuestoHTML()}${window.RopaOpinion ? window.RopaOpinion.html() : ""}${faltanHTML()}${listaHTML()}${sobraHTML()}
     <p class="rd-nota rco-nunca">Manolo nunca compra nada: solo te muestra ideas.</p>`;
   pintarIconos(app);
 }

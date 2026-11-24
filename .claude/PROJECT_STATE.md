@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-24 (Ropa, nivel 2: tu estilista con IA, fase 3 y D-159).
+Actualizado: 2026-11-24 (Ropa, nivel 2: tu estilista con IA, fase 4, D-160).
 
 - **Ropa, nivel 2: tu estilista con IA (2026-11-24, en curso)**: hablar con la
   IA como con un estilista (outfits solo con su ropa, a partir de lo que
@@ -25,6 +25,11 @@ Actualizado: 2026-11-24 (Ropa, nivel 2: tu estilista con IA, fase 3 y D-159).
   copia de seguridad). D-159: recuerda lo del día (sigue la conversación de
   hoy; los outfits de antes con su nombre y lo que vio hoy; puente versión 6)
   y Outfits guarda las opciones de cada día y ocasión.
+  Fase 4 hecha (D-160): **lo que opina tu estilista** de su ropero (en Compras:
+  los números de Manolo comentados, lo que sumaría con cuántos outfits nuevos,
+  qué no comprar, qué dejar, colores y consejos; `ropa_opiniones`) y **"¿Qué
+  opinas?"** de sus outfits (en Armar el mío, guardados y opciones; "Cambiar"
+  en un toque).
 
 - **Ropa con IA e inspiración de Pinterest (2026-11-22; terminado el
   2026-11-23; la IA conectada el 2026-11-24)**: el

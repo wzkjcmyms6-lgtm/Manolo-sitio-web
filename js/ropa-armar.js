@@ -149,6 +149,7 @@ function pieHTML(xs) {
     <fieldset class="ro-campo"><legend>Para qué</legend><div class="ro-opciones">${ocasiones().map(o =>
       `<label class="ro-op-chip"><input type="radio" name="roar-ocasion" value="${esc(o.id)}"${ocasion() === o.id ? " checked" : ""}><span>${esc(o.nombre)}</span></label>`).join("")}</div></fieldset>
     <label class="rd-campo"><span>Nombre <small class="rd-nota">(si quieres)</small></span><input class="lib-input" name="roar-nombre" maxlength="40" value="${esc(est.nombre)}" placeholder="Por ejemplo: Oficina fresca" autocomplete="off"></label>
+    ${xs.length >= 2 && window.RopaOpinion && window.RopaOpinion.disponible() ? `<button type="button" class="lib-btn-sec roar-opinar" data-roar="opinar" aria-haspopup="dialog">${icono("sparkle")}¿Qué opinas? <small>(tu estilista)</small></button>` : ""}
     <div class="roar-bots">
       <button type="button" class="lib-btn" data-roar="${manana ? "manana" : "puse"}"${xs.length ? "" : " disabled"}>${icono("check")}${manana ? "Para mañana" : "Me lo pongo"}</button>
       <button type="button" class="lib-btn-sec" data-roar="guardar"${xs.length ? "" : " disabled"}>${icono("guardar")}${editar ? "Guardar los cambios" : "Guardar"}</button>
@@ -245,6 +246,7 @@ app.addEventListener("click", e => {
   if (!b || b.disabled) return;
   const a = b.dataset.roar;
   if (a === "ver") { if (OF() && OF().ver) OF().ver(idsListos(), est.nombre.trim() || "Tu outfit", b); }
+  else if (a === "opinar") opinar(b);
   else if (a === "arriba") { window.scrollTo({ top: 0, behavior: "smooth" }); const v = app.querySelector('[data-roar="ver"]'); if (v) v.focus({ preventScroll: true }); }
   else if (a === "puse") ponerme();
   else if (a === "guardar") guardar(null);
@@ -270,6 +272,22 @@ app.addEventListener("input", e => {
   guardarBorrador();
 });
 
+// "¿Qué opinas?" (D-160): tu estilista mira tu outfit; "Cambiar" lo aplica aquí (con Deshacer).
+function opinar(desde) {
+  const RP = window.RopaOpinion, PM = window.RopaOpinionMotor;
+  if (!RP || !PM) return;
+  RP.opinar(idsListos(), {
+    desde, ocasion: O.ocasion(ocasion(), propias()).nombre,
+    alCambiar: (sale, entra) => {
+      const antes = est.ids.slice(), a = D.una(sale), b = D.una(entra);
+      est.ids = PM.cambiar(idsListos(), sale, entra);
+      guardarBorrador();
+      render();
+      aviso(`Listo: ${a ? M.titulo(a) : "esa prenda"} por ${b ? M.titulo(b) : "la otra"}.`, () => { est.ids = antes; guardarBorrador(); render(); });
+    }
+  });
+}
+
 // ---------- Cuándo se pinta ----------
 function alEntrar() {
   if (pantalla() !== "ropa-armar") return;
@@ -282,5 +300,7 @@ document.addEventListener("DOMContentLoaded", alEntrar);
 D.al(() => { if (pantalla() === "ropa-armar") render(); });
 DO.al(() => { if (pantalla() === "ropa-armar") render(); });
 DI.al(() => { if (pantalla() === "ropa-armar") render(); });
+// Con la IA lista aparece "¿Qué opinas?" (D-160).
+if (window.RopaIA) window.RopaIA.alCambiar(() => { if (pantalla() === "ropa-armar") render(); });
 window.RopaArmar = { abrir, render };
 })();

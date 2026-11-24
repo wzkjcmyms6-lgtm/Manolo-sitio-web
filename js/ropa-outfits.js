@@ -157,6 +157,14 @@ function prendasHTML(ids) {
 }
 const principales = ids => ids.filter(id => { const p = D.una(id); return p && p.grupo !== "accesorios"; });
 const armar_ = () => window.RopaArmar;   // "Armar el mío" (js/ropa-armar.js)
+// "¿Qué opinas?" de tu estilista (D-160, js/ropa-opinion.js): "Cambiar" abre
+// "Armar el mío" con el cambio hecho (para guardarlo o ponértelo).
+const opinion = () => !!(window.RopaOpinion && window.RopaOpinion.disponible());
+function opinarDe(ids, o, desde) {
+  const RP = window.RopaOpinion, PM = window.RopaOpinionMotor;
+  if (!RP || !PM) return;
+  RP.opinar(ids, { desde, ocasion: nombreOcasion(o.ocasion), alCambiar: armar_() ? (sale, entra) => armar_().abrir(PM.cambiar(ids, sale, entra), { modo: "cambiar", ocasion: o.ocasion, datos: o.datos }) : null });
+}
 // ---------- Ver en grande (D-156) ----------
 // Las fotos juntas, como se ve puesto: lo de arriba (de afuera hacia adentro),
 // lo de abajo, los pies y los accesorios; cada una lleva a su ficha. Debajo,
@@ -584,6 +592,7 @@ function verGuardado(id, desde) {
       ${armar_() ? `<button type="button" class="lib-btn-sec" data-rof-h="editar">${icono("edit")}Editar</button>
       <button type="button" class="lib-btn-sec" data-rof-h="duplicar">${icono("copy")}Duplicar</button>` : ""}
       <button type="button" class="lib-btn-sec" data-rof-h="quitar">Quitar de guardados</button>
+      ${opinion() ? `<button type="button" class="lib-btn-sec" data-rof-h="opinar" aria-haspopup="dialog">${icono("sparkle")}¿Qué opinas?</button>` : ""}
     </div></div>`);
   if (desde) h.volver = desde;
   pintarIconos(h.el);
@@ -594,6 +603,7 @@ function verGuardado(id, desde) {
     if (!b) { if (e.target.closest(".rof-tab")) { h.volver = null; h.cerrar(); } return; }
     const a = b.dataset.rofH;
     if (a === "editar" || a === "duplicar") { h.volver = null; h.cerrar(); location.hash = `ropa-armar/${a === "editar" ? "o" : "d"}/${encodeURIComponent(id)}`; return; }
+    if (a === "opinar") { const v = h.volver; h.volver = null; h.cerrar(); opinarDe(o.prendas, { ocasion: o.ocasion, datos: { origen: o.origen, nombre: o.nombre, porque: o.porque, capas: o.capas } }, v); return; }
     h.cerrar();
     if (a === "puse") ponermeGuardado(id);
     else { DO.quitarGuardado(id).catch(fallo); aviso("Quitado de tus guardados.", () => DO.guardar(o.prendas, {}, o.para || null).catch(fallo)); }
@@ -635,6 +645,7 @@ function verOpcion(i, desde) {
       <button type="button" class="lib-btn-sec" data-rof-v="no">${icono("close")}No me gusta</button>
     </div>
     ${armar_() ? `<button type="button" class="link-btn rof-ver-cambiar" data-rof-v="cambiar">${icono("edit")}Cambiar una prenda</button>` : ""}
+    ${opinion() ? `<button type="button" class="link-btn rof-ver-cambiar" data-rof-v="opinar" aria-haspopup="dialog">${icono("sparkle")}¿Qué opinas? (tu estilista)</button>` : ""}
   </div>`);
   if (desde) h.volver = desde;
   pintarIconos(h.el);
@@ -651,6 +662,7 @@ function verOpcion(i, desde) {
       return;
     }
     if (a === "cambiar") { h.volver = null; h.cerrar(); accionOpcion("cambiar", i); return; }
+    if (a === "opinar") { const v = h.volver; h.volver = null; h.cerrar(); opinarDe(o.prendas, { ocasion: est.ocasion, datos: datosDe(o) }, v); return; }
     h.cerrar();
     accionOpcion(a, i);
   };

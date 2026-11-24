@@ -433,6 +433,29 @@ Pregunta del dueño: "¿Por qué no recuerda los outfits que me hizo para el dí
 - Outfits guarda las opciones de cada día y cada ocasión: al volver, siguen ahí
   (sin pedirlas otra vez).
 
+## Hecho en la fase 4 (D-160): lo que opina tu estilista y "¿Qué opinas?"
+- **En Compras, antes de "Qué te falta"**: "Lo que opina tu estilista". Sin
+  repaso: "Pedir su opinión" (unos 12 centavos; tarda un poco). Con repaso: la
+  fecha (y cuántas prendas tenías), el resumen, **Lo que ve** (los números de
+  Manolo, cada uno con lo que comenta tu estilista), **Lo que sumaría** (por
+  qué, con qué de tu ropa va, cuántos outfits nuevos te da —los cuenta Manolo—,
+  si también está en tus pines, "A mi lista" y "Ver opciones en Pinterest"),
+  **Qué no comprar más**, **Podrías dejar de lado** (es solo un consejo: no
+  cambia nada), **Tus colores** y **Consejos**; "Pedirle otra opinión". Cada
+  repaso queda guardado; sin la IA, el último se ve igual.
+- **Los números de Manolo** (`js/ropa-opinion-motor.js`): cuánto de cada parte
+  (y si falta algo), un color que domina, los zapatos todos oscuros o claros,
+  todo liso, nada muy formal, nada para el calor o el frío, lo que más te pones
+  y lo que no te pusiste en 3 meses, tus colores, lo que tienes de sobra y
+  cuántas combinaciones van juntas.
+- **"¿Qué opinas?"** (unos 4 centavos): en "Armar el mío" (con 2 prendas o
+  más), en tus guardados y en cada opción vista en grande. Dice si va bien, qué
+  funciona, hasta 2 cambios con fotos (sale → entra, por qué) y un consejo.
+  "Cambiar": en Armar el mío lo aplica ahí mismo (con Deshacer); desde un
+  outfit, abre Armar el mío con el cambio hecho. Si preguntas lo mismo otra
+  vez, te muestra la misma respuesta sin pagar; "Preguntarle otra vez" vuelve a
+  preguntar.
+
 ## Lo que no hace
 No genera fotos tuyas con la ropa puesta. No compra nada. No borra ni cambia
 tu ropa: solo propone. No publica nada en tu Pinterest. No pide tu ubicación.

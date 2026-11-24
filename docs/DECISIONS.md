@@ -2716,3 +2716,48 @@ en adelante, hasta 12; la de antes se lee igual). Pruebas: `npm test` → 846;
 Outfits; una de otro día no sigue; en una nueva igual sabe lo de hoy);
 `ropa-outfits` 87 (al volver a hoy o a Casual, siguen las opciones). Puente:
 18 pruebas de la lógica y 9 del Worker; instalado (versión 6).
+
+**D-160 (2026-11-24) · Ropa, nivel 2, fase 4: lo que opina tu estilista de tu
+ropero y "¿Qué opinas?".** (1) **Lo que ve Manolo** (`js/ropa-opinion-motor.js`;
+el plan decía `ropa-estilista-motor.js`, pero estos números usan las reglas de
+Compras y de Tus números, que se cargan después): frases con números de verdad,
+cada una con su referencia (`h1`…, hasta 15), sin lo que ya no tienes: cuánto
+de cada parte; si hay mucho más de arriba que de abajo (o al revés); sin
+zapatos o sin abrigos (desde 6 prendas); un color que domina una parte (4 o
+más y la mitad o más; el color con su forma: "negras", "negros"); los zapatos
+todos oscuros o todos claros; todo liso (desde 8); nada muy formal (4 o 5),
+nada marcado para el calor o el frío; lo que más te pones y lo que no te
+pusiste en 3 meses (de lo que anotaste; si no anotaste nada, lo dice); tus
+colores; lo que tienes de sobra; cuántas combinaciones de arriba y abajo van
+juntas (`vanJuntas`). (2) **El repaso, en Compras** (`js/ropa-opinion.js`,
+antes de "Qué te falta"): sin la IA y sin un repaso guardado, no aparece; con
+menos de 3 prendas, lo explica. "Pedir su opinión" (unos 12 centavos; "Tu
+estilista está mirando tu ropero…"; si falla, lo dice y no guarda nada). Al
+puente (`/opinion`, esfuerzo alto): tu ropa con las veces que te la pusiste
+(`roperoParaRepaso`), los números, lo que se repite en tus pines
+(`pinesTexto`, de "Qué te falta"), tu estilo, lo que recuerda de ti, tu
+presupuesto y tu ciudad. Cada repaso queda en `ropa_opiniones` ({ v, fecha, n,
+hechos, ia, creado }; sin el gasto) y se ve el último (al toque, sin esperar a
+la nube). Se ve: el resumen; "Lo que ve" (cada número con lo que comenta tu
+estilista); "Lo que sumaría" (con qué de tu ropa va, cuántos outfits nuevos te
+da —`outfitsNuevos`, lo cuenta Manolo—, si también está en tus pines, "A mi
+lista" con `origen: "estilista"` y "Ver opciones en Pinterest"); qué no
+comprar más; podrías dejar de lado (solo las que siguen en tu ropero; "es solo
+un consejo": nunca toca nada); tus colores; consejos; "Pedirle otra opinión".
+(3) **"¿Qué opinas?"** (`RopaOpinion.opinar`, `/opinar`, esfuerzo medio, unos
+4 centavos): en Armar el mío (con 2 prendas o más y la IA lista; "Cambiar" lo
+aplica ahí mismo con `RopaOpinionMotor.cambiar`, con Deshacer), en un guardado
+y en una opción en grande de Outfits ("Cambiar" abre Armar el mío con el cambio
+hecho). Le llegan tu outfit, tu ropa (lo que está para lavar, marcado), el clima
+de hoy y de mañana, la ocasión, tu estilo y lo que recuerda de ti. La hoja se
+arma una vez y solo cambia lo de adentro (se anuncia; el foco queda); la
+respuesta de cada outfit queda en esta sesión (no se paga dos veces lo mismo;
+"Preguntarle otra vez", sí) y lo que llega tarde de otro outfit no se pinta.
+(4) **Datos**: `ropa_opiniones` (nuevo, en la copia de seguridad). (5)
+**Pruebas**: `npm test` → 851 (nuevo `ropa-opinion-motor`: lo que ve Manolo, tu
+ropa con las veces, tus pines en palabras, cada repaso guardado, el veredicto y
+cambiar); E2E nueva `ropa-opinion` (56: pedir, un error, lo que va al puente,
+lo guardado, cada parte del repaso, "A mi lista" y Pinterest, lo guardado sin
+la IA; "¿Qué opinas?" en Armar el mío con "Cambiar" y Deshacer, sin pagar dos
+veces y "Preguntarle otra vez"; desde un guardado; sin la IA no aparece; 320 px
+en oscuro y en claro).

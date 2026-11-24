@@ -42,7 +42,8 @@ const COLECCIONES = [
   { id: "ropa_inspiracion", nombre: "inspiraciones de Ropa", uno: "inspiración de Ropa" },
   { id: "ropa_outfits", nombre: "outfits de Ropa", uno: "outfit de Ropa" },
   { id: "ropa_deseos", nombre: "deseos de Ropa", uno: "deseo de Ropa" },
-  { id: "ropa_charlas", nombre: "conversaciones con tu estilista", uno: "conversación con tu estilista" }
+  { id: "ropa_charlas", nombre: "conversaciones con tu estilista", uno: "conversación con tu estilista" },
+  { id: "ropa_opiniones", nombre: "opiniones de tu estilista", uno: "opinión de tu estilista" }
 ];
 const NOMBRE = Object.fromEntries(COLECCIONES.map(c => [c.id, c.nombre]));
 const MAX_BYTES = 150 * 1024 * 1024;   // un archivo más grande no es una copia de Manolo
