@@ -1,7 +1,15 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-24 (Ropa: el puente instalado, D-153; corte, mangas,
-colores y mayúsculas, D-154).
+Actualizado: 2026-11-24 (Ropa, nivel 2: tu estilista con IA, fase 0, D-155).
+
+- **Ropa, nivel 2: tu estilista con IA (2026-11-24, en curso)**: hablar con la
+  IA como con un estilista (outfits solo con su ropa, a partir de lo que
+  escribe o dicta), armar sus outfits él mismo ("Armar el mío", sin IA, con
+  avisos que no bloquean y "¿Qué opinas?" con la IA) y que la IA opine de su
+  ropero con su propio criterio (los números los cuenta Manolo; sugerencias
+  con cuántos outfits nuevos dan, qué no comprar, qué dejar de lado, colores y
+  consejos), en Compras. Plan, maquetas y costos (unos US$ 2 más al mes) en
+  `docs/ROPA_ESTILISTA.md` (D-155); fases en `.claude/CURRENT_PHASE.md`.
 
 - **Ropa con IA e inspiración de Pinterest (2026-11-22; terminado el
   2026-11-23; la IA conectada el 2026-11-24)**: el

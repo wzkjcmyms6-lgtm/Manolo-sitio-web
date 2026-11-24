@@ -1,0 +1,330 @@
+# Ropa, nivel 2: tu estilista con IA
+
+El siguiente paso de Ropa (`docs/ROPA.md`, D-145 a D-154): hablar con la IA
+como con un estilista personal, armar tus outfits tú mismo y que la IA opine
+de tu ropero con su propio criterio (no solo con lo que sale de Pinterest).
+Plan y decisiones de la fase 0 (D-155); las fases, en
+`.claude/CURRENT_PHASE.md`.
+
+## Pedido del dueño (2026-11-24)
+
+> **PROYECTO: "ROPA, NIVEL 2: MI ESTILISTA CON IA" EN MANOLO**
+>
+> **1. Qué quiero.** La IA de Ropa ya describe mis prendas, arma los looks de
+> mis pines y me propone outfits. Ahora quiero que sea mi estilista personal, y
+> también poder armar mis outfits yo. Tres cosas:
+> - **Hablar con ella:** le digo con mis palabras lo que necesito y me arma
+>   outfits con mi ropa.
+> - **Armar mis outfits yo:** elijo las prendas de mi ropero y, si quiero, le
+>   pido su opinión.
+> - **Que opine de mi ropero:** que lo mire todo con su propio criterio de
+>   estilista, no solo con lo que sale de Pinterest, y me diga qué me sobra,
+>   qué me falta y qué compraría para que mis outfits sean mejores.
+>
+> Lo que ya existe está en `docs/ROPA.md` (D-145 a D-154). Hazlo de la manera
+> más completa posible, por fases, como siempre.
+>
+> **2. Reglas de siempre.** Seguir `.claude/RULES.md`: español simple; tú
+> decides lo técnico y solo me preguntas lo que bloquea o cambia cómo se ve.
+> No romper nada de lo que ya funciona. Mis datos solo se suman: nunca se
+> borran ni se cambian solos. Con el aspecto de Manolo, en claro y en oscuro,
+> en el iPhone y en la compu. Todo entra en la copia de seguridad. En cada
+> fase, pruebas completas y el resumen de siempre: qué hiciste, cómo lo pruebo
+> en el iPhone, cuántas pruebas pasaron, qué decidiste y qué archivos
+> cambiaron.
+>
+> **3. Hablar con mi estilista.** En Ropa, un lugar para conversar con la IA,
+> y un acceso desde Outfits ("Pídelo con tus palabras"). Le escribo, o le
+> dicto con el micrófono del teclado del iPhone. Por ejemplo: "Está haciendo
+> bastante frío, quiero una chompa y una chamarra encima"; "Mañana tengo una
+> reunión formal y va a llover"; "Algo con mi jean negro y las zapatillas
+> blancas". Me contesta con 1 a 3 outfits **solo con mi ropa**: las fotos
+> juntas, en capas (de adentro hacia afuera), y una frase de por qué funciona.
+> Nunca inventa una prenda que no tengo; si le pido algo que no tengo, me lo
+> dice, me propone lo más parecido y, si vale la pena, me ofrece ponerlo en mi
+> lista de deseos. Usa todo lo que Manolo ya sabe: el clima de hoy o de mañana
+> en mi ciudad, la ocasión, lo que me puse los últimos días (no me lo repite),
+> lo que está para lavar (no lo usa), el corte y las mangas de cada prenda, mi
+> estilo de Pinterest y mis gustos. Puedo seguir la conversación: "otra
+> opción", "sin la chamarra negra", "algo más formal", "¿y si al mediodía sale
+> el sol?"; se acuerda de lo que hablamos en esa conversación. Cada outfit con
+> los botones de siempre: "Me lo pongo", "Guardar" y "No me gusta". También le
+> puedo hacer preguntas sueltas de ropa ("¿Con qué combino mis botines
+> cafés?"): contesta corto, en español simple y, si puede, con mi ropa. Si le
+> digo algo de mí ("no me gusta el amarillo", "prefiero los pantalones
+> rectos"), lo recuerda siempre; puedo ver y borrar lo que recuerda. Mis
+> últimas conversaciones quedan guardadas y puedo borrar la que quiera.
+>
+> **4. Armar mis outfits yo.** En Outfits, "Armar el mío": elijo lo que me
+> quiero poner por partes (arriba, abajo o cuerpo entero, abrigo, zapatos y
+> accesorios), viendo las fotos de mi ropa; puedo filtrar por color y por
+> clima. Mientras lo armo, veo el outfit con las fotos juntas, en capas. Le
+> pongo la ocasión y, si quiero, un nombre; lo guardo, lo marco "Me lo pongo"
+> o lo dejo para otro día ("Para mañana"). Manolo me avisa si algo no cuadra
+> (una prenda que está para lavar, dos pantalones, sin zapatos o algo muy
+> liviano para el frío de hoy): solo avisa, la decisión es mía. Puedo partir de
+> un outfit que me propuso la IA o de uno guardado y cambiarle una prenda
+> ("Cambiar esta"); también editar o duplicar mis outfits guardados. Con la
+> IA, "¿Qué opinas?": mi estilista me dice qué funciona, qué cambiaría
+> (siempre con mi ropa) y por qué; si me gusta un cambio, lo acepto con un
+> toque. Lo que armo yo también le enseña mis gustos a Manolo y a mi
+> estilista. Armar no gasta nada y funciona sin internet; solo "¿Qué opinas?"
+> usa la IA.
+>
+> **5. Lo que opina mi estilista de mi ropero.** Un repaso de todo mi ropero
+> cuando yo se lo pido ("Pedirle su opinión"), con la fecha del último. Lo que
+> ve, con números de verdad (los cuenta Manolo, no la IA): "Tienes 9 poleras
+> negras y solo 1 clara", "Casi todo es casual: no tienes nada para un evento
+> formal", "Todos tus zapatos son oscuros". Lo que haría mejores mis outfits:
+> "Unas zapatillas blancas: 12 outfits nuevos con tu ropa", "Un pantalón chino
+> beige va con 8 de tus camisas"; cada sugerencia con por qué, con qué de mi
+> ropa combina (las fotos), cuántos outfits nuevos me daría (contados con mi
+> ropa de verdad), "A mi lista de deseos" y "Ver opciones en Pinterest". Qué no
+> comprar más (lo que ya tengo de sobra) y qué podría dejar de lado (lo que no
+> uso y casi no combina): solo como consejo, nunca toca mi ropa. Mis colores:
+> cuáles me van con lo que tengo y cuáles sumar. Consejos de cortes y capas
+> según mi ropa y el clima de La Paz (mañanas frías, sol fuerte al mediodía,
+> lluvias de diciembre a marzo). Que me aporte algo distinto de Pinterest: lo
+> de Pinterest es lo que me gusta; esto es la opinión de una experta; si
+> coinciden, que lo diga ("también está en 4 de tus pines"). Que respete mi
+> presupuesto de ropa del mes, si lo tengo. Lo veo en Compras, junto a "Qué te
+> falta", y en Outfits, un aviso corto cuando algo que no tengo mejoraría las
+> opciones del día.
+>
+> **6. Cómo se conecta (lo técnico lo decides tú).** Por el mismo puente de
+> Cloudflare y con las mismas reglas: solo yo uso la IA; a la IA le llega lo
+> que le escribo y la lista de mi ropa (sin notas, talla ni precio), nunca mi
+> nombre, mi correo ni mi usuario. El puente no guarda las conversaciones:
+> quedan en mi cuenta de Manolo, como lo demás. El gasto: que cada mensaje
+> cueste lo menos posible; que Manolo me diga más o menos cuánto cuesta un
+> mensaje y un repaso; el tope del mes sigue mandando; nada nuevo de la IA
+> corre solo sin que yo lo pida (si algo conviene que corra solo, me preguntas
+> antes); si le sirve buscar en internet lo que se usa ahora, que lo haga con
+> un límite y me digas cuánto cuesta. Sin internet, la conversación y los
+> repasos avisan que necesitan conexión; lo demás funciona igual, también
+> armar mis outfits. Las pruebas con respuestas inventadas para no gastar; al
+> final, una prueba real corta con mi OK.
+>
+> **7. Fases.** 0 Diseño (cómo se ve y cuánto costaría al mes) · 1 Armar mis
+> outfits yo (sin IA) · 2 El puente aprende a conversar y a opinar · 3 Hablar
+> con mi estilista · 4 Lo que opina mi estilista de mi ropero, y "¿Qué opinas?"
+> de mis outfits · 5 Conectarlo con Outfits y Compras (y con Inicio, si tiene
+> sentido) · 6 Revisión final.
+>
+> **8. Lo que no hace.** No genera fotos mías con la ropa puesta. No compra
+> nada sola. No borra ni cambia mi ropa: solo propone. No publica nada en mi
+> Pinterest. No pide mi ubicación. No inventa prendas que no tengo.
+>
+> **9. Lo que hago yo.** Probar en el iPhone al final de cada fase. Decirte si
+> los consejos me sirven, para afinarlos. Hacer la prueba real corta, con mi
+> OK.
+
+## Auditoría (fase 0): lo que ya existe y se reutiliza
+- **Outfits** (D-149): la pantalla (`js/ropa-outfits.js`, `#ropa-outfits`:
+  el clima, la ocasión, "¿Qué me pongo?", opciones, guardados y el
+  calendario), las reglas (`js/ropa-outfit-motor.js`: `armar`, `validas` —un
+  outfit completo: arriba y abajo o cuerpo entero, zapatos si tienes, hasta 2
+  de arriba y 1 abrigo—, `gustos`, `recientes`, `roperoParaIA`, `fuertes`) y
+  los datos (`js/ropa-outfits-datos.js`, `ropa_outfits`: un documento por
+  conjunto de prendas; `origen` ya acepta `"manual"`; `guardar`, `ponerme`,
+  `noMeGusta`, `quitarGuardado`). **No hay pantalla para armar a mano**:
+  "manual" solo existe en los datos.
+- **El clima** (`js/ropa-clima.js`): `necesidades` (frío, abrigo, capas,
+  lluvia, sol…), `consejos`, `resumen` y `paraIA`; cualquier ciudad, sin tu
+  ubicación.
+- **Compras** (D-150, `js/ropa-compras-motor.js`): `vanJuntas` (colores,
+  estampados, formalidad y clima), `outfitsNuevos` (cuántos outfits daría una
+  prenda que no tienes, contados con tu ropa), `deSobra`, `faltan` (lo de tus
+  pines), `buscar` (el link a Pinterest); la lista de deseos (`ropa_deseos`) y
+  el presupuesto del mes.
+- **Tus números** (D-151, `js/ropa-numeros-motor.js`): lo que no te pones
+  hace 3 meses o más, tus colores por familia.
+- **La IA** (`js/ropa-ia.js` → el puente, `puente/`, versión 4): `preguntar()`
+  revisa el tope, suma el gasto, pide la respuesta con esquema fijo y usa el
+  respaldo si la IA se niega; el ropero va con referencias cortas (`p1`,
+  `p2`…; `textoRopero`) y en caché; cada `limpiar…` deja solo prendas que
+  existen. "Mi estilo" (D-148) y los gustos (lo que guardas, te pones y no te
+  gusta) ya se le mandan en `/outfits`.
+- **Lo que falta**: armar a mano, conversar, el repaso del ropero, "¿Qué
+  opinas?" y "lo que recuerda de ti".
+
+## Diseño
+
+### Pantallas
+Las maquetas (Armar el mío, Tu estilista y la opinión en Compras, a 390 px,
+en oscuro y en claro) se le mostraron al dueño en la fase 0; se hicieron con
+la app de verdad y sus estilos, con un ropero de mentira, y no van en el
+repositorio.
+
+1. **Armar el mío** (`#ropa-armar`; desde Outfits, junto a "¿Qué me pongo?").
+   - Arriba, fijo, **tu outfit** mientras lo armas: las fotos en capas (abrigo,
+     arriba, abajo o cuerpo entero, zapatos, accesorios), cada una con su ✕, y
+     debajo los avisos (cortos, en ámbar, nunca bloquean).
+   - Las partes como fichas: Arriba · Abajo · Cuerpo entero · Abrigo · Zapatos ·
+     Accesorios, cada una con cuántas elegiste. Debajo, la grilla de fotos de
+     esa parte (tocar agrega o quita; la elegida con ✓); lo que está para lavar
+     se ve apagado y avisa si lo eliges; lo que ya no tienes no aparece.
+   - Filtros: color (por familia) y clima (frío, templado, calor).
+   - Abajo: la ocasión (las de siempre y las tuyas), un nombre si quieres, y
+     "Me lo pongo", "Guardar", "Para mañana" y, con la IA, "¿Qué opinas?".
+   - Se llega también desde una opción o un guardado: "Cambiar una prenda"
+     (un link debajo de las fotos: abre con ese outfit; las opciones conservan
+     sus 4 botones), "Editar" y "Duplicar".
+2. **Tu estilista** (`#ropa-estilista`; la pestaña Outfits queda marcada).
+   - Vacía: ejemplos para tocar ("Hace frío: una chompa y una chamarra
+     encima", "Mañana tengo una reunión formal", "¿Con qué combino mis
+     zapatillas blancas?").
+   - Tus mensajes a la derecha; los de tu estilista a la izquierda, con su
+     texto y, si arma algo, las tarjetas de outfit (fotos en capas numeradas,
+     "Cambiar una prenda", por qué, cómo llevar las capas, "Me lo pongo",
+     "Guardar", "Otra opción" y "No me gusta"). Si te falta algo: "Te falta:
+     unos botines cafés · A mi lista". Si dijiste algo de ti: "Lo recordé:
+     eres friolento · Deshacer".
+   - Abajo, el cuadro para escribir (el micrófono del teclado del iPhone
+     dicta) y el costo aproximado ("cada mensaje, unos 4 centavos").
+   - Arriba: "Conversaciones" (las anteriores, la más nueva primero; borrar
+     una, con Deshacer) y "Lo que recuerda de ti".
+   - En Outfits, arriba: "Pídelo con tus palabras" (un cuadro que abre la
+     conversación con lo que escribiste).
+3. **Lo que opina tu estilista** (en Compras, antes de "Qué te falta").
+   - Sin repaso todavía: "Pídele a tu estilista su opinión de tu ropero (unos
+     12 centavos)".
+   - Con repaso: la fecha y un resumen; **Lo que ve** (los números los cuenta
+     Manolo; tu estilista los comenta); **Lo que sumaría** (cada sugerencia
+     con por qué, las fotos de tu ropa con la que combina, cuántos outfits
+     nuevos te da —contados por Manolo—, "A mi lista de deseos" y "Ver
+     opciones en Pinterest"; si también está en tus pines, lo dice); **Qué no
+     comprar más**; **Podrías dejar de lado** (las fotos y por qué; nunca toca
+     nada); **Tus colores** (los que te van y los que sumarías); **Consejos**
+     (cortes, capas, el clima de La Paz). "Pedirle otra opinión".
+4. **¿Qué opinas?** (una hoja, desde "Armar el mío" y desde cualquier outfit):
+   si va bien, qué funciona, hasta 2 cambios con fotos ("sale → entra", por
+   qué; "Cambiar" lo aplica en un toque) y un consejo.
+5. **Lo que recuerda de ti** (en Ajustes de Ropa y en Tu estilista): la lista,
+   "Agregar" y "Borrar" (con Deshacer).
+6. **Sin pestaña nueva**: la barra de Ropa ya tiene 5 lugares. Tu estilista y
+   Armar el mío cuelgan de Outfits; la opinión, de Compras.
+
+### Avisos de "Armar el mío" (reglas, sin IA)
+Solo avisan: puedes guardar igual.
+- Está para lavar (y cuál).
+- Dos de abajo; cuerpo entero con algo de abajo; más de dos de arriba; dos
+  abrigos; dos pares de zapatos.
+- Falta lo de arriba o lo de abajo; faltan los zapatos (si tienes).
+- El clima del día: frío sin abrigo ("Hoy hace 4°: suma algo de abrigo"),
+  calor con abrigo, lluvia con sandalias.
+- Los colores y el resto (como `vanJuntas`): más de dos colores fuertes, dos
+  estampados, lo muy formal con lo muy informal; para un evento formal, algo
+  muy informal.
+
+### Lo que ve Manolo (los números del repaso, sin IA)
+`js/ropa-estilista-motor.js` (nuevo) cuenta en tu ropa (sin lo que ya no
+tienes) y arma frases con números de verdad, cada una con su referencia
+(`h1`, `h2`…) para que tu estilista la comente:
+- Cuánto de cada parte ("Tienes 9 de arriba y solo 2 de abajo").
+- Un color que domina una parte (4 prendas o más y la mitad o más: "6 de tus
+  8 poleras son negras").
+- Zapatos todos oscuros o todos claros; todo liso.
+- Lo formal (nada de 4 o 5) y el clima (nada para el calor, nada de abrigo).
+- Lo que no te pones hace 3 meses o más (de Tus números).
+- Cuántas combinaciones salen con tu ropa (arriba con abajo que van, y lo de
+  cuerpo entero).
+
+### Datos (solo se suman)
+- `ropa_outfits`: los que armas tú, con `origen: "manual"` (ya existe).
+  Editar uno guardado arma el outfit nuevo (otras prendas, otro documento) y
+  el de antes deja de estar guardado, con Deshacer; su historia (cuándo te lo
+  pusiste) queda. Duplicar arma uno nuevo y el de antes sigue igual.
+- `users/{uid}/ropa_charlas/{id}` (nuevo): `v`, `titulo` (el comienzo del
+  primer mensaje), `mensajes` ([{ `de`: "yo" | "ia", `texto`, `outfits`
+  ([{ prendas, nombre, porque, capas }]), `faltan`, `recordo`, `fecha` }]),
+  `creado`, `editado`. Hasta 40 mensajes por conversación; a la IA le van los
+  últimos 10.
+- `users/{uid}/ropa_opiniones/{id}` (nuevo): cada repaso queda (se ve el
+  último): `v`, `fecha`, `hechos` (lo que contó Manolo), `ia` (resumen,
+  comentarios, sugerencias, dejar, colores, consejos).
+- `meta/ropa_ajustes.memoria` (nuevo campo): lo que recuerda de ti, [{ `id`,
+  `texto`, `fecha` }], hasta 30.
+- La copia de seguridad suma `ropa_charlas` y `ropa_opiniones` (la memoria va
+  con los ajustes). Las reglas de Firestore ya cubren todo lo tuyo.
+
+### La IA y el puente (versión 5)
+Tres rutas nuevas, con el mismo `preguntar()` (tope, gasto, esquema fijo,
+respaldo si se niega). La app manda; el puente revisa, pregunta y limpia; no
+guarda nada.
+- **`POST /charla`** → { `respuesta` (corta, en español simple), `outfits`
+  (0 a 3: nombre, prendas por referencia, por qué, capas), `faltan` (0 a 2:
+  grupo, tipo, color, por qué), `recordar` (0 a 2: lo que dijiste de ti) }.
+  Va: tus palabras, lo que hablaron antes (los últimos 10 mensajes), tu ropa
+  (sin notas, talla ni precio; lo que está para lavar, marcado), el clima de
+  hoy y de mañana, lo que te pusiste estos días, tu estilo, tus gustos, lo
+  que recuerda de ti y, si tienes, lo que te queda del presupuesto del mes.
+  Esfuerzo medio.
+- **`POST /opinar`** ("¿Qué opinas?") → { `veredicto` (muy bien | bien |
+  cambiaría), `funciona`, `cambios` (0 a 2: sale, entra, por qué),
+  `consejo` }. Esfuerzo medio.
+- **`POST /opinion`** (el repaso) → { `resumen`, `comentarios` (uno por cada
+  número de Manolo: `h1`…), `sugerencias` (3 a 6: grupo, tipo, color, por qué,
+  con qué de tu ropa combina), `noComprar`, `dejar` (0 a 3: prenda, por qué),
+  `colores` (los que te van y los que sumarías, por qué), `consejos` (0 a 3) }.
+  Esfuerzo alto.
+- **Instrucciones**: "el estilista personal de una app personal" (sin tu
+  nombre); solo tu ropa, por referencia; capas de adentro hacia afuera; el
+  clima y la ocasión mandan; lo que recuerda de ti, siempre; con su propio
+  criterio (combinaciones versátiles, proporciones de los cortes, colores que
+  te van, el clima de La Paz), distinto de lo que ya sale de tus pines (se le
+  dice qué está en tus pines para que lo note).
+- **La app revisa todo**: cada outfit con `validas` (completo y con prendas
+  que existen, sin lo que está para lavar); "¿Qué opinas?" solo cambia una
+  prenda por otra de tu ropa y del mismo papel; las sugerencias con grupo y
+  color de la lista; cuántos outfits nuevos da cada sugerencia lo cuenta
+  Manolo (`outfitsNuevos`), no la IA.
+- **Para que cueste poco**: las instrucciones y tu ropa van primero y quedan
+  en caché unos minutos (los mensajes siguientes de la conversación las pagan
+  a 0,20 en vez de 4 por millón); lo que ya hablaron también queda en caché;
+  a la IA le van los últimos 10 mensajes, no todos.
+- **Buscar en internet: por ahora no.** La IA ya sabe lo que se usa en 2026;
+  buscar sumaría unos 3 centavos por repaso y complica la respuesta con
+  esquema. Si después quieres las tendencias de la temporada, se agrega al
+  repaso con un límite de 2 búsquedas.
+- **Nada corre solo**: la conversación, "¿Qué opinas?" y el repaso son siempre
+  tuyos (un botón o un mensaje).
+
+### Sin IA o sin internet
+- **Armar el mío** funciona siempre: sin internet y sin IA (no gasta).
+- Tu estilista, "¿Qué opinas?" y el repaso avisan que necesitan conexión; lo
+  ya guardado (conversaciones, el último repaso) se ve igual.
+- Quien no es el dueño: Armar el mío sí; lo de la IA no aparece.
+
+### Costos estimados (el modelo de hoy: por millón de tokens, US$ 4 lo que lee, 20 lo que escribe, 0,20 lo que lee de la caché)
+Con unas 80 prendas:
+
+| Qué | Cuánto |
+|---|---|
+| Un mensaje a tu estilista | unos 3 a 5 centavos (el primero de la conversación, ~5; los siguientes, ~3: tu ropa queda en caché) |
+| Una conversación de 3 mensajes | unos 12 centavos |
+| "¿Qué opinas?" | unos 4 centavos |
+| Un repaso del ropero | unos 8 a 15 centavos |
+| Armar el mío | gratis |
+
+Al mes, con un uso normal (12 conversaciones de 3 mensajes, 8 "¿Qué
+opinas?" y 2 repasos): **unos US$ 2 más**. Con lo de hoy (US$ 2 a 4), **en
+total US$ 4 a 6**, debajo del tope de US$ 8. Si conversas todos los días (30
+conversaciones de 4 mensajes y 4 repasos), unos US$ 6 más: llegarías al tope;
+en ese caso conviene subirlo a US$ 12 en Ajustes de Ropa (te pregunto antes).
+
+## Fases
+| Fase | Qué |
+|---|---|
+| 0 | Diseño: cómo se ve y cuánto costaría al mes (este documento, D-155) |
+| 1 | Armar mis outfits yo (sin IA): la pantalla, los avisos, guardar, me lo pongo, para mañana, cambiar una prenda, editar y duplicar |
+| 2 | El puente aprende a conversar y a opinar: `/charla`, `/opinar`, `/opinion` (versión 5), con pruebas sin gastar, y desplegado |
+| 3 | Hablar con mi estilista: la pantalla, las conversaciones, lo que recuerda de ti, "Pídelo con tus palabras" |
+| 4 | Lo que opina mi estilista de mi ropero (en Compras) y "¿Qué opinas?" de mis outfits |
+| 5 | Conectarlo con Outfits y Compras: el aviso del día en Outfits, "Cambiar una prenda" desde las conversaciones, y en Inicio si tiene sentido |
+| 6 | Revisión final: todas las pruebas, Lighthouse, la lista para el iPhone y la prueba real corta con tu OK |
+
+## Lo que no hace
+No genera fotos tuyas con la ropa puesta. No compra nada. No borra ni cambia
+tu ropa: solo propone. No publica nada en tu Pinterest. No pide tu ubicación.
+No inventa prendas que no tienes. La IA no corre sola.

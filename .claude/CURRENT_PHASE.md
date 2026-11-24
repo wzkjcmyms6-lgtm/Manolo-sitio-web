@@ -1,5 +1,20 @@
 # Fase actual
 
+## Ropa, nivel 2: tu estilista con IA (pedido del dueño, 2026-11-24)
+"Que la IA sea mi estilista: hablar con ella, armar mis outfits yo y que opine
+de mi ropero con su propio criterio." Pedido completo, auditoría, diseño,
+datos, puente y costos en `docs/ROPA_ESTILISTA.md` (D-155).
+
+| Fase | Qué | Estado |
+|---|---|---|
+| 0 | Diseño: cómo se ve (maquetas) y cuánto costaría al mes | ✅ (D-155) |
+| 1 | Armar mis outfits yo (sin IA): la pantalla, los avisos, guardar, me lo pongo, para mañana, cambiar una prenda, editar y duplicar | ⏳ |
+| 2 | El puente aprende a conversar y a opinar (`/charla`, `/opinar`, `/opinion`, versión 5), desplegado | ⏳ |
+| 3 | Hablar con mi estilista: la pantalla, las conversaciones, lo que recuerda de ti, "Pídelo con tus palabras" | ⏳ |
+| 4 | Lo que opina mi estilista de mi ropero (en Compras) y "¿Qué opinas?" de mis outfits | ⏳ |
+| 5 | Conectarlo con Outfits y Compras (y con Inicio, si tiene sentido) | ⏳ |
+| 6 | Revisión final y la prueba real corta con el OK del dueño | ⏳ |
+
 ## Ropa con IA e inspiración de Pinterest (pedido del dueño, 2026-11-22)
 "Una sección nueva, Ropa, donde guardo toda mi ropa con fotos. Una IA
 describe cada prenda, toma mis inspiraciones de Pinterest y arma esos looks

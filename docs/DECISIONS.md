@@ -2510,3 +2510,46 @@ fallas (3.993 comprobaciones). La captura mostró las mangas en "Abajo"
 aunque estaban escondidas: el estilo del recuadro (`display: flex`) le ganaba
 al atributo `hidden`; arreglado con `.ro-campo[hidden]`, y la prueba ahora
 mira lo que de verdad se ve.
+
+**D-155 (2026-11-24) · Ropa, nivel 2: tu estilista con IA: plan.** Pedido
+del dueño (completo en `docs/ROPA_ESTILISTA.md`): hablar con la IA como con un
+estilista, armar sus outfits él mismo y que la IA opine de su ropero con su
+propio criterio, no solo con lo de Pinterest. Fases en
+`.claude/CURRENT_PHASE.md`. (1) **Sin pestaña nueva** (la barra de Ropa ya
+tiene 5 lugares): "Armar el mío" (`#ropa-armar`) y "Tu estilista"
+(`#ropa-estilista`) cuelgan de Outfits; la opinión del ropero va en Compras;
+"Lo que recuerda de ti", en Ajustes de Ropa. (2) **Armar el mío va primero y
+sin IA**: tu outfit arriba (fotos en capas, con ✕), las partes como fichas,
+la grilla de fotos con filtros de color y clima, y abajo la ocasión, "Me lo
+pongo", "Guardar", "Para mañana" y, con la IA, "¿Qué opinas?". Los avisos
+(para lavar, dos de abajo, sin zapatos, frío sin abrigo, colores…) son reglas
+y nunca bloquean. Se guarda en `ropa_outfits` con `origen: "manual"` (ya
+existía); editar un guardado arma uno nuevo y el de antes deja de estar
+guardado (con Deshacer; su historia queda). (3) **Tres rutas nuevas en el
+puente** (versión 5), con el mismo `preguntar()`: `/charla` (respuesta,
+0 a 3 outfits por referencia, lo que te falta y lo que recordar), `/opinar`
+("¿Qué opinas?": veredicto, qué funciona, hasta 2 cambios y un consejo) y
+`/opinion` (el repaso: resumen, comentarios a los números de Manolo,
+sugerencias, qué no comprar, qué dejar de lado, colores y consejos). La app
+revisa todo (`validas`, prendas que existen y del mismo papel, grupos y
+colores de la lista). (4) **Los números los cuenta Manolo** (nuevo
+`js/ropa-estilista-motor.js`: cuánto de cada parte, un color que domina, lo
+formal, el clima, lo que no te pones, cuántas combinaciones salen) y los
+outfits nuevos de cada sugerencia, `outfitsNuevos`; la IA los comenta. (5)
+**La conversación va en una sola pregunta por mensaje**: tu ropa y el
+contexto (en caché), lo que hablaron antes como texto (los últimos 10
+mensajes, también en caché) y el mensaje nuevo; así no se reenvía el
+pensamiento de la IA ni se arma un historial que el modelo tenga que revisar.
+(6) **Datos solo aditivos**: `ropa_charlas` (cada conversación, hasta 40
+mensajes), `ropa_opiniones` (cada repaso queda) y `meta/ropa_ajustes.memoria`
+(hasta 30 cosas); los dos primeros se suman a la copia de seguridad. (7)
+**Buscar en internet: por ahora no**: la IA ya sabe lo que se usa en 2026;
+sumaría unos 3 centavos por repaso y complica la respuesta con esquema; se
+agrega después con un límite de 2 búsquedas si el dueño lo quiere. (8)
+**Costos** (el modelo de hoy: US$ 4 por millón de tokens de entrada, 20 de
+salida, 0,20 de caché): un mensaje, 3 a 5 centavos; "¿Qué opinas?", unos 4; un
+repaso, 8 a 15; armar, gratis. Uso normal: unos US$ 2 más al mes (en total US$
+4 a 6, debajo del tope de US$ 8); conversando todos los días se llega al tope
+(subirlo a 12 es del dueño). Nada corre solo. (9) **Maquetas** de las tres
+pantallas (oscuro y claro, 390 px) hechas con la app de verdad, mostradas al
+dueño; no van en el repositorio.
