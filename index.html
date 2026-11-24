@@ -18,7 +18,7 @@
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
   <!-- Todos los estilos de la app en un archivo (D-127): js/paquete.json › npm run listo -->
-  <link rel="stylesheet" href="css/app.paquete.css?v=94dfe928706a">
+  <link rel="stylesheet" href="css/app.paquete.css?v=77a5593cb4bd">
   <!-- Modo claro (D-126): generado con "npm run tema"; js/tema.js lo apaga en
        el modo oscuro y elige el modo antes de pintar (sin "defer": es chico) -->
   <link rel="stylesheet" href="css/tema-claro.css?v=202611171200" id="tema-claro-css">
@@ -506,6 +506,11 @@
           <section id="panel-ropa-outfits" hidden>
             <h1 class="page-title">Outfits</h1>
             <div class="rof-app" id="rof-app"></div>
+          </section>
+          <section id="panel-ropa-armar" hidden>
+            <a class="back-link lib-volver" href="#ropa-outfits"><span class="icon-sm" data-icon="chevronLeft"></span>Outfits</a>
+            <h1 class="page-title">Armar el mío</h1>
+            <div class="roar-app" id="roar-app"></div>
           </section>
           <section id="panel-ropa-inspiracion" hidden>
             <h1 class="page-title">Inspiración</h1>
@@ -1542,6 +1547,6 @@
   <script defer src="vendor/firebase-10.7.1/firebase-firestore-compat.js"></script>
   <!-- Todos los módulos de la app en un archivo (D-127): cada uno corre como su
        propio <script>. Se editan los de js/ y después: npm run listo -->
-  <script defer src="js/app.paquete.js?v=8b4c3f6dbd2b"></script>
+  <script defer src="js/app.paquete.js?v=f538f668fe28"></script>
 </body>
 </html>

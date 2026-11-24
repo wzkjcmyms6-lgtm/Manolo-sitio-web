@@ -9,14 +9,17 @@
 // otra) y "Otras opciones" (las tres). "¿Con qué combino esto?"
 // (#ropa-outfits/con/{id}, desde la ficha): la prenda va en las tres. Abajo:
 // lo de hoy, tus guardados y el calendario de lo que te pusiste.
+// Ver en grande (D-156): cada opción, guardado o día se abre con las fotos
+// juntas, de la cabeza a los pies (js/ropa-armar-motor.js), y lleva a "Armar
+// el mío" (js/ropa-armar.js) para cambiar una prenda, editar o duplicar.
 // Datos: js/ropa-outfits-datos.js; clima: js/ropa-clima.js (Open-Meteo, sin
 // tu ubicación); ajustes (ciudad, cómo sientes el frío): meta/ropa_ajustes.
 (function () {
 "use strict";
-const M = window.RopaMotor, O = window.RopaOutfitMotor, C = window.RopaClima, D = window.RopaDatos, DO = window.RopaOutfitsDatos, DI = window.RopaInspDatos;
+const M = window.RopaMotor, O = window.RopaOutfitMotor, C = window.RopaClima, D = window.RopaDatos, DO = window.RopaOutfitsDatos, DI = window.RopaInspDatos, AR = window.RopaArmarMotor;
 const IA = () => window.RopaIA, A = () => window.RopaApp, I = () => window.RopaInspMotor;
 const app = document.getElementById("rof-app");
-if (!M || !O || !C || !D || !DO || !DI || !app || !window.Lectura) return;
+if (!M || !O || !C || !D || !DO || !DI || !AR || !app || !window.Lectura) return;
 const { esc } = window.Lectura;
 const partes = () => location.hash.replace(/^#/, "").split("/");
 const pantalla = () => partes()[0];
@@ -150,6 +153,31 @@ function prendasHTML(ids) {
     <p class="rof-lista">${ps.map(p => esc(M.titulo(p))).join("\u00a0· ")}</p>`;
 }
 const principales = ids => ids.filter(id => { const p = D.una(id); return p && p.grupo !== "accesorios"; });
+const armar_ = () => window.RopaArmar;   // "Armar el mío" (js/ropa-armar.js)
+// ---------- Ver en grande (D-156) ----------
+// Las fotos juntas, como se ve puesto: lo de arriba (de afuera hacia adentro),
+// lo de abajo, los pies y los accesorios; cada una lleva a su ficha. Debajo,
+// los nombres completos.
+const FILA = { arriba: "Arriba", abajo: "Abajo", pies: "Los pies", accesorios: "Accesorios" };
+function fotoTab(p) {
+  const f = p.fotos[0];
+  return f ? `<span class="rof-tab-foto"><img src="${esc(f.mini || "")}" data-foto="${esc(f.id)}" alt="" decoding="async"></span>`
+    : `<span class="rof-tab-foto is-vacia">${icono("ropa")}</span>`;
+}
+function tableroHTML(ids) {
+  const ps = ids.map(id => D.una(id)).filter(Boolean);
+  return `<div class="rof-tablero">${AR.filas(ps).map(f => `<ul class="rof-tab-fila is-${f.id} n${Math.min(f.prendas.length, 4)}" aria-label="${FILA[f.id]}">${f.prendas.map(p =>
+    `<li><a class="rof-tab" href="#ropa-prenda/${encodeURIComponent(p.id)}">${fotoTab(p)}<span class="rof-tab-n">${esc(M.titulo(p))}</span>${p.estado === "lavar" ? `<span class="rof-tab-lavar">Para lavar</span>` : ""}</a></li>`).join("")}</ul>`).join("")}</div>
+    <p class="rof-lista">${AR.ordenar(ps).map(p => esc(M.titulo(p))).join("\u00a0· ")}</p>`;
+}
+// En la tarjeta de cada opción: las fotos (al tocarlas, en grande) y los nombres.
+function fotosOpcionHTML(o, i) {
+  const ps = o.prendas.map(id => D.una(id)).filter(Boolean);
+  return `<div class="rof-ver-a" data-rof-op="ver" data-i="${i}"><span class="rof-fotos">${ps.map(p => `<span class="rof-foto-a" data-prenda="${esc(p.id)}">${A().fotoHTML(p, "ro-foto")}</span>`).join("")}</span>
+    <p class="rof-lista">${ps.map(p => esc(M.titulo(p))).join("\u00a0· ")}</p></div>
+    <div class="rof-op-ver"><button type="button" class="link-btn" data-rof-op="ver" data-i="${i}" aria-haspopup="dialog">${icono("ampliar")}Ver en grande</button>
+      ${armar_() ? `<button type="button" class="link-btn" data-rof-op="cambiar" data-i="${i}">${icono("edit")}Cambiar una prenda</button>` : ""}</div>`;
+}
 
 // ---------- La pantalla ----------
 function climaHTML() {
@@ -183,7 +211,7 @@ function opcionesHTML() {
     ${est.nota ? `<p class="rin-consejo">${icono("sparkle")}${esc(est.nota)}</p>` : ""}
     <ol class="rof-opciones">${est.opciones.map((o, i) => { const x = inspDe(o); return `<li class="tmp-card rof-op">
       <div class="rof-op-cab"><h3 class="rof-op-t"><span class="rof-op-n">Opción ${i + 1}</span>${esc(o.nombre || "Para hoy")}</h3>${o.origen === "ia" ? `<span class="rof-ia">${icono("sparkle")}IA</span>` : ""}</div>
-      ${prendasHTML(o.prendas)}
+      ${fotosOpcionHTML(o, i)}
       ${o.porque ? `<p class="rof-porque">${esc(o.porque)}</p>` : ""}
       ${o.capas ? `<p class="rd-nota rof-capas">${esc(o.capas)}</p>` : ""}
       ${x ? inspHTML(x) : ""}
@@ -207,11 +235,13 @@ function hoyHTML() {
   const puestas = u && Array.isArray(u.prendas) ? u.prendas.filter(id => D.una(id)) : [];
   if (puestas.length) {
     const o = u.outfitId ? DO.una(u.outfitId) : null;
-    return `<section class="tmp-card rof-hoy" aria-labelledby="rof-hoy-t"><h2 class="ro-sub" id="rof-hoy-t">${icono("check")}Hoy te pusiste${o && o.nombre ? `: ${esc(o.nombre)}` : ""}</h2>${prendasHTML(puestas)}</section>`;
+    return `<section class="tmp-card rof-hoy" aria-labelledby="rof-hoy-t"><h2 class="ro-sub" id="rof-hoy-t">${icono("check")}Hoy te pusiste${o && o.nombre ? `: ${esc(o.nombre)}` : ""}</h2>${prendasHTML(puestas)}
+      <button type="button" class="link-btn rof-hoy-ver" data-rof-cal="${hoy}" aria-haspopup="dialog">${icono("ampliar")}Ver en grande</button></section>`;
   }
   const para = DO.lista().find(o => o.para === hoy && o.guardado);
   if (para) {
     return `<section class="tmp-card rof-hoy" aria-labelledby="rof-hoy-t"><h2 class="ro-sub" id="rof-hoy-t">Para hoy elegiste${para.nombre ? `: ${esc(para.nombre)}` : ""}</h2>${prendasHTML(para.prendas)}
+      <button type="button" class="link-btn rof-hoy-ver" data-rof-g="${esc(para.id)}" aria-haspopup="dialog">${icono("ampliar")}Ver en grande</button>
       <button type="button" class="lib-btn" data-rof-g="${esc(para.id)}" data-rof-gp="puse">${icono("check")}Me lo pongo</button></section>`;
   }
   return "";
@@ -272,6 +302,7 @@ function render() {
       : `${ocasionesHTML()}
       <button type="button" class="lib-btn rof-armar" data-rof="${est.opciones.length ? "otras" : "armar"}"${est.armando ? " disabled" : ""}>${icono("sparkle")}${est.armando ? "Armando…" : est.opciones.length ? "Otras opciones" : b ? "Armar con esta prenda" : "¿Qué me pongo?"}</button>
       <p class="rd-nota rof-con">${iaOutfits() ? "Con la IA, solo con tu ropa." : "Con reglas, solo con tu ropa (sin IA, gratis)."}</p>
+      ${armar_() ? `<a class="lib-btn-sec rof-mio" href="#ropa-armar">${icono("edit")}Armar el mío</a>` : ""}
       <div aria-live="polite">${opcionesHTML()}</div>`}
     ${guardadosHTML()}
     ${calendarioHTML()}`;
@@ -386,7 +417,7 @@ app.addEventListener("click", e => {
     return;
   }
   const op = e.target.closest("[data-rof-op]");
-  if (op) { accionOpcion(op.dataset.rofOp, Number(op.dataset.i)); return; }
+  if (op) { accionOpcion(op.dataset.rofOp, Number(op.dataset.i), op); return; }
   const b = e.target.closest("[data-rof]");
   if (!b) return;
   const a = b.dataset.rof;
@@ -403,10 +434,13 @@ app.addEventListener("change", e => {
   recuperarOpciones();
   render();
 });
-function accionOpcion(a, i) {
+function accionOpcion(a, i, desde) {
   const o = est.opciones[i];
   if (!o) return;
   const ids = o.prendas;
+  // El foco vuelve al botón "Ver en grande" (aunque hayas tocado las fotos).
+  if (a === "ver") { verOpcion(i, desde && desde.tagName === "BUTTON" ? desde : app.querySelector(`.rof-op-ver [data-rof-op="ver"][data-i="${i}"]`)); return; }
+  if (a === "cambiar") { if (armar_()) armar_().abrir(ids, { modo: "cambiar", ocasion: est.ocasion, datos: datosDe(o) }); return; }
   if (a === "puse") {
     if (est.dia === "manana") {
       const para = fechaDelDia();
@@ -482,13 +516,15 @@ function verGuardado(id, desde) {
   const o = DO.una(id);
   if (!o) return;
   const h = A().hoja("rof-hoja-guardado");
-  h.mostrar(o.nombre || "Outfit", `<div class="rof-hoja-o">${prendasHTML(o.prendas)}
+  h.mostrar(o.nombre || "Outfit", `<div class="rof-hoja-o">${tableroHTML(o.prendas)}
     ${o.porque ? `<p class="rof-porque">${esc(o.porque)}</p>` : ""}
     ${o.capas ? `<p class="rd-nota">${esc(o.capas)}</p>` : ""}
     <p class="rd-nota">${[nombreOcasion(o.ocasion), o.ciudad, o.clima].filter(Boolean).map(esc).join(" · ")}</p>
     ${o.puesto.length ? `<p class="rd-nota">Te lo pusiste ${plural(o.puesto.length, "vez", "veces")}; la última, el ${esc(M.fechaLarga(o.puesto[o.puesto.length - 1]))}.</p>` : ""}
     <div class="rof-op-bot">
       <button type="button" class="lib-btn" data-rof-h="puse">${icono("check")}Me lo pongo hoy</button>
+      ${armar_() ? `<button type="button" class="lib-btn-sec" data-rof-h="editar">${icono("edit")}Editar</button>
+      <button type="button" class="lib-btn-sec" data-rof-h="duplicar">${icono("copy")}Duplicar</button>` : ""}
       <button type="button" class="lib-btn-sec" data-rof-h="quitar">Quitar de guardados</button>
     </div></div>`);
   if (desde) h.volver = desde;
@@ -497,9 +533,11 @@ function verGuardado(id, desde) {
   h.el.onchange = null; h.el.onsubmit = null;
   h.el.onclick = e => {
     const b = e.target.closest("[data-rof-h]");
-    if (!b) return;
+    if (!b) { if (e.target.closest(".rof-tab")) { h.volver = null; h.cerrar(); } return; }
+    const a = b.dataset.rofH;
+    if (a === "editar" || a === "duplicar") { h.volver = null; h.cerrar(); location.hash = `ropa-armar/${a === "editar" ? "o" : "d"}/${encodeURIComponent(id)}`; return; }
     h.cerrar();
-    if (b.dataset.rofH === "puse") ponermeGuardado(id);
+    if (a === "puse") ponermeGuardado(id);
     else { DO.quitarGuardado(id).catch(fallo); aviso("Quitado de tus guardados.", () => DO.guardar(o.prendas, {}, o.para || null).catch(fallo)); }
   };
 }
@@ -511,11 +549,68 @@ function verDia(f, desde) {
   const h = A().hoja("rof-hoja-dia");
   h.mostrar(M.fechaLarga(f).replace(/^./, s => s.toUpperCase()), `<div class="rof-hoja-o">
     ${o && o.nombre ? `<p><b>${esc(o.nombre)}</b>${o.ciudad ? ` · ${esc(o.ciudad)}` : ""}</p>` : ""}
-    ${ids.length ? prendasHTML(ids) : `<p class="rd-nota">Ese día no anotaste nada.</p>`}</div>`);
+    ${ids.length ? tableroHTML(ids) : `<p class="rd-nota">Ese día no anotaste nada.</p>`}</div>`);
   if (desde) h.volver = desde;
   pintarIconos(h.el);
   fotosGrandes(h.el);
-  h.el.onclick = null; h.el.onchange = null; h.el.onsubmit = null;
+  h.el.onchange = null; h.el.onsubmit = null;
+  h.el.onclick = e => { if (e.target.closest(".rof-tab")) { h.volver = null; h.cerrar(); } };
+}
+// ---------- Una opción, en grande (con las de al lado a un toque) ----------
+function verOpcion(i, desde) {
+  const o = est.opciones[i];
+  if (!o) return;
+  const n = est.opciones.length, manana = est.dia === "manana", x = inspDe(o);
+  const h = A().hoja("rof-hoja-ver");
+  h.mostrar(o.nombre || `Opción ${i + 1}`, `<div class="rof-ver">
+    ${n > 1 ? `<div class="rof-ver-nav"><button type="button" class="rof-ver-ir" data-rof-v="ant" aria-label="La opción anterior">${icono("chevronLeft")}</button>
+      <span>Opción ${i + 1} de ${n}</span>
+      <button type="button" class="rof-ver-ir" data-rof-v="sig" aria-label="La opción siguiente">${icono("chevronRight")}</button></div>` : ""}
+    ${tableroHTML(o.prendas)}
+    ${o.porque ? `<p class="rof-porque">${esc(o.porque)}</p>` : ""}
+    ${o.capas ? `<p class="rd-nota rof-capas">${esc(o.capas)}</p>` : ""}
+    ${x ? inspHTML(x) : ""}
+    <div class="rof-op-bot">
+      <button type="button" class="lib-btn" data-rof-v="puse">${icono("check")}${manana ? "Para mañana" : "Me lo pongo"}</button>
+      <button type="button" class="lib-btn-sec" data-rof-v="guardar">${icono("guardar")}Guardar</button>
+      <button type="button" class="lib-btn-sec" data-rof-v="otra"${est.armando ? " disabled" : ""}>${icono("swap")}Otra opción</button>
+      <button type="button" class="lib-btn-sec" data-rof-v="no">${icono("close")}No me gusta</button>
+    </div>
+    ${armar_() ? `<button type="button" class="link-btn rof-ver-cambiar" data-rof-v="cambiar">${icono("edit")}Cambiar una prenda</button>` : ""}
+  </div>`);
+  if (desde) h.volver = desde;
+  pintarIconos(h.el);
+  fotosGrandes(h.el);
+  h.el.onchange = null; h.el.onsubmit = null;
+  h.el.onclick = e => {
+    const b = e.target.closest("[data-rof-v]");
+    if (!b) { if (e.target.closest(".rof-tab, .rof-insp")) { h.volver = null; h.cerrar(); } return; }
+    const a = b.dataset.rofV;
+    if (a === "ant" || a === "sig") { verOpcion((i + (a === "sig" ? 1 : n - 1)) % n); return; }
+    if (a === "otra" || a === "no") {
+      accionOpcion(a, i);
+      if (est.opciones.length) verOpcion(Math.min(i, est.opciones.length - 1)); else h.cerrar();
+      return;
+    }
+    if (a === "cambiar") { h.volver = null; h.cerrar(); accionOpcion("cambiar", i); return; }
+    h.cerrar();
+    accionOpcion(a, i);
+  };
+}
+// Un outfit cualquiera, solo para mirarlo (desde "Armar el mío").
+function verPrendas(ids, titulo, desde) {
+  const h = A().hoja("rof-hoja-ver");
+  h.mostrar(titulo || "Tu outfit", `<div class="rof-ver">${tableroHTML(ids)}</div>`);
+  if (desde) h.volver = desde;
+  pintarIconos(h.el);
+  fotosGrandes(h.el);
+  h.el.onchange = null; h.el.onsubmit = null;
+  h.el.onclick = e => { if (e.target.closest(".rof-tab")) { h.volver = null; h.cerrar(); } };
+}
+// Para "Armar el mío": el día elegido (hoy o mañana), lo que pide el clima, la ciudad y la ocasión.
+function contexto() {
+  const x = elDia();
+  return { dia: est.dia || "hoy", fecha: fechaDelDia(), nec: x ? x.nec : null, clima: x ? C.resumen(x.d) : "", ciudad: ciudad().nombre, ocasion: est.ocasion };
 }
 
 // ---------- La ciudad (buscar; las recientes a un toque) ----------
@@ -592,5 +687,5 @@ DI.al(() => {
   render();
 });
 if (IA()) IA().alCambiar(() => { if (pantalla() === "ropa-outfits") render(); });
-window.RopaOutfits = { render, armar, elegirCiudad };
+window.RopaOutfits = { render, armar, elegirCiudad, tableroHTML, ver: verPrendas, contexto, pedirClima };
 })();

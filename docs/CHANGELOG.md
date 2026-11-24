@@ -1,5 +1,16 @@
 # Cambios
 
+## 2026-11-24 · Ropa: ver tus outfits en grande y armar el tuyo
+- **Ver en grande**: toca las fotos de una opción de Outfits y la ves como
+  quedaría puesta, de la cabeza a los pies, con las fotos grandes. Pasas a las
+  otras opciones con las flechas. También tus guardados y lo que te pusiste.
+- **Armar el mío** (en Outfits): eliges tú las prendas por partes (arriba,
+  abajo, abrigo, zapatos…) viendo las fotos. Manolo te avisa si falta algo o
+  si hace frío, pero la decisión es tuya. "Me lo pongo", "Guardar" o "Para
+  mañana".
+- **Cambiar una prenda** de una opción, y **Editar** o **Duplicar** tus
+  outfits guardados.
+
 ## 2026-11-24 · Ropa: el corte, las mangas y cambiar los colores
 - **El corte** de cada prenda: pegada, suelta, oversize, recto, pitillo,
   ancho, acampanado… (el nombre va con la prenda: "Polera pegada", "Falda

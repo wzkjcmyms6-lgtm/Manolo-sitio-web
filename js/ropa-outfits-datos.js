@@ -6,8 +6,8 @@
 // día (con outfitId). Solo se suman campos y documentos.
 // window.RopaOutfitsDatos: lista(), una(id), crudo(id), cargada(), al(fn),
 // deCombo(ids), ponerme(ids, datos, fecha), quitarme(id, ids, fecha, eraNuevo),
-// guardar(ids, datos, para), noMeGusta(ids, datos), quitarGuardado(id),
-// borrar(id), restaurar(id, doc).
+// guardar(ids, datos, para), guardarMio(ids, datos, para), noMeGusta(ids,
+// datos), quitarGuardado(id), borrar(id), restaurar(id, doc).
 (function () {
 "use strict";
 const O = window.RopaOutfitMotor, D = window.RopaDatos;
@@ -83,6 +83,14 @@ function quitarme(id, ids, fecha, eraNuevo) {
 }
 // Guardar (y "para" un día: lo eliges hoy para mañana).
 const guardar = (ids, datos, para) => refDe(ids, datos, Object.assign({ guardado: true, gusto: "si" }, para ? { para } : {})).then(r => ({ id: r.ref.id, nuevo: r.nuevo }));
+// Lo que armaste tú (D-156): como guardar y, si ese outfit ya existía, con el
+// nombre y la ocasión que le pusiste.
+function guardarMio(ids, datos, para) {
+  const d = datos || {};
+  const extra = Object.assign({ guardado: true, gusto: "si" }, para ? { para } : {},
+    txt(d.nombre, 40) ? { nombre: txt(d.nombre, 40) } : {}, txt(d.ocasion, 20) ? { ocasion: txt(d.ocasion, 20) } : {});
+  return refDe(ids, datos, extra).then(r => ({ id: r.ref.id, nuevo: r.nuevo }));
+}
 const noMeGusta = (ids, datos) => refDe(ids, datos, { gusto: "no", guardado: false }).then(r => ({ id: r.ref.id, nuevo: r.nuevo }));
 const quitarGuardado = id => col().doc(id).set({ guardado: false, para: FV().delete(), editado: Date.now() }, { merge: true });
 const borrar = id => col().doc(id).delete();
@@ -90,6 +98,6 @@ const restaurar = (id, doc) => col().doc(id).set(doc);
 
 window.RopaOutfitsDatos = {
   lista: () => todos, una: id => todos.find(o => o.id === id) || null, crudo: id => crudos.get(id) || null,
-  cargada: () => cargada, al: fn => { oyentes.push(fn); }, normalizar, deCombo, ponerme, quitarme, guardar, noMeGusta, quitarGuardado, borrar, restaurar
+  cargada: () => cargada, al: fn => { oyentes.push(fn); }, normalizar, deCombo, ponerme, quitarme, guardar, guardarMio, noMeGusta, quitarGuardado, borrar, restaurar
 };
 })();

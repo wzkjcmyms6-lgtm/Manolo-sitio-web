@@ -3496,6 +3496,59 @@ html[data-modo="claro"] {
 :where(html[data-modo="claro"]) .rn-app {
   --rn-barra: #915f1b;
 }
+:where(html[data-modo="claro"]) .roar-n {
+  background: rgba(244, 242, 236, 0.6);
+  color: #161513;
+}
+:where(html[data-modo="claro"]) .roar-x {
+  background: transparent;
+}
+:where(html[data-modo="claro"]) .roar-x [data-icon] {
+  background: var(--surface-raised);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .roar-aviso {
+  background: rgba(255, 184, 77, 0.1);
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .roar-aviso.is-info {
+  background: var(--bg-soft);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .roar-aviso.is-info [data-icon] {
+  color: var(--accent-2);
+}
+:where(html[data-modo="claro"]) .roar-barra {
+  background: var(--bg);
+}
+:where(html[data-modo="claro"]) .roar-mini {
+  background: var(--surface);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .roar-mini-n {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .roar-k {
+  background: var(--surface-raised);
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .roar-p {
+  background: transparent;
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .roar-check {
+  background: var(--accent-2);
+  color: #111;
+}
+:where(html[data-modo="claro"]) .roar-p-n {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .roar-p.is-sel .roar-p-n {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .roar-p-l {
+  color: var(--accent-2);
+}
 
 /* ---- css/ej-calendario.css ---- */
 :where(html[data-modo="claro"]) .ejc-tarjeta {

@@ -2553,3 +2553,39 @@ repaso, 8 a 15; armar, gratis. Uso normal: unos US$ 2 más al mes (en total US$
 (subirlo a 12 es del dueño). Nada corre solo. (9) **Maquetas** de las tres
 pantallas (oscuro y claro, 390 px) hechas con la app de verdad, mostradas al
 dueño; no van en el repositorio.
+
+**D-156 (2026-11-24) · Ropa, nivel 2, fase 1: ver en grande y armar el mío.**
+Pedido del dueño durante la fase 0 (con una captura de Outfits): "quiero que en
+los outfits sugeridos pueda entrar para ver cómo se ven". (1) **Ver en grande**
+(`js/ropa-outfits.js`: `tableroHTML`, `verOpcion`, `verPrendas`): las fotos en
+filas como se ve puesto —lo de arriba (abrigo, arriba y cuerpo entero), lo de
+abajo, los pies y los accesorios— y, en cada fila, de afuera hacia adentro
+(`js/ropa-armar-motor.js`: `ordenar` pone la chompa sobre la camisa y la camisa
+sobre la polera, por el tipo); fotos de 4:5 (la mediana del teléfono) y los
+nombres completos debajo. Tocar las fotos de una opción la abre (la tarjeta ya
+no lleva a la ficha de cada prenda: eso queda en la grande); "Ver en grande" es
+el botón para el teclado y el lector (el foco vuelve a él al cerrar). En la
+grande, "‹ ›" entre las opciones y sus 4 botones; "Otra opción" y "No me
+gusta" la cambian ahí mismo. Los guardados (con Editar y Duplicar), lo de hoy
+y cada día del calendario usan el mismo tablero. (2) **Armar el mío**
+(`#ropa-armar`, `js/ropa-armar.js`, hijo de Outfits en la barra): el borrador
+en `manolo.ropa.armar` (este teléfono); `AR.tocar` suma o saca y, en las partes
+de una sola (abajo, abrigo, zapatos, cuerpo entero), cambia la que había; las
+partes y lo elegido en chico quedan fijos al bajar (debajo de la barra de
+arriba, que se mide). Los avisos son reglas (`AR.avisos`) y nunca bloquean; el
+clima, el de Outfits (`RopaOutfits.contexto`, con su caché). Se guarda en
+`ropa_outfits` con `origen: "manual"` (ya existía) por `guardarMio` (si ese
+outfit ya existía, con tu nombre y tu ocasión); "Cambiar una prenda" sin cambiar
+nada guarda la opción como era. Editar: el nuevo queda guardado y el de antes
+no (su historia queda); Deshacer restaura los dos documentos tal cual. (3)
+**Sin datos nuevos**: solo `guardarMio` en `js/ropa-outfits-datos.js`; nada se
+borra solo. (4) **Pruebas**: `npm test` → 831 (nuevo `ropa-armar-motor`: el
+orden de las capas, las filas, elegir y los avisos); E2E nueva `ropa-armar`
+(78 comprobaciones: en grande desde una opción, un guardado y lo de hoy; armar,
+los avisos, los filtros, la barra fija, el borrador, guardar, me lo pongo, para
+mañana y empezar de cero, con Deshacer; cambiar una prenda, editar y duplicar;
+sin internet; 320 px en oscuro y en claro: nada se sale, todo se toca con el
+dedo y se lee bien); `ropa-outfits` lee las prendas de cada opción por
+`data-prenda` (sus fotos ya no son links); las 48 suites sin fallas (4.071
+comprobaciones; la medición de la Biblia de `lectura-qa` dio 1.567 ms con la
+máquina ocupada y, sola, 1.255 ms, bajo el límite de 1,5 s).

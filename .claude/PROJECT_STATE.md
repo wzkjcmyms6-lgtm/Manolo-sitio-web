@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-24 (Ropa, nivel 2: tu estilista con IA, fase 0, D-155).
+Actualizado: 2026-11-24 (Ropa, nivel 2: tu estilista con IA, fase 1, D-156).
 
 - **Ropa, nivel 2: tu estilista con IA (2026-11-24, en curso)**: hablar con la
   IA como con un estilista (outfits solo con su ropa, a partir de lo que
@@ -10,6 +10,9 @@ Actualizado: 2026-11-24 (Ropa, nivel 2: tu estilista con IA, fase 0, D-155).
   con cuántos outfits nuevos dan, qué no comprar, qué dejar de lado, colores y
   consejos), en Compras. Plan, maquetas y costos (unos US$ 2 más al mes) en
   `docs/ROPA_ESTILISTA.md` (D-155); fases en `.claude/CURRENT_PHASE.md`.
+  Fase 1 hecha (D-156): **ver en grande** cada outfit (de la cabeza a los
+  pies; opciones, guardados y días) y **Armar el mío** (`#ropa-armar`: las
+  partes, los avisos, cambiar una prenda, editar y duplicar), sin IA.
 
 - **Ropa con IA e inspiración de Pinterest (2026-11-22; terminado el
   2026-11-23; la IA conectada el 2026-11-24)**: el

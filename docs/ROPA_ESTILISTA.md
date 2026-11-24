@@ -317,12 +317,46 @@ en ese caso conviene subirlo a US$ 12 en Ajustes de Ropa (te pregunto antes).
 | Fase | Qué |
 |---|---|
 | 0 | Diseño: cómo se ve y cuánto costaría al mes (este documento, D-155) |
-| 1 | Armar mis outfits yo (sin IA): la pantalla, los avisos, guardar, me lo pongo, para mañana, cambiar una prenda, editar y duplicar |
+| 1 | Armar mis outfits yo (sin IA): la pantalla, los avisos, guardar, me lo pongo, para mañana, cambiar una prenda, editar y duplicar; y ver cada outfit en grande (pedido del 2026-11-24) |
 | 2 | El puente aprende a conversar y a opinar: `/charla`, `/opinar`, `/opinion` (versión 5), con pruebas sin gastar, y desplegado |
 | 3 | Hablar con mi estilista: la pantalla, las conversaciones, lo que recuerda de ti, "Pídelo con tus palabras" |
 | 4 | Lo que opina mi estilista de mi ropero (en Compras) y "¿Qué opinas?" de mis outfits |
 | 5 | Conectarlo con Outfits y Compras: el aviso del día en Outfits, "Cambiar una prenda" desde las conversaciones, y en Inicio si tiene sentido |
 | 6 | Revisión final: todas las pruebas, Lighthouse, la lista para el iPhone y la prueba real corta con tu OK |
+
+## Pedido del dueño durante la fase 0 (2026-11-24)
+Con una captura de Outfits en su iPhone (las fotos de cada opción, chiquitas):
+"Igualmente quiero que en los outfits sugeridos pueda entrar para ver cómo se
+ven, me entiendes?". Se sumó a la fase 1: **ver en grande**.
+
+## Hecho en la fase 1 (D-156): ver en grande y armar el mío
+- **Ver en grande**: tocar las fotos de una opción (o "Ver en grande") la abre
+  como se ve puesta: las fotos grandes, de la cabeza a los pies (lo de arriba
+  —de afuera hacia adentro: la chamarra, la chompa, la polera—, lo de abajo,
+  los pies y los accesorios), los nombres completos, por qué y las capas; con
+  "‹ ›" pasas a las otras opciones y ahí mismo "Me lo pongo", "Guardar", "Otra
+  opción" y "No me gusta". Cada foto lleva a su ficha. Igual para tus
+  guardados, lo de hoy y cada día del calendario.
+- **Armar el mío** (`#ropa-armar`, desde Outfits): arriba tu outfit en capas
+  (✕ para sacar una prenda, "Ver en grande") y los avisos; las partes (con
+  cuántas elegiste) y las fotos de cada una, con filtros de color y clima; lo
+  que está para lavar se ve apagado y avisa. En abajo, abrigo, zapatos y
+  cuerpo entero, tocar otra cambia la que había; arriba suma (para las capas).
+  Al bajar a las fotos, las partes quedan fijas arriba y aparece tu outfit en
+  chico (tócalo para volver). Abajo, la ocasión, un nombre si quieres y "Me lo
+  pongo", "Guardar" y "Para mañana" (con Deshacer). El borrador queda en el
+  teléfono si sales y vuelves. Sin IA y sin internet.
+- **Los avisos** (nunca bloquean): para lavar; dos de abajo, dos abrigos, dos
+  pares de zapatos, más de dos de arriba, cuerpo entero con algo de abajo;
+  falta lo de arriba, lo de abajo o los zapatos; el frío del día sin abrigo
+  ("Hace frío (9° a la mañana)…"), calor con abrigo, lluvia con sandalias; las
+  capas ("Al mediodía sube a 20°: la chamarra es para la mañana"); más de dos
+  colores fuertes, dos estampados, lo muy formal con lo muy informal.
+- **Cambiar una prenda** (desde una opción o en grande): "Armar el mío" con
+  esa opción; si no la cambias, se guarda como era (con su porqué); si la
+  cambias, queda tuya. **Editar** un guardado: si cambias las prendas, se
+  guarda el nuevo y el de antes deja de estar guardado (su historia queda);
+  **Duplicar**: una copia para cambiarle algo.
 
 ## Lo que no hace
 No genera fotos tuyas con la ropa puesta. No compra nada. No borra ni cambia

@@ -20,6 +20,9 @@ if (typeof ICONS === "object") {
   ICONS.outfit = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M8.5 4 4 6.6l1.7 3.5L8 9.2V20h8V9.2l2.3.9L20 6.6 15.5 4c-.6 1.4-1.9 2.2-3.5 2.2S9.1 5.4 8.5 4Z"/></svg>`;
   ICONS.clima = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><circle cx="9" cy="9" r="3.2"/><path d="M9 2.5v1.3M3.8 4.2l.9.9M2.5 9h1.3M14.2 4.2l-.9.9"/><path d="M8.5 19.5h9a3 3 0 0 0 .4-6 4.3 4.3 0 0 0-8.2-.9 3.2 3.2 0 0 0-1.2 6.9Z"/></svg>`;
   ICONS.guardar = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M7 3.5h10a1 1 0 0 1 1 1v16l-6-4-6 4v-16a1 1 0 0 1 1-1Z"/></svg>`;
+  // Ver en grande y los avisos de "Armar el mío" (D-156).
+  ICONS.ampliar = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M14.5 3.5h6v6M9.5 20.5h-6v-6M20.5 3.5l-7 7M3.5 20.5l7-7"/></svg>`;
+  ICONS.alerta = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M10.3 4.3 2.6 17.6A2 2 0 0 0 4.3 20.6h15.4a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0Z"/><path d="M12 9.5v4M12 17v.01"/></svg>`;
 }
 const M = window.RopaMotor, D = window.RopaDatos;
 const app = document.getElementById("ro-app"), ficha = document.getElementById("rop-app");

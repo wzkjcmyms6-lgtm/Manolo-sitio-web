@@ -118,7 +118,7 @@ permitidos):
 - `users/{uid}/ropa_outfits/{id}` (D-149; uno por conjunto de prendas: si
   armas el mismo, es el mismo): `v`, `prendas`, `ocasion` (casual, trabajo,
   noche, deporte, formal o una tuya "o-…"), `origen` (ia | reglas |
-  inspiracion | manual), `nombre`, `porque`, `capas`, `ciudad`, `clima` (el
+  inspiracion | manual: los que armas tú, D-156), `nombre`, `porque`, `capas`, `ciudad`, `clima` (el
   resumen del día), `inspiracionId`, `guardado`, `gusto` (si | no), `puesto`
   ([fechas]), `para` (la fecha para la que lo elegiste), `creado`, `editado`.
 - `users/{uid}/ropa_inspiracion/{id}` (D-148; los pines con id `pin-{id del
@@ -420,6 +420,11 @@ corte recto, ya sabes".
   mangas ("pegada", "manga corta").
 - Solo se suma: las prendas de antes quedan sin corte ni mangas hasta que las
   edites.
+
+## Nivel 2: tu estilista con IA
+Hablar con la IA como con un estilista, armar tus outfits tú mismo y ver cada
+outfit en grande, y la opinión de tu ropero: `docs/ROPA_ESTILISTA.md` (D-155
+en adelante).
 
 ## La prueba real de la IA (el puente ya está instalado)
 Corta, con tu OK: cuesta unos centavos (menos de US$ 0,25).

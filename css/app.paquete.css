@@ -7894,6 +7894,94 @@ h1.page-title.rin-ficha-t { margin-bottom: 0.2rem; font-size: 1.5rem; overflow-w
 .rn-valor small { color: var(--muted); font-weight: 400; }
 @media (max-width: 360px) { .rn-colores li { grid-template-columns: minmax(0, 6rem) minmax(0, 1fr) auto; gap: 0.5rem; } .rn-cifra b { font-size: 1.1rem; } }
 
+
+/* ---------- Ver en grande (D-156): como se ve puesto, de la cabeza a los pies ---------- */
+.rof-ver-a { cursor: pointer; border-radius: 12px; }
+.rof-ver-a .rof-fotos { display: grid; }
+.rof-op-ver { display: flex; flex-wrap: wrap; gap: 0 1rem; margin: -0.1rem 0 0.35rem; }
+.rof-op-ver .link-btn, .rof-hoy-ver, .rof-ver-cambiar { display: inline-flex; align-items: center; gap: 0.35rem; min-height: 44px; }
+.rof-op-ver [data-icon], .rof-hoy-ver [data-icon], .rof-ver-cambiar [data-icon], .rof-mio [data-icon] { width: 18px; height: 18px; display: inline-flex; }
+.rof-hoy .lib-btn { margin-top: 0.2rem; }
+.rof-mio { display: flex; align-items: center; justify-content: center; gap: 0.4rem; margin: -0.4rem 0 1rem; text-decoration: none; }
+.rof-ver { display: flex; flex-direction: column; gap: 0.45rem; padding-bottom: 1rem; }
+.rof-ver-nav { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; color: var(--muted); font-size: 0.88rem; font-weight: 600; }
+.rof-ver-ir { width: 44px; height: 44px; flex-shrink: 0; display: grid; place-items: center; padding: 0; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--ink); cursor: pointer; }
+.rof-ver-ir [data-icon] { width: 20px; height: 20px; display: inline-flex; }
+.rof-ver-ir:focus-visible, .rof-tab:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.rof-tablero { display: flex; flex-direction: column; gap: 0.55rem; margin: 0.15rem 0 0.2rem; }
+.rof-tab-fila { list-style: none; margin: 0; padding: 0; display: flex; justify-content: center; gap: 0.5rem; }
+.rof-tab-fila > li { flex: 0 1 47%; min-width: 0; }
+.rof-tab-fila.n1 > li { flex-basis: 52%; }
+.rof-tab-fila.n3 > li { flex-basis: 31.5%; }
+.rof-tab-fila.n4 > li { flex-basis: 23.5%; }
+.rof-tab-fila.is-pies > li { flex-basis: 38%; }
+.rof-tab-fila.is-accesorios > li { flex-basis: 23.5%; }
+.rof-tab { display: block; color: var(--ink); text-decoration: none; border-radius: 14px; }
+.rof-tab-foto { display: block; aspect-ratio: 4 / 5; border-radius: 14px; overflow: hidden; background: var(--bg-soft); border: 1px solid var(--border); }
+.rof-tab-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rof-tab-foto.is-vacia { display: grid; place-items: center; color: var(--muted); }
+.rof-tab-foto.is-vacia [data-icon] { width: 34%; height: 34%; display: inline-flex; }
+.rof-tab-n { display: block; margin-top: 0.25rem; color: var(--muted); font-size: 0.8rem; line-height: 1.3; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rof-tab-lavar { display: block; color: var(--accent-2); font-size: 0.76rem; text-align: center; }
+.rof-ver > .rof-lista { margin: 0; text-align: center; }
+
+/* ---------- Armar el mío (#ropa-armar, D-156) ---------- */
+.roar-outfit { margin-bottom: 0.9rem; }
+.roar-cab { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.roar-cab .ro-sub { margin: 0; }
+.roar-cab .link-btn { display: inline-flex; align-items: center; gap: 0.35rem; min-height: 44px; }
+.roar-cab [data-icon], .roar-bots [data-icon] { width: 18px; height: 18px; display: inline-flex; }
+.roar-editando, .roar-vacio { margin: 0.2rem 0 0.4rem; }
+.roar-fila { list-style: none; margin: 0.45rem 0 0; padding: 0.4rem 0.2rem 0.2rem; display: flex; gap: 0.6rem; overflow-x: auto; scrollbar-width: none; }
+.roar-fila::-webkit-scrollbar { display: none; }
+.roar-fila li { position: relative; flex: 0 0 74px; min-width: 0; }
+.roar-fila .ro-foto { aspect-ratio: 4 / 5; border-radius: 12px; }
+.roar-fila small { display: block; margin-top: 0.2rem; color: var(--muted); font-size: 0.74rem; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.roar-n { position: absolute; top: 4px; left: 4px; min-width: 18px; padding: 0 4px; border-radius: 6px; background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 0.68rem; font-weight: 700; line-height: 18px; text-align: center; }
+.roar-x { position: absolute; top: -10px; right: -10px; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.roar-x [data-icon] { width: 26px; height: 26px; padding: 5px; box-sizing: border-box; display: inline-flex; border-radius: 50%; border: 1px solid var(--border); background: var(--surface-raised); color: var(--ink); }
+.roar-x:focus-visible { outline: none; }
+.roar-x:focus-visible [data-icon] { outline: 2px solid var(--accent-2); outline-offset: 1px; }
+.roar-avisos:empty { display: none; }
+.roar-aviso { display: flex; align-items: flex-start; gap: 0.45rem; margin: 0.45rem 0 0; padding: 0.5rem 0.7rem; border-radius: 12px; background: rgba(255, 184, 77, 0.1); color: var(--accent-2); font-size: 0.88rem; line-height: 1.4; }
+.roar-aviso [data-icon] { width: 18px; height: 18px; flex-shrink: 0; display: inline-flex; margin-top: 1px; }
+.roar-aviso.is-info { background: var(--bg-soft); color: var(--ink); }
+.roar-aviso.is-info [data-icon] { color: var(--accent-2); }
+/* La barra fija al bajar: las partes y, cuando tu outfit ya no se ve, lo elegido en chico. */
+.roar-barra { position: sticky; top: var(--roar-top, 0px); z-index: 6; margin: 0 0 0.55rem; padding: 0.4rem 0 0.15rem; background: var(--bg); }
+.roar-mini { display: none; align-items: center; gap: 0.3rem; width: 100%; min-height: 48px; margin: 0 0 0.3rem; padding: 0.2rem 0.5rem; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; overflow: hidden; }
+.roar-mini.is-visible { display: flex; }
+.roar-mini .ro-foto { width: 30px; flex-shrink: 0; aspect-ratio: 4 / 5; border-radius: 6px; }
+.roar-mini-n { margin-left: 0.3rem; color: var(--muted); font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.roar-mini:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.roar-partes { display: flex; gap: 0.4rem; overflow-x: auto; margin: 0; padding: 0.1rem 0.1rem 0.25rem; scrollbar-width: none; }
+.roar-partes::-webkit-scrollbar { display: none; }
+.roar-k { min-width: 20px; padding: 0 0.35rem; border-radius: var(--radio-pildora); background: var(--surface-raised); color: var(--ink); font-size: 0.76rem; line-height: 20px; text-align: center; }
+.roar-filtros { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.6rem; }
+.roar-filtros:empty { display: none; }
+.roar-fil { display: flex; gap: 0.35rem; overflow-x: auto; padding: 0.1rem; scrollbar-width: none; }
+.roar-fil::-webkit-scrollbar { display: none; }
+.roar-chip { font-size: 0.84rem; }
+.roar-chip .ro-muestra { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--muted); display: inline-block; }
+.roar-grilla { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.55rem; }
+.roar-p { position: relative; display: block; width: 100%; padding: 0; border: 0; background: transparent; color: var(--ink); font: inherit; text-align: center; cursor: pointer; }
+.roar-p .ro-foto { aspect-ratio: 4 / 5; border-radius: 12px; border: 2px solid transparent; }
+.roar-p.is-sel .ro-foto { border-color: var(--accent-2); }
+.roar-p.is-lavar .ro-foto img { opacity: 0.55; }
+.roar-p:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; border-radius: 12px; }
+.roar-check { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: var(--accent-2); color: #111; }
+.roar-check [data-icon] { width: 15px; height: 15px; display: inline-flex; }
+.roar-p-n { display: block; margin-top: 0.25rem; font-size: 0.8rem; line-height: 1.3; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.roar-p.is-sel .roar-p-n { color: var(--ink); font-weight: 600; }
+.roar-p-l { display: block; font-size: 0.74rem; color: var(--accent-2); }
+.roar-nada { margin: 0 0 1rem; }
+.roar-pie { border-top: 1px solid var(--border); padding-top: 0.8rem; display: flex; flex-direction: column; gap: 0.7rem; }
+.roar-bots { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.roar-bots > :first-child { grid-column: 1 / -1; }
+.roar-bots > * { display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; min-height: 46px; white-space: nowrap; min-width: 0; padding-left: 0.6rem; padding-right: 0.6rem; }
+.roar-cero { align-self: center; min-height: 44px; }
+@media (min-width: 900px) { .roar-grilla { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); } }
+
 /* ---- css/respaldo.css ---- */
 /* ---------- Copia de seguridad de todo Manolo (D-118) ----------
    Hoja de js/respaldo.js. Solo usa las variables de :root (css/style.css):

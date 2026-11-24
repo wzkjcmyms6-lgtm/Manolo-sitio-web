@@ -1,6 +1,19 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-24 (Ropa, nivel 2, fase 1, D-156: ver en grande y armar el mío):
+  `npm test` → **831 pruebas** (nuevo `ropa-armar-motor`). Las **48 suites**
+  de `scripts/e2e/` sin fallas (4.071 comprobaciones; en la corrida
+  completa, la Biblia de `lectura-qa` dio 1.567 ms con la máquina ocupada y,
+  sola, 1.255 ms, bajo el límite de 1,5 s). Nueva `ropa-armar`
+  (78: ver en grande una opción —tocando sus fotos o el botón; las de al lado,
+  "Otra opción", "Guardar", el foco al cerrar, cada prenda a su ficha—, un
+  guardado y lo de hoy; armar el mío —las partes, cambiar o sumar, los avisos
+  con el clima del día, para lavar, los filtros, el orden de las capas, la
+  barra fija al bajar, el borrador, Guardar, Me lo pongo, Para mañana y Empezar
+  de cero, con Deshacer—; cambiar una prenda, editar y duplicar; sin internet;
+  320 px en oscuro y en claro con el contraste). `ropa-outfits` lee las
+  prendas de cada opción por `data-prenda`.
 - 2026-11-24 (Ropa: corte, mangas, colores y mayúsculas, D-154; el puente
   instalado, D-153): `npm test` → **825 pruebas** (el corte, las mangas y las
   mayúsculas en `ropa-motor`; en `puente-logica`, las listas iguales a las de
@@ -502,7 +515,7 @@
   retiraron en D-033.
 - **Dispositivo real (iPhone)**: pantalla encendida, voz y sonido se validan
   en el teléfono del dueño; nada se da por funcionando sin esa prueba.
-- **Regresión** en cada fase: `npm test` + las 47 suites de `scripts/e2e/`
+- **Regresión** en cada fase: `npm test` + las 48 suites de `scripts/e2e/`
   (ver "Cómo correr todo"; D-115: una prueba que quedó fuera de la lista
   corta se rompió sin que se viera).
 
@@ -515,7 +528,7 @@ for f in fase1 regresion hojas sw-instala emojis scalping inversiones tarjetas m
   run-compartir run-qa habitos mi-dia ej-calendario ejercicio libros-progreso lectura \
   lectura-qa tiempos finanzas-diario lugares respaldo sin-internet pantalla tarjetas-minimo \
   biblia-marcar biblia-audio rr-editor rutina-entreno tema-claro libros-n3 bici resumenes \
-  ropa ropa-insp ropa-outfits ropa-compras ropa-numeros ropa-final ropa-corte; do node scripts/e2e/$f.js || break; done
+  ropa ropa-insp ropa-outfits ropa-compras ropa-numeros ropa-final ropa-corte ropa-armar; do node scripts/e2e/$f.js || break; done
 (cd puente && npm install && npm run prueba)   # el Worker del puente de Ropa
 ```
 Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
@@ -637,6 +650,14 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
   En la ficha, "Cambiar los colores".
 - [ ] Escribe la tela y la marca en minúscula y la talla "m": al guardar,
   quedan con mayúscula ("M").
+
+- [ ] Outfits: toca las fotos de una opción: la ves en grande; pasa a las otras
+  con las flechas. Toca una foto: abre esa prenda.
+- [ ] "Armar el mío": elige arriba, abajo y zapatos; mira los avisos (si hace
+  frío, te lo dice). Baja a las fotos: las partes quedan arriba. Guárdalo con un
+  nombre; "Me lo pongo" otro día.
+- [ ] En una opción, "Cambiar una prenda"; en un guardado, "Editar" y
+  "Duplicar".
 
 *Con la IA (el puente ya está instalado):*
 - [ ] La prueba real corta (`docs/ROPA.md` › "La prueba real de la IA").

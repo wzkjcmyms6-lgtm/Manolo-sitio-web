@@ -33,7 +33,8 @@ const sobra = p => p.evaluate(() => document.documentElement.scrollWidth - inner
 const coleccion = (p, c) => p.evaluate(x => Object.fromEntries(window.__fakeStore.colMap(x)), c);
 const toast = p => txt(p, "#ro-toast .undo-toast-msg");
 const ir = (p, h) => p.evaluate(x => { location.hash = x; }, h);
-const opciones = p => p.$$eval(".rof-op", els => els.map(el => [...el.querySelectorAll(".rof-foto-a")].map(a => a.getAttribute("href").split("/")[1])));
+// Las prendas de cada opción (D-156: las fotos ya no son links: se tocan para verlas en grande).
+const opciones = p => p.$$eval(".rof-op", els => els.map(el => [...el.querySelectorAll(".rof-foto-a")].map(a => a.dataset.prenda)));
 
 // El clima de mentira (como Open-Meteo): por coordenadas, La Paz o Santa Cruz.
 function climaFalso(o) {
