@@ -1,7 +1,8 @@
 // ---------- Ropa: Ajustes (#ropa-ajustes, el engranaje; D-147 a D-149) ----------
 // Tus outfits: la ciudad del clima, cómo sientes el frío (friolento, normal
 // o caluroso: corre los límites 3 grados) y tus ocasiones (las que agregaste
-// en Outfits; aquí se quitan, con Deshacer). Tu tablero de Pinterest
+// en Outfits; aquí se quitan, con Deshacer). Tu estilista (D-158): lo que
+// recuerda de ti (verlo, agregar y borrar, con Deshacer). Tu tablero de Pinterest
 // (conectar, actualizar, cambiar o desconectar; con el puente listo). La IA: si está conectada, el gasto del mes con su tope
 // (se puede cambiar) y "Describir con IA" las prendas que cargaste antes
 // (llena solo lo que falta, sin cambiar lo que pusiste). Si no está
@@ -58,6 +59,7 @@ function pintar() {
   }
   app.innerHTML = `${aviso ? `<p class="tmp-ok" role="status">${esc(aviso)}</p>` : ""}
     ${climaHTML()}
+    ${estilistaHTML()}
     ${pinterestHTML()}
     <section class="tmp-card roa-ia" aria-labelledby="roa-ia-t"><h2 class="ro-sub" id="roa-ia-t">La IA</h2>${ia}</section>`;
   if (typeof renderIcons === "function") renderIcons(app);
@@ -84,6 +86,21 @@ function climaHTML() {
       <button type="button" class="lib-btn-sec lib-btn-chico" data-roa="oc-quitar" data-id="${esc(o.id)}" aria-label="Quitar ${esc(o.nombre)}">Quitar</button></li>`).join("")}</ul>` : ""}
     <p class="rd-nota">${ocs.length ? "Agrega más" : "Agrega las tuyas (la universidad, la iglesia…)"} en Outfits › Para qué › «+ Otra».</p>
   </section>`;
+}
+
+// Tu estilista (D-158): lo que recuerda de ti (si ya hablaste con él o la IA está lista).
+function estilistaHTML() {
+  const RE = window.RopaEstilista, DE = window.RopaEstilistaDatos;
+  if (!RE || !DE) return "";
+  const n = DE.memoria().length, cs = DE.lista().length;
+  if (!n && !cs && !IA.estilista()) return "";
+  return `<section class="tmp-card roa-estilista" aria-labelledby="roa-est-t">
+    <h2 class="ro-sub" id="roa-est-t"><span data-icon="sparkle" aria-hidden="true"></span>Tu estilista</h2>
+    <p>${n ? `Recuerda ${n === 1 ? "una cosa" : `${n} cosas`} de ti.` : "Todavía no recuerda nada de ti."} <span class="rd-nota">Lo tiene en cuenta cada vez que le escribes.</span></p>
+    <div class="roa-pin-bot">
+      <button type="button" class="lib-btn-sec lib-btn-chico" data-roa="memoria" aria-haspopup="dialog">Lo que recuerda de ti</button>
+      <a class="lib-btn-sec lib-btn-chico" href="#ropa-estilista">Hablar con tu estilista</a>
+    </div></section>`;
 }
 
 // Tu tablero de Pinterest (D-148): solo con el puente listo.
@@ -163,6 +180,7 @@ app.addEventListener("click", e => {
   else if (a === "todas") describirTodas();
   else if (a === "cancelar" && tarea) { tarea.cancelar = true; b.disabled = true; }
   else if (a === "ciudad" && window.RopaOutfits) window.RopaOutfits.elegirCiudad(b);
+  else if (a === "memoria" && window.RopaEstilista) window.RopaEstilista.memoria(b);
   else if (a === "oc-quitar" && DI) {
     const antes = propias(), o = antes.find(x => x.id === b.dataset.id);
     if (!o) return;
@@ -192,6 +210,7 @@ app.addEventListener("submit", e => {
 IA.alCambiar(() => { if (!tarea) pintar(); });
 if (DI) DI.al(() => { if (!tarea && !(document.activeElement && document.activeElement.closest("#roa-app form"))) pintar(); });
 D.al(() => { if (!tarea && !(document.activeElement && document.activeElement.closest("#roa-app form"))) pintar(); });
+if (window.RopaEstilistaDatos) window.RopaEstilistaDatos.al(() => { if (!tarea && !(document.activeElement && document.activeElement.closest("#roa-app form"))) pintar(); });
 window.addEventListener("hashchange", () => { aviso = ""; if (visible()) IA.quien().then(pintar); pintar(); });
 document.addEventListener("DOMContentLoaded", pintar);
 window.RopaAjustes = { pintar, soloLoQueFalta };

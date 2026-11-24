@@ -150,9 +150,10 @@ const presupuesto = v => (typeof v === "number" && isFinite(v) && v >= 1 && v <=
 
 // ---- La lista de deseos (users/{uid}/ropa_deseos) ----
 // { grupo, tipo, colores [id], nota, inspiraciones [ids], origen (falta | pin
-// | manual), estado (quiero | comprado | descartado), prendaId, compradoFecha,
+// | manual | estilista: lo que te sugirió tu estilista, D-158), estado (quiero | comprado | descartado), prendaId, compradoFecha,
 // creado, editado } → limpio, con su clave y su nombre.
 const ESTADOS = ["quiero", "comprado", "descartado"];
+const ORIGENES = ["falta", "pin", "manual", "estilista"];
 function normalizarDeseo(id, d) {
   const x = d && typeof d === "object" ? d : {};
   const grupo = M.GRUPO[x.grupo] ? x.grupo : "arriba";
@@ -161,11 +162,11 @@ function normalizarDeseo(id, d) {
   return {
     id, grupo, tipo, colores, clave: clave({ grupo, tipo, colores }), nombre: nombreDe(tipo, colores), nota: M.mayus(texto(x.nota, 200)),
     inspiraciones: [...new Set((Array.isArray(x.inspiraciones) ? x.inspiraciones : []).filter(s => typeof s === "string" && s))].slice(0, 24),
-    origen: ["falta", "pin", "manual"].includes(x.origen) ? x.origen : "manual", estado: ESTADOS.includes(x.estado) ? x.estado : "quiero",
+    origen: ORIGENES.includes(x.origen) ? x.origen : "manual", estado: ESTADOS.includes(x.estado) ? x.estado : "quiero",
     prendaId: typeof x.prendaId === "string" ? x.prendaId : "", compradoFecha: fechaOk(x.compradoFecha) ? x.compradoFecha : "",
     creado: num(x.creado), editado: num(x.editado)
   };
 }
 
-return { clave, colorDe, buscar, faltan, vanJuntas, outfitsNuevos, deSobra, gastoDelMes, presupuesto, normalizarDeseo, ESTADOS };
+return { clave, colorDe, buscar, faltan, vanJuntas, outfitsNuevos, deSobra, gastoDelMes, presupuesto, normalizarDeseo, ESTADOS, ORIGENES };
 });

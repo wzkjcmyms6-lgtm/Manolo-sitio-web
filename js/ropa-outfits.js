@@ -12,6 +12,9 @@
 // Ver en grande (D-156): cada opción, guardado o día se abre con las fotos
 // juntas, de la cabeza a los pies (js/ropa-armar-motor.js), y lleva a "Armar
 // el mío" (js/ropa-armar.js) para cambiar una prenda, editar o duplicar.
+// Tu estilista (D-158): arriba, "Pídelo con tus palabras" abre una conversación
+// nueva (js/ropa-estilista.js) con lo que escribiste; el clima de hoy y de
+// mañana le llega en palabras (climaParaIA).
 // Datos: js/ropa-outfits-datos.js; clima: js/ropa-clima.js (Open-Meteo, sin
 // tu ubicación); ajustes (ciudad, cómo sientes el frío): meta/ropa_ajustes.
 (function () {
@@ -199,6 +202,24 @@ function climaHTML() {
       <button type="button" class="lib-btn-sec lib-btn-chico" data-rof="ciudad" aria-haspopup="dialog">Cambiar ciudad</button></div>
     ${dias}${cuerpo}</section>`;
 }
+// "Pídelo con tus palabras": a tu estilista (con la IA lista; sin internet, lo avisa).
+function estilistaHTML() {
+  const RE = window.RopaEstilista, DE = window.RopaEstilistaDatos;
+  if (!RE || !IA() || !(IA().estilista() || IA().sinInternet())) return "";
+  const sin = IA().sinInternet() || !IA().estilista();
+  const n = DE ? DE.lista().length : 0;
+  return `<section class="tmp-card roe-pide" aria-labelledby="roe-pide-t">
+    <h2 class="ro-sub" id="roe-pide-t">${icono("sparkle")}<span>Tu estilista</span></h2>
+    <form class="roe-pide-form" data-rof-pide novalidate>
+      <label class="roe-pide-label" for="rof-pide">${sin ? "Sin internet: tu estilista necesita conexión." : "Pídelo con tus palabras. Por ejemplo: «Hace frío: una chompa y una chamarra encima»."}</label>
+      <div class="roe-pide-fila">
+        <input class="lib-input" id="rof-pide" name="texto" maxlength="600" placeholder="Escribe o dicta aquí" autocomplete="off" enterkeyhint="send"${sin ? " disabled" : ""}>
+        <button type="submit" class="lib-btn roe-enviar" aria-label="Enviar a tu estilista"${sin ? " disabled" : ""}>${icono("send")}</button>
+      </div>
+    </form>
+    <a class="roe-pide-ver" href="#ropa-estilista">${n ? `Tus conversaciones (${n})` : "Abrir tu estilista"}</a>
+  </section>`;
+}
 function ocasionesHTML() {
   return `<fieldset class="ro-campo rof-ocasion"><legend>Para qué</legend><div class="ro-opciones">${O.OCASIONES.concat(propias()).map(o =>
     `<label class="ro-op-chip"><input type="radio" name="rof-ocasion" value="${esc(o.id)}"${est.ocasion === o.id ? " checked" : ""}><span>${esc(o.nombre)}</span></label>`).join("")}
@@ -294,9 +315,13 @@ function render() {
   if (DI.ajustesListos() && !ocasionValida(est.ocasion) && est.ocasion !== est.ocasionNueva) { est.ocasion = "casual"; guardarLocal("manolo.ropa.ocasion", est.ocasion); recuperarOpciones(); }
   const b = base() && D.una(base());
   const sinRopa = !activas.length;
+  // Lo que escribías para tu estilista queda (aunque se vuelva a pintar).
+  const pide = app.querySelector("#rof-pide");
+  const pideV = pide ? pide.value : "", pideFoco = !!pide && document.activeElement === pide;
   app.innerHTML = `
     ${b ? `<div class="rof-base" role="status">${A().fotoHTML(b, "ro-foto rof-base-foto")}<span>Combinando con <b>${esc(M.titulo(b))}</b></span><a class="rof-base-x" href="#ropa-outfits" aria-label="Dejar de combinar con ${esc(M.titulo(b))}">${icono("close")}</a></div>` : ""}
     ${climaHTML()}
+    ${sinRopa || b ? "" : estilistaHTML()}
     ${hoyHTML()}
     ${sinRopa ? `<div class="run-vacio"><span class="icon" data-icon="ropa"></span><p><b>Primero, tu ropa.</b></p><p>Agrega tus prendas al ropero (con el +) y aquí armo tus outfits.</p><a class="lib-btn" href="#ropa">Ir al ropero</a></div>`
       : `${ocasionesHTML()}
@@ -306,6 +331,10 @@ function render() {
       <div aria-live="polite">${opcionesHTML()}</div>`}
     ${guardadosHTML()}
     ${calendarioHTML()}`;
+  if (pideV || pideFoco) {
+    const n = app.querySelector("#rof-pide");
+    if (n) { n.value = pideV; if (pideFoco) n.focus({ preventScroll: true }); }
+  }
   pintarIconos(app);
   fotosGrandes(app);
 }
@@ -426,6 +455,15 @@ app.addEventListener("click", e => {
   else if (a === "ciudad") elegirCiudad(b);
   else if (a === "reclima") pedirClima(true);
   else if (a === "ocasion-nueva") nuevaOcasion(b);
+});
+// "Pídelo con tus palabras" → una conversación nueva con tu estilista.
+app.addEventListener("submit", e => {
+  const f = e.target.closest("[data-rof-pide]");
+  if (!f) return;
+  e.preventDefault();
+  const campo = f.elements.texto;
+  if (!campo.value.trim()) { campo.focus(); return; }
+  if (window.RopaEstilista && window.RopaEstilista.pedir(campo.value)) campo.value = "";
 });
 app.addEventListener("change", e => {
   if (e.target.name !== "rof-ocasion") return;
@@ -607,6 +645,17 @@ function verPrendas(ids, titulo, desde) {
   h.el.onchange = null; h.el.onsubmit = null;
   h.el.onclick = e => { if (e.target.closest(".rof-tab")) { h.volver = null; h.cerrar(); } };
 }
+// Para tu estilista (D-158): el clima de hoy y de mañana, en palabras (o "" sin clima).
+function climaParaIA() {
+  return pedirClima().then(() => {
+    if (!clima || !clima.dias.length) return "";
+    const ahora = C.enLaCiudad(clima.offset);
+    return [["Hoy", ahora.fecha], ["Mañana", C.manana(ahora.fecha)]].map(([n, f]) => {
+      const d = C.diaDe(clima.dias, f);
+      return d ? `${n} (${M.fechaLarga(f)}): ${C.paraIA(ciudad(), d, C.necesidades(d, sensacion()))}` : "";
+    }).filter(Boolean).join("\n");
+  }, () => "");
+}
 // Para "Armar el mío": el día elegido (hoy o mañana), lo que pide el clima, la ciudad y la ocasión.
 function contexto() {
   const x = elDia();
@@ -687,5 +736,6 @@ DI.al(() => {
   render();
 });
 if (IA()) IA().alCambiar(() => { if (pantalla() === "ropa-outfits") render(); });
-window.RopaOutfits = { render, armar, elegirCiudad, tableroHTML, ver: verPrendas, contexto, pedirClima };
+if (window.RopaEstilistaDatos) window.RopaEstilistaDatos.al(() => { if (pantalla() === "ropa-outfits") render(); });
+window.RopaOutfits = { render, armar, elegirCiudad, tableroHTML, ver: verPrendas, contexto, pedirClima, climaParaIA };
 })();

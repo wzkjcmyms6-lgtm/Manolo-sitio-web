@@ -48,7 +48,7 @@ function agregar(cosa, extra) {
   const ref = col().doc();
   return ref.set({
     v: 1, grupo: cosa.grupo, tipo: String(cosa.tipo || "").slice(0, 40), colores: (cosa.colores || []).slice(0, 3), nota: String(e.nota || "").slice(0, 200),
-    inspiraciones: pines, origen: ["falta", "pin", "manual"].includes(e.origen) ? e.origen : "manual", estado: "quiero", creado: Date.now(), editado: Date.now()
+    inspiraciones: pines, origen: K.ORIGENES.includes(e.origen) ? e.origen : "manual", estado: "quiero", creado: Date.now(), editado: Date.now()
   }).then(() => ({ id: ref.id, nuevo: true }));
 }
 // "Lo compré": ya está en tu ropero (prendaId).

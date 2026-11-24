@@ -386,6 +386,43 @@ los botones en la app llegan en las fases 3 y 4.
 - **Probado sin gastar**: con una IA de mentira (ninguna prueba llama a la de
   verdad).
 
+## Hecho en la fase 3 (D-158): hablar con tu estilista
+- **Dónde**: en Outfits, arriba (después del clima), "Tu estilista: Pídelo con
+  tus palabras": lo que escribes abre una conversación nueva. La pantalla
+  (`#ropa-estilista`) cuelga de Outfits (esa pestaña queda marcada).
+- **La conversación**: tus mensajes a la derecha y los de tu estilista a la
+  izquierda; mientras piensa, "Pensando…". Cada outfit con las fotos (tocarlas
+  lo abre en grande), "Cambiar una prenda", por qué, cómo llevar las capas, y
+  "Me lo pongo", "Guardar", "Otra opción" (le pide otra a tu estilista) y "No
+  me gusta" (con Deshacer). La tarjeta dice si ya lo guardaste, te lo pusiste
+  hoy o no te gustó, si algo está para lavar o si una prenda ya no está. Si te
+  falta algo: "Te falta: Botines cafés" con "A mi lista" (a tu lista de
+  deseos). Si le contaste algo de ti: "Lo recordé: es friolento" con
+  "Olvidar".
+- **Escribir**: el cuadro queda fijo abajo (el micrófono del teclado dicta);
+  Enter manda y Mayúscula + Enter hace otra línea; lo que escribías queda si
+  sales y vuelves. Vacía, tres ejemplos que se escriben en el cuadro al
+  tocarlos (no se mandan solos). Debajo: "Cada mensaje, unos 4 centavos de
+  dólar" y lo gastado del mes.
+- **Arriba**: "Conversaciones" (la más nueva primero, con cuántos mensajes;
+  abrir, "Nueva conversación" y borrar, con Deshacer ahí mismo) y "Lo que
+  recuerda de ti" (la lista, agregar y borrar, con Deshacer ahí mismo; también
+  desde Ajustes de Ropa).
+- **Si algo sale mal**: tu mensaje queda; dice qué pasó (por ejemplo, el tope
+  del mes, con Ajustes de Ropa) y "Volver a preguntar". Sin internet, lo
+  hablado se ve igual y el cuadro avisa. Quien no es el dueño no lo ve en
+  Outfits; si entra, la pantalla lo explica.
+- **Una conversación de 40 mensajes**: lo que escribas empieza una nueva (lo
+  que recuerda de ti sigue; nada se borra).
+- **Lo que va a tu estilista**: tu ropa (con lo que está para lavar marcado;
+  sin lo que ya no tienes, ni notas, tallas o precios), lo hablado antes, el
+  clima de hoy y de mañana de tu ciudad, tu estilo de Pinterest, lo que te
+  pusiste estos días, lo que te gustó y lo que no, lo que recuerda de ti y lo
+  que te queda del presupuesto del mes.
+- **Datos nuevos**: `ropa_charlas` (cada mensaje se suma al final) y
+  `meta/ropa_ajustes.memoria`; en la lista de deseos, "de tu estilista"
+  (`origen: "estilista"`). La copia de seguridad suma tus conversaciones.
+
 ## Lo que no hace
 No genera fotos tuyas con la ropa puesta. No compra nada. No borra ni cambia
 tu ropa: solo propone. No publica nada en tu Pinterest. No pide tu ubicación.

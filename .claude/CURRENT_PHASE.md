@@ -10,7 +10,7 @@ datos, puente y costos en `docs/ROPA_ESTILISTA.md` (D-155).
 | 0 | Diseño: cómo se ve (maquetas) y cuánto costaría al mes | ✅ (D-155) |
 | 1 | Armar mis outfits yo (sin IA) y ver cada outfit en grande | ✅ (D-156): "Armar el mío", los avisos, cambiar una prenda, editar y duplicar; ver en grande opciones, guardados y días |
 | 2 | El puente aprende a conversar y a opinar (`/charla`, `/opinar`, `/opinion`, versión 5), desplegado | ✅ (D-157): las tres rutas con su caché, sus esquemas y su limpieza; instalado; `RopaIA.estilista()`, `charla`, `opinar`, `opinion` en la app (sin pantalla todavía) |
-| 3 | Hablar con mi estilista: la pantalla, las conversaciones, lo que recuerda de ti, "Pídelo con tus palabras" | ⏳ |
+| 3 | Hablar con mi estilista: la pantalla, las conversaciones, lo que recuerda de ti, "Pídelo con tus palabras" | ✅ (D-158): `#ropa-estilista` (conversar, cada outfit con sus botones, "A mi lista", "Lo recordé"), tus conversaciones, lo que recuerda de ti (también en Ajustes de Ropa) y "Pídelo con tus palabras" en Outfits |
 | 4 | Lo que opina mi estilista de mi ropero (en Compras) y "¿Qué opinas?" de mis outfits | ⏳ |
 | 5 | Conectarlo con Outfits y Compras (y con Inicio, si tiene sentido) | ⏳ |
 | 6 | Revisión final y la prueba real corta con el OK del dueño | ⏳ |

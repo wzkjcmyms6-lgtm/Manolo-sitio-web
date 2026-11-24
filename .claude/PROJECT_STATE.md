@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-24 (Ropa, nivel 2: tu estilista con IA, fase 2, D-157).
+Actualizado: 2026-11-24 (Ropa, nivel 2: tu estilista con IA, fase 3, D-158).
 
 - **Ropa, nivel 2: tu estilista con IA (2026-11-24, en curso)**: hablar con la
   IA como con un estilista (outfits solo con su ropa, a partir de lo que
@@ -18,6 +18,11 @@ Actualizado: 2026-11-24 (Ropa, nivel 2: tu estilista con IA, fase 2, D-157).
   (`/opinion`), con caché, esquema fijo y lo que vuelve revisado; la app ya
   los puede llamar (`RopaIA.estilista()`, `charla`, `opinar`, `opinion`), sin
   pantalla todavía (fases 3 y 4).
+  Fase 3 hecha (D-158): **hablar con tu estilista** (`#ropa-estilista`, desde
+  "Pídelo con tus palabras" en Outfits): outfits solo con su ropa con sus
+  botones, lo que le falta ("A mi lista"), lo que recuerda de él (también en
+  Ajustes de Ropa) y sus conversaciones guardadas (`ropa_charlas`, en la
+  copia de seguridad).
 
 - **Ropa con IA e inspiración de Pinterest (2026-11-22; terminado el
   2026-11-23; la IA conectada el 2026-11-24)**: el

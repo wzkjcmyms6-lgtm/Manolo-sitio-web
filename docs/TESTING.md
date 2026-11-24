@@ -1,6 +1,21 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-24 (Ropa, nivel 2, fase 3, D-158: hablar con tu estilista):
+  `npm test` → **844 pruebas** (nuevo `ropa-estilista-motor`: el título de
+  cada conversación, los mensajes, cuándo está llena y lo que quedó sin
+  respuesta, lo que va al puente, tu ropa con lo que está para lavar, el
+  presupuesto, lo que recuerda de ti y "hoy", "ayer" o la fecha). E2E nueva
+  `ropa-estilista` (**104**, con un puente de mentira): "Pídelo con tus
+  palabras" en Outfits; lo que va al puente (tu ropa sin lo que ya no tienes ni
+  tus notas, el clima de hoy y de mañana, lo que recuerda de ti, el
+  presupuesto, lo hablado antes); los outfits revisados, "A mi lista", "Lo
+  recordé" y "Olvidar"; Guardar, No me gusta y Me lo pongo con Deshacer; Ver en
+  grande, Cambiar una prenda y Otra opción; un error y "Volver a preguntar";
+  los ejemplos, Enter y el borrador; tus conversaciones y lo que recuerda de ti
+  (con Deshacer en la misma hoja) y en Ajustes de Ropa; una conversación llena;
+  sin internet, quien no es el dueño y sin el puente; 320 px en oscuro y en
+  claro (nada se sale, todo se toca con el dedo y se lee bien).
 - 2026-11-24 (Ropa, nivel 2, fase 2, D-157: el puente aprende a conversar y a
   opinar): `npm test` → **836 pruebas** (5 nuevas en `puente-logica`: los
   esquemas y las instrucciones —sin el nombre de la app ni correos—, las
@@ -688,6 +703,13 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
   "Mi estilo": míralo y corrígelo.
 - [ ] Outfits con la IA. Compras: "Qué te falta" y "Ver opciones en
   Pinterest"; "A mi lista" desde un pin.
+- [ ] Outfits › "Tu estilista": dicta con el micrófono del teclado "Hace frío,
+  quiero una chompa y una chamarra encima". Mira los outfits; "Me lo pongo" o
+  "Guardar" uno; "Otra opción". Si te falta algo, "A mi lista".
+- [ ] Cuéntale algo de ti ("Soy friolento"): aparece "Lo recordé"; míralo en
+  "Lo que recuerda de ti" (también en Ajustes de Ropa).
+- [ ] Sal y vuelve: la conversación sigue; en "Conversaciones", empieza una
+  nueva y vuelve a la de antes.
 - [ ] En modo avión: Ajustes de Ropa dice "Sin internet"; al agregar una foto,
   "Sin internet: la IA no puede mirar la foto". Al volver internet, la IA se
   conecta sola.

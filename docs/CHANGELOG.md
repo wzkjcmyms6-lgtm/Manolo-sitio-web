@@ -1,5 +1,21 @@
 # Cambios
 
+## 2026-11-24 · Ropa: habla con tu estilista
+- **Tu estilista** (en Outfits, arriba: "Pídelo con tus palabras"): le
+  escribes o le dictas lo que necesitas ("Hace frío: una chompa y una
+  chamarra encima", "Mañana tengo una reunión formal") y te contesta corto,
+  con outfits solo con tu ropa y el clima de hoy y de mañana.
+- Cada outfit, con "Me lo pongo", "Guardar", "Otra opción", "No me gusta",
+  "Ver en grande" y "Cambiar una prenda".
+- Si te falta algo, te lo dice: "A mi lista" lo suma a tu lista de deseos.
+- **Lo que recuerda de ti** ("Es friolento", "No le gusta el amarillo"): lo
+  tiene en cuenta cada vez. Lo ves, agregas o borras en Tu estilista o en
+  Ajustes de Ropa.
+- **Tus conversaciones** quedan guardadas (la más nueva primero); borrar se
+  puede deshacer. Van en tu copia de seguridad.
+- Cada mensaje cuesta unos 4 centavos de dólar (abajo ves lo gastado del
+  mes). Sin internet, lo que hablaron se ve igual.
+
 ## 2026-11-24 · Ropa: ver tus outfits en grande y armar el tuyo
 - **Ver en grande**: toca las fotos de una opción de Outfits y la ves como
   quedaría puesta, de la cabeza a los pies, con las fotos grandes. Pasas a las

@@ -2640,3 +2640,51 @@ mide, y `$eval` (que busca y después mide, en dos pasos) medía la grilla vieja
 ya fuera de la página (ancho 0, sin estilos). La app estaba bien (cuadro por
 cuadro, la grilla siempre tiene 4 columnas). Ahora busca y mide en un solo
 `evaluate`: 3 de 3 con la misma carga.
+
+**D-158 (2026-11-24) · Ropa, nivel 2, fase 3: hablar con tu estilista.** (1)
+**Dónde**: `#ropa-estilista` (`js/ropa-estilista.js`, hijo de Outfits en la
+barra); en Outfits, después del clima, "Tu estilista: Pídelo con tus
+palabras" (solo con la IA lista; sin internet lo avisa; no aparece sin ropa ni
+al combinar con una prenda): lo que escribes abre una conversación nueva
+(`RopaEstilista.pedir`). Lo que escribías ahí queda aunque Outfits se vuelva a
+pintar. (2) **La conversación**: el cuadro para escribir se arma una sola vez
+(no se vuelve a pintar: lo escrito queda; el borrador también en
+`manolo.ropa.charla.borrador`), fijo abajo con `position: sticky` sobre la
+barra de pestañas; Enter manda, Mayúscula + Enter, otra línea. La abierta, en
+`manolo.ropa.charla`. Tu mensaje se guarda al toque (`crear` da el id en el
+momento; `agregar` con `arrayUnion`: nada se reescribe) y se ve de una copia
+local hasta que llega de la nube. Hasta 40 mensajes: después, lo que escribas
+empieza otra (nada se borra). El título: el comienzo de tu primer mensaje
+(`E.titulo`). (3) **Lo que va al puente** (`/charla`): tu ropa con lo que está
+para lavar marcado y sin lo que ya no tienes (`E.roperoParaCharla`), lo
+hablado antes (los últimos 20; el puente usa 10), el clima de hoy y de mañana
+(`RopaOutfits.climaParaIA`, con la caché del clima), tu estilo, lo que te
+pusiste en 7 días, lo que te gustó y lo que no, lo que recuerda de ti y tu
+presupuesto en palabras (`E.presupuestoTexto`). (4) **Se revisa aquí**: cada
+outfit con `RopaOutfitMotor.validas` (completo y con tu ropa; sin descartar lo
+que no te gustó: si lo pides, se muestra); los que no pasan se cuentan
+(`sinMostrar`) y se dice. Sin texto ni outfits: "No pude armar outfits…". Lo
+que falta, con parte y color de la lista. (5) **Cada outfit**: Me lo pongo,
+Guardar, No me gusta (con Deshacer, como en Outfits, `origen: "ia"`), Ver en
+grande, Cambiar una prenda y "Otra opción", que es un mensaje más ("Dame otra
+opción distinta de «…»": se ve y cuesta como cualquiera). Lo que dice la
+tarjeta (guardado, te lo pusiste hoy, no te gustó, para lavar, ya no está) se
+saca de `ropa_outfits` y de tu ropa: sin datos nuevos. (6) **Lo que recuerda
+de ti** (`meta/ropa_ajustes.memoria`, [{ id, texto, fecha }]): se suma lo que
+la IA manda en `recordar`, sin repetir (sin mayúsculas, tildes ni signos) y
+hasta 30 (se va lo más viejo); "Lo recordé" se ve solo mientras lo siga
+recordando ("Olvidar", con Deshacer). Se ve, agrega y borra en una hoja (desde
+Tu estilista y desde Ajustes de Ropa). (7) **Deshacer dentro de las hojas**:
+el aviso de abajo queda tapado por una hoja abierta (z-index 60 contra 900);
+en "Tus conversaciones" y "Lo que recuerda de ti", lo hecho se dice arriba de
+la hoja con su "Deshacer" y el foco va ahí. (8) **Los ejemplos** de la
+conversación vacía se escriben en el cuadro: no se mandan solos (nada gasta
+sin que lo mandes). (9) **Si falla**: tu mensaje queda, dice qué pasó (el
+tope, con Ajustes de Ropa) y "Volver a preguntar" lo pregunta de nuevo sin
+repetirlo. Sin internet, lo hablado se ve igual; quien no es el dueño lo ve
+explicado. (10) **Datos**: `ropa_charlas` (nuevo, en la copia de seguridad:
+`js/respaldo-motor.js`); en la lista de deseos, `origen: "estilista"`
+(`RopaComprasMotor.ORIGENES`). (11) **Pruebas**: `npm test` → 844 (nuevo
+`ropa-estilista-motor`: el título, los mensajes, las conversaciones, lo que va
+al puente, tu ropa, el presupuesto, lo que recuerda de ti y cuándo); E2E
+nueva `ropa-estilista` (104 comprobaciones, con un puente de mentira).

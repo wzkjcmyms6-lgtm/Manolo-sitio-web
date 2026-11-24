@@ -57,6 +57,7 @@ const SUB_PANELS = [
   { hash: "ropa-ajustes", parent: "ropa" },
   { hash: "ropa-outfits", parent: "ropa" },
   { hash: "ropa-armar", parent: "ropa-outfits" },
+  { hash: "ropa-estilista", parent: "ropa-outfits" },
   { hash: "ropa-inspiracion", parent: "ropa" },
   { hash: "ropa-pin", parent: "ropa-inspiracion" },
   { hash: "ropa-compras", parent: "ropa" },
