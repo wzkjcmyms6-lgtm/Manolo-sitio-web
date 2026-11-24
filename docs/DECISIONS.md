@@ -2760,4 +2760,4 @@ cambiar); E2E nueva `ropa-opinion` (56: pedir, un error, lo que va al puente,
 lo guardado, cada parte del repaso, "A mi lista" y Pinterest, lo guardado sin
 la IA; "¿Qué opinas?" en Armar el mío con "Cambiar" y Deshacer, sin pagar dos
 veces y "Preguntarle otra vez"; desde un guardado; sin la IA no aparece; 320 px
-en oscuro y en claro).
+en oscuro y en claro). Las 50 suites sin fallas (4.243 comprobaciones).

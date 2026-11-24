@@ -10,6 +10,8 @@
   repaso, "A mi lista" y Pinterest, lo guardado sin la IA; "¿Qué opinas?" en
   Armar el mío ("Cambiar" con Deshacer, sin pagar dos veces, "Preguntarle otra
   vez") y desde un guardado; sin la IA no aparece; 320 px en oscuro y en claro.
+  Las **50 suites** de `scripts/e2e/` sin fallas (**4.243** comprobaciones,
+  con D-159).
 - 2026-11-24 (D-159: tu estilista recuerda lo del día): `npm test` → **846**
   (en `puente-logica`, los outfits de antes con su número y su nombre y lo que
   viste hoy; en `ropa-estilista-motor`, `delDia`, `deHoy` y lo de antes con
