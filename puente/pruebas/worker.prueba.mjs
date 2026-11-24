@@ -92,7 +92,7 @@ test("quién soy: el dueño, la versión y el gasto; los demás no pasan", async
   const r = await pedir(env, "/quien");
   assert.equal(r.status, 200);
   assert.equal(r.json.permitido, true);
-  assert.equal(r.json.version, 4, "4: el corte y las mangas (D-154)");
+  assert.equal(r.json.version, 5, "5: el estilista (D-157)");
   assert.equal(r.json.lista, true);
   assert.equal(r.json.gasto.usd, 0);
   assert.equal(r.headers.get("Access-Control-Allow-Origin"), ORIGEN);
@@ -202,6 +202,53 @@ test("IA: outfits del día (el ropero en caché, referencias cortas, esfuerzo me
   assert.match(c.messages[0].content[1].text, /Lo que pide: ropa de templado; abrigo para el frío; capas/);
   assert.ok(!/pol"|jean"|secreta/.test(JSON.stringify(c.messages)), "la IA no ve tus ids ni tus notas");
   assert.equal((await pedir(env, "/outfits", { ropero: [] })).status, 400);
+});
+
+test("IA: conversar con el estilista (la ropa y el último mensaje de antes en caché, esfuerzo medio)", async () => {
+  pedidos = [];
+  const env = entorno();
+  respuestaIA = { datos: { respuesta: "Va así:", outfits: [{ nombre: "Capas", prendas: ["p3", "p2", "p1"], porque: "Abriga.", capas: "" }], faltan: [], recordar: ["Es friolento"] } };
+  const ropero = [{ id: "pol", grupo: "arriba", tipo: "Polera", colores: ["blanco"] }, { id: "jean", grupo: "abajo", tipo: "Jean", colores: ["azul-jean"] }, { id: "cha", grupo: "abrigos", tipo: "Chamarra", colores: ["verde-oliva"], notas: "secreta" }];
+  const historial = [{ de: "yo", texto: "Hola" }, { de: "ia", texto: "¿Qué necesitas?", outfits: [] }];
+  const r = await pedir(env, "/charla", { mensaje: "Hace frío", ropero, historial, clima: "9 a 20 °C" });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.json.outfits[0].prendas, ["cha", "jean", "pol"], "con tus ids");
+  assert.deepEqual(r.json.recordar, ["Es friolento"]);
+  assert.equal(typeof r.json.gasto.usd, "number");
+  const c = cuerpoIA(deIA()[0]);
+  assert.equal(c.output_config.effort, "medium");
+  const bloques = c.messages[0].content;
+  assert.deepEqual(bloques.map(x => !!x.cache_control), [true, false, false, true, false], "la ropa y el último mensaje de antes, en caché");
+  assert.match(bloques[1].text, /^El clima: 9 a 20 °C/);
+  assert.deepEqual(bloques.slice(2).map(x => x.text), ["Yo: Hola", "Tú: ¿Qué necesitas?", "Ahora te digo: Hace frío"]);
+  assert.match(c.system, /^Eres el estilista personal/);
+  assert.ok(!/pol"|jean"|cha"|secreta/.test(JSON.stringify(c.messages)), "la IA no ve tus ids ni tus notas");
+  assert.equal((await pedir(env, "/charla", { mensaje: " ", ropero })).status, 400);
+});
+
+test("IA: «¿Qué opinas?» (esfuerzo medio) y el repaso del ropero (esfuerzo alto)", async () => {
+  pedidos = [];
+  const env = entorno();
+  const ropero = [{ id: "pol", grupo: "arriba", tipo: "Polera", colores: ["blanco"] }, { id: "jean", grupo: "abajo", tipo: "Jean", colores: ["azul-jean"] },
+    { id: "zap", grupo: "zapatos", tipo: "Zapatillas", colores: ["blanco"] }, { id: "zn", grupo: "zapatos", tipo: "Zapatos", colores: ["negro"], formalidad: 4 }];
+  respuestaIA = { datos: { veredicto: "bien", funciona: "Bien.", cambios: [{ sale: "p3", entra: "p4", porque: "Más formal." }, { sale: "p1", entra: "p2", porque: "Otra parte." }], consejo: "" } };
+  let r = await pedir(env, "/opinar", { outfit: ["pol", "jean", "zap"], ropero, ocasion: "Trabajo" });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.json.cambios, [{ sale: "zap", entra: "zn", porque: "Más formal." }], "solo cambios posibles, con tus ids");
+  let c = cuerpoIA(deIA()[0]);
+  assert.equal(c.output_config.effort, "medium");
+  assert.match(c.messages[0].content[1].text, /^Mi outfit: p1, p2, p3\.\nPara: Trabajo\./);
+  assert.equal((await pedir(env, "/opinar", { outfit: ["pol"], ropero })).status, 400);
+  respuestaIA = { datos: { resumen: "Buenas bases.", comentarios: [{ hecho: "h1", texto: "Suma algo abajo." }], sugerencias: [{ grupo: "abajo", tipo: "Chino", color: "beige", porque: "Aclara.", combina: ["p1"] }],
+    noComprar: [], dejar: [], colores: { van: ["negro"], sumar: ["beige"], porque: "" }, consejos: [] } };
+  r = await pedir(env, "/opinion", { ropero: ropero.map((p, k) => Object.assign({ veces: k }, p)), hechos: [{ id: "h1", texto: "Tienes 1 de abajo." }], ciudad: "La Paz" });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.json.sugerencias[0].combina, ["pol"]);
+  c = cuerpoIA(deIA()[1]);
+  assert.equal(c.output_config.effort, "high");
+  assert.match(c.messages[0].content[0].text, /p1 · arriba · Polera · blanco · sin usar/);
+  assert.match(c.messages[0].content[1].text, /^Los datos de mi ropero \(de la app\):\nh1\. Tienes 1 de abajo\./);
+  assert.equal((await pedir(env, "/opinion", { ropero: ropero.slice(0, 2) })).status, 400);
 });
 
 test("el tope: al llegar, la IA no se llama; Pinterest sigue", async () => {

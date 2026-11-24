@@ -1,6 +1,23 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-24 (Ropa, nivel 2, fase 2, D-157: el puente aprende a conversar y a
+  opinar): `npm test` → **836 pruebas** (5 nuevas en `puente-logica`: los
+  esquemas y las instrucciones —sin el nombre de la app ni correos—, las
+  veces que te pusiste cada prenda, conversar —los últimos 10 mensajes que
+  sirven, un bloque por mensaje, los outfits con tus ids y sin lo que está
+  para lavar—, "¿Qué opinas?" —solo cambios posibles, de la misma parte— y el
+  repaso —solo los números que mandó la app—). El puente entero (`cd puente
+  && npm run prueba`, con fetch de mentira, sin gastar): **9** (2 nuevas:
+  `/charla` con la ropa y el último mensaje en caché, esfuerzo medio, sin tus
+  ids ni tus notas; `/opinar` y `/opinion` con su esfuerzo y sus 400). Sin
+  pantallas nuevas: las suites de Ropa (`ropa`, `ropa-final`, `ropa-armar`,
+  `ropa-outfits`, `ropa-compras`, `ropa-insp`, `ropa-numeros`,
+  `ropa-corte`), `sin-internet`, `respaldo` y `regresion`, sin fallas.
+  Arreglada en `ropa` la medición de la grilla en la compu, que fallaba a
+  veces con la máquina ocupada: la lista se volvía a dibujar entre buscarla y
+  medirla (`$eval` lo hace en dos pasos); ahora va en un solo `evaluate`. Para
+  medir algo que se vuelve a dibujar, buscarlo y medirlo en el mismo paso.
 - 2026-11-24 (Ropa, nivel 2, fase 1, D-156: ver en grande y armar el mío):
   `npm test` → **831 pruebas** (nuevo `ropa-armar-motor`). Las **48 suites**
   de `scripts/e2e/` sin fallas (4.071 comprobaciones; en la corrida

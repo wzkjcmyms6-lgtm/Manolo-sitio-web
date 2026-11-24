@@ -310,7 +310,9 @@ function entradaPrenda(p) {
     id: o.id, grupo: o.grupo, tipo: corto(o.tipo, 40) || GRUPOS[o.grupo][0], colores: solo(o.colores, COLORES, 3),
     estampado: ESTAMPADOS.includes(o.estampado) ? o.estampado : "", tela: corto(o.tela, 40),
     corte: corteDe(o.grupo, o.corte), manga: mangaDe(o.grupo, o.manga), estilo: solo(o.estilo, ESTILOS, 3),
-    clima: solo(o.clima, CLIMAS, 3), formalidad: formal(o.formalidad), marca: corto(o.marca, 40), lavar: o.lavar === true
+    clima: solo(o.clima, CLIMAS, 3), formalidad: formal(o.formalidad), marca: corto(o.marca, 40), lavar: o.lavar === true,
+    // Las veces que te la pusiste (D-157, solo para el repaso del ropero).
+    ...(Number.isInteger(o.veces) && o.veces >= 0 ? { veces: Math.min(o.veces, 9999) } : {})
   };
 }
 // { pin, ropero } que manda Manolo → limpio, o null si no alcanza.
@@ -335,7 +337,8 @@ export function textoRopero(ropero) {
     refs.set(ref, p.id);
     return `${ref} · ${[p.grupo, p.tipo, p.corte ? `corte ${p.corte}` : "", p.manga ? MANGA_TEXTO[p.manga] : "",
       p.colores.map(nombreCol).join(" y "), p.estampado && p.estampado !== "liso" ? p.estampado : "", p.tela,
-      p.estilo.join(", "), p.clima.join(", "), p.formalidad ? `formal ${p.formalidad}` : "", p.marca, p.lavar ? "para lavar" : ""].filter(Boolean).join(" · ")}`;
+      p.estilo.join(", "), p.clima.join(", "), p.formalidad ? `formal ${p.formalidad}` : "", p.marca,
+      typeof p.veces === "number" ? (p.veces ? `puesta ${p.veces} ${p.veces === 1 ? "vez" : "veces"}` : "sin usar") : "", p.lavar ? "para lavar" : ""].filter(Boolean).join(" · ")}`;
   });
   return { texto: `La ropa que tengo (cada prenda con su referencia):\n${lineas.join("\n")}`, refs };
 }
@@ -515,3 +518,342 @@ export function limpiarOutfits(x, refs) {
   }).filter(Boolean);
   return { outfits, nota: corto(o.nota, 200) };
 }
+
+// ======== El estilista (D-157, versión 5): conversar, "¿Qué opinas?" y el repaso del ropero ========
+// Sin el nombre de nadie: "una app personal".
+const ESTILISTA = "Eres el estilista personal de quien usa una app personal de ropa";
+const deRefs = (v, refs, max) => [...new Set((Array.isArray(v) ? v : []).map(r => refs.get(String(r || "").trim().toLowerCase())).filter(Boolean))].slice(0, max);
+// La ropa que manda Manolo (sin repetir), y las listas de ids que tienen que ser suyas.
+function roperoDe(o) {
+  const vistos = new Set();
+  return (Array.isArray(o.ropero) ? o.ropero : []).slice(0, MAX_ROPERO).map(entradaPrenda).filter(p => p && !vistos.has(p.id) && vistos.add(p.id));
+}
+function listasDe(ropero) {
+  const ids = new Set(ropero.map(p => p.id));
+  const lista = (v, max) => [...new Set((Array.isArray(v) ? v : []).filter(id => typeof id === "string" && ids.has(id)))].slice(0, max);
+  const combos = (v, max) => (Array.isArray(v) ? v : []).slice(0, max).map(x => lista(x, 8)).filter(x => x.length >= 2);
+  return { lista, combos };
+}
+const memoriaDe = v => (Array.isArray(v) ? v : []).map(t => corto(t, 120)).filter(Boolean).slice(0, 30);
+const refsDe = refs => { const refDe = new Map([...refs].map(([r, id]) => [id, r])); return ids => ids.map(id => refDe.get(id)).filter(Boolean).join(", "); };
+const loQueSabes = m => (m.length ? `Lo que ya sabes de mí:\n${m.map(t => `- ${t}`).join("\n")}` : "");
+
+// ---- Conversar (/charla) ----
+const ESQ_OUTFIT = {
+  type: "object",
+  additionalProperties: false,
+  required: ["nombre", "prendas", "porque", "capas"],
+  properties: {
+    nombre: { type: "string", description: "2 a 4 palabras" },
+    prendas: { type: "array", items: { type: "string" }, description: "Las referencias de sus prendas (p1, p2…), tal cual" },
+    porque: { type: "string", description: "Una frase corta" },
+    capas: { type: "string", description: "Cómo llevar las capas ese día, si hace falta; vacío si no" }
+  }
+};
+const ESQ_FALTA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["grupo", "tipo", "color", "porque"],
+  properties: {
+    grupo: { type: "string", enum: Object.keys(GRUPOS) },
+    tipo: { type: "string", description: "Qué prenda, corta (por ejemplo \"Botines\")" },
+    color: { type: "string", enum: ["", ...COLORES] },
+    porque: { type: "string", description: "Una frase" }
+  }
+};
+export const ESQUEMA_CHARLA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["respuesta", "outfits", "faltan", "recordar"],
+  properties: {
+    respuesta: { type: "string", description: "Lo que le contestas: de 1 a 4 frases, en español simple" },
+    outfits: { type: "array", items: ESQ_OUTFIT, description: "De 0 a 3 outfits solo con su ropa, del mejor al menos bueno; vacío si no pidió outfits" },
+    faltan: { type: "array", items: ESQ_FALTA, description: "De 0 a 2 prendas que no tiene y le servirían para lo que pidió" },
+    recordar: { type: "array", items: { type: "string" }, description: "De 0 a 2 cosas nuevas y duraderas que dijo de sí mismo; vacío si nada" }
+  }
+};
+export function instruccionesCharla() {
+  return `${ESTILISTA}. La persona te escribe (o te dicta) lo que necesita y tú le armas outfits con SU ropa (cada prenda con su referencia: p1, p2…) o le contestas preguntas de ropa. Hablas como un buen estilista: amable, directo, en español de Bolivia, simple y corto.
+
+Reglas:
+- Usa SOLO su ropa, por referencia. Nunca inventes una referencia ni una prenda. Si pide algo que no tiene, díselo, arma lo más parecido con su ropa y, si vale la pena, ponlo en faltan.
+- Nada de lo marcado "para lavar" en un outfit; si lo nombra, avísale que está para lavar.
+- Cada outfit: algo de arriba y algo de abajo (o algo de cuerpo entero), zapatos si tiene y abrigo si el día lo pide. Hasta dos de arriba (por ejemplo, polera y chompa) y un abrigo encima. Accesorios solo si suman.
+- Si nombra prendas ("una chompa y una chamarra encima", "con mi jean negro"), van en todos los outfits.
+- El clima manda (si no dice el día, es hoy; si dice mañana, el de mañana): con frío, abrigo; con capas, lo de abajo para el mediodía y el abrigo para la mañana; con lluvia, zapatos cerrados.
+- Fíjate en el corte y las mangas: proporciones que funcionen (algo suelto con algo más pegado; oversize con pitillo o recto).
+- Colores que combinen: neutros con uno o dos colores fuertes; un solo estampado.
+- Respeta lo que sabes de la persona y su estilo. Si hay otra opción igual de buena, evita lo que se puso hace poco y lo que no le gustó.
+- Si solo pregunta algo, contesta corto y deja outfits vacío; si puedes, nombra prendas suyas.
+- respuesta: de 1 a 4 frases, sin repetir lo que ya dicen los outfits. outfits: de 0 a 3, distintos entre sí, del mejor al menos bueno. nombre: 2 a 4 palabras. porque: una frase corta. capas: cómo llevarlas, si hace falta; si no, vacío.
+- faltan: como mucho 2, solo si de verdad le sirven para lo que pidió.
+- recordar: solo lo nuevo y duradero que diga de sí mismo, en una frase corta ("No le gusta el amarillo", "Es friolento"); si nada, vacío. No repitas lo que ya sabes.
+- Si te pide algo que no es de ropa, contesta amable que solo ayudas con la ropa.`;
+}
+export const MAX_HISTORIAL = 10;
+// { mensaje, historial [{ de: "yo" | "ia", texto, outfits [[ids]] }], ropero,
+// clima, estilo, recientes, gustan, noGustan, memoria, presupuesto } → limpio, o null.
+export function entradaCharla(c) {
+  const o = obj(c);
+  const mensaje = corto(o.mensaje, 600);
+  const ropero = roperoDe(o);
+  if (!mensaje || !ropero.length) return null;
+  const { lista, combos } = listasDe(ropero);
+  // Los últimos 10 que sirven (los vacíos o raros no ocupan lugar).
+  const historial = (Array.isArray(o.historial) ? o.historial : []).slice(-60).map(h => {
+    const x = obj(h);
+    const de = x.de === "ia" ? "ia" : x.de === "yo" ? "yo" : null;
+    const texto = corto(x.texto, 800);
+    const outfits = de === "ia" ? combos(x.outfits, 3) : [];
+    return de && (texto || outfits.length) ? { de, texto, outfits } : null;
+  }).filter(Boolean).slice(-MAX_HISTORIAL);
+  return {
+    mensaje, ropero, historial,
+    clima: corto(o.clima, 600), estilo: corto(o.estilo, 600),
+    recientes: lista(o.recientes, 60), gustan: combos(o.gustan, 15), noGustan: combos(o.noGustan, 15),
+    memoria: memoriaDe(o.memoria), presupuesto: corto(o.presupuesto, 160)
+  };
+}
+// Lo que va después de la ropa: el contexto del día, cada mensaje de antes (uno
+// por bloque, para que queden en caché) y el mensaje nuevo.
+export function bloquesCharla(e, refs) {
+  const rs = refsDe(refs);
+  const contexto = [
+    e.clima ? `El clima: ${e.clima}` : "Sin el clima de hoy.",
+    e.estilo ? `Mi estilo (de mis inspiraciones): ${e.estilo}` : "",
+    loQueSabes(e.memoria),
+    e.recientes.length ? `Me puse hace poco: ${rs(e.recientes)}.` : "",
+    e.gustan.length ? `Combinaciones que me gustaron: ${e.gustan.map(x => `(${rs(x)})`).join("; ")}.` : "",
+    e.noGustan.length ? `No me gustaron: ${e.noGustan.map(x => `(${rs(x)})`).join("; ")}.` : "",
+    e.presupuesto ? `Mi presupuesto de ropa: ${e.presupuesto}` : ""
+  ].filter(Boolean).join("\n");
+  const turnos = e.historial.map(h => (h.de === "yo" ? `Yo: ${h.texto}`
+    : `Tú: ${h.texto}${h.outfits.length ? ` (outfits que me armaste: ${h.outfits.map(x => `(${rs(x)})`).join("; ")})` : ""}`));
+  return { contexto, turnos, mensaje: `${turnos.length ? "Ahora te digo" : "Te digo"}: ${e.mensaje}` };
+}
+const outfitsDe = (v, refs, max, sin) => (Array.isArray(v) ? v : []).slice(0, max * 2).map(f => {
+  const q = obj(f);
+  const ids = deRefs(q.prendas, refs, 8);
+  return ids.length >= 2 && !ids.some(id => sin.has(id)) ? { nombre: corto(q.nombre, 40), prendas: ids, porque: corto(q.porque, 200), capas: corto(q.capas, 160) } : null;
+}).filter(Boolean).slice(0, max);
+const faltanDe = v => (Array.isArray(v) ? v : []).slice(0, 6).map(f => {
+  const q = obj(f);
+  const tipo = corto(q.tipo, 40);
+  return GRUPOS[q.grupo] && tipo ? { grupo: q.grupo, tipo, color: COLORES.includes(q.color) ? q.color : "", porque: corto(q.porque, 200) } : null;
+}).filter(Boolean).slice(0, 2);
+// Lo que contestó la IA → con tus ids, sin lo que está para lavar.
+export function limpiarCharla(x, refs, e) {
+  const o = obj(x);
+  const lavar = new Set(e.ropero.filter(p => p.lavar).map(p => p.id));
+  const outfits = outfitsDe(o.outfits, refs, 3, lavar);
+  const recordar = (Array.isArray(o.recordar) ? o.recordar : []).map(t => corto(t, 120)).filter(Boolean).slice(0, 2);
+  const respuesta = corto(o.respuesta, 900) || (outfits.length ? "" : "No te entendí bien: ¿me lo dices de otra forma?");
+  return { respuesta, outfits, faltan: faltanDe(o.faltan), recordar };
+}
+
+// ---- "¿Qué opinas?" de un outfit (/opinar) ----
+export const VEREDICTOS = ["muy-bien", "bien", "cambiaria"];
+export const ESQUEMA_OPINAR = {
+  type: "object",
+  additionalProperties: false,
+  required: ["veredicto", "funciona", "cambios", "consejo"],
+  properties: {
+    veredicto: { type: "string", enum: VEREDICTOS },
+    funciona: { type: "string", description: "Qué funciona, en una o dos frases" },
+    cambios: {
+      type: "array",
+      description: "De 0 a 2 cambios con su ropa: la prenda del outfit que sale y una suya, de la misma parte, que entra",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["sale", "entra", "porque"],
+        properties: {
+          sale: { type: "string", description: "Referencia de una prenda del outfit" },
+          entra: { type: "string", description: "Referencia de una prenda suya que no está en el outfit" },
+          porque: { type: "string", description: "Una frase" }
+        }
+      }
+    },
+    consejo: { type: "string", description: "Un consejo para llevarlo; vacío si nada" }
+  }
+};
+export function instruccionesOpinar() {
+  return `${ESTILISTA}. La persona armó un outfit con su ropa y te pregunta qué opinas. Le dices, con tu criterio de estilista, qué funciona y qué cambiarías, siempre con SU ropa (cada prenda con su referencia: p1, p2…).
+
+Reglas:
+- Sé honesto y amable. Si está bien, dilo: no cambies por cambiar.
+- veredicto: "muy-bien" (no le cambiarías nada), "bien" (funciona; algún detalle) o "cambiaria" (algo no va).
+- funciona: qué funciona, en una o dos frases.
+- cambios: como mucho 2. Cada uno: una prenda del outfit que sale y una suya de la misma parte (arriba por arriba, zapatos por zapatos…) que entra, con por qué. Solo si mejora de verdad. Nunca algo "para lavar" ni una referencia que no existe.
+- Mira el clima, la ocasión, los colores (neutros con uno o dos fuertes; un solo estampado), qué tan formal es cada prenda y las proporciones (el corte y las mangas).
+- consejo: cómo llevarlo (las capas, meter la camisa, arremangar…), en una frase; vacío si nada.
+- Español de Bolivia, simple y corto.`;
+}
+// { outfit [ids], ropero, clima, ocasion, estilo, memoria } → limpio, o null.
+export function entradaOpinar(c) {
+  const o = obj(c);
+  const ropero = roperoDe(o);
+  const { lista } = listasDe(ropero);
+  const outfit = lista(o.outfit, 8);
+  if (outfit.length < 2) return null;
+  return { ropero, outfit, clima: corto(o.clima, 600), ocasion: corto(o.ocasion, 60), estilo: corto(o.estilo, 600), memoria: memoriaDe(o.memoria) };
+}
+export function textoOpinar(e, refs) {
+  const rs = refsDe(refs);
+  return [
+    `Mi outfit: ${rs(e.outfit)}.`,
+    e.ocasion ? `Para: ${e.ocasion}.` : "",
+    e.clima ? `El clima: ${e.clima}` : "",
+    e.estilo ? `Mi estilo (de mis inspiraciones): ${e.estilo}` : "",
+    loQueSabes(e.memoria),
+    "¿Qué opinas?"
+  ].filter(Boolean).join("\n");
+}
+// Lo que contestó la IA → solo cambios posibles: sale del outfit, entra una
+// tuya de la misma parte (que no está en el outfit ni para lavar).
+export function limpiarOpinar(x, refs, e) {
+  const o = obj(x);
+  const por = new Map(e.ropero.map(p => [p.id, p]));
+  const en = new Set(e.outfit), salen = new Set();
+  const cambios = (Array.isArray(o.cambios) ? o.cambios : []).map(k => {
+    const q = obj(k);
+    const [sale] = deRefs([q.sale], refs, 1), [entra] = deRefs([q.entra], refs, 1);
+    const s = por.get(sale), n = por.get(entra);
+    if (!s || !n || !en.has(sale) || en.has(entra) || n.lavar || s.grupo !== n.grupo || salen.has(sale)) return null;
+    salen.add(sale);
+    return { sale, entra, porque: corto(q.porque, 200) };
+  }).filter(Boolean).slice(0, 2);
+  return { veredicto: VEREDICTOS.includes(o.veredicto) ? o.veredicto : "bien", funciona: corto(o.funciona, 400), cambios, consejo: corto(o.consejo, 200) };
+}
+
+// ---- El repaso del ropero (/opinion) ----
+export const ESQUEMA_OPINION = {
+  type: "object",
+  additionalProperties: false,
+  required: ["resumen", "comentarios", "sugerencias", "noComprar", "dejar", "colores", "consejos"],
+  properties: {
+    resumen: { type: "string", description: "Cómo ves su ropero: 2 o 3 frases" },
+    comentarios: {
+      type: "array",
+      description: "Tu comentario a los datos que importan, uno por dato",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["hecho", "texto"],
+        properties: { hecho: { type: "string", description: "La referencia del dato (h1, h2…)" }, texto: { type: "string", description: "Una frase: qué significa y qué harías" } }
+      }
+    },
+    sugerencias: {
+      type: "array",
+      description: "De 3 a 6 prendas que sumarías, de la más útil a la menos",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["grupo", "tipo", "color", "porque", "combina"],
+        properties: {
+          grupo: { type: "string", enum: Object.keys(GRUPOS) },
+          tipo: { type: "string", description: "Qué prenda, corta (por ejemplo \"Pantalón chino\")" },
+          color: { type: "string", enum: COLORES },
+          porque: { type: "string", description: "Una o dos frases" },
+          combina: { type: "array", items: { type: "string" }, description: "Referencias de sus prendas con las que va (hasta 6)" }
+        }
+      }
+    },
+    noComprar: { type: "array", items: { type: "string" }, description: "De 0 a 3 cosas que ya tiene de sobra, en pocas palabras" },
+    dejar: {
+      type: "array",
+      description: "De 0 a 3 prendas suyas que podría dejar de lado",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["prenda", "porque"],
+        properties: { prenda: { type: "string", description: "Su referencia" }, porque: { type: "string", description: "Una frase" } }
+      }
+    },
+    colores: {
+      type: "object",
+      additionalProperties: false,
+      required: ["van", "sumar", "porque"],
+      properties: {
+        van: { type: "array", items: { type: "string", enum: COLORES }, description: "Los colores que le van con lo que tiene (hasta 5)" },
+        sumar: { type: "array", items: { type: "string", enum: COLORES }, description: "Los que sumarías (hasta 3)" },
+        porque: { type: "string", description: "Una frase" }
+      }
+    },
+    consejos: { type: "array", items: { type: "string" }, description: "De 0 a 3 consejos prácticos de cortes, capas o el clima" }
+  }
+};
+export function instruccionesOpinion() {
+  return `${ESTILISTA}. Haces un repaso de todo su ropero y le das tu opinión de experta, con tu propio criterio. Te paso su ropa (cada prenda con su referencia: p1, p2…, y cuántas veces se la puso), los datos que contó la app (h1, h2…: son exactos, no cambies sus números ni inventes otros) y lo que se repite en sus inspiraciones de Pinterest.
+
+Reglas:
+- resumen: 2 o 3 frases, honestas y amables.
+- comentarios: comenta los datos que importan, por su referencia, en una frase cada uno: qué significa para sus outfits y qué harías. No repitas el número.
+- sugerencias: de 3 a 6 prendas que sumarías para que sus outfits sean mejores y más versátiles: básicos que combinan con mucho de lo suyo, lo que equilibra lo que le sobra, lo que le falta para el clima de su ciudad y para sus ocasiones. Distintas entre sí y que no tenga ya. combina: las referencias de sus prendas con las que va.
+- Tu criterio primero: no sugieras algo solo porque está en sus inspiraciones; si coincide, dilo en porque.
+- noComprar: lo que ya tiene de sobra, en pocas palabras.
+- dejar: como mucho 3 prendas suyas que casi no combinan con lo demás o no usa; es solo un consejo.
+- colores: los que le van con lo que tiene y los que sumarías (de la lista), con por qué en una frase.
+- consejos: como mucho 3, prácticos: cortes y proporciones, capas, el clima (en La Paz: mañanas frías, sol fuerte al mediodía, lluvias de diciembre a marzo).
+- Si tiene un presupuesto, lo más útil primero.
+- Español de Bolivia, simple.`;
+}
+export const MAX_HECHOS = 15;
+// { ropero (con veces), hechos [{ id: "h1", texto }], pines, estilo, memoria,
+// presupuesto, ciudad } → limpio, o null (con menos de 3 prendas no hay repaso).
+export function entradaOpinion(c) {
+  const o = obj(c);
+  const ropero = roperoDe(o);
+  if (ropero.length < 3) return null;
+  const vistos = new Set();
+  const hechos = (Array.isArray(o.hechos) ? o.hechos : []).map(h => {
+    const x = obj(h);
+    const id = String(x.id || "");
+    return /^h\d{1,2}$/.test(id) && !vistos.has(id) && vistos.add(id) && corto(x.texto, 200) ? { id, texto: corto(x.texto, 200) } : null;
+  }).filter(Boolean).slice(0, MAX_HECHOS);
+  return { ropero, hechos, pines: corto(o.pines, 600), estilo: corto(o.estilo, 600), memoria: memoriaDe(o.memoria), presupuesto: corto(o.presupuesto, 160), ciudad: corto(o.ciudad, 60) };
+}
+export function textoOpinion(e) {
+  return [
+    e.hechos.length ? `Los datos de mi ropero (de la app):\n${e.hechos.map(h => `${h.id}. ${h.texto}`).join("\n")}` : "",
+    e.pines ? `Lo que se repite en mis inspiraciones de Pinterest: ${e.pines}` : "Todavía no tengo inspiraciones de Pinterest.",
+    e.estilo ? `Mi estilo (de mis inspiraciones): ${e.estilo}` : "",
+    loQueSabes(e.memoria),
+    e.presupuesto ? `Mi presupuesto de ropa: ${e.presupuesto}` : "",
+    e.ciudad ? `Vivo en ${e.ciudad}.` : "",
+    "Dame tu opinión de mi ropero."
+  ].filter(Boolean).join("\n");
+}
+// Lo que contestó la IA → solo lo que existe: datos de la app, tus prendas y colores de la lista.
+export function limpiarOpinion(x, refs, e) {
+  const o = obj(x);
+  const hechos = new Set(e.hechos.map(h => h.id)), vistos = new Set();
+  const comentarios = (Array.isArray(o.comentarios) ? o.comentarios : []).map(k => {
+    const q = obj(k);
+    const h = String(q.hecho || "").trim().toLowerCase();
+    return hechos.has(h) && !vistos.has(h) && vistos.add(h) && corto(q.texto, 300) ? { hecho: h, texto: corto(q.texto, 300) } : null;
+  }).filter(Boolean);
+  const claves = new Set();
+  const sugerencias = (Array.isArray(o.sugerencias) ? o.sugerencias : []).map(k => {
+    const q = obj(k);
+    const tipo = corto(q.tipo, 40);
+    const k2 = `${q.grupo}|${tipo.toLowerCase()}|${q.color}`;
+    if (!GRUPOS[q.grupo] || !tipo || !COLORES.includes(q.color) || claves.has(k2)) return null;
+    claves.add(k2);
+    return { grupo: q.grupo, tipo, color: q.color, porque: corto(q.porque, 300), combina: deRefs(q.combina, refs, 6) };
+  }).filter(Boolean).slice(0, 6);
+  const dejadas = new Set();
+  const dejar = (Array.isArray(o.dejar) ? o.dejar : []).map(k => {
+    const q = obj(k);
+    const [id] = deRefs([q.prenda], refs, 1);
+    return id && !dejadas.has(id) && dejadas.add(id) ? { prenda: id, porque: corto(q.porque, 200) } : null;
+  }).filter(Boolean).slice(0, 3);
+  const c = obj(o.colores);
+  const textos = (v, n, max) => (Array.isArray(v) ? v : []).map(t => corto(t, max)).filter(Boolean).slice(0, n);
+  return {
+    resumen: corto(o.resumen, 600), comentarios, sugerencias, noComprar: textos(o.noComprar, 3, 120), dejar,
+    colores: { van: solo(c.van, COLORES, 5), sumar: solo(c.sumar, COLORES, 3), porque: corto(c.porque, 200) },
+    consejos: textos(o.consejos, 3, 240)
+  };
+}
+

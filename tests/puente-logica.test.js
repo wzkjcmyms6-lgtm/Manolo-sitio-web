@@ -316,3 +316,151 @@ test("outfits (D-149): esquema, lo que llega, el pedido y lo que contesta la IA"
   const muchos = L.limpiarOutfits({ outfits: Array.from({ length: 9 }, () => ({ nombre: "x", prendas: ["p1", "p2"], porque: "", capas: "" })), nota: "" }, refs);
   assert.equal(muchos.outfits.length, 6, "hasta 6 (la app muestra 3 y guarda el resto)");
 });
+
+// ======== El estilista (D-157, versión 5) ========
+const ROPERO_E = [
+  { id: "idPol1", grupo: "arriba", tipo: "Polera", colores: ["blanco"], corte: "pegado", manga: "corta", notas: "secreta", veces: 12 },
+  { id: "idCho2", grupo: "arriba", tipo: "Chompa", colores: ["bordo"], clima: ["frio"], veces: 0 },
+  { id: "idJean3", grupo: "abajo", tipo: "Jean", colores: ["azul-jean"], corte: "recto", veces: 30 },
+  { id: "idTela4", grupo: "abajo", tipo: "Pantalón de tela", colores: ["negro"], formalidad: 4, lavar: true },
+  { id: "idCha5", grupo: "abrigos", tipo: "Chamarra", colores: ["verde-oliva"], clima: ["frio"] },
+  { id: "idZap6", grupo: "zapatos", tipo: "Zapatillas", colores: ["blanco"] },
+  { id: "idZn7", grupo: "zapatos", tipo: "Zapatos", colores: ["negro"], formalidad: 4 }
+];
+
+test("el estilista: los esquemas (todo obligatorio, sin límites) y las instrucciones sin el nombre de nadie", async () => {
+  const L = await cargar();
+  [["charla", L.ESQUEMA_CHARLA], ["opinar", L.ESQUEMA_OPINAR], ["opinion", L.ESQUEMA_OPINION]].forEach(([n, s]) => revisarEsquema(s, n));
+  assert.deepEqual(L.ESQUEMA_CHARLA.properties.faltan.items.properties.color.enum, ["", ...L.COLORES]);
+  assert.deepEqual(L.ESQUEMA_OPINAR.properties.veredicto.enum, ["muy-bien", "bien", "cambiaria"]);
+  const todas = [L.instruccionesCharla(), L.instruccionesOpinar(), L.instruccionesOpinion()];
+  todas.forEach(t => {
+    assert.match(t, /^Eres el estilista personal de quien usa una app personal de ropa\./);
+    assert.ok(!/Manolo|@/.test(t), "ni el nombre de la app ni un correo");
+  });
+  assert.match(L.instruccionesCharla(), /Usa SOLO su ropa, por referencia/);
+  assert.match(L.instruccionesCharla(), /para lavar/);
+  assert.match(L.instruccionesOpinar(), /no cambies por cambiar/);
+  assert.match(L.instruccionesOpinion(), /no cambies sus números ni inventes otros/);
+});
+
+test("el estilista: las veces que te la pusiste, solo si vienen (el repaso); lo demás no cambia", async () => {
+  const L = await cargar();
+  const e = L.entradaOpinion({ ropero: ROPERO_E });
+  const { texto } = L.textoRopero(e.ropero);
+  assert.equal(texto.split("\n")[1], "p1 · arriba · Polera · corte pegado · manga corta · blanco · puesta 12 veces");
+  assert.equal(texto.split("\n")[2], "p2 · arriba · Chompa · bordo · frio · sin usar");
+  assert.equal(texto.split("\n")[4], "p4 · abajo · Pantalón de tela · negro · formal 4 · para lavar");
+  const sin = L.textoRopero([{ id: "a", grupo: "arriba", tipo: "Polera", colores: ["blanco"], estampado: "", tela: "", corte: "", manga: "", estilo: [], clima: [], formalidad: null, marca: "", lavar: false }]);
+  assert.equal(sin.texto.split("\n")[1], "p1 · arriba · Polera · blanco", "sin las veces, como antes");
+});
+
+test("conversar: lo que llega, los bloques (cada mensaje por separado) y lo que contesta la IA", async () => {
+  const L = await cargar();
+  assert.equal(L.entradaCharla({ mensaje: "  ", ropero: ROPERO_E }), null, "sin mensaje, nada");
+  assert.equal(L.entradaCharla({ mensaje: "Hola", ropero: [] }), null, "sin ropero, nada");
+  const historial = Array.from({ length: 14 }, (_, k) => (k % 2 ? { de: "ia", texto: `Respuesta ${k}`, outfits: [["idPol1", "idJean3", "idZap6"], ["idPol1", "otraCosa"]] } : { de: "yo", texto: `Mensaje ${k}` }));
+  historial.push({ de: "raro", texto: "x" }, { de: "ia", texto: "", outfits: [] });
+  const e = L.entradaCharla({
+    mensaje: "Está haciendo   bastante frío, quiero una chompa y una chamarra encima", ropero: ROPERO_E, historial,
+    clima: "Hoy en La Paz: de 9 a 20 °C de sensación; mañana, lluvia.", estilo: "Casual, colores sobrios.", recientes: ["idJean3", "noEsMia"],
+    gustan: [["idPol1", "idJean3"]], noGustan: [["idCho2", "idTela4"]], memoria: ["Es friolento", "", "No le gusta el amarillo"], presupuesto: "Te quedan Bs 300 este mes."
+  });
+  assert.equal(e.mensaje, "Está haciendo bastante frío, quiero una chompa y una chamarra encima");
+  assert.equal(e.historial.length, 10, "los últimos 10 que sirven (los vacíos o raros no ocupan lugar)");
+  assert.deepEqual(e.historial[0], { de: "yo", texto: "Mensaje 4", outfits: [] });
+  assert.deepEqual(e.historial[1], { de: "ia", texto: "Respuesta 5", outfits: [["idPol1", "idJean3", "idZap6"]] }, "solo los outfits con tus prendas");
+  assert.deepEqual(e.memoria, ["Es friolento", "No le gusta el amarillo"]);
+  assert.deepEqual(e.recientes, ["idJean3"]);
+  const { texto, refs } = L.textoRopero(e.ropero);
+  const b = L.bloquesCharla(e, refs);
+  assert.match(b.contexto, /^El clima: Hoy en La Paz/);
+  assert.match(b.contexto, /Lo que ya sabes de mí:\n- Es friolento\n- No le gusta el amarillo/);
+  assert.match(b.contexto, /Me puse hace poco: p3\./);
+  assert.match(b.contexto, /No me gustaron: \(p2, p4\)\./);
+  assert.match(b.contexto, /Mi presupuesto de ropa: Te quedan Bs 300 este mes\./);
+  assert.equal(b.turnos.length, 10);
+  assert.equal(b.turnos[0], "Yo: Mensaje 4");
+  assert.equal(b.turnos[1], "Tú: Respuesta 5 (outfits que me armaste: (p1, p3, p6))");
+  assert.equal(b.mensaje, "Ahora te digo: Está haciendo bastante frío, quiero una chompa y una chamarra encima");
+  assert.equal(L.bloquesCharla(L.entradaCharla({ mensaje: "Hola", ropero: ROPERO_E }), refs).mensaje, "Te digo: Hola");
+  assert.ok(!/idPol1|idJean3|secreta/.test(texto + JSON.stringify(b)), "la IA no ve tus ids ni tus notas");
+  // Lo que contesta la IA.
+  const r = L.limpiarCharla({
+    respuesta: "Con 9° a la mañana, va así:",
+    outfits: [
+      { nombre: "Bordó y oliva", prendas: ["p5", "P2", "p1", "p3", "p6"], porque: "Abriga.", capas: "La chamarra a la mañana." },
+      { nombre: "Con lo de lavar", prendas: ["p2", "p4", "p7"], porque: "", capas: "" },
+      { nombre: "Inventado", prendas: ["p9", "p1"], porque: "", capas: "" },
+      { nombre: "Otro", prendas: ["p1", "p3"], porque: "", capas: "" },
+      { nombre: "De más", prendas: ["p2", "p3"], porque: "", capas: "" }
+    ],
+    faltan: [{ grupo: "zapatos", tipo: "Botines", color: "cafe", porque: "Para la lluvia." }, { grupo: "luna", tipo: "x", color: "", porque: "" }, { grupo: "abajo", tipo: "Chino", color: "violeta", porque: "" }],
+    recordar: ["Es friolento", "", "Usa talla M", "Otra"]
+  }, refs, e);
+  assert.deepEqual(r.outfits.map(o => o.prendas), [["idCha5", "idCho2", "idPol1", "idJean3", "idZap6"], ["idPol1", "idJean3"], ["idCho2", "idJean3"]], "solo con tu ropa: sin lo que está para lavar ni inventadas; hasta 3");
+  assert.deepEqual(r.faltan, [{ grupo: "zapatos", tipo: "Botines", color: "cafe", porque: "Para la lluvia." }, { grupo: "abajo", tipo: "Chino", color: "", porque: "" }]);
+  assert.deepEqual(r.recordar, ["Es friolento", "Usa talla M"]);
+  assert.equal(r.respuesta, "Con 9° a la mañana, va así:");
+  assert.deepEqual(L.limpiarCharla(null, refs, e), { respuesta: "No te entendí bien: ¿me lo dices de otra forma?", outfits: [], faltan: [], recordar: [] });
+});
+
+test("«¿Qué opinas?»: lo que llega, el pedido y solo los cambios posibles", async () => {
+  const L = await cargar();
+  assert.equal(L.entradaOpinar({ outfit: ["idPol1"], ropero: ROPERO_E }), null, "con una prenda no hay outfit");
+  const e = L.entradaOpinar({ outfit: ["idPol1", "idJean3", "idZap6", "noEsMia"], ropero: ROPERO_E, clima: "9 a 20 °C", ocasion: "Trabajo", memoria: ["Es friolento"] });
+  assert.deepEqual(e.outfit, ["idPol1", "idJean3", "idZap6"]);
+  const { refs } = L.textoRopero(e.ropero);
+  const t = L.textoOpinar(e, refs);
+  assert.match(t, /^Mi outfit: p1, p3, p6\.\nPara: Trabajo\.\nEl clima: 9 a 20 °C\nLo que ya sabes de mí:\n- Es friolento\n¿Qué opinas\?$/);
+  const r = L.limpiarOpinar({
+    veredicto: "cambiaria", funciona: "La polera blanca con el jean, bien.",
+    cambios: [
+      { sale: "p6", entra: "p7", porque: "Más formal para el trabajo." },
+      { sale: "p3", entra: "p4", porque: "Está para lavar." },
+      { sale: "p1", entra: "p5", porque: "Otra parte." },
+      { sale: "p6", entra: "p6", porque: "La misma." },
+      { sale: "p2", entra: "p1", porque: "No está en el outfit." }
+    ],
+    consejo: "Mete la polera."
+  }, refs, e);
+  assert.deepEqual(r.cambios, [{ sale: "idZap6", entra: "idZn7", porque: "Más formal para el trabajo." }], "sale del outfit; entra una tuya de la misma parte, que no está para lavar");
+  assert.equal(r.veredicto, "cambiaria");
+  assert.equal(L.limpiarOpinar({ veredicto: "genial" }, refs, e).veredicto, "bien", "un veredicto raro queda en «bien»");
+});
+
+test("el repaso del ropero: lo que llega, el pedido y solo lo que existe", async () => {
+  const L = await cargar();
+  assert.equal(L.entradaOpinion({ ropero: ROPERO_E.slice(0, 2) }), null, "con menos de 3 prendas no hay repaso");
+  const hechos = [{ id: "h1", texto: "Tienes 2 de arriba y 2 de abajo." }, { id: "h2", texto: "Todos tus zapatos son blancos o negros." }, { id: "h1", texto: "repetido" }, { id: "x9", texto: "raro" }, { id: "h3", texto: "" }];
+  const e = L.entradaOpinion({ ropero: ROPERO_E, hechos, pines: "Abrigo camel (6 pines), Botines cafés (2)", estilo: "Casual sobrio", memoria: ["Es friolento"], presupuesto: "Bs 800 al mes", ciudad: "La Paz" });
+  assert.deepEqual(e.hechos.map(h => h.id), ["h1", "h2"]);
+  const t = L.textoOpinion(e);
+  assert.match(t, /^Los datos de mi ropero \(de la app\):\nh1\. Tienes 2 de arriba y 2 de abajo\.\nh2\. Todos tus zapatos/);
+  assert.match(t, /Lo que se repite en mis inspiraciones de Pinterest: Abrigo camel \(6 pines\)/);
+  assert.match(t, /Vivo en La Paz\.\nDame tu opinión de mi ropero\.$/);
+  assert.match(L.textoOpinion(L.entradaOpinion({ ropero: ROPERO_E })), /Todavía no tengo inspiraciones de Pinterest\./);
+  const { refs } = L.textoRopero(e.ropero);
+  const r = L.limpiarOpinion({
+    resumen: "Tienes buenas bases.",
+    comentarios: [{ hecho: "h1", texto: "Con un pantalón más, más combinaciones." }, { hecho: "h7", texto: "Inventado" }, { hecho: "H2", texto: "Suma un color." }, { hecho: "h1", texto: "De nuevo" }],
+    sugerencias: [
+      { grupo: "abajo", tipo: "Pantalón chino", color: "beige", porque: "Aclara.", combina: ["p1", "p2", "p99"] },
+      { grupo: "zapatos", tipo: "Botines", color: "cafe", porque: "Para la lluvia.", combina: ["p3"] },
+      { grupo: "abajo", tipo: "pantalón chino", color: "beige", porque: "Repetida.", combina: [] },
+      { grupo: "luna", tipo: "Algo", color: "beige", porque: "", combina: [] },
+      { grupo: "arriba", tipo: "Camisa", color: "violeta", porque: "", combina: [] }
+    ],
+    noComprar: ["Poleras blancas", "", "Jeans", "Más", "De más"],
+    dejar: [{ prenda: "p2", porque: "No te la pones." }, { prenda: "p99", porque: "No existe." }, { prenda: "p2", porque: "Repetida." }],
+    colores: { van: ["negro", "blanco", "violeta", "negro"], sumar: ["camel", "beige"], porque: "Neutros cálidos." },
+    consejos: ["Capas: polera, chompa y chamarra.", ""]
+  }, refs, e);
+  assert.deepEqual(r.comentarios.map(c => c.hecho), ["h1", "h2"], "solo los datos de la app, una vez cada uno");
+  assert.deepEqual(r.sugerencias.map(s => `${s.tipo}:${s.combina.join("+")}`), ["Pantalón chino:idPol1+idCho2", "Botines:idJean3"], "con tus prendas; sin repetidas ni colores raros");
+  assert.deepEqual(r.noComprar, ["Poleras blancas", "Jeans", "Más"]);
+  assert.deepEqual(r.dejar, [{ prenda: "idCho2", porque: "No te la pones." }]);
+  assert.deepEqual(r.colores, { van: ["negro", "blanco"], sumar: ["camel", "beige"], porque: "Neutros cálidos." });
+  assert.deepEqual(r.consejos, ["Capas: polera, chompa y chamarra."]);
+  assert.deepEqual(L.limpiarOpinion(null, refs, e).sugerencias, []);
+});

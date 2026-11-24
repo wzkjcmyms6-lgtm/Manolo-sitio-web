@@ -480,8 +480,15 @@ async function compu(browser, base) {
   tipos.forEach(([grupo, tipo, color], k) => { seed[COL][`s${k}`] = { v: 1, grupo, tipo, colores: [{ id: color }], estado: "activa", creado: k + 1, fotos: [] }; });
   const p = await abrir(browser, base, { __SEED__: seed }, { hash: "#ropa", zona: ZONA, fecha: FECHA, ancho: 1280, alto: 900 });
   await p.waitForTimeout(500);
-  const cols = await p.$eval(".ro-grilla", el => getComputedStyle(el).gridTemplateColumns.split(" ").length);
-  ok(cols >= 4, `la grilla usa el ancho (${cols} columnas)`);
+  // Buscar y medir en un solo paso: con la máquina ocupada, la lista se vuelve
+  // a dibujar justo ahí y $eval medía la grilla vieja, ya fuera de la página.
+  const { cols, info } = await p.evaluate(() => {
+    const el = document.querySelector(".ro-grilla");
+    if (!el) return { cols: 0, info: "sin grilla" };
+    const cs = getComputedStyle(el);
+    return { cols: cs.gridTemplateColumns.split(" ").length, info: `${cs.display} «${cs.gridTemplateColumns}» de ${el.clientWidth}px` };
+  });
+  ok(cols >= 4, `la grilla usa el ancho (${cols} columnas)${cols >= 4 ? "" : `: ${info}`}`);
   ok(/Saco azul marino/.test(await txt(p, "#ro-lista")) && /Cinturón café/.test(await txt(p, "#ro-lista")), "las prendas sin foto, con su nombre");
   ok(await sobra(p) <= 0, "nada se sale a lo ancho");
   await captura(p, "ropa-grilla-1280.png");

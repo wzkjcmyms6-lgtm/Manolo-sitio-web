@@ -8,6 +8,7 @@
 // window.RopaIA: puente(), quien(forzar), disponible(), pinterest(),
 // describir(blob), analizar(blob), look(pin, ropero), estilo(pines),
 // tablero(datos), pin(link), imagen(url), outfits(datos), version(),
+// estilista(), charla(datos), opinar(datos), opinion(datos),
 // gasto(), tope(usd), alCambiar(fn), estado(), fallo(), sinInternet().
 (function () {
 "use strict";
@@ -119,9 +120,15 @@ const pin = link => pedir("/pinterest/pin", { link }).then(j => j.pin);
 const imagen = url => pedir("/pinterest/imagen", { url }, true);
 // "¿Qué me pongo hoy?" (D-149, puente versión 3).
 const outfits = datos => pedir("/outfits", datos);
+// El estilista (D-157, puente versión 5): conversar (charla), «¿Qué opinas?»
+// de un outfit tuyo (opinar) y lo que opina de tu ropero (opinion).
+const estilista = () => !!(disponible() && version() >= 5);
+const charla = datos => pedir("/charla", datos);
+const opinar = datos => pedir("/opinar", datos);
+const opinion = datos => pedir("/opinion", datos);
 const gasto = () => pedir("/gasto").then(j => j.gasto);
 const tope = usd => pedir("/tope", { tope: usd }).then(j => j.gasto);
 
 if (typeof onAuthReady === "function") onAuthReady(() => { quien(); });
-window.RopaIA = { puente, quien, disponible, pinterest, version, describir, analizar, look, estilo, tablero, pin, imagen, outfits, gasto, tope, alCambiar: fn => { oyentes.push(fn); }, estado: () => estado, fallo: () => fallo, sinInternet };
+window.RopaIA = { puente, quien, disponible, pinterest, version, describir, analizar, look, estilo, tablero, pin, imagen, outfits, estilista, charla, opinar, opinion, gasto, tope, alCambiar: fn => { oyentes.push(fn); }, estado: () => estado, fallo: () => fallo, sinInternet };
 })();

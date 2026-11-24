@@ -17,7 +17,7 @@ import * as L from "./logica.js";
 import * as P from "./pinterest.js";
 
 // Lo que este puente sabe hacer (la app lo mira para mostrar o no lo nuevo).
-const VERSION = 4;   // 2: Pinterest e inspiración (D-148); 3: outfits (D-149); 4: el corte y las mangas (D-154)
+const VERSION = 5;   // 2: Pinterest e inspiración (D-148); 3: outfits (D-149); 4: el corte y las mangas (D-154); 5: el estilista (D-157)
 
 let jwks = null;   // { llaves, vence }
 async function llaves() {
@@ -144,6 +144,44 @@ async function outfits(env, cuerpo) {
   return r.cuerpo ? [r.status, r.cuerpo] : [200, Object.assign(L.limpiarOutfits(r.datos, refs), { gasto: r.gasto })];
 }
 
+// ---- El estilista (D-157) ----
+// Conversar: tu ropa (en caché), el contexto del día, cada mensaje de antes (el
+// último, en caché: el siguiente mensaje no vuelve a pagar todo) y el nuevo.
+async function charla(env, cuerpo) {
+  const e = L.entradaCharla(cuerpo);
+  if (!e) return [400, { error: "datos", mensaje: "Falta tu mensaje o tu ropero." }];
+  const { texto, refs } = L.textoRopero(e.ropero);
+  const b = L.bloquesCharla(e, refs);
+  const turnos = b.turnos.map((t, i) => Object.assign({ type: "text", text: t }, i === b.turnos.length - 1 ? { cache_control: { type: "ephemeral" } } : {}));
+  const r = await preguntar(env, {
+    system: L.instruccionesCharla(), esquema: L.ESQUEMA_CHARLA, esfuerzo: "medium", que: "contestarte",
+    contenido: [{ type: "text", text: texto, cache_control: { type: "ephemeral" } }, { type: "text", text: b.contexto }].concat(turnos, [{ type: "text", text: b.mensaje }])
+  });
+  return r.cuerpo ? [r.status, r.cuerpo] : [200, Object.assign(L.limpiarCharla(r.datos, refs, e), { gasto: r.gasto })];
+}
+// "¿Qué opinas?" de un outfit que armaste.
+async function opinar(env, cuerpo) {
+  const e = L.entradaOpinar(cuerpo);
+  if (!e) return [400, { error: "datos", mensaje: "Falta el outfit (al menos 2 prendas tuyas)." }];
+  const { texto, refs } = L.textoRopero(e.ropero);
+  const r = await preguntar(env, {
+    system: L.instruccionesOpinar(), esquema: L.ESQUEMA_OPINAR, esfuerzo: "medium", que: "opinar de tu outfit",
+    contenido: [{ type: "text", text: texto, cache_control: { type: "ephemeral" } }, { type: "text", text: L.textoOpinar(e, refs) }]
+  });
+  return r.cuerpo ? [r.status, r.cuerpo] : [200, Object.assign(L.limpiarOpinar(r.datos, refs, e), { gasto: r.gasto })];
+}
+// El repaso de todo tu ropero: con más esfuerzo (es una vez de tanto en tanto).
+async function opinion(env, cuerpo) {
+  const e = L.entradaOpinion(cuerpo);
+  if (!e) return [400, { error: "datos", mensaje: "Hacen falta al menos 3 prendas en tu ropero." }];
+  const { texto, refs } = L.textoRopero(e.ropero);
+  const r = await preguntar(env, {
+    system: L.instruccionesOpinion(), esquema: L.ESQUEMA_OPINION, esfuerzo: "high", que: "repasar tu ropero",
+    contenido: [{ type: "text", text: texto }, { type: "text", text: L.textoOpinion(e) }]
+  });
+  return r.cuerpo ? [r.status, r.cuerpo] : [200, Object.assign(L.limpiarOpinion(r.datos, refs, e), { gasto: r.gasto })];
+}
+
 // ---- Pinterest (solo lectura) ----
 // Pide algo a Pinterest; si falla (a veces da 404 un rato), reintenta.
 async function traer(url, intentos) {
@@ -228,7 +266,7 @@ export default {
         return json(200, { gasto: await estadoGasto(env) });
       }
       if (!env.ANTHROPIC_API_KEY || !env.MODELO) return json(503, { error: "falta-clave", mensaje: "Falta conectar la IA: la clave va en Cloudflare." });
-      const ia = { "/describir": describir, "/inspiracion": inspiracion, "/look": look, "/estilo": estilo, "/outfits": outfits }[ruta];
+      const ia = { "/describir": describir, "/inspiracion": inspiracion, "/look": look, "/estilo": estilo, "/outfits": outfits, "/charla": charla, "/opinar": opinar, "/opinion": opinion }[ruta];
       if (post && ia) return json(...(await ia(env, await leer())));
       return json(404, { error: "ruta", mensaje: "No existe." });
     } catch (e) {

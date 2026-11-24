@@ -2589,3 +2589,54 @@ dedo y se lee bien); `ropa-outfits` lee las prendas de cada opción por
 `data-prenda` (sus fotos ya no son links); las 48 suites sin fallas (4.071
 comprobaciones; la medición de la Biblia de `lectura-qa` dio 1.567 ms con la
 máquina ocupada y, sola, 1.255 ms, bajo el límite de 1,5 s).
+
+**D-157 (2026-11-24) · Ropa, nivel 2, fase 2: el puente aprende a conversar y
+a opinar.** (1) **Puente versión 5** (`puente/src/index.js`): tres rutas, todas
+por `preguntar()` (tope, gasto, esquema fijo, respaldo si se niega): `/charla`
+(conversar, esfuerzo medio), `/opinar` ("¿Qué opinas?" de un outfit, medio) y
+`/opinion` (el repaso del ropero, alto: es de tanto en tanto). Instalado con
+wrangler; los secretos (`ANTHROPIC_API_KEY`, `MODELO`, `USUARIOS`) quedan. (2)
+**La lógica, sin red** (`puente/src/logica.js`): `entradaCharla` /
+`bloquesCharla` / `limpiarCharla`, `entradaOpinar` / `textoOpinar` /
+`limpiarOpinar`, `entradaOpinion` / `textoOpinion` / `limpiarOpinion`, con sus
+esquemas (`ESQUEMA_CHARLA`, `ESQUEMA_OPINAR`, `ESQUEMA_OPINION`: todo
+requerido, sin propiedades de más, partes y colores como listas cerradas) y sus
+instrucciones ("el estilista personal de quien usa una app personal de ropa":
+ni el nombre de la app ni el de la persona). A la IA le llegan tus prendas
+como referencias (p1, p2…; `textoRopero`), nunca tus ids, notas, talla ni
+precio. (3) **La caché**: tu ropa primero y en caché (`/charla` y `/opinar`);
+en `/charla`, cada mensaje de antes en su propio bloque y el último con
+`cache_control`: el prefijo crece y el mensaje siguiente lee todo lo anterior
+de la caché (2 puntos de caché por pedido; el límite es 4; el mínimo para
+guardar en caché es de 512 tokens en el modelo de hoy y la ropa lo pasa). Van
+los últimos 10 mensajes que sirven (se descartan los vacíos o raros antes de
+contar); pasados 10, lo más viejo sale y esa parte se vuelve a escribir en la
+caché (una fracción de centavo); la ropa sigue leyéndose de la caché. Si cambia
+el contexto del día entre mensajes (por ejemplo, lo que te pusiste), lo que
+va después también se vuelve a escribir. El repaso no usa caché (se pide pocas
+veces). (4) **Lo que vuelve se limpia**:
+outfits con al menos 2 prendas que existen y nada para lavar (hasta 3; se
+descartan los malos antes de contar), lo que falta con parte y color de la
+lista (hasta 2), lo que recordar (hasta 2 frases cortas); si no hay texto ni
+outfits, "No te entendí bien: ¿me lo dices de otra forma?". "¿Qué opinas?":
+cada cambio saca una prenda del outfit y pone una tuya que no está, de la
+misma parte y no para lavar (hasta 2, sin repetir la que sale); el veredicto,
+de la lista ("bien" si no). El repaso: comentarios solo de los números que
+mandó la app (`h1`… hasta 15, uno por número), sugerencias con parte, tipo y
+color válidos y con qué de tu ropa combinan (tus ids), qué no comprar, qué
+dejar (prendas tuyas, sin repetir), colores (de la lista) y consejos. (5)
+**`veces`** (opcional) en cada prenda: "puesta N veces" o "sin usar", solo si
+la app lo manda (el repaso). (6) **En la app**: `RopaIA.estilista()` (el dueño,
+la IA lista y el puente 5 o más), `charla`, `opinar` y `opinion`; todavía sin
+pantalla (fases 3 y 4). Sin datos nuevos. (7) **Pruebas** (sin gastar: ninguna
+llama a la IA de verdad): `npm test` → 836 (5 nuevas en
+`puente-logica`: esquemas e instrucciones, las veces, conversar, "¿Qué
+opinas?" y el repaso); el puente entero con fetch de mentira (`npm run
+prueba`), 9 (2 nuevas: conversar con su caché y su esfuerzo; "¿Qué opinas?" y
+el repaso). (8) **Una prueba que fallaba a veces** (`ropa`, "la grilla usa el
+ancho" en la compu: 2 de 11 corridas, y 3 de 3 con tres copias a la vez): con
+la máquina ocupada, Ropa vuelve a dibujar la lista justo cuando la prueba la
+mide, y `$eval` (que busca y después mide, en dos pasos) medía la grilla vieja,
+ya fuera de la página (ancho 0, sin estilos). La app estaba bien (cuadro por
+cuadro, la grilla siempre tiene 4 columnas). Ahora busca y mide en un solo
+`evaluate`: 3 de 3 con la misma carga.

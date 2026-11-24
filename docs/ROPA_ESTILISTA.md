@@ -358,6 +358,34 @@ ven, me entiendes?". Se sumó a la fase 1: **ver en grande**.
   guarda el nuevo y el de antes deja de estar guardado (su historia queda);
   **Duplicar**: una copia para cambiarle algo.
 
+## Hecho en la fase 2 (D-157): el puente aprende a conversar y a opinar
+El puente (versión 5, instalado en tu Cloudflare) ya sabe tres cosas nuevas;
+los botones en la app llegan en las fases 3 y 4.
+- **Conversar** (`/charla`): le dices lo que necesitas ("Hace frío, quiero
+  una chompa y una chamarra encima") y contesta corto, con hasta 3 outfits
+  solo con tu ropa (las prendas que nombras van en todos), hasta 2 prendas
+  que te faltarían y hasta 2 cosas para recordar de ti ("Es friolento"). Lee
+  los últimos 10 mensajes de la conversación, el clima, tu estilo, lo que te
+  pusiste hace poco, lo que te gustó y lo que no, lo que ya sabe de ti y tu
+  presupuesto.
+- **"¿Qué opinas?"** (`/opinar`) de un outfit que armaste: muy bien, bien o
+  lo cambiaría; qué funciona; y hasta 2 cambios, siempre por prendas tuyas de
+  la misma parte que no estén para lavar.
+- **El repaso de tu ropero** (`/opinion`, con más esfuerzo): comenta los
+  números que cuenta Manolo sin cambiarlos, sugiere qué comprar (y con qué de
+  tu ropa combina), qué no comprar, qué dejar, tus colores y hasta 3 consejos.
+  Para eso cada prenda puede llevar cuántas veces te la pusiste.
+- **Para que cueste poco**: tu ropa va primero y queda en caché; en la
+  conversación, también lo que ya hablaron (el mensaje siguiente lo lee de la
+  caché, 20 veces más barato).
+- **Lo que no le llega a la IA**: tu nombre, tu correo, tu usuario, tus notas,
+  tallas ni precios. Tus prendas van como p1, p2…; a la app vuelven las tuyas.
+- **Todo se revisa antes de llegar a la app**: un outfit con una prenda que no
+  existe o que está para lavar no pasa; los colores y las partes, de la lista
+  de Manolo.
+- **Probado sin gastar**: con una IA de mentira (ninguna prueba llama a la de
+  verdad).
+
 ## Lo que no hace
 No genera fotos tuyas con la ropa puesta. No compra nada. No borra ni cambia
 tu ropa: solo propone. No publica nada en tu Pinterest. No pide tu ubicación.

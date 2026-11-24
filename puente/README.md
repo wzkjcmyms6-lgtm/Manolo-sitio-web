@@ -14,11 +14,25 @@ dependencias; esto se instala aparte, en la cuenta de Cloudflare del dueño.
 
 Rutas: `GET /quien`, `GET /gasto`, `POST /tope`; la IA: `POST /describir`,
 `/inspiracion`, `/look`, `/estilo`, `/outfits` (5 outfits del mejor al menos
-bueno, con tu ropa y el clima del día); Pinterest (solo lectura, sin la IA):
+bueno, con tu ropa y el clima del día); el estilista (D-157): `/charla`
+(conversar: una respuesta corta, 0 a 3 outfits con tu ropa, 0 a 2 prendas que
+te faltan y 0 a 2 cosas para recordar de ti), `/opinar` ("¿Qué opinas?" de un
+outfit tuyo: veredicto y 0 a 2 cambios por prendas tuyas de la misma parte) y
+`/opinion` (el repaso del ropero, con más esfuerzo: comenta los números que
+calcula la app —`h1`, `h2`…— sin cambiarlos, sugiere prendas y dice qué no
+comprar y qué dejar); Pinterest (solo lectura, sin la IA):
 `POST /pinterest/tablero`, `/pinterest/pin`, `/pinterest/imagen`. `/quien`
 dice la versión del puente (3: con outfits; 4: `/describir` también dice el
-corte y las mangas de la prenda, D-154); la app usa lo nuevo solo si el
-puente lo tiene.
+corte y las mangas de la prenda, D-154; 5: el estilista, D-157); la app usa
+lo nuevo solo si el puente lo tiene.
+
+Para que cueste poco, la ropa va primero y en caché (en `/charla` y
+`/opinar`); en `/charla`, además, cada mensaje de antes va en su propio
+bloque y el último queda en caché: el mensaje siguiente lee de la caché todo
+lo anterior. A la IA le van los últimos 10 mensajes que sirven (pasados 10, lo
+más viejo sale y esa parte se escribe de nuevo en la caché; la ropa no). Con tu ropa
+solo van referencias (p1, p2…): ni tus ids, ni notas, talla o precio; la app
+recibe de vuelta tus ids, sin lo que está para lavar.
 
 **Instalado** (D-153, 2026-11-24): `https://manolo-puente.manolo-ropa-482.workers.dev`,
 en la cuenta de Cloudflare del dueño. Para subir un cambio: `npm run prueba`
