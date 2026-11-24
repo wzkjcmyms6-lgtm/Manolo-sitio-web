@@ -2814,4 +2814,5 @@ que te armó hoy y en palabras); E2E nueva `ropa-conectar` (74: el aviso
 de hoy y de mañana, la ✕ con Deshacer, "Ya está en tu lista", lo que ya
 tienes no sale, sin aviso combinando una prenda, sale sin el puente; "Hoy te
 armó…" y su link; "Para mañana" con Deshacer; los cruces en Compras; Inicio;
-320 px en oscuro y en claro, con las tarjetas de Inicio enteras).
+320 px en oscuro y en claro, con las tarjetas de Inicio enteras). Las 51
+suites sin fallas (4.317 comprobaciones).

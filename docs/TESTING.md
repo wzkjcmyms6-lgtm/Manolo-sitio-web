@@ -12,7 +12,8 @@
   en Compras, "Tu estilista también lo sugiere", "También está en 2 de tus
   pines" y "Te lo sugirió tu estilista"; Inicio (lo que te armó hoy, "¿Qué me
   pongo hoy?", sin internet, a la noche, sin el puente); 320 px en oscuro y
-  en claro (las tarjetas de Inicio entran).
+  en claro (las tarjetas de Inicio entran). Las **51 suites** de
+  `scripts/e2e/` sin fallas (**4.317** comprobaciones).
 - 2026-11-24 (Ropa, nivel 2, fase 4, D-160: lo que opina tu estilista y "¿Qué
   opinas?"): `npm test` → **851** (nuevo `ropa-opinion-motor`: lo que ve
   Manolo con sus números, tu ropa con las veces, tus pines en palabras, cada
