@@ -79,6 +79,8 @@ function datos() {
 
 // ---------- La pantalla ----------
 function fotoHTML(p) { return A().fotoHTML(p, "ro-foto"); }
+// Con el nombre escrito al lado, la foto va sin texto (si no, se lee dos veces; D-162).
+const fotoMuda = p => fotoHTML(p).replace(/ alt="[^"]*"/, ' alt=""');
 function outfitHTML(xs, avs) {
   const editando = est.modo === "editar" && DO.una(est.deId);
   return `<section class="tmp-card roar-outfit" aria-labelledby="roar-t">
@@ -86,7 +88,7 @@ function outfitHTML(xs, avs) {
       ${xs.length ? `<button type="button" class="link-btn" data-roar="ver" aria-haspopup="dialog">${icono("ampliar")}Ver en grande</button>` : ""}</div>
     ${editando ? `<p class="rd-nota roar-editando">Editando ${editando.nombre ? `«${esc(editando.nombre)}»` : "un outfit guardado"}.</p>` : ""}
     ${est.modo === "duplicar" ? `<p class="rd-nota roar-editando">Una copia de tu outfit: cámbiale lo que quieras.</p>` : ""}
-    ${xs.length ? `<ul class="roar-fila">${xs.map((p, k) => `<li>${fotoHTML(p)}<span class="roar-n" aria-hidden="true">${k + 1}</span>
+    ${xs.length ? `<ul class="roar-fila">${xs.map((p, k) => `<li>${fotoMuda(p)}<span class="roar-n" aria-hidden="true">${k + 1}</span>
         <button type="button" class="roar-x" data-roar-x="${esc(p.id)}" aria-label="Sacar ${esc(M.titulo(p))}">${icono("close")}</button>
         <small>${esc(M.titulo(p))}</small></li>`).join("")}</ul>`
       : `<p class="rd-nota roar-vacio">Elige abajo lo que te quieres poner: tócalo y aparece aquí.</p>`}
@@ -138,7 +140,7 @@ function grillaHTML(deParte, xs) {
   return `<ul class="roar-grilla">${orden.map(p => {
     const on = sel.has(p.id), lavar = p.estado === "lavar";
     return `<li><button type="button" class="roar-p${on ? " is-sel" : ""}${lavar ? " is-lavar" : ""}" data-roar-p="${esc(p.id)}" aria-pressed="${on}">
-      ${fotoHTML(p)}${on ? `<span class="roar-check" aria-hidden="true">${icono("check")}</span>` : ""}
+      ${fotoMuda(p)}${on ? `<span class="roar-check" aria-hidden="true">${icono("check")}</span>` : ""}
       <span class="roar-p-n">${esc(M.titulo(p))}</span>${lavar ? `<span class="roar-p-l">Para lavar</span>` : ""}</button></li>`;
   }).join("")}</ul>`;
 }

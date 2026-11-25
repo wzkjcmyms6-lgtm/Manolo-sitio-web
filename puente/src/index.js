@@ -8,8 +8,10 @@
 // Configuración en Cloudflare: secretos ANTHROPIC_API_KEY, MODELO y USUARIOS;
 // variables FIREBASE_PROJECT y ORIGENES (wrangler.toml).
 // Rutas: GET /quien, GET /gasto, POST /tope; IA: POST /describir,
-// /inspiracion, /look, /estilo, /outfits; Pinterest: POST /pinterest/tablero,
-// /pinterest/pin, /pinterest/imagen.
+// /inspiracion, /look, /estilo, /outfits, /charla, /opinar, /opinion (con
+// ?latidos=1, la respuesta sale enseguida y late mientras la IA piensa:
+// conLatidos); Pinterest: POST /pinterest/tablero, /pinterest/pin,
+// /pinterest/imagen.
 // Lógica sin red (y sus pruebas): ./logica.js, ./pinterest.js y
 // tests/puente-logica.test.js, tests/puente-pinterest.test.js.
 import Anthropic from "@anthropic-ai/sdk";
@@ -17,7 +19,7 @@ import * as L from "./logica.js";
 import * as P from "./pinterest.js";
 
 // Lo que este puente sabe hacer (la app lo mira para mostrar o no lo nuevo).
-const VERSION = 6;   // 2: Pinterest e inspiración (D-148); 3: outfits (D-149); 4: el corte y las mangas (D-154); 5: el estilista (D-157); 6: recuerda lo del día (D-159)
+const VERSION = 7;   // 2: Pinterest e inspiración (D-148); 3: outfits (D-149); 4: el corte y las mangas (D-154); 5: el estilista (D-157); 6: recuerda lo del día (D-159); 7: latidos (D-162)
 
 let jwks = null;   // { llaves, vence }
 async function llaves() {
@@ -182,6 +184,32 @@ async function opinion(env, cuerpo) {
   return r.cuerpo ? [r.status, r.cuerpo] : [200, Object.assign(L.limpiarOpinion(r.datos, refs, e), { gasto: r.gasto })];
 }
 
+// ---- Latidos (D-162) ----
+// El iPhone (Safari) corta un pedido si no le llega nada en 60 segundos, y la
+// IA puede tardar más (el repaso del ropero, con esfuerzo alto). Con
+// ?latidos=1, el puente contesta enseguida (200) y, mientras la IA piensa,
+// manda un espacio cada 10 segundos (al JSON no le molesta); al final, el
+// JSON: lo de siempre o, si no se pudo, { error, mensaje, status } (la app lo
+// entiende igual). Sin ?latidos, como antes (la app de antes sigue andando).
+const LATIDO_MS = 10000;
+function conLatidos(trabajo, h, ctx, cada) {
+  const { readable, writable } = new TransformStream();
+  const w = writable.getWriter();
+  const enc = new TextEncoder();
+  const escribir = t => w.write(enc.encode(t)).catch(() => {});   // si te fuiste, no pasa nada
+  const latido = setInterval(() => { escribir(" "); }, cada || LATIDO_MS);
+  const fin = Promise.resolve(trabajo)
+    .then(([status, cuerpo]) => (status >= 400 ? Object.assign({ status }, cuerpo) : cuerpo))
+    .catch(e => { console.log("Puente:", e && e.message); return { status: 500, error: "puente", mensaje: "El puente tuvo un problema. Intenta de nuevo." }; })
+    .then(async c => {
+      clearInterval(latido);
+      await escribir(JSON.stringify(c));
+      await w.close().catch(() => {});
+    });
+  if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(fin);
+  return new Response(readable, { status: 200, headers: Object.assign({}, h, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store, no-transform" }) });
+}
+
 // ---- Pinterest (solo lectura) ----
 // Pide algo a Pinterest; si falla (a veces da 404 un rato), reintenta.
 async function traer(url, intentos) {
@@ -239,11 +267,12 @@ async function imagenPin(cuerpo, h) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const h = L.cors(request.headers.get("Origin") || "", env.ORIGENES);
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: h });
     const json = (status, cuerpo) => new Response(JSON.stringify(cuerpo), { status, headers: Object.assign({}, h, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" }) });
-    const ruta = new URL(request.url).pathname.replace(/\/+$/, "") || "/";
+    const url = new URL(request.url);
+    const ruta = url.pathname.replace(/\/+$/, "") || "/";
     const post = request.method === "POST";
     const leer = () => request.json().catch(() => ({}));
     try {
@@ -267,7 +296,11 @@ export default {
       }
       if (!env.ANTHROPIC_API_KEY || !env.MODELO) return json(503, { error: "falta-clave", mensaje: "Falta conectar la IA: la clave va en Cloudflare." });
       const ia = { "/describir": describir, "/inspiracion": inspiracion, "/look": look, "/estilo": estilo, "/outfits": outfits, "/charla": charla, "/opinar": opinar, "/opinion": opinion }[ruta];
-      if (post && ia) return json(...(await ia(env, await leer())));
+      if (post && ia) {
+        const cuerpo = await leer();
+        if (url.searchParams.get("latidos") === "1") return conLatidos(ia(env, cuerpo), h, ctx, Number(env.LATIDO_MS) || 0);
+        return json(...(await ia(env, cuerpo)));
+      }
       return json(404, { error: "ruta", mensaje: "No existe." });
     } catch (e) {
       console.log("Puente:", e && e.message);

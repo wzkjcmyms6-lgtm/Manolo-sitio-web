@@ -322,7 +322,7 @@ en ese caso conviene subirlo a US$ 12 en Ajustes de Ropa (te pregunto antes).
 | 3 | Hablar con mi estilista: la pantalla, las conversaciones, lo que recuerda de ti, "Pídelo con tus palabras" |
 | 4 | Lo que opina mi estilista de mi ropero (en Compras) y "¿Qué opinas?" de mis outfits |
 | 5 | Conectarlo con Outfits y Compras: el aviso del día en Outfits, "Cambiar una prenda" desde las conversaciones, y en Inicio si tiene sentido (hecho: D-161) |
-| 6 | Revisión final: todas las pruebas, Lighthouse, la lista para el iPhone y la prueba real corta con tu OK |
+| 6 | Revisión final: todas las pruebas, Lighthouse, la lista para el iPhone y la prueba real corta con tu OK (hecho: D-162; la prueba real la haces tú, abajo) |
 
 ## Pedido del dueño durante la fase 0 (2026-11-24)
 Con una captura de Outfits en su iPhone (las fotos de cada opción, chiquitas):
@@ -483,6 +483,47 @@ Pregunta del dueño: "¿Por qué no recuerda los outfits que me hizo para el dí
   internet o sin la IA, como antes.
 - **Lo que armas tú también le enseña tus gustos**: ya pasaba (lo que guardas
   o te pones le llega a tu estilista como "le gustó").
+
+## Hecho en la fase 6 (D-162): la revisión final
+- **Todas las pruebas**: `npm test`, las del puente (las del Worker y las de su
+  lógica) y las 51 pruebas de pantalla, sin fallas.
+- **Lighthouse** de las pantallas nuevas (Inicio, Outfits con tu estilista y el
+  aviso, una opción en grande, una conversación, "Para mañana", tus
+  conversaciones, lo que recuerda de ti, mientras piensa, una conversación
+  nueva, Armar el mío, "¿Qué opinas?", Compras y Ajustes), en oscuro y en
+  claro: 100 en accesibilidad y en buenas prácticas en las 26. Arreglado en
+  el camino: en "Armar el mío", las fotos con su nombre al lado se leían dos
+  veces con el lector de pantalla; en una opción en grande, "Se parece a tu
+  inspiración" ahora es un botón (sigue llevando al pin).
+- **El iPhone no corta la espera**: Safari corta un pedido si no le llega nada
+  en 60 segundos, y el repaso de tu ropero puede tardar más. El puente
+  (versión 7, instalado) ahora contesta enseguida y "late" cada 10 segundos
+  mientras tu estilista piensa; si algo sale mal, lo dice igual de claro.
+- **Revisado**: a la IA no le llega tu nombre, tu correo ni tu usuario; el
+  tope del mes corta antes de llamar a la IA; cada error de la IA se dice en
+  palabras simples; nada corre solo.
+
+## La prueba real de tu estilista (la haces tú, en el iPhone)
+Corta: cuesta unos 25 centavos de dólar en total (menos de US$ 0,30).
+1. Ropa › el engranaje: tiene que decir que la IA está conectada; mira cuánto
+   llevas gastado este mes.
+2. Outfits › "Tu estilista": escribe o dicta "Hace frío: una chompa y una
+   chamarra encima". Tienen que llegar outfits solo con tu ropa (unos 4
+   centavos). Toca "Ver en grande" en uno.
+3. Escríbele "Dame otra opción distinta de la opción 1": tiene que saber cuál
+   es (unos 4 centavos). Si le cuentas algo de ti ("Soy friolento"), aparece
+   "Lo recordé".
+4. "Armar el mío": elige 3 prendas y toca "¿Qué opinas?" (unos 4 centavos); si
+   propone un cambio, "Cambiar".
+5. Compras › "Lo que opina tu estilista" › "Pedir su opinión" (unos 12
+   centavos). Puede tardar un minuto o más: espera con la pantalla prendida y
+   sin cambiar de app. Lee lo que ve y lo que sumaría.
+6. Vuelve a Outfits: si algo de lo que sugirió sirve para el clima de hoy,
+   aparece el aviso corto. En Inicio, la tarjeta de Ropa dice lo que te armó
+   hoy.
+7. Vuelve al engranaje: el gasto subió unos 25 centavos.
+
+Si algo no anda, dime qué pasó y qué decía la pantalla (una captura ayuda).
 
 ## Lo que no hace
 No genera fotos tuyas con la ropa puesta. No compra nada. No borra ni cambia

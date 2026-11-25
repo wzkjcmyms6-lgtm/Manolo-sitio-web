@@ -54,6 +54,7 @@ globalThis.fetch = async (url, init) => {
   if (u.startsWith("https://i.pinimg.com/")) return r("no", 404);
   if (/\/v1\/messages$/.test(u)) {
     const c = respuestaIA || {};
+    if (c.demora) await new Promise(res => setTimeout(res, c.demora));   // la IA "pensando" (para los latidos)
     return r(JSON.stringify({
       id: "msg_1", type: "message", role: "assistant", model: "modelo-de-prueba",
       content: c.content || [{ type: "text", text: JSON.stringify(c.datos || {}) }],
@@ -92,7 +93,7 @@ test("quién soy: el dueño, la versión y el gasto; los demás no pasan", async
   const r = await pedir(env, "/quien");
   assert.equal(r.status, 200);
   assert.equal(r.json.permitido, true);
-  assert.equal(r.json.version, 6, "6: el estilista recuerda lo del día (D-159)");
+  assert.equal(r.json.version, 7, "7: los latidos (D-162)");
   assert.equal(r.json.lista, true);
   assert.equal(r.json.gasto.usd, 0);
   assert.equal(r.headers.get("Access-Control-Allow-Origin"), ORIGEN);
@@ -261,4 +262,39 @@ test("el tope: al llegar, la IA no se llama; Pinterest sigue", async () => {
   assert.equal(r.json.error, "tope");
   assert.equal(deIA().length, 0, "no se gastó nada");
   assert.equal((await pedir(env, "/pinterest/pin", { link: "https://www.pinterest.com/pin/333/" })).status, 200);
+});
+
+test("los latidos (D-162): con ?latidos=1 contesta enseguida, late mientras la IA piensa y al final el JSON (también los errores)", async () => {
+  pedidos = [];
+  const env = entorno({ LATIDO_MS: "5" });   // en Cloudflare, cada 10 segundos
+  respuestaIA = { demora: 60, datos: { respuesta: "Va así:", outfits: [{ nombre: "Capas", prendas: ["p2", "p1"], porque: "", capas: "" }], faltan: [], recordar: [] } };
+  const ropero = [{ id: "pol", grupo: "arriba", tipo: "Polera", colores: ["blanco"] }, { id: "jean", grupo: "abajo", tipo: "Jean", colores: ["azul-jean"] }, { id: "zap", grupo: "zapatos", tipo: "Zapatillas", colores: ["blanco"] }];
+  const crudo = async (ruta, cuerpo) => {
+    const t = await token("dueno123");
+    const res = await worker.fetch(new Request(`https://manolo-puente.prueba.workers.dev${ruta}`, { method: "POST", headers: { Origin: ORIGEN, Authorization: `Bearer ${t}`, "Content-Type": "application/json" }, body: JSON.stringify(cuerpo) }), env);
+    return { status: res.status, headers: res.headers, texto: await res.text() };
+  };
+  let r = await crudo("/charla?latidos=1", { mensaje: "Hace frío", ropero });
+  assert.equal(r.status, 200, "contesta enseguida");
+  assert.equal(r.headers.get("Access-Control-Allow-Origin"), ORIGEN, "el teléfono lo puede leer");
+  assert.match(r.headers.get("Cache-Control"), /no-transform/, "sin comprimir (si no, los latidos esperan)");
+  assert.match(r.texto, /^ +\{/, `latió mientras la IA pensaba («${r.texto.slice(0, 12)}…»)`);
+  const j = JSON.parse(r.texto);
+  assert.deepEqual(j.outfits[0].prendas, ["jean", "pol"], "y al final, lo de siempre");
+  assert.equal(typeof j.gasto.usd, "number");
+  // Si no se pudo: el error va adentro (con su status), igual de claro.
+  respuestaIA = { datos: {} };
+  r = await crudo("/opinion?latidos=1", { ropero: ropero.slice(0, 2) });
+  assert.equal(r.status, 200);
+  assert.deepEqual([JSON.parse(r.texto).status, JSON.parse(r.texto).error], [400, "datos"]);
+  const mes = new Date(Date.now() - 4 * 3600e3).toISOString().slice(0, 7);
+  await env.GASTO.put(`gasto:${mes}`, JSON.stringify({ usd: 8.01, n: 300 }));
+  const antes = deIA().length;
+  r = await crudo("/opinar?latidos=1", { outfit: ["pol", "jean"], ropero });
+  const e = JSON.parse(r.texto);
+  assert.deepEqual([r.status, e.status, e.error], [200, 402, "tope"], "el tope, adentro");
+  assert.equal(typeof e.gasto.usd, "number", "con el gasto");
+  assert.equal(deIA().length, antes, "y no se llamó a la IA");
+  // Sin ?latidos, como antes (para la app de antes).
+  assert.equal((await pedir(env, "/opinar", { outfit: ["pol", "jean"], ropero })).status, 402);
 });

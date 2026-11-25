@@ -25,7 +25,17 @@ comprar y qué dejar); Pinterest (solo lectura, sin la IA):
 dice la versión del puente (3: con outfits; 4: `/describir` también dice el
 corte y las mangas de la prenda, D-154; 5: el estilista, D-157; 6: en
 `/charla`, los outfits de antes con su nombre y lo que ya viste hoy, `hoy`,
-D-159); la app usa lo nuevo solo si el puente lo tiene.
+D-159; 7: los latidos, D-162); la app usa lo nuevo solo si el puente lo tiene.
+
+**Latidos (versión 7, D-162).** El iPhone (Safari) corta un pedido si no le
+llega nada en 60 segundos, y la IA puede tardar más (el repaso del ropero, con
+esfuerzo alto). Las rutas de la IA con `?latidos=1` contestan enseguida
+(`200`, `Cache-Control: no-store, no-transform` para que Cloudflare no la
+comprima ni la retenga) y, mientras la IA piensa, mandan un espacio cada 10
+segundos (al JSON no le molesta); al final va el JSON de siempre o, si no se
+pudo, `{ error, mensaje, status }` adentro (la app lo entiende igual). Sin
+`?latidos`, todo como antes (la app vieja sigue andando). En las pruebas,
+`LATIDO_MS` lo acorta.
 
 Para que cueste poco, la ropa va primero y en caché (en `/charla` y
 `/opinar`); en `/charla`, además, cada mensaje de antes va en su propio

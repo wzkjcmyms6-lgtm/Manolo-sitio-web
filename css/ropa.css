@@ -342,6 +342,7 @@ h1.page-title.rin-ficha-t { margin-bottom: 0.2rem; font-size: 1.5rem; overflow-w
 .rof-insp img, .rof-insp > [data-icon] { width: 40px; height: 40px; flex-shrink: 0; border-radius: 8px; object-fit: cover; }
 .rof-insp > [data-icon] { display: grid; place-items: center; padding: 10px; box-sizing: border-box; color: var(--accent-2); }
 .rof-insp:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+button.rof-insp { width: 100%; border: 0; font-family: inherit; font-weight: inherit; text-align: left; cursor: pointer; }
 /* "+ Otra" ocasión: un chip con borde punteado. */
 .rof-oc-nueva { display: inline-flex; align-items: center; min-height: 44px; padding: 0 0.9rem; border: 1px dashed var(--border); border-radius: var(--radio-pildora); background: transparent; color: var(--muted); font: inherit; font-size: 0.9rem; font-weight: 600; white-space: nowrap; cursor: pointer; }
 .rof-oc-nueva:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }

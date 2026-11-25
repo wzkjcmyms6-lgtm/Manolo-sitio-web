@@ -26,6 +26,12 @@ const oyentes = [];
 const avisar = () => oyentes.forEach(f => { try { f(estado); } catch (e) { console.error(e); } });
 
 function error(codigo, mensaje, extra) { const e = new Error(mensaje); e.codigo = codigo; e.ia = true; if (extra) e.datos = extra; return e; }
+// Lo que usa la IA va con ?latidos=1 (D-162): el puente (versión 7) contesta
+// enseguida y manda un espacio cada 10 segundos mientras la IA piensa (el
+// iPhone corta un pedido si no le llega nada en 60 segundos); al final, el
+// JSON, y si no se pudo, { error, mensaje } adentro. El puente de antes no lo
+// mira y contesta como siempre.
+const CON_IA = ["/describir", "/inspiracion", "/look", "/estilo", "/outfits", "/charla", "/opinar", "/opinion"];
 // comoBlob: la respuesta es una imagen (Pinterest), no JSON.
 async function pedir(ruta, cuerpo, comoBlob) {
   const base = puente();
@@ -35,7 +41,7 @@ async function pedir(ruta, cuerpo, comoBlob) {
   const token = await currentUser.getIdToken();
   let r;
   try {
-    r = await fetch(base.replace(/\/+$/, "") + ruta, {
+    r = await fetch(base.replace(/\/+$/, "") + ruta + (CON_IA.includes(ruta) ? "?latidos=1" : ""), {
       method: cuerpo ? "POST" : "GET",
       headers: Object.assign({ Authorization: `Bearer ${token}` }, cuerpo ? { "Content-Type": "application/json" } : {}),
       body: cuerpo ? JSON.stringify(cuerpo) : undefined
@@ -46,9 +52,12 @@ async function pedir(ruta, cuerpo, comoBlob) {
     if (!/^image\//.test(b.type)) throw error("imagen", "No pude traer esa imagen de Pinterest.");
     return b;
   }
-  const j = await r.json().catch(() => ({}));
+  const j = await r.json().catch(() => null);
   if (j && j.gasto && estado) { estado.gasto = j.gasto; avisar(); }
-  if (!r.ok) throw error(j.error || `http-${r.status}`, j.mensaje || "No respondió. Intenta de nuevo.", j);
+  if (!r.ok) throw error((j && j.error) || `http-${r.status}`, (j && j.mensaje) || "No respondió. Intenta de nuevo.", j || {});
+  // Con latidos, lo que salió mal llega adentro; y si se cortó a la mitad, no es una respuesta.
+  if (!j) throw error("cortada", "Se cortó la conexión antes de la respuesta. Intenta de nuevo.");
+  if (j.error) throw error(j.error, j.mensaje || "No respondió. Intenta de nuevo.", j);
   return j;
 }
 // Lo último que contestó /quien en este teléfono (sin el gasto): si abres

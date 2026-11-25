@@ -1,6 +1,19 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-25 (Ropa, nivel 2, fase 6, D-162: la revisión final de tu
+  estilista): `npm test` → **853**; el puente: **10** pruebas del Worker
+  (nueva: los latidos —contesta enseguida, late mientras la IA piensa y al
+  final el JSON; los errores, adentro; sin `?latidos`, como antes—) y **18** de
+  su lógica; instalado (versión 7). E2E: `ropa-estilista` con un puente de
+  mentira como el 7 (latidos, errores adentro; **114**), `ropa-outfits` (en
+  grande, "Se parece a tu inspiración" lleva al pin; **89**); las demás con
+  puentes de mentira como el de antes (la app nueva anda con los dos).
+  Lighthouse (`scratchpad/lh/correr11.mjs`, fuera del repo) de las 13
+  pantallas nuevas de tu estilista en oscuro y en claro: **100** en
+  accesibilidad y en buenas prácticas en las 26 (antes: 98 en una opción en
+  grande —un link "#…" que Lighthouse tomaba por un link para saltar— y 99 en
+  Armar el mío —las fotos con su nombre al lado—).
 - 2026-11-24 (Ropa, nivel 2, fase 5, D-161: tu estilista, conectado con
   Outfits, Compras e Inicio): `npm test` → **853** (el aviso del día: el clima
   y la ocasión, lo que ya tienes, compraste, ya no quieres u ocultaste; lo que
@@ -755,6 +768,9 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] Compras: "Tu estilista también lo sugiere" (si coincide con tus pines) y
   "Te lo sugirió tu estilista" en tu lista. Inicio: la tarjeta de Ropa dice lo
   que te armó hoy o "¿Qué me pongo hoy?".
+- [ ] La prueba real corta de tu estilista (`docs/ROPA_ESTILISTA.md` › "La
+  prueba real de tu estilista"; unos 25 centavos). El repaso de tu ropero
+  puede tardar más de un minuto: tiene que llegar igual (los latidos, D-162).
 - [ ] En modo avión: Ajustes de Ropa dice "Sin internet"; al agregar una foto,
   "Sin internet: la IA no puede mirar la foto". Al volver internet, la IA se
   conecta sola.

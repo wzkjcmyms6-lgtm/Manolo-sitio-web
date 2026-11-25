@@ -77,7 +77,7 @@ function semilla(extra) {
 const PUENTE = "https://puente.prueba";
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Authorization, Content-Type", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" };
 function puenteFalso(o) {
-  const est = Object.assign({ permitido: true, lista: true, version: 6, gasto: { mes: "2026-11", usd: 0.12, veces: 3, tope: 8 }, demora: 300, respuestas: [], fallo: null, pedidos: [] }, o || {});
+  const est = Object.assign({ permitido: true, lista: true, version: 7, gasto: { mes: "2026-11", usd: 0.12, veces: 3, tope: 8 }, demora: 300, respuestas: [], fallo: null, pedidos: [] }, o || {});
   est.charlas = () => est.pedidos.filter(x => x.ruta === "/charla");
   est.rutas = async ctx => {
     await ctx.route(/open-meteo\.com/, r => r.abort());
@@ -86,8 +86,13 @@ function puenteFalso(o) {
       if (req.method() === "OPTIONS") return route.fulfill({ status: 204, headers: CORS });
       const ruta = new URL(req.url()).pathname;
       const cuerpo = req.postData() ? JSON.parse(req.postData()) : null;
-      est.pedidos.push({ ruta, auth: req.headers().authorization, cuerpo });
-      const json = (status, c) => route.fulfill({ status, headers: CORS, contentType: "application/json", body: JSON.stringify(c) });
+      const latidos = new URL(req.url()).searchParams.get("latidos") === "1";
+      est.pedidos.push({ ruta, auth: req.headers().authorization, cuerpo, latidos });
+      // Como el puente 7 con ?latidos=1 (D-162): 200 enseguida, espacios y al
+      // final el JSON; lo que salió mal, adentro (con su status).
+      const json = (status, c) => (latidos && est.version >= 7 && ruta !== "/quien"
+        ? route.fulfill({ status: 200, headers: CORS, contentType: "application/json", body: "   \n  " + JSON.stringify(status >= 400 ? Object.assign({ status }, c) : c) })
+        : route.fulfill({ status, headers: CORS, contentType: "application/json", body: JSON.stringify(c) }));
       if (ruta === "/quien") return json(200, { permitido: est.permitido, uid: "test", lista: est.lista, gasto: est.gasto, version: est.version });
       if (ruta === "/charla") {
         await new Promise(r => setTimeout(r, est.demora));
@@ -146,6 +151,7 @@ async function conversar(browser, base) {
   // Lo que fue al puente.
   const c1 = pf.charlas()[0];
   ok(c1 && /^Bearer /.test(c1.auth), "al puente, con tu sesión");
+  ok(c1.latidos === true, "con latidos (D-162: el iPhone no corta la espera si tu estilista tarda)");
   const ids = c1.cuerpo.ropero.map(x => x.id);
   ok(c1.cuerpo.mensaje === "Hace frío: una chompa y una chamarra encima" && c1.cuerpo.historial.length === 0, "tu mensaje, en una conversación nueva");
   ok(ids.includes("sucia") && c1.cuerpo.ropero.find(x => x.id === "sucia").lavar === true && c1.cuerpo.ropero.find(x => x.id === "pol").lavar === false, "tu ropa, con lo que está para lavar marcado");

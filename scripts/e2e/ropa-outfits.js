@@ -132,6 +132,15 @@ async function conReglas(browser, base, seed) {
   ok(/Opción 1/.test(await txt(p, ".rof-op >> nth=0")) && /para la mañana fría/.test(await txt(p, ".rof-op >> nth=0")), "cada opción con su porqué");
   ok(/Se parece a tu inspiración «Oliva y celeste»/.test(await txt(p, ".rof-op >> nth=0 >> .rof-insp")) && await p.$eval(".rof-op >> nth=0 >> .rof-insp", a => a.getAttribute("href")) === "#ropa-pin/pin-77", `la primera se parece a tu inspiración (lleva al pin): ${ops[0]}`);
   ok(await p.$$eval('.rof-op [data-rof-op="otra"]', bs => bs.length) === 3, "cada opción con «Otra opción»");
+  // En grande, «Se parece a tu inspiración» es un botón que lleva al pin (D-162).
+  await p.click('.rof-op >> nth=0 >> .rof-op-ver [data-rof-op="ver"]');
+  await p.waitForSelector(".rof-hoja-ver button.rof-insp", { timeout: 3000 }).catch(() => {});
+  await p.click(".rof-hoja-ver button.rof-insp");
+  await p.waitForTimeout(600);
+  ok(await p.evaluate(() => location.hash) === "#ropa-pin/pin-77" && !(await p.$(".rof-hoja-ver:not([hidden])")), "en grande, «Se parece a tu inspiración» lleva al pin (y cierra)");
+  await p.evaluate(() => { location.hash = "ropa-outfits"; });
+  await p.waitForTimeout(700);
+  ok((await opciones(p)).length === 3, "al volver, siguen las 3 opciones");
   await p.waitForTimeout(300);
   await captura(p, "outfits-opciones-390.png");
   // Otra opción: cambia solo esa.

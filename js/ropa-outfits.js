@@ -293,10 +293,14 @@ function opcionesHTML() {
       </div></li>`; }).join("")}</ol>
     <button type="button" class="lib-btn-sec rof-otras" data-rof="otras"${est.armando ? " disabled" : ""}>Otras opciones</button></section>`;
 }
-function inspHTML(x) {
+// En una hoja va como botón: un link "#…" que queda abajo, fuera de la vista de
+// la hoja, Lighthouse lo toma por un "link para saltar" sin destino (D-162).
+function inspHTML(x, enHoja) {
   const f = x.fotos[0];
   const src = f && f.mini ? f.mini : x.pin && x.pin.img ? x.pin.img : "";
-  return `<a class="rof-insp" href="#ropa-pin/${encodeURIComponent(x.id)}">${src ? `<img src="${esc(src)}" alt="" decoding="async" loading="lazy" referrerpolicy="no-referrer">` : icono("inspiracion")}<span>Se parece a tu inspiración <b>«${esc(I().titulo(x))}»</b></span></a>`;
+  const dentro = `${src ? `<img src="${esc(src)}" alt="" decoding="async" loading="lazy" referrerpolicy="no-referrer">` : icono("inspiracion")}<span>Se parece a tu inspiración <b>«${esc(I().titulo(x))}»</b></span>`;
+  return enHoja ? `<button type="button" class="rof-insp" data-rof-v="insp" data-id="${esc(x.id)}">${dentro}</button>`
+    : `<a class="rof-insp" href="#ropa-pin/${encodeURIComponent(x.id)}">${dentro}</a>`;
 }
 // Lo de hoy: lo que te pusiste (de aquí, de un pin o de la ficha) o lo que elegiste ayer para hoy.
 function hoyHTML() {
@@ -680,7 +684,7 @@ function verOpcion(i, desde) {
     ${tableroHTML(o.prendas)}
     ${o.porque ? `<p class="rof-porque">${esc(o.porque)}</p>` : ""}
     ${o.capas ? `<p class="rd-nota rof-capas">${esc(o.capas)}</p>` : ""}
-    ${x ? inspHTML(x) : ""}
+    ${x ? inspHTML(x, true) : ""}
     <div class="rof-op-bot">
       <button type="button" class="lib-btn" data-rof-v="puse">${icono("check")}${manana ? "Para mañana" : "Me lo pongo"}</button>
       <button type="button" class="lib-btn-sec" data-rof-v="guardar">${icono("guardar")}Guardar</button>
@@ -696,8 +700,9 @@ function verOpcion(i, desde) {
   h.el.onchange = null; h.el.onsubmit = null;
   h.el.onclick = e => {
     const b = e.target.closest("[data-rof-v]");
-    if (!b) { if (e.target.closest(".rof-tab, .rof-insp")) { h.volver = null; h.cerrar(); } return; }
+    if (!b) { if (e.target.closest(".rof-tab")) { h.volver = null; h.cerrar(); } return; }
     const a = b.dataset.rofV;
+    if (a === "insp") { h.volver = null; h.cerrar(); location.hash = `ropa-pin/${encodeURIComponent(b.dataset.id)}`; return; }
     if (a === "ant" || a === "sig") { verOpcion((i + (a === "sig" ? 1 : n - 1)) % n); return; }
     if (a === "otra" || a === "no") {
       accionOpcion(a, i);

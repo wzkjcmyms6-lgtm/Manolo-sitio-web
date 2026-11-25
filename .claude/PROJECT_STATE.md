@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-24 (Ropa, nivel 2: tu estilista con IA, fase 5, D-161).
+Actualizado: 2026-11-25 (Ropa, nivel 2: tu estilista con IA, fase 6, D-162).
 
 - **Ropa, nivel 2: tu estilista con IA (2026-11-24, en curso)**: hablar con la
   IA como con un estilista (outfits solo con su ropa, a partir de lo que
@@ -34,8 +34,14 @@ Actualizado: 2026-11-24 (Ropa, nivel 2: tu estilista con IA, fase 5, D-161).
   lo que le sugirió su estilista y le serviría al clima o a la ocasión, si no
   lo tiene; "Hoy te armó…" con el link a esa conversación), la conversación
   ("Para mañana"), Compras (también lo sugiere, en N de tus pines, te lo
-  sugirió) e Inicio (lo que le armó hoy o "¿Qué me pongo hoy?"). Falta la
-  fase 6: revisión final y la prueba real corta con su OK.
+  sugirió) e Inicio (lo que le armó hoy o "¿Qué me pongo hoy?").
+  Fase 6 hecha (D-162): la revisión final (todas las pruebas; Lighthouse 100
+  en las 26 pantallas nuevas, con 2 detalles de accesibilidad arreglados) y
+  los **latidos** (puente versión 7, instalado): Safari del iPhone corta un
+  pedido sin respuesta a los 60 segundos y el repaso del ropero puede tardar
+  más; ahora el puente contesta enseguida y late cada 10 segundos. Falta solo
+  la prueba real corta, que hace el dueño en su iPhone (la guía, en
+  `docs/ROPA_ESTILISTA.md`).
 
 - **Ropa con IA e inspiración de Pinterest (2026-11-22; terminado el
   2026-11-23; la IA conectada el 2026-11-24)**: el

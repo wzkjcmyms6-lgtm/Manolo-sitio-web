@@ -2816,3 +2816,44 @@ tienes no sale, sin aviso combinando una prenda, sale sin el puente; "Hoy te
 armó…" y su link; "Para mañana" con Deshacer; los cruces en Compras; Inicio;
 320 px en oscuro y en claro, con las tarjetas de Inicio enteras). Las 51
 suites sin fallas (4.317 comprobaciones).
+
+**D-162 (2026-11-25) · Ropa, nivel 2, fase 6: la revisión final de tu
+estilista (y los latidos).** (1) **Revisado** (fases 1 a 5): a la IA no le
+llega el nombre, el correo ni el usuario (solo referencias p1, p2…; ni ids,
+notas, talla ni precio); el tope del mes corta antes de llamar a la IA; cada
+error de la IA (clave, crédito, ocupada, caída, rechazo, respuesta rara) se
+dice en palabras simples; nada corre solo; los datos solo se suman. (2)
+**Lighthouse** de las 13 pantallas nuevas en oscuro y en claro
+(`scratchpad/lh/correr11.mjs`, fuera del repo, con el Firebase falso y un
+puente de mentira): 100 en accesibilidad y en buenas prácticas en las 26,
+después de arreglar dos cosas de la fase 1: (a) en una opción en grande, "Se
+parece a tu inspiración" era un link `#ropa-pin/…` que quedaba abajo, fuera de
+la vista de la hoja, y Lighthouse (axe, regla `skip-link`) lo tomaba por un
+"link para saltar" sin destino (en una app con rutas "#", cualquier link así
+dentro de una hoja que se desplaza): en la hoja ahora es un botón que cierra
+la hoja y va al pin (en la lista sigue siendo un link); (b) en Armar el mío,
+las fotos con el nombre escrito al lado llevaban ese mismo nombre de texto
+alternativo (el lector de pantalla lo leía dos veces, `image-redundant-alt`):
+ahora van con `alt=""`. (3) **Los latidos (puente versión 7, instalado).**
+Safari del iPhone corta un pedido si no le llega nada en 60 segundos (el
+tiempo de espera por defecto de WebKit; hay reportes de iOS 10 a 16.4), y el
+repaso del ropero (esfuerzo alto) puede tardar más: se pagaba y no llegaba.
+Ahora, con `?latidos=1`, el puente contesta enseguida (200, con
+`Cache-Control: no-store, no-transform`: según Cloudflare, así no comprime ni
+toca la respuesta) y, mientras la IA piensa, manda un espacio cada 10 segundos
+(el JSON los acepta adelante); al final, el JSON de siempre o, si no se pudo,
+`{ error, mensaje, status }` adentro. La app (`RopaIA`) lo pide en todo lo que
+usa la IA, entiende el error de adentro igual que antes y, si la respuesta
+llega cortada, lo dice ("Se cortó la conexión antes de la respuesta"); el
+puente de antes no mira `?latidos`, y sin `?latidos` el puente nuevo contesta
+como antes (las dos versiones de la app y del puente se entienden). Se
+probó en el Worker con una IA de mentira que tarda (`LATIDO_MS` lo acorta);
+la red de esta sesión no llega al Worker instalado, así que la prueba real
+del dueño lo confirma. (4) **La prueba real**: la hace el dueño en su iPhone
+con la guía de `docs/ROPA_ESTILISTA.md` (unos 25 centavos: dos mensajes,
+"¿Qué opinas?" y el repaso; esperar con la pantalla prendida y sin cambiar de
+app). (5) **Pruebas**: `npm test` → 853; el puente: 10 del Worker (nueva: los
+latidos, los errores adentro, el tope adentro sin llamar a la IA y sin
+`?latidos` como antes) y 18 de su lógica; E2E `ropa-estilista` (114, con un
+puente de mentira como el 7) y `ropa-outfits` (89: en grande, "Se parece a tu
+inspiración" lleva al pin); las demás, con puentes como el de antes.

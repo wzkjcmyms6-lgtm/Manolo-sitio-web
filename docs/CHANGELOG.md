@@ -1,5 +1,12 @@
 # Cambios
 
+## 2026-11-25 · Ropa: la revisión final de tu estilista
+- Si tu estilista tarda más de un minuto (por ejemplo, en el repaso de tu
+  ropero), el iPhone ya no corta la espera: la respuesta llega igual.
+- En "Armar el mío", el lector de pantalla ya no lee dos veces el nombre de
+  cada prenda; en una opción en grande, "Se parece a tu inspiración" sigue
+  llevando a tu pin.
+
 ## 2026-11-24 · Ropa: tu estilista, conectado con todo
 - **En Outfits, un aviso corto** cuando algo que te sugirió tu estilista (y
   todavía no tienes) te serviría para el clima del día o la ocasión: "Para la
