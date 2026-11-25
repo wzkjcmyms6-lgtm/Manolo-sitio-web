@@ -2888,4 +2888,8 @@ aprende**: tus favoritos le llegan primero a la IA (en `/outfits` y en
 largo ("Quitar de guardados" a 320 px) se salía de su borde; ahora el texto
 pasa a dos líneas. (6) **Pruebas**: `npm test` → 854; E2E nueva
 `ropa-favoritos` (56); `ropa-outfits` (89), `ropa-armar`, `ropa-estilista`,
-`ropa-final` y `ropa-conectar` bien.
+`ropa-final` y `ropa-conectar` bien. Corrida completa: 51 de 52 suites sin
+fallas (4.375 comprobaciones); la otra, `lectura-qa` («Biblia con 1.500
+versículos», 2.156 ms contra 1,5 s), falla igual con la versión de antes de
+los favoritos medida lado a lado (2.437–3.976 ms; la de ahora, 1.586–3.477
+ms): es la máquina, no el cambio. El límite no se toca.

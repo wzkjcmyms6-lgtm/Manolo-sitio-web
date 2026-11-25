@@ -11,7 +11,11 @@
   (con su nombre) y editar un favorito (el nuevo es el favorito; Deshacer); el
   corazón en tu estilista y tus favoritos primero para la IA; 320 px en oscuro
   y en claro (corazones de 44 px, cada botón con su texto adentro).
-  `ropa-outfits` (89) bien.
+  `ropa-outfits` (89) bien. Corrida completa: **51 de 52 suites** sin fallas
+  (**4.375** comprobaciones); en `lectura-qa`, «Biblia con 1.500 versículos»
+  dio 2.156 ms (límite 1,5 s). Sola dio 1.586–3.477 ms y la versión de antes
+  de los favoritos, medida lado a lado, 2.437–3.976 ms: es la máquina de hoy,
+  no el cambio (como en D-149/D-156); el límite queda como está.
 - 2026-11-25 (Ropa, nivel 2, fase 6, D-162: la revisión final de tu
   estilista): `npm test` → **853**; el puente: **10** pruebas del Worker
   (nueva: los latidos —contesta enseguida, late mientras la IA piensa y al
