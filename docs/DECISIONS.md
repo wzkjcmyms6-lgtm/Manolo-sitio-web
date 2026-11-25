@@ -2856,4 +2856,5 @@ app). (5) **Pruebas**: `npm test` → 853; el puente: 10 del Worker (nueva: los
 latidos, los errores adentro, el tope adentro sin llamar a la IA y sin
 `?latidos` como antes) y 18 de su lógica; E2E `ropa-estilista` (114, con un
 puente de mentira como el 7) y `ropa-outfits` (89: en grande, "Se parece a tu
-inspiración" lleva al pin); las demás, con puentes como el de antes.
+inspiración" lleva al pin); las demás, con puentes como el de antes. Las 51
+suites sin fallas (4.320 comprobaciones).

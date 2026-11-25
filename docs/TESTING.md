@@ -8,7 +8,8 @@
   su lógica; instalado (versión 7). E2E: `ropa-estilista` con un puente de
   mentira como el 7 (latidos, errores adentro; **114**), `ropa-outfits` (en
   grande, "Se parece a tu inspiración" lleva al pin; **89**); las demás con
-  puentes de mentira como el de antes (la app nueva anda con los dos).
+  puentes de mentira como el de antes (la app nueva anda con los dos). Las
+  **51 suites** de `scripts/e2e/` sin fallas (**4.320** comprobaciones).
   Lighthouse (`scratchpad/lh/correr11.mjs`, fuera del repo) de las 13
   pantallas nuevas de tu estilista en oscuro y en claro: **100** en
   accesibilidad y en buenas prácticas en las 26 (antes: 98 en una opción en
