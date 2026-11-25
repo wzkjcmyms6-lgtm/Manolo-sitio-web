@@ -2967,7 +2967,7 @@ dejó la deuda en cero o menos (`alDia`; mismo día, manda el orden en que se
 anotó), la tarjeta dice "Este mes ya pagaste todo" (en verde) y lo que gastes
 después "va a tu próximo pago" ("Pagar todo" queda como botón secundario).
 (5) **Los demás lugares**: el total de arriba ("Para no pagar intereses, este
-mes"), la fila de cada tarjeta en el Resumen ("A pagar: Bs X (con seguros)" o
+mes"), la fila de cada tarjeta en Movimientos ("A pagar: Bs X (con seguros)" o
 "✓ Este mes ya pagaste todo"), "Atención" (el pago de los próximos 3 días, en
 rojo hoy o mañana, "(con seguros y mantenimiento)"), Análisis › "Próximos 30
 días" y "Mi día" de Inicio ("Pago de Visa BNB: Bs X · Vence mañana. Págala
@@ -2979,3 +2979,37 @@ solo con pago mínimo, ahora el de cada tarjeta que vence en 3 días o menos).
 categoría; `tests/mi-dia.test.js`); E2E nueva `scripts/e2e/tarjetas-cargos.js`
 (61, en oscuro y en claro; reemplaza a `tarjetas-minimo.js`), `tarjetas.js`
 al día (56) y 15 suites más de Finanzas, Inicio y la app, bien.
+
+**D-166 (2026-11-25) · Tarjetas: de qué sale lo que pagas y el día de
+corte.** Pedidos del dueño: "cuando apriete en las tarjetas, muéstrame qué
+gastos lo componen" y "Sí" a agregar la fecha de corte (para que el monto sea
+igual al del extracto). (1) **El día de corte** (en cada tarjeta, Editar ›
+"Día de corte · opcional", "No lo sé" por defecto; `diaCorte` 1–31, aditivo).
+El extracto que pagas el día de pago P cierra el último día de corte antes de
+P (`corteDe`; en meses cortos, el último día). Con corte, lo que pagas es lo
+del extracto: lo que debías al corte + los seguros y el mantenimiento de ese
+pago − lo que pagaste después del corte; lo que gastes después del corte va
+al pago siguiente. Si el corte todavía no llegó, cuenta lo de hasta hoy. Los
+seguros y el mantenimiento se anotan con la fecha del corte (salen en ese
+extracto), salvo que pagues antes del corte. Sin corte, como D-165. (2) **De
+qué sale** (`FinanzasTarjetas.cuenta`, la misma cuenta que el monto de la
+tarjeta): una ventana de movimientos —con corte, del corte anterior al de este
+pago; sin corte, del día de pago anterior a hoy (o hasta el pago que te dejó
+al día)—; lo de antes es el saldo de antes ("Extracto anterior" con corte; a
+favor si es negativo); los pagos de la ventana (y, con corte, los de después
+del corte) son "Ya pagaste"; lo de después va al pago siguiente. Al día, con
+corte: el extracto quedó en cero con un pago de este ciclo. (3) **Al tocar
+una tarjeta** (el recuadro del pago, ahora un botón con ›, o cualquier parte
+de la tarjeta; en Movimientos, la fila de la tarjeta), una hoja con su nombre:
+arriba, lo que pagas y cuándo vence (con corte, de qué extracto) o "Este mes
+ya pagaste todo"; los gastos (cada uno con fecha y categoría), los seguros y
+el mantenimiento (anotados, o "Se anota al pagar"), el saldo de antes, "Ya
+pagaste" y el total; aparte, "Después del corte" o "Después de pagar" (va a
+tu próximo pago). Cada movimiento se toca para abrirlo. Abajo, "Pagar todo" y,
+si viene de Movimientos, "Ver tus tarjetas". Se vuelve a dibujar si cambian
+los datos con la hoja abierta. (4) De paso: la fila de cada tarjeta está en
+Movimientos (no en el Resumen, como decían D-121 y D-165). Pruebas: `npm test`
+→ 862 (`tests/finanzas-tarjetas.test.js`: el corte, se guarda, lo del
+extracto y lo de después, de qué sale sin corte); E2E `tarjetas-cargos` (95,
+nuevo: el detalle, al día, en Movimientos, con corte, el formulario, en claro)
+y 16 suites más de Finanzas, Inicio y la app, bien.

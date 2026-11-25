@@ -27,7 +27,7 @@ test("normalizar: limpia lo guardado", () => {
     { id: "z", nombre: "Master", limiteCent: 200000, diaPago: 40, color: "rojo" }
   ]);
   assert.strictEqual(n.length, 2);
-  assert.deepStrictEqual(n[0], { id: "x", nombre: "Visa", limiteCent: 150050, diaPago: 10, color: TC.COLORES[0], creado: 0, pagoMinimoCent: null, cargos: [], cargosCategoria: null });
+  assert.deepStrictEqual(n[0], { id: "x", nombre: "Visa", limiteCent: 150050, diaPago: 10, diaCorte: null, color: TC.COLORES[0], creado: 0, pagoMinimoCent: null, cargos: [], cargosCategoria: null });
   assert.strictEqual(n[1].diaPago, null);
   assert.strictEqual(n[1].color, TC.COLORES[1]);
   assert.deepStrictEqual(TC.normalizar(null), []);
@@ -103,7 +103,7 @@ test("leerMonto: coma decimal y punto de miles", () => {
 test("validar el formulario", () => {
   let r = TC.validar({ nombre: "  Visa   Oro ", limite: "15.000", diaPago: "20" }, [visa]);
   assert.ok(r.ok);
-  assert.deepStrictEqual(r.datos, { nombre: "Visa Oro", limiteCent: 1500000, diaPago: 20, cargos: [], cargosCategoria: null });
+  assert.deepStrictEqual(r.datos, { nombre: "Visa Oro", limiteCent: 1500000, diaPago: 20, diaCorte: null, cargos: [], cargosCategoria: null });
   r = TC.validar({ nombre: "", limite: "", diaPago: "" }, []);
   assert.deepStrictEqual(r.errores.map(e => e.campo), ["nombre", "limite"]);
   r = TC.validar({ nombre: "visa bnb", limite: "0", diaPago: "32" }, [visa]);
@@ -178,7 +178,8 @@ test("a pagar: lo que gastaste + seguros y mantenimiento, todo", () => {
   const movs = [gasto("g1", "2026-10-20", 1170)];
   // 10 nov: paga el 15 (en 5 días). Gastó 1.170; seguros y mantenimiento, 64,50.
   let c = TC.estado(movs, [conCargos], "2026-11-10", 29).lista[0];
-  assert.deepStrictEqual(c.pagar, { cent: 123450, deudaCent: 117000, favorCent: 0, cargosCent: 6450, cargos: conCargos.cargos, alDia: null, pagadoCent: 0, urgencia: "aviso", desde: "2026-10-15" });
+  assert.deepStrictEqual(c.pagar, { cent: 123450, deudaCent: 117000, favorCent: 0, cargosCent: 6450, cargos: conCargos.cargos, alDia: null, pagadoCent: 0, urgencia: "aviso", desde: "2026-10-15",
+    corte: null, abierto: false, despuesCent: 0 });
   assert.strictEqual(c.cargosMesCent, 6450);
   // Sin cargos: todo lo que debes. Un día antes, en rojo; con más de 7 días, normal.
   assert.deepStrictEqual([TC.estado(movs, [visa], "2026-11-14", 29).lista[0].pagar.cent, TC.estado(movs, [visa], "2026-11-14", 29).lista[0].pagar.urgencia], [117000, "mal"]);
@@ -235,3 +236,78 @@ test("a pagar: la categoría de los cargos", () => {
   assert.strictEqual(TC.categoriaCargos({}, [{ id: "a", label: "A" }]), "a");
   assert.strictEqual(TC.categoriaCargos({}, []), "otros");
 });
+
+// ---- Día de corte y de qué sale lo que pagas (D-166) ----
+test("corte: el último antes del día de pago", () => {
+  assert.strictEqual(TC.corteDe(20, "2026-12-05"), "2026-11-20", "corte 20, pago 5: el del mes anterior");
+  assert.strictEqual(TC.corteDe(5, "2026-11-25"), "2026-11-05", "corte 5, pago 25: el mismo mes");
+  assert.strictEqual(TC.corteDe(31, "2027-03-10"), "2027-02-28", "en febrero, el último día");
+  assert.strictEqual(TC.corteDe(25, "2026-11-25"), "2026-10-25", "el mismo día que el pago: el del mes anterior");
+  assert.strictEqual(TC.corteDe(20, "2026-11-20"), "2026-10-20", "el corte anterior a un corte");
+  assert.strictEqual(TC.corteDe(28, "2027-01-05"), "2026-12-28", "cruza el año");
+});
+
+test("corte: se guarda en la tarjeta, opcional", () => {
+  assert.strictEqual(TC.validar({ nombre: "Visa", limite: "5000", diaCorte: "20" }, []).datos.diaCorte, 20);
+  assert.strictEqual(TC.validar({ nombre: "Visa", limite: "5000", diaCorte: "" }, []).datos.diaCorte, null, "vacío: no lo sabes");
+  assert.deepStrictEqual(TC.validar({ nombre: "Visa", limite: "5000", diaCorte: "32" }, []).errores.map(e => e.campo), ["diaCorte"]);
+  const n = TC.nueva({ nombre: "Visa", limiteCent: 500000, diaPago: 5, diaCorte: 20, cargos: [] }, [], 1);
+  assert.strictEqual(n.diaCorte, 20);
+  assert.ok(!("diaCorte" in TC.nueva({ nombre: "Otra", limiteCent: 100, diaPago: 5, diaCorte: null, cargos: [] }, [], 1)), "sin corte: la tarjeta queda como antes");
+  assert.strictEqual(TC.editar(n, { nombre: "Visa", limiteCent: 500000, diaPago: 5, diaCorte: 22, cargos: [] }, 2).diaCorte, 22);
+  assert.strictEqual(TC.editar(n, { nombre: "Visa", limiteCent: 500000, diaPago: 5, diaCorte: null, cargos: [] }, 2).diaCorte, null, "quitarlo");
+  assert.ok(!("diaCorte" in TC.editar({ id: "a", nombre: "A" }, { nombre: "A", limiteCent: 100, diaPago: null, diaCorte: null, cargos: [] }, 2)), "si no cambia, no se toca");
+  assert.strictEqual(TC.normalizar([{ id: "a", nombre: "A", limiteCent: 100, diaCorte: 40 }])[0].diaCorte, null);
+});
+
+// Corte el 20, pago el 5, seguro de Bs 40. El extracto de octubre (Bs 800) se
+// pagó el 5 nov; en noviembre gastó 600 y 400 antes del corte y 80 después.
+const conCorte = Object.assign({}, visa, { diaPago: 5, diaCorte: 20, cargos: [{ id: "seg", nombre: "Seguro", montoCent: 4000 }] });
+const MESES = [
+  gasto("o1", "2026-10-10", 800, { createdAt: 1 }), pagoA("p0", "2026-11-05", 800, { createdAt: 2 }),
+  gasto("n1", "2026-11-10", 600, { createdAt: 3, desc: "Super" }), gasto("n2", "2026-11-18", 400, { createdAt: 4, desc: "Ropa" }),
+  gasto("n3", "2026-11-25", 80, { createdAt: 5, desc: "Cena" })
+];
+const ids = l => l.map(m => m.id || m.nombre);
+
+test("corte: pagas lo del extracto; lo de después va al pago siguiente", () => {
+  const t = TC.normalizar([conCorte])[0];
+  let c = TC.cuenta(t, MESES, [t], "2026-11-28", 29);
+  assert.deepStrictEqual([c.pago.fecha, c.corte, c.abierto, c.antesCent], ["2026-12-05", "2026-11-20", false, 80000]);
+  assert.deepStrictEqual([ids(c.gastos), ids(c.pagos), ids(c.nuevos), ids(c.pendientes)], [["n1", "n2"], ["p0"], ["n3"], ["seg"]]);
+  assert.strictEqual(c.totalCent, 100000 + 4000, "el extracto (Bs 1.000) + el seguro; la cena va al pago siguiente");
+  let e = TC.estado(MESES, [t], "2026-11-28", 29).lista[0];
+  assert.deepStrictEqual([e.pagar.cent, e.pagar.deudaCent, e.pagar.cargosCent, e.pagar.despuesCent, e.pagar.urgencia, e.pagar.corte], [104000, 100000, 4000, 8000, "aviso", "2026-11-20"]);
+  assert.strictEqual(e.deudaCent, 108000, "lo que debes en total sí incluye la cena");
+  // Antes del corte, el extracto sigue abierto: cuenta todo hasta hoy.
+  c = TC.cuenta(t, MESES.slice(0, 4), [t], "2026-11-18", 29);
+  assert.deepStrictEqual([c.abierto, c.totalCent, c.nuevos.length], [true, 104000, 0]);
+  // Al pagar el 1 dic, el seguro se anota con la fecha del corte (sale en ese extracto).
+  const pend = TC.cargosDelPago(t, MESES, [t], "2026-12-01", 29);
+  const g = TC.gastosDeCargos(t, pend, "2026-12-01", "otros");
+  assert.deepStrictEqual([g[0].date, g[0].cargoCiclo, g[0].amount], ["2026-11-20", "2026-12-05", 40]);
+  assert.strictEqual(TC.gastosDeCargos(t, TC.cargosDelPago(t, [], [t], "2026-11-15", 29), "2026-11-15", "otros")[0].date, "2026-11-15", "si pagas antes del corte, con la fecha del pago");
+  const pagados = MESES.concat([mov("s1", Object.assign({ createdAt: 9 }, g[0])), pagoA("p1", "2026-12-01", 1040, { createdAt: 10 })]);
+  e = TC.estado(pagados, [t], "2026-12-01", 29).lista[0];
+  assert.deepStrictEqual([e.pagar.cent, e.pagar.alDia, e.pagar.despuesCent, e.pagar.cargosCent], [0, "2026-12-01", 8000, 0], "al día; la cena va al próximo");
+  // El 6 dic empieza el ciclo siguiente: la cena + el seguro de enero.
+  c = TC.cuenta(t, pagados, [t], "2026-12-06", 29);
+  assert.deepStrictEqual([c.corte, c.abierto, c.antesCent, ids(c.gastos), ids(c.pagos), c.totalCent], ["2026-12-20", true, 104000, ["n3"], ["p1"], 8000 + 4000]);
+});
+
+test("de qué sale, sin corte: lo gastado, los seguros y lo ya pagado", () => {
+  const t = TC.normalizar([conCargos])[0];
+  const antes = [gasto("g1", "2026-10-20", 1170, { createdAt: 1 }), pagoA("p", "2026-11-12", 100, { createdAt: 2 })];
+  let c = TC.cuenta(t, antes, [t], "2026-11-13", 29);
+  assert.deepStrictEqual([c.corte, c.antesCent, ids(c.gastos), ids(c.pagos), ids(c.pendientes), c.totalCent, c.alDia], [null, 0, ["g1"], ["p"], ["seg", "man"], 107000 + 6450, null]);
+  // Pagó todo el 13: lo cubierto y lo nuevo, separados.
+  const pend = TC.cargosDelPago(t, antes, [t], "2026-11-13", 29);
+  const todo = antes.concat(TC.gastosDeCargos(t, pend, "2026-11-13", "otros").map((g, i) => mov(`c${i}`, Object.assign({ createdAt: 5 }, g))),
+    [pagoA("q", "2026-11-13", 1134.5, { createdAt: 6 }), gasto("g2", "2026-11-14", 50, { createdAt: 7 })]);
+  c = TC.cuenta(t, todo, [t], "2026-11-14", 29);
+  assert.deepStrictEqual([c.alDia, ids(c.gastos), ids(c.cargos), ids(c.pagos), ids(c.nuevos), c.totalCent, c.pendientes.length], ["2026-11-13", ["g1"], ["c0", "c1"], ["p", "q"], ["g2"], 0, 0]);
+  // Un saldo de antes sin pagar (no pagó todo el mes pasado) se suma.
+  c = TC.cuenta(t, [gasto("v", "2026-10-01", 500, { createdAt: 1 })], [t], "2026-11-10", 29);
+  assert.deepStrictEqual([c.antesCent, c.gastos.length, c.totalCent], [50000, 0, 50000 + 6450]);
+});
+

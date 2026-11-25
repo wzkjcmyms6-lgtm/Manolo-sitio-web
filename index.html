@@ -18,7 +18,7 @@
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
   <!-- Todos los estilos de la app en un archivo (D-127): js/paquete.json › npm run listo -->
-  <link rel="stylesheet" href="css/app.paquete.css?v=c552b025a62f">
+  <link rel="stylesheet" href="css/app.paquete.css?v=a46b81eb5700">
   <!-- Modo claro (D-126): generado con "npm run tema"; js/tema.js lo apaga en
        el modo oscuro y elige el modo antes de pintar (sin "defer": es chico) -->
   <link rel="stylesheet" href="css/tema-claro.css?v=202611171200" id="tema-claro-css">
@@ -1222,6 +1222,19 @@
     </div>
   </div>
 
+<!-- De qué sale lo que pagas de una tarjeta (D-166) -->
+  <div id="tcd-sheet" class="js-sheet budget-sheet" hidden>
+    <div class="budget-sheet-overlay"></div>
+    <div class="budget-sheet-panel txn-filtros-panel" role="dialog" aria-modal="true" aria-labelledby="tcd-sheet-title">
+      <div class="budget-sheet-header">
+        <button type="button" class="budget-sheet-close" aria-label="Cerrar"><span data-icon="close"></span></button>
+        <h3 id="tcd-sheet-title">Tarjeta</h3>
+      </div>
+      <div class="txn-filtros-cuerpo tcd-cuerpo" id="tcd-cuerpo"></div>
+      <div class="txn-sheet-actions" id="tcd-acciones"></div>
+    </div>
+  </div>
+
 <!-- Crear o editar un pago recurrente -->
   <div id="rec-sheet" class="js-sheet budget-sheet" hidden>
     <div class="budget-sheet-overlay"></div>
@@ -1557,6 +1570,6 @@
   <script defer src="vendor/firebase-10.7.1/firebase-firestore-compat.js"></script>
   <!-- Todos los módulos de la app en un archivo (D-127): cada uno corre como su
        propio <script>. Se editan los de js/ y después: npm run listo -->
-  <script defer src="js/app.paquete.js?v=4c1a66c09bdb"></script>
+  <script defer src="js/app.paquete.js?v=faaa37f81cb7"></script>
 </body>
 </html>

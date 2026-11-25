@@ -18,6 +18,10 @@
 // presupuesto quedan bien. Si en este ciclo ya pagaste todo, la tarjeta está
 // "al día" y lo que gastes después va al pago siguiente. El pago mínimo de
 // antes (D-121, pagoMinimoCent) queda guardado, pero ya no se usa.
+// Día de corte y de qué sale lo que pagas (D-166, pedido del dueño
+// 2026-11-25): con el día de corte, lo que pagas es lo del extracto (hasta el
+// corte) y lo que gastes después va al pago siguiente; cuenta() da el detalle
+// (los gastos, los seguros, el saldo de antes y lo ya pagado).
 // Pruebas: tests/finanzas-tarjetas.test.js.
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
@@ -39,12 +43,14 @@ function normalizar(list) {
     .map((t, i) => {
       const lim = centDe(t.limiteCent, t.limite);
       const dia = Number(t.diaPago);
+      const corte = Number(t.diaCorte);
       const min = centDe(t.pagoMinimoCent, t.pagoMinimo);
       return {
         id: t.id,
         nombre: t.nombre.trim(),
         limiteCent: lim != null && lim > 0 ? lim : 0,
         diaPago: Number.isInteger(dia) && dia >= 1 && dia <= 31 ? dia : null,
+        diaCorte: Number.isInteger(corte) && corte >= 1 && corte <= 31 ? corte : null,
         color: typeof t.color === "string" && /^#[0-9a-f]{6}$/i.test(t.color) ? t.color : COLORES[i % COLORES.length],
         creado: Number(t.creado) || 0,
         pagoMinimoCent: min != null && min > 0 && min <= LIMITE_MAX_CENT ? min : null,   // D-121: ya no se usa (solo para avisar)
@@ -136,8 +142,12 @@ function cargosDelPago(t, movs, tarjetas, fecha, diaGlobal) {
   return { ciclo, lista, cent: lista.reduce((s, c) => s + c.montoCent, 0) };
 }
 // Los gastos que anotan esos cargos (el id y createdAt los pone quien guarda).
+// Con día de corte, llevan la fecha del corte (salen en ese extracto), salvo
+// que pagues antes del corte.
 function gastosDeCargos(t, pend, fecha, categoria) {
-  return pend.lista.map(c => ({ date: fecha, type: "gasto", category: categoria, payment: "credito", desc: c.nombre, amount: c.montoCent / 100,
+  const corte = t.diaCorte ? corteDe(t.diaCorte, pend.ciclo) : null;
+  const f = corte && corte < fecha ? corte : fecha;
+  return pend.lista.map(c => ({ date: f, type: "gasto", category: categoria, payment: "credito", desc: c.nombre, amount: c.montoCent / 100,
     excluded: false, factura: false, tarjetaId: t.id, cargoCiclo: pend.ciclo, cargoId: c.id }));
 }
 // La categoría de esos gastos: la elegida; si no, una de banco o seguros; si no, "Otros".
@@ -150,31 +160,80 @@ function categoriaCargos(t, categorias) {
   if (lista.some(c => c.id === "otros")) return "otros";
   return lista.length ? lista[0].id : "otros";
 }
-// ¿Pagaste todo en este ciclo? La fecha del último pago (desde exclusivo,
-// hasta hoy) tras el que no debías nada; null si no. Mismo día: manda el orden
-// en que se anotó.
-function alDia(movs, tarjetas, id, desde, hoy) {
-  const orden = (movs || []).filter(m => m && efectoDeuda(m) && m.date <= hoy && tarjetaDe(m, tarjetas) === id)
-    .sort((a, b) => String(a.date).localeCompare(String(b.date)) || (Number(a.createdAt) || 0) - (Number(b.createdAt) || 0));
-  let deuda = 0, fecha = null;
-  orden.forEach(m => {
-    deuda += efectoDeuda(m);
-    if (m.date > desde && (m.type === "pago_tarjeta" || (m.type === "transferencia" && m.to === "tarjeta")) && deuda <= 0) fecha = m.date;
-  });
-  return fecha;
+// El corte del extracto que pagas el día "pago": el último día de corte
+// antes del día de pago (en meses más cortos, el último día del mes).
+function corteDe(diaCorte, pago) {
+  const [a, m] = pago.split("-").map(Number);
+  const enMes = (y, mes) => {
+    const ultimo = new Date(Date.UTC(y, mes + 1, 0)).getUTCDate();
+    return new Date(Date.UTC(y, mes, Math.min(diaCorte, ultimo)));
+  };
+  let f = enMes(a, m - 1);
+  if (f.toISOString().slice(0, 10) >= pago) f = enMes(a, m - 2);
+  return f.toISOString().slice(0, 10);
+}
+// Orden en que pasaron: por fecha y, el mismo día, por cuándo se anotó.
+const porOrden = (a, b) => String(a.date).localeCompare(String(b.date)) || (Number(a.createdAt) || 0) - (Number(b.createdAt) || 0);
+const esPago = m => m.type === "pago_tarjeta" || (m.type === "transferencia" && m.to === "tarjeta");
+// De qué sale lo que pagas (D-166). Una ventana de movimientos de la tarjeta:
+// - con día de corte: del corte anterior (sin incluirlo) al corte de este
+//   pago; lo de después del corte (gastos) va al pago siguiente, y los pagos de
+//   después del corte cuentan para este;
+// - sin corte: del día de pago anterior (sin incluirlo) a hoy; si un pago te
+//   dejó en cero, hasta ese pago (al día) y lo de después va al pago siguiente.
+// Lo de antes de la ventana es el saldo de antes (negativo: a favor).
+// { pago, desde, corte, abierto (el extracto todavía no cerró), antesCent,
+//   gastos, cargos (ya anotados), pendientes (por anotar), pagos, nuevos,
+//   sinPendCent, totalCent, alDia }. Los movimientos van en orden.
+function cuenta(t, movs, tarjetas, hoy, diaGlobal) {
+  const dia = t.diaPago || diaGlobal || 29;
+  const pago = proximoPago(dia, hoy);
+  const desde = pagoAnterior(dia, hoy);
+  const orden = (movs || []).filter(m => m && efectoDeuda(m) && String(m.date) <= hoy && tarjetaDe(m, tarjetas) === t.id).sort(porOrden);
+  const d = [];
+  orden.reduce((s, m, i) => (d[i] = s + efectoDeuda(m)), 0);
+  const ultimo = cond => { for (let i = orden.length - 1; i >= 0; i--) if (cond(orden[i], i)) return i; return -1; };
+  let corte = null, inicio, fin, alDia = null;
+  if (t.diaCorte) {
+    corte = corteDe(t.diaCorte, pago.fecha);
+    const anterior = corteDe(t.diaCorte, corte);
+    inicio = ultimo(m => m.date <= anterior);
+    fin = ultimo(m => m.date <= corte);
+  } else {
+    inicio = ultimo(m => m.date <= desde);
+    fin = orden.length - 1;
+    const k = ultimo((m, i) => i > inicio && esPago(m) && d[i] <= 0);
+    if (k >= 0) { fin = k; alDia = orden[k].date; }
+  }
+  const ventana = orden.slice(inicio + 1, fin + 1), despues = orden.slice(fin + 1);
+  const suma = l => l.reduce((s, m) => s + efectoDeuda(m), 0);
+  const antesCent = inicio < 0 ? 0 : d[inicio];
+  const gastos = ventana.filter(m => efectoDeuda(m) > 0 && !m.cargoId);
+  const cargos = ventana.filter(m => efectoDeuda(m) > 0 && m.cargoId);
+  const pagos = ventana.concat(corte ? despues : []).filter(m => efectoDeuda(m) < 0);
+  const nuevos = despues.filter(m => efectoDeuda(m) > 0);
+  const sinPendCent = antesCent + suma(gastos) + suma(cargos) + suma(pagos);
+  if (corte) {
+    const ult = pagos.filter(m => esPago(m) && m.date > desde).pop();
+    if (sinPendCent <= 0 && ult) alDia = ult.date;
+  }
+  const pendientes = alDia ? [] : cargosPendientes(t, movs, tarjetas, pago.fecha);
+  const totalCent = sinPendCent + pendientes.reduce((s, c) => s + c.montoCent, 0);
+  return { pago, desde, corte, abierto: !!corte && corte >= hoy, antesCent, gastos, cargos, pendientes, pagos, nuevos, sinPendCent, totalCent, alDia };
 }
 // Lo que conviene pagar antes del día de pago para no pagar intereses:
-// { cent, deudaCent, favorCent, cargosCent, cargos, alDia, pagadoCent, urgencia, desde }.
+// { cent, deudaCent (lo gastado que falta pagar), favorCent, cargosCent y
+//   cargos (por anotar), alDia, pagadoCent (en este ciclo), urgencia, desde,
+//   corte, abierto, despuesCent (lo que va al pago siguiente) }.
 // Rojo hoy o mañana; ámbar a 7 días o menos.
-function aPagar(t, deudaCent, pago, movs, tarjetas, hoy, dia) {
-  const desde = pagoAnterior(dia, hoy);
-  const cargos = cargosPendientes(t, movs, tarjetas, pago.fecha);
-  const cargosCent = cargos.reduce((s, c) => s + c.montoCent, 0);
-  const fecha = alDia(movs, tarjetas, t.id, desde, hoy);
-  const cent = fecha ? 0 : Math.max(0, deudaCent + cargosCent);
-  const urgencia = !cent ? "ok" : pago.dias <= 1 ? "mal" : pago.dias <= 7 ? "aviso" : "normal";
-  return { cent, deudaCent: Math.max(0, deudaCent), favorCent: Math.max(0, -deudaCent), cargosCent: fecha ? 0 : cargosCent, cargos: fecha ? [] : cargos,
-    alDia: fecha, pagadoCent: Math.max(0, pagado(movs, tarjetas, t.id, desde, hoy)), urgencia, desde };
+function aPagar(t, movs, tarjetas, hoy, diaGlobal) {
+  const c = cuenta(t, movs, tarjetas, hoy, diaGlobal);
+  const cent = Math.max(0, c.totalCent);
+  const urgencia = !cent ? "ok" : c.pago.dias <= 1 ? "mal" : c.pago.dias <= 7 ? "aviso" : "normal";
+  return { cent, deudaCent: Math.max(0, c.sinPendCent), favorCent: Math.max(0, -c.sinPendCent),
+    cargosCent: c.pendientes.reduce((s, x) => s + x.montoCent, 0), cargos: c.pendientes,
+    alDia: c.alDia, pagadoCent: Math.max(0, pagado(movs, tarjetas, t.id, c.desde, hoy)), urgencia, desde: c.desde,
+    corte: c.corte, abierto: c.abierto, despuesCent: c.nuevos.reduce((s, m) => s + efectoDeuda(m), 0) };
 }
 
 function nivel(uso) {
@@ -191,14 +250,13 @@ function estado(movs, tarjetas, hoy, diaGlobal) {
   const lista = (tarjetas || []).map(t => {
     const deudaCent = d[t.id] || 0;
     const uso = t.limiteCent > 0 ? Math.max(deudaCent, 0) / t.limiteCent : 0;
-    const dia = t.diaPago || diaGlobal || 29;
-    const pago = proximoPago(dia, hoy);
+    const pago = proximoPago(t.diaPago || diaGlobal || 29, hoy);
     return Object.assign({}, t, {
       deudaCent,
       disponibleCent: t.limiteCent - Math.max(deudaCent, 0),
       uso, nivel: nivel(uso),
       pago,
-      pagar: aPagar(t, deudaCent, pago, movs, tarjetas, hoy, dia),
+      pagar: aPagar(t, movs, tarjetas, hoy, diaGlobal),
       cargosMesCent: (t.cargos || []).reduce((s, c) => s + c.montoCent, 0)
     });
   });
@@ -221,7 +279,7 @@ function leerMonto(txt) {
   return Math.round(n * 100);
 }
 
-// Formulario → { ok, errores: [{ campo, texto }], datos: { nombre, limiteCent, diaPago, cargos, cargosCategoria } }.
+// Formulario → { ok, errores: [{ campo, texto }], datos: { nombre, limiteCent, diaPago, diaCorte, cargos, cargosCategoria } }.
 // cargos: [{ id?, nombre, monto }] tal como están en el formulario (filas vacías: se ignoran).
 function validar(entrada, tarjetas, editandoId) {
   const e = entrada || {};
@@ -240,6 +298,13 @@ function validar(entrada, tarjetas, editandoId) {
     const dia = Number(e.diaPago);
     if (Number.isInteger(dia) && dia >= 1 && dia <= 31) diaPago = dia;
     else errores.push({ campo: "diaPago", texto: "El día de pago va del 1 al 31." });
+  }
+  // Día de corte: opcional (vacío = no lo sabes; se paga todo lo que debes).
+  let diaCorte = null;
+  if (e.diaCorte !== "" && e.diaCorte != null) {
+    const dc = Number(e.diaCorte);
+    if (Number.isInteger(dc) && dc >= 1 && dc <= 31) diaCorte = dc;
+    else errores.push({ campo: "diaCorte", texto: "El día de corte va del 1 al 31." });
   }
   // Seguros y mantenimiento: opcionales, cada uno con qué es y cuánto por mes.
   const cargos = [];
@@ -260,7 +325,7 @@ function validar(entrada, tarjetas, editandoId) {
   if (!editandoId && (tarjetas || []).length >= MAX) errores.push({ campo: "nombre", texto: `Puedes registrar hasta ${MAX} tarjetas.` });
   // En qué categoría se anotan como gasto (solo si hay cargos).
   const cargosCategoria = cargos.length && typeof e.cargosCategoria === "string" && e.cargosCategoria ? e.cargosCategoria : null;
-  return { ok: !errores.length, errores, datos: { nombre, limiteCent: Number.isFinite(lim) ? lim : null, diaPago, cargos, cargosCategoria } };
+  return { ok: !errores.length, errores, datos: { nombre, limiteCent: Number.isFinite(lim) ? lim : null, diaPago, diaCorte, cargos, cargosCategoria } };
 }
 // Cargos para guardar: con id (los nuevos reciben uno que no repite) y el monto también en Bs.
 function cargosParaGuardar(cargos, ahora) {
@@ -288,6 +353,7 @@ function nueva(datos, tarjetas, ahora) {
   const out = { id, nombre: datos.nombre, limiteCent: datos.limiteCent, limite: datos.limiteCent / 100, diaPago: datos.diaPago, color: COLORES[lista.length % COLORES.length], creado: t };
   if (datos.cargos && datos.cargos.length) Object.assign(out, { cargos: cargosParaGuardar(datos.cargos, t), cargosActualizado: t });
   if (datos.cargosCategoria) out.cargosCategoria = datos.cargosCategoria;
+  if (datos.diaCorte) out.diaCorte = datos.diaCorte;
   return out;
 }
 // Misma tarjeta con lo editado (conserva id, color, creado y lo que no se toca).
@@ -298,8 +364,9 @@ function editar(tarjeta, datos, ahora) {
   const cargos = cargosParaGuardar(datos.cargos || [], t);
   if (!mismosCargos(cargos, normalizarCargos(tarjeta.cargos))) Object.assign(out, { cargos, cargosActualizado: t });
   if (datos.cargosCategoria && datos.cargosCategoria !== tarjeta.cargosCategoria) out.cargosCategoria = datos.cargosCategoria;
+  if ((datos.diaCorte || null) !== (tarjeta.diaCorte || null)) out.diaCorte = datos.diaCorte || null;
   return out;
 }
 
-return { COLORES, MAX, MAX_CARGOS, normalizar, normalizarCargos, tarjetaDe, efectoDeuda, deudas, proximoPago, pagoAnterior, pagado, cargosPendientes, cargosDelPago, gastosDeCargos, categoriaCargos, alDia, aPagar, nivel, estado, leerMonto, validar, nueva, editar };
+return { COLORES, MAX, MAX_CARGOS, normalizar, normalizarCargos, tarjetaDe, efectoDeuda, deudas, proximoPago, pagoAnterior, pagado, cargosPendientes, cargosDelPago, gastosDeCargos, categoriaCargos, corteDe, cuenta, aPagar, nivel, estado, leerMonto, validar, nueva, editar };
 });

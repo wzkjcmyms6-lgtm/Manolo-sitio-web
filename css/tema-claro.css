@@ -1642,6 +1642,12 @@ html[data-modo="claro"] {
 :where(html[data-modo="claro"]) .fin-tc-pagar.is-sec {
   color: var(--ink);
 }
+:where(html[data-modo="claro"]) .fin-tc-pago {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .fin-tc-pago-ver {
+  color: var(--muted);
+}
 :where(html[data-modo="claro"]) .fin-tc-pago small {
   color: var(--muted);
 }
@@ -1675,6 +1681,9 @@ html[data-modo="claro"] {
 }
 :where(html[data-modo="claro"]) .fin-tc-cargos-total strong {
   color: var(--ink);
+}
+:where(html[data-modo="claro"]) .txn-filtros-cuerpo .tcd-grupo-t {
+  color: var(--muted);
 }
 :where(html[data-modo="claro"]) .fin-tc-nota {
   color: var(--muted);

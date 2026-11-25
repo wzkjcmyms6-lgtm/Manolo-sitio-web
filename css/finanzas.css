@@ -1825,7 +1825,12 @@ button.res-cat { cursor: pointer; }
 .fin-tc-pagar.is-sec { background: transparent; color: var(--ink); border: 1px solid var(--border); }
 /* Lo que pagas este mes (D-165, antes el pago mínimo de D-121): siempre con
    ícono y texto; el color acompaña. */
-.fin-tc-pago { display: flex; align-items: flex-start; gap: 0.6rem; margin: 0; padding: 0.7rem 0.8rem; border-radius: var(--radio-caja); background: var(--surface-raised); font-size: 0.9rem; line-height: 1.4; }
+.fin-tc-pago { display: flex; align-items: flex-start; gap: 0.6rem; width: 100%; margin: 0; padding: 0.7rem 0.8rem; border: 0; border-radius: var(--radio-caja); background: var(--surface-raised); color: var(--ink); font: inherit; font-size: 0.9rem; line-height: 1.4; text-align: left; cursor: pointer; }
+.fin-tc-pago-t { flex: 1; min-width: 0; }
+.fin-tc-pago-ver { display: flex; flex-shrink: 0; align-self: center; width: 18px; height: 18px; color: var(--muted); }
+.fin-tc-pago-ver [data-icon] { display: flex; width: 18px; height: 18px; }
+.fin-tc { cursor: pointer; }
+.fin-tc .fin-tc-cab, .fin-tc .fin-tc-cifras { cursor: inherit; }
 .fin-tc-pago strong { display: block; font-variant-numeric: tabular-nums; }
 .fin-tc-pago small { display: block; color: var(--muted); font-size: 0.8rem; margin-top: 0.1rem; }
 .fin-tc-pago-ic { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; font-size: 0.8rem; font-weight: 800; background: var(--muted); color: #0a0a0a; }
@@ -1852,6 +1857,32 @@ button.res-cat { cursor: pointer; }
 .fin-tc-cargos-total { margin: 0; color: var(--muted); font-size: 0.85rem; }
 .fin-tc-cargos-total strong { color: var(--ink); font-variant-numeric: tabular-nums; }
 .fin-tc-cargos .rec-campo { margin-top: 0.3rem; }
+/* De qué sale lo que pagas (D-166): la hoja al tocar una tarjeta. */
+.tcd-cab { display: flex; flex-direction: column; gap: 0.1rem; margin-top: 0.3rem; padding: 0.85rem 1rem; border-radius: var(--radio-caja); background: var(--surface-raised); }
+.tcd-cab span { color: var(--muted); font-size: 0.85rem; }
+.tcd-cab strong { font-family: var(--font-display); font-size: 1.7rem; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); }
+.tcd-cab small { color: var(--muted); font-size: 0.82rem; }
+.tcd-cab.is-ok { background: var(--estado-ok-fondo); }
+.tcd-cab.is-aviso { background: var(--estado-aviso-fondo); }
+.tcd-cab.is-mal { background: var(--estado-mal-fondo); }
+.tcd-grupo { margin-top: 0.9rem; }
+.txn-filtros-cuerpo .tcd-grupo-t { display: flex; justify-content: space-between; gap: 0.6rem; margin: 0 0 0.15rem; font-size: 0.9rem; color: var(--muted); font-weight: 600; }
+.tcd-grupo-t span:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tcd-lista { list-style: none; margin: 0; padding: 0; }
+.tcd-fila { gap: 0.75rem; padding: 0.4rem 0; }
+.tcd-fila .txn-icon-solid { width: 38px; height: 38px; padding: 9px; font-size: 1.1rem; }
+.tcd-fila .txn-amount { font-variant-numeric: tabular-nums; }
+.tcd-fila.is-pend { cursor: default; }
+.tcd-fila.is-pend:active { background: none; }
+.tcd-linea { display: flex; justify-content: space-between; gap: 0.6rem; margin: 0.9rem 0 0; font-size: 0.95rem; }
+.tcd-linea span:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tcd-total { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; margin: 1rem 0 0; padding-top: 0.8rem; border-top: 1px solid var(--border); font-weight: 600; }
+.tcd-total strong { font-size: 1.15rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tcd-nota { margin: 0.15rem 0 0; color: var(--muted); font-size: 0.82rem; }
+.tcd-vacio { margin-top: 1rem; }
+.tcd-despues { margin-top: 1.4rem; padding-top: 0.2rem; border-top: 1px dashed var(--border); }
+#tcd-acciones[hidden] { display: none; }
+#tcd-acciones .fin-tc-pagar { flex: 1; min-width: 0; min-height: 52px; padding: 0 0.8rem; }
 /* En la hoja de pago: "Sumar seguros y mantenimiento" (la nota va abajo). */
 .txn-cargos-row .txn-toggle-hint { display: block; margin: 0.1rem 0 0; letter-spacing: 0; font-weight: 500; font-size: 0.78rem; }
 .fin-tc-nota { margin: 0; color: var(--muted); font-size: 0.82rem; line-height: 1.4; }

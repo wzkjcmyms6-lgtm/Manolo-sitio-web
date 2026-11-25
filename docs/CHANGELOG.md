@@ -1,5 +1,12 @@
 # Cambios
 
+## 2026-11-25 · Finanzas: de qué sale lo que pagas y el día de corte
+- **Toca una tarjeta y ves de qué sale lo que pagas**: cada gasto (con su
+  fecha), los seguros y el mantenimiento, lo que ya pagaste y el total. Cada
+  gasto se toca para abrirlo. También desde Movimientos.
+- **Día de corte** (opcional, en cada tarjeta): así lo que pagas es igual a tu
+  extracto, y lo que gastes después del corte va al pago siguiente.
+
 ## 2026-11-25 · Finanzas: seguros y mantenimiento de tus tarjetas
 - **Ya no hay pago mínimo**: pagas siempre todo, para no pagar intereses.
 - **En cada tarjeta anotas sus seguros y el mantenimiento** (lo que el banco
@@ -8,7 +15,7 @@
 - **"Pagar todo"** ya trae esa suma y, al guardar, anota los seguros como
   gastos de la tarjeta (así tu presupuesto los cuenta). Después dice "Este
   mes ya pagaste todo".
-- El Resumen, "Atención", Análisis y "Mi día" de Inicio avisan el pago
+- Movimientos, "Atención", Análisis y "Mi día" de Inicio avisan el pago
   completo, con seguros.
 
 ## 2026-11-25 · Ropa: ideas de tu estilista en Inspiración

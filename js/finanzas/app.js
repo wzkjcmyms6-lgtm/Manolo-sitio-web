@@ -311,7 +311,7 @@ function filaTarjetaResumen(t) {
   const pct = Math.min(100, Math.round(t.uso * 100));
   return `
       <div class="fin-cartera is-tarjeta" role="listitem" data-tc-fila="${escapeHtml(t.id)}">
-        <button type="button" class="fin-cartera-btn" data-ver-tarjetas>
+        <button type="button" class="fin-cartera-btn" data-tc-ver="${escapeHtml(t.id)}">
           <span class="fin-cartera-top"><span class="fin-cartera-ico" style="background:${t.color}" data-icon="finance"></span><span class="fin-cartera-nombre">${escapeHtml(t.nombre)}</span></span>
           <span class="fin-cartera-valor${t.deudaCent > 0 ? " neg" : ""}">${t.deudaCent > 0 ? "−" : ""}${formatMoney(FD.aBs(Math.abs(t.deudaCent)))}</span>
           <span class="fin-tc-barra is-${t.nivel}" aria-hidden="true"><i style="width:${pct}%"></i></span>
@@ -325,7 +325,8 @@ function filaTarjetaResumen(t) {
 document.getElementById("finance-stats").addEventListener("click", e => {
   const pg = e.target.closest("[data-pagar-tarjeta]");
   if (pg) { pagarTarjeta(pg.dataset.pagarTarjeta || null); return; }
-  if (e.target.closest("[data-ver-tarjetas]")) { location.hash = "#fin-tarjetas"; return; }
+  const ver = e.target.closest("[data-tc-ver]");
+  if (ver) { abrirDetalleTarjeta(ver.dataset.tcVer, "movimientos"); return; }
   const b = e.target.closest("[data-abrir-cartera]");
   if (b) openWalletDetail(b.dataset.abrirCartera);
 });
@@ -3701,27 +3702,124 @@ function venceTexto(p) {
 }
 // Lo que pagas este mes (D-165): todo lo que debes + seguros y mantenimiento,
 // para no pagar intereses. "Ya pagaste todo" si en este ciclo quedaste en cero.
+// Con día de corte (D-166), lo del extracto; lo de después va al pago
+// siguiente. Se toca para ver de qué gastos sale.
 function pagoHTML(c) {
   const p = c.pagar;
   const bs = bsJusto;
   const agregar = !c.cargos.length && (c.deudaCent > 0 || p.alDia)
     ? `<button type="button" class="fin-tc-cargos-agregar" data-tc-cargos-agregar="${escapeHtml(c.id)}"><span data-icon="plus"></span>Agregar seguros y mantenimiento</button>` : "";
-  if (p.alDia) return `<p class="fin-tc-pago is-ok"><span class="fin-tc-pago-ic" aria-hidden="true">✓</span><span><strong>Este mes ya pagaste todo</strong><small>${c.deudaCent > 0
-    ? `Lo que gastaste después (${bs(c.deudaCent)}) va a tu próximo pago.`
-    : `Pagaste ${bs(p.pagadoCent)} desde el ${escapeHtml(fechaCorta(p.desde))}: sin intereses.`}</small></span></p>${agregar}`;
+  const ver = `<span class="fin-tc-pago-ver" aria-hidden="true"><span data-icon="chevronRight"></span></span><span class="visually-hidden">. Ver de qué gastos sale.</span>`;
+  const boton = (clase, ic, titulo, texto) => `<button type="button" class="fin-tc-pago is-${clase}" data-tc-ver="${escapeHtml(c.id)}">
+      <span class="fin-tc-pago-ic" aria-hidden="true">${ic}</span>
+      <span class="fin-tc-pago-t"><strong>${titulo}</strong><small>${texto}</small></span>${ver}
+    </button>`;
+  if (p.alDia) return boton("ok", "✓", "Este mes ya pagaste todo", p.despuesCent > 0
+    ? `${p.corte ? "Lo de después del corte" : "Lo que gastaste después"} (${bs(p.despuesCent)}) va a tu próximo pago.`
+    : `Pagaste ${bs(p.pagadoCent)} desde el ${escapeHtml(fechaCorta(p.desde))}: sin intereses.`) + agregar;
   if (!p.cent) return agregar;
   const etiqueta = p.urgencia === "mal" ? "Urgente" : p.urgencia === "aviso" ? "Pronto" : "Pendiente";
-  const que = p.cargosCent > 0
+  let que;
+  if (!p.corte) que = p.cargosCent > 0
     ? (p.deudaCent > 0 ? `Lo que gastaste (${bs(p.deudaCent)}) + seguros y mantenimiento (${bs(p.cargosCent)}).` : `Seguros y mantenimiento (${bs(p.cargosCent)}): este mes no gastaste con esta tarjeta.`)
     : "Paga todo lo que debes.";
+  else {
+    const partes = p.cargosCent > 0
+      ? (p.deudaCent > 0 ? `lo que gastaste (${bs(p.deudaCent)}) + seguros y mantenimiento (${bs(p.cargosCent)})` : `seguros y mantenimiento (${bs(p.cargosCent)})`)
+      : `lo que gastaste (${bs(p.deudaCent)})`;
+    que = `${p.abierto ? `Hasta hoy (el corte es el ${escapeHtml(fechaCorta(p.corte))})` : `Tu extracto del ${escapeHtml(fechaCorta(p.corte))}`}: ${partes}.`
+      + (p.despuesCent > 0 ? ` Lo de después del corte (${bs(p.despuesCent)}) va al pago siguiente.` : "");
+  }
   const favor = p.favorCent > 0 ? ` Ya descuenta tu saldo a favor (${bs(p.favorCent)}).` : "";
   const ic = p.urgencia === "normal" ? `<span data-icon="calendar"></span>` : "!";
-  return `<div class="fin-tc-pago is-${p.urgencia}" role="group" aria-label="Pago de ${escapeHtml(c.nombre)}">
-      <span class="fin-tc-pago-ic" aria-hidden="true">${ic}</span>
-      <span><strong>Para no pagar intereses: ${formatMoney(FD.aBs(p.cent))}</strong>
-        <small>${etiqueta}: ${venceTexto(c.pago)}. ${que}${favor}</small></span>
-    </div>${agregar}`;
+  return boton(p.urgencia, ic, `Para no pagar intereses: ${formatMoney(FD.aBs(p.cent))}`, `${etiqueta}: ${venceTexto(c.pago)}. ${que}${favor}`) + agregar;
 }
+
+// ---- De qué sale lo que pagas (D-166): al tocar una tarjeta ----
+// Los gastos de este pago (con corte: los del extracto), los seguros y el
+// mantenimiento (anotados o por anotar), el saldo de antes, lo ya pagado y lo
+// que va al pago siguiente. Cada movimiento se toca para verlo.
+let tcdAbierta = null;   // { id, desde: "movimientos" | "tarjetas" }
+function abrirDetalleTarjeta(id, desde) {
+  tcdAbierta = { id, desde };
+  if (renderDetalleTarjeta()) showSheet(document.getElementById("tcd-sheet"));
+}
+function cerrarDetalleTarjeta() {
+  tcdAbierta = null;
+  hideSheet(document.getElementById("tcd-sheet"));
+}
+function filaDetalle(m) {
+  const pago = m.type !== "gasto";
+  const cat = pago ? CARD_PAYMENT_CATEGORY : findCategory(m.type, m.category);
+  const cent = TC.efectoDeuda(m);
+  const titulo = m.desc || (pago ? (m.type === "ajuste_tarjeta" ? "Ajuste" : "Pago") : cat.label);
+  const sub = [fechaCorta(m.date), pago ? (m.type === "ajuste_tarjeta" ? "Ajuste" : "Pago") : m.desc ? cat.label : ""].filter(Boolean).join(" · ");
+  return `<li><button type="button" class="txn-row tcd-fila" data-tcd-mov="${escapeHtml(m.id)}">
+      ${txnIconHTML(cat)}
+      <span class="txn-body"><span class="txn-desc">${escapeHtml(titulo)}</span><span class="meta">${escapeHtml(sub)}</span></span>
+      <span class="txn-amount${cent < 0 ? " pos" : ""}">${cent < 0 ? "−" : ""}${bsJusto(Math.abs(cent))}</span>
+    </button></li>`;
+}
+function grupoDetalle(titulo, cent, filas, nota) {
+  return `<section class="tcd-grupo">
+      <h4 class="tcd-grupo-t"><span>${titulo}</span><span>${cent < 0 ? "−" : ""}${bsJusto(Math.abs(cent))}</span></h4>
+      <ul class="tcd-lista">${filas}</ul>${nota ? `<p class="tcd-nota">${nota}</p>` : ""}
+    </section>`;
+}
+function renderDetalleTarjeta() {
+  const sheet = document.getElementById("tcd-sheet");
+  if (!tcdAbierta || !sheet) return false;
+  const c = tarjetaEstado(tcdAbierta.id);
+  if (!c) { cerrarDetalleTarjeta(); return false; }
+  const k = TC.cuenta(c, financeCache, tarjetasCache, isoDate(new Date()), diaPagoTarjeta());
+  const p = c.pagar;
+  const suma = l => l.reduce((s, m) => s + TC.efectoDeuda(m), 0);
+  const catCargos = findCategory("gasto", TC.categoriaCargos(c, gastoCategoriesCache));
+  let cab;
+  if (p.alDia) cab = `<div class="tcd-cab is-ok"><span>✓ Este mes ya pagaste todo</span><strong>${bsJusto(p.pagadoCent)}</strong><small>Lo que pagaste desde el ${escapeHtml(fechaCorta(p.desde))}: sin intereses.</small></div>`;
+  else if (p.cent > 0) cab = `<div class="tcd-cab is-${p.urgencia}"><span>Para no pagar intereses</span><strong>${bsJusto(p.cent)}</strong>
+      <small>${capitalize(venceTexto(c.pago))}${p.corte ? (p.abierto ? ` · el corte es el ${escapeHtml(fechaCorta(p.corte))}` : ` · extracto del ${escapeHtml(fechaCorta(p.corte))}`) : ""}</small></div>`;
+  else cab = `<div class="tcd-cab is-ok"><span>Este mes no tienes nada que pagar</span><strong>${bsJusto(0)}</strong><small>${p.favorCent > 0 ? `Tienes un saldo a favor de ${bsJusto(p.favorCent)}.` : "Sin gastos con esta tarjeta en este periodo."}</small></div>`;
+  const partes = [];
+  if (k.gastos.length) partes.push(grupoDetalle(`Gastos (${k.gastos.length})`, suma(k.gastos), k.gastos.map(filaDetalle).join("")));
+  if (k.cargos.length || k.pendientes.length) {
+    const pend = k.pendientes.map(x => `<li><div class="txn-row tcd-fila is-pend">${txnIconHTML(catCargos)}
+        <span class="txn-body"><span class="txn-desc">${escapeHtml(x.nombre)}</span><span class="meta">Se anota al pagar</span></span>
+        <span class="txn-amount">${bsJusto(x.montoCent)}</span></div></li>`).join("");
+    partes.push(grupoDetalle("Seguros y mantenimiento", suma(k.cargos) + k.pendientes.reduce((s, x) => s + x.montoCent, 0), k.cargos.map(filaDetalle).join("") + pend));
+  }
+  if (k.antesCent) partes.push(`<p class="tcd-linea"><span>${k.antesCent < 0 ? "Saldo a favor de antes" : k.corte ? "Extracto anterior" : "Saldo de antes"}</span><span>${k.antesCent < 0 ? "−" : ""}${bsJusto(Math.abs(k.antesCent))}</span></p>`);
+  if (k.pagos.length) partes.push(grupoDetalle("Ya pagaste", suma(k.pagos), k.pagos.map(filaDetalle).join("")));
+  const total = Math.max(0, k.totalCent);
+  const cuerpo = partes.length
+    ? partes.join("") + `<p class="tcd-total"><span>${p.alDia ? "Queda por pagar" : "Para no pagar intereses"}</span><strong>${bsJusto(p.alDia ? 0 : total)}</strong></p>`
+    : `<p class="tcd-nota tcd-vacio">Todavía no hay gastos en este pago.</p>`;
+  const nuevos = k.nuevos.length
+    ? `<div class="tcd-despues">${grupoDetalle(k.corte ? "Después del corte" : "Después de pagar", suma(k.nuevos), k.nuevos.map(filaDetalle).join(""), "Va a tu próximo pago.")}</div>` : "";
+  document.getElementById("tcd-sheet-title").textContent = c.nombre;
+  document.getElementById("tcd-cuerpo").innerHTML = cab + cuerpo + nuevos;
+  const monto = montoPagar(c);
+  const acciones = (tcdAbierta.desde === "movimientos" ? `<button type="button" class="fin-tc-pagar is-sec" data-tcd-ir>Ver tus tarjetas</button>` : "")
+    + (monto > 0 ? `<button type="button" class="fin-tc-pagar" data-tcd-pagar>Pagar todo (${bsJusto(monto)})</button>` : "");
+  const acc = document.getElementById("tcd-acciones");
+  acc.innerHTML = acciones;
+  acc.hidden = !acciones;
+  renderIcons(sheet);
+  return true;
+}
+document.getElementById("tcd-sheet").addEventListener("click", e => {
+  const id = tcdAbierta && tcdAbierta.id;
+  const mov = e.target.closest("[data-tcd-mov]");
+  if (mov) {
+    const m = financeCache.find(x => x.id === mov.dataset.tcdMov);
+    cerrarDetalleTarjeta();
+    if (m) openTxnSheet(m);
+    return;
+  }
+  if (e.target.closest("[data-tcd-pagar]")) { cerrarDetalleTarjeta(); pagarTarjeta(id); return; }
+  if (e.target.closest("[data-tcd-ir]")) { cerrarDetalleTarjeta(); location.hash = "#fin-tarjetas"; return; }
+  if (e.target.closest(".budget-sheet-close") || e.target.classList.contains("budget-sheet-overlay")) cerrarDetalleTarjeta();
+});
 
 function renderTarjetas() {
   const el = document.getElementById("fin-tarjetas");
@@ -3771,7 +3869,7 @@ function tarjetaHTML(c, principal) {
       </div>
       <span class="fin-tc-barra is-${c.nivel}" role="img" aria-label="Usaste el ${pct} % del límite"><i style="width:${Math.min(100, pct)}%"></i></span>
       <p class="fin-tc-pie"><span>Usaste el ${pct} % de ${formatBsShort(FD.aBs(c.limiteCent))}</span>${c.deudaCent < 0 ? `<span>Saldo a favor: ${formatBsShort(FD.aBs(-c.deudaCent))}</span>` : ""}</p>
-      ${c.pagar.cent > 0 || c.pagar.alDia ? "" : `<p class="fin-tc-pie"><span>${c.pago.dias === 0 ? "Hoy toca pagar" : `Pago: ${fechaCorta(c.pago.fecha)} (${c.pago.dias === 1 ? "falta 1 día" : `faltan ${c.pago.dias} días`})`}</span></p>`}
+      ${c.pagar.cent > 0 || c.pagar.alDia ? "" : `<p class="fin-tc-pie"><span>${c.pago.dias === 0 ? "Hoy toca pagar" : `Pago: ${fechaCorta(c.pago.fecha)} (${c.pago.dias === 1 ? "falta 1 día" : `faltan ${c.pago.dias} días`})`}</span>${c.pagar.corte ? `<span>Corte: ${fechaCorta(c.pagar.corte)}</span>` : ""}</p>`}
       ${c.nivel === "pasado" ? `<p class="fin-tc-alerta">Te pasaste del límite por ${formatBsShort(FD.aBs(-c.disponibleCent))}.</p>` : c.nivel === "alto" ? `<p class="fin-tc-alerta is-aviso">Ya usaste el ${pct} % del límite.</p>` : ""}
       ${pagoHTML(c)}
       ${montoPagar(c) > 0 ? `<button type="button" class="fin-tc-pagar${c.pagar.alDia ? " is-sec" : ""}" data-tc-pagar="${escapeHtml(c.id)}">Pagar todo (${formatMoney(FD.aBs(montoPagar(c)))})</button>` : ""}
@@ -3779,7 +3877,7 @@ function tarjetaHTML(c, principal) {
 }
 
 // ---- Hoja para agregar o editar una tarjeta ----
-let tcEditando = null; // { id|null, nombre, limite, diaPago, cargos: [{ id|null, nombre, monto }], cargosCategoria, viejoMinimoCent } tal como están en el formulario
+let tcEditando = null; // { id|null, nombre, limite, diaPago, diaCorte, cargos: [{ id|null, nombre, monto }], cargosCategoria, viejoMinimoCent } tal como están en el formulario
 // La lista tal como está guardada (se editan esas entradas para no perder campos).
 const tarjetasCrudas = () => (metaCrudo.finanzas_tarjetas && Array.isArray(metaCrudo.finanzas_tarjetas.list) ? metaCrudo.finanzas_tarjetas.list : []);
 function guardarTarjetas(list) {
@@ -3789,10 +3887,10 @@ function guardarTarjetas(list) {
 function abrirTarjeta(id, enfocar) {
   const c = id ? tarjetasCache.find(x => x.id === id) : null;
   tcEditando = c
-    ? { id: c.id, nombre: c.nombre, limite: String(FD.aBs(c.limiteCent)).replace(".", ","), diaPago: c.diaPago ? String(c.diaPago) : "",
+    ? { id: c.id, nombre: c.nombre, limite: String(FD.aBs(c.limiteCent)).replace(".", ","), diaPago: c.diaPago ? String(c.diaPago) : "", diaCorte: c.diaCorte ? String(c.diaCorte) : "",
         cargos: c.cargos.map(x => ({ id: x.id, nombre: x.nombre, monto: montoHoja(x.montoCent) })),
         cargosCategoria: TC.categoriaCargos(c, gastoCategoriesCache), viejoMinimoCent: c.cargos.length ? null : c.pagoMinimoCent }
-    : { id: null, nombre: "", limite: "", diaPago: "", cargos: [], cargosCategoria: TC.categoriaCargos({}, gastoCategoriesCache), viejoMinimoCent: null };
+    : { id: null, nombre: "", limite: "", diaPago: "", diaCorte: "", cargos: [], cargosCategoria: TC.categoriaCargos({}, gastoCategoriesCache), viejoMinimoCent: null };
   // Dos filas para empezar: un seguro y el mantenimiento.
   while (tcEditando.cargos.length < 2) tcEditando.cargos.push({ id: null, nombre: "", monto: "" });
   renderTarjetaForm([]);
@@ -3813,6 +3911,11 @@ function renderTarjetaForm(errores) {
       <option value="">El de Ajustes (día ${diaPagoTarjeta()})</option>
       ${dias.map(d => `<option value="${d}"${String(d) === r.diaPago ? " selected" : ""}>Día ${d}</option>`).join("")}
     </select></label>
+    <label class="rec-campo">Día de corte · opcional<select name="diaCorte" class="txn-filtro-select" aria-describedby="tc-corte-ayuda">
+      <option value="">No lo sé</option>
+      ${dias.map(d => `<option value="${d}"${String(d) === r.diaCorte ? " selected" : ""}>Día ${d}</option>`).join("")}
+    </select></label>
+    <p class="fin-aj-texto fin-tc-corte-ayuda" id="tc-corte-ayuda">El día en que tu banco cierra el extracto (dice «fecha de corte»). Así lo que pagas es igual a tu extracto, y lo que gastes después del corte va al pago siguiente.</p>
     ${cargosFormHTML(r)}
     ${r.id && tarjetasCache.length > 1 ? (principal
       ? `<p class="fin-aj-texto">Es tu tarjeta principal: los gastos con tarjeta que anotaste antes de registrar tus tarjetas cuentan aquí.</p>`
@@ -3846,7 +3949,7 @@ function cargosFormHTML(r) {
 }
 function leerTarjetaForm() {
   const f = document.getElementById("tc-form");
-  Object.assign(tcEditando, { nombre: f.elements.nombre.value, limite: f.elements.limite.value, diaPago: f.elements.diaPago.value,
+  Object.assign(tcEditando, { nombre: f.elements.nombre.value, limite: f.elements.limite.value, diaPago: f.elements.diaPago.value, diaCorte: f.elements.diaCorte.value,
     cargos: tcEditando.cargos.map((x, i) => ({ id: x.id, nombre: f.elements[`cargoNombre${i}`].value, monto: f.elements[`cargoMonto${i}`].value })),
     cargosCategoria: f.elements.cargosCategoria ? f.elements.cargosCategoria.value : tcEditando.cargosCategoria });
 }
@@ -3899,7 +4002,12 @@ document.getElementById("panel-fin-tarjetas").addEventListener("click", e => {
   if (pg) { pagarTarjeta(pg.dataset.tcPagar); return; }
   const ag = e.target.closest("[data-tc-cargos-agregar]");
   if (ag) { abrirTarjeta(ag.dataset.tcCargosAgregar, "cargoNombre0"); return; }
-  if (e.target.closest("[data-tc-nueva]")) abrirTarjeta(null);
+  if (e.target.closest("[data-tc-nueva]")) { abrirTarjeta(null); return; }
+  // D-166: tocar el recuadro del pago o cualquier parte de la tarjeta muestra de qué sale.
+  const ver = e.target.closest("[data-tc-ver]");
+  if (ver) { abrirDetalleTarjeta(ver.dataset.tcVer, "tarjetas"); return; }
+  const card = e.target.closest("[data-tc]");
+  if (card && !e.target.closest("button, a, input, select")) abrirDetalleTarjeta(card.dataset.tc, "tarjetas");
 });
 document.getElementById("tc-sheet").addEventListener("click", e => {
   if (e.target.closest("#tc-guardar")) { guardarTarjeta(); return; }
@@ -5394,7 +5502,7 @@ const RENDERERS = [
   renderStats, updateMonthLabel, renderMovements, renderGasto, renderAnalisis, renderVistaGeneral,
   updateBudgetMonthLabel, renderBudgets, renderBudgetInputs, renderBudgetSummary, renderBudgetInfo,
   renderPresHerramientas, renderCategoryGroups, renderPeriodSettings, renderWallets, updateExportSummary, renderReiva, renderEstadoDatos,
-  renderAjustes, renderRecordatorio, renderDemoBanner, renderPerfil, renderPendientes, renderRecurrentes, renderTarjetas
+  renderAjustes, renderRecordatorio, renderDemoBanner, renderPerfil, renderPendientes, renderRecurrentes, renderTarjetas, renderDetalleTarjeta
 ];
 // Finanzas solo se dibuja cuando se ve: si estás en otra sección, los
 // cambios quedan marcados y se dibujan al entrar (así no frena el resto de

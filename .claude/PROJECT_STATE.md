@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-25 (Finanzas: seguros y mantenimiento de las tarjetas, D-165).
+Actualizado: 2026-11-25 (Tarjetas: de qué sale lo que pagas y el día de corte, D-166).
 
 - **Finanzas: seguros y mantenimiento de las tarjetas (2026-11-25)**: el
   dueño paga siempre todo, así que ya no hay pago mínimo (D-121 queda
@@ -8,8 +8,10 @@ Actualizado: 2026-11-25 (Finanzas: seguros y mantenimiento de las tarjetas, D-16
   monto cada mes); la tarjeta dice "Para no pagar intereses: Bs X" (lo que
   gastó + esos cargos), "Pagar todo" los anota como gastos de la tarjeta al
   guardar el pago y queda "Este mes ya pagaste todo". También en el Resumen,
-  Atención, Análisis y Mi día (D-165). Falta que el dueño anote sus seguros y
-  compare con su extracto.
+  Atención, Análisis y Mi día (D-165). Al tocar una tarjeta, de qué gastos
+  sale (gastos, seguros, lo ya pagado); y el día de corte, para que el monto
+  sea el del extracto (D-166). Falta que el dueño ponga su corte y sus
+  seguros, y compare con su extracto.
 
 - **Ropa, nivel 2: tu estilista con IA (2026-11-24, en curso)**: hablar con la
   IA como con un estilista (outfits solo con su ropa, a partir de lo que

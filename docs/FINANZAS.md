@@ -31,11 +31,21 @@ intereses.
   - Rojo y "Urgente" hoy o mañana; ámbar y "Pronto" a 7 días o menos; con
     ícono y texto.
   - "Pagar todo (Bs X)". Al día: "Este mes ya pagaste todo", en verde.
-- **También aparece en:** el Resumen (la fila de la tarjeta y "Atención"),
-  Análisis › "Próximos 30 días" y "Mi día" de Inicio (vence en 3 días o
-  menos).
+- **También aparece en:** Movimientos (la fila de cada tarjeta), el Resumen
+  ("Atención"), Análisis › "Próximos 30 días" y "Mi día" de Inicio (vence en
+  3 días o menos).
+- **Día de corte (D-166, opcional):** el extracto que pagas el día de pago
+  cierra el último día de corte antes de ese día. Con corte, pagas lo del
+  extracto (lo que debías al corte + seguros − lo pagado después del corte);
+  lo que gastes después va al pago siguiente. Si el corte no llegó, cuenta
+  hasta hoy. Los seguros se anotan con la fecha del corte.
+- **De qué sale (D-166):** al tocar una tarjeta (o su fila en Movimientos),
+  una hoja con los gastos, los seguros y el mantenimiento, el saldo de antes
+  ("Extracto anterior" con corte), "Ya pagaste" y el total; aparte, lo que va
+  al pago siguiente. Es la misma cuenta que el monto de la tarjeta
+  (`cuenta`).
 - **Lógica:** `js/finanzas/tarjetas.js` (`cargosPendientes`, `cargosDelPago`,
-  `gastosDeCargos`, `categoriaCargos`, `alDia`, `aPagar`). Pruebas:
+  `gastosDeCargos`, `categoriaCargos`, `corteDe`, `cuenta`, `aPagar`). Pruebas:
   `tests/finanzas-tarjetas.test.js` y `scripts/e2e/tarjetas-cargos.js`.
 
 ## Disponible por día (2026-11-15, D-116)

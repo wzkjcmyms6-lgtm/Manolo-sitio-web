@@ -1,5 +1,6 @@
 // Tarjetas de crédito: seguros y mantenimiento de cada mes, en vez del pago
-// mínimo (D-165, reemplaza a D-121), a 375 px.
+// mínimo (D-165, reemplaza a D-121); de qué sale lo que pagas y el día de
+// corte (D-166), a 375 px.
 // El dueño paga siempre todo: lo que gastó + seguros y mantenimiento.
 // Uso: node scripts/e2e/tarjetas-cargos.js [carpeta-para-capturas]
 const { chromium, servidor, abrir, ok, captura: capturar, terminar, auditarContraste } = require("./comun.js");
@@ -105,6 +106,36 @@ const SEED2 = { "users/test/meta": { finanzas_tarjetas: { list: lista({ cargos: 
   ok(/Para no pagar intereses: Bs\s?1\.155,50/.test(visa2) && /Lo que gastaste \(Bs\s?1\.100\) \+ seguros y mantenimiento \(Bs\s?55,50\)/.test(visa2), "la Visa ya suma sus seguros: Bs 1.155,50");
   ok(!(await p.$(sel(VISA, "[data-tc-cargos-agregar]"))), "y ya no ofrece agregarlos");
 
+  console.log("\nDe qué sale: al tocar la tarjeta");
+  await sinAviso(p);
+  await p.click(sel(VISA, "[data-tc-ver]"));
+  await p.waitForTimeout(450);
+  ok(await p.$eval("#tcd-sheet", s => !s.hidden) && (await texto(p, "#tcd-sheet-title")) === "Visa BNB", "tocar el recuadro abre «Visa BNB» con el detalle");
+  const det = await texto(p, "#tcd-cuerpo");
+  ok(/^Para no pagar intereses Bs\s?1\.155,50 Vence el 30 nov \(en 2 días\)/.test(det), `arriba, lo que pagas y cuándo vence (${det.slice(0, 70)}…)`);
+  ok(/Gastos \(1\) Bs\s?1\.200 Supermercado 2 nov · Otros Bs\s?1\.200/.test(det), "los gastos que lo componen: Supermercado, 2 nov, Bs 1.200");
+  ok(/Seguros y mantenimiento Bs\s?55,50 Seguro de desgravamen Se anota al pagar Bs\s?25,50 Mantenimiento Se anota al pagar Bs\s?30/.test(det), "los seguros y el mantenimiento, que se anotan al pagar");
+  ok(/Ya pagaste −Bs\s?100 Pago de Visa BNB 10 nov · Pago −Bs\s?100/.test(det), "lo que ya pagaste (10 nov)");
+  ok(/Para no pagar intereses Bs\s?1\.155,50$/.test(det), "y el total: Bs 1.155,50 (1.200 + 55,50 − 100)");
+  ok((await p.$eval("#tcd-acciones [data-tcd-pagar]", b => b.textContent.trim())) === "Pagar todo (Bs 1.155,50)" && !(await p.$("#tcd-acciones [data-tcd-ir]")), "con «Pagar todo (Bs 1.155,50)» (sin «Ver tus tarjetas»: ya estás ahí)");
+  const malosDet = await p.evaluate(auditarContraste);
+  ok(!malosDet.length, `el detalle se lee bien${malosDet.length ? `: ${malosDet.slice(0, 2).map(m => `«${m.texto}» ${m.k}`).join(" · ")}` : ""}`);
+  ok(await p.evaluate(() => { const f = document.querySelector("#tcd-sheet .budget-sheet-panel"); return f.scrollWidth <= f.clientWidth + 1; }), "el detalle no se sale a lo ancho");
+  const chicosDet = await p.$$eval("#tcd-sheet button", els => els.filter(e => e.offsetParent).map(e => ({ t: e.textContent.trim().slice(0, 20), h: e.getBoundingClientRect().height })).filter(x => x.h < 44));
+  ok(!chicosDet.length, `en el detalle todo se toca bien (44 px)${chicosDet.length ? `: ${JSON.stringify(chicosDet)}` : ""}`);
+  await captura(p, "tarjetas-detalle-375.png");
+  await p.click('#tcd-cuerpo [data-tcd-mov="g1"]');
+  await p.waitForTimeout(550);
+  ok(await p.$eval("#tcd-sheet", s => s.hidden || s.classList.contains("is-closing")) && (await texto(p, "#txn-sheet-title")) === "Editar transacción" && (await texto(p, "#txn-sheet-amount")) === "1.200", "tocar un gasto lo abre (Editar transacción, Bs 1.200)");
+  await p.click("#txn-sheet .budget-sheet-close");
+  await p.waitForTimeout(450);
+  await p.click(sel(VISA, ".fin-tc-cifras"));
+  await p.waitForTimeout(450);
+  ok(await p.$eval("#tcd-sheet", s => !s.hidden), "tocar cualquier parte de la tarjeta también lo abre");
+  await p.click("#tcd-sheet .budget-sheet-close");
+  await p.waitForTimeout(450);
+  ok(await p.$eval("#tcd-sheet", s => s.hidden), "la × lo cierra");
+
   console.log("\nPagar todo: se anotan los seguros y la tarjeta queda al día");
   await p.click(sel(VISA, "[data-tc-pagar]"));
   await p.waitForTimeout(500);
@@ -153,13 +184,32 @@ const SEED2 = { "users/test/meta": { finanzas_tarjetas: { list: lista({ cargos: 
   ok(await p.$eval("#txn-sheet-cargos-row", r => r.hidden), "en un gasto común, la fila no aparece");
   await p.click("#txn-sheet .budget-sheet-close");
   await p.waitForTimeout(400);
+  await p.click(sel(VISA, "[data-tc-ver]"));
+  await p.waitForTimeout(450);
+  const pagado = await texto(p, "#tcd-cuerpo");
+  ok(/^✓ Este mes ya pagaste todo Bs\s?1\.255,50 Lo que pagaste desde el 30 oct: sin intereses\./.test(pagado), `al día: «Este mes ya pagaste todo», Bs 1.255,50 (${pagado.slice(0, 60)}…)`);
+  ok(/Gastos \(1\) Bs\s?1\.200 Supermercado/.test(pagado) && /Seguros y mantenimiento Bs\s?55,50/.test(pagado) && /Seguro de desgravamen 28 nov · Otros Bs\s?25,50/.test(pagado) && /Mantenimiento 28 nov · Otros Bs\s?30/.test(pagado), "lo que cubrió tu pago: el gasto y los seguros ya anotados");
+  ok(/Ya pagaste −Bs\s?1\.255,50/.test(pagado) && /Queda por pagar Bs\s?0/.test(pagado), "lo que pagaste (100 + 1.155,50) y «Queda por pagar Bs 0»");
+  ok(/Después de pagar Bs\s?80 Cena 28 nov · Comida Bs\s?80 Va a tu próximo pago\.$/.test(pagado), "y aparte, lo de después (la cena), que va a tu próximo pago");
+  await captura(p, "tarjetas-detalle-al-dia-375.png");
+  await p.click("#tcd-sheet .budget-sheet-close");
+  await p.waitForTimeout(450);
 
-  console.log("\nResumen, Atención, Análisis y Mi día");
-  const p2 = await abrir(browser, base, { __SEED__: SEED2 }, { hash: "#finanzas", zona: ZONA, fecha: HOY, ancho: 375, alto: 812 });
+  console.log("\nMovimientos, Atención, Análisis y Mi día");
+  const p2 = await abrir(browser, base, { __SEED__: SEED2 }, { hash: "#fin-movimientos", zona: ZONA, fecha: HOY, ancho: 375, alto: 812 });
   await p2.waitForTimeout(1300);
+  ok(await p2.$eval(`#finance-stats [data-tc-fila="${VISA}"]`, el => el.offsetParent !== null), "en Movimientos, una fila por tarjeta");
   const filaV = await texto(p2, `#finance-stats [data-tc-fila="${VISA}"]`);
   ok(/A pagar: Bs\s?1\.155,50 \(con seguros\)/.test(filaV) && await p2.$eval(`#finance-stats [data-tc-fila="${VISA}"] .fin-cartera-pago`, el => el.classList.contains("is-aviso")), `fila de la Visa: «A pagar: Bs 1.155,50 (con seguros)» (${filaV.slice(0, 80)})`);
   ok(/A pagar: Bs\s?464,50 \(con seguros\)/.test(await texto(p2, `#finance-stats [data-tc-fila="${MASTER}"]`)), "fila de la Master: «A pagar: Bs 464,50 (con seguros)»");
+  await p2.click(`#finance-stats [data-tc-fila="${VISA}"] [data-tc-ver]`);
+  await p2.waitForTimeout(450);
+  ok(await p2.$eval("#tcd-sheet", x => !x.hidden) && /Gastos \(1\) Bs\s?1\.200 Supermercado/.test(await texto(p2, "#tcd-cuerpo")), "en Movimientos, tocar la tarjeta también muestra de qué sale");
+  await p2.click("#tcd-acciones [data-tcd-ir]");
+  await p2.waitForTimeout(600);
+  ok((await p2.evaluate(() => location.hash)) === "#fin-tarjetas" && await p2.$eval("#tcd-sheet", x => x.hidden || x.classList.contains("is-closing")), "«Ver tus tarjetas» lleva a Tarjetas");
+  await p2.evaluate(() => { location.hash = "#finanzas"; });
+  await p2.waitForTimeout(800);
   const atencion = await texto(p2, "#res-atencion");
   ok(/En 2 días: pago de Visa BNB · Bs\s?1\.155,50 \(con seguros y mantenimiento\)/.test(atencion), `«Atención»: el pago de la Visa con seguros (${(atencion.match(/En 2 días[^)]*\)/) || [""])[0]})`);
   ok(!/mínimo|buró/i.test(atencion) && !/pago de Master/.test(atencion), "sin pago mínimo; la Master (en 12 días) todavía no avisa");
@@ -172,6 +222,57 @@ const SEED2 = { "users/test/meta": { finanzas_tarjetas: { list: lista({ cargos: 
   const fila = await texto(p2, '#mi-dia [data-md="tarjeta"]');
   ok(/Pago de Visa BNB: Bs\s?1\.155,50/.test(fila) && /Vence en 2 días\. Págala completa para no pagar intereses\. Incluye seguros y mantenimiento\./.test(fila), `«Mi día» lo recuerda (${fila.slice(0, 80)})`);
   ok(await p2.$eval('#mi-dia [data-md="tarjeta"]', a => a.getAttribute("href") === "#fin-tarjetas"), "y lleva a Tarjetas");
+
+  console.log("\nDía de corte: lo que pagas es lo del extracto");
+  const BCP = "tc_bcp";
+  const credito = (date, amount, desc, createdAt, category) => ({ date, type: "gasto", category: category || "otros", payment: "credito", amount, tarjetaId: BCP, desc, createdAt });
+  const SEED3 = { "users/test/meta": { finanzas_tarjetas: { list: [{ id: BCP, nombre: "BCP", limiteCent: 300000, limite: 3000, diaPago: 5, diaCorte: 20, color: "#9b6bde", creado: 1,
+    cargos: [{ id: "seg", nombre: "Seguro", montoCent: 4000, monto: 40 }] }] } },
+  [MOVS]: { sueldo: MOVIMIENTOS.sueldo, o1: credito("2026-10-10", 800, "Viaje", 1),
+    p0: { date: "2026-11-05", type: "transferencia", from: "debito", to: "tarjeta", amount: 800, tarjetaId: BCP, desc: "Pago de BCP", createdAt: 2 },
+    n1: credito("2026-11-10", 600, "Super", 3), n2: credito("2026-11-18", 400, "Ropa", 4), n3: credito("2026-11-25", 80, "Cena", 5, "comida") } };
+  const p4 = await abrir(browser, base, { __SEED__: SEED3 }, { hash: "#fin-tarjetas", zona: ZONA, fecha: HOY, ancho: 375, alto: 812 });
+  await p4.waitForTimeout(1200);
+  const bcp = await texto(p4, sel(BCP, ".fin-tc-pago"));
+  ok(/Para no pagar intereses: Bs\s?1\.040,00/.test(bcp) && /Pronto: vence el 5 dic \(en 7 días\)\. Tu extracto del 20 nov: lo que gastaste \(Bs\s?1\.000\) \+ seguros y mantenimiento \(Bs\s?40\)\. Lo de después del corte \(Bs\s?80\) va al pago siguiente\./.test(bcp), `con corte: lo del extracto del 20 nov (${bcp.slice(0, 90)}…)`);
+  ok(/Debes Bs\s?1\.080,00/.test(await texto(p4, sel(BCP))), "lo que debes en total sí incluye la cena (Bs 1.080)");
+  await p4.click(sel(BCP, "[data-tc-ver]"));
+  await p4.waitForTimeout(450);
+  const ext = await texto(p4, "#tcd-cuerpo");
+  ok(/Vence el 5 dic \(en 7 días\) · extracto del 20 nov/.test(ext), "el detalle dice de qué extracto es");
+  ok(/Gastos \(2\) Bs\s?1\.000 Super 10 nov · Otros Bs\s?600 Ropa 18 nov · Otros Bs\s?400/.test(ext), "los gastos del extracto (hasta el corte)");
+  ok(/Seguros y mantenimiento Bs\s?40 Seguro Se anota al pagar Bs\s?40/.test(ext) && /Extracto anterior Bs\s?800 Ya pagaste −Bs\s?800 Pago de BCP 5 nov · Pago −Bs\s?800/.test(ext), "el seguro, el extracto anterior y su pago");
+  ok(/Para no pagar intereses Bs\s?1\.040 Después del corte Bs\s?80 Cena 25 nov · Comida Bs\s?80 Va a tu próximo pago\./.test(ext), "total Bs 1.040; la cena, después del corte, va al próximo pago");
+  await captura(p4, "tarjetas-corte-detalle-375.png");
+  await p4.click("#tcd-sheet .budget-sheet-close");
+  await p4.waitForTimeout(450);
+  await p4.click(sel(BCP, "[data-tc-editar]"));
+  await p4.waitForTimeout(550);
+  ok((await p4.$eval('#tc-form [name="diaCorte"]', x => x.options[x.selectedIndex].text)) === "Día 20" && /fecha de corte/.test(await texto(p4, "#tc-corte-ayuda")), "en la tarjeta, «Día de corte: Día 20», con su explicación");
+  await p4.$eval('#tc-form [name="diaCorte"]', el => el.scrollIntoView({ block: "center" }));
+  await captura(p4, "tarjetas-corte-form-375.png");
+  await p4.selectOption('#tc-form [name="diaCorte"]', "");
+  await p4.click("#tc-guardar");
+  await p4.waitForTimeout(650);
+  const corteGuardado = () => p4.evaluate(() => window.__fakeStore.colMap("users/test/meta").get("finanzas_tarjetas").list[0].diaCorte);
+  ok((await corteGuardado()) === null && /Para no pagar intereses: Bs\s?1\.120,00/.test(await texto(p4, sel(BCP, ".fin-tc-pago"))), "sin corte: todo lo que debes (Bs 1.080) + el seguro = Bs 1.120");
+  await p4.click(sel(BCP, "[data-tc-editar]"));
+  await p4.waitForTimeout(550);
+  await p4.selectOption('#tc-form [name="diaCorte"]', "20");
+  await p4.click("#tc-guardar");
+  await p4.waitForTimeout(650);
+  ok((await corteGuardado()) === 20 && /Bs\s?1\.040,00/.test(await texto(p4, sel(BCP, ".fin-tc-pago"))), "con el corte otra vez (día 20): Bs 1.040");
+  await sinAviso(p4);
+  await p4.click(sel(BCP, "[data-tc-pagar]"));
+  await p4.waitForTimeout(550);
+  ok((await texto(p4, "#txn-sheet-amount")) === "1.040" && /Sumar seguros y mantenimiento · Bs\s?40/.test(await texto(p4, "#txn-sheet-cargos-row")), "«Pagar todo»: Bs 1.040, con el seguro");
+  await p4.click("#txn-sheet-save");
+  await p4.waitForTimeout(750);
+  const seg4 = (await movs(p4)).find(m => m.cargoId === "seg");
+  ok(seg4 && seg4.date === "2026-11-20" && seg4.cargoCiclo === "2026-12-05" && seg4.amount === 40, "el seguro se anota con la fecha del corte (20 nov), como en tu extracto");
+  const alDia4 = await texto(p4, sel(BCP, ".fin-tc-pago"));
+  ok(/Este mes ya pagaste todo/.test(alDia4) && /Lo de después del corte \(Bs\s?80\) va a tu próximo pago\./.test(alDia4), "queda al día; la cena va a tu próximo pago");
+  ok(!p4.errores.length, "sin errores con el día de corte");
 
   console.log("\nCalidad a 375 px");
   await ir(p, "#fin-tarjetas");
@@ -211,6 +312,13 @@ const SEED2 = { "users/test/meta": { finanzas_tarjetas: { list: lista({ cargos: 
   ok(!claro.length, `el formulario en claro se lee bien${claro.length ? `: ${claro.slice(0, 2).map(m => `«${m.texto}» ${m.k}`).join(" · ")}` : ""}`);
   await p3.$eval("#tc-form .fin-tc-cargos", el => el.scrollIntoView({ block: "center" }));
   await captura(p3, "tarjetas-cargos-form-claro-375.png");
+  await p3.click("#tc-sheet .budget-sheet-close");
+  await p3.waitForTimeout(450);
+  await p3.click(sel(VISA, "[data-tc-ver]"));
+  await p3.waitForTimeout(500);
+  claro = await p3.evaluate(auditarContraste);
+  ok(!claro.length, `el detalle en claro se lee bien${claro.length ? `: ${claro.slice(0, 2).map(m => `«${m.texto}» ${m.k}`).join(" · ")}` : ""}`);
+  await captura(p3, "tarjetas-detalle-claro-375.png");
   ok(!consola.length && !p.errores.length && !p2.errores.length && !p3.errores.length, `sin errores ni advertencias${consola.length ? ` (${consola[0]})` : ""}`);
   await terminar(browser, srv);
 })();

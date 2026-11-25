@@ -1,6 +1,19 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-25 (Tarjetas: de qué sale lo que pagas y el día de corte, D-166):
+  `npm test` → **862** (en `finanzas-tarjetas`: el corte —el último antes del
+  día de pago, meses cortos, cruza el año—, se guarda, lo del extracto y lo de
+  después del corte, el seguro con la fecha del corte, al día; de qué sale sin
+  corte). E2E `tarjetas-cargos` → **95** (nuevo: tocar el recuadro o la
+  tarjeta abre el detalle —gastos, seguros por anotar, ya pagaste, total—,
+  tocar un gasto lo abre, la ×; al día con lo de después; desde Movimientos
+  con "Ver tus tarjetas"; con corte: el extracto del 20 nov, el extracto
+  anterior, la cena después del corte, el formulario —"Día de corte"—, sin y
+  con corte, pagar con el seguro en la fecha del corte; en claro). Bien
+  también: `tarjetas`, `finanzas-diario`, `mi-dia`, `inversiones`, `hojas`,
+  `regresion`, `respaldo`, `resumenes`, `sin-internet`, `sw-instala`,
+  `tema-claro`, `pantalla`, `fase1`, `emojis`, `scalping` y `lugares`.
 - 2026-11-25 (Finanzas: seguros y mantenimiento de las tarjetas, D-165):
   `npm test` → **858** (en `finanzas-tarjetas`: los cargos se guardan y se
   validan, lo que pagas —lo que debes + seguros y mantenimiento, saldo a
@@ -753,6 +766,10 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
   como gastos de la tarjeta y la tarjeta dice "Este mes ya pagaste todo".
 - [ ] El día antes de pagar: "Mi día" de Inicio y "Atención" en el Resumen
   te recuerdan el pago completo.
+- [ ] Edita tu tarjeta y elige su "Día de corte" (está en tu extracto):
+  el monto tiene que ser igual al de tu extracto.
+- [ ] Toca la tarjeta: mira la lista de gastos, seguros y lo que ya pagaste;
+  toca un gasto para abrirlo. En Movimientos, toca la fila de la tarjeta.
 
 **Ropa (2026-11; revisión final D-152)**
 
