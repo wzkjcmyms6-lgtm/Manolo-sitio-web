@@ -1642,23 +1642,39 @@ html[data-modo="claro"] {
 :where(html[data-modo="claro"]) .fin-tc-pagar.is-sec {
   color: var(--ink);
 }
-:where(html[data-modo="claro"]) .fin-tc-min small {
+:where(html[data-modo="claro"]) .fin-tc-pago small {
   color: var(--muted);
 }
-:where(html[data-modo="claro"]) .fin-tc-min-ic {
+:where(html[data-modo="claro"]) .fin-tc-pago-ic {
   color: #0a0a0a;
 }
-:where(html[data-modo="claro"]) .fin-tc-min-agregar {
+:where(html[data-modo="claro"]) .fin-tc-cargos-agregar,
+:where(html[data-modo="claro"]) .fin-tc-cargos-mas {
   color: var(--accent-2);
 }
-:where(html[data-modo="claro"]) .fin-cartera-min.is-mal {
+:where(html[data-modo="claro"]) .fin-cartera-pago.is-mal {
   color: var(--estado-mal);
 }
-:where(html[data-modo="claro"]) .fin-cartera-min.is-aviso {
+:where(html[data-modo="claro"]) .fin-cartera-pago.is-aviso {
   color: var(--estado-aviso);
 }
-:where(html[data-modo="claro"]) .fin-cartera-min.is-ok {
+:where(html[data-modo="claro"]) .fin-cartera-pago.is-ok {
   color: var(--estado-ok);
+}
+:where(html[data-modo="claro"]) .fin-tc-cargos legend {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .fin-tc-cargo input {
+  color: var(--ink);
+}
+:where(html[data-modo="claro"]) .fin-tc-cargo-quitar {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .fin-tc-cargos-total {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .fin-tc-cargos-total strong {
+  color: var(--ink);
 }
 :where(html[data-modo="claro"]) .fin-tc-nota {
   color: var(--muted);

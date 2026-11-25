@@ -1823,23 +1823,37 @@ button.res-cat { cursor: pointer; }
 .fin-tc-alerta.is-aviso { background: rgba(255, 184, 77, 0.12); color: #ffcf85; }
 .fin-tc-pagar { align-self: flex-start; min-height: 44px; padding: 0 1.1rem; border-radius: 999px; border: 0; background: var(--accent-grad); color: #0a0a0a; font: inherit; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
 .fin-tc-pagar.is-sec { background: transparent; color: var(--ink); border: 1px solid var(--border); }
-/* Pago mínimo (D-121): siempre con ícono y texto; el color acompaña. */
-.fin-tc-min { display: flex; align-items: flex-start; gap: 0.6rem; margin: 0; padding: 0.7rem 0.8rem; border-radius: var(--radio-caja); background: var(--surface-raised); font-size: 0.9rem; line-height: 1.4; }
-.fin-tc-min strong { display: block; font-variant-numeric: tabular-nums; }
-.fin-tc-min small { display: block; color: var(--muted); font-size: 0.8rem; margin-top: 0.1rem; }
-.fin-tc-min-ic { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; font-size: 0.8rem; font-weight: 800; background: var(--muted); color: #0a0a0a; }
-.fin-tc-min.is-ok { background: var(--estado-ok-fondo); }
-.fin-tc-min.is-ok .fin-tc-min-ic { background: var(--estado-ok); }
-.fin-tc-min.is-aviso { background: var(--estado-aviso-fondo); }
-.fin-tc-min.is-aviso .fin-tc-min-ic { background: var(--estado-aviso); }
-.fin-tc-min.is-mal { background: var(--estado-mal-fondo); }
-.fin-tc-min.is-mal .fin-tc-min-ic { background: var(--estado-mal); }
-.fin-tc-min-agregar { align-self: flex-start; display: inline-flex; align-items: center; gap: 0.4rem; min-height: 44px; padding: 0 0.2rem; border: 0; background: none; color: var(--accent-2); font: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
-.fin-tc-min-agregar [data-icon] { width: 16px; height: 16px; display: flex; }
-.fin-tc-min-ayuda { margin-top: -0.35rem; }
-.fin-cartera-min.is-mal { color: var(--estado-mal); font-weight: 700; }
-.fin-cartera-min.is-aviso { color: var(--estado-aviso); font-weight: 700; }
-.fin-cartera-min.is-ok { color: var(--estado-ok); }
+/* Lo que pagas este mes (D-165, antes el pago mínimo de D-121): siempre con
+   ícono y texto; el color acompaña. */
+.fin-tc-pago { display: flex; align-items: flex-start; gap: 0.6rem; margin: 0; padding: 0.7rem 0.8rem; border-radius: var(--radio-caja); background: var(--surface-raised); font-size: 0.9rem; line-height: 1.4; }
+.fin-tc-pago strong { display: block; font-variant-numeric: tabular-nums; }
+.fin-tc-pago small { display: block; color: var(--muted); font-size: 0.8rem; margin-top: 0.1rem; }
+.fin-tc-pago-ic { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; font-size: 0.8rem; font-weight: 800; background: var(--muted); color: #0a0a0a; }
+.fin-tc-pago-ic [data-icon] { display: flex; width: 13px; height: 13px; }
+.fin-tc-pago.is-ok { background: var(--estado-ok-fondo); }
+.fin-tc-pago.is-ok .fin-tc-pago-ic { background: var(--estado-ok); }
+.fin-tc-pago.is-aviso { background: var(--estado-aviso-fondo); }
+.fin-tc-pago.is-aviso .fin-tc-pago-ic { background: var(--estado-aviso); }
+.fin-tc-pago.is-mal { background: var(--estado-mal-fondo); }
+.fin-tc-pago.is-mal .fin-tc-pago-ic { background: var(--estado-mal); }
+.fin-tc-cargos-agregar, .fin-tc-cargos-mas { align-self: flex-start; display: inline-flex; align-items: center; gap: 0.4rem; min-height: 44px; padding: 0 0.2rem; border: 0; background: none; color: var(--accent-2); font: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
+.fin-tc-cargos-agregar [data-icon], .fin-tc-cargos-mas [data-icon] { width: 16px; height: 16px; display: flex; }
+.fin-cartera-pago.is-mal { color: var(--estado-mal); font-weight: 700; }
+.fin-cartera-pago.is-aviso { color: var(--estado-aviso); font-weight: 700; }
+.fin-cartera-pago.is-ok { color: var(--estado-ok); }
+/* Formulario: seguros y mantenimiento, cada uno con qué es y cuánto por mes. */
+.fin-tc-cargos { display: flex; flex-direction: column; gap: 0.45rem; min-width: 0; margin: 0.9rem 0 0; padding: 0; border: 0; }
+.fin-tc-cargos legend { padding: 0; margin-bottom: 0.35rem; font-size: 0.85rem; color: var(--muted); }
+.fin-tc-cargos .fin-aj-texto { margin: 0 0 0.2rem; }
+.fin-tc-cargo { display: grid; grid-template-columns: minmax(0, 1fr) 5.2rem 44px; gap: 0.35rem; align-items: center; }
+.fin-tc-cargo input { min-width: 0; min-height: 44px; padding: 0 0.6rem; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-soft); color: var(--ink); font: inherit; }
+.fin-tc-cargo-quitar { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: none; color: var(--muted); cursor: pointer; }
+.fin-tc-cargo-quitar [data-icon] { display: flex; width: 16px; height: 16px; }
+.fin-tc-cargos-total { margin: 0; color: var(--muted); font-size: 0.85rem; }
+.fin-tc-cargos-total strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+.fin-tc-cargos .rec-campo { margin-top: 0.3rem; }
+/* En la hoja de pago: "Sumar seguros y mantenimiento" (la nota va abajo). */
+.txn-cargos-row .txn-toggle-hint { display: block; margin: 0.1rem 0 0; letter-spacing: 0; font-weight: 500; font-size: 0.78rem; }
 .fin-tc-nota { margin: 0; color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
 .fin-tc-vacio { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; padding: 1.1rem; border-radius: 18px; background: var(--surface); border: 1px dashed var(--border); }
 .fin-tc-vacio p { margin: 0; color: var(--muted); font-size: 0.9rem; line-height: 1.45; }

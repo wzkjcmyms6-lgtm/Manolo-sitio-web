@@ -1,6 +1,21 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-25 (Finanzas: seguros y mantenimiento de las tarjetas, D-165):
+  `npm test` → **858** (en `finanzas-tarjetas`: los cargos se guardan y se
+  validan, lo que pagas —lo que debes + seguros y mantenimiento, saldo a
+  favor, sin gastos—, al pagar se anotan y la tarjeta queda al día, lo nuevo
+  va al pago siguiente, la categoría; en `mi-dia`: el pago completo con
+  seguros). E2E nueva `tarjetas-cargos` (**61**, reemplaza a
+  `tarjetas-minimo`): "Para no pagar intereses" en cada tarjeta (sin pago
+  mínimo), anotar los seguros (errores, agregar y quitar filas, el total, el
+  aviso del pago mínimo de antes), "Pagar todo" con la fila "Sumar seguros y
+  mantenimiento" (apagarla baja el monto), los gastos que se anotan, "Este mes
+  ya pagaste todo", lo nuevo al pago siguiente, Resumen, Atención, Análisis y
+  Mi día; 375 px en oscuro y en claro. `tarjetas` (**56**) al día. Bien
+  también: `finanzas-diario`, `mi-dia`, `inversiones`, `hojas`, `regresion`,
+  `respaldo`, `resumenes`, `sin-internet`, `sw-instala`, `tema-claro`,
+  `pantalla`, `fase1`, `emojis`, `scalping` y `lugares`.
 - 2026-11-25 (Ropa: ideas de tu estilista en Inspiración, D-164): `npm test`
   → **856** (en `ropa-opinion-motor`: "Así lo usarías"; en `ropa-motor`: el
   color concuerda con lo que escribe la IA). Puente: **11** del Worker (nueva:
@@ -12,7 +27,12 @@
   Pinterest"), "Pedirle ideas nuevas" (mientras mira; lo mismo en Compras), sin
   repaso, sin la IA, el mensaje del tablero; 320 px en oscuro y en claro.
   `ropa-insp`, `ropa-opinion`, `ropa-compras`, `ropa-conectar`, `ropa`,
-  `ropa-final` y `tema-claro` bien.
+  `ropa-final` y `tema-claro` bien. Corrida completa: **51 de 53 suites** sin
+  fallas (**4.407** comprobaciones). En `lectura-qa`, los dos tiempos de
+  siempre con la máquina cargada («Biblia con 1.500 versículos» 3.423 ms;
+  una pausa de 562 ms): es la máquina, como en D-163; el límite queda. En
+  `ropa-numeros`, «en claro, las barras con su color de claro» leyó vacío
+  mientras corrían otras pruebas a la vez; sola, dos veces, todo bien.
 - 2026-11-25 (Ropa: tus favoritos, D-163): `npm test` → **854** (en
   `ropa-outfit-motor`: tus favoritos pesan una vez y media). E2E nueva
   `ropa-favoritos` (**56**): "Tus favoritos" (sin ninguno, cómo se suman; antes
@@ -631,9 +651,10 @@ export NODE_PATH=/opt/node22/lib/node_modules   # donde está Playwright
 for f in fase1 regresion hojas sw-instala emojis scalping inversiones tarjetas movilidad \
   running run-importar run-detalle run-feed run-progreso run-inteligencia run-segmentos \
   run-compartir run-qa habitos mi-dia ej-calendario ejercicio libros-progreso lectura \
-  lectura-qa tiempos finanzas-diario lugares respaldo sin-internet pantalla tarjetas-minimo \
+  lectura-qa tiempos finanzas-diario lugares respaldo sin-internet pantalla tarjetas-cargos \
   biblia-marcar biblia-audio rr-editor rutina-entreno tema-claro libros-n3 bici resumenes \
-  ropa ropa-insp ropa-outfits ropa-compras ropa-numeros ropa-final ropa-corte ropa-armar; do node scripts/e2e/$f.js || break; done
+  ropa ropa-insp ropa-outfits ropa-compras ropa-numeros ropa-final ropa-corte ropa-armar \
+  ropa-opinion ropa-estilista ropa-conectar ropa-favoritos ropa-ideas; do node scripts/e2e/$f.js || break; done
 (cd puente && npm install && npm run prueba)   # el Worker del puente de Ropa
 ```
 Cada script termina con "Todo bien" (código 0) o con la cantidad de fallos.
@@ -718,6 +739,20 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 
 **Antes de empezar (una sola vez)**
 - [ ] Publicar las reglas y crear `admins/{tu uid}` (`docs/ADMIN.md`).
+
+**Tarjetas: seguros y mantenimiento (2026-11-25, D-165)**
+- [ ] Finanzas › Tarjetas: en tu tarjeta toca "Agregar seguros y
+  mantenimiento" (o el lápiz). Anota cada seguro y el mantenimiento con lo
+  que te cobran al mes y guarda: la tarjeta dice "Para no pagar intereses:
+  Bs X" (lo que gastaste + seguros y mantenimiento).
+- [ ] Compara ese monto con tu extracto. Si gastaste después de la fecha
+  de corte, la app también lo suma (pagarlo antes no cobra intereses); si
+  aun así no cuadra, dime la diferencia.
+- [ ] "Pagar todo": el monto ya trae los seguros y la fila "Sumar seguros y
+  mantenimiento" está prendida. Guarda: en Movimientos aparecen los seguros
+  como gastos de la tarjeta y la tarjeta dice "Este mes ya pagaste todo".
+- [ ] El día antes de pagar: "Mi día" de Inicio y "Atención" en el Resumen
+  te recuerdan el pago completo.
 
 **Ropa (2026-11; revisión final D-152)**
 
@@ -956,9 +991,8 @@ Un recorrido corto por todo lo nuevo (más detalle en cada lista de abajo):
 - [ ] Si no se oye nada: sube el volumen, quita el modo silencio y dime.
 
 **Pago mínimo, Biblia en papel y arreglos (2026-11)**
-- [ ] Finanzas › Tarjetas: edita una tarjeta, pon su "Pago mínimo" y
-  guarda: la tarjeta dice cuánto falta y cuándo vence; "Pagar el mínimo"
-  abre el pago con ese monto.
+- [ ] ~~Finanzas › Tarjetas: el pago mínimo~~ (ya no existe desde D-165:
+  ver "Tarjetas: seguros y mantenimiento").
 - [ ] Biblia: en "Leí en mi Biblia" toca "✓ Leí …": queda marcado y ofrece
   el siguiente. Toca "Deshacer" una vez.
 - [ ] "Elegir otros capítulos" › un libro › toca 2 o 3 números: quedan en

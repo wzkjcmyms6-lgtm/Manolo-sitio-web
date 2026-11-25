@@ -65,7 +65,7 @@ const tarjetaSel = (id, sub) => `#fin-tarjetas [data-tc="${id}"] ${sub || ""}`;
   const VISA = lista[0].id;
   ok(!(await abierta(p, "#tc-sheet")), "la hoja se cierra");
   ok(/Debes Bs\s?300,00/.test(await texto(p, tarjetaSel(VISA, ".fin-tc-cifras"))) && /Disponible Bs\s?4\.700,00/.test(await texto(p, tarjetaSel(VISA, ".fin-tc-cifras"))), "la deuda de antes queda en Visa: debes 300, disponible 4.700");
-  ok(/Usaste el 6 % de Bs\s?5\.000/.test(await texto(p, tarjetaSel(VISA))) && /Pago: 15 nov \(faltan 18 días\)/.test(await texto(p, tarjetaSel(VISA))), "uso 6 % y próximo pago 15 nov (faltan 18 días)");
+  ok(/Usaste el 6 % de Bs\s?5\.000/.test(await texto(p, tarjetaSel(VISA))) && /Para no pagar intereses: Bs\s?300,00 Pendiente: vence el 15 nov \(en 18 días\)\. Paga todo lo que debes\./.test(await texto(p, tarjetaSel(VISA))), "uso 6 % y el pago de todo (D-165): vence el 15 nov (en 18 días)");
   await p.click("[data-tc-nueva]");
   await p.waitForTimeout(350);
   await hojaTarjeta(p, "visa bnb", "100", "");

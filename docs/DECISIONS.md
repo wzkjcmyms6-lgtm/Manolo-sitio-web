@@ -1597,7 +1597,7 @@ Plan de la mañana: los campos de hora se salían de la tarjeta en el iPhone
 (Fraunces en toda la sección, decisión de antes). Pruebas:
 `tests/viewport-ajuste.test.js`, `scripts/e2e/pantalla.js`.
 
-**D-121 (2026-11-15) · Tarjetas: pago mínimo por tarjeta.** Pedido del
+**D-121 (2026-11-15) · Tarjetas: pago mínimo por tarjeta** *(reemplazada por D-165: el dueño paga siempre todo)*. Pedido del
 dueño: "lo que sí o sí tengo que pagar para no ir a buró, por tarjeta".
 (1) Campo opcional "Pago mínimo (Bs)" en cada tarjeta
 (`meta/finanzas_tarjetas.list[].pagoMinimoCent`, `pagoMinimo` en Bs y
@@ -2928,4 +2928,54 @@ palabra; si no, por cómo termina): "Camisa de lino blanca", "Sandalias de
 cuero blancas". (4) **Pruebas**: `npm test` → 856; puente 11 + 23 (nueva: los
 mensajes del tablero); E2E nueva `ropa-ideas` (34); `ropa-insp`,
 `ropa-opinion`, `ropa-compras`, `ropa-conectar`, `ropa`, `ropa-final` y
-`tema-claro` bien.
+`tema-claro` bien. Corrida completa: 51 de 53 suites sin fallas (4.407
+comprobaciones); `lectura-qa` (los tiempos, con la máquina cargada) y
+`ropa-numeros` (un color leído mientras corrían otras pruebas; sola, bien).
+
+**D-165 (2026-11-25) · Tarjetas: seguros y mantenimiento en vez del pago
+mínimo.** Pedido del dueño: "no hay un pago mínimo, quiero pagar siempre la
+tarjeta completa para no generar intereses; lo que es como 'pago mínimo' son
+los seguros, quiero registrar eso ahí; los seguros a lo largo del año son el
+mismo monto; si no generó interés tengo que pagar solo lo que gasté y estos
+seguros y mantenimiento". (1) **En cada tarjeta** (Editar), "Seguros y
+mantenimiento · cada mes": filas con qué es y cuánto por mes (dos para
+empezar, "Agregar otro", la ×, hasta 6; el total al mes) y en qué categoría
+se anotan como gasto (la elegida; si no, una de banco o seguros; si no,
+"Otros"). Se guardan en `meta/finanzas_tarjetas.list[].cargos: [{ id ("cg_…"),
+nombre, montoCent, monto }]`, `cargosCategoria` y `cargosActualizado`
+(aditivo: una tarjeta sin cargos queda igual). El campo "Pago mínimo" se
+quitó del formulario; lo guardado (`pagoMinimoCent`) no se borra ni se usa: si
+la tarjeta no tiene cargos, el formulario avisa "Antes anotaste un pago mínimo
+de Bs X. Ya no se usa… Si eran tus seguros, anótalos aquí". (2) **Lo que
+pagas** (`FinanzasTarjetas.aPagar`): todo lo que debes + los cargos del ciclo
+(del día de pago anterior, sin incluirlo, al próximo) que todavía no se
+anotaron; un saldo a favor se descuenta; sin gastos, igual se pagan los
+cargos. En la tarjeta, "Para no pagar intereses: Bs X" con cuándo vence y de
+qué sale ("Lo que gastaste (Bs …) + seguros y mantenimiento (Bs …)"); rojo
+("Urgente") hoy o mañana, ámbar ("Pronto") a 7 días o menos, siempre con
+ícono y texto; "Pagar todo (Bs X)". Ya no hay "Pagar el mínimo". (3) **Al
+pagar** (la hoja de la transferencia a una tarjeta con cargos pendientes, por
+cualquier camino): la fila "Sumar seguros y mantenimiento · Bs …" (prendida;
+dice qué se anota). Al guardar, en el mismo lote, cada cargo se anota como
+gasto de la tarjeta (`payment: "credito"`, `tarjetaId`, la categoría, `desc` =
+su nombre, campos nuevos `cargoCiclo` = el día de pago de ese ciclo y
+`cargoId`), un instante antes del pago (`createdAt − 1`): así la deuda, el
+disponible y el presupuesto quedan bien y no se anotan dos veces en el mismo
+ciclo. Si apagas la fila, el monto sugerido baja solo (y vuelve al prenderla);
+si lo cambiaste a mano, no se toca. (4) **Al día**: si en este ciclo un pago
+dejó la deuda en cero o menos (`alDia`; mismo día, manda el orden en que se
+anotó), la tarjeta dice "Este mes ya pagaste todo" (en verde) y lo que gastes
+después "va a tu próximo pago" ("Pagar todo" queda como botón secundario).
+(5) **Los demás lugares**: el total de arriba ("Para no pagar intereses, este
+mes"), la fila de cada tarjeta en el Resumen ("A pagar: Bs X (con seguros)" o
+"✓ Este mes ya pagaste todo"), "Atención" (el pago de los próximos 3 días, en
+rojo hoy o mañana, "(con seguros y mantenimiento)"), Análisis › "Próximos 30
+días" y "Mi día" de Inicio ("Pago de Visa BNB: Bs X · Vence mañana. Págala
+completa para no pagar intereses. Incluye seguros y mantenimiento"; antes
+solo con pago mínimo, ahora el de cada tarjeta que vence en 3 días o menos).
+(6) En lo nuevo, los montos con centavos llevan siempre dos ("Bs 64,50", no
+"Bs 64,5"): `bsJusto`. Pruebas: `npm test` → 858
+(`tests/finanzas-tarjetas.test.js`: cargos, lo que pagas, al día, la
+categoría; `tests/mi-dia.test.js`); E2E nueva `scripts/e2e/tarjetas-cargos.js`
+(61, en oscuro y en claro; reemplaza a `tarjetas-minimo.js`), `tarjetas.js`
+al día (56) y 15 suites más de Finanzas, Inicio y la app, bien.

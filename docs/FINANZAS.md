@@ -6,28 +6,37 @@ Notas de diseño de Finanzas que no están en otro lado. El código vive en
 `users/{uid}/finanzas`, `ahorros`, `carteras_movimientos` y `meta/…` (ver
 `docs/DATABASE.md`).
 
-## Pago mínimo de las tarjetas (2026-11-15, D-121)
+## Seguros y mantenimiento de las tarjetas (2026-11-25, D-165)
+
+Reemplaza al pago mínimo (D-121): el dueño paga siempre todo, para no pagar
+intereses.
 
 - **Dónde:** Finanzas › Tarjetas de crédito › editar una tarjeta ›
-  "Pago mínimo (Bs) · opcional". Es lo que sí o sí tienes que pagar antes
-  del día de pago para no caer en el buró; sale en el extracto y cambia
-  cada mes.
-- **Cálculo:**
-  - Lo pagado cuenta desde el día de pago anterior (sin incluirlo) hasta
-    hoy: pagos y transferencias a esa tarjeta, no ajustes.
-  - Falta = mínimo − pagado, nunca más de lo que debes.
-  - Sin deuda: no hay pago mínimo ese mes.
+  "Seguros y mantenimiento · cada mes". Una fila por cargo (qué es y cuánto
+  por mes; hasta 6) y en qué categoría se anotan como gasto. Si la tarjeta
+  tenía un pago mínimo de antes, el formulario avisa que ya no se usa.
+- **Lo que pagas antes del día de pago** (`aPagar`):
+  - Todo lo que debes + los cargos de este ciclo que todavía no se anotaron.
+    El ciclo va del día de pago anterior (sin incluirlo) al próximo.
+  - Un saldo a favor se descuenta; sin gastos, igual se pagan los cargos.
+  - Si en este ciclo un pago dejó la deuda en cero, la tarjeta está **al
+    día**: lo que gastes después va al pago siguiente.
+- **Al pagar** (la transferencia a la tarjeta, desde "Pagar todo" o a mano):
+  la fila "Sumar seguros y mantenimiento" (prendida) anota cada cargo como
+  gasto de la tarjeta (`cargoCiclo`, `cargoId`), un instante antes del pago.
+  Apagarla baja el monto sugerido. No se anotan dos veces en un ciclo.
 - **En pantalla:**
-  - "Pago mínimo: Bs X", con cuándo vence y lo ya pagado.
-  - Rojo y "Urgente" a 3 días o menos; ámbar y "Pronto" a 7 días o menos.
-  - Botones "Pagar el mínimo" (abre la transferencia con ese monto) y
-    "Pagar todo".
-  - Cubierto: "✓ Pago mínimo cubierto".
-- **También aparece en:** el Resumen (fila de la tarjeta y "Atención") y
-  "Mi día" de Inicio, cuando vence en 3 días o menos.
-- **Lógica:** `js/finanzas/tarjetas.js` (`pagoAnterior`, `pagado`,
-  `estado().lista[].minimo`). Pruebas: `tests/finanzas-tarjetas.test.js` y
-  `scripts/e2e/tarjetas-minimo.js`.
+  - "Para no pagar intereses: Bs X", cuándo vence y de qué sale (lo que
+    gastaste + seguros y mantenimiento).
+  - Rojo y "Urgente" hoy o mañana; ámbar y "Pronto" a 7 días o menos; con
+    ícono y texto.
+  - "Pagar todo (Bs X)". Al día: "Este mes ya pagaste todo", en verde.
+- **También aparece en:** el Resumen (la fila de la tarjeta y "Atención"),
+  Análisis › "Próximos 30 días" y "Mi día" de Inicio (vence en 3 días o
+  menos).
+- **Lógica:** `js/finanzas/tarjetas.js` (`cargosPendientes`, `cargosDelPago`,
+  `gastosDeCargos`, `categoriaCargos`, `alDia`, `aPagar`). Pruebas:
+  `tests/finanzas-tarjetas.test.js` y `scripts/e2e/tarjetas-cargos.js`.
 
 ## Disponible por día (2026-11-15, D-116)
 

@@ -18,7 +18,7 @@
   <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fuentes.css?v=202610010700">
   <!-- Todos los estilos de la app en un archivo (D-127): js/paquete.json › npm run listo -->
-  <link rel="stylesheet" href="css/app.paquete.css?v=cf0188d38e51">
+  <link rel="stylesheet" href="css/app.paquete.css?v=c552b025a62f">
   <!-- Modo claro (D-126): generado con "npm run tema"; js/tema.js lo apaga en
        el modo oscuro y elige el modo antes de pintar (sin "defer": es chico) -->
   <link rel="stylesheet" href="css/tema-claro.css?v=202611171200" id="tema-claro-css">
@@ -1127,6 +1127,11 @@
                     <span id="txn-sheet-to-badge" class="txn-icon"></span>
                     <span>A la cartera: <strong id="txn-sheet-to-label"></strong></span>
                   </button>
+                  <label class="budget-sheet-row txn-only-transfer txn-toggle-row txn-cargos-row" id="txn-sheet-cargos-row" hidden>
+                    <span class="txn-row-icon" data-icon="finance"></span>
+                    <span class="txn-toggle-label"><span id="txn-sheet-cargos-texto">Sumar seguros y mantenimiento</span><small class="txn-toggle-hint" id="txn-sheet-cargos-hint"></small></span>
+                    <input type="checkbox" id="txn-sheet-cargos" class="switch">
+                  </label>
                   <label class="budget-sheet-row txn-only-transfer txn-amount-to-row" id="txn-sheet-rate-row" hidden>
                     <span class="txn-row-icon" data-icon="bank"></span>
                     <span class="txn-amount-to-label">Tipo de cambio<small id="txn-sheet-rate-hint"></small></span>
@@ -1552,6 +1557,6 @@
   <script defer src="vendor/firebase-10.7.1/firebase-firestore-compat.js"></script>
   <!-- Todos los módulos de la app en un archivo (D-127): cada uno corre como su
        propio <script>. Se editan los de js/ y después: npm run listo -->
-  <script defer src="js/app.paquete.js?v=759998aaffdf"></script>
+  <script defer src="js/app.paquete.js?v=4c1a66c09bdb"></script>
 </body>
 </html>

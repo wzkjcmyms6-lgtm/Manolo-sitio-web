@@ -18,7 +18,7 @@ const num1 = n => String(Math.round(Number(n) * 10) / 10).replace(".", ",");
 //   biblia: { hoyHecho, actual (racha), total, cita, capsHoy (capítulos leídos hoy),
 //             plan: { nombre, texto } | null (lectura de hoy que falta) },
 //   dinero: { estado: "verde"|"ambar"|"rojo"|"cerrado"|"vacio", dias, disponibleDia, quedaDia, pasado } (D-116),
-//   tarjetas: [{ nombre, falta, faltaCent, dias }] pagos mínimos que faltan y vencen en ≤ 3 días (D-121),
+//   tarjetas: [{ nombre, falta, faltaCent, dias, cargos }] pagos de tarjeta (todo + seguros y mantenimiento) que vencen en ≤ 3 días (D-165),
 //   running: { kmSemana, meta, manana: { dia, km, dura } | null,
 //              ultima: { cuando: "ayer", km } | null },
 //   manana: { estado: "curso" | "hecha" | "pendiente", paso, de, nombre, vsPlan (s, + = atrasado),
@@ -88,15 +88,17 @@ function filas(d) {
     const partes = [rp.frases > 0 ? `${rp.frases} ${rp.frases === 1 ? "frase" : "frases"}` : "", rp.versiculos > 0 ? `${rp.versiculos} ${rp.versiculos === 1 ? "versículo" : "versículos"}` : ""].filter(Boolean);
     out.push({ id: "repaso", icono: rp.versiculos > 0 && !rp.frases ? "biblia" : "libro", titulo: "Repaso de hoy", detalle: `${lista(partes)} para repasar.`, estado: "pendiente", href: rp.frases > 0 ? "#libros" : "#biblia-memorizar" });
   }
-  // Pago mínimo de las tarjetas (D-121): lo que hay que pagar sí o sí para no
-  // caer en el buró, cuando vence en 3 días o menos. Hoy o mañana: por hacer.
+  // Pago de las tarjetas (D-165, antes el pago mínimo de D-121): todo lo que
+  // debes + seguros y mantenimiento, para no pagar intereses, cuando vence en
+  // 3 días o menos. Hoy o mañana: por hacer.
   const tc = (x.tarjetas || []).filter(t => t && t.faltaCent > 0).sort((a, b) => a.dias - b.dias);
   if (tc.length) {
     const t = tc[0];
     const vence = t.dias <= 0 ? "Vence hoy" : t.dias === 1 ? "Vence mañana" : `Vence en ${t.dias} días`;
+    const con = t.cargos ? " Incluye seguros y mantenimiento." : "";
     out.push(tc.length === 1
-      ? { id: "tarjeta", icono: "finance", titulo: `Pago mínimo de ${t.nombre}: ${t.falta}`, detalle: `${vence}. Págalo para no caer en el buró.`, estado: t.dias <= 1 ? "pendiente" : "aviso", href: "#fin-tarjetas" }
-      : { id: "tarjeta", icono: "finance", titulo: `Pagos mínimos de ${tc.length} tarjetas`, detalle: `${vence} el de ${t.nombre} (${t.falta}). Págalos para no caer en el buró.`, estado: t.dias <= 1 ? "pendiente" : "aviso", href: "#fin-tarjetas" });
+      ? { id: "tarjeta", icono: "finance", titulo: `Pago de ${t.nombre}: ${t.falta}`, detalle: `${vence}. Págala completa para no pagar intereses.${con}`, estado: t.dias <= 1 ? "pendiente" : "aviso", href: "#fin-tarjetas" }
+      : { id: "tarjeta", icono: "finance", titulo: `Pagos de ${tc.length} tarjetas`, detalle: `${vence} el de ${t.nombre} (${t.falta}). Págalas completas para no pagar intereses.`, estado: t.dias <= 1 ? "pendiente" : "aviso", href: "#fin-tarjetas" });
   }
   // Dinero (D-116): lo que te queda por día desde hoy, según lo que entró de
   // verdad este mes. Sin ingresos registrados, no aparece (nada inventado).

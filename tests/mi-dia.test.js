@@ -101,16 +101,18 @@ test("fase 7: como mucho 5 filas, primero lo que hay que hacer hoy", () => {
   assert.deepEqual(fs.map(f => f.id), ["manana", "habitos", "biblia", "libro", "repaso"], "quedan los pendientes y lo hecho de hoy; se van el descanso, el dinero y Running (libres)");
 });
 
-test("pago mínimo de la tarjeta que vence pronto (D-121)", () => {
-  const una = M.filas({ tarjetas: [{ nombre: "Visa BNB", falta: "Bs 250", faltaCent: 25000, dias: 1 }] });
+test("pago de la tarjeta que vence pronto: todo + seguros y mantenimiento (D-165)", () => {
+  const una = M.filas({ tarjetas: [{ nombre: "Visa BNB", falta: "Bs 1.234,50", faltaCent: 123450, dias: 1, cargos: true }] });
   const f = una.find(x => x.id === "tarjeta");
-  assert.equal(f.titulo, "Pago mínimo de Visa BNB: Bs 250");
-  assert.equal(f.detalle, "Vence mañana. Págalo para no caer en el buró.");
+  assert.equal(f.titulo, "Pago de Visa BNB: Bs 1.234,50");
+  assert.equal(f.detalle, "Vence mañana. Págala completa para no pagar intereses. Incluye seguros y mantenimiento.");
   assert.equal(f.estado, "pendiente");
   assert.equal(f.href, "#fin-tarjetas");
+  assert.equal(M.filas({ tarjetas: [{ nombre: "Visa", falta: "Bs 50", faltaCent: 5000, dias: 0 }] }).find(x => x.id === "tarjeta").detalle, "Vence hoy. Págala completa para no pagar intereses.", "sin cargos, no los nombra");
   const dos = M.filas({ tarjetas: [{ nombre: "Master", falta: "Bs 100", faltaCent: 10000, dias: 3 }, { nombre: "Visa", falta: "Bs 50", faltaCent: 5000, dias: 2 }] }).find(x => x.id === "tarjeta");
-  assert.equal(dos.titulo, "Pagos mínimos de 2 tarjetas");
-  assert.equal(dos.detalle, "Vence en 2 días el de Visa (Bs 50). Págalos para no caer en el buró.");
+  assert.equal(dos.titulo, "Pagos de 2 tarjetas");
+  assert.equal(dos.detalle, "Vence en 2 días el de Visa (Bs 50). Págalas completas para no pagar intereses.");
   assert.equal(dos.estado, "aviso");
   assert.equal(M.filas({ tarjetas: [] }).find(x => x.id === "tarjeta"), undefined);
+  assert.equal(M.filas({ tarjetas: [{ nombre: "Visa", falta: "Bs 0", faltaCent: 0, dias: 1 }] }).find(x => x.id === "tarjeta"), undefined, "al día: nada");
 });

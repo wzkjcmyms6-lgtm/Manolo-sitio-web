@@ -299,6 +299,13 @@ function renderStats() {
     </div>`;
   renderIcons(document.getElementById("finance-stats"));
 }
+// D-165: lo que pagas este mes, si trae seguros y mantenimiento o vence pronto; o "ya pagaste todo".
+function filaPagoResumen(t) {
+  const p = t.pagar;
+  if (p.alDia) return `<span class="fin-cartera-sub fin-cartera-pago is-ok">✓ Este mes ya pagaste todo</span>`;
+  if (p.cent > 0 && (p.cargosCent > 0 || p.urgencia === "mal" || p.urgencia === "aviso")) return `<span class="fin-cartera-sub fin-cartera-pago is-${p.urgencia}">A pagar: ${bsJusto(p.cent)}${p.cargosCent > 0 ? " (con seguros)" : ""}</span>`;
+  return "";
+}
 // Cada tarjeta registrada: lo que debes, lo disponible de su límite y su pago.
 function filaTarjetaResumen(t) {
   const pct = Math.min(100, Math.round(t.uso * 100));
@@ -310,9 +317,9 @@ function filaTarjetaResumen(t) {
           <span class="fin-tc-barra is-${t.nivel}" aria-hidden="true"><i style="width:${pct}%"></i></span>
           <span class="fin-cartera-sub">Disponible: ${formatBsShort(FD.aBs(t.disponibleCent))}</span>
           <span class="fin-cartera-sub">${t.pago.dias === 0 ? "Hoy toca pagar" : `Pago: ${fechaCorta(t.pago.fecha)} · ${t.pago.dias === 1 ? "falta 1 día" : `faltan ${t.pago.dias} días`}`}</span>
-          ${t.minimo && t.minimo.faltaCent > 0 ? `<span class="fin-cartera-sub fin-cartera-min is-${t.minimo.urgencia}">Mínimo por pagar: ${formatBsShort(FD.aBs(t.minimo.faltaCent))}</span>` : t.minimo && !t.minimo.sinDeuda ? `<span class="fin-cartera-sub fin-cartera-min is-ok">✓ Mínimo cubierto</span>` : ""}
+          ${filaPagoResumen(t)}
         </button>
-        ${t.deudaCent > 0 ? `<button type="button" class="fin-cartera-pagar" data-pagar-tarjeta="${escapeHtml(t.id)}" aria-label="Pagar ${escapeHtml(t.nombre)}">Pagar</button>` : ""}
+        ${montoPagar(t) > 0 ? `<button type="button" class="fin-cartera-pagar" data-pagar-tarjeta="${escapeHtml(t.id)}" aria-label="Pagar ${escapeHtml(t.nombre)}">Pagar</button>` : ""}
       </div>`;
 }
 document.getElementById("finance-stats").addEventListener("click", e => {
@@ -899,12 +906,13 @@ function resAtencionHTML(period) {
     FD.proximosRecurrentes(recurrentes, financeCache, hoy, 3).forEach(p => {
       items.push({ peso: 2, html: `<a class="res-item" href="#fin-analisis"><span class="res-item-ic" aria-hidden="true"><span data-icon="calendar"></span></span><span><strong>${enDias(p.fecha)}:</strong> ${escapeHtml(p.rec.nombre)} · ${p.rec.type === "ingreso" ? "+" : ""}${bsCent(p.rec.montoCent || 0)}</span></a>` });
     });
+    // D-165: el pago de cada tarjeta, todo + seguros y mantenimiento (hoy o mañana, en rojo).
     pagosDeTarjeta().forEach(x => {
-      if (!(x.deudaCent > 0 && x.dias <= 3)) return;
+      if (!(x.pagarCent > 0 && x.dias <= 3)) return;
       const cuando = x.dias === 0 ? "Hoy" : x.dias === 1 ? "Mañana" : `En ${x.dias} días`;
       const href = tarjetasCache.length ? "#fin-tarjetas" : "#fin-movimientos";
-      if (x.minimo && x.minimo.faltaCent > 0) items.push({ peso: 4, html: `<a class="res-item mal" href="${href}"><span class="res-item-ic" aria-hidden="true">!</span><span><strong>${cuando}:</strong> pago mínimo de ${escapeHtml(x.nombre)} · ${bsCent(x.minimo.faltaCent)} (para no caer en el buró)</span></a>` });
-      else items.push({ peso: 2.5, html: `<a class="res-item aviso" href="${href}"><span class="res-item-ic" aria-hidden="true"><span data-icon="calendar"></span></span><span><strong>${cuando}:</strong> pago de ${x.nombre ? escapeHtml(x.nombre) : "la tarjeta"} · ${bsCent(x.deudaCent)}${x.minimo && x.minimo.cubierto ? " · mínimo cubierto" : ""}</span></a>` });
+      const ya = x.dias <= 1;
+      items.push({ peso: ya ? 4 : 2.5, html: `<a class="res-item ${ya ? "mal" : "aviso"}" href="${href}"><span class="res-item-ic" aria-hidden="true">${ya ? "!" : `<span data-icon="calendar"></span>`}</span><span><strong>${cuando}:</strong> pago de ${x.nombre ? escapeHtml(x.nombre) : "la tarjeta"} · ${bsJusto(x.pagarCent)}${x.cargosCent ? " (con seguros y mantenimiento)" : ""}</span></a>` });
     });
   }
   items.sort((a, b) => b.peso - a.peso);
@@ -1329,7 +1337,7 @@ function anProximosHTML() {
   const lista = FD.proximosRecurrentes(recurrentes, financeCache, hoy, 30)
     .map(p => ({ fecha: p.fecha, nombre: p.rec.nombre, cent: p.rec.montoCent || 0, ingreso: p.rec.type === "ingreso" }));
   pagosDeTarjeta().forEach(x => {
-    if (x.deudaCent > 0 && x.fecha > hoy) lista.push({ fecha: x.fecha, nombre: x.nombre ? `Pago de ${x.nombre}` : "Pago de la tarjeta", cent: x.deudaCent, ingreso: false, tarjeta: true });
+    if (x.pagarCent > 0 && x.fecha > hoy) lista.push({ fecha: x.fecha, nombre: x.nombre ? `Pago de ${x.nombre}` : "Pago de la tarjeta", cent: x.pagarCent, ingreso: false, tarjeta: true });
   });
   lista.sort((x, y) => x.fecha.localeCompare(y.fecha));
   const head = `<h2 class="an-titulo" id="an-proximos-t">Próximos 30 días</h2>`;
@@ -1469,6 +1477,15 @@ function parseNum(str) {
   return parseFloat(String(str || "").replace(/\s/g, "").replace(",", ".")) || 0;
 }
 
+// Los seguros y mantenimiento de este mes que se suman a un pago a la
+// tarjeta (D-165): { ciclo, lista, cent, tarjeta } o null si no corresponde.
+function cargosDeLaHoja(t) {
+  if (!t || t.id || t.readonly || t.type !== "transferencia" || t.to !== "tarjeta" || !tarjetasCache.length) return null;
+  const tc = tarjetasCache.find(x => x.id === TC.tarjetaDe({ tarjetaId: t.tarjetaId }, tarjetasCache));
+  if (!tc || !tc.cargos.length) return null;
+  const pend = TC.cargosDelPago(tc, financeCache, tarjetasCache, t.date, diaPagoTarjeta());
+  return pend.lista.length ? Object.assign(pend, { tarjeta: tc }) : null;
+}
 // Con el tipo de cambio calcula cuánto llega en la otra moneda.
 function syncTransferAmounts() {
   const t = txnSheet;
@@ -1504,7 +1521,7 @@ function openTxnSheet(movement, inicial) {
         rate: movement.tipoCambio ? toStr(movement.tipoCambio) : "", rateTouched: true,
         readonly: movement.type === "transferencia", movement
       }
-    : { id: null, type: "gasto", category: null, payment: ultimaCartera("gasto"), amount: "0", desc: "", date: isoDate(new Date()), excluded: false, factura: false, keypad: true, from: "debito", to: "ahorro", amountTo: "", rate: "", rateTouched: false, readonly: false, tarjetaId: null };
+    : { id: null, type: "gasto", category: null, payment: ultimaCartera("gasto"), amount: "0", desc: "", date: isoDate(new Date()), excluded: false, factura: false, keypad: true, from: "debito", to: "ahorro", amountTo: "", rate: "", rateTouched: false, readonly: false, tarjetaId: null, cargos: null, cargosAuto: null };
   if (inicial && !movement) Object.assign(txnSheet, inicial, { keypad: inicial.keypad !== undefined ? inicial.keypad : true });
   if (!movement && !txnSheet.tarjetaId && (txnSheet.payment === "credito" || txnSheet.to === "tarjeta")) txnSheet.tarjetaId = ultimaTarjeta();
   txnError(null);
@@ -1605,6 +1622,14 @@ function renderTxnSheet() {
   };
   walletRow("from", t.from);
   walletRow("to", t.to);
+  // D-165: al pagar una tarjeta, se suman sus seguros y mantenimiento de este mes.
+  const pendC = cargosDeLaHoja(t);
+  document.getElementById("txn-sheet-cargos-row").hidden = !pendC;
+  if (pendC) {
+    document.getElementById("txn-sheet-cargos-texto").textContent = `Sumar seguros y mantenimiento · ${bsJusto(pendC.cent)}`;
+    document.getElementById("txn-sheet-cargos-hint").textContent = `Se anotan como gastos de ${pendC.tarjeta.nombre}: ${pendC.lista.map(c => c.nombre).join(", ")}.`;
+    document.getElementById("txn-sheet-cargos").checked = t.cargos !== false;
+  }
   const needsAmountTo = isTransfer && walletCurrency(t.from) !== walletCurrency(t.to);
   document.getElementById("txn-sheet-amount-to-row").hidden = !needsAmountTo;
   document.getElementById("txn-sheet-rate-row").hidden = !needsAmountTo;
@@ -1903,7 +1928,7 @@ function chooseTxnWallet(side) {
     onPick: elegido => {
       closePicker();
       const [id, tarjetaId] = String(elegido).split("|");
-      if (tarjetaId) t.tarjetaId = tarjetaId;
+      if (tarjetaId && tarjetaId !== t.tarjetaId) { t.tarjetaId = tarjetaId; t.cargosAuto = null; }
       if (id === t[side]) { renderTxnSheet(); return; }
       const antes = t[side];
       t[side] = id;
@@ -1945,8 +1970,13 @@ function saveTxn(yOtro) {
     const payload = { from: t.from, to: t.to, amount, amountTo, desc: t.desc.trim(), date: t.date };
     if (t.to === "tarjeta" && tarjetasCache.length) payload.tarjetaId = TC.tarjetaDe({ tarjetaId: t.tarjetaId }, tarjetasCache);
     if (walletCurrency(t.from) !== walletCurrency(t.to) && rate > 0) payload.tipoCambio = rate;
+    // D-165: los seguros y mantenimiento de este mes se anotan como gastos de la tarjeta.
+    const pendC = t.cargos !== false ? cargosDeLaHoja(t) : null;
+    if (pendC) payload.gastos = TC.gastosDeCargos(pendC.tarjeta, pendC, t.date, TC.categoriaCargos(pendC.tarjeta, gastoCategoriesCache)).map(g => FD.conCentavos(g));
     createTransfer(payload).catch(err => console.error("Manolo: no se pudo guardar la transferencia", err));
-    trasGuardar(yOtro, `Transferencia de ${formatBsShort(amount)} guardada`);
+    const conC = pendC ? ` · se anotaron seguros y mantenimiento (${bsJusto(pendC.cent)})` : "";
+    trasGuardar(yOtro, `Transferencia de ${formatBsShort(amount)} guardada${conC}`);
+    if (pendC && !yOtro) avisoFin(`Pago de ${bsJusto(FD.aCentavos(amount))} guardado${conC}`);
     return;
   }
   if (!t.category) {
@@ -1990,7 +2020,7 @@ function trasGuardar(yOtro, texto) {
   try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) { /* sin vibración */ }
   if (!yOtro) { closeTxnSheet(); return; }
   const t = txnSheet;
-  Object.assign(t, { id: null, amount: "0", desc: "", category: null, factura: false, excluded: false, amountTo: "", keypad: true, repetir: null, recurrenteId: null, recurrenteFecha: null });
+  Object.assign(t, { id: null, amount: "0", desc: "", category: null, factura: false, excluded: false, amountTo: "", keypad: true, repetir: null, recurrenteId: null, recurrenteFecha: null, cargos: null, cargosAuto: null });
   txnError(null);
   renderTxnSheet();
   avisoFin(texto);
@@ -2287,6 +2317,17 @@ document.getElementById("txn-sheet-repetir").addEventListener("change", e => {
 document.getElementById("txn-sheet-factura").addEventListener("change", e => {
   if (txnSheet) txnSheet.factura = e.target.checked;
 });
+// D-165: "Sumar seguros y mantenimiento". Si el monto es el sugerido, cambia con ella.
+document.getElementById("txn-sheet-cargos").addEventListener("change", e => {
+  const t = txnSheet;
+  if (!t) return;
+  t.cargos = e.target.checked;
+  const a = t.cargosAuto;
+  if (a && FD.evaluarMonto(t.amount) === (t.cargos ? a.sinCent : a.conCent)) {
+    t.amount = montoHoja(t.cargos ? a.conCent : a.sinCent);
+    pintarMontoTxn();
+  }
+});
 
 document.getElementById("budget-month-prev").addEventListener("click", () => cambiarPeriodo(-1));
 document.getElementById("budget-month-next").addEventListener("click", () => cambiarPeriodo(1));
@@ -2538,6 +2579,11 @@ function renderBudgets() {
 
 // ---- Tarjetas por categoría: barra con marca de ritmo y estado ----
 const bsCent = c => formatBsShort(FD.aBs(c));
+// Bs sin ",00" si es entero; con centavos, siempre dos (Bs 64,50, no Bs 64,5).
+function bsJusto(cent) {
+  const n = FD.aBs(cent);
+  return `Bs ${n.toLocaleString("es-BO", Number.isInteger(n) ? { maximumFractionDigits: 0 } : { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
 // Nombre de la sección, solo si aporta (si es distinto del de la categoría).
 function grupoDe(cat) {
   const g = categoryGroupsCache.find(gr => (gr.items || []).some(i => i.id === cat.id));
@@ -3623,40 +3669,58 @@ function nombreTarjeta(m) {
   return c ? c.nombre : "";
 }
 // Pagos que vienen: uno por tarjeta (o el de siempre, si no registraste ninguna).
+// pagarCent: todo lo que debes + seguros y mantenimiento de este mes (D-165).
 function pagosDeTarjeta() {
   if (!tarjetasCache.length) {
     const { date, days } = nextCardPayDate();
-    return [{ nombre: "", deudaCent: FD.saldos(financeCache).deuda, fecha: isoDate(date), dias: days }];
+    const deudaCent = FD.saldos(financeCache).deuda;
+    return [{ nombre: "", deudaCent, pagarCent: Math.max(0, deudaCent), cargosCent: 0, fecha: isoDate(date), dias: days }];
   }
-  return estadoTarjetas().lista.map(c => ({ nombre: c.nombre, deudaCent: c.deudaCent, fecha: c.pago.fecha, dias: c.pago.dias, minimo: c.minimo }));
+  return estadoTarjetas().lista.map(c => ({ nombre: c.nombre, deudaCent: c.deudaCent, pagarCent: c.pagar.cent, cargosCent: c.pagar.cargosCent, fecha: c.pago.fecha, dias: c.pago.dias }));
 }
-// Pagar es una transferencia de Débito a la tarjeta, por el total que debes
-// (o solo lo que falta del pago mínimo, D-121).
-function pagarTarjeta(id, soloMinimo) {
+// Lo que paga "Pagar todo": lo de este mes (con seguros y mantenimiento); si
+// ya pagaste todo este mes, lo que debes (lo nuevo).
+function montoPagar(c) { return c.pagar.cent > 0 ? c.pagar.cent : Math.max(0, c.deudaCent); }
+// El monto para la hoja: "1155,50" (con centavos, siempre dos) o "1100".
+const montoHoja = cent => (cent % 100 ? (cent / 100).toFixed(2) : String(cent / 100)).replace(".", ",");
+// Pagar es una transferencia de Débito a la tarjeta, por todo (D-165: nunca el
+// mínimo, para no pagar intereses). Los seguros y mantenimiento de este mes se
+// suman y, al guardar, se anotan como gastos de la tarjeta (ver cargosDeLaHoja).
+function pagarTarjeta(id) {
   const c = id ? tarjetaEstado(id) : null;
-  const deudaCent = Math.max(0, c ? c.deudaCent : FD.saldos(financeCache).deuda);
-  const min = soloMinimo && c && c.minimo && c.minimo.faltaCent > 0 ? c.minimo.faltaCent : null;
-  openTxnSheet(null, { type: "transferencia", from: "debito", to: "tarjeta", tarjetaId: c ? c.id : null, amount: String(FD.aBs(min || deudaCent)).replace(".", ","),
-    desc: c ? `${min ? "Pago mínimo" : "Pago"} de ${c.nombre}` : "Pago de tarjeta" });
+  const cent = c ? montoPagar(c) : Math.max(0, FD.saldos(financeCache).deuda);
+  const inicial = { type: "transferencia", from: "debito", to: "tarjeta", tarjetaId: c ? c.id : null, amount: montoHoja(cent),
+    desc: c ? `Pago de ${c.nombre}` : "Pago de tarjeta" };
+  // Si apagas "Sumar seguros y mantenimiento", el monto baja solo (y vuelve si lo prendes).
+  if (c && c.pagar.cargosCent > 0) inicial.cargosAuto = { conCent: cent, sinCent: Math.max(0, cent - c.pagar.cargosCent) };
+  openTxnSheet(null, inicial);
 }
 // "Vence hoy / mañana / el 29 nov (en 14 días)".
 function venceTexto(p) {
   return p.dias === 0 ? "vence hoy" : p.dias === 1 ? "vence mañana" : `vence el ${fechaCorta(p.fecha)} (en ${p.dias} días)`;
 }
-// Pago mínimo de una tarjeta (D-121): lo que falta, ya cubierto o sin deuda.
-function minimoHTML(c) {
-  const m = c.minimo;
-  if (!m) return c.deudaCent > 0
-    ? `<button type="button" class="fin-tc-min-agregar" data-tc-min-agregar="${escapeHtml(c.id)}"><span data-icon="plus"></span>Agregar el pago mínimo</button>` : "";
-  if (m.sinDeuda) return `<p class="fin-tc-min is-ok"><span class="fin-tc-min-ic" aria-hidden="true">✓</span><span>Sin deuda: este mes no tienes pago mínimo.</span></p>`;
-  if (m.cubierto) return `<p class="fin-tc-min is-ok"><span class="fin-tc-min-ic" aria-hidden="true">✓</span><span><strong>Pago mínimo cubierto</strong><small>Pagaste ${formatBsShort(FD.aBs(m.pagadoCent))} desde el ${escapeHtml(fechaCorta(m.desde))}. Mínimo: ${formatBsShort(FD.aBs(m.cent))}.</small></span></p>`;
-  const etiqueta = m.urgencia === "mal" ? "Urgente" : m.urgencia === "aviso" ? "Pronto" : "Pendiente";
-  return `<div class="fin-tc-min is-${m.urgencia}" role="group" aria-label="Pago mínimo de ${escapeHtml(c.nombre)}">
-      <span class="fin-tc-min-ic" aria-hidden="true">!</span>
-      <span><strong>Pago mínimo: ${formatMoney(FD.aBs(m.faltaCent))}</strong>
-        <small>${etiqueta}: ${venceTexto(c.pago)}${m.pagadoCent > 0 ? ` · ya pagaste ${formatBsShort(FD.aBs(m.pagadoCent))} de ${formatBsShort(FD.aBs(m.cent))}` : ""}. Págalo para no caer en el buró.</small></span>
-    </div>
-    <button type="button" class="fin-tc-pagar fin-tc-pagar-min" data-tc-pagar-min="${escapeHtml(c.id)}">Pagar el mínimo (${formatBsShort(FD.aBs(m.faltaCent))})</button>`;
+// Lo que pagas este mes (D-165): todo lo que debes + seguros y mantenimiento,
+// para no pagar intereses. "Ya pagaste todo" si en este ciclo quedaste en cero.
+function pagoHTML(c) {
+  const p = c.pagar;
+  const bs = bsJusto;
+  const agregar = !c.cargos.length && (c.deudaCent > 0 || p.alDia)
+    ? `<button type="button" class="fin-tc-cargos-agregar" data-tc-cargos-agregar="${escapeHtml(c.id)}"><span data-icon="plus"></span>Agregar seguros y mantenimiento</button>` : "";
+  if (p.alDia) return `<p class="fin-tc-pago is-ok"><span class="fin-tc-pago-ic" aria-hidden="true">✓</span><span><strong>Este mes ya pagaste todo</strong><small>${c.deudaCent > 0
+    ? `Lo que gastaste después (${bs(c.deudaCent)}) va a tu próximo pago.`
+    : `Pagaste ${bs(p.pagadoCent)} desde el ${escapeHtml(fechaCorta(p.desde))}: sin intereses.`}</small></span></p>${agregar}`;
+  if (!p.cent) return agregar;
+  const etiqueta = p.urgencia === "mal" ? "Urgente" : p.urgencia === "aviso" ? "Pronto" : "Pendiente";
+  const que = p.cargosCent > 0
+    ? (p.deudaCent > 0 ? `Lo que gastaste (${bs(p.deudaCent)}) + seguros y mantenimiento (${bs(p.cargosCent)}).` : `Seguros y mantenimiento (${bs(p.cargosCent)}): este mes no gastaste con esta tarjeta.`)
+    : "Paga todo lo que debes.";
+  const favor = p.favorCent > 0 ? ` Ya descuenta tu saldo a favor (${bs(p.favorCent)}).` : "";
+  const ic = p.urgencia === "normal" ? `<span data-icon="calendar"></span>` : "!";
+  return `<div class="fin-tc-pago is-${p.urgencia}" role="group" aria-label="Pago de ${escapeHtml(c.nombre)}">
+      <span class="fin-tc-pago-ic" aria-hidden="true">${ic}</span>
+      <span><strong>Para no pagar intereses: ${formatMoney(FD.aBs(p.cent))}</strong>
+        <small>${etiqueta}: ${venceTexto(c.pago)}. ${que}${favor}</small></span>
+    </div>${agregar}`;
 }
 
 function renderTarjetas() {
@@ -3685,7 +3749,7 @@ function renderTarjetas() {
         <div><span>Disponible</span><strong>${formatBsShort(FD.aBs(tot.disponibleCent))}</strong></div>
       </div>
       <span class="fin-tc-barra is-${tot.nivel}" aria-hidden="true"><i style="width:${Math.min(100, Math.round(tot.uso * 100))}%"></i></span>
-      ${e.minimoFaltaCent > 0 ? `<p class="fin-tc-pie"><span>Pagos mínimos que faltan: <strong class="neg">${formatBsShort(FD.aBs(e.minimoFaltaCent))}</strong></span></p>` : ""}
+      ${e.pagarCent > 0 ? `<p class="fin-tc-pie"><span>Para no pagar intereses, este mes: <strong class="neg">${bsJusto(e.pagarCent)}</strong></span></p>` : ""}
     </div>` : ""}
     ${e.lista.map((c, i) => tarjetaHTML(c, i === 0 && e.lista.length > 1)).join("")}
     <p class="fin-tc-nota">El disponible es tu límite menos lo que debes.${e.lista.length > 1 ? " La principal se queda con los gastos con tarjeta que anotaste antes de registrar tus tarjetas." : ""}</p>`;
@@ -3707,15 +3771,15 @@ function tarjetaHTML(c, principal) {
       </div>
       <span class="fin-tc-barra is-${c.nivel}" role="img" aria-label="Usaste el ${pct} % del límite"><i style="width:${Math.min(100, pct)}%"></i></span>
       <p class="fin-tc-pie"><span>Usaste el ${pct} % de ${formatBsShort(FD.aBs(c.limiteCent))}</span>${c.deudaCent < 0 ? `<span>Saldo a favor: ${formatBsShort(FD.aBs(-c.deudaCent))}</span>` : ""}</p>
-      <p class="fin-tc-pie"><span>${c.pago.dias === 0 ? "Hoy toca pagar" : `Pago: ${fechaCorta(c.pago.fecha)} (${c.pago.dias === 1 ? "falta 1 día" : `faltan ${c.pago.dias} días`})`}</span></p>
+      ${c.pagar.cent > 0 || c.pagar.alDia ? "" : `<p class="fin-tc-pie"><span>${c.pago.dias === 0 ? "Hoy toca pagar" : `Pago: ${fechaCorta(c.pago.fecha)} (${c.pago.dias === 1 ? "falta 1 día" : `faltan ${c.pago.dias} días`})`}</span></p>`}
       ${c.nivel === "pasado" ? `<p class="fin-tc-alerta">Te pasaste del límite por ${formatBsShort(FD.aBs(-c.disponibleCent))}.</p>` : c.nivel === "alto" ? `<p class="fin-tc-alerta is-aviso">Ya usaste el ${pct} % del límite.</p>` : ""}
-      ${minimoHTML(c)}
-      ${c.deudaCent > 0 ? `<button type="button" class="fin-tc-pagar${c.minimo && c.minimo.faltaCent > 0 ? " is-sec" : ""}" data-tc-pagar="${escapeHtml(c.id)}">Pagar todo (${formatMoney(FD.aBs(c.deudaCent))})</button>` : ""}
+      ${pagoHTML(c)}
+      ${montoPagar(c) > 0 ? `<button type="button" class="fin-tc-pagar${c.pagar.alDia ? " is-sec" : ""}" data-tc-pagar="${escapeHtml(c.id)}">Pagar todo (${formatMoney(FD.aBs(montoPagar(c)))})</button>` : ""}
     </article>`;
 }
 
 // ---- Hoja para agregar o editar una tarjeta ----
-let tcEditando = null; // { id|null, nombre, limite, diaPago, pagoMinimo } tal como están en el formulario
+let tcEditando = null; // { id|null, nombre, limite, diaPago, cargos: [{ id|null, nombre, monto }], cargosCategoria, viejoMinimoCent } tal como están en el formulario
 // La lista tal como está guardada (se editan esas entradas para no perder campos).
 const tarjetasCrudas = () => (metaCrudo.finanzas_tarjetas && Array.isArray(metaCrudo.finanzas_tarjetas.list) ? metaCrudo.finanzas_tarjetas.list : []);
 function guardarTarjetas(list) {
@@ -3725,8 +3789,12 @@ function guardarTarjetas(list) {
 function abrirTarjeta(id, enfocar) {
   const c = id ? tarjetasCache.find(x => x.id === id) : null;
   tcEditando = c
-    ? { id: c.id, nombre: c.nombre, limite: String(FD.aBs(c.limiteCent)).replace(".", ","), diaPago: c.diaPago ? String(c.diaPago) : "", pagoMinimo: c.pagoMinimoCent ? String(FD.aBs(c.pagoMinimoCent)).replace(".", ",") : "" }
-    : { id: null, nombre: "", limite: "", diaPago: "", pagoMinimo: "" };
+    ? { id: c.id, nombre: c.nombre, limite: String(FD.aBs(c.limiteCent)).replace(".", ","), diaPago: c.diaPago ? String(c.diaPago) : "",
+        cargos: c.cargos.map(x => ({ id: x.id, nombre: x.nombre, monto: montoHoja(x.montoCent) })),
+        cargosCategoria: TC.categoriaCargos(c, gastoCategoriesCache), viejoMinimoCent: c.cargos.length ? null : c.pagoMinimoCent }
+    : { id: null, nombre: "", limite: "", diaPago: "", cargos: [], cargosCategoria: TC.categoriaCargos({}, gastoCategoriesCache), viejoMinimoCent: null };
+  // Dos filas para empezar: un seguro y el mantenimiento.
+  while (tcEditando.cargos.length < 2) tcEditando.cargos.push({ id: null, nombre: "", monto: "" });
   renderTarjetaForm([]);
   document.getElementById("tc-sheet-title").textContent = c ? "Editar tarjeta" : "Nueva tarjeta";
   document.getElementById("tc-borrar").hidden = !c;
@@ -3741,21 +3809,58 @@ function renderTarjetaForm(errores) {
   f.innerHTML = `
     <label class="rec-campo">Nombre<input type="text" name="nombre" maxlength="40" value="${escapeHtml(r.nombre)}" placeholder="Visa BNB" autocomplete="off"></label>
     <label class="rec-campo">Límite (Bs)<input type="text" name="limite" inputmode="decimal" value="${escapeHtml(r.limite)}" placeholder="5000" autocomplete="off"></label>
-    <label class="rec-campo">Pago mínimo (Bs) · opcional<input type="text" name="pagoMinimo" inputmode="decimal" value="${escapeHtml(r.pagoMinimo || "")}" placeholder="250" autocomplete="off" aria-describedby="tc-min-ayuda"></label>
-    <p class="fin-aj-texto fin-tc-min-ayuda" id="tc-min-ayuda">Lo que sí o sí tienes que pagar antes del día de pago para no caer en el buró. Sale en tu extracto: actualízalo cada mes.</p>
     <label class="rec-campo">Día de pago<select name="diaPago" class="txn-filtro-select">
       <option value="">El de Ajustes (día ${diaPagoTarjeta()})</option>
       ${dias.map(d => `<option value="${d}"${String(d) === r.diaPago ? " selected" : ""}>Día ${d}</option>`).join("")}
     </select></label>
+    ${cargosFormHTML(r)}
     ${r.id && tarjetasCache.length > 1 ? (principal
       ? `<p class="fin-aj-texto">Es tu tarjeta principal: los gastos con tarjeta que anotaste antes de registrar tus tarjetas cuentan aquí.</p>`
       : `<button type="button" class="fin-aj-btn fin-tc-hacer-principal" data-tc-principal>Hacer principal</button>`) : ""}
     <p class="txn-sheet-error" id="tc-error" role="alert"${errores.length ? "" : " hidden"}>${errores.map(x => escapeHtml(x.texto)).join("<br>")}</p>`;
   errores.forEach(x => { const i = f.elements[x.campo]; if (i) { i.classList.add("is-error"); i.setAttribute("aria-invalid", "true"); } });
+  renderIcons(f);
+}
+// Seguros y mantenimiento (D-165): lo que el banco cobra cada mes, siempre igual.
+const CARGO_EJEMPLOS = ["Seguro de desgravamen", "Mantenimiento", "Otro seguro"];
+function cargosFormHTML(r) {
+  const total = r.cargos.reduce((s, x) => { const m = TC.leerMonto(x.monto); return s + (Number.isFinite(m) && m > 0 ? m : 0); }, 0);
+  const filas = r.cargos.map((x, i) => `
+      <div class="fin-tc-cargo">
+        <input type="text" name="cargoNombre${i}" maxlength="40" value="${escapeHtml(x.nombre)}" placeholder="${CARGO_EJEMPLOS[Math.min(i, 2)]}" autocomplete="off" aria-label="Cargo ${i + 1}: qué es">
+        <input type="text" name="cargoMonto${i}" inputmode="decimal" value="${escapeHtml(x.monto)}" placeholder="Bs" autocomplete="off" aria-label="Cargo ${i + 1}: Bs al mes">
+        <button type="button" class="fin-tc-cargo-quitar" data-tc-cargo-quitar="${i}" aria-label="Quitar el cargo ${i + 1}${x.nombre ? ` (${escapeHtml(x.nombre)})` : ""}"><span data-icon="close"></span></button>
+      </div>`).join("");
+  return `
+    <fieldset class="fin-tc-cargos" aria-describedby="tc-cargos-ayuda">
+      <legend>Seguros y mantenimiento · cada mes</legend>
+      <p class="fin-aj-texto" id="tc-cargos-ayuda">Lo que el banco te cobra cada mes, siempre igual. Se suma a lo que gastas: así sabes cuánto pagar para no pagar intereses.</p>
+      ${r.viejoMinimoCent ? `<p class="fin-aj-texto fin-tc-viejo">Antes anotaste un pago mínimo de ${bsJusto(r.viejoMinimoCent)}. Ya no se usa, porque pagas todo. Si eran tus seguros, anótalos aquí.</p>` : ""}
+      ${filas}
+      ${r.cargos.length < TC.MAX_CARGOS ? `<button type="button" class="fin-tc-cargos-mas" data-tc-cargo-mas><span data-icon="plus"></span>Agregar otro</button>` : ""}
+      ${total ? `<p class="fin-tc-cargos-total">Total al mes: <strong>${bsJusto(total)}</strong></p>` : ""}
+      <label class="rec-campo">Se anotan como gasto en<select name="cargosCategoria" class="txn-filtro-select">
+        ${gastoCategoriesCache.map(cat => `<option value="${escapeHtml(cat.id)}"${cat.id === r.cargosCategoria ? " selected" : ""}>${escapeHtml(cat.label)}</option>`).join("")}
+      </select></label>
+    </fieldset>`;
 }
 function leerTarjetaForm() {
   const f = document.getElementById("tc-form");
-  Object.assign(tcEditando, { nombre: f.elements.nombre.value, limite: f.elements.limite.value, diaPago: f.elements.diaPago.value, pagoMinimo: f.elements.pagoMinimo.value });
+  Object.assign(tcEditando, { nombre: f.elements.nombre.value, limite: f.elements.limite.value, diaPago: f.elements.diaPago.value,
+    cargos: tcEditando.cargos.map((x, i) => ({ id: x.id, nombre: f.elements[`cargoNombre${i}`].value, monto: f.elements[`cargoMonto${i}`].value })),
+    cargosCategoria: f.elements.cargosCategoria ? f.elements.cargosCategoria.value : tcEditando.cargosCategoria });
+}
+// Agregar o quitar una fila de cargos (lo escrito se conserva).
+function cambiarCargos(quitar) {
+  leerTarjetaForm();
+  const lista = tcEditando.cargos;
+  if (quitar == null) lista.push({ id: null, nombre: "", monto: "" });
+  else lista.splice(quitar, 1);
+  if (!lista.length) lista.push({ id: null, nombre: "", monto: "" });
+  renderTarjetaForm([]);
+  const f = document.getElementById("tc-form");
+  const foco = quitar == null ? f.elements[`cargoNombre${lista.length - 1}`] : (f.querySelector("[data-tc-cargo-mas]") || f.elements[`cargoNombre${Math.max(0, quitar - 1)}`]);
+  if (foco) foco.focus();
 }
 function guardarTarjeta() {
   leerTarjetaForm();
@@ -3765,7 +3870,9 @@ function guardarTarjeta() {
   const crudas = tarjetasCrudas();
   guardarTarjetas(r.id ? crudas.map(x => (x && x.id === r.id ? TC.editar(x, v.datos, Date.now()) : x)) : crudas.concat([TC.nueva(v.datos, tarjetasCache)]));
   hideSheet(document.getElementById("tc-sheet"));
-  avisoFin(r.id ? `«${v.datos.nombre}» guardada` : `«${v.datos.nombre}» agregada · límite ${formatBsShort(FD.aBs(v.datos.limiteCent))}`);
+  const cargosCent = v.datos.cargos.reduce((s, x) => s + x.montoCent, 0);
+  const extra = cargosCent ? ` · seguros y mantenimiento: ${bsJusto(cargosCent)} al mes` : "";
+  avisoFin(r.id ? `«${v.datos.nombre}» guardada${extra}` : `«${v.datos.nombre}» agregada · límite ${formatBsShort(FD.aBs(v.datos.limiteCent))}${extra}`);
 }
 function borrarTarjeta() {
   const c = tarjetasCache.find(x => x.id === tcEditando.id);
@@ -3790,16 +3897,17 @@ document.getElementById("panel-fin-tarjetas").addEventListener("click", e => {
   if (ed) { abrirTarjeta(ed.dataset.tcEditar); return; }
   const pg = e.target.closest("[data-tc-pagar]");
   if (pg) { pagarTarjeta(pg.dataset.tcPagar); return; }
-  const pm = e.target.closest("[data-tc-pagar-min]");
-  if (pm) { pagarTarjeta(pm.dataset.tcPagarMin, true); return; }
-  const ag = e.target.closest("[data-tc-min-agregar]");
-  if (ag) { abrirTarjeta(ag.dataset.tcMinAgregar, "pagoMinimo"); return; }
+  const ag = e.target.closest("[data-tc-cargos-agregar]");
+  if (ag) { abrirTarjeta(ag.dataset.tcCargosAgregar, "cargoNombre0"); return; }
   if (e.target.closest("[data-tc-nueva]")) abrirTarjeta(null);
 });
 document.getElementById("tc-sheet").addEventListener("click", e => {
   if (e.target.closest("#tc-guardar")) { guardarTarjeta(); return; }
   if (e.target.closest("#tc-borrar")) { borrarTarjeta(); return; }
   if (e.target.closest("[data-tc-principal]")) { hacerPrincipal(); return; }
+  const q = e.target.closest("[data-tc-cargo-quitar]");
+  if (q) { cambiarCargos(Number(q.dataset.tcCargoQuitar)); return; }
+  if (e.target.closest("[data-tc-cargo-mas]")) { cambiarCargos(null); return; }
   if (e.target.closest(".budget-sheet-close") || e.target.classList.contains("budget-sheet-overlay")) hideSheet(document.getElementById("tc-sheet"));
 });
 document.getElementById("tc-form").addEventListener("submit", e => { e.preventDefault(); guardarTarjeta(); });
@@ -4282,7 +4390,7 @@ function formatWalletAmount(id, n) {
 // Todo en un solo lote con ids creados en el teléfono: sin conexión se
 // guarda completo al instante (antes esperaba al servidor entre un paso y
 // otro y, si cerrabas la app, quedaba a medias).
-function createTransfer({ from, to, amount, amountTo, desc, date, tipoCambio, tarjetaId }) {
+function createTransfer({ from, to, amount, amountTo, desc, date, tipoCambio, tarjetaId, gastos }) {
   const suffix = desc ? " · " + desc : "";
   const links = [];
   const lote = nuevoLote();
@@ -4304,6 +4412,9 @@ function createTransfer({ from, to, amount, amountTo, desc, date, tipoCambio, ta
   const record = FD.conCentavos({ date, type: "transferencia", category: "transferencia", from, to, amount, amountTo, desc: desc || "", links, createdAt: creado });
   if (tipoCambio) record.tipoCambio = tipoCambio;
   if (to === "tarjeta" && tarjetaId) record.tarjetaId = tarjetaId;
+  // D-165: seguros y mantenimiento que se suman a un pago, anotados un instante
+  // antes (así el pago los cubre y la tarjeta queda al día).
+  (gastos || []).forEach(g => lote.set(financeCollection().doc(), Object.assign({}, g, { createdAt: creado - 1 })));
   lote.set(financeCollection().doc(), record);
   return lote.commit();
 }
@@ -5497,11 +5608,12 @@ window.FinanzasResumen = {
     gastoCategoriesCache.forEach(c => { o[c.id] = c.label; });
     return o;
   },
-  // D-121: pagos mínimos que faltan y vencen en 3 días o menos.
+  // D-165 (antes el pago mínimo de D-121): el pago de cada tarjeta (todo +
+  // seguros y mantenimiento) que vence en 3 días o menos.
   tarjetas() {
     if (!tarjetasCache.length) return [];
-    return estadoTarjetas().lista.filter(c => c.minimo && c.minimo.faltaCent > 0 && c.pago.dias <= 3)
-      .map(c => ({ nombre: c.nombre, falta: bsCent(c.minimo.faltaCent), faltaCent: c.minimo.faltaCent, dias: c.pago.dias }));
+    return estadoTarjetas().lista.filter(c => c.pagar.cent > 0 && c.pago.dias <= 3)
+      .map(c => ({ nombre: c.nombre, falta: bsJusto(c.pagar.cent), faltaCent: c.pagar.cent, dias: c.pago.dias, cargos: c.pagar.cargosCent > 0 }));
   },
   hoy() {
     if (!financeCache.length && !delServidor.finanzas) return null;

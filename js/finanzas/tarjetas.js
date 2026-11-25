@@ -8,10 +8,16 @@
 // movimiento. Lo viejo (sin tarjetaId, o con una tarjeta que ya no existe)
 // cuenta para la primera de la lista, la "principal". Así la suma de las
 // deudas por tarjeta es siempre igual a la deuda total.
-// Pago mínimo (D-121, pedido del dueño 2026-11-15): cada tarjeta puede tener
-// el suyo (lo que sí o sí hay que pagar para no caer en el buró; sale en el
-// extracto y cambia cada mes). Se cuenta lo que pagaste a esa tarjeta desde
-// el día de pago anterior y se muestra cuánto falta antes del próximo.
+// Seguros y mantenimiento (D-165, pedido del dueño 2026-11-25): no hay pago
+// mínimo; el dueño paga siempre todo, para no pagar intereses. Lo que el banco
+// cobra cada mes, siempre igual (seguros, mantenimiento), se anota en la
+// tarjeta: cargos [{ id, nombre, montoCent }]. Lo que hay que pagar antes del
+// día de pago = lo que debes + los cargos de este ciclo que todavía no se
+// anotaron. Al pagar, esos cargos se anotan como gastos de la tarjeta
+// (cargoCiclo = el día de pago del ciclo, cargoId = cuál): así la deuda y el
+// presupuesto quedan bien. Si en este ciclo ya pagaste todo, la tarjeta está
+// "al día" y lo que gastes después va al pago siguiente. El pago mínimo de
+// antes (D-121, pagoMinimoCent) queda guardado, pero ya no se usa.
 // Pruebas: tests/finanzas-tarjetas.test.js.
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
@@ -21,6 +27,7 @@
 
 const COLORES = ["#e05656", "#4d9de0", "#9b6bde", "#ffb84d", "#5cc98a", "#ff6b9a"];
 const MAX = 10;
+const MAX_CARGOS = 6;
 const LIMITE_MAX_CENT = 1000000000;   // Bs 10 millones
 
 const centDe = (n, dec) => (Number.isInteger(n) ? n : (typeof dec === "number" && isFinite(dec) ? Math.round(dec * 100) : null));
@@ -40,9 +47,20 @@ function normalizar(list) {
         diaPago: Number.isInteger(dia) && dia >= 1 && dia <= 31 ? dia : null,
         color: typeof t.color === "string" && /^#[0-9a-f]{6}$/i.test(t.color) ? t.color : COLORES[i % COLORES.length],
         creado: Number(t.creado) || 0,
-        pagoMinimoCent: min != null && min > 0 && min <= LIMITE_MAX_CENT ? min : null
+        pagoMinimoCent: min != null && min > 0 && min <= LIMITE_MAX_CENT ? min : null,   // D-121: ya no se usa (solo para avisar)
+        cargos: normalizarCargos(t.cargos),
+        cargosCategoria: typeof t.cargosCategoria === "string" && t.cargosCategoria ? t.cargosCategoria : null
       };
     });
+}
+// Seguros y mantenimiento guardados → limpios: [{ id, nombre, montoCent }].
+function normalizarCargos(lista) {
+  const vistos = new Set();
+  return (Array.isArray(lista) ? lista : [])
+    .filter(c => c && typeof c.id === "string" && c.id && typeof c.nombre === "string" && c.nombre.trim() && !vistos.has(c.id) && vistos.add(c.id))
+    .map(c => ({ id: c.id, nombre: c.nombre.trim(), montoCent: centDe(c.montoCent, c.monto) }))
+    .filter(c => c.montoCent != null && c.montoCent > 0 && c.montoCent <= LIMITE_MAX_CENT)
+    .slice(0, MAX_CARGOS);
 }
 
 // ¿A qué tarjeta va este movimiento? (null si no hay tarjetas registradas)
@@ -105,15 +123,58 @@ function pagado(movs, tarjetas, id, desde, hasta) {
     return s - efectoDeuda(m);
   }, 0);
 }
-// Pago mínimo de una tarjeta este ciclo: { cent, pagadoCent, faltaCent, cubierto, sinDeuda, desde, urgencia }.
-function minimo(t, deudaCent, pago, movs, tarjetas, hoy, dia) {
-  if (!t.pagoMinimoCent) return null;
+// Los cargos de un ciclo (el que termina el día de pago "hasta") que todavía
+// no se anotaron como gastos de la tarjeta.
+function cargosPendientes(t, movs, tarjetas, hasta) {
+  const anotados = new Set((movs || []).filter(m => m && m.type === "gasto" && m.cargoCiclo === hasta && m.cargoId && tarjetaDe(m, tarjetas) === t.id).map(m => m.cargoId));
+  return (t.cargos || []).filter(c => !anotados.has(c.id));
+}
+// Los cargos que se suman a un pago hecho en esa fecha: { ciclo, lista, cent }.
+function cargosDelPago(t, movs, tarjetas, fecha, diaGlobal) {
+  const ciclo = proximoPago(t.diaPago || diaGlobal || 29, fecha).fecha;
+  const lista = cargosPendientes(t, movs, tarjetas, ciclo);
+  return { ciclo, lista, cent: lista.reduce((s, c) => s + c.montoCent, 0) };
+}
+// Los gastos que anotan esos cargos (el id y createdAt los pone quien guarda).
+function gastosDeCargos(t, pend, fecha, categoria) {
+  return pend.lista.map(c => ({ date: fecha, type: "gasto", category: categoria, payment: "credito", desc: c.nombre, amount: c.montoCent / 100,
+    excluded: false, factura: false, tarjetaId: t.id, cargoCiclo: pend.ciclo, cargoId: c.id }));
+}
+// La categoría de esos gastos: la elegida; si no, una de banco o seguros; si no, "Otros".
+// categorias: [{ id, label }] (las de gasto).
+function categoriaCargos(t, categorias) {
+  const lista = categorias || [];
+  if (t && t.cargosCategoria && lista.some(c => c.id === t.cargosCategoria)) return t.cargosCategoria;
+  const parecida = lista.find(c => /seguro|banc|comisi|financ|tarjeta/i.test(c.label || ""));
+  if (parecida) return parecida.id;
+  if (lista.some(c => c.id === "otros")) return "otros";
+  return lista.length ? lista[0].id : "otros";
+}
+// ¿Pagaste todo en este ciclo? La fecha del último pago (desde exclusivo,
+// hasta hoy) tras el que no debías nada; null si no. Mismo día: manda el orden
+// en que se anotó.
+function alDia(movs, tarjetas, id, desde, hoy) {
+  const orden = (movs || []).filter(m => m && efectoDeuda(m) && m.date <= hoy && tarjetaDe(m, tarjetas) === id)
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)) || (Number(a.createdAt) || 0) - (Number(b.createdAt) || 0));
+  let deuda = 0, fecha = null;
+  orden.forEach(m => {
+    deuda += efectoDeuda(m);
+    if (m.date > desde && (m.type === "pago_tarjeta" || (m.type === "transferencia" && m.to === "tarjeta")) && deuda <= 0) fecha = m.date;
+  });
+  return fecha;
+}
+// Lo que conviene pagar antes del día de pago para no pagar intereses:
+// { cent, deudaCent, favorCent, cargosCent, cargos, alDia, pagadoCent, urgencia, desde }.
+// Rojo hoy o mañana; ámbar a 7 días o menos.
+function aPagar(t, deudaCent, pago, movs, tarjetas, hoy, dia) {
   const desde = pagoAnterior(dia, hoy);
-  const pagadoCent = Math.max(0, pagado(movs, tarjetas, t.id, desde, hoy));
-  const deuda = Math.max(0, deudaCent);
-  const faltaCent = Math.max(0, Math.min(t.pagoMinimoCent - pagadoCent, deuda));
-  const urgencia = !faltaCent ? "ok" : pago.dias <= 3 ? "mal" : pago.dias <= 7 ? "aviso" : "normal";
-  return { cent: t.pagoMinimoCent, pagadoCent, faltaCent, cubierto: !faltaCent, sinDeuda: !deuda, desde, urgencia };
+  const cargos = cargosPendientes(t, movs, tarjetas, pago.fecha);
+  const cargosCent = cargos.reduce((s, c) => s + c.montoCent, 0);
+  const fecha = alDia(movs, tarjetas, t.id, desde, hoy);
+  const cent = fecha ? 0 : Math.max(0, deudaCent + cargosCent);
+  const urgencia = !cent ? "ok" : pago.dias <= 1 ? "mal" : pago.dias <= 7 ? "aviso" : "normal";
+  return { cent, deudaCent: Math.max(0, deudaCent), favorCent: Math.max(0, -deudaCent), cargosCent: fecha ? 0 : cargosCent, cargos: fecha ? [] : cargos,
+    alDia: fecha, pagadoCent: Math.max(0, pagado(movs, tarjetas, t.id, desde, hoy)), urgencia, desde };
 }
 
 function nivel(uso) {
@@ -137,15 +198,16 @@ function estado(movs, tarjetas, hoy, diaGlobal) {
       disponibleCent: t.limiteCent - Math.max(deudaCent, 0),
       uso, nivel: nivel(uso),
       pago,
-      minimo: minimo(t, deudaCent, pago, movs, tarjetas, hoy, dia)
+      pagar: aPagar(t, deudaCent, pago, movs, tarjetas, hoy, dia),
+      cargosMesCent: (t.cargos || []).reduce((s, c) => s + c.montoCent, 0)
     });
   });
   const limiteCent = lista.reduce((s, t) => s + t.limiteCent, 0);
   const deudaCent = lista.reduce((s, t) => s + t.deudaCent, 0);
   const usado = lista.reduce((s, t) => s + Math.max(t.deudaCent, 0), 0);
   const uso = limiteCent > 0 ? usado / limiteCent : 0;
-  const minimoFaltaCent = lista.reduce((s, t) => s + (t.minimo ? t.minimo.faltaCent : 0), 0);
-  return { lista, total: { limiteCent, deudaCent, disponibleCent: limiteCent - usado, uso, nivel: nivel(uso) }, minimoFaltaCent };
+  const pagarCent = lista.reduce((s, t) => s + t.pagar.cent, 0);
+  return { lista, total: { limiteCent, deudaCent, disponibleCent: limiteCent - usado, uso, nivel: nivel(uso) }, pagarCent };
 }
 
 // "5000", "5000,50", "5.000" o "15.000,50" (punto de miles, como en Bolivia) → centavos.
@@ -159,7 +221,8 @@ function leerMonto(txt) {
   return Math.round(n * 100);
 }
 
-// Formulario → { ok, errores: [{ campo, texto }], datos: { nombre, limiteCent, diaPago, pagoMinimoCent } }.
+// Formulario → { ok, errores: [{ campo, texto }], datos: { nombre, limiteCent, diaPago, cargos, cargosCategoria } }.
+// cargos: [{ id?, nombre, monto }] tal como están en el formulario (filas vacías: se ignoran).
 function validar(entrada, tarjetas, editandoId) {
   const e = entrada || {};
   const errores = [];
@@ -178,17 +241,41 @@ function validar(entrada, tarjetas, editandoId) {
     if (Number.isInteger(dia) && dia >= 1 && dia <= 31) diaPago = dia;
     else errores.push({ campo: "diaPago", texto: "El día de pago va del 1 al 31." });
   }
-  // Pago mínimo: opcional (vacío o 0 = sin pago mínimo).
-  let pagoMinimoCent = null;
-  const pm = leerMonto(e.pagoMinimo);
-  if (pm != null) {
-    if (!Number.isFinite(pm)) errores.push({ campo: "pagoMinimo", texto: "El pago mínimo tiene que ser un número (por ejemplo, 250)." });
-    else if (pm > LIMITE_MAX_CENT) errores.push({ campo: "pagoMinimo", texto: "Revisa el pago mínimo: es demasiado alto." });
-    else if (pm > 0) pagoMinimoCent = pm;
-  }
+  // Seguros y mantenimiento: opcionales, cada uno con qué es y cuánto por mes.
+  const cargos = [];
+  (Array.isArray(e.cargos) ? e.cargos : []).forEach((c, i) => {
+    const n = String((c && c.nombre) || "").trim().replace(/\s+/g, " ");
+    const m = leerMonto(c && c.monto);
+    if (!n && m == null) return;
+    const cual = n ? `«${n}»` : "ese cargo";
+    if (!n) errores.push({ campo: `cargoNombre${i}`, texto: "Escribe qué es cada cargo (por ejemplo, Seguro de desgravamen)." });
+    else if (n.length > 40) errores.push({ campo: `cargoNombre${i}`, texto: `El nombre ${cual} es muy largo (máximo 40 letras).` });
+    if (m == null) errores.push({ campo: `cargoMonto${i}`, texto: `Escribe cuánto te cobran por ${cual} cada mes.` });
+    else if (!Number.isFinite(m)) errores.push({ campo: `cargoMonto${i}`, texto: `El monto de ${cual} tiene que ser un número (por ejemplo, 35).` });
+    else if (m <= 0) errores.push({ campo: `cargoMonto${i}`, texto: `El monto de ${cual} tiene que ser mayor que cero.` });
+    else if (m > LIMITE_MAX_CENT) errores.push({ campo: `cargoMonto${i}`, texto: `Revisa el monto de ${cual}: es demasiado alto.` });
+    else if (n && n.length <= 40) cargos.push({ id: c && typeof c.id === "string" && c.id ? c.id : null, nombre: n, montoCent: m });
+  });
+  if (cargos.length > MAX_CARGOS) errores.push({ campo: "cargoNombre0", texto: `Puedes anotar hasta ${MAX_CARGOS} cargos por tarjeta.` });
   if (!editandoId && (tarjetas || []).length >= MAX) errores.push({ campo: "nombre", texto: `Puedes registrar hasta ${MAX} tarjetas.` });
-  return { ok: !errores.length, errores, datos: { nombre, limiteCent: Number.isFinite(lim) ? lim : null, diaPago, pagoMinimoCent } };
+  // En qué categoría se anotan como gasto (solo si hay cargos).
+  const cargosCategoria = cargos.length && typeof e.cargosCategoria === "string" && e.cargosCategoria ? e.cargosCategoria : null;
+  return { ok: !errores.length, errores, datos: { nombre, limiteCent: Number.isFinite(lim) ? lim : null, diaPago, cargos, cargosCategoria } };
 }
+// Cargos para guardar: con id (los nuevos reciben uno que no repite) y el monto también en Bs.
+function cargosParaGuardar(cargos, ahora) {
+  const usados = new Set(cargos.filter(c => c.id).map(c => c.id));
+  return cargos.map((c, i) => {
+    let id = c.id;
+    if (!id) {
+      id = `cg_${ahora.toString(36)}_${i}`;
+      for (let k = 2; usados.has(id); k++) id = `cg_${ahora.toString(36)}_${i}_${k}`;
+      usados.add(id);
+    }
+    return { id, nombre: c.nombre, montoCent: c.montoCent, monto: c.montoCent / 100 };
+  });
+}
+const mismosCargos = (a, b) => JSON.stringify((a || []).map(c => [c.id, c.nombre, c.montoCent])) === JSON.stringify((b || []).map(c => [c.id, c.nombre, c.montoCent]));
 
 // Tarjeta nueva para guardar (con el límite también en Bs, como el resto de Finanzas).
 // El id nunca repite uno existente (dos tarjetas creadas en el mismo milisegundo).
@@ -199,20 +286,20 @@ function nueva(datos, tarjetas, ahora) {
   let id = `tc_${t.toString(36)}`;
   for (let i = 2; usados.has(id); i++) id = `tc_${t.toString(36)}_${i}`;
   const out = { id, nombre: datos.nombre, limiteCent: datos.limiteCent, limite: datos.limiteCent / 100, diaPago: datos.diaPago, color: COLORES[lista.length % COLORES.length], creado: t };
-  if (datos.pagoMinimoCent) Object.assign(out, { pagoMinimoCent: datos.pagoMinimoCent, pagoMinimo: datos.pagoMinimoCent / 100, pagoMinimoActualizado: t });
+  if (datos.cargos && datos.cargos.length) Object.assign(out, { cargos: cargosParaGuardar(datos.cargos, t), cargosActualizado: t });
+  if (datos.cargosCategoria) out.cargosCategoria = datos.cargosCategoria;
   return out;
 }
 // Misma tarjeta con lo editado (conserva id, color, creado y lo que no se toca).
 function editar(tarjeta, datos, ahora) {
   const out = Object.assign({}, tarjeta, { nombre: datos.nombre, limiteCent: datos.limiteCent, limite: datos.limiteCent / 100, diaPago: datos.diaPago });
-  const antes = tarjeta.pagoMinimoCent || null, nuevo = datos.pagoMinimoCent || null;
-  if (nuevo !== antes) {
-    Object.assign(out, nuevo
-      ? { pagoMinimoCent: nuevo, pagoMinimo: nuevo / 100, pagoMinimoActualizado: ahora || Date.now() }
-      : { pagoMinimoCent: null, pagoMinimo: null, pagoMinimoActualizado: ahora || Date.now() });
-  }
+  // Seguros y mantenimiento: la lista nueva (cada uno conserva su id).
+  const t = ahora || Date.now();
+  const cargos = cargosParaGuardar(datos.cargos || [], t);
+  if (!mismosCargos(cargos, normalizarCargos(tarjeta.cargos))) Object.assign(out, { cargos, cargosActualizado: t });
+  if (datos.cargosCategoria && datos.cargosCategoria !== tarjeta.cargosCategoria) out.cargosCategoria = datos.cargosCategoria;
   return out;
 }
 
-return { COLORES, MAX, normalizar, tarjetaDe, efectoDeuda, deudas, proximoPago, pagoAnterior, pagado, nivel, estado, leerMonto, validar, nueva, editar };
+return { COLORES, MAX, MAX_CARGOS, normalizar, normalizarCargos, tarjetaDe, efectoDeuda, deudas, proximoPago, pagoAnterior, pagado, cargosPendientes, cargosDelPago, gastosDeCargos, categoriaCargos, alDia, aPagar, nivel, estado, leerMonto, validar, nueva, editar };
 });

@@ -1,5 +1,16 @@
 # Cambios
 
+## 2026-11-25 · Finanzas: seguros y mantenimiento de tus tarjetas
+- **Ya no hay pago mínimo**: pagas siempre todo, para no pagar intereses.
+- **En cada tarjeta anotas sus seguros y el mantenimiento** (lo que el banco
+  cobra cada mes, siempre igual). La tarjeta te dice "Para no pagar
+  intereses: Bs X": lo que gastaste + seguros y mantenimiento.
+- **"Pagar todo"** ya trae esa suma y, al guardar, anota los seguros como
+  gastos de la tarjeta (así tu presupuesto los cuenta). Después dice "Este
+  mes ya pagaste todo".
+- El Resumen, "Atención", Análisis y "Mi día" de Inicio avisan el pago
+  completo, con seguros.
+
 ## 2026-11-25 · Ropa: ideas de tu estilista en Inspiración
 - **"Ideas de tu estilista"**, arriba de Inspiración: las prendas que le faltan
   a tu ropero según tu estilista (no hace falta Pinterest), cada una con por

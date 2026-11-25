@@ -1,6 +1,15 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-25 (Ropa: ideas de tu estilista en Inspiración, D-164).
+Actualizado: 2026-11-25 (Finanzas: seguros y mantenimiento de las tarjetas, D-165).
+
+- **Finanzas: seguros y mantenimiento de las tarjetas (2026-11-25)**: el
+  dueño paga siempre todo, así que ya no hay pago mínimo (D-121 queda
+  reemplazada). En cada tarjeta anota sus seguros y el mantenimiento (mismo
+  monto cada mes); la tarjeta dice "Para no pagar intereses: Bs X" (lo que
+  gastó + esos cargos), "Pagar todo" los anota como gastos de la tarjeta al
+  guardar el pago y queda "Este mes ya pagaste todo". También en el Resumen,
+  Atención, Análisis y Mi día (D-165). Falta que el dueño anote sus seguros y
+  compare con su extracto.
 
 - **Ropa, nivel 2: tu estilista con IA (2026-11-24, en curso)**: hablar con la
   IA como con un estilista (outfits solo con su ropa, a partir de lo que
@@ -152,7 +161,7 @@ Actualizado: 2026-11-25 (Ropa: ideas de tu estilista en Inspiración, D-164).
   iPhone en `docs/TESTING.md`.
 
 - **Ajustes del dueño (2026-11-15)**: pago mínimo por tarjeta con aviso
-  (D-121); "Leí en mi Biblia" para marcar lo leído en papel con un toque
+  (D-121; desde el 2026-11-25, seguros y mantenimiento: D-165); "Leí en mi Biblia" para marcar lo leído en papel con un toque
   (D-122); en el iPhone, lo fijo vuelve a su lugar si la pantalla queda
   corrida y todos los campos con letra de 16 px (D-120).
 

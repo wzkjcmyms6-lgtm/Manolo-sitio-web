@@ -1,5 +1,14 @@
 # Fase actual
 
+## Finanzas: seguros y mantenimiento de las tarjetas (pedido del dueño, 2026-11-25)
+"No hay un pago mínimo, quiero pagar siempre la tarjeta completa para no
+generar intereses; lo que es como pago mínimo son los seguros (y el
+mantenimiento), siempre el mismo monto."
+
+| Qué | Estado |
+|---|---|
+| Seguros y mantenimiento en cada tarjeta; "Para no pagar intereses: Bs X" (lo gastado + cargos); "Pagar todo" los anota como gastos; "Este mes ya pagaste todo"; Resumen, Atención, Análisis y Mi día; sin pago mínimo | ✅ (D-165) · ⏳ el dueño anota sus seguros y compara con su extracto (lista "Tarjetas: seguros y mantenimiento" de `docs/TESTING.md`) |
+
 ## Ropa, nivel 2: tu estilista con IA (pedido del dueño, 2026-11-24)
 "Que la IA sea mi estilista: hablar con ella, armar mis outfits yo y que opine
 de mi ropero con su propio criterio." Pedido completo, auditoría, diseño,
@@ -94,7 +103,7 @@ servidor): avisos con la app cerrada y Strava automático.
 | Qué | Estado |
 |---|---|
 | Fallas de pantalla de las capturas (barra flotando, campos de hora, nombres largos) | ✅ (D-120) |
-| Tarjetas: pago mínimo por tarjeta | ✅ (D-121) |
+| Tarjetas: pago mínimo por tarjeta | ✅ (D-121) · reemplazado por D-165 (seguros y mantenimiento) |
 | Biblia: marcar lo leído en papel, más sencillo | ✅ (D-122) |
 
 Queda del dueño: probar en el iPhone la lista «Pago mínimo, Biblia en
