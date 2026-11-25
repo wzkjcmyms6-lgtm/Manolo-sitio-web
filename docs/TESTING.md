@@ -1,6 +1,19 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-25 (Tarjetas: avance de efectivo, D-167): `npm test` → **864** (en
+  `finanzas-tarjetas`: el % —se valida, se guarda, se redondea—, la comisión,
+  el gasto de la comisión, Débito sube y la tarjeta debe lo sacado + la
+  comisión, a Efectivo, en lo que pagas y en el detalle). E2E nueva
+  `tarjetas-avance` (**34**): desde un gasto con la tarjeta ("Es un avance de
+  efectivo"), la comisión al escribir, se guarda unido a su comisión, el
+  aviso, Débito y la tarjeta, la lista, abrirlo, borrarlo y Deshacer, lo que
+  pagas y el detalle ("Avances de efectivo"), desde la tarjeta y desde
+  Transferencia (solo a Efectivo o Débito; sin %, sin comisión), el % en el
+  formulario; 375 px en oscuro y en claro. Bien también: `tarjetas-cargos`
+  (95), `tarjetas`, `finanzas-diario`, `mi-dia`, `inversiones`, `hojas`,
+  `regresion`, `respaldo`, `resumenes`, `sin-internet`, `sw-instala`,
+  `tema-claro`, `pantalla`, `fase1`, `emojis`, `scalping` y `lugares`.
 - 2026-11-25 (Tarjetas: de qué sale lo que pagas y el día de corte, D-166):
   `npm test` → **862** (en `finanzas-tarjetas`: el corte —el último antes del
   día de pago, meses cortos, cruza el año—, se guarda, lo del extracto y lo de
@@ -664,7 +677,7 @@ export NODE_PATH=/opt/node22/lib/node_modules   # donde está Playwright
 for f in fase1 regresion hojas sw-instala emojis scalping inversiones tarjetas movilidad \
   running run-importar run-detalle run-feed run-progreso run-inteligencia run-segmentos \
   run-compartir run-qa habitos mi-dia ej-calendario ejercicio libros-progreso lectura \
-  lectura-qa tiempos finanzas-diario lugares respaldo sin-internet pantalla tarjetas-cargos \
+  lectura-qa tiempos finanzas-diario lugares respaldo sin-internet pantalla tarjetas-cargos tarjetas-avance \
   biblia-marcar biblia-audio rr-editor rutina-entreno tema-claro libros-n3 bici resumenes \
   ropa ropa-insp ropa-outfits ropa-compras ropa-numeros ropa-final ropa-corte ropa-armar \
   ropa-opinion ropa-estilista ropa-conectar ropa-favoritos ropa-ideas; do node scripts/e2e/$f.js || break; done
@@ -770,6 +783,10 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
   el monto tiene que ser igual al de tu extracto.
 - [ ] Toca la tarjeta: mira la lista de gastos, seguros y lo que ya pagaste;
   toca un gasto para abrirlo. En Movimientos, toca la fila de la tarjeta.
+- [ ] Pon el % del avance de efectivo en tu tarjeta. Registra un avance (un
+  gasto con la tarjeta › "Es un avance de efectivo", o el botón de la
+  tarjeta): mira que Débito suba lo sacado y que la tarjeta deba lo sacado +
+  la comisión.
 
 **Ropa (2026-11; revisión final D-152)**
 

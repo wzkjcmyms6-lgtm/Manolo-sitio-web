@@ -123,6 +123,7 @@ function saldos(movs) {
       if (esEfectivo(m.from)) cash[carteraEfectivo(m.from)] -= c;
       if (esEfectivo(m.to)) cash[carteraEfectivo(m.to)] += recibido;
       if (m.to === "tarjeta") deuda -= recibido;
+      if (m.from === "tarjeta") deuda += c;   // avance de efectivo (D-167)
     } else if (m.type === "ajuste_tarjeta") {
       deuda -= c;
     }

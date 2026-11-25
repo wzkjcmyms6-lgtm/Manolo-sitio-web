@@ -22,6 +22,10 @@
 // 2026-11-25): con el día de corte, lo que pagas es lo del extracto (hasta el
 // corte) y lo que gastes después va al pago siguiente; cuenta() da el detalle
 // (los gastos, los seguros, el saldo de antes y lo ya pagado).
+// Avance de efectivo (D-167, pedido del dueño 2026-11-25): sacas plata con la
+// tarjeta (por ejemplo, por QR) a Débito o Efectivo; es una transferencia
+// desde la tarjeta y el banco cobra un % de comisión (avancePct), que se anota
+// como gasto de la tarjeta. En la tarjeta debes lo que sacaste + la comisión.
 // Pruebas: tests/finanzas-tarjetas.test.js.
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
@@ -32,6 +36,7 @@
 const COLORES = ["#e05656", "#4d9de0", "#9b6bde", "#ffb84d", "#5cc98a", "#ff6b9a"];
 const MAX = 10;
 const MAX_CARGOS = 6;
+const MAX_AVANCE = 50;                // % de comisión del avance de efectivo (más es un error)
 const LIMITE_MAX_CENT = 1000000000;   // Bs 10 millones
 
 const centDe = (n, dec) => (Number.isInteger(n) ? n : (typeof dec === "number" && isFinite(dec) ? Math.round(dec * 100) : null));
@@ -45,6 +50,7 @@ function normalizar(list) {
       const dia = Number(t.diaPago);
       const corte = Number(t.diaCorte);
       const min = centDe(t.pagoMinimoCent, t.pagoMinimo);
+      const avance = Number(t.avancePct);
       return {
         id: t.id,
         nombre: t.nombre.trim(),
@@ -55,7 +61,8 @@ function normalizar(list) {
         creado: Number(t.creado) || 0,
         pagoMinimoCent: min != null && min > 0 && min <= LIMITE_MAX_CENT ? min : null,   // D-121: ya no se usa (solo para avisar)
         cargos: normalizarCargos(t.cargos),
-        cargosCategoria: typeof t.cargosCategoria === "string" && t.cargosCategoria ? t.cargosCategoria : null
+        cargosCategoria: typeof t.cargosCategoria === "string" && t.cargosCategoria ? t.cargosCategoria : null,
+        avancePct: Number.isFinite(avance) && avance > 0 && avance <= MAX_AVANCE ? Math.round(avance * 100) / 100 : null
       };
     });
 }
@@ -86,7 +93,22 @@ function efectoDeuda(m) {
     const recibido = Number.isInteger(m.montoDestinoCent) ? m.montoDestinoCent : (m.amountTo != null ? Math.round(Number(m.amountTo) * 100) : c);
     return -recibido;
   }
+  if (m.type === "transferencia" && m.from === "tarjeta") return c;   // avance de efectivo (D-167)
   return 0;
+}
+// ¿Es un avance de efectivo (o su comisión)?
+const esAvance = m => !!m && ((m.type === "transferencia" && m.from === "tarjeta") || !!m.comisionAvance);
+// El % escrito como en Bolivia: "1", "1,5".
+const pctTexto = p => String(Math.round(p * 100) / 100).replace(".", ",");
+// La comisión de un avance de efectivo (centavos): el % de la tarjeta.
+function comisionAvance(t, montoCent) {
+  const pct = t && t.avancePct > 0 ? t.avancePct : 0;
+  return Math.round(montoCent * pct / 100);
+}
+// El gasto que anota la comisión (el id y createdAt los pone quien guarda).
+function gastoComision(t, comisionCent, fecha, categoria) {
+  return { date: fecha, type: "gasto", category: categoria, payment: "credito", desc: `Comisión del avance (${pctTexto(t.avancePct || 0)} %)`,
+    amount: comisionCent / 100, excluded: false, factura: false, tarjetaId: t.id, comisionAvance: true };
 }
 
 // Deuda de cada tarjeta: { id: centavos }.
@@ -279,7 +301,7 @@ function leerMonto(txt) {
   return Math.round(n * 100);
 }
 
-// Formulario → { ok, errores: [{ campo, texto }], datos: { nombre, limiteCent, diaPago, diaCorte, cargos, cargosCategoria } }.
+// Formulario → { ok, errores: [{ campo, texto }], datos: { nombre, limiteCent, diaPago, diaCorte, avancePct, cargos, cargosCategoria } }.
 // cargos: [{ id?, nombre, monto }] tal como están en el formulario (filas vacías: se ignoran).
 function validar(entrada, tarjetas, editandoId) {
   const e = entrada || {};
@@ -306,6 +328,15 @@ function validar(entrada, tarjetas, editandoId) {
     if (Number.isInteger(dc) && dc >= 1 && dc <= 31) diaCorte = dc;
     else errores.push({ campo: "diaCorte", texto: "El día de corte va del 1 al 31." });
   }
+  // Comisión del avance de efectivo: un % opcional ("1", "1,5"; vacío o 0 = sin comisión).
+  let avancePct = null;
+  const ap = String(e.avancePct == null ? "" : e.avancePct).replace(/\s|%/g, "").replace(",", ".");
+  if (ap) {
+    const n = /^\d+(\.\d{1,2})?$/.test(ap) ? Number(ap) : NaN;
+    if (!Number.isFinite(n)) errores.push({ campo: "avancePct", texto: "La comisión del avance es un porcentaje (por ejemplo, 1 o 1,5)." });
+    else if (n > MAX_AVANCE) errores.push({ campo: "avancePct", texto: "Revisa la comisión del avance: es demasiado alta." });
+    else if (n > 0) avancePct = n;
+  }
   // Seguros y mantenimiento: opcionales, cada uno con qué es y cuánto por mes.
   const cargos = [];
   (Array.isArray(e.cargos) ? e.cargos : []).forEach((c, i) => {
@@ -325,7 +356,7 @@ function validar(entrada, tarjetas, editandoId) {
   if (!editandoId && (tarjetas || []).length >= MAX) errores.push({ campo: "nombre", texto: `Puedes registrar hasta ${MAX} tarjetas.` });
   // En qué categoría se anotan como gasto (solo si hay cargos).
   const cargosCategoria = cargos.length && typeof e.cargosCategoria === "string" && e.cargosCategoria ? e.cargosCategoria : null;
-  return { ok: !errores.length, errores, datos: { nombre, limiteCent: Number.isFinite(lim) ? lim : null, diaPago, diaCorte, cargos, cargosCategoria } };
+  return { ok: !errores.length, errores, datos: { nombre, limiteCent: Number.isFinite(lim) ? lim : null, diaPago, diaCorte, avancePct, cargos, cargosCategoria } };
 }
 // Cargos para guardar: con id (los nuevos reciben uno que no repite) y el monto también en Bs.
 function cargosParaGuardar(cargos, ahora) {
@@ -354,6 +385,7 @@ function nueva(datos, tarjetas, ahora) {
   if (datos.cargos && datos.cargos.length) Object.assign(out, { cargos: cargosParaGuardar(datos.cargos, t), cargosActualizado: t });
   if (datos.cargosCategoria) out.cargosCategoria = datos.cargosCategoria;
   if (datos.diaCorte) out.diaCorte = datos.diaCorte;
+  if (datos.avancePct) out.avancePct = datos.avancePct;
   return out;
 }
 // Misma tarjeta con lo editado (conserva id, color, creado y lo que no se toca).
@@ -365,8 +397,9 @@ function editar(tarjeta, datos, ahora) {
   if (!mismosCargos(cargos, normalizarCargos(tarjeta.cargos))) Object.assign(out, { cargos, cargosActualizado: t });
   if (datos.cargosCategoria && datos.cargosCategoria !== tarjeta.cargosCategoria) out.cargosCategoria = datos.cargosCategoria;
   if ((datos.diaCorte || null) !== (tarjeta.diaCorte || null)) out.diaCorte = datos.diaCorte || null;
+  if ((datos.avancePct || null) !== (tarjeta.avancePct || null)) out.avancePct = datos.avancePct || null;
   return out;
 }
 
-return { COLORES, MAX, MAX_CARGOS, normalizar, normalizarCargos, tarjetaDe, efectoDeuda, deudas, proximoPago, pagoAnterior, pagado, cargosPendientes, cargosDelPago, gastosDeCargos, categoriaCargos, corteDe, cuenta, aPagar, nivel, estado, leerMonto, validar, nueva, editar };
+return { COLORES, MAX, MAX_CARGOS, normalizar, normalizarCargos, tarjetaDe, efectoDeuda, deudas, proximoPago, pagoAnterior, pagado, cargosPendientes, cargosDelPago, gastosDeCargos, categoriaCargos, corteDe, cuenta, aPagar, esAvance, pctTexto, comisionAvance, gastoComision, nivel, estado, leerMonto, validar, nueva, editar };
 });

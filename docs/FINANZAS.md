@@ -48,6 +48,22 @@ intereses.
   `gastosDeCargos`, `categoriaCargos`, `corteDe`, `cuenta`, `aPagar`). Pruebas:
   `tests/finanzas-tarjetas.test.js` y `scripts/e2e/tarjetas-cargos.js`.
 
+## Avance de efectivo (2026-11-25, D-167)
+
+- **El %:** en cada tarjeta (Editar › "Avance de efectivo · comisión (%)").
+- **Registrarlo:** en un gasto nuevo con una tarjeta, "¿Sacaste plata con la
+  tarjeta? Es un avance de efectivo"; en Transferencia, "Desde" una tarjeta;
+  o el botón "Avance de efectivo" de la tarjeta. Va a Efectivo o Débito.
+- **Cuentas:** es una transferencia desde la tarjeta (`from: "tarjeta"`): la
+  cartera sube lo sacado y la tarjeta debe lo mismo; no es ingreso ni gasto.
+  La comisión (`round(monto × % / 100)`) es un gasto de la tarjeta, unido al
+  avance (se borran juntos). En la tarjeta debes lo sacado + la comisión.
+- **Se ve en:** la lista de Movimientos, lo que pagas de la tarjeta y su
+  detalle ("Avances de efectivo").
+- **Lógica:** `js/finanzas/tarjetas.js` (`comisionAvance`, `gastoComision`,
+  `esAvance`, `efectoDeuda`) y `js/finanzas/datos.js` (`saldos`). Pruebas:
+  `tests/finanzas-tarjetas.test.js` y `scripts/e2e/tarjetas-avance.js`.
+
 ## Disponible por día (2026-11-15, D-116)
 
 Pedido del dueño: "el monto diario sale del presupuesto que escribo, no de lo

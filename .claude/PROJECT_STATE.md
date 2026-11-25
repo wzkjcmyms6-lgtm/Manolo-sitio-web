@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-25 (Tarjetas: de qué sale lo que pagas y el día de corte, D-166).
+Actualizado: 2026-11-25 (Tarjetas: avance de efectivo, D-167).
 
 - **Finanzas: seguros y mantenimiento de las tarjetas (2026-11-25)**: el
   dueño paga siempre todo, así que ya no hay pago mínimo (D-121 queda
@@ -10,8 +10,10 @@ Actualizado: 2026-11-25 (Tarjetas: de qué sale lo que pagas y el día de corte,
   guardar el pago y queda "Este mes ya pagaste todo". También en el Resumen,
   Atención, Análisis y Mi día (D-165). Al tocar una tarjeta, de qué gastos
   sale (gastos, seguros, lo ya pagado); y el día de corte, para que el monto
-  sea el del extracto (D-166). Falta que el dueño ponga su corte y sus
-  seguros, y compare con su extracto.
+  sea el del extracto (D-166). Avance de efectivo: el % en cada tarjeta, la
+  plata a Débito o Efectivo y en la tarjeta lo sacado + la comisión (D-167).
+  Falta que el dueño ponga su corte, sus seguros y su %, y compare con su
+  extracto.
 
 - **Ropa, nivel 2: tu estilista con IA (2026-11-24, en curso)**: hablar con la
   IA como con un estilista (outfits solo con su ropa, a partir de lo que

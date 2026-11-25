@@ -3013,3 +3013,34 @@ Movimientos (no en el Resumen, como decían D-121 y D-165). Pruebas: `npm test`
 extracto y lo de después, de qué sale sin corte); E2E `tarjetas-cargos` (95,
 nuevo: el detalle, al día, en Movimientos, con corte, el formulario, en claro)
 y 16 suites más de Finanzas, Inicio y la app, bien.
+
+**D-167 (2026-11-25) · Tarjetas: avance de efectivo con comisión.** Pedido
+del dueño: a cada tarjeta ponerle el % del "avance de efectivo"; al registrar
+un avance (por ejemplo, por QR: "saco 300 bolivianos"), que la plata vaya a
+Débito o Efectivo y que en la tarjeta se deba lo sacado + la comisión (300 +
+1 % = 303). (1) **El %** en cada tarjeta (Editar › "Avance de efectivo ·
+comisión (%) · opcional"; "1" o "1,5"; vacío o 0 = sin comisión; más de 50 es
+un error): `avancePct`, aditivo. (2) **El avance es una transferencia desde
+la tarjeta** (`from: "tarjeta"`, `tarjetaId`) a Efectivo o Débito (no a Ahorro
+ni a otra cartera): la cartera sube lo sacado y la deuda de la tarjeta sube lo
+mismo (`FD.saldos` y `TC.efectoDeuda`). No es ingreso ni gasto. Lleva
+`avance: true`, `avancePct` y `comisionCent`. (3) **La comisión** (`round(monto
+× % / 100)`) es un gasto de la tarjeta (`comisionAvance: true`, "Comisión del
+avance (1 %)", en la categoría de los cargos de la tarjeta), unido al avance
+por `links` (`kind: "mov"`): borrar el avance borra su comisión (con
+Deshacer). (4) **Dónde se registra**: en un gasto nuevo con una tarjeta,
+"¿Sacaste plata con la tarjeta? Es un avance de efectivo" (la hoja pasa a
+"Avance de efectivo", de la tarjeta a Débito); en Transferencia, "¿Desde qué
+cartera?" ofrece cada tarjeta ("Visa BNB · avance de efectivo") y el destino
+queda en Efectivo o Débito; y el botón "Avance de efectivo" en cada tarjeta.
+La hoja muestra el disponible de la tarjeta y "Comisión del avance · 1 %: Bs 3
+— En Visa BNB debes Bs 303 (Bs 300 + Bs 3 de comisión)", al escribir; sin %,
+"sin comisión" y dónde ponerlo. Pagar la tarjeta ⇄ avance con ⇅. (5) **En el
+resto**: la lista ("Avance de efectivo · Visa BNB → Débito"; las
+transferencias con tarjeta, por su nombre), lo que pagas de la tarjeta, el
+detalle ("Avances de efectivo", aparte de los gastos) y Mi día/Atención (por
+lo que pagas). Las reglas de Firestore no limitan los campos de los datos del
+usuario: lo nuevo se guarda. No se calculan intereses del avance (el dueño
+cuenta solo la comisión). Pruebas: `npm test` → 864 (`finanzas-tarjetas`: el
+%, la comisión y su redondeo, saldos y deuda, a Efectivo, en lo que pagas y
+el detalle); E2E nueva `tarjetas-avance` (34) y 17 suites más, bien.

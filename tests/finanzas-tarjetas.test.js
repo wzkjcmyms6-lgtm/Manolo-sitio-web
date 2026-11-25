@@ -27,7 +27,7 @@ test("normalizar: limpia lo guardado", () => {
     { id: "z", nombre: "Master", limiteCent: 200000, diaPago: 40, color: "rojo" }
   ]);
   assert.strictEqual(n.length, 2);
-  assert.deepStrictEqual(n[0], { id: "x", nombre: "Visa", limiteCent: 150050, diaPago: 10, diaCorte: null, color: TC.COLORES[0], creado: 0, pagoMinimoCent: null, cargos: [], cargosCategoria: null });
+  assert.deepStrictEqual(n[0], { id: "x", nombre: "Visa", limiteCent: 150050, diaPago: 10, diaCorte: null, color: TC.COLORES[0], creado: 0, pagoMinimoCent: null, cargos: [], cargosCategoria: null, avancePct: null });
   assert.strictEqual(n[1].diaPago, null);
   assert.strictEqual(n[1].color, TC.COLORES[1]);
   assert.deepStrictEqual(TC.normalizar(null), []);
@@ -103,7 +103,7 @@ test("leerMonto: coma decimal y punto de miles", () => {
 test("validar el formulario", () => {
   let r = TC.validar({ nombre: "  Visa   Oro ", limite: "15.000", diaPago: "20" }, [visa]);
   assert.ok(r.ok);
-  assert.deepStrictEqual(r.datos, { nombre: "Visa Oro", limiteCent: 1500000, diaPago: 20, diaCorte: null, cargos: [], cargosCategoria: null });
+  assert.deepStrictEqual(r.datos, { nombre: "Visa Oro", limiteCent: 1500000, diaPago: 20, diaCorte: null, avancePct: null, cargos: [], cargosCategoria: null });
   r = TC.validar({ nombre: "", limite: "", diaPago: "" }, []);
   assert.deepStrictEqual(r.errores.map(e => e.campo), ["nombre", "limite"]);
   r = TC.validar({ nombre: "visa bnb", limite: "0", diaPago: "32" }, [visa]);
@@ -309,5 +309,44 @@ test("de qué sale, sin corte: lo gastado, los seguros y lo ya pagado", () => {
   // Un saldo de antes sin pagar (no pagó todo el mes pasado) se suma.
   c = TC.cuenta(t, [gasto("v", "2026-10-01", 500, { createdAt: 1 })], [t], "2026-11-10", 29);
   assert.deepStrictEqual([c.antesCent, c.gastos.length, c.totalCent], [50000, 0, 50000 + 6450]);
+});
+
+// ---- Avance de efectivo (D-167) ----
+test("avance: el % de comisión se guarda en la tarjeta", () => {
+  assert.strictEqual(TC.validar({ nombre: "Visa", limite: "5000", avancePct: "1,5" }, []).datos.avancePct, 1.5);
+  assert.strictEqual(TC.validar({ nombre: "Visa", limite: "5000", avancePct: " 2 % " }, []).datos.avancePct, 2);
+  assert.strictEqual(TC.validar({ nombre: "Visa", limite: "5000", avancePct: "" }, []).datos.avancePct, null, "vacío: sin comisión");
+  assert.strictEqual(TC.validar({ nombre: "Visa", limite: "5000", avancePct: "0" }, []).datos.avancePct, null, "0: sin comisión");
+  assert.deepStrictEqual(TC.validar({ nombre: "Visa", limite: "5000", avancePct: "uno" }, []).errores.map(e => e.campo), ["avancePct"]);
+  assert.deepStrictEqual(TC.validar({ nombre: "Visa", limite: "5000", avancePct: "60" }, []).errores.map(e => e.campo), ["avancePct"]);
+  const n = TC.nueva({ nombre: "Visa", limiteCent: 500000, diaPago: 5, avancePct: 1, cargos: [] }, [], 1);
+  assert.strictEqual(n.avancePct, 1);
+  assert.ok(!("avancePct" in TC.nueva({ nombre: "Otra", limiteCent: 100, diaPago: 5, avancePct: null, cargos: [] }, [], 1)), "sin comisión: la tarjeta queda como antes");
+  assert.strictEqual(TC.editar(n, { nombre: "Visa", limiteCent: 500000, diaPago: 5, avancePct: 2.5, cargos: [] }, 2).avancePct, 2.5);
+  assert.strictEqual(TC.editar(n, { nombre: "Visa", limiteCent: 500000, diaPago: 5, avancePct: null, cargos: [] }, 2).avancePct, null);
+  assert.deepStrictEqual([TC.normalizar([{ id: "a", nombre: "A", avancePct: "1.257" }])[0].avancePct, TC.normalizar([{ id: "a", nombre: "A", avancePct: 99 }])[0].avancePct], [1.26, null]);
+  assert.deepStrictEqual([TC.pctTexto(1), TC.pctTexto(1.5)], ["1", "1,5"]);
+});
+
+test("avance: lo que sacas + la comisión es lo que debes en la tarjeta", () => {
+  const t = TC.normalizar([Object.assign({}, visa, { avancePct: 1 })])[0];
+  assert.strictEqual(TC.comisionAvance(t, 30000), 300, "1 % de Bs 300 = Bs 3");
+  assert.strictEqual(TC.comisionAvance(Object.assign({}, t, { avancePct: 1.5 }), 33333), 500, "se redondea al centavo");
+  assert.strictEqual(TC.comisionAvance(TC.normalizar([visa])[0], 30000), 0, "sin % no hay comisión");
+  const g = TC.gastoComision(t, 300, "2026-11-28", "otros");
+  assert.deepStrictEqual(g, { date: "2026-11-28", type: "gasto", category: "otros", payment: "credito", desc: "Comisión del avance (1 %)", amount: 3, excluded: false, factura: false, tarjetaId: "tc_visa", comisionAvance: true });
+  // Por QR: sacas Bs 300 a Débito; la comisión, gasto de la tarjeta.
+  const movs = [mov("a", { date: "2026-11-28", type: "transferencia", from: "tarjeta", to: "debito", amount: 300, tarjetaId: "tc_visa", avance: true, createdAt: 1 }), mov("c", Object.assign({ createdAt: 2 }, g))];
+  const sal = FD.saldos(movs);
+  assert.deepStrictEqual([sal.debito, sal.deuda], [30000, 30300], "Débito +300; la tarjeta debe 303");
+  assert.deepStrictEqual(TC.deudas(movs, [t, master]), { tc_visa: 30300, tc_master: 0 });
+  assert.strictEqual(TC.efectoDeuda(movs[0]), 30000);
+  assert.deepStrictEqual([TC.esAvance(movs[0]), TC.esAvance(movs[1]), TC.esAvance(gasto("x", "2026-11-28", 10))], [true, true, false]);
+  // A Efectivo, igual.
+  assert.strictEqual(FD.saldos([mov("e", { date: "2026-11-28", type: "transferencia", from: "tarjeta", to: "efectivo", amount: 100, tarjetaId: "tc_visa" })]).efectivo, 10000);
+  // Entra en lo que pagas y en el detalle.
+  const e = TC.estado(movs, [t], "2026-11-28", 29).lista[0];
+  assert.strictEqual(e.pagar.cent, 30300);
+  assert.deepStrictEqual(TC.cuenta(t, movs, [t], "2026-11-28", 29).gastos.map(m => m.id), ["a", "c"]);
 });
 

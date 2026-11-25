@@ -475,9 +475,10 @@ function renderMovements() {
           let title = m.desc || cat.label;
           let sub = [m.desc ? cat.label : "", m.payment === "credito" ? (tarjetasCache.length ? nombreTarjeta(m) : pay ? pay.label : "") : "", m.type === "gasto" && m.factura ? "Con factura" : "", m.recurrenteId ? "Recurrente" : "", m.excluded ? "Excluido del presupuesto" : ""].filter(Boolean).join(" · ");
           if (m.type === "transferencia") {
-            const route = `${walletLabel(m.from)} → ${walletLabel(m.to)}`;
+            const cartera = id => (id === "tarjeta" && tarjetasCache.length ? nombreTarjeta(m) : walletLabel(id));
+            const route = `${cartera(m.from)} → ${cartera(m.to)}`;
             title = m.desc || route;
-            sub = m.desc ? route : "Transferencia";
+            sub = m.desc ? route : m.from === "tarjeta" ? "Avance de efectivo" : "Transferencia";
           }
           const isTransfer = m.type === "pago_tarjeta" || m.type === "ajuste_tarjeta" || m.type === "transferencia";
           const amount = m.type === "ingreso"
@@ -1478,6 +1479,28 @@ function parseNum(str) {
   return parseFloat(String(str || "").replace(/\s/g, "").replace(",", ".")) || 0;
 }
 
+// Avance de efectivo (D-167): la tarjeta de la hoja y la comisión del monto escrito.
+function avanceDeLaHoja(t) {
+  if (!t || t.type !== "transferencia" || t.from !== "tarjeta" || !tarjetasCache.length) return null;
+  const tc = tarjetasCache.find(x => x.id === TC.tarjetaDe({ tarjetaId: t.tarjetaId }, tarjetasCache));
+  if (!tc) return null;
+  if (t.readonly && t.movement) return { tarjeta: tc, montoCent: FD.aCentavos(t.movement.amount), pct: t.movement.avancePct || 0, comisionCent: t.movement.comisionCent || 0 };
+  const montoCent = Math.max(0, FD.evaluarMonto(t.amount) || 0);
+  return { tarjeta: tc, montoCent, pct: tc.avancePct || 0, comisionCent: TC.comisionAvance(tc, montoCent) };
+}
+function pintarAvance() {
+  const t = txnSheet;
+  const a = avanceDeLaHoja(t);
+  const fila = document.getElementById("txn-sheet-avance-row");
+  fila.hidden = !a;
+  if (!a) return;
+  document.getElementById("txn-sheet-avance-texto").textContent = a.pct
+    ? `Comisión del avance · ${TC.pctTexto(a.pct)} %: ${bsJusto(a.comisionCent)}`
+    : "Avance de efectivo · sin comisión";
+  document.getElementById("txn-sheet-avance-hint").textContent = a.pct
+    ? (a.montoCent ? `En ${a.tarjeta.nombre} debes ${bsJusto(a.montoCent + a.comisionCent)} (${bsJusto(a.montoCent)} + ${bsJusto(a.comisionCent)} de comisión).` : `Se suma a lo que debes en ${a.tarjeta.nombre}.`)
+    : `Si tu banco cobra comisión, pon su % en la tarjeta (Tarjetas › editar).`;
+}
 // Los seguros y mantenimiento de este mes que se suman a un pago a la
 // tarjeta (D-165): { ciclo, lista, cent, tarjeta } o null si no corresponde.
 function cargosDeLaHoja(t) {
@@ -1524,7 +1547,7 @@ function openTxnSheet(movement, inicial) {
       }
     : { id: null, type: "gasto", category: null, payment: ultimaCartera("gasto"), amount: "0", desc: "", date: isoDate(new Date()), excluded: false, factura: false, keypad: true, from: "debito", to: "ahorro", amountTo: "", rate: "", rateTouched: false, readonly: false, tarjetaId: null, cargos: null, cargosAuto: null };
   if (inicial && !movement) Object.assign(txnSheet, inicial, { keypad: inicial.keypad !== undefined ? inicial.keypad : true });
-  if (!movement && !txnSheet.tarjetaId && (txnSheet.payment === "credito" || txnSheet.to === "tarjeta")) txnSheet.tarjetaId = ultimaTarjeta();
+  if (!movement && !txnSheet.tarjetaId && (txnSheet.payment === "credito" || txnSheet.to === "tarjeta" || txnSheet.from === "tarjeta")) txnSheet.tarjetaId = ultimaTarjeta();
   txnError(null);
   renderTxnSheet();
   showSheet(document.getElementById("txn-sheet"));
@@ -1604,7 +1627,8 @@ function renderTxnSheet() {
   const sheet = document.getElementById("txn-sheet");
   sheet.classList.toggle("is-transfer", isTransfer);
   sheet.classList.toggle("is-readonly", !!t.readonly);
-  document.getElementById("txn-sheet-title").textContent = t.readonly ? "Transferencia" : t.id ? "Editar transacción" : "Nueva transacción";
+  const esAvanceHoja = isTransfer && t.from === "tarjeta";
+  document.getElementById("txn-sheet-title").textContent = esAvanceHoja ? "Avance de efectivo" : t.readonly ? "Transferencia" : t.id ? "Editar transacción" : "Nueva transacción";
   pintarMontoTxn();
   document.getElementById("txn-sheet-currency").textContent = isTransfer ? walletCurrency(t.from) : "Bs";
   const swap = document.getElementById("txn-sheet-swap");
@@ -1618,11 +1642,17 @@ function renderTxnSheet() {
     const v = walletVisual(id);
     const tc = id === "tarjeta" ? tarjetaEstado(t.tarjetaId) : null;
     document.getElementById(`txn-sheet-${key}-badge`).outerHTML = `<span id="txn-sheet-${key}-badge" class="txn-icon txn-icon-solid" style="background:${tc ? tc.color : v.color}" data-icon="${v.icon}"></span>`;
-    document.getElementById(`txn-sheet-${key}-label`).textContent = tc ? `${tc.nombre} · ${tc.deudaCent > 0 ? "−" : ""}${formatMoney(FD.aBs(Math.abs(tc.deudaCent)))}` : `${walletLabel(id)} · ${walletBalanceText(id)}`;
+    // Como origen (avance de efectivo), cuánto te queda disponible; como destino (pagarla), lo que debes.
+    document.getElementById(`txn-sheet-${key}-label`).textContent = tc
+      ? (key === "from" ? `${tc.nombre} · ${textoDisponible(tc)}` : `${tc.nombre} · ${tc.deudaCent > 0 ? "−" : ""}${formatMoney(FD.aBs(Math.abs(tc.deudaCent)))}`)
+      : `${walletLabel(id)} · ${walletBalanceText(id)}`;
     document.getElementById(`txn-sheet-${key}`).disabled = !!t.readonly;
   };
   walletRow("from", t.from);
   walletRow("to", t.to);
+  pintarAvance();
+  // D-167: con una tarjeta en un gasto nuevo, "¿Sacaste plata? Es un avance de efectivo".
+  document.getElementById("txn-sheet-avance-btn").hidden = !(t.type === "gasto" && t.payment === "credito" && !t.id && !t.readonly && tarjetasCache.length);
   // D-165: al pagar una tarjeta, se suman sus seguros y mantenimiento de este mes.
   const pendC = cargosDeLaHoja(t);
   document.getElementById("txn-sheet-cargos-row").hidden = !pendC;
@@ -1711,6 +1741,7 @@ function pressTxnKey(key) {
   }
   txnError(null);
   pintarMontoTxn();
+  pintarAvance();
   if (txnSheet.type === "transferencia") {
     syncTransferAmounts();
     const el = document.getElementById("txn-sheet-amount-to");
@@ -1914,13 +1945,19 @@ function chooseTxnWallet(side) {
   // La tarjeta solo puede recibir (pagarla); nunca es origen. Se muestran
   // todas las demás, también la que está del otro lado: si la eliges, se
   // intercambian (así Ahorro → Débito se arma en un toque).
-  const wallets = ledgerWallets().filter(w => (side === "to" || w.id !== "tarjeta") && (w.id !== t[side] || (w.id === "tarjeta" && tarjetasCache.length > 1)));
+  // D-167: con tarjetas registradas, también puede ser el origen (avance de
+  // efectivo), y entonces la plata va solo a Efectivo o Débito.
+  const avanceA = side === "to" && t.from === "tarjeta";
+  const wallets = ledgerWallets().filter(w => (side === "to" || w.id !== "tarjeta" || tarjetasCache.length) && (!avanceA || isCash(w.id))
+    && (w.id !== t[side] || (w.id === "tarjeta" && tarjetasCache.length > 1)));
   const items = [];
   wallets.forEach(w => {
     const v = walletVisual(w.id);
-    // Pagar una tarjeta: con varias registradas, se elige cuál ("tarjeta|id").
+    // Pagar una tarjeta (o sacar plata de ella): con varias registradas, se elige cuál ("tarjeta|id").
     if (w.id === "tarjeta" && tarjetasCache.length) {
-      estadoTarjetas().lista.filter(c => !(t[side] === "tarjeta" && c.id === t.tarjetaId)).forEach(c => items.push({ id: `tarjeta|${c.id}`, label: `${c.nombre} (Bs)`, sub: `${c.deudaCent > 0 ? "−" : ""}${formatMoney(FD.aBs(Math.abs(c.deudaCent)))}`, icon: v.icon, color: c.color }));
+      estadoTarjetas().lista.filter(c => !(t[side] === "tarjeta" && c.id === t.tarjetaId)).forEach(c => items.push(side === "from"
+        ? { id: `tarjeta|${c.id}`, label: `${c.nombre} · avance de efectivo`, sub: textoDisponible(c), icon: v.icon, color: c.color }
+        : { id: `tarjeta|${c.id}`, label: `${c.nombre} (Bs)`, sub: `${c.deudaCent > 0 ? "−" : ""}${formatMoney(FD.aBs(Math.abs(c.deudaCent)))}`, icon: v.icon, color: c.color }));
     } else items.push({ id: w.id, label: `${walletLabel(w.id)} (${w.moneda})`, sub: walletBalanceText(w.id), icon: v.icon, color: v.color });
   });
   openPicker({
@@ -1934,9 +1971,11 @@ function chooseTxnWallet(side) {
       const antes = t[side];
       t[side] = id;
       if (t[otroLado] === id) {
-        // Se intercambian; la tarjeta nunca queda como origen.
-        t[otroLado] = otroLado === "from" && antes === "tarjeta" ? (id === "debito" ? "efectivo" : "debito") : antes;
+        // Se intercambian (Ahorro → Débito en un toque).
+        t[otroLado] = antes;
       }
+      // Un avance de efectivo (desde la tarjeta) va a Efectivo o Débito.
+      if (t.from === "tarjeta" && !isCash(t.to)) t.to = "debito";
       t.amountTo = "";
       renderTxnSheet();
     }
@@ -1956,6 +1995,7 @@ function saveTxn(yOtro) {
   }
   if (t.type === "transferencia") {
     if (t.from === t.to) { txnError("Elige dos carteras distintas.", "txn-sheet-to"); return; }
+    if (t.from === "tarjeta" && !isCash(t.to)) { txnError("El avance de efectivo va a Efectivo o Débito.", "txn-sheet-to"); return; }
     let amountTo = amount;
     if (walletCurrency(t.from) !== walletCurrency(t.to)) {
       amountTo = parseFloat((t.amountTo || "").replace(",", ".")) || 0;
@@ -1969,13 +2009,25 @@ function saveTxn(yOtro) {
     }
     const rate = parseNum(t.rate);
     const payload = { from: t.from, to: t.to, amount, amountTo, desc: t.desc.trim(), date: t.date };
-    if (t.to === "tarjeta" && tarjetasCache.length) payload.tarjetaId = TC.tarjetaDe({ tarjetaId: t.tarjetaId }, tarjetasCache);
+    if ((t.to === "tarjeta" || t.from === "tarjeta") && tarjetasCache.length) payload.tarjetaId = TC.tarjetaDe({ tarjetaId: t.tarjetaId }, tarjetasCache);
+    // D-167: avance de efectivo; la comisión (el % de la tarjeta) es un gasto de la tarjeta.
+    const av = avanceDeLaHoja(t);
+    if (av) {
+      Object.assign(payload, { desc: payload.desc || "Avance de efectivo", avance: true, avancePct: av.pct, comisionCent: av.comisionCent });
+      if (av.comisionCent > 0) payload.comision = FD.conCentavos(TC.gastoComision(av.tarjeta, av.comisionCent, t.date, TC.categoriaCargos(av.tarjeta, gastoCategoriesCache)));
+    }
     if (walletCurrency(t.from) !== walletCurrency(t.to) && rate > 0) payload.tipoCambio = rate;
     // D-165: los seguros y mantenimiento de este mes se anotan como gastos de la tarjeta.
     const pendC = t.cargos !== false ? cargosDeLaHoja(t) : null;
     if (pendC) payload.gastos = TC.gastosDeCargos(pendC.tarjeta, pendC, t.date, TC.categoriaCargos(pendC.tarjeta, gastoCategoriesCache)).map(g => FD.conCentavos(g));
     createTransfer(payload).catch(err => console.error("Manolo: no se pudo guardar la transferencia", err));
     const conC = pendC ? ` · se anotaron seguros y mantenimiento (${bsJusto(pendC.cent)})` : "";
+    if (av) {
+      const texto = `Avance de ${bsJusto(av.montoCent)} a ${walletLabel(t.to)}${av.comisionCent ? ` · comisión ${bsJusto(av.comisionCent)}: en ${av.tarjeta.nombre} debes ${bsJusto(av.montoCent + av.comisionCent)} más` : ""}`;
+      trasGuardar(yOtro, texto);
+      if (!yOtro) avisoFin(texto);
+      return;
+    }
     trasGuardar(yOtro, `Transferencia de ${formatBsShort(amount)} guardada${conC}`);
     if (pendC && !yOtro) avisoFin(`Pago de ${bsJusto(FD.aCentavos(amount))} guardado${conC}`);
     return;
@@ -2243,10 +2295,18 @@ document.getElementById("txn-sheet").addEventListener("click", e => {
   if (e.target.closest("#txn-sheet-amount-btn")) { if (!txnSheet.readonly) { txnSheet.keypad = !txnSheet.keypad; renderTxnSheet(); } return; }
   if (e.target.closest("#txn-sheet-keypad-done")) { txnSheet.keypad = false; renderTxnSheet(); return; }
   if (e.target.closest("#txn-sheet-cat")) { chooseTxnCategory(); return; }
+  if (e.target.closest("#txn-sheet-avance-btn")) {
+    // D-167: el gasto con tarjeta pasa a avance de efectivo (de la tarjeta a Débito).
+    Object.assign(txnSheet, { type: "transferencia", from: "tarjeta", to: "debito", category: null, amountTo: "" });
+    txnError(null);
+    renderTxnSheet();
+    return;
+  }
   if (e.target.closest("#txn-sheet-pay")) { chooseTxnPayment(); return; }
   if (e.target.closest("#txn-sheet-swap")) {
     const t = txnSheet;
-    if (t.readonly || t.to === "tarjeta") return;
+    // Pagar la tarjeta ⇄ avance de efectivo (desde la tarjeta, solo a Efectivo o Débito).
+    if (t.readonly || (t.to === "tarjeta" && !isCash(t.from))) return;
     [t.from, t.to] = [t.to, t.from];
     t.amountTo = "";
     renderTxnSheet();
@@ -3749,11 +3809,12 @@ function cerrarDetalleTarjeta() {
   hideSheet(document.getElementById("tcd-sheet"));
 }
 function filaDetalle(m) {
-  const pago = m.type !== "gasto";
-  const cat = pago ? CARD_PAYMENT_CATEGORY : findCategory(m.type, m.category);
+  const avance = m.type === "transferencia" && m.from === "tarjeta";
+  const pago = m.type !== "gasto" && !avance;
+  const cat = avance ? TRANSFER_CATEGORY : pago ? CARD_PAYMENT_CATEGORY : findCategory(m.type, m.category);
   const cent = TC.efectoDeuda(m);
-  const titulo = m.desc || (pago ? (m.type === "ajuste_tarjeta" ? "Ajuste" : "Pago") : cat.label);
-  const sub = [fechaCorta(m.date), pago ? (m.type === "ajuste_tarjeta" ? "Ajuste" : "Pago") : m.desc ? cat.label : ""].filter(Boolean).join(" · ");
+  const titulo = m.desc || (avance ? "Avance de efectivo" : pago ? (m.type === "ajuste_tarjeta" ? "Ajuste" : "Pago") : cat.label);
+  const sub = [fechaCorta(m.date), avance ? `a ${walletLabel(m.to)}` : pago ? (m.type === "ajuste_tarjeta" ? "Ajuste" : "Pago") : m.desc ? cat.label : ""].filter(Boolean).join(" · ");
   return `<li><button type="button" class="txn-row tcd-fila" data-tcd-mov="${escapeHtml(m.id)}">
       ${txnIconHTML(cat)}
       <span class="txn-body"><span class="txn-desc">${escapeHtml(titulo)}</span><span class="meta">${escapeHtml(sub)}</span></span>
@@ -3781,7 +3842,9 @@ function renderDetalleTarjeta() {
       <small>${capitalize(venceTexto(c.pago))}${p.corte ? (p.abierto ? ` · el corte es el ${escapeHtml(fechaCorta(p.corte))}` : ` · extracto del ${escapeHtml(fechaCorta(p.corte))}`) : ""}</small></div>`;
   else cab = `<div class="tcd-cab is-ok"><span>Este mes no tienes nada que pagar</span><strong>${bsJusto(0)}</strong><small>${p.favorCent > 0 ? `Tienes un saldo a favor de ${bsJusto(p.favorCent)}.` : "Sin gastos con esta tarjeta en este periodo."}</small></div>`;
   const partes = [];
-  if (k.gastos.length) partes.push(grupoDetalle(`Gastos (${k.gastos.length})`, suma(k.gastos), k.gastos.map(filaDetalle).join("")));
+  const gastos = k.gastos.filter(m => !TC.esAvance(m)), avances = k.gastos.filter(TC.esAvance);
+  if (gastos.length) partes.push(grupoDetalle(`Gastos (${gastos.length})`, suma(gastos), gastos.map(filaDetalle).join("")));
+  if (avances.length) partes.push(grupoDetalle("Avances de efectivo", suma(avances), avances.map(filaDetalle).join("")));
   if (k.cargos.length || k.pendientes.length) {
     const pend = k.pendientes.map(x => `<li><div class="txn-row tcd-fila is-pend">${txnIconHTML(catCargos)}
         <span class="txn-body"><span class="txn-desc">${escapeHtml(x.nombre)}</span><span class="meta">Se anota al pagar</span></span>
@@ -3872,12 +3935,15 @@ function tarjetaHTML(c, principal) {
       ${c.pagar.cent > 0 || c.pagar.alDia ? "" : `<p class="fin-tc-pie"><span>${c.pago.dias === 0 ? "Hoy toca pagar" : `Pago: ${fechaCorta(c.pago.fecha)} (${c.pago.dias === 1 ? "falta 1 día" : `faltan ${c.pago.dias} días`})`}</span>${c.pagar.corte ? `<span>Corte: ${fechaCorta(c.pagar.corte)}</span>` : ""}</p>`}
       ${c.nivel === "pasado" ? `<p class="fin-tc-alerta">Te pasaste del límite por ${formatBsShort(FD.aBs(-c.disponibleCent))}.</p>` : c.nivel === "alto" ? `<p class="fin-tc-alerta is-aviso">Ya usaste el ${pct} % del límite.</p>` : ""}
       ${pagoHTML(c)}
-      ${montoPagar(c) > 0 ? `<button type="button" class="fin-tc-pagar${c.pagar.alDia ? " is-sec" : ""}" data-tc-pagar="${escapeHtml(c.id)}">Pagar todo (${formatMoney(FD.aBs(montoPagar(c)))})</button>` : ""}
+      <div class="fin-tc-acciones">
+        ${montoPagar(c) > 0 ? `<button type="button" class="fin-tc-pagar${c.pagar.alDia ? " is-sec" : ""}" data-tc-pagar="${escapeHtml(c.id)}">Pagar todo (${formatMoney(FD.aBs(montoPagar(c)))})</button>` : ""}
+        <button type="button" class="fin-tc-pagar is-sec" data-tc-avance="${escapeHtml(c.id)}">Avance de efectivo</button>
+      </div>
     </article>`;
 }
 
 // ---- Hoja para agregar o editar una tarjeta ----
-let tcEditando = null; // { id|null, nombre, limite, diaPago, diaCorte, cargos: [{ id|null, nombre, monto }], cargosCategoria, viejoMinimoCent } tal como están en el formulario
+let tcEditando = null; // { id|null, nombre, limite, diaPago, diaCorte, avancePct, cargos: [{ id|null, nombre, monto }], cargosCategoria, viejoMinimoCent } tal como están en el formulario
 // La lista tal como está guardada (se editan esas entradas para no perder campos).
 const tarjetasCrudas = () => (metaCrudo.finanzas_tarjetas && Array.isArray(metaCrudo.finanzas_tarjetas.list) ? metaCrudo.finanzas_tarjetas.list : []);
 function guardarTarjetas(list) {
@@ -3887,10 +3953,10 @@ function guardarTarjetas(list) {
 function abrirTarjeta(id, enfocar) {
   const c = id ? tarjetasCache.find(x => x.id === id) : null;
   tcEditando = c
-    ? { id: c.id, nombre: c.nombre, limite: String(FD.aBs(c.limiteCent)).replace(".", ","), diaPago: c.diaPago ? String(c.diaPago) : "", diaCorte: c.diaCorte ? String(c.diaCorte) : "",
+    ? { id: c.id, nombre: c.nombre, limite: String(FD.aBs(c.limiteCent)).replace(".", ","), diaPago: c.diaPago ? String(c.diaPago) : "", diaCorte: c.diaCorte ? String(c.diaCorte) : "", avancePct: c.avancePct ? TC.pctTexto(c.avancePct) : "",
         cargos: c.cargos.map(x => ({ id: x.id, nombre: x.nombre, monto: montoHoja(x.montoCent) })),
         cargosCategoria: TC.categoriaCargos(c, gastoCategoriesCache), viejoMinimoCent: c.cargos.length ? null : c.pagoMinimoCent }
-    : { id: null, nombre: "", limite: "", diaPago: "", diaCorte: "", cargos: [], cargosCategoria: TC.categoriaCargos({}, gastoCategoriesCache), viejoMinimoCent: null };
+    : { id: null, nombre: "", limite: "", diaPago: "", diaCorte: "", avancePct: "", cargos: [], cargosCategoria: TC.categoriaCargos({}, gastoCategoriesCache), viejoMinimoCent: null };
   // Dos filas para empezar: un seguro y el mantenimiento.
   while (tcEditando.cargos.length < 2) tcEditando.cargos.push({ id: null, nombre: "", monto: "" });
   renderTarjetaForm([]);
@@ -3916,6 +3982,8 @@ function renderTarjetaForm(errores) {
       ${dias.map(d => `<option value="${d}"${String(d) === r.diaCorte ? " selected" : ""}>Día ${d}</option>`).join("")}
     </select></label>
     <p class="fin-aj-texto fin-tc-corte-ayuda" id="tc-corte-ayuda">El día en que tu banco cierra el extracto (dice «fecha de corte»). Así lo que pagas es igual a tu extracto, y lo que gastes después del corte va al pago siguiente.</p>
+    <label class="rec-campo">Avance de efectivo · comisión (%) · opcional<input type="text" name="avancePct" inputmode="decimal" value="${escapeHtml(r.avancePct || "")}" placeholder="1" autocomplete="off" aria-describedby="tc-avance-ayuda"></label>
+    <p class="fin-aj-texto" id="tc-avance-ayuda">Lo que te cobra el banco cuando sacas plata con la tarjeta (por ejemplo, por QR). Con 1 %, si sacas Bs 300, en la tarjeta debes Bs 303.</p>
     ${cargosFormHTML(r)}
     ${r.id && tarjetasCache.length > 1 ? (principal
       ? `<p class="fin-aj-texto">Es tu tarjeta principal: los gastos con tarjeta que anotaste antes de registrar tus tarjetas cuentan aquí.</p>`
@@ -3949,7 +4017,7 @@ function cargosFormHTML(r) {
 }
 function leerTarjetaForm() {
   const f = document.getElementById("tc-form");
-  Object.assign(tcEditando, { nombre: f.elements.nombre.value, limite: f.elements.limite.value, diaPago: f.elements.diaPago.value, diaCorte: f.elements.diaCorte.value,
+  Object.assign(tcEditando, { nombre: f.elements.nombre.value, limite: f.elements.limite.value, diaPago: f.elements.diaPago.value, diaCorte: f.elements.diaCorte.value, avancePct: f.elements.avancePct.value,
     cargos: tcEditando.cargos.map((x, i) => ({ id: x.id, nombre: f.elements[`cargoNombre${i}`].value, monto: f.elements[`cargoMonto${i}`].value })),
     cargosCategoria: f.elements.cargosCategoria ? f.elements.cargosCategoria.value : tcEditando.cargosCategoria });
 }
@@ -4003,6 +4071,9 @@ document.getElementById("panel-fin-tarjetas").addEventListener("click", e => {
   const ag = e.target.closest("[data-tc-cargos-agregar]");
   if (ag) { abrirTarjeta(ag.dataset.tcCargosAgregar, "cargoNombre0"); return; }
   if (e.target.closest("[data-tc-nueva]")) { abrirTarjeta(null); return; }
+  // D-167: sacar plata con la tarjeta (a Débito; se puede cambiar a Efectivo).
+  const av = e.target.closest("[data-tc-avance]");
+  if (av) { openTxnSheet(null, { type: "transferencia", from: "tarjeta", to: "debito", tarjetaId: av.dataset.tcAvance }); return; }
   // D-166: tocar el recuadro del pago o cualquier parte de la tarjeta muestra de qué sale.
   const ver = e.target.closest("[data-tc-ver]");
   if (ver) { abrirDetalleTarjeta(ver.dataset.tcVer, "tarjetas"); return; }
@@ -4498,7 +4569,7 @@ function formatWalletAmount(id, n) {
 // Todo en un solo lote con ids creados en el teléfono: sin conexión se
 // guarda completo al instante (antes esperaba al servidor entre un paso y
 // otro y, si cerrabas la app, quedaba a medias).
-function createTransfer({ from, to, amount, amountTo, desc, date, tipoCambio, tarjetaId, gastos }) {
+function createTransfer({ from, to, amount, amountTo, desc, date, tipoCambio, tarjetaId, gastos, avance, avancePct, comisionCent, comision }) {
   const suffix = desc ? " · " + desc : "";
   const links = [];
   const lote = nuevoLote();
@@ -4519,7 +4590,14 @@ function createTransfer({ from, to, amount, amountTo, desc, date, tipoCambio, ta
   side(to, amountTo, `Transferencia desde ${walletLabel(from)}${suffix}`);
   const record = FD.conCentavos({ date, type: "transferencia", category: "transferencia", from, to, amount, amountTo, desc: desc || "", links, createdAt: creado });
   if (tipoCambio) record.tipoCambio = tipoCambio;
-  if (to === "tarjeta" && tarjetaId) record.tarjetaId = tarjetaId;
+  if ((to === "tarjeta" || from === "tarjeta") && tarjetaId) record.tarjetaId = tarjetaId;
+  // D-167: avance de efectivo; su comisión va unida (se borran juntos).
+  if (avance) Object.assign(record, { avance: true, avancePct: avancePct || 0, comisionCent: comisionCent || 0 });
+  if (comision) {
+    const ref = financeCollection().doc();
+    lote.set(ref, Object.assign({}, comision, { createdAt: creado + 1 }));
+    record.links = links.concat([{ kind: "mov", id: ref.id }]);
+  }
   // D-165: seguros y mantenimiento que se suman a un pago, anotados un instante
   // antes (así el pago los cubre y la tarjeta queda al día).
   (gastos || []).forEach(g => lote.set(financeCollection().doc(), Object.assign({}, g, { createdAt: creado - 1 })));
@@ -4531,13 +4609,14 @@ function deleteTransfer(m) {
   const entries = [{ ref: financeCollection().doc(m.id), data: withoutId(m) }];
   (m.links || []).forEach(l => {
     const ref = l.kind === "ahorro" ? ahorrosCollection().doc(l.id)
-      : l.kind === "cartera" ? carterasMovimientosCollection().doc(l.id) : null;
+      : l.kind === "cartera" ? carterasMovimientosCollection().doc(l.id)
+      : l.kind === "mov" ? financeCollection().doc(l.id) : null;   // la comisión de un avance (D-167)
     if (!ref) return;
-    const doc = (l.kind === "ahorro" ? ahorrosCache : carterasMovCache).find(x => x.id === l.id);
+    const doc = (l.kind === "ahorro" ? ahorrosCache : l.kind === "cartera" ? carterasMovCache : financeCache).find(x => x.id === l.id);
     if (doc) entries.push({ ref, data: withoutId(doc) });
     else ref.delete();
   });
-  removeWithUndo("Transferencia eliminada", entries);
+  removeWithUndo(m.from === "tarjeta" ? "Avance de efectivo eliminado" : "Transferencia eliminada", entries);
 }
 
 // Muestra el error real de Firebase (permisos, red, etc.) en vez de fallar

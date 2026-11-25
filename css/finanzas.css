@@ -1883,7 +1883,15 @@ button.res-cat { cursor: pointer; }
 .tcd-despues { margin-top: 1.4rem; padding-top: 0.2rem; border-top: 1px dashed var(--border); }
 #tcd-acciones[hidden] { display: none; }
 #tcd-acciones .fin-tc-pagar { flex: 1; min-width: 0; min-height: 52px; padding: 0 0.8rem; }
+/* Avance de efectivo (D-167): el botón en un gasto con tarjeta y la comisión. */
+.txn-avance-btn[hidden] { display: none; }
+.txn-avance-btn { color: var(--muted); text-align: left; }
+.txn-avance-btn strong { color: var(--accent-2); font-weight: 600; }
+.txn-avance-row { cursor: default; }
+.fin-tc-acciones { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.fin-tc-acciones .fin-tc-pagar { align-self: auto; }
 /* En la hoja de pago: "Sumar seguros y mantenimiento" (la nota va abajo). */
+.txn-avance-row .txn-toggle-hint,
 .txn-cargos-row .txn-toggle-hint { display: block; margin: 0.1rem 0 0; letter-spacing: 0; font-weight: 500; font-size: 0.78rem; }
 .fin-tc-nota { margin: 0; color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
 .fin-tc-vacio { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; padding: 1.1rem; border-radius: 18px; background: var(--surface); border: 1px dashed var(--border); }

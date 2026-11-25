@@ -8,6 +8,7 @@ mantenimiento), siempre el mismo monto."
 | Qué | Estado |
 |---|---|
 | Seguros y mantenimiento en cada tarjeta; "Para no pagar intereses: Bs X" (lo gastado + cargos); "Pagar todo" los anota como gastos; "Este mes ya pagaste todo"; Movimientos, Atención, Análisis y Mi día; sin pago mínimo | ✅ (D-165) |
+| Pedido del dueño: avance de efectivo (el % en cada tarjeta; la plata a Débito o Efectivo; en la tarjeta, lo sacado + la comisión) | ✅ (D-167) |
 | Pedido del dueño: al tocar una tarjeta, de qué gastos sale; y el día de corte (el monto igual al del extracto) | ✅ (D-166) · ⏳ el dueño pone su día de corte y sus seguros, y compara con su extracto (lista "Tarjetas: seguros y mantenimiento" de `docs/TESTING.md`) |
 
 ## Ropa, nivel 2: tu estilista con IA (pedido del dueño, 2026-11-24)

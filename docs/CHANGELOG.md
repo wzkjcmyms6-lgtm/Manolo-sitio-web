@@ -1,5 +1,13 @@
 # Cambios
 
+## 2026-11-25 · Finanzas: avance de efectivo
+- **En cada tarjeta, el % del avance de efectivo** (lo que cobra el banco).
+- **Registrar un avance**: en un gasto con la tarjeta, "Es un avance de
+  efectivo"; o en Transferencia, desde la tarjeta; o con el botón "Avance de
+  efectivo" de la tarjeta. La plata va a Débito o Efectivo y en la tarjeta
+  debes lo sacado + la comisión (Bs 300 + 1 % = Bs 303). La comisión queda
+  como gasto de la tarjeta.
+
 ## 2026-11-25 · Finanzas: de qué sale lo que pagas y el día de corte
 - **Toca una tarjeta y ves de qué sale lo que pagas**: cada gasto (con su
   fecha), los seguros y el mantenimiento, lo que ya pagaste y el total. Cada

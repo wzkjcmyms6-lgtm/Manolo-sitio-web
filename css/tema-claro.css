@@ -1685,6 +1685,12 @@ html[data-modo="claro"] {
 :where(html[data-modo="claro"]) .txn-filtros-cuerpo .tcd-grupo-t {
   color: var(--muted);
 }
+:where(html[data-modo="claro"]) .txn-avance-btn {
+  color: var(--muted);
+}
+:where(html[data-modo="claro"]) .txn-avance-btn strong {
+  color: var(--accent-2);
+}
 :where(html[data-modo="claro"]) .fin-tc-nota {
   color: var(--muted);
 }
