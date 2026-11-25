@@ -2893,3 +2893,39 @@ fallas (4.375 comprobaciones); la otra, `lectura-qa` («Biblia con 1.500
 versículos», 2.156 ms contra 1,5 s), falla igual con la versión de antes de
 los favoritos medida lado a lado (2.437–3.976 ms; la de ahora, 1.586–3.477
 ms): es la máquina, no el cambio. El límite no se toca.
+
+**D-164 (2026-11-25) · Ropa: ideas de tu estilista en Inspiración (y por
+qué no se conecta el tablero).** Pedido del dueño: "En la parte de
+inspiración quiero que la propia IA me pueda sugerir prendas, más allá de la de
+Pinterest (no me deja conectar el tablero), en base a lo que ve que falta en mi
+ropero". (1) **Las ideas** (`js/ropa-ideas.js`, arriba de Inspiración): las
+sugerencias del último repaso de tu estilista (D-160) que todavía no tienes
+(`laTienes`), cada una con por qué, **"Así lo usarías"** (un outfit de ejemplo
+con tu ropa y la prenda nueva —un cuadro de su color con un +—, armado con las
+reglas de Outfits: `RopaOpinionMotor.ideaEnOutfit`, la prenda como `__idea`
+en un día templado y casual; sin IA), cuántos outfits nuevos te da
+(`outfitsNuevos`), "A mi lista" (`origen: "estilista"`, con Deshacer) y "Ver
+ideas en Pinterest" (una búsqueda: anda sin conectar el tablero). "Pedirle
+ideas" / "Pedirle ideas nuevas" (unos 12 centavos) pide **el mismo repaso que
+Compras** (`RopaOpinion.pedir({ de: "ideas" })`): una sola opinión de tu
+estilista, que se ve en los dos lados (no dos que se contradigan). Sin la IA y
+sin un repaso guardado, no aparece; sin la IA, lo guardado se ve igual. (2)
+**El tablero que no se conecta**: la lectura desde Cloudflare nunca se había
+probado (la red de estas sesiones no llega al Worker; quedaba "falta probar"
+desde la fase 0). Una prueba temporal en la cuenta de Cloudflare del dueño
+(un Worker con cron) no se hizo: no estaba pedida y se descartó; el espacio
+KV vacío que se había creado para ella se borró. Desde aquí, el RSS de un
+perfil público de Pinterest contesta bien. Lo que sí se hizo: el puente
+(instalado) ahora dice qué pasó en vez de "revisa que sea público" para todo:
+`corto` (el link pin.it no llevó a Pinterest, con su código), `tablero` (404:
+no existe o es secreto), `pinterest-bloqueo` (otro código, por ejemplo 403:
+Pinterest no deja leerlo desde el puente), `pinterest-raro` (contestó algo que
+no es el RSS) y `pinterest-red`; en los que no son culpa del link, sugiere
+subir capturas o pedirle ideas a tu estilista. Falta que el dueño lo intente
+otra vez y mande el mensaje. (3) De paso: el color concuerda con los tipos que
+escribe la IA (`RopaMotor.generoDe`: el de la lista; si no, el de su primera
+palabra; si no, por cómo termina): "Camisa de lino blanca", "Sandalias de
+cuero blancas". (4) **Pruebas**: `npm test` → 856; puente 11 + 23 (nueva: los
+mensajes del tablero); E2E nueva `ropa-ideas` (34); `ropa-insp`,
+`ropa-opinion`, `ropa-compras`, `ropa-conectar`, `ropa`, `ropa-final` y
+`tema-claro` bien.

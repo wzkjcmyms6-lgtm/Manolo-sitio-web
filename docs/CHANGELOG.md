@@ -1,5 +1,14 @@
 # Cambios
 
+## 2026-11-25 · Ropa: ideas de tu estilista en Inspiración
+- **"Ideas de tu estilista"**, arriba de Inspiración: las prendas que le faltan
+  a tu ropero según tu estilista (no hace falta Pinterest), cada una con por
+  qué, **cómo la usarías con tu ropa**, cuántos outfits nuevos te da, "A mi
+  lista" y "Ver ideas en Pinterest". "Pedirle ideas" (unos 12 centavos).
+- Si tu tablero de Pinterest no se conecta, ahora el mensaje dice exactamente
+  qué pasó.
+- Los nombres concuerdan mejor: "Camisa de lino blanca".
+
 ## 2026-11-25 · Ropa: tus favoritos
 - **"Tus favoritos" en Outfits**, antes de tus guardados: los outfits que más
   te gustan, a un toque ("Me lo pongo hoy").

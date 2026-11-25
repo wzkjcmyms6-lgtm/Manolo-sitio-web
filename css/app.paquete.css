@@ -8158,6 +8158,24 @@ button.rof-insp { width: 100%; border: 0; font-family: inherit; font-weight: inh
 .rof-favs-vacio { margin: 0.2rem 0 0; }
 .roar-bots > .roar-fav { grid-column: 1 / -1; }
 
+/* ---------- Ideas de tu estilista, en Inspiración (D-164) ---------- */
+.rid-sec .ro-sub { display: flex; align-items: center; gap: 0.4rem; }
+.rid-sec .ro-sub [data-icon] { width: 18px; height: 18px; display: inline-flex; color: var(--accent-2); }
+.rid-fecha { margin: 0 0 0.6rem; }
+.rid-lista { list-style: none; margin: 0.5rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.8rem; }
+.rid-t { display: flex; align-items: center; gap: 0.45rem; margin: 0 0 0.35rem; font-size: 1.05rem; line-height: 1.3; }
+.rid-porque { margin: 0 0 0.5rem; line-height: 1.45; }
+.rid-asi-t { margin: 0.3rem 0 0.35rem; }
+/* "Así lo usarías": tus prendas y la nueva (su color, con un +). */
+.rid-asi { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; }
+.rid-asi > li { flex: 0 1 64px; min-width: 0; }
+.rid-asi .ro-foto { width: 100%; border-radius: 10px; }
+.rid-nueva { display: grid; place-items: center; background: var(--rid-c); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.55); }
+.rid-nueva [data-icon] { width: 26px; height: 26px; display: inline-flex; padding: 5px; box-sizing: border-box; border-radius: 50%; background: rgba(255, 255, 255, 0.92); color: #1b1b1b; }
+.rid-asi-n { margin: 0.35rem 0 0.5rem; }
+.rid-pedir { margin-top: 0.6rem; }
+.rid-costo { margin: 0.4rem 0 0; }
+
 /* ---- css/respaldo.css ---- */
 /* ---------- Copia de seguridad de todo Manolo (D-118) ----------
    Hoja de js/respaldo.js. Solo usa las variables de :root (css/style.css):

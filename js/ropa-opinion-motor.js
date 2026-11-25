@@ -10,11 +10,13 @@
 // guardado (users/{uid}/ropa_opiniones), para "¿Qué opinas?", cambiar una
 // prenda por otra, y el aviso del día en Outfits (D-161): lo que te sugirió
 // que le serviría al clima o a la ocasión del día, si todavía no lo tienes.
+// Para las ideas de Inspiración (D-164): "Así lo usarías", un outfit de ejemplo
+// con tu ropa y la prenda que te sugirió (con las reglas de Outfits).
 (function (root, factory) {
   if (typeof module === "object" && module.exports) {
-    module.exports = factory(require("./ropa-motor.js"), require("./ropa-compras-motor.js"), require("./ropa-numeros-motor.js"), require("./ropa-estilista-motor.js"), require("./ropa-insp-motor.js"));
-  } else root.RopaOpinionMotor = factory(root.RopaMotor, root.RopaComprasMotor, root.RopaNumerosMotor, root.RopaEstilistaMotor, root.RopaInspMotor);
-})(typeof self !== "undefined" ? self : this, function (M, K, N, E, I) {
+    module.exports = factory(require("./ropa-motor.js"), require("./ropa-compras-motor.js"), require("./ropa-numeros-motor.js"), require("./ropa-estilista-motor.js"), require("./ropa-insp-motor.js"), require("./ropa-outfit-motor.js"));
+  } else root.RopaOpinionMotor = factory(root.RopaMotor, root.RopaComprasMotor, root.RopaNumerosMotor, root.RopaEstilistaMotor, root.RopaInspMotor, root.RopaOutfitMotor);
+})(typeof self !== "undefined" ? self : this, function (M, K, N, E, I, O) {
 "use strict";
 
 const MAX_HECHOS = 15;
@@ -230,5 +232,23 @@ const fraseAviso = (a, manana) => `${(FRASE[a && a.motivo] || (() => "Para hoy")
 // Lo que ocultaste ([claves], hasta 30; lo más nuevo al final).
 const ocultar = (lista, k) => [...new Set((Array.isArray(lista) ? lista : []).filter(x => typeof x === "string" && x && x !== k).concat(k ? [k] : []))].slice(-30);
 
-return { MAX_HECHOS, hechos, roperoParaRepaso, pinesTexto, normalizar, ordenar, veredicto, cambiar, cosaDe, laTienes, avisoDelDia, fraseAviso, ocultar };
+// ---- "Así lo usarías" (D-164) ----
+// La prenda que te sugirió, como si ya la tuvieras (id "__idea"), en un outfit
+// con tu ropa: lo arman las reglas de Outfits (un día templado, casual; sin IA,
+// no cuesta nada). ctx: { usos, hoy, outfits } (para lo que te gusta). → [ids]
+// (con "__idea") o [] si no sale.
+const IDEA = "__idea";
+const NEUTRO = { base: "templado", abrigo: "", capas: false, lluvia: "", tormenta: false, nieve: false, viento: false, sol: false };
+function ideaComoPrenda(s) {
+  return M.normalizar(IDEA, { v: 1, grupo: s.grupo, tipo: s.tipo, colores: cosaDe(s).colores.map(id => ({ id })), estampado: "liso", tela: "", estilo: [], clima: [], formalidad: null, estado: "activa", fotos: [], creado: 0 });
+}
+function ideaEnOutfit(s, ropero, ctx) {
+  if (!s || !M.GRUPO[s.grupo]) return [];
+  const tuyas = (ropero || []).filter(p => p && p.estado !== "fuera" && p.id !== IDEA);
+  const r = O.armar(tuyas.concat([ideaComoPrenda(s)]), Object.assign({ nec: NEUTRO, ocasion: "casual", n: 1, evitar: [] }, ctx || {}, { base: IDEA }));
+  const o = r.opciones[0];
+  return o && o.prendas.includes(IDEA) && o.prendas.length >= 2 ? o.prendas : [];
+}
+
+return { MAX_HECHOS, hechos, roperoParaRepaso, pinesTexto, normalizar, ordenar, veredicto, cambiar, cosaDe, laTienes, avisoDelDia, fraseAviso, ocultar, IDEA, ideaComoPrenda, ideaEnOutfit };
 });

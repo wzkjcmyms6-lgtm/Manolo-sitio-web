@@ -45,3 +45,7 @@ html[data-modo="claro"] .undo-toast-btn { color: #8a4500; }
 /* Ropa › Tus números (D-151): las barras de tus colores, en el ámbar del modo
    claro (validado: contraste de al menos 3:1 sobre el blanco de la tarjeta). */
 html[data-modo="claro"] .rn-app { --rn-barra: #a35200; }
+
+/* Ideas de tu estilista (D-164): la prenda nueva es un cuadro de su color con
+   un + en un círculo blanco; el círculo queda blanco también en el modo claro. */
+html[data-modo="claro"] .rid-nueva [data-icon] { background: rgba(255, 255, 255, 0.92); color: #1b1b1b; }

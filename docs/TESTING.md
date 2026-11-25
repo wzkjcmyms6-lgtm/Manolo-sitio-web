@@ -1,6 +1,18 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-25 (Ropa: ideas de tu estilista en Inspiración, D-164): `npm test`
+  → **856** (en `ropa-opinion-motor`: "Así lo usarías"; en `ropa-motor`: el
+  color concuerda con lo que escribe la IA). Puente: **11** del Worker (nueva:
+  por qué no se lee un tablero —no existe o es secreto, Pinterest no deja (403),
+  contestó otra cosa, el link corto no abrió—) y **23** de su lógica y de
+  Pinterest; instalado. E2E nueva `ropa-ideas` (**34**): las ideas arriba de
+  Inspiración (sin lo que ya tienes, con su porqué, "Así lo usarías" con tu
+  ropa y la nueva, outfits nuevos, "A mi lista" con Deshacer, "Ver ideas en
+  Pinterest"), "Pedirle ideas nuevas" (mientras mira; lo mismo en Compras), sin
+  repaso, sin la IA, el mensaje del tablero; 320 px en oscuro y en claro.
+  `ropa-insp`, `ropa-opinion`, `ropa-compras`, `ropa-conectar`, `ropa`,
+  `ropa-final` y `tema-claro` bien.
 - 2026-11-25 (Ropa: tus favoritos, D-163): `npm test` → **854** (en
   `ropa-outfit-motor`: tus favoritos pesan una vez y media). E2E nueva
   `ropa-favoritos` (**56**): "Tus favoritos" (sin ninguno, cómo se suman; antes
@@ -790,6 +802,9 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] Tus favoritos: toca el corazón en una opción de Outfits y en un
   guardado; míralos en "Tus favoritos" y ponte uno ("Me lo pongo hoy"). En
   "Armar el mío", "A favoritos".
+- [ ] Inspiración › "Ideas de tu estilista": "Pedirle ideas" (unos 12
+  centavos); mira "Así lo usarías" y "Ver ideas en Pinterest". Conecta tu
+  tablero otra vez: si no se puede, el mensaje dice por qué (mándalo).
 - [ ] En modo avión: Ajustes de Ropa dice "Sin internet"; al agregar una foto,
   "Sin internet: la IA no puede mirar la foto". Al volver internet, la IA se
   conecta sola.

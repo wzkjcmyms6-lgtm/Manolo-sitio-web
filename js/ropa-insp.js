@@ -6,6 +6,8 @@
 // que te falta. Sin IA, el look sale igual con reglas (por grupo, tipo y
 // color). "Mi estilo": lo que se repite en tus pines (y, con la IA, un resumen
 // que puedes corregir). El tablero se conecta acá o en Ajustes de Ropa.
+// Arriba, las ideas de tu estilista (D-164, js/ropa-ideas.js): prendas que le
+// faltan a tu ropero, sin depender de Pinterest.
 // Datos: js/ropa-insp-datos.js; lógica: js/ropa-insp-motor.js; la IA y
 // Pinterest: js/ropa-ia.js (por el puente).
 (function () {
@@ -188,6 +190,7 @@ function render() {
         <button type="button" class="lib-btn-sec" data-rin-link>${icono("enlace")}Link de Pinterest</button></div></div>`;
   app.innerHTML = `${mensaje ? `<p class="tmp-ok rin-mensaje" role="status">${esc(mensaje)}</p>` : ""}
     <p class="ro-resumen" aria-live="polite">${r.total ? `${plural(r.total, "inspiración", "inspiraciones")}${iaLista() && r.sinAnalizar ? ` · ${plural(r.sinAnalizar, "sin mirar", "sin mirar")}` : ""}` : ""}</p>
+    ${verOcultas || !window.RopaIdeas ? "" : window.RopaIdeas.html()}
     ${tableroHTML()}
     ${tareaHTML()}
     ${verOcultas ? `<h2 class="ro-sub">Las que quitaste</h2><p class="rd-nota">Ábrela para volver a mostrarla.</p>` : estiloHTML(xs)}

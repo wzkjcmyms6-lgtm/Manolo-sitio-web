@@ -223,23 +223,39 @@ async function traer(url, intentos) {
   return r;
 }
 // Un link (o lo que pegó el iPhone) → { tipo, … }, siguiendo el link corto.
+// Si el link corto no lleva a Pinterest: { tipo: "corto-fallo", status } (lo
+// último que contestó, para decir qué pasó).
 async function entender(texto) {
   const l = P.leerLink(texto);
   if (!l || l.tipo !== "corto") return l;
-  return P.resolverCorto(l.url, async u => {
+  let status = 0;
+  const fin = await P.resolverCorto(l.url, async u => {
     const r = await fetch(u, { redirect: "manual" });
+    status = r.status;
     return { status: r.status, location: r.headers.get("Location") };
-  });
+  }).catch(() => null);
+  return fin || { tipo: "corto-fallo", status };
 }
+// Lo que pasó con el tablero, en palabras (D-164: antes todo decía "revisa que
+// sea público", aunque fuera otra cosa). detalle: { paso, status }.
+const SUBE = "Mientras, sube capturas de tus pines con el + o pídele ideas a tu estilista.";
 async function tablero(cuerpo) {
   const c = cuerpo || {};
   const l = c.link ? await entender(c.link) : P.leerLink(`${c.usuario || ""}/${c.tablero || ""}`);
   if (l && l.tipo === "pin") return [400, { error: "es-pin", mensaje: "Ese link es de un pin, no de un tablero: abre el tablero y copia su link." }];
   if (l && l.tipo === "perfil") return [400, { error: "perfil", mensaje: "Ese link es de tu perfil: abre el tablero y copia su link." }];
+  if (l && l.tipo === "corto-fallo") return [400, { error: "corto", mensaje: `No pude abrir ese link corto de Pinterest${l.status ? ` (respondió ${l.status})` : ""}. Prueba con el link largo: abre el tablero en Pinterest desde el navegador y copia la dirección (pinterest.com/tu-usuario/tu-tablero).`, detalle: { paso: "corto", status: l.status } }];
   if (!l || l.tipo !== "tablero") return [400, { error: "link", mensaje: "No entendí ese link. En Pinterest, abre el tablero › Compartir › Copiar link, y pégalo aquí." }];
   const r = await traer(P.urlRss(l.usuario, l.tablero));
   const xml = r && r.ok ? await r.text() : "";
-  if (!/<rss[\s>]/i.test(xml)) return [404, { error: "tablero", mensaje: "No pude leer ese tablero. Revisa que sea público (los secretos no se pueden leer)." }];
+  if (!/<rss[\s>]/i.test(xml)) {
+    const status = r ? r.status : 0;
+    const detalle = { paso: "rss", status };
+    if (!r) return [502, { error: "pinterest-red", mensaje: `No pude llegar a Pinterest. Intenta de nuevo en un rato. ${SUBE}`, detalle }];
+    if (status === 404) return [404, { error: "tablero", mensaje: `Pinterest dice que el tablero «${l.tablero}» de ${l.usuario} no existe o es secreto. Revisa que sea público (en Pinterest: el tablero › Editar › que no sea secreto) y que el link sea del tablero.`, detalle }];
+    if (!r.ok) return [502, { error: "pinterest-bloqueo", mensaje: `Pinterest no dejó leer tu tablero desde el puente (respondió ${status}). ${SUBE}`, detalle }];
+    return [502, { error: "pinterest-raro", mensaje: `Pinterest contestó algo que no es tu tablero (puede que esté pidiendo comprobar que no es un robot). ${SUBE}`, detalle }];
+  }
   return [200, { usuario: l.usuario, tablero: l.tablero, titulo: P.tituloRss(xml), pines: P.leerRss(xml, 50) }];
 }
 async function pin(cuerpo) {

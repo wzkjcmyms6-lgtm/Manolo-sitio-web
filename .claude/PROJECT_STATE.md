@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-25 (Ropa: tus favoritos, D-163).
+Actualizado: 2026-11-25 (Ropa: ideas de tu estilista en Inspiración, D-164).
 
 - **Ropa, nivel 2: tu estilista con IA (2026-11-24, en curso)**: hablar con la
   IA como con un estilista (outfits solo con su ropa, a partir de lo que
@@ -45,6 +45,10 @@ Actualizado: 2026-11-25 (Ropa: tus favoritos, D-163).
   Pedido del dueño (D-163): **tus favoritos** en Outfits (el corazón en cada
   outfit; "Tus favoritos" antes de "Guardados"; le llegan primero a tu
   estilista).
+  Pedido del dueño (D-164): **ideas de tu estilista en Inspiración** (las
+  prendas que le faltan a su ropero, sin Pinterest, con "Así lo usarías" con
+  su ropa); su tablero de Pinterest no se conecta: el puente ahora dice qué
+  pasó, falta que lo pruebe y mande el mensaje.
 
 - **Ropa con IA e inspiración de Pinterest (2026-11-22; terminado el
   2026-11-23; la IA conectada el 2026-11-24)**: el

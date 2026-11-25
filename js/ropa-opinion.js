@@ -12,6 +12,8 @@
 // guardado de Outfits): una hoja con si va bien, qué funciona, hasta 2 cambios
 // con fotos ("Cambiar" lo aplica en un toque) y un consejo.
 // El puente: /opinion (esfuerzo alto) y /opinar (medio), versión 5 o más.
+// El mismo repaso se pide también desde las ideas de Inspiración (D-164,
+// js/ropa-ideas.js): pedir({ de: "ideas" }); estado() dice si está mirando.
 (function () {
 "use strict";
 const M = window.RopaMotor, O = window.RopaOutfitMotor, P = window.RopaOpinionMotor, E = window.RopaEstilistaMotor, K = window.RopaComprasMotor, D = window.RopaDatos, DI = window.RopaInspDatos, DE = window.RopaEstilistaDatos;
@@ -109,8 +111,14 @@ function html() {
   if (!op) return caja(`<p>Pídele a tu estilista su opinión de tu ropero: lo que ve, lo que sumaría para tener más outfits, lo que no compraría más y los colores que te van.</p>${error}${boton("Pedir su opinión")}`);
   return caja(`${opinionHTML(op)}${error}${boton("Pedirle otra opinión")}`);
 }
-function repintar() { if (pantalla() === "ropa-compras" && RC()) RC().render(); }
-async function pedirOpinion() {
+// Se ve en Compras y en las ideas de Inspiración (D-164).
+function repintar() {
+  if (pantalla() === "ropa-compras" && RC()) RC().render();
+  else if (pantalla() === "ropa-inspiracion" && window.RopaInsp) window.RopaInsp.render();
+}
+// o: { de: "ideas" } si lo pides desde Inspiración.
+async function pedirOpinion(o) {
+  const deIdeas = !!(o && o.de === "ideas");
   if (est.pidiendo || !disponible()) return;
   const ropero = D.lista();
   const hechos = P.hechos(ropero, D.usosDocs(), D.hoy());
@@ -120,7 +128,7 @@ async function pedirOpinion() {
   est.pidiendo = true;
   est.error = "";
   repintar();
-  const sec = document.querySelector("#rco-app .rop-op");
+  const sec = document.querySelector(deIdeas ? "#rin-app .rid-sec" : "#rco-app .rop-op");
   if (sec) sec.scrollIntoView({ block: "start", behavior: "smooth" });
   try {
     const r = await IA().opinion(Object.assign({ ropero: P.roperoParaRepaso(ropero, D.usosDocs()), hechos, pines: I() ? P.pinesTexto(K.faltan(DI.lista(), ropero)) : "", ciudad }, contexto()));
@@ -128,7 +136,7 @@ async function pedirOpinion() {
     const doc = { fecha: D.hoy(), n: tuyas().length, hechos, ia };
     const id = DE.guardarOpinion(doc);
     est.recien = P.normalizar(id, Object.assign({ creado: Date.now() }, doc));
-    aviso("Listo: tu estilista te dio su opinión de tu ropero.");
+    aviso(deIdeas ? "Listo: tu estilista te dio ideas nuevas." : "Listo: tu estilista te dio su opinión de tu ropero.");
   } catch (e) {
     est.error = (e && e.message) || "Tu estilista no pudo darte su opinión. Intenta de nuevo.";
   }
@@ -215,5 +223,5 @@ function opinar(ids, o) {
   };
 }
 
-window.RopaOpinion = { html, opinar, disponible, ultima };
+window.RopaOpinion = { html, opinar, disponible, ultima, pedir: pedirOpinion, estado: () => ({ pidiendo: est.pidiendo, error: est.error }), contexto };
 })();

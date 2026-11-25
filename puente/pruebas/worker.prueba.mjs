@@ -32,7 +32,7 @@ const RSS = `<?xml version="1.0"?><rss version="2.0"><channel><title>Manolo</tit
 <item><title>Abrigo camel</title><link>https://www.pinterest.com/pin/111/</link><description>&lt;img src=&quot;https://i.pinimg.com/236x/aa/bb/cc/abc.jpg&quot;&gt;</description><pubDate>Sun, 22 Nov 2026 18:21:01 GMT</pubDate></item>
 <item><title>Jean recto</title><link>https://www.pinterest.com/pin/222/</link><description>&lt;img src=&quot;https://i.pinimg.com/236x/dd/ee/ff/def.jpg&quot;&gt;</description></item>
 </channel></rss>`;
-let pedidos = [], respuestaIA = null, rssFalla = 0;
+let pedidos = [], respuestaIA = null, rssFalla = 0, rssModo = "";   // rssModo: "403", "html" o "404" (siempre)
 const IMG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 4]);
 globalThis.fetch = async (url, init) => {
   const u = String(url instanceof Request ? url.url : url);
@@ -43,7 +43,14 @@ globalThis.fetch = async (url, init) => {
   if (u === "https://pin.it/2Ab3Cd4Ef") return r(null, 308, { Location: "https://api.pinterest.com/url_shortener/2Ab3Cd4Ef/redirect/" });
   if (u === "https://api.pinterest.com/url_shortener/2Ab3Cd4Ef/redirect/") return r(null, 302, { Location: "https://www.pinterest.com/juanito_99/manolo/?invite_code=z" });
   if (u === "https://pin.it/PinCorto1") return r(null, 308, { Location: "https://www.pinterest.com/pin/333/sent/?x=1" });
-  if (u === "https://www.pinterest.com/juanito_99/manolo.rss") { if (rssFalla > 0) { rssFalla--; return r("no", 404); } return r(RSS, 200, { "Content-Type": "text/xml" }); }
+  if (u === "https://www.pinterest.com/juanito_99/manolo.rss") {
+    if (rssModo === "403") return r("Forbidden", 403);
+    if (rssModo === "html") return r("<!doctype html><html><body>¿Eres un robot?</body></html>", 200, { "Content-Type": "text/html" });
+    if (rssModo === "404") return r("Board not found", 404);
+    if (rssFalla > 0) { rssFalla--; return r("no", 404); }
+    return r(RSS, 200, { "Content-Type": "text/xml" });
+  }
+  if (u === "https://pin.it/Roto1234") return r(null, 404);
   if (u.startsWith("https://www.pinterest.com/oembed.json?url=")) {
     return decodeURIComponent(u.split("url=")[1]) === "https://www.pinterest.com/pin/333/"
       ? r(JSON.stringify({ title: "Look de oficina", thumbnail_url: "https://i.pinimg.com/236x/12/34/56/x.jpg" }), 200, { "Content-Type": "application/json" })
@@ -297,4 +304,30 @@ test("los latidos (D-162): con ?latidos=1 contesta enseguida, late mientras la I
   assert.equal(deIA().length, antes, "y no se llamó a la IA");
   // Sin ?latidos, como antes (para la app de antes).
   assert.equal((await pedir(env, "/opinar", { outfit: ["pol", "jean"], ropero })).status, 402);
+});
+
+test("Pinterest (D-164): si el tablero no se puede leer, dice qué pasó", async () => {
+  pedidos = [];
+  const env = entorno();
+  const leer = async link => (await pedir(env, "/pinterest/tablero", { link })).json;
+  try {
+    rssModo = "404";
+    let j = await leer("https://www.pinterest.com/juanito_99/manolo/");
+    assert.equal(j.error, "tablero");
+    assert.match(j.mensaje, /no existe o es secreto/);
+    assert.deepEqual(j.detalle, { paso: "rss", status: 404 });
+    rssModo = "403";
+    j = await leer("https://www.pinterest.com/juanito_99/manolo/");
+    assert.equal(j.error, "pinterest-bloqueo");
+    assert.match(j.mensaje, /no dejó leer tu tablero desde el puente \(respondió 403\)/);
+    assert.match(j.mensaje, /pídele ideas a tu estilista/);
+    rssModo = "html";
+    j = await leer("https://www.pinterest.com/juanito_99/manolo/");
+    assert.equal(j.error, "pinterest-raro");
+    rssModo = "";
+    j = await leer("https://pin.it/Roto1234");
+    assert.equal(j.error, "corto");
+    assert.match(j.mensaje, /link corto de Pinterest \(respondió 404\)/);
+    assert.equal((await leer("https://www.pinterest.com/juanito_99/manolo/")).titulo, "Manolo", "y si se puede, como siempre");
+  } finally { rssModo = ""; }
 });

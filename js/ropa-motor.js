@@ -86,11 +86,22 @@ const COLORES = [
 const COLOR = Object.fromEntries(COLORES.map(c => [c.id, c]));
 const cap = s => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 const FORMA = { m: 0, f: 1, mp: 2, fp: 3 };
+// El género de un tipo de prenda: el de la lista; si es otro (lo que escribe la
+// IA: "Camisa de lino", "Chamarra impermeable"), el de su primera palabra si
+// está en la lista y, si no, por cómo termina (D-164).
+function generoDe(tipo) {
+  if (TIPO_G[tipo]) return TIPO_G[tipo];
+  const primera = String(tipo || "").trim().split(/\s+/)[0] || "";
+  const p = plano(primera);
+  const conocido = Object.keys(TIPO_G).find(k => plano(k) === p);
+  if (conocido) return TIPO_G[conocido];
+  return /as$/.test(p) ? "fp" : /(os|es)$/.test(p) ? "mp" : /a$/.test(p) ? "f" : "m";
+}
 // El nombre del color para un tipo de prenda ("negras" para Zapatillas).
 function colorPara(colorId, tipo) {
   const c = COLOR[colorId];
   if (!c) return "";
-  const i = FORMA[TIPO_G[tipo] || "m"];
+  const i = FORMA[generoDe(tipo)];
   return c.f.length === 1 ? c.f[0] : c.f[i];
 }
 const nombreColor = id => (COLOR[id] ? cap(COLOR[id].f[0]) : "");
@@ -98,7 +109,7 @@ const nombreColor = id => (COLOR[id] ? cap(COLOR[id].f[0]) : "");
 function nombreCorte(id, tipo) {
   const base = nombreDe(CORTES, id);
   if (!base) return "";
-  const g = TIPO_G[tipo] || "m";
+  const g = generoDe(tipo);
   if (["pegado", "suelto", "recto", "ancho", "acampanado"].includes(id)) return base.slice(0, -1) + { m: "o", f: "a", mp: "os", fp: "as" }[g];
   if (base === "Regular" && (g === "mp" || g === "fp")) return "Regulares";
   return base;
@@ -338,7 +349,7 @@ function resumen(xs) {
 
 return {
   GRUPOS, GRUPO, CLIMAS, ESTILOS, ESTAMPADOS, TELAS, FORMALIDAD, ESTADOS, COLORES, COLOR, ORDENES, CORTES, CORTES_DE, MANGAS, CON_MANGA,
-  nombreDe, colorPara, nombreColor, nombreCorte, nombreManga, mayus, talla, hexARgb, rgbALab, colorCercano, coloresDeFoto,
+  nombreDe, generoDe, colorPara, nombreColor, nombreCorte, nombreManga, mayus, talla, hexARgb, rgbALab, colorCercano, coloresDeFoto,
   normalizar, validar, titulo, detalle, usos, costoPorUso, fechaLarga, buscar, filtrar, ordenar, familias, resumen, plano
 };
 });

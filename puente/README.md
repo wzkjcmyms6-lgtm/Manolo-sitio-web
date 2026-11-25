@@ -45,6 +45,13 @@ más viejo sale y esa parte se escribe de nuevo en la caché; la ropa no). Con t
 solo van referencias (p1, p2…): ni tus ids, ni notas, talla o precio; la app
 recibe de vuelta tus ids, sin lo que está para lavar.
 
+**Pinterest, si no se puede leer un tablero (D-164)**: el error dice qué pasó
+(`detalle: { paso, status }`): `corto` (el link pin.it no llevó a Pinterest),
+`tablero` (404: no existe o es secreto), `pinterest-bloqueo` (Pinterest
+contestó otro error, con su código), `pinterest-raro` (contestó algo que no es
+el RSS) o `pinterest-red` (no se pudo llegar). La lectura desde Cloudflare
+nunca se pudo probar desde estas sesiones (su red no llega al Worker).
+
 **Instalado** (D-153, 2026-11-24): `https://manolo-puente.manolo-ropa-482.workers.dev`,
 en la cuenta de Cloudflare del dueño. Para subir un cambio: `npm run prueba`
 y, desde aquí, `npx wrangler deploy` (los secretos quedan).

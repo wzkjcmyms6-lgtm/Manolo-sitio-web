@@ -202,6 +202,7 @@
   "js/ropa-armar.js",
   "js/ropa-estilista.js",
   "js/ropa-opinion.js",
+  "js/ropa-ideas.js",
   "js/ropa-compras.js",
   "js/ropa-numeros.js",
   "js/ropa-ajustes.js",

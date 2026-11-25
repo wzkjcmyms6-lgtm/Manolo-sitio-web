@@ -212,3 +212,15 @@ test("las familias de color de tu ropero y el resumen", () => {
   assert.deepEqual(f.map(x => x.id).sort(), ["azul", "blanco", "negro"]);
   assert.deepEqual(R.resumen(ropero), { total: 3, porGrupo: { arriba: 1, abajo: 1, cuerpo: 0, abrigos: 1, zapatos: 0, accesorios: 0 }, lavar: 1, fuera: 1 });
 });
+
+test("el color concuerda también con lo que escribe la IA (D-164): «Camisa de lino blanca»", () => {
+  const R = require("../js/ropa-motor.js");
+  assert.equal(R.titulo({ tipo: "Camisa de lino", colores: [{ id: "blanco" }] }), "Camisa de lino blanca", "por su primera palabra");
+  assert.equal(R.titulo({ tipo: "Chamarra impermeable", colores: [{ id: "negro" }] }), "Chamarra impermeable negra");
+  assert.equal(R.titulo({ tipo: "Pantalón de tela", colores: [{ id: "negro" }] }), "Pantalón de tela negro");
+  assert.equal(R.titulo({ tipo: "Botines", colores: [{ id: "negro" }] }), "Botines negros");
+  assert.equal(R.titulo({ tipo: "Sandalias de cuero", colores: [{ id: "blanco" }] }), "Sandalias de cuero blancas", "por cómo termina");
+  assert.equal(R.titulo({ tipo: "Gabardina", colores: [{ id: "negro" }] }), "Gabardina negra");
+  assert.equal(R.titulo({ tipo: "Blazer", colores: [{ id: "negro" }] }), "Blazer negro");
+  assert.equal(R.generoDe("Polera"), "f");
+});

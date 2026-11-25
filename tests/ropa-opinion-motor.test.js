@@ -151,3 +151,20 @@ test("el aviso del día (D-161): lo que te sugirió tu estilista y le serviría 
   assert.equal(P.ocultar(Array.from({ length: 40 }, (_, i) => `k${i}`), "nuevo").length, 30);
   assert.equal(P.ocultar(Array.from({ length: 40 }, (_, i) => `k${i}`), "nuevo").slice(-1)[0], "nuevo");
 });
+
+test("«Así lo usarías» (D-164): un outfit de ejemplo con tu ropa y la prenda que te sugirió", () => {
+  const r = ropero();
+  const chino = { grupo: "abajo", tipo: "Chino", color: "beige", porque: "", combina: [] };
+  const o = P.ideaEnOutfit(chino, r, { usos: new Map(), hoy: HOY, outfits: [] });
+  assert.ok(o.includes(P.IDEA), "con la prenda nueva");
+  const por = new Map(r.map(p => [p.id, p]));
+  const otras = o.filter(id => id !== P.IDEA).map(id => por.get(id));
+  assert.ok(otras.length >= 2 && otras.every(Boolean), "y con prendas tuyas");
+  assert.ok(otras.some(p => p.grupo === "arriba") && !otras.some(p => p.grupo === "abajo"), "algo de arriba; de abajo, solo el chino");
+  assert.ok(!otras.some(p => p.estado === "fuera"), "sin lo que ya no tienes");
+  assert.equal(P.ideaComoPrenda(chino).colores[0].id, "beige");
+  const abrigo = P.ideaEnOutfit({ grupo: "abrigos", tipo: "Chamarra", color: "verde-oliva" }, r, {});
+  assert.ok(abrigo.includes(P.IDEA) && abrigo.length >= 3, "un abrigo va sobre un outfit");
+  assert.deepEqual(P.ideaEnOutfit({ grupo: "abajo", tipo: "Chino", color: "beige" }, [], {}), [], "sin ropa, no sale");
+  assert.deepEqual(P.ideaEnOutfit(null, r, {}), []);
+});

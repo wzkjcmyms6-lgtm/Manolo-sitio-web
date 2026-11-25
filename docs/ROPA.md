@@ -436,6 +436,27 @@ corte recto, ya sabes".
 - Datos: `favorito` y `favoritoFecha` en cada outfit (`ropa_outfits`; solo se
   suman, van en la copia de seguridad).
 
+## Ideas de tu estilista en Inspiración (D-164, pedido del dueño del 2026-11-25)
+"En la parte de inspiración quiero que la propia IA me pueda sugerir prendas,
+más allá de la de Pinterest (no me deja conectar el tablero), en base a lo que
+ve que falta en mi ropero."
+- **Arriba de Inspiración, "Ideas de tu estilista"**: las prendas que tu
+  estilista sumaría a tu ropero (las de su último repaso, sin lo que ya
+  tienes), cada una con por qué, **"Así lo usarías"** (un outfit de ejemplo con
+  tu ropa y la prenda nueva, con su color: lo arma Manolo con las reglas de
+  Outfits, sin IA), cuántos outfits nuevos te da, "A mi lista" y "Ver ideas en
+  Pinterest" (una búsqueda: no hace falta conectar el tablero).
+- **"Pedirle ideas"** (unos 12 centavos): el repaso de tu ropero, el mismo de
+  Compras (así no hay dos opiniones distintas); se ve en los dos lados.
+- **El tablero que no se conecta**: antes, cualquier problema decía "revisa
+  que sea público". Ahora el puente dice qué pasó: el link corto no abrió,
+  Pinterest dice que el tablero no existe o es secreto, Pinterest no dejó
+  leerlo desde el puente (con su código) o contestó otra cosa. Con ese mensaje
+  se sabe qué arreglar. La lectura del tablero desde Cloudflare nunca se había
+  podido probar (la red de estas sesiones no llega al puente instalado).
+- De paso: el color concuerda con lo que escribe la IA ("Camisa de lino
+  blanca", no "blanco": por la primera palabra o por cómo termina).
+
 ## Nivel 2: tu estilista con IA
 Hablar con la IA como con un estilista, armar tus outfits tú mismo y ver cada
 outfit en grande, y la opinión de tu ropero: `docs/ROPA_ESTILISTA.md` (D-155
