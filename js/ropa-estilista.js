@@ -16,7 +16,8 @@
 // Outfits y en tus otras conversaciones).
 // Conectado (D-161): "Para mañana" en cada outfit (queda en tus guardados para
 // mañana, como en Outfits) y #ropa-estilista/{id} abre esa conversación (el
-// link de "Hoy te armó…", en Outfits y en Inicio).
+// link de "Hoy te armó…", en Outfits y en Inicio). El ♥ (D-163): a tus
+// favoritos (y tus favoritos le llegan primero).
 // Datos: js/ropa-estilista-datos.js; lógica: js/ropa-estilista-motor.js.
 (function () {
 "use strict";
@@ -131,7 +132,8 @@ function outfitHTML(o, i, j, n, ocupado) {
     : ya.guardado && ya.para === manana() ? "Lo elegiste para mañana." : ya.guardado ? "Está en tus guardados." : "";
   const k = `data-m="${i}" data-o="${j}"`;
   return `<li class="tmp-card rof-op roe-op">
-    <div class="rof-op-cab"><h3 class="rof-op-t">${n > 1 ? `<span class="rof-op-n">Opción ${j + 1}</span>` : ""}${esc(o.nombre || "Tu outfit")}</h3></div>
+    <div class="rof-op-cab"><h3 class="rof-op-t">${n > 1 ? `<span class="rof-op-n">Opción ${j + 1}</span>` : ""}${esc(o.nombre || "Tu outfit")}</h3>
+      ${noEsta ? "" : `<button type="button" class="rof-fav-b${ya && ya.favorito ? " is-on" : ""}" data-roe-o="fav" ${k} aria-pressed="${!!(ya && ya.favorito)}" aria-label="Favorito">${icono(ya && ya.favorito ? "corazonLleno" : "corazon")}</button>`}</div>
     ${hay.length ? `<div class="rof-ver-a" data-roe-o="ver" ${k}><span class="rof-fotos">${hay.map(p => `<span class="rof-foto-a" data-prenda="${esc(p.id)}">${A().fotoHTML(p, "ro-foto")}</span>`).join("")}</span>
       <p class="rof-lista">${hay.map(p => esc(M.titulo(p))).join(" · ")}</p></div>` : ""}
     <div class="rof-op-ver"><button type="button" class="link-btn" data-roe-o="ver" ${k} aria-haspopup="dialog">${icono("ampliar")}Ver en grande</button>
@@ -225,7 +227,7 @@ async function datosIA(t, antes, id) {
     mensaje: t, ropero: E.roperoParaCharla(D.lista()), historial: E.historial(antes, v6), clima: clima || "",
     ...(v6 ? { hoy: E.delDia(DE.lista(), id, D.hoy(), RO() && RO().opcionesDelDia ? RO().opcionesDelDia() : []) } : {}),
     estilo: g ? g.resumen : "", recientes: O.recientes(D.usosDocs(), D.hoy()),
-    gustan: DO.lista().filter(o => o.gusto === "si").slice(0, 15).map(o => o.prendas),
+    gustan: DO.gustan(15).map(o => o.prendas),
     noGustan: DO.lista().filter(o => o.gusto === "no").slice(0, 15).map(o => o.prendas),
     memoria: DE.memoria().map(m => m.texto), presupuesto: presupuesto()
   };
@@ -319,6 +321,8 @@ function accion(a, i, j, desde) {
     DO.ponerme(ids, datosDe(o), D.hoy()).then(r => aviso("Listo: anotado lo que te pusiste hoy.", () => DO.quitarme(r.id, nuevas, D.hoy(), r.nuevo).catch(fallo)), fallo);
   } else if (a === "guardar") {
     DO.guardar(ids, datosDe(o)).then(r => aviso("Guardado en tus outfits.", () => (r.nuevo ? DO.borrar(r.id) : DO.quitarGuardado(r.id)).catch(fallo)), fallo);
+  } else if (a === "fav") {
+    DO.alternarFavorito(ids, datosDe(o)).then(r => aviso(r.on ? "Listo: está en tus favoritos." : "Quitado de tus favoritos.", () => r.deshacer().catch(fallo)), fallo);
   } else if (a === "manana") {
     // Queda en tus guardados para mañana (como "Para mañana" en Outfits); Deshacer lo deja como estaba.
     const ya = DO.deCombo(ids), antes = ya ? DO.crudo(ya.id) : null;

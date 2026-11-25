@@ -2858,3 +2858,34 @@ latidos, los errores adentro, el tope adentro sin llamar a la IA y sin
 puente de mentira como el 7) y `ropa-outfits` (89: en grande, "Se parece a tu
 inspiración" lleva al pin); las demás, con puentes como el de antes. Las 51
 suites sin fallas (4.320 comprobaciones).
+
+**D-163 (2026-11-25) · Ropa: tus favoritos.** Pedido del dueño: "Que en
+outfits haya un espacio de outfits favoritos". (1) **Datos**: en cada outfit
+(`ropa_outfits`), `favorito: true` y `favoritoFecha` (cuándo lo marcaste); solo
+se suman. Un favorito te gusta (`gusto: "si"`) y no hace falta que esté en
+guardados: el corazón no es "Guardar" (si te equivocas y lo apagas, no te deja
+un guardado de más). `RopaOutfitsDatos`: `favoritos()` (el último que marcaste,
+primero), `favorito`, `quitarFavorito`, `alternarFavorito` (→ { on, deshacer }:
+Deshacer deja el outfit como estaba; si era nuevo, lo borra) y `gustan(n)`
+(tus favoritos primero, después lo que te gustó). "No me gusta" también lo saca
+de tus favoritos. (2) **El corazón** (vacío o lleno, la misma forma; un botón
+que se prende y se apaga, con `aria-pressed`): de 44 px en la cabecera de cada
+opción de "¿Qué me pongo?" y de cada outfit de tu estilista (con aviso y
+Deshacer); "Favorito" al ver uno en grande (una opción, un guardado o un día
+del calendario): se prende ahí mismo, sin aviso (el de abajo queda tapado por
+la hoja). En "Armar el mío", "A favoritos" (con 2 prendas o más): se guarda con
+su nombre y su ocasión y queda en tus favoritos (con Deshacer); al editar no
+aparece, y si editas un favorito y cambias una prenda, el nuevo queda como
+favorito y el de antes ya no (Deshacer deja los dos como estaban). (3) **"Tus
+favoritos"** en Outfits, antes de "Guardados" (que ya no los repite), con las
+mismas tarjetas: un toque lo abre en grande ("Me lo pongo hoy", editar,
+duplicar, "¿Qué opinas?"; "Quitar de guardados" solo si está guardado). Sin
+ninguno, el espacio está y dice cómo se suman. Lugar: abajo, junto a tus
+guardados (lo tuyo), para no empujar "¿Qué me pongo?" más abajo. (4) **Lo que
+aprende**: tus favoritos le llegan primero a la IA (en `/outfits` y en
+`/charla`, `gustan`) y en las reglas pesan una vez y media
+(`RopaOutfitMotor.gustos`). (5) De paso: en las hojas, un botón con el texto
+largo ("Quitar de guardados" a 320 px) se salía de su borde; ahora el texto
+pasa a dos líneas. (6) **Pruebas**: `npm test` → 854; E2E nueva
+`ropa-favoritos` (56); `ropa-outfits` (89), `ropa-armar`, `ropa-estilista`,
+`ropa-final` y `ropa-conectar` bien.

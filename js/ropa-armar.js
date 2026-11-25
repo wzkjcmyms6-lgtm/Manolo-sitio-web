@@ -156,6 +156,7 @@ function pieHTML(xs) {
       <button type="button" class="lib-btn" data-roar="${manana ? "manana" : "puse"}"${xs.length ? "" : " disabled"}>${icono("check")}${manana ? "Para mañana" : "Me lo pongo"}</button>
       <button type="button" class="lib-btn-sec" data-roar="guardar"${xs.length ? "" : " disabled"}>${icono("guardar")}${editar ? "Guardar los cambios" : "Guardar"}</button>
       <button type="button" class="lib-btn-sec" data-roar="${manana ? "puse" : "manana"}"${xs.length ? "" : " disabled"}>${manana ? "Me lo pongo hoy" : "Para mañana"}</button>
+      ${editar ? "" : `<button type="button" class="lib-btn-sec roar-fav" data-roar="fav"${xs.length >= 2 ? "" : " disabled"}>${icono("corazon")}A favoritos</button>`}
     </div>
     ${xs.length ? `<button type="button" class="link-btn roar-cero" data-roar="cero">Empezar de cero</button>` : ""}
   </section>`;
@@ -203,22 +204,36 @@ function ponerme() {
   terminar();
 }
 // Guardar (o para mañana). Al editar, si cambiaste las prendas, el de antes
-// deja de estar guardado (su historia queda); Deshacer deja todo como estaba.
+// deja de estar guardado (su historia queda) y, si era tu favorito, el nuevo
+// lo es en su lugar (D-163); Deshacer deja todo como estaba.
 function guardar(para) {
   const ids = idsListos();
   if (!ids.length) { vacio(); return; }
   const ya = DO.deCombo(ids), antes = ya ? DO.crudo(ya.id) : null;
   const viejo = est.modo === "editar" ? DO.una(est.deId) : null, antesViejo = viejo ? DO.crudo(viejo.id) : null;
   if (est.modo === "duplicar" && ya && ya.id === est.deId) { aviso("Es igual al que ya tienes: cámbiale algo para que sea otro."); return; }
-  DO.guardarMio(ids, datos(), para || null).then(r => {
+  const fav = viejo && viejo.favorito && (!ya || ya.id !== viejo.id) ? { favorito: true, favoritoFecha: viejo.favoritoFecha || Date.now() } : null;
+  DO.guardarMio(ids, datos(), para || null, fav).then(r => {
     const cambio = viejo && r.id !== viejo.id;
     const listo = para ? "Listo: queda para mañana." : viejo ? "Listo: guardé los cambios." : r.nuevo ? "Guardado en tus outfits." : "Listo: está en tus outfits.";
     const deshacer = () => Promise.all([
       r.nuevo ? DO.borrar(r.id) : DO.restaurar(r.id, antes),
       cambio ? DO.restaurar(viejo.id, antesViejo) : null
     ]).catch(fallo);
-    return (cambio ? DO.quitarGuardado(viejo.id) : Promise.resolve()).then(() => aviso(listo, deshacer));
+    const quitarViejo = cambio ? Promise.all([DO.quitarGuardado(viejo.id), viejo.favorito ? DO.quitarFavorito(viejo.id) : null]) : Promise.resolve();
+    return quitarViejo.then(() => aviso(listo, deshacer));
   }).catch(fallo);
+  terminar();
+}
+// "A favoritos" (D-163): lo que armaste, guardado y en tus favoritos (con su
+// nombre y su ocasión); Deshacer lo deja como estaba.
+function aFavoritos() {
+  const ids = idsListos();
+  if (ids.length < 2) { aviso("Elige al menos dos prendas."); return; }
+  const ya = DO.deCombo(ids), antes = ya ? DO.crudo(ya.id) : null;
+  const d = datos();
+  const mas = Object.assign({ guardado: true }, d.nombre ? { nombre: d.nombre } : {}, d.ocasion ? { ocasion: d.ocasion } : {});
+  DO.favorito(ids, d, mas).then(r => aviso("Listo: está en tus favoritos.", () => (r.nuevo ? DO.borrar(r.id) : DO.restaurar(r.id, antes)).catch(fallo)), fallo);
   terminar();
 }
 
@@ -252,6 +267,7 @@ app.addEventListener("click", e => {
   else if (a === "arriba") { window.scrollTo({ top: 0, behavior: "smooth" }); const v = app.querySelector('[data-roar="ver"]'); if (v) v.focus({ preventScroll: true }); }
   else if (a === "puse") ponerme();
   else if (a === "guardar") guardar(null);
+  else if (a === "fav") aFavoritos();
   else if (a === "manana") { const c = ctxDia(); guardar(c.dia === "manana" ? c.fecha : C.manana(D.hoy())); }
   else if (a === "sin-filtros") { est.color = ""; est.clima = ""; guardarBorrador(); render(); }
   else if (a === "cero") {

@@ -1,6 +1,17 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-25 (Ropa: tus favoritos, D-163): `npm test` → **854** (en
+  `ropa-outfit-motor`: tus favoritos pesan una vez y media). E2E nueva
+  `ropa-favoritos` (**56**): "Tus favoritos" (sin ninguno, cómo se suman; antes
+  de "Guardados", que ya no los repite); el corazón de cada opción (aviso,
+  Deshacer, tocarlo otra vez); en grande (una opción, un guardado, un día), se
+  prende ahí mismo; "Quitar de guardados" solo si está guardado; "Me lo pongo
+  hoy" desde un favorito; "No me gusta" lo saca; "A favoritos" en Armar el mío
+  (con su nombre) y editar un favorito (el nuevo es el favorito; Deshacer); el
+  corazón en tu estilista y tus favoritos primero para la IA; 320 px en oscuro
+  y en claro (corazones de 44 px, cada botón con su texto adentro).
+  `ropa-outfits` (89) bien.
 - 2026-11-25 (Ropa, nivel 2, fase 6, D-162: la revisión final de tu
   estilista): `npm test` → **853**; el puente: **10** pruebas del Worker
   (nueva: los latidos —contesta enseguida, late mientras la IA piensa y al
@@ -772,6 +783,9 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
 - [ ] La prueba real corta de tu estilista (`docs/ROPA_ESTILISTA.md` › "La
   prueba real de tu estilista"; unos 25 centavos). El repaso de tu ropero
   puede tardar más de un minuto: tiene que llegar igual (los latidos, D-162).
+- [ ] Tus favoritos: toca el corazón en una opción de Outfits y en un
+  guardado; míralos en "Tus favoritos" y ponte uno ("Me lo pongo hoy"). En
+  "Armar el mío", "A favoritos".
 - [ ] En modo avión: Ajustes de Ropa dice "Sin internet"; al agregar una foto,
   "Sin internet: la IA no puede mirar la foto". Al volver internet, la IA se
   conecta sola.

@@ -33,6 +33,7 @@ de Pinterest y diseño en `docs/ROPA.md` (D-145).
 | 6 | Extras: lo más y lo menos usado, colores, costo por uso, Tu semana, Tu año, Inicio | ✅ (D-151): "Tus números", lo de hoy en Inicio y Ropa en "Tu semana" y "Tu año" |
 | 7 | Revisión final y lista para el iPhone | ✅ (D-152): todas las pruebas, Lighthouse, la IA sin internet y la lista para el iPhone; la prueba real de la IA, del dueño (el puente ya está) |
 | + | Pedido del dueño (2026-11-24): el corte y las mangas, cambiar los colores, mayúsculas | ✅ (D-154): la IA también llena el corte y las mangas (puente versión 4) |
+| + | Pedido del dueño (2026-11-25): "Que en outfits haya un espacio de outfits favoritos" | ✅ (D-163): el corazón (opciones, tu estilista, en grande, guardados, días, Armar el mío) y "Tus favoritos" en Outfits |
 
 ## Tu semana, Tu año y Bici al nivel de Running (pedido del dueño, 2026-11-16) — terminado
 "Haz el 1, 2 y 4, desarróllalos de la manera más completa posible."

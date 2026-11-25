@@ -20,6 +20,9 @@
 // te sugirió en su último repaso le serviría al clima o a la ocasión del día y
 // todavía no lo tienes (js/ropa-opinion-motor.js; sin IA). El ✕ lo oculta en
 // este teléfono (con Deshacer).
+// Tus favoritos (D-163): el ♥ en cada opción, en grande, en tus guardados y en
+// un día del calendario; "Tus favoritos" va antes de "Guardados" (que ya no
+// los repite) y le llegan primero a la IA.
 // Datos: js/ropa-outfits-datos.js; clima: js/ropa-clima.js (Open-Meteo, sin
 // tu ubicación); ajustes (ciudad, cómo sientes el frío): meta/ropa_ajustes.
 (function () {
@@ -170,6 +173,32 @@ function armadoHoy() {
   const E = window.RopaEstilistaMotor, DE = window.RopaEstilistaDatos;
   return E && DE ? E.armadoHoy(DE.lista(), D.hoy(), id => { const p = D.una(id); return !!p && p.estado !== "fuera"; }) : null;
 }
+// ---------- Tus favoritos (D-163) ----------
+// El ♥: lleno si ese outfit es tu favorito. En las tarjetas, solo el ♥ (44 px);
+// en las hojas, con "Favorito" escrito. Se prende y se apaga (aria-pressed).
+const esFav = ids => { const o = DO.deCombo(ids); return !!(o && o.favorito); };
+function favHTML(ids, attrs, conTexto) {
+  const on = esFav(ids);
+  return conTexto
+    ? `<button type="button" class="lib-btn-sec rof-fav${on ? " is-on" : ""}" ${attrs} aria-pressed="${on}">${icono(on ? "corazonLleno" : "corazon")}<span>Favorito</span></button>`
+    : `<button type="button" class="rof-fav-b${on ? " is-on" : ""}" ${attrs} aria-pressed="${on}" aria-label="Favorito">${icono(on ? "corazonLleno" : "corazon")}</button>`;
+}
+// El ♥ al toque (en una hoja no se vuelve a pintar todo).
+function pintarFav(b, on) {
+  b.classList.toggle("is-on", on);
+  b.setAttribute("aria-pressed", String(on));
+  const i = b.querySelector("[data-icon]");
+  if (i) { i.dataset.icon = on ? "corazonLleno" : "corazon"; pintarIconos(b); }
+}
+// Marca o desmarca. En la pantalla, con aviso y Deshacer; en una hoja, el ♥
+// mismo lo dice (el aviso de abajo queda tapado por la hoja).
+function alternarFav(ids, datos, enHoja) {
+  const lista = [...new Set(ids)].filter(id => D.una(id));
+  if (lista.length < 2) return;
+  DO.alternarFavorito(lista, datos).then(r => {
+    if (!enHoja) aviso(r.on ? "Listo: está en tus favoritos." : "Quitado de tus favoritos.", () => r.deshacer().catch(fallo));
+  }, fallo);
+}
 // El aviso del día (D-161): lo que te sugirió tu estilista y le serviría hoy.
 const OCULTOS = "manolo.ropa.avisos";
 const ocultos = () => { const v = leerLocal(OCULTOS); return Array.isArray(v) ? v.filter(x => typeof x === "string") : []; };
@@ -280,7 +309,7 @@ function opcionesHTML() {
   return `<section class="rof-ops" aria-labelledby="rof-ops-t"><h2 class="ro-sub" id="rof-ops-t">Tus opciones${manana ? " para mañana" : " para hoy"}</h2>
     ${est.nota ? `<p class="rin-consejo">${icono("sparkle")}${esc(est.nota)}</p>` : ""}
     <ol class="rof-opciones">${est.opciones.map((o, i) => { const x = inspDe(o); return `<li class="tmp-card rof-op">
-      <div class="rof-op-cab"><h3 class="rof-op-t"><span class="rof-op-n">Opción ${i + 1}</span>${esc(o.nombre || "Para hoy")}</h3>${o.origen === "ia" ? `<span class="rof-ia">${icono("sparkle")}IA</span>` : ""}</div>
+      <div class="rof-op-cab"><h3 class="rof-op-t"><span class="rof-op-n">Opción ${i + 1}</span>${esc(o.nombre || "Para hoy")}</h3>${o.origen === "ia" ? `<span class="rof-ia">${icono("sparkle")}IA</span>` : ""}${favHTML(o.prendas, `data-rof-op="fav" data-i="${i}"`)}</div>
       ${fotosOpcionHTML(o, i)}
       ${o.porque ? `<p class="rof-porque">${esc(o.porque)}</p>` : ""}
       ${o.capas ? `<p class="rd-nota rof-capas">${esc(o.capas)}</p>` : ""}
@@ -324,11 +353,20 @@ function collage(ids) {
   const ps = ids.map(id => D.una(id)).filter(Boolean).filter(p => p.grupo !== "accesorios").slice(0, 4);
   return `<span class="rof-collage n${ps.length}" aria-hidden="true">${ps.map(p => A().fotoHTML(p, "ro-foto")).join("")}</span>`;
 }
+const gHTML = o => `<li><button type="button" class="rof-g" data-rof-g="${esc(o.id)}" aria-haspopup="dialog">${collage(o.prendas)}<span class="rof-g-t">${esc(o.nombre || "Outfit")}</span>${o.para ? `<span class="rof-g-para">Para el ${esc(M.fechaLarga(o.para).split(" ").slice(0, 2).join(" "))}</span>` : ""}</button></li>`;
+// Tus favoritos (D-163): siempre a la vista (sin ninguno, cómo se suman).
+function favoritosHTML() {
+  const fs = DO.favoritos().filter(o => o.gusto !== "no" && o.prendas.some(id => D.una(id)));
+  return `<section class="rof-favs-s" aria-labelledby="rof-fav-t"><h2 class="ro-sub" id="rof-fav-t">${icono("corazonLleno")}Tus favoritos${fs.length ? ` (${fs.length})` : ""}</h2>
+    ${fs.length ? `<ul class="rof-guardados">${fs.map(gHTML).join("")}</ul>`
+      : `<p class="rd-nota rof-favs-vacio">Toca el corazón de un outfit que te encanta (en tus opciones, en grande o en tus guardados) y queda aquí, a un toque.</p>`}</section>`;
+}
+// Guardados: los demás (tus favoritos ya están arriba).
 function guardadosHTML() {
-  const gs = DO.lista().filter(o => o.guardado && o.prendas.some(id => D.una(id)));
+  const gs = DO.lista().filter(o => o.guardado && !o.favorito && o.prendas.some(id => D.una(id)));
   if (!gs.length) return "";
   return `<section class="rof-guardados-s" aria-labelledby="rof-g-t"><h2 class="ro-sub" id="rof-g-t">Guardados (${gs.length})</h2>
-    <ul class="rof-guardados">${gs.map(o => `<li><button type="button" class="rof-g" data-rof-g="${esc(o.id)}" aria-haspopup="dialog">${collage(o.prendas)}<span class="rof-g-t">${esc(o.nombre || "Outfit")}</span>${o.para ? `<span class="rof-g-para">Para el ${esc(M.fechaLarga(o.para).split(" ").slice(0, 2).join(" "))}</span>` : ""}</button></li>`).join("")}</ul></section>`;
+    <ul class="rof-guardados">${gs.map(gHTML).join("")}</ul></section>`;
 }
 const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 function calendarioHTML() {
@@ -383,6 +421,7 @@ function render() {
       ${armar_() ? `<a class="lib-btn-sec rof-mio" href="#ropa-armar">${icono("edit")}Armar el mío</a>` : ""}
       ${b ? "" : avisoHTML()}
       <div aria-live="polite">${opcionesHTML()}</div>`}
+    ${sinRopa ? "" : favoritosHTML()}
     ${guardadosHTML()}
     ${calendarioHTML()}`;
   if (pideV || pideFoco) {
@@ -445,7 +484,7 @@ async function armar(otras) {
       const r = await IA().outfits({
         ropero: O.roperoParaIA(ropero), clima: x ? C.paraIA(ciudad(), x.d, x.nec) : "Sin el clima de hoy.", necesidades: ctx.nec,
         ocasion: ocasionIA(), estilo: g ? g.resumen : "", recientes: O.recientes(D.usosDocs(), D.hoy()),
-        gustan: DO.lista().filter(o => o.gusto === "si").slice(0, 15).map(o => o.prendas), noGustan: DO.lista().filter(o => o.gusto === "no").slice(0, 15).map(o => o.prendas),
+        gustan: DO.gustan(15).map(o => o.prendas), noGustan: DO.lista().filter(o => o.gusto === "no").slice(0, 15).map(o => o.prendas),
         evitar: ctx.evitar, base: base()
       });
       opciones = O.validas(r.outfits, ropero, ctx).slice(0, 5).map(o => Object.assign({ origen: "ia" }, o));
@@ -554,6 +593,7 @@ function accionOpcion(a, i, desde) {
   // El foco vuelve al botón "Ver en grande" (aunque hayas tocado las fotos).
   if (a === "ver") { verOpcion(i, desde && desde.tagName === "BUTTON" ? desde : app.querySelector(`.rof-op-ver [data-rof-op="ver"][data-i="${i}"]`)); return; }
   if (a === "cambiar") { if (armar_()) armar_().abrir(ids, { modo: "cambiar", ocasion: est.ocasion, datos: datosDe(o) }); return; }
+  if (a === "fav") { alternarFav(ids, datosDe(o)); return; }
   if (a === "puse") {
     if (est.dia === "manana") {
       const para = fechaDelDia();
@@ -636,9 +676,10 @@ function verGuardado(id, desde) {
     ${o.puesto.length ? `<p class="rd-nota">Te lo pusiste ${plural(o.puesto.length, "vez", "veces")}; la última, el ${esc(M.fechaLarga(o.puesto[o.puesto.length - 1]))}.</p>` : ""}
     <div class="rof-op-bot">
       <button type="button" class="lib-btn" data-rof-h="puse">${icono("check")}Me lo pongo hoy</button>
+      ${favHTML(o.prendas, 'data-rof-h="fav"', true)}
       ${armar_() ? `<button type="button" class="lib-btn-sec" data-rof-h="editar">${icono("edit")}Editar</button>
       <button type="button" class="lib-btn-sec" data-rof-h="duplicar">${icono("copy")}Duplicar</button>` : ""}
-      <button type="button" class="lib-btn-sec" data-rof-h="quitar">Quitar de guardados</button>
+      ${o.guardado ? `<button type="button" class="lib-btn-sec" data-rof-h="quitar">Quitar de guardados</button>` : ""}
       ${opinion() ? `<button type="button" class="lib-btn-sec" data-rof-h="opinar" aria-haspopup="dialog">${icono("sparkle")}¿Qué opinas?</button>` : ""}
     </div></div>`);
   if (desde) h.volver = desde;
@@ -651,6 +692,7 @@ function verGuardado(id, desde) {
     const a = b.dataset.rofH;
     if (a === "editar" || a === "duplicar") { h.volver = null; h.cerrar(); location.hash = `ropa-armar/${a === "editar" ? "o" : "d"}/${encodeURIComponent(id)}`; return; }
     if (a === "opinar") { const v = h.volver; h.volver = null; h.cerrar(); opinarDe(o.prendas, { ocasion: o.ocasion, datos: { origen: o.origen, nombre: o.nombre, porque: o.porque, capas: o.capas } }, v); return; }
+    if (a === "fav") { pintarFav(b, !esFav(o.prendas)); alternarFav(o.prendas, {}, true); return; }
     h.cerrar();
     if (a === "puse") ponermeGuardado(id);
     else { DO.quitarGuardado(id).catch(fallo); aviso("Quitado de tus guardados.", () => DO.guardar(o.prendas, {}, o.para || null).catch(fallo)); }
@@ -664,12 +706,17 @@ function verDia(f, desde) {
   const h = A().hoja("rof-hoja-dia");
   h.mostrar(M.fechaLarga(f).replace(/^./, s => s.toUpperCase()), `<div class="rof-hoja-o">
     ${o && o.nombre ? `<p><b>${esc(o.nombre)}</b>${o.ciudad ? ` · ${esc(o.ciudad)}` : ""}</p>` : ""}
-    ${ids.length ? tableroHTML(ids) : `<p class="rd-nota">Ese día no anotaste nada.</p>`}</div>`);
+    ${ids.length ? tableroHTML(ids) : `<p class="rd-nota">Ese día no anotaste nada.</p>`}
+    ${(o ? o.prendas : ids).filter(x => D.una(x)).length >= 2 ? favHTML(o ? o.prendas : ids, 'data-rof-d="fav"', true) : ""}</div>`);
   if (desde) h.volver = desde;
   pintarIconos(h.el);
   fotosGrandes(h.el);
   h.el.onchange = null; h.el.onsubmit = null;
-  h.el.onclick = e => { if (e.target.closest(".rof-tab")) { h.volver = null; h.cerrar(); } };
+  h.el.onclick = e => {
+    const fav = e.target.closest('[data-rof-d="fav"]');
+    if (fav) { const xs = o ? o.prendas : ids; pintarFav(fav, !esFav(xs)); alternarFav(xs, o ? { origen: o.origen, nombre: o.nombre } : { origen: "manual" }, true); return; }
+    if (e.target.closest(".rof-tab")) { h.volver = null; h.cerrar(); }
+  };
 }
 // ---------- Una opción, en grande (con las de al lado a un toque) ----------
 function verOpcion(i, desde) {
@@ -688,6 +735,7 @@ function verOpcion(i, desde) {
     <div class="rof-op-bot">
       <button type="button" class="lib-btn" data-rof-v="puse">${icono("check")}${manana ? "Para mañana" : "Me lo pongo"}</button>
       <button type="button" class="lib-btn-sec" data-rof-v="guardar">${icono("guardar")}Guardar</button>
+      ${favHTML(o.prendas, 'data-rof-v="fav"', true)}
       <button type="button" class="lib-btn-sec" data-rof-v="otra"${est.armando ? " disabled" : ""}>${icono("swap")}Otra opción</button>
       <button type="button" class="lib-btn-sec" data-rof-v="no">${icono("close")}No me gusta</button>
     </div>
@@ -703,6 +751,7 @@ function verOpcion(i, desde) {
     if (!b) { if (e.target.closest(".rof-tab")) { h.volver = null; h.cerrar(); } return; }
     const a = b.dataset.rofV;
     if (a === "insp") { h.volver = null; h.cerrar(); location.hash = `ropa-pin/${encodeURIComponent(b.dataset.id)}`; return; }
+    if (a === "fav") { pintarFav(b, !esFav(o.prendas)); alternarFav(o.prendas, datosDe(o), true); return; }
     if (a === "ant" || a === "sig") { verOpcion((i + (a === "sig" ? 1 : n - 1)) % n); return; }
     if (a === "otra" || a === "no") {
       accionOpcion(a, i);

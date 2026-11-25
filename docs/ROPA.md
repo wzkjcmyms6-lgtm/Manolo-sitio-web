@@ -421,6 +421,21 @@ corte recto, ya sabes".
 - Solo se suma: las prendas de antes quedan sin corte ni mangas hasta que las
   edites.
 
+## Tus favoritos (D-163, pedido del dueño del 2026-11-25)
+"Que en outfits haya un espacio de outfits favoritos."
+- **El corazón**: en cada opción de "¿Qué me pongo?", en cada outfit de tu
+  estilista, al ver uno en grande (una opción, un guardado o un día del
+  calendario) y en "Armar el mío" ("A favoritos", con su nombre). Se prende y
+  se apaga; en la pantalla, con aviso y Deshacer.
+- **"Tus favoritos"** en Outfits, antes de "Guardados" (que ya no los repite):
+  el último que marcaste, primero; un toque lo abre en grande ("Me lo pongo
+  hoy", editar, duplicar, "¿Qué opinas?"). Sin ninguno, dice cómo se suman.
+- Un favorito te gusta: le llega primero a tu estilista y a la IA de "¿Qué me
+  pongo?", y en las reglas pesa una vez y media. "No me gusta" lo saca de tus
+  favoritos; si editas un favorito, el nuevo queda como favorito.
+- Datos: `favorito` y `favoritoFecha` en cada outfit (`ropa_outfits`; solo se
+  suman, van en la copia de seguridad).
+
 ## Nivel 2: tu estilista con IA
 Hablar con la IA como con un estilista, armar tus outfits tú mismo y ver cada
 outfit en grande, y la opinión de tu ropero: `docs/ROPA_ESTILISTA.md` (D-155

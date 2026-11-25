@@ -1,5 +1,14 @@
 # Cambios
 
+## 2026-11-25 · Ropa: tus favoritos
+- **"Tus favoritos" en Outfits**, antes de tus guardados: los outfits que más
+  te gustan, a un toque ("Me lo pongo hoy").
+- **El corazón** en cada opción, en cada outfit de tu estilista, al verlos en
+  grande, en tus guardados, en un día del calendario y en "Armar el mío" ("A
+  favoritos"). Se toca para marcar o desmarcar.
+- Tus favoritos le enseñan a tu estilista lo que más te gusta: le llegan
+  primero.
+
 ## 2026-11-25 · Ropa: la revisión final de tu estilista
 - Si tu estilista tarda más de un minuto (por ejemplo, en el repaso de tu
   ropero), el iPhone ya no corta la espera: la respuesta llega igual.

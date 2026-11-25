@@ -3,11 +3,15 @@
 // dejaste para mañana) y los que no te gustaron (para que no vuelvan). Un
 // outfit es un conjunto de prendas: si armas el mismo otra vez, se usa el
 // mismo documento. "Me lo pongo" también anota las prendas en ropa_usos del
-// día (con outfitId). Solo se suman campos y documentos.
+// día (con outfitId). Tus favoritos (D-163): favorito: true (con la fecha en
+// que lo marcaste); un favorito te gusta ("si") y no hace falta que esté en
+// guardados. Solo se suman campos y documentos.
 // window.RopaOutfitsDatos: lista(), una(id), crudo(id), cargada(), al(fn),
 // deCombo(ids), ponerme(ids, datos, fecha), quitarme(id, ids, fecha, eraNuevo),
-// guardar(ids, datos, para), guardarMio(ids, datos, para), noMeGusta(ids,
-// datos), quitarGuardado(id), borrar(id), restaurar(id, doc).
+// guardar(ids, datos, para), guardarMio(ids, datos, para, extra), noMeGusta(ids,
+// datos), quitarGuardado(id), borrar(id), restaurar(id, doc), favoritos(),
+// favorito(ids, datos, extra), quitarFavorito(id), alternarFavorito(ids,
+// datos), gustan(n).
 (function () {
 "use strict";
 const O = window.RopaOutfitMotor, D = window.RopaDatos;
@@ -19,7 +23,8 @@ const fechaOk = f => typeof f === "string" && /^\d{4}-\d{2}-\d{2}$/.test(f);
 const txt = (v, n) => String(v == null ? "" : v).replace(/\s+/g, " ").trim().slice(0, n);
 
 // Lo guardado → { id, prendas, ocasion, origen, nombre, porque, capas, ciudad,
-// clima, inspiracionId, guardado, gusto, puesto [fechas], para, creado }.
+// clima, inspiracionId, guardado, gusto, puesto [fechas], para, favorito,
+// favoritoFecha, creado }.
 function normalizar(id, d) {
   const x = d && typeof d === "object" ? d : {};
   return {
@@ -30,6 +35,7 @@ function normalizar(id, d) {
     inspiracionId: typeof x.inspiracionId === "string" ? x.inspiracionId : "",
     guardado: x.guardado === true, gusto: x.gusto === "si" || x.gusto === "no" ? x.gusto : null,
     puesto: (Array.isArray(x.puesto) ? x.puesto : []).filter(fechaOk).sort(), para: fechaOk(x.para) ? x.para : "",
+    favorito: x.favorito === true, favoritoFecha: typeof x.favoritoFecha === "number" ? x.favoritoFecha : 0,
     creado: typeof x.creado === "number" ? x.creado : 0
   };
 }
@@ -85,19 +91,40 @@ function quitarme(id, ids, fecha, eraNuevo) {
 const guardar = (ids, datos, para) => refDe(ids, datos, Object.assign({ guardado: true, gusto: "si" }, para ? { para } : {})).then(r => ({ id: r.ref.id, nuevo: r.nuevo }));
 // Lo que armaste tú (D-156): como guardar y, si ese outfit ya existía, con el
 // nombre y la ocasión que le pusiste.
-function guardarMio(ids, datos, para) {
+// mas: lo que se suma (por ejemplo, que siga siendo tu favorito al editarlo).
+function guardarMio(ids, datos, para, mas) {
   const d = datos || {};
   const extra = Object.assign({ guardado: true, gusto: "si" }, para ? { para } : {},
-    txt(d.nombre, 40) ? { nombre: txt(d.nombre, 40) } : {}, txt(d.ocasion, 20) ? { ocasion: txt(d.ocasion, 20) } : {});
+    txt(d.nombre, 40) ? { nombre: txt(d.nombre, 40) } : {}, txt(d.ocasion, 20) ? { ocasion: txt(d.ocasion, 20) } : {}, mas || {});
   return refDe(ids, datos, extra).then(r => ({ id: r.ref.id, nuevo: r.nuevo }));
 }
-const noMeGusta = (ids, datos) => refDe(ids, datos, { gusto: "no", guardado: false }).then(r => ({ id: r.ref.id, nuevo: r.nuevo }));
+// Lo que no te gusta tampoco queda en tus favoritos.
+const noMeGusta = (ids, datos) => refDe(ids, datos, { gusto: "no", guardado: false, favorito: false }).then(r => ({ id: r.ref.id, nuevo: r.nuevo }));
 const quitarGuardado = id => col().doc(id).set({ guardado: false, para: FV().delete(), editado: Date.now() }, { merge: true });
 const borrar = id => col().doc(id).delete();
 const restaurar = (id, doc) => col().doc(id).set(doc);
 
+// ---- Tus favoritos (D-163) ----
+// El más nuevo primero (el que marcaste último).
+const favoritos = () => todos.filter(o => o.favorito).sort((a, b) => b.favoritoFecha - a.favoritoFecha || b.creado - a.creado);
+// ♥ un outfit: te gusta y queda en tus favoritos (mas: { nombre, ocasion,
+// guardado… }). → { id, nuevo }
+const favorito = (ids, datos, mas) => refDe(ids, datos, Object.assign({ favorito: true, favoritoFecha: Date.now(), gusto: "si" }, mas || {})).then(r => ({ id: r.ref.id, nuevo: r.nuevo }));
+const quitarFavorito = id => col().doc(id).set({ favorito: false, editado: Date.now() }, { merge: true });
+// El ♥ que se prende y se apaga. → { on (si quedó favorito), id, deshacer() }:
+// Deshacer lo deja como estaba (si era nuevo, lo borra).
+function alternarFavorito(ids, datos) {
+  const ya = deCombo(ids), antes = ya ? crudos.get(ya.id) : null;
+  const deshacer = id => () => (antes ? restaurar(id, antes) : borrar(id));
+  if (ya && ya.favorito) return quitarFavorito(ya.id).then(() => ({ on: false, id: ya.id, deshacer: deshacer(ya.id) }));
+  return favorito(ids, datos).then(r => ({ on: true, id: r.id, deshacer: deshacer(r.id) }));
+}
+// Lo que te gustó, para tu estilista y para las reglas: tus favoritos primero.
+const gustan = n => favoritos().filter(o => o.gusto !== "no").concat(todos.filter(o => o.gusto === "si" && !o.favorito)).slice(0, n || 15);
+
 window.RopaOutfitsDatos = {
   lista: () => todos, una: id => todos.find(o => o.id === id) || null, crudo: id => crudos.get(id) || null,
-  cargada: () => cargada, al: fn => { oyentes.push(fn); }, normalizar, deCombo, ponerme, quitarme, guardar, guardarMio, noMeGusta, quitarGuardado, borrar, restaurar
+  cargada: () => cargada, al: fn => { oyentes.push(fn); }, normalizar, deCombo, ponerme, quitarme, guardar, guardarMio, noMeGusta, quitarGuardado, borrar, restaurar,
+  favoritos, favorito, quitarFavorito, alternarFavorito, gustan
 };
 })();

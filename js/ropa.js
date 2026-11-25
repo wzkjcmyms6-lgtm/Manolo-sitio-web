@@ -23,6 +23,9 @@ if (typeof ICONS === "object") {
   // Ver en grande y los avisos de "Armar el mío" (D-156).
   ICONS.ampliar = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M14.5 3.5h6v6M9.5 20.5h-6v-6M20.5 3.5l-7 7M3.5 20.5l7-7"/></svg>`;
   ICONS.alerta = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M10.3 4.3 2.6 17.6A2 2 0 0 0 4.3 20.6h15.4a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0Z"/><path d="M12 9.5v4M12 17v.01"/></svg>`;
+  // Tus favoritos (D-163): el corazón vacío y lleno (la misma forma).
+  ICONS.corazon = `<svg viewBox="0 0 24 24" ${ICON_ATTRS}><path d="M12 20.3c-.3 0-.6-.1-.8-.3C8.3 17.6 3 13.2 3 8.9 3 6.2 5.1 4.2 7.6 4.2c1.8 0 3.3.9 4.4 2.4 1.1-1.5 2.6-2.4 4.4-2.4 2.5 0 4.6 2 4.6 4.7 0 4.3-5.3 8.7-8.2 11.1-.2.2-.5.3-.8.3Z"/></svg>`;
+  ICONS.corazonLleno = `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 20.3c-.3 0-.6-.1-.8-.3C8.3 17.6 3 13.2 3 8.9 3 6.2 5.1 4.2 7.6 4.2c1.8 0 3.3.9 4.4 2.4 1.1-1.5 2.6-2.4 4.4-2.4 2.5 0 4.6 2 4.6 4.7 0 4.3-5.3 8.7-8.2 11.1-.2.2-.5.3-.8.3Z"/></svg>`;
 }
 const M = window.RopaMotor, D = window.RopaDatos;
 const app = document.getElementById("ro-app"), ficha = document.getElementById("rop-app");

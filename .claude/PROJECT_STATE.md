@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-25 (Ropa, nivel 2: tu estilista con IA, fase 6, D-162).
+Actualizado: 2026-11-25 (Ropa: tus favoritos, D-163).
 
 - **Ropa, nivel 2: tu estilista con IA (2026-11-24, en curso)**: hablar con la
   IA como con un estilista (outfits solo con su ropa, a partir de lo que
@@ -42,6 +42,9 @@ Actualizado: 2026-11-25 (Ropa, nivel 2: tu estilista con IA, fase 6, D-162).
   más; ahora el puente contesta enseguida y late cada 10 segundos. Falta solo
   la prueba real corta, que hace el dueño en su iPhone (la guía, en
   `docs/ROPA_ESTILISTA.md`).
+  Pedido del dueño (D-163): **tus favoritos** en Outfits (el corazón en cada
+  outfit; "Tus favoritos" antes de "Guardados"; le llegan primero a tu
+  estilista).
 
 - **Ropa con IA e inspiración de Pinterest (2026-11-22; terminado el
   2026-11-23; la IA conectada el 2026-11-24)**: el

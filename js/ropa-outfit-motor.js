@@ -125,6 +125,7 @@ function puntosPrenda(p, rol, ctx) {
 // vetados }. Lo de la misma ocasión (o sin ocasión) cuenta entero; lo de otra
 // parecida (un punto de formalidad o menos), la mitad; lo de una muy distinta
 // (lo casual para un evento formal), nada. Lo que no te gustó no vuelve nunca.
+// Tus favoritos (D-163) pesan una vez y media.
 function gustos(outfits, ocasionId, propias) {
   const pares = new Map(), vetados = new Set();
   const actual = ocasionId ? ocasion(ocasionId, propias) : null;
@@ -135,7 +136,7 @@ function gustos(outfits, ocasionId, propias) {
     const ids = [...new Set(o.prendas || [])].sort();
     if (ids.length < 2) return;
     if (o.gusto === "no") vetados.add(ids.join("|"));
-    const s = (o.gusto === "si" ? 1 : o.gusto === "no" ? -1 : 0) * peso(o);
+    const s = (o.gusto === "si" ? (o.favorito ? 1.5 : 1) : o.gusto === "no" ? -1 : 0) * peso(o);
     if (!s) return;
     for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) {
       const k = `${ids[i]}|${ids[j]}`;

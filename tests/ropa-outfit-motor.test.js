@@ -208,3 +208,13 @@ test("lo que se manda a la IA y lo que contesta", () => {
   assert.equal(O.ocasion("nada").id, "casual");
   assert.equal(O.diasEntre("2026-11-20", HOY), 3);
 });
+
+test("tus favoritos (D-163) pesan una vez y media en lo que aprendió de ti", () => {
+  const g = O.gustos([{ prendas: ["a", "b"], gusto: "si", favorito: true }, { prendas: ["c", "d"], gusto: "si" }, { prendas: ["e", "f"], gusto: "no", favorito: true }]);
+  assert.equal(g.pares.get("a|b"), 1.5, "el favorito, 1,5");
+  assert.equal(g.pares.get("c|d"), 1, "lo que te gustó, 1");
+  assert.equal(g.pares.get("e|f"), -1, "si no te gustó, no cuenta como favorito");
+  assert.ok(g.vetados.has("e|f"));
+  const media = O.gustos([{ prendas: ["a", "b"], gusto: "si", favorito: true, ocasion: "noche" }], "casual");
+  assert.equal(media.pares.get("a|b"), 0.75, "de otra ocasión parecida, la mitad de 1,5");
+});
