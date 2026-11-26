@@ -25,7 +25,19 @@ comprar y qué dejar); Pinterest (solo lectura, sin la IA):
 dice la versión del puente (3: con outfits; 4: `/describir` también dice el
 corte y las mangas de la prenda, D-154; 5: el estilista, D-157; 6: en
 `/charla`, los outfits de antes con su nombre y lo que ya viste hoy, `hoy`,
-D-159; 7: los latidos, D-162); la app usa lo nuevo solo si el puente lo tiene.
+D-159; 7: los latidos, D-162; 8: Pinterest con cara de navegador, D-168); la
+app usa lo nuevo solo si el puente lo tiene.
+
+**Pinterest desde Cloudflare (versión 8, D-168).** Probado desde el puente el
+2026-11-26: si el pedido no trae el `User-Agent` de un navegador, Pinterest
+contesta "Forbidden" (403) en el RSS de los tableros, en el del perfil y en
+oEmbed; con el de Safari del iPhone (`NAVEGADOR` en `src/index.js`), 200. Los
+links cortos (`pin.it`) y las imágenes (`i.pinimg.com`) andan igual. Además,
+en el RSS de los tableros cada pin viene ahora con un código de 55 letras
+(`/pin/e1_AfqPS…/`, antes un número): el puente acepta códigos de hasta 100.
+oEmbed no reconoce esos códigos nuevos (no hace falta: el RSS trae el título y
+la imagen). En las pruebas, el Pinterest de mentira también contesta 403 sin
+`User-Agent`.
 
 **Latidos (versión 7, D-162).** El iPhone (Safari) corta un pedido si no le
 llega nada en 60 segundos, y la IA puede tardar más (el repaso del ropero, con

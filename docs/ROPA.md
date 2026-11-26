@@ -65,8 +65,13 @@ permitidos):
   2026-11-23).
 - **Las imágenes de `i.pinimg.com` tampoco traen CORS**: el teléfono las puede
   mostrar, pero no guardarlas; las trae el puente (`/pinterest/imagen`).
-- **Falta probar**: con el tablero del dueño y desde el puente en Cloudflare
-  (cuando esté instalado).
+- **Desde el puente en Cloudflare** (probado el 2026-11-26, D-168): sin el
+  `User-Agent` de un navegador, Pinterest contesta 403 ("Forbidden") en el
+  RSS, el perfil y oEmbed; con el de Safari del iPhone, 200 (24 pines de cada
+  tablero de prueba). Los pines del RSS traen ahora un código de 55 letras en
+  vez de un número (el puente acepta hasta 100). oEmbed no reconoce esos
+  códigos nuevos (el RSS ya trae título e imagen). Falta: el tablero del
+  dueño, desde su iPhone.
 
 ## Diseño
 

@@ -11,6 +11,9 @@ test("los links de Pinterest: pin, tablero, perfil y el link corto", async () =>
   assert.deepEqual(P.leerLink("https://www.pinterest.com/pin/424605071146401455/"), { tipo: "pin", id: "424605071146401455" });
   assert.deepEqual(P.leerLink("https://es.pinterest.com/pin/424605071146401455/sent/?invite_code=abc&sender=1"), { tipo: "pin", id: "424605071146401455" });
   assert.deepEqual(P.leerLink("https://pinterest.com.mx/pin/99/"), { tipo: "pin", id: "99" });
+  // D-168: desde 2026-11, en el RSS de los tableros el pin viene con un código de 55 letras.
+  assert.deepEqual(P.leerLink("https://www.pinterest.com/pin/e1_AfqPShzsafwMC3zEh8VCdutn84cI39v-eNA_DVedfCihH2C8Tqj_/"), { tipo: "pin", id: "e1_AfqPShzsafwMC3zEh8VCdutn84cI39v-eNA_DVedfCihH2C8Tqj_" });
+  assert.strictEqual(P.leerLink(`https://www.pinterest.com/pin/${"a".repeat(101)}/`), null, "más de 100: no es un pin");
   // Lo que pega el iPhone desde la app: texto y el link corto.
   assert.deepEqual(P.leerLink("Mira este pin en Pinterest https://pin.it/2Ab3Cd4Ef"), { tipo: "corto", url: "https://pin.it/2Ab3Cd4Ef" });
   assert.deepEqual(P.leerLink("https://pin.it/2Ab3Cd4Ef/"), { tipo: "corto", url: "https://pin.it/2Ab3Cd4Ef" });
@@ -113,3 +116,23 @@ test("un pin por oEmbed", async () => {
   assert.equal(P.pinDeOembed("1", { title: "x" }), null);
   assert.equal(P.pinDeOembed("1", null), null);
 });
+
+test("RSS de un tablero con los códigos nuevos de los pines (2026-11, D-168)", async () => {
+  const P = await cargar();
+  // Un pin tal como viene hoy en el RSS de un tablero público de Pinterest.
+  const xml = `<?xml version="1.0" encoding="utf-8"?><rss version="2.0"><channel><title>Official news</title>
+    <item>
+      <title>Introducing the Workshop: A creative studio for bringing Pinterest ideas to life</title>
+      <link>https://www.pinterest.com/pin/e1_AfqPShzsafwMC3zEh8VCdutn84cI39v-eNA_DVedfCihH2C8Tqj_/</link>
+      <description>&lt;a href=&quot;https://www.pinterest.com/pin/e1_AfqPShzsafwMC3zEh8VCdutn84cI39v-eNA_DVedfCihH2C8Tqj_/&quot;&gt;&lt;img src=&quot;https://i.pinimg.com/236x/32/68/65/3268658fe7973644e6e6e5be15266517.jpg&quot;&gt;&lt;/a&gt;Introducing the Workshop</description>
+      <pubDate>Thu, 09 Nov 2017 23:13:20 GMT</pubDate>
+      <guid>https://www.pinterest.com/pin/e1_AfqPShzsafwMC3zEh8VCdutn84cI39v-eNA_DVedfCihH2C8Tqj_/</guid>
+    </item></channel></rss>`;
+  const pines = P.leerRss(xml, 50);
+  assert.equal(pines.length, 1);
+  assert.equal(pines[0].id, "e1_AfqPShzsafwMC3zEh8VCdutn84cI39v-eNA_DVedfCihH2C8Tqj_");
+  assert.equal(pines[0].url, "https://www.pinterest.com/pin/e1_AfqPShzsafwMC3zEh8VCdutn84cI39v-eNA_DVedfCihH2C8Tqj_/");
+  assert.match(pines[0].img, /^https:\/\/i\.pinimg\.com\/736x\/32\/68\/65\/3268658fe7973644e6e6e5be15266517\.jpg$/);
+  assert.equal(P.tituloRss(xml), "Official news");
+});
+

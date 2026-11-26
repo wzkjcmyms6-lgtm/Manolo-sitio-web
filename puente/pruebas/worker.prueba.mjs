@@ -40,6 +40,10 @@ globalThis.fetch = async (url, init) => {
   pedidos.push({ url: u, init: opciones });
   const r = (cuerpo, status, headers) => new Response(cuerpo, { status: status || 200, headers: headers || {} });
   if (u.startsWith("https://www.googleapis.com/")) return r(JSON.stringify(JWKS), 200, { "cache-control": "public, max-age=3600" });
+  // Como Pinterest de verdad desde Cloudflare (probado el 2026-11-26): sin
+  // User-Agent de navegador, "Forbidden" (403).
+  const ua = new Headers(opciones.headers || {}).get("User-Agent") || "";
+  if (/^https:\/\/(www\.|api\.)?pinterest\.com\/|^https:\/\/pin\.it\//.test(u) && !/Mozilla\/5\.0/.test(ua)) return r("<!DOCTYPE HTML><title>Pinterest - Forbidden</title>", 403, { "Content-Type": "text/html" });
   if (u === "https://pin.it/2Ab3Cd4Ef") return r(null, 308, { Location: "https://api.pinterest.com/url_shortener/2Ab3Cd4Ef/redirect/" });
   if (u === "https://api.pinterest.com/url_shortener/2Ab3Cd4Ef/redirect/") return r(null, 302, { Location: "https://www.pinterest.com/juanito_99/manolo/?invite_code=z" });
   if (u === "https://pin.it/PinCorto1") return r(null, 308, { Location: "https://www.pinterest.com/pin/333/sent/?x=1" });
@@ -100,7 +104,7 @@ test("quién soy: el dueño, la versión y el gasto; los demás no pasan", async
   const r = await pedir(env, "/quien");
   assert.equal(r.status, 200);
   assert.equal(r.json.permitido, true);
-  assert.equal(r.json.version, 7, "7: los latidos (D-162)");
+  assert.equal(r.json.version, 8, "8: Pinterest con cara de navegador (D-168)");
   assert.equal(r.json.lista, true);
   assert.equal(r.json.gasto.usd, 0);
   assert.equal(r.headers.get("Access-Control-Allow-Origin"), ORIGEN);

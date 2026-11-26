@@ -45,7 +45,7 @@ de Pinterest y diseño en `docs/ROPA.md` (D-145).
 | 7 | Revisión final y lista para el iPhone | ✅ (D-152): todas las pruebas, Lighthouse, la IA sin internet y la lista para el iPhone; la prueba real de la IA, del dueño (el puente ya está) |
 | + | Pedido del dueño (2026-11-24): el corte y las mangas, cambiar los colores, mayúsculas | ✅ (D-154): la IA también llena el corte y las mangas (puente versión 4) |
 | + | Pedido del dueño (2026-11-25): "Que en outfits haya un espacio de outfits favoritos" | ✅ (D-163): el corazón (opciones, tu estilista, en grande, guardados, días, Armar el mío) y "Tus favoritos" en Outfits |
-| + | Pedido del dueño (2026-11-25): que la IA le sugiera prendas en Inspiración (el tablero de Pinterest no se conecta) | ✅ (D-164): "Ideas de tu estilista" arriba de Inspiración ("Así lo usarías", outfits nuevos, A mi lista, Pinterest); el puente dice por qué no se lee el tablero · ⏳ el dueño prueba el tablero otra vez y manda el mensaje |
+| + | Pedido del dueño (2026-11-25): que la IA le sugiera prendas en Inspiración (el tablero de Pinterest no se conecta) | ✅ (D-164): "Ideas de tu estilista" arriba de Inspiración ("Así lo usarías", outfits nuevos, A mi lista, Pinterest); el puente dice por qué no se lee el tablero · la causa (D-168): Pinterest le contestaba 403 al puente sin User-Agent de navegador y los pines del RSS traen códigos de 55 letras; arreglado y probado desde Cloudflare (puente 8) · ⏳ el dueño conecta su tablero desde el iPhone |
 
 ## Tu semana, Tu año y Bici al nivel de Running (pedido del dueño, 2026-11-16) — terminado
 "Haz el 1, 2 y 4, desarróllalos de la manera más completa posible."

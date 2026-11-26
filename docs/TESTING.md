@@ -1,6 +1,14 @@
 # Pruebas
 
 ## Estado actual
+- 2026-11-26 (Pinterest desde el puente, D-168): la prueba autorizada por el
+  dueño, desde Cloudflare: sin `User-Agent` de navegador, 403 en el RSS, el
+  perfil y oEmbed; con él, 200; tras el arreglo, 24 pines en cada uno de dos
+  tableros públicos, un pin con imagen, una imagen y el link corto, bien.
+  Puente: **11** del Worker (su Pinterest de mentira ahora contesta 403 sin
+  `User-Agent`: con el código de antes, 4 fallaban) y **24** de su lógica y
+  de Pinterest (nueva: el RSS con los códigos de pin de 55 letras). La app no
+  cambió.
 - 2026-11-25 (Tarjetas: avance de efectivo, D-167): `npm test` → **864** (en
   `finanzas-tarjetas`: el % —se valida, se guarda, se redondea—, la comisión,
   el gasto de la comisión, Débito sube y la tarjeta debe lo sacado + la
@@ -872,8 +880,10 @@ con iOS actualizado. Marcar cada punto; si algo falla, anotar qué pasó.
   guardado; míralos en "Tus favoritos" y ponte uno ("Me lo pongo hoy"). En
   "Armar el mío", "A favoritos".
 - [ ] Inspiración › "Ideas de tu estilista": "Pedirle ideas" (unos 12
-  centavos); mira "Así lo usarías" y "Ver ideas en Pinterest". Conecta tu
-  tablero otra vez: si no se puede, el mensaje dice por qué (mándalo).
+  centavos); mira "Así lo usarías" y "Ver ideas en Pinterest".
+- [ ] Ropa › Ajustes: conecta tu tablero de Pinterest otra vez (arreglado en
+  D-168). Tienen que aparecer tus pines en Inspiración; si no, manda el
+  mensaje que sale.
 - [ ] En modo avión: Ajustes de Ropa dice "Sin internet"; al agregar una foto,
   "Sin internet: la IA no puede mirar la foto". Al volver internet, la IA se
   conecta sola.

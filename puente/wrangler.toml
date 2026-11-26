@@ -13,3 +13,7 @@ ORIGENES = "https://wzkjcmyms6-lgtm.github.io"
 [[kv_namespaces]]
 binding = "GASTO"
 id = "b8e6711c3f51447ea2543e9130d275be"
+
+# Sin tareas programadas (la prueba de Pinterest del 2026-11-26, D-168, ya se quitó).
+[triggers]
+crons = []

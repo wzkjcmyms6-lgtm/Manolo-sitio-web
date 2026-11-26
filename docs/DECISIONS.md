@@ -3044,3 +3044,29 @@ usuario: lo nuevo se guarda. No se calculan intereses del avance (el dueño
 cuenta solo la comisión). Pruebas: `npm test` → 864 (`finanzas-tarjetas`: el
 %, la comisión y su redondeo, saldos y deuda, a Efectivo, en lo que pagas y
 el detalle); E2E nueva `tarjetas-avance` (34) y 17 suites más, bien.
+
+**D-168 (2026-11-26) · Pinterest: por qué el puente no leía los tableros (y el
+arreglo).** Pregunta del dueño: "¿por qué en Ropa no puede leer los pines de
+Pinterest?"; autorizó la prueba en el puente ("Sí, haz la prueba del
+puente"). (1) **La prueba**: el puente instalado, con una tarea programada
+temporal (cada minuto), le preguntó a Pinterest desde Cloudflare por
+direcciones públicas fijas (tableros y un pin de la cuenta oficial de
+Pinterest) y guardó lo que contestó en su KV; se leyó con wrangler (la red de
+estas sesiones no llega a `workers.dev`). Al terminar se quitaron la prueba y
+la tarea (`crons = []`) y se borró la clave. (2) **Causa 1**: sin el
+`User-Agent` de un navegador, Pinterest le contesta "Forbidden" (403) al
+puente en el RSS del tablero, en el del perfil y en oEmbed (desde este entorno
+sí contestaba: por eso no se veía). Con el de Safari del iPhone, 200. Arreglo:
+todo lo de Pinterest sale con `NAVEGADOR` (User-Agent y Accept-Language), en
+`traer` y en los saltos del link corto. (3) **Causa 2**: con el RSS ya
+llegando, salían 0 pines: Pinterest cambió el código de cada pin en el RSS de
+los tableros (55 letras, `e1_AfqPS…`; antes un número) y el puente solo
+aceptaba hasta 40. Ahora hasta 100 (también al pegar el link de un pin).
+oEmbed no reconoce esos códigos nuevos, pero no hace falta: el RSS trae el
+título y la imagen. (4) **Comprobado desde Cloudflare** con el puente
+arreglado: dos tableros públicos, 24 pines cada uno; un pin por oEmbed, con
+imagen; una imagen; el link corto. Puente versión 8, instalado. La app no
+cambia (usa la versión con `>=`). Pruebas: el Pinterest de mentira del Worker
+contesta 403 sin `User-Agent` (con el código de antes, 4 pruebas fallaban);
+Worker 11, lógica y Pinterest 24 (nueva: el RSS con los códigos nuevos).
+Falta: que el dueño conecte su tablero desde el iPhone.

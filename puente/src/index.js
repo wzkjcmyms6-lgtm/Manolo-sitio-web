@@ -19,7 +19,7 @@ import * as L from "./logica.js";
 import * as P from "./pinterest.js";
 
 // Lo que este puente sabe hacer (la app lo mira para mostrar o no lo nuevo).
-const VERSION = 7;   // 2: Pinterest e inspiración (D-148); 3: outfits (D-149); 4: el corte y las mangas (D-154); 5: el estilista (D-157); 6: recuerda lo del día (D-159); 7: latidos (D-162)
+const VERSION = 8;   // 2: Pinterest e inspiración (D-148); 3: outfits (D-149); 4: el corte y las mangas (D-154); 5: el estilista (D-157); 6: recuerda lo del día (D-159); 7: latidos (D-162); 8: Pinterest con cara de navegador (D-168)
 
 let jwks = null;   // { llaves, vence }
 async function llaves() {
@@ -212,10 +212,18 @@ function conLatidos(trabajo, h, ctx, cada) {
 
 // ---- Pinterest (solo lectura) ----
 // Pide algo a Pinterest; si falla (a veces da 404 un rato), reintenta.
+// Pinterest le contesta "Forbidden" (403) al puente si no se presenta como un
+// navegador: probado desde Cloudflare el 2026-11-26 (D-168), sin User-Agent dio
+// 403 en el RSS del tablero, en el del perfil y en el oEmbed de un pin; con el
+// de Safari del iPhone, el RSS dio 200. Por eso todo lo de Pinterest va así.
+const NAVEGADOR = {
+  "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+  "Accept-Language": "es-ES,es;q=0.9,en;q=0.8"
+};
 async function traer(url, intentos) {
   let r = null;
   for (let i = 0; i < (intentos || 3); i++) {
-    try { r = await fetch(url, { headers: { Accept: "*/*" } }); } catch (e) { r = null; }
+    try { r = await fetch(url, { headers: Object.assign({ Accept: "application/rss+xml, application/xml;q=0.9, application/json;q=0.9, image/*;q=0.8, */*;q=0.7" }, NAVEGADOR) }); } catch (e) { r = null; }
     if (r && r.ok) return r;
     if (r && r.status !== 404 && r.status !== 429 && r.status < 500) return r;
     await new Promise(res => setTimeout(res, 500 * (i + 1)));
@@ -230,7 +238,7 @@ async function entender(texto) {
   if (!l || l.tipo !== "corto") return l;
   let status = 0;
   const fin = await P.resolverCorto(l.url, async u => {
-    const r = await fetch(u, { redirect: "manual" });
+    const r = await fetch(u, { redirect: "manual", headers: NAVEGADOR });
     status = r.status;
     return { status: r.status, location: r.headers.get("Location") };
   }).catch(() => null);

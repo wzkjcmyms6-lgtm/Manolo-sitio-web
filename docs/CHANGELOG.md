@@ -1,5 +1,11 @@
 # Cambios
 
+## 2026-11-26 · Ropa: Pinterest ya se puede leer
+- **Por qué no leía tus pines**: Pinterest no dejaba entrar al puente de
+  Manolo (no se presentaba como un navegador) y, además, cambió cómo nombra
+  sus pines. Las dos cosas están arregladas y probadas desde Cloudflare.
+- Conecta tu tablero otra vez en Ropa › Ajustes.
+
 ## 2026-11-25 · Finanzas: avance de efectivo
 - **En cada tarjeta, el % del avance de efectivo** (lo que cobra el banco).
 - **Registrar un avance**: en un gasto con la tarjeta, "Es un avance de

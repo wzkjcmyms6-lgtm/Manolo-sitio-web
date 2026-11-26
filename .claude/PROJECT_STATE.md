@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-25 (Tarjetas: avance de efectivo, D-167).
+Actualizado: 2026-11-26 (Pinterest desde el puente, D-168).
 
 - **Finanzas: seguros y mantenimiento de las tarjetas (2026-11-25)**: el
   dueño paga siempre todo, así que ya no hay pago mínimo (D-121 queda
@@ -60,8 +60,10 @@ Actualizado: 2026-11-25 (Tarjetas: avance de efectivo, D-167).
   estilista).
   Pedido del dueño (D-164): **ideas de tu estilista en Inspiración** (las
   prendas que le faltan a su ropero, sin Pinterest, con "Así lo usarías" con
-  su ropa); su tablero de Pinterest no se conecta: el puente ahora dice qué
-  pasó, falta que lo pruebe y mande el mensaje.
+  su ropa). El tablero de Pinterest no se conectaba: Pinterest le contestaba
+  403 al puente (sin User-Agent de navegador) y cambió los códigos de los
+  pines; arreglado y probado desde Cloudflare (D-168, puente 8). Falta que el
+  dueño lo conecte desde su iPhone.
 
 - **Ropa con IA e inspiración de Pinterest (2026-11-22; terminado el
   2026-11-23; la IA conectada el 2026-11-24)**: el

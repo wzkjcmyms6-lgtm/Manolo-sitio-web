@@ -38,7 +38,9 @@ export function leerLink(texto) {
   if (!esHostPinterest(host)) return null;
   const p = tramos(u.pathname);
   if (!p || !p.length) return null;
-  if (p[0] === "pin") return p[1] && /^[A-Za-z0-9_-]{1,40}$/.test(p[1]) ? { tipo: "pin", id: p[1] } : null;
+  // El código del pin: un número o, desde 2026-11, un código de letras (en el
+  // RSS de los tableros: 55 caracteres, como "e1_AfqPS…"); hasta 100 (D-168).
+  if (p[0] === "pin") return p[1] && /^[A-Za-z0-9_-]{1,100}$/.test(p[1]) ? { tipo: "pin", id: p[1] } : null;
   if (p[0] === "url_shortener") return p[1] && /^[A-Za-z0-9]{3,20}$/.test(p[1]) ? { tipo: "corto", url: `https://api.pinterest.com/url_shortener/${p[1]}/redirect/` } : null;
   if (!USUARIO.test(p[0]) || NO_USUARIO.has(p[0].toLowerCase())) return null;
   if (p.length === 1) return { tipo: "perfil", usuario: p[0] };
